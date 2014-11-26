@@ -148,7 +148,7 @@ namespace Lucene.Net.Codecs.Lucene40
                         visitor.LongField(info, fieldsStream.ReadLong());
                         return;
                     case Lucene40StoredFieldsWriter.FIELD_IS_NUMERIC_FLOAT:
-                        visitor.FloatField(info, Number.IntBitsToFloat(fieldsStream.ReadInt()));
+                        visitor.FloatField(info, fieldsStream.ReadInt().IntBitsToFloat());
                         return;
                     case Lucene40StoredFieldsWriter.FIELD_IS_NUMERIC_DOUBLE:
                         visitor.DoubleField(info, BitConverter.Int64BitsToDouble(fieldsStream.ReadLong()));

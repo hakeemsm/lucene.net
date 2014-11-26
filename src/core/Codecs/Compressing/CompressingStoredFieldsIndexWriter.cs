@@ -146,7 +146,7 @@ namespace Lucene.Net.Codecs.Compressing
             maxStartPointer = startPointer;
         }
 
-        internal void Finish(int numDocs)
+		internal void Finish(int numDocs, long maxPointer)
         {
             if (numDocs != totalDocs)
             {
@@ -157,6 +157,8 @@ namespace Lucene.Net.Codecs.Compressing
                 WriteBlock();
             }
             fieldsIndexOut.WriteVInt(0); // end marker
+			fieldsIndexOut.WriteVLong(maxPointer);
+			CodecUtil.WriteFooter(fieldsIndexOut);
         }
 
         public void Dispose()

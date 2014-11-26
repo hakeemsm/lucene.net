@@ -113,7 +113,7 @@ namespace Lucene.Net.Support
             return hashCode;
         }
 
-        public static List<T> asList<T>(params T[] objects)
+        public static List<T> AsList<T>(params T[] objects)
         {
             return objects.ToList();
         }

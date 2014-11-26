@@ -177,8 +177,8 @@ namespace Lucene.Net.Util.Packed
 
         public class FormatAndBits
         {
-            private readonly Format format;
-            private readonly int bitsPerValue;
+            internal readonly Format format;
+            internal readonly int bitsPerValue;
 
             public FormatAndBits(Format format, int bitsPerValue)
             {
@@ -742,16 +742,21 @@ namespace Lucene.Net.Util.Packed
         public static IMutable GetMutable(int valueCount,
             int bitsPerValue, float acceptableOverheadRatio)
         {
-            //assert valueCount >= 0;
+            PackedInts.FormatAndBits formatAndBits = FastestFormatAndBits(valueCount, bitsPerValue
+                , acceptableOverheadRatio);
+            return GetMutable(valueCount, formatAndBits.bitsPerValue, formatAndBits.format);
+        }
 
-            FormatAndBits formatAndBits = FastestFormatAndBits(valueCount, bitsPerValue, acceptableOverheadRatio);
-            if (formatAndBits.Format == Format.PACKED_SINGLE_BLOCK)
+        public static PackedInts.Mutable GetMutable(int valueCount, int bitsPerValue, Format
+             format)
+        {
+            if (format == Format.PACKED_SINGLE_BLOCK)
             {
-                return Packed64SingleBlock.Create(valueCount, formatAndBits.BitsPerValue);
+                return Packed64SingleBlock.Create(valueCount, bitsPerValue);
             }
-            else if (formatAndBits.Format == Format.PACKED)
+            if (format == Format.PACKED)
             {
-                switch (formatAndBits.BitsPerValue)
+                switch (bitsPerValue)
                 {
                     case 8:
                         return new Direct8(valueCount);
@@ -774,7 +779,7 @@ namespace Lucene.Net.Util.Packed
                         }
                         break;
                 }
-                return new Packed64(valueCount, formatAndBits.BitsPerValue);
+                return new Packed64(valueCount, bitsPerValue);
             }
             else
                 throw new ArgumentException();
@@ -803,7 +808,7 @@ namespace Lucene.Net.Util.Packed
             {
                 throw new ArgumentException("maxValue must be non-negative (got: " + maxValue + ")");
             }
-            return Math.Max(1, 64 - Number.NumberOfLeadingZeros(maxValue));
+            return Math.Max(1, 64 - maxValue.NumberOfLeadingZeros());
         }
 
         public static long MaxValue(int bitsPerValue)
@@ -825,35 +830,46 @@ namespace Lucene.Net.Util.Packed
             }
             else
             {
-                // use bulk operations
-                long[] buf = new long[Math.Min(capacity, len)];
-                int remaining = 0;
-                while (len > 0)
-                {
-                    int read = src.Get(srcPos, buf, remaining, Math.Min(len, buf.Length - remaining));
-                    //assert read > 0;
-                    srcPos += read;
-                    len -= read;
-                    remaining += read;
-                    int written = dest.Set(destPos, buf, 0, remaining);
-                    //assert written > 0;
-                    destPos += written;
-                    if (written < remaining)
-                    {
-                        Array.Copy(buf, written, buf, 0, remaining - written);
-                    }
-                    remaining -= written;
-                }
-                while (remaining > 0)
-                {
-                    int written = dest.Set(destPos, buf, 0, remaining);
-                    destPos += written;
-                    remaining -= written;
-                    Array.Copy(buf, written, buf, 0, remaining);
-                }
+				if (len > 0)
+				{
+					// use bulk operations
+					long[] buf = new long[Math.Min(capacity, len)];
+					Copy(src, srcPos, dest, destPos, len, buf);
+				}
             }
         }
 
+		internal static void Copy(IReader src, int srcPos, IMutable dest, int destPos, int len, long[] buf)
+		{
+			//HM:revisit 
+			//assert buf.length > 0;
+			int remaining = 0;
+			while (len > 0)
+			{
+				int read = src.Get(srcPos, buf, remaining, Math.Min(len, buf.Length - remaining));
+				//HM:revisit 
+				//assert read > 0;
+				srcPos += read;
+				len -= read;
+				remaining += read;
+				int written = dest.Set(destPos, buf, 0, remaining);
+				//HM:revisit 
+				//assert written > 0;
+				destPos += written;
+				if (written < remaining)
+				{
+					System.Array.Copy(buf, written, buf, 0, remaining - written);
+				}
+				remaining -= written;
+			}
+			while (remaining > 0)
+			{
+				int written = dest.Set(destPos, buf, 0, remaining);
+				destPos += written;
+				remaining -= written;
+				System.Array.Copy(buf, written, buf, 0, remaining);
+			}
+		}
         public static Header ReadHeader(DataInput input)
         {
             int version = CodecUtil.CheckHeader(input, CODEC_NAME, VERSION_START, VERSION_CURRENT);
@@ -899,5 +915,46 @@ namespace Lucene.Net.Util.Packed
                 get { return version; }
             }
         }
+
+        /// <summary>
+        /// Check that the block size is a power of 2, in the right bounds, and return
+        /// its log in base 2.
+        /// </summary>
+        /// <remarks>
+        /// Check that the block size is a power of 2, in the right bounds, and return
+        /// its log in base 2.
+        /// </remarks>
+        internal static int CheckBlockSize(int blockSize, int minBlockSize, int maxBlockSize)
+        {
+            if (blockSize < minBlockSize || blockSize > maxBlockSize)
+            {
+                throw new ArgumentException("blockSize must be >= " + minBlockSize + " and <= " +
+                     maxBlockSize + ", got " + blockSize);
+            }
+            if ((blockSize & (blockSize - 1)) != 0)
+            {
+                throw new ArgumentException("blockSize must be a power of two, got " + blockSize);
+            }
+            return blockSize.NumberOfTrailingZeros();
+        }
+
+        /// <summary>
+        /// Return the number of blocks required to store <code>size</code> values on
+        /// <code>blockSize</code>.
+        /// </summary>
+        /// <remarks>
+        /// Return the number of blocks required to store <code>size</code> values on
+        /// <code>blockSize</code>.
+        /// </remarks>
+        internal static int NumBlocks(long size, int blockSize)
+        {
+            int numBlocks = (int)(size / blockSize) + (size % blockSize == 0 ? 0 : 1);
+            if ((long)numBlocks * blockSize < size)
+            {
+                throw new ArgumentException("size is too large for this block size");
+            }
+            return numBlocks;
+        }
+
     }
 }

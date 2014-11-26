@@ -154,6 +154,9 @@
     <SignAssembly>true</SignAssembly>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Lucene.Net">
+      <HintPath>..\..\..\build\bin\core\Debug\NET40\Lucene.Net.dll</HintPath>
+    </Reference>
     <Reference Include="System">
       <Name>System</Name>
     </Reference>
@@ -191,9 +194,9 @@
     <Content Include="Spell\Package.html" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\core\Lucene.Net.csproj">
-      <Project>{5D4AD9BE-1FFB-41AB-9943-25737971BF57}</Project>
-      <Name>Lucene.Net</Name>
+    <ProjectReference Include="..\Analyzers\Contrib.Analyzers.csproj">
+      <Project>{4286e961-9143-4821-b46d-3d39d3736386}</Project>
+      <Name>Contrib.Analyzers</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

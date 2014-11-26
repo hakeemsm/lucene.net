@@ -1,4 +1,6 @@
-﻿namespace Lucene.Net.Search
+﻿using Lucene.Net.Support;
+
+namespace Lucene.Net.Search
 {
     public class NGramPhraseQuery : PhraseQuery
     {
@@ -49,7 +51,7 @@
 
         public override int GetHashCode()
         {
-            return Support.Number.FloatToIntBits(Boost)
+            return Boost.FloatToIntBits()
                    ^ Slop
                    ^ GetTerms().GetHashCode()
                    ^ GetPositions().GetHashCode()

@@ -19,6 +19,8 @@
  *
 */
 
+using System;
+
 namespace Lucene.Net.Support
 {
     /// <summary>
@@ -46,6 +48,9 @@ namespace Lucene.Net.Support
         public const char MAX_HIGH_SURROGATE = '\uDBFF';
 
         public static int MIN_SUPPLEMENTARY_CODE_POINT = 0x010000;
+        public static int FORMAT = 16;
+        public static int NON_SPACING_MARK = 6;
+        public static int COMBINING_SPACING_MARK=8;
 
         /// <summary>
         /// 
@@ -119,6 +124,39 @@ namespace Lucene.Net.Support
         public static bool IsHighSurrogate(char ch)
         {
             return ch >= MIN_HIGH_SURROGATE && ch <= MAX_HIGH_SURROGATE;
+        }
+
+        public static int ToUpperCase(int codePoint)
+        {
+            return char.ToUpper((char)codePoint);
+        }
+
+        [Flags]
+        public enum UnicodeBlock
+        {
+            DEVANAGARI = 0x0900,
+            BENGALI = 0x0980,
+            GURMUKHI,
+            GUJARATI,
+            ORIYA,
+            TAMIL,
+            TELUGU,
+            KANNADA,
+            MALAYALAM,
+            UNDEFINED
+        }
+    }
+
+    public static class UnicodeBlockExtension
+    {
+        public static Character.UnicodeBlock Of(this Enum ub, int ch)
+        {
+            Character.UnicodeBlock ubRet;
+            if (Enum.TryParse(ch.ToString(), out ubRet))
+            {
+                return ubRet;
+            }
+            return Character.UnicodeBlock.UNDEFINED;
         }
     }
 }

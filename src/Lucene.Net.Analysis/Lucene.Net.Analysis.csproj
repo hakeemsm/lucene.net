@@ -1,0 +1,423 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{C82C6217-B961-41B7-8BF4-722C98F3936F}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Lucene.Net.Analysis</RootNamespace>
+    <AssemblyName>Lucene.Net.Analysis</AssemblyName>
+    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Common\AR\ArabicAnalyzer.cs" />
+    <Compile Include="Common\AR\ArabicLetterTokenizer.cs" />
+    <Compile Include="Common\AR\ArabicLetterTokenizerFactory.cs" />
+    <Compile Include="Common\AR\ArabicNormalizationFilter.cs" />
+    <Compile Include="Common\AR\ArabicNormalizationFilterFactory.cs" />
+    <Compile Include="Common\AR\ArabicNormalizer.cs" />
+    <Compile Include="Common\AR\ArabicStemFilter.cs" />
+    <Compile Include="Common\AR\ArabicStemFilterFactory.cs" />
+    <Compile Include="Common\AR\ArabicStemmer.cs" />
+    <Compile Include="Common\BG\BulgarianAnalyzer.cs" />
+    <Compile Include="Common\BG\BulgarianStemFilter.cs" />
+    <Compile Include="Common\BG\BulgarianStemFilterFactory.cs" />
+    <Compile Include="Common\BG\BulgarianStemmer.cs" />
+    <Compile Include="Common\BR\BrazilianAnalyzer.cs" />
+    <Compile Include="Common\BR\BrazilianStemFilter.cs" />
+    <Compile Include="Common\BR\BrazilianStemFilterFactory.cs" />
+    <Compile Include="Common\BR\BrazilianStemmer.cs" />
+    <Compile Include="Common\CA\CatalanAnalyzer.cs" />
+    <Compile Include="Common\Charfilter\BaseCharFilter.cs" />
+    <Compile Include="Common\Charfilter\HTMLStripCharfilter.cs" />
+    <Compile Include="Common\Charfilter\HTMLStripCharFilterFactory.cs" />
+    <Compile Include="Common\Charfilter\MappingCharFilter.cs" />
+    <Compile Include="Common\Charfilter\MappingCharFilterFactory.cs" />
+    <Compile Include="Common\Charfilter\NormalizeCharMap.cs" />
+    <Compile Include="Common\CJK\CJKAnalyzer.cs" />
+    <Compile Include="Common\CJK\CJKBigramFilter.cs" />
+    <Compile Include="Common\CJK\CJKBigramFilterFactory.cs" />
+    <Compile Include="Common\CJK\CJKTokenizer.cs" />
+    <Compile Include="Common\CJK\CJKTokenizerFactory.cs" />
+    <Compile Include="Common\CJK\CJKWidthFilter.cs" />
+    <Compile Include="Common\CJK\CJKWidthFilterFactory.cs" />
+    <Compile Include="Common\Ckb\SoraniAnalyzer.cs" />
+    <Compile Include="Common\Ckb\SoraniNormalizationFilter.cs" />
+    <Compile Include="Common\Ckb\SoraniNormalizationFilterFactory.cs" />
+    <Compile Include="Common\Ckb\SoraniNormalizer.cs" />
+    <Compile Include="Common\Ckb\SoraniStemFilter.cs" />
+    <Compile Include="Common\Ckb\SoraniStemFilterFactory.cs" />
+    <Compile Include="Common\Ckb\SoraniStemmer.cs" />
+    <Compile Include="Common\Cn\ChineseAnalyzer.cs" />
+    <Compile Include="Common\Cn\ChineseFilter.cs" />
+    <Compile Include="Common\Cn\ChineseFilterFactory.cs" />
+    <Compile Include="Common\Cn\ChineseTokenizer.cs" />
+    <Compile Include="Common\Cn\ChineseTokenizerFactory.cs" />
+    <Compile Include="Common\Commongrams\CommonGramsFilter.cs" />
+    <Compile Include="Common\Commongrams\CommonGramsFilterFactory.cs" />
+    <Compile Include="Common\Commongrams\CommonGramsQueryFilter.cs" />
+    <Compile Include="Common\Commongrams\CommonGramsQueryFilterFactory.cs" />
+    <Compile Include="Common\Compound\CompoundWordTokenFilterBase.cs" />
+    <Compile Include="Common\Compound\DictionaryCompoundWordTokenFilter.cs" />
+    <Compile Include="Common\Compound\DictionaryCompoundWordTokenFilterFactory.cs" />
+    <Compile Include="Common\Compound\HyphenationCompoundWordTokenFilter.cs" />
+    <Compile Include="Common\Compound\HyphenationCompoundWordTokenFilterFactory.cs" />
+    <Compile Include="Common\Compound\Hyphenation\ByteVector.cs" />
+    <Compile Include="Common\Compound\Hyphenation\CharVector.cs" />
+    <Compile Include="Common\Compound\Hyphenation\Hyphen.cs" />
+    <Compile Include="Common\Compound\Hyphenation\Hyphenation.cs" />
+    <Compile Include="Common\Compound\Hyphenation\HyphenationException.cs" />
+    <Compile Include="Common\Compound\Hyphenation\HyphenationTree.cs" />
+    <Compile Include="Common\Compound\Hyphenation\PatternConsumer.cs" />
+    <Compile Include="Common\Compound\Hyphenation\PatternParser.cs" />
+    <Compile Include="Common\Compound\Hyphenation\TernaryTree.cs" />
+    <Compile Include="Common\Core\KeywordAnalyzer.cs" />
+    <Compile Include="Common\Core\KeywordTokenizer.cs" />
+    <Compile Include="Common\Core\KeywordTokenizerFactory.cs" />
+    <Compile Include="Common\Core\LetterTokenizer.cs" />
+    <Compile Include="Common\Core\LetterTokenizerFactory.cs" />
+    <Compile Include="Common\Core\LowerCaseFilter.cs" />
+    <Compile Include="Common\Core\LowerCaseFilterFactory.cs" />
+    <Compile Include="Common\Core\LowerCaseTokenizer.cs" />
+    <Compile Include="Common\Core\LowerCaseTokenizerFactory.cs" />
+    <Compile Include="Common\Core\SimpleAnalyzer.cs" />
+    <Compile Include="Common\Core\StopAnalyzer.cs" />
+    <Compile Include="Common\Core\StopFilter.cs" />
+    <Compile Include="Common\Core\StopFilterFactory.cs" />
+    <Compile Include="Common\Core\TypeTokenFilter.cs" />
+    <Compile Include="Common\Core\TypeTokenFilterFactory.cs" />
+    <Compile Include="Common\Core\UpperCaseFilter.cs" />
+    <Compile Include="Common\Core\UpperCaseFilterFactory.cs" />
+    <Compile Include="Common\Core\WhitespaceAnalyzer.cs" />
+    <Compile Include="Common\Core\WhitespaceTokenizer.cs" />
+    <Compile Include="Common\Core\WhitespaceTokenizerFactory.cs" />
+    <Compile Include="Common\Cz\CzechAnalyzer.cs" />
+    <Compile Include="Common\Cz\CzechStemFilter.cs" />
+    <Compile Include="Common\Cz\CzechStemFilterFactory.cs" />
+    <Compile Include="Common\Cz\CzechStemmer.cs" />
+    <Compile Include="Common\DA\DanishAnalyzer.cs" />
+    <Compile Include="Common\De\GermanAnalyzer.cs" />
+    <Compile Include="Common\De\GermanDIN2Stemmer.cs" />
+    <Compile Include="Common\De\GermanStemFilter.cs" />
+    <Compile Include="Common\De\GermanStemmer.cs" />
+    <Compile Include="Common\El\GreekAnalyzer.cs" />
+    <Compile Include="Common\El\GreekLowerCaseFilter.cs" />
+    <Compile Include="Common\En\EnglishAnalyzer.cs" />
+    <Compile Include="Common\En\EnglishMinimalStemFilter.cs" />
+    <Compile Include="Common\En\EnglishMinimalStemFilterFactory.cs" />
+    <Compile Include="Common\En\EnglishMinimalStemmer.cs" />
+    <Compile Include="Common\En\EnglishPossessiveFilter.cs" />
+    <Compile Include="Common\En\EnglishPossessiveFilterFactory.cs" />
+    <Compile Include="Common\En\KStemData1.cs" />
+    <Compile Include="Common\En\KStemData2.cs" />
+    <Compile Include="Common\En\KStemData3.cs" />
+    <Compile Include="Common\En\KStemData4.cs" />
+    <Compile Include="Common\En\KStemData5.cs" />
+    <Compile Include="Common\En\KStemData6.cs" />
+    <Compile Include="Common\En\KStemData7.cs" />
+    <Compile Include="Common\En\KStemData8.cs" />
+    <Compile Include="Common\En\KStemFilter.cs" />
+    <Compile Include="Common\En\KStemFilterFactory.cs" />
+    <Compile Include="Common\En\KStemmer.cs" />
+    <Compile Include="Common\En\PorterStemFilter.cs" />
+    <Compile Include="Common\En\PorterStemFilterFactory.cs" />
+    <Compile Include="Common\En\PorterStemmer.cs" />
+    <Compile Include="Common\ES\SpanishAnalyzer.cs" />
+    <Compile Include="Common\ES\SpanishLightStemFilter.cs" />
+    <Compile Include="Common\ES\SpanishLightStemFilterFactory.cs" />
+    <Compile Include="Common\ES\SpanishLightStemmer.cs" />
+    <Compile Include="Common\EU\BasqueAnalyzer.cs" />
+    <Compile Include="Common\Fa\PersianAnalyzer.cs" />
+    <Compile Include="Common\Fa\PersianNormalizationFilter.cs" />
+    <Compile Include="Common\Fa\PersianNormalizer.cs" />
+    <Compile Include="Common\Filters\ChainedFilter.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Common\FI\FinnishAnalyzer.cs" />
+    <Compile Include="Common\FI\FinnishLightStemFilter.cs" />
+    <Compile Include="Common\FI\FinnishLightStemFilterFactory.cs" />
+    <Compile Include="Common\FI\FinnishLightStemmer.cs" />
+    <Compile Include="Common\Fr\ElisionFilter.cs" />
+    <Compile Include="Common\Fr\FrenchAnalyzer.cs" />
+    <Compile Include="Common\Fr\FrenchStemFilter.cs" />
+    <Compile Include="Common\Fr\FrenchStemmer.cs" />
+    <Compile Include="Common\GA\IrishAnalyzer.cs" />
+    <Compile Include="Common\GA\IrishLowerCaseFilter.cs" />
+    <Compile Include="Common\GA\IrishLowerCaseFilterFactory.cs" />
+    <Compile Include="Common\GL\GalicianAnalyzer.cs" />
+    <Compile Include="Common\GL\GalicianMinimalStemFilter.cs" />
+    <Compile Include="Common\GL\GalicianMinimalStemFilterFactory.cs" />
+    <Compile Include="Common\GL\GalicianMinimalStemmer.cs" />
+    <Compile Include="Common\GL\GalicianStemFilter.cs" />
+    <Compile Include="Common\GL\GalicianStemFilterFactory.cs" />
+    <Compile Include="Common\GL\GalicianStemmer.cs" />
+    <Compile Include="Common\HI\HindiAnalyzer.cs" />
+    <Compile Include="Common\HI\HindiNormalizationFilter.cs" />
+    <Compile Include="Common\HI\HindiNormalizationFilterFactory.cs" />
+    <Compile Include="Common\HI\HindiNormalizer.cs" />
+    <Compile Include="Common\HI\HindiStemFilter.cs" />
+    <Compile Include="Common\HI\HindiStemFilterFactory.cs" />
+    <Compile Include="Common\HI\HindiStemmer.cs" />
+    <Compile Include="Common\HTMLCharStripFilterResources.Designer.cs" />
+    <Compile Include="Common\Hunspell\HunspellAffix.cs" />
+    <Compile Include="Common\Hunspell\HunspellDictionary.cs" />
+    <Compile Include="Common\Hunspell\HunspellStem.cs" />
+    <Compile Include="Common\Hunspell\HunspellStemFilter.cs" />
+    <Compile Include="Common\Hunspell\HunspellStemmer.cs" />
+    <Compile Include="Common\Hunspell\HunspellWord.cs" />
+    <Compile Include="Common\HU\HungarianAnalyzer.cs" />
+    <Compile Include="Common\HU\HungarianLightStemFilter.cs" />
+    <Compile Include="Common\HU\HungarianLightStemFilterFactory.cs" />
+    <Compile Include="Common\HU\HungarianLightStemmer.cs" />
+    <Compile Include="Common\HY\ArmenianAnalyzer.cs" />
+    <Compile Include="Common\ID\IndonesianAnalyzer.cs" />
+    <Compile Include="Common\ID\IndonesianStemFilter.cs" />
+    <Compile Include="Common\ID\IndonesianStemFilterFactory.cs" />
+    <Compile Include="Common\ID\IndonesianStemmer.cs" />
+    <Compile Include="Common\IN\IndicNormalizationFilter.cs" />
+    <Compile Include="Common\IN\IndicNormalizationFilterFactory.cs" />
+    <Compile Include="Common\IN\IndicNormalizer.cs" />
+    <Compile Include="Common\IN\IndicTokenizer.cs" />
+    <Compile Include="Common\IT\ItalianAnalyzer.cs" />
+    <Compile Include="Common\IT\ItalianLightStemFilter.cs" />
+    <Compile Include="Common\IT\ItalianLightStemFilterFactory.cs" />
+    <Compile Include="Common\IT\ItalianLightStemmer.cs" />
+    <Compile Include="Common\LV\LatvianAnalyzer.cs" />
+    <Compile Include="Common\LV\LatvianStemFilter.cs" />
+    <Compile Include="Common\LV\LatvianStemFilterFactory.cs" />
+    <Compile Include="Common\LV\LatvianStemmer.cs" />
+    <Compile Include="Common\Miscellaneous\EmptyTokenStream.cs" />
+    <Compile Include="Common\Miscellaneous\InjectablePrefixAwareTokenFilter.cs" />
+    <Compile Include="Common\Miscellaneous\KeywordMarkerFilter.cs" />
+    <Compile Include="Common\Miscellaneous\PatternAnalyzer.cs" />
+    <Compile Include="Common\Miscellaneous\PrefixAndSuffixAwareTokenFilter.cs" />
+    <Compile Include="Common\Miscellaneous\PrefixAwareTokenStream.cs" />
+    <Compile Include="Common\Miscellaneous\SetKeywordMarkerFilter.cs" />
+    <Compile Include="Common\Miscellaneous\SingleTokenTokenStream.cs" />
+    <Compile Include="Common\NGram\EdgeNGramFilterFactory.cs" />
+    <Compile Include="Common\NGram\EdgeNGramTokenFilter.cs" />
+    <Compile Include="Common\NGram\EdgeNGramTokenizer.cs" />
+    <Compile Include="Common\NGram\EdgeNGramTokenizerFactory.cs" />
+    <Compile Include="Common\NGram\Lucene43EdgeNGramTokenizer.cs" />
+    <Compile Include="Common\NGram\Lucene43NGramTokenizer.cs" />
+    <Compile Include="Common\NGram\NGramFilterFactory.cs" />
+    <Compile Include="Common\NGram\NGramTokenFilter.cs" />
+    <Compile Include="Common\NGram\NGramTokenizer.cs" />
+    <Compile Include="Common\NGram\NGramTokenizerFactory.cs" />
+    <Compile Include="Common\Nl\DutchAnalyzer.cs" />
+    <Compile Include="Common\Nl\DutchStemFilter.cs" />
+    <Compile Include="Common\Nl\DutchStemmer.cs" />
+    <Compile Include="Common\NO\NorwegianAnalyzer.cs" />
+    <Compile Include="Common\NO\NorwegianLightStemFilter.cs" />
+    <Compile Include="Common\NO\NorwegianLightStemFilterFactory.cs" />
+    <Compile Include="Common\NO\NorwegianLightStemmer.cs" />
+    <Compile Include="Common\NO\NorwegianMinimalStemFilter.cs" />
+    <Compile Include="Common\NO\NorwegianMinimalStemFilterFactory.cs" />
+    <Compile Include="Common\NO\NorwegianMinimalStemmer.cs" />
+    <Compile Include="Common\Path\PathHierarchyTokenizer.cs" />
+    <Compile Include="Common\Path\PathHierarchyTokenizerFactory.cs" />
+    <Compile Include="Common\Path\ReversePathHierarchyTokenizer.cs" />
+    <Compile Include="Common\Pattern\PatternCaptureGroupFilterFactory.cs" />
+    <Compile Include="Common\Pattern\PatternCaptureGroupTokenFilter.cs" />
+    <Compile Include="Common\Pattern\PatternReplaceCharFilter.cs" />
+    <Compile Include="Common\Pattern\PatternReplaceCharFilterFactory.cs" />
+    <Compile Include="Common\Pattern\PatternReplaceFilter.cs" />
+    <Compile Include="Common\Pattern\PatternReplaceFilterFactory.cs" />
+    <Compile Include="Common\Pattern\PatternTokenizer.cs" />
+    <Compile Include="Common\Pattern\PatternTokenizerFactory.cs" />
+    <Compile Include="Common\Payloads\AbstractEncoder.cs" />
+    <Compile Include="Common\Payloads\DelimitedPayloadTokenFilter.cs" />
+    <Compile Include="Common\Payloads\FloatEncoder.cs" />
+    <Compile Include="Common\Payloads\IdentityEncoder.cs" />
+    <Compile Include="Common\Payloads\IntegerEncoder.cs" />
+    <Compile Include="Common\Payloads\NumericPayloadTokenFilter.cs" />
+    <Compile Include="Common\Payloads\PayloadEncoder.cs" />
+    <Compile Include="Common\Payloads\PayloadHelper.cs" />
+    <Compile Include="Common\Payloads\TokenOffsetPayloadTokenFilter.cs" />
+    <Compile Include="Common\Payloads\TypeAsPayloadTokenFilter.cs" />
+    <Compile Include="Common\Position\PositionFilter.cs" />
+    <Compile Include="Common\Properties\AssemblyInfo.cs" />
+    <Compile Include="Common\PT\PortugueseAnalyzer.cs" />
+    <Compile Include="Common\PT\PortugueseLightStemFilter.cs" />
+    <Compile Include="Common\PT\PortugueseLightStemFilterFactory.cs" />
+    <Compile Include="Common\PT\PortugueseLightStemmer.cs" />
+    <Compile Include="Common\PT\PortugueseMinimalStemFilter.cs" />
+    <Compile Include="Common\PT\PortugueseMinimalStemFilterFactory.cs" />
+    <Compile Include="Common\PT\PortugueseMinimalStemmer.cs" />
+    <Compile Include="Common\PT\PortugueseStemFilter.cs" />
+    <Compile Include="Common\PT\PortugueseStemFilterFactory.cs" />
+    <Compile Include="Common\PT\PortugueseStemmer.cs" />
+    <Compile Include="Common\PT\RSLPStemmerBase.cs" />
+    <Compile Include="Common\Query\QueryAutoStopWordAnalyzer.cs" />
+    <Compile Include="Common\Reverse\ReverseStringFilter.cs" />
+    <Compile Include="Common\RO\RomanianAnalyzer.cs" />
+    <Compile Include="Common\Ru\RussianAnalyzer.cs" />
+    <Compile Include="Common\Ru\RussianLetterTokenizer.cs" />
+    <Compile Include="Common\Ru\RussianLowerCaseFilter.cs" />
+    <Compile Include="Common\Ru\RussianStemFilter.cs" />
+    <Compile Include="Common\Ru\RussianStemmer.cs" />
+    <Compile Include="Common\Shingle\Codec\OneDimensionalNonWeightedTokenSettingsCodec.cs" />
+    <Compile Include="Common\Shingle\Codec\SimpleThreeDimensionalTokenSettingsCodec.cs" />
+    <Compile Include="Common\Shingle\Codec\TokenSettingsCodec.cs" />
+    <Compile Include="Common\Shingle\Codec\TwoDimensionalNonWeightedSynonymTokenSettingsCodec.cs" />
+    <Compile Include="Common\Shingle\Matrix\Column.cs" />
+    <Compile Include="Common\Shingle\Matrix\Matrix.cs" />
+    <Compile Include="Common\Shingle\Matrix\MatrixPermutationIterator.cs" />
+    <Compile Include="Common\Shingle\Matrix\Row.cs" />
+    <Compile Include="Common\Shingle\ShingleAnalyzerWrapper.cs" />
+    <Compile Include="Common\Shingle\ShingleFilter.cs" />
+    <Compile Include="Common\Shingle\ShingleMatrixFilter.cs" />
+    <Compile Include="Common\Shingle\TokenPositioner.cs" />
+    <Compile Include="Common\Sinks\DateRecognizerSinkFilter.cs" />
+    <Compile Include="Common\Sinks\TokenRangeSinkFilter.cs" />
+    <Compile Include="Common\Sinks\TokenTypeSinkFilter.cs" />
+    <Compile Include="Common\Snowball\Among.cs" />
+    <Compile Include="Common\Snowball\Ext\ArmenianStemmer.cs" />
+    <Compile Include="Common\Snowball\Ext\BasqueStemmer.cs" />
+    <Compile Include="Common\Snowball\Ext\CatalanStemmer.cs" />
+    <Compile Include="Common\Snowball\Ext\DanishStemmer.cs" />
+    <Compile Include="Common\Snowball\Ext\DutchStemmer.cs" />
+    <Compile Include="Common\Snowball\Ext\EnglishStemmer.cs" />
+    <Compile Include="Common\Snowball\Ext\FinnishStemmer.cs" />
+    <Compile Include="Common\Snowball\Ext\FrenchStemmer.cs" />
+    <Compile Include="Common\Snowball\Ext\German2Stemmer.cs" />
+    <Compile Include="Common\Snowball\Ext\GermanStemmer.cs" />
+    <Compile Include="Common\Snowball\Ext\HungarianStemmer.cs" />
+    <Compile Include="Common\Snowball\Ext\IrishStemmer.cs" />
+    <Compile Include="Common\Snowball\Ext\ItalianStemmer.cs" />
+    <Compile Include="Common\Snowball\Ext\KpStemmer.cs" />
+    <Compile Include="Common\Snowball\Ext\LovinsStemmer.cs" />
+    <Compile Include="Common\Snowball\Ext\NorwegianStemmer.cs" />
+    <Compile Include="Common\Snowball\Ext\PorterStemmer.cs" />
+    <Compile Include="Common\Snowball\Ext\PortugueseStemmer.cs" />
+    <Compile Include="Common\Snowball\Ext\RomanianStemmer.cs" />
+    <Compile Include="Common\Snowball\Ext\RussianStemmer.cs" />
+    <Compile Include="Common\Snowball\Ext\SpanishStemmer.cs" />
+    <Compile Include="Common\Snowball\Ext\SwedishStemmer.cs" />
+    <Compile Include="Common\Snowball\Ext\TurkishStemmer.cs" />
+    <Compile Include="Common\Snowball\SnowballAnalyzer.cs" />
+    <Compile Include="Common\Snowball\SnowballFilter.cs" />
+    <Compile Include="Common\Snowball\SnowballPorterFilterFactory.cs" />
+    <Compile Include="Common\Snowball\SnowballProgram.cs" />
+    <Compile Include="Common\Standard\ClassicAnalyzer.cs" />
+    <Compile Include="Common\Standard\ClassicFilter.cs" />
+    <Compile Include="Common\Standard\ClassicFilterFactory.cs" />
+    <Compile Include="Common\Standard\ClassicTokenizer.cs" />
+    <Compile Include="Common\Standard\ClassicTokenizerFactory.cs" />
+    <Compile Include="Common\Standard\ClassicTokenizerImpl.cs" />
+    <Compile Include="Common\Standard\IStandardTokenizerInterface.cs" />
+    <Compile Include="Common\Standard\StandardAnalyzer.cs" />
+    <Compile Include="Common\Standard\StandardFilter.cs" />
+    <Compile Include="Common\Standard\StandardFilterFactory.cs" />
+    <Compile Include="Common\Standard\StandardTokenizer.cs" />
+    <Compile Include="Common\Standard\StandardTokenizerFactory.cs" />
+    <Compile Include="Common\Standard\StandardTokenizerImpl.cs" />
+    <Compile Include="Common\Standard\Std31\StandardTokenizerImpl31.cs" />
+    <Compile Include="Common\Standard\Std34\StandardTokenizerImpl34.cs" />
+    <Compile Include="Common\Support\AbstractSet.cs" />
+    <Compile Include="Common\Support\IAppendable.cs" />
+    <Compile Include="Common\Support\StreamReaderExtensions.cs" />
+    <Compile Include="Common\Support\StringExtensions.cs" />
+    <Compile Include="Common\SV\SwedishAnalyzer.cs" />
+    <Compile Include="Common\SV\SwedishLightStemFilter.cs" />
+    <Compile Include="Common\SV\SwedishLightStemFilterFactory.cs" />
+    <Compile Include="Common\SV\SwedishLightStemmer.cs" />
+    <Compile Include="Common\Synonym\FSTSynonymFilterFactory.cs" />
+    <Compile Include="Common\Synonym\SlowSynonymFilter.cs" />
+    <Compile Include="Common\Synonym\SlowSynonymFilterFactory.cs" />
+    <Compile Include="Common\Synonym\SlowSynonymMap.cs" />
+    <Compile Include="Common\Synonym\SolrSynonymParser.cs" />
+    <Compile Include="Common\Synonym\SynonymFilter.cs" />
+    <Compile Include="Common\Synonym\SynonymFilterFactory.cs" />
+    <Compile Include="Common\Synonym\SynonymMap.cs" />
+    <Compile Include="Common\Synonym\WordnetSynonymParser.cs" />
+    <Compile Include="Common\Th\ThaiAnalyzer.cs" />
+    <Compile Include="Common\Th\ThaiWordFilter.cs" />
+    <Compile Include="Common\TR\ApostropheFilter.cs" />
+    <Compile Include="Common\TR\ApostropheFilterFactory.cs" />
+    <Compile Include="Common\TR\TurkishAnalyzer.cs" />
+    <Compile Include="Common\TR\TurkishLowerCaseFilter.cs" />
+    <Compile Include="Common\TR\TurkishLowerCaseFilterFactory.cs" />
+    <Compile Include="Common\Util\AbstractAnalysisFactory.cs" />
+    <Compile Include="Common\Util\AnalysisSPILoader.cs" />
+    <Compile Include="Common\Util\CharacterUtils.cs" />
+    <Compile Include="Common\Util\CharArrayMap.cs" />
+    <Compile Include="Common\Util\CharArraySet.cs" />
+    <Compile Include="Common\Util\CharFilterFactory.cs" />
+    <Compile Include="Common\Util\CharTokenizer.cs" />
+    <Compile Include="Common\Util\FilteringTokenFilter.cs" />
+    <Compile Include="Common\Util\IMultiTermAwareComponent.cs" />
+    <Compile Include="Common\Util\IResourceLoader.cs" />
+    <Compile Include="Common\Util\IResourceLoaderAware.cs" />
+    <Compile Include="Common\Util\OpenStringBuilder.cs" />
+    <Compile Include="Common\Util\RollingCharBuffer.cs" />
+    <Compile Include="Common\Util\StemmerUtil.cs" />
+    <Compile Include="Common\Util\StopwordAnalyzerBase.cs" />
+    <Compile Include="Common\Util\TokenFilterFactory.cs" />
+    <Compile Include="Common\Util\TokenizerFactory.cs" />
+    <Compile Include="Common\Util\WordlistLoader.cs" />
+    <Compile Include="Common\Wikipedia\WikipediaTokenizer.cs" />
+    <Compile Include="Common\Wikipedia\WikipediaTokenizerFactory.cs" />
+    <Compile Include="Common\Wikipedia\WikipediaTokenizerImpl.cs" />
+    <Compile Include="Common\WordlistLoader.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\core\Lucene.Net.csproj">
+      <Project>{5D4AD9BE-1FFB-41AB-9943-25737971BF57}</Project>
+      <Name>Lucene.Net</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Common\AR\ArabicStopWords.txt" />
+    <Content Include="Common\BG\BulgarianStopWords.txt" />
+    <Content Include="Common\CJK\CJKstopwords.txt" />
+    <Content Include="Common\Contrib.Analyzers.csproj" />
+    <Content Include="Common\Snowball\Ext\Package.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Common\Compound\Hyphenation\hyphenation.dtd" />
+    <None Include="Common\Lucene.Net.snk" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Common\HTMLCharStripFilterResources.resx" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

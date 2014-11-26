@@ -19,7 +19,7 @@ namespace Lucene.Net.Util.Packed
         {
             AbstractBlockPackedWriter.CheckBlockSize(blockSize);
             this.valueCount = valueCount;
-            blockShift = Number.NumberOfTrailingZeros(blockSize);
+            blockShift = blockSize.NumberOfTrailingZeros();
             blockMask = blockSize - 1;
             int numBlocks = (int)(valueCount / blockSize) + (valueCount % blockSize == 0 ? 0 : 1);
             if ((long)numBlocks * blockSize < valueCount)
@@ -32,7 +32,7 @@ namespace Lucene.Net.Util.Packed
             for (int i = 0; i < numBlocks; ++i)
             {
                 minValues[i] = input.ReadVLong();
-                averages[i] = Number.IntBitsToFloat(input.ReadInt());
+                averages[i] = input.ReadInt().IntBitsToFloat();
                 int bitsPerValue = input.ReadVInt();
                 if (bitsPerValue > 64)
                 {

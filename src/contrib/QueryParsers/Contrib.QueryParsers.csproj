@@ -31,6 +31,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Lucene.Net">
+      <HintPath>..\..\..\build\bin\core\Debug\NET40\Lucene.Net.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
@@ -251,10 +254,6 @@
     <Compile Include="Xml\QueryTemplateManager.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\core\Lucene.Net.csproj">
-      <Project>{5d4ad9be-1ffb-41ab-9943-25737971bf57}</Project>
-      <Name>Lucene.Net</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Queries\Contrib.Queries.csproj">
       <Project>{481cf6e3-52af-4621-9deb-022122079af6}</Project>
       <Name>Contrib.Queries</Name>

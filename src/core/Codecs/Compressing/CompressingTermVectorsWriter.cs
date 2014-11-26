@@ -21,6 +21,7 @@ namespace Lucene.Net.Codecs.Compressing
         internal const string CODEC_SFX_DAT = "Data";
 
         internal const int VERSION_START = 0;
+		internal const int VERSION_CHECKSUM = 1;
         internal const int VERSION_CURRENT = VERSION_START;
 
         internal const int BLOCK_SIZE = 64;
@@ -201,7 +202,7 @@ namespace Lucene.Net.Codecs.Compressing
             this.segment = si.name;
             this.segmentSuffix = segmentSuffix;
             this.compressionMode = compressionMode;
-            this.compressor = compressionMode.newCompressor();
+            this.compressor = compressionMode.NewCompressor();
             this.chunkSize = chunkSize;
 
             numDocs = 0;
@@ -621,7 +622,7 @@ namespace Lucene.Net.Codecs.Compressing
             // start offsets
             for (int i = 0; i < fieldNums.Length; ++i)
             {
-                vectorsStream.WriteInt(Number.FloatToIntBits(charsPerTerm[i]));
+                vectorsStream.WriteInt(charsPerTerm[i].FloatToIntBits());
             }
 
             writer.Reset(vectorsStream);
@@ -712,7 +713,8 @@ namespace Lucene.Net.Codecs.Compressing
             {
                 throw new SystemException("Wrote " + this.numDocs + " docs, finish called with numDocs=" + numDocs);
             }
-            indexWriter.Finish(numDocs);
+			indexWriter.Finish(numDocs, vectorsStream.GetFilePointer);
+			CodecUtil.WriteFooter(vectorsStream);
         }
 
         public override IComparer<Util.BytesRef> Comparator
@@ -862,6 +864,8 @@ namespace Lucene.Net.Codecs.Compressing
                     i = NextLiveDoc(i + 1, liveDocs, maxDoc);
                     }
                 }
+					vectorsStream.Seek(vectorsStream.Length - CodecUtil.FooterLength());
+					CodecUtil.CheckFooter(vectorsStream);
                 }
             }
             Finish(mergeState.fieldInfos, docCount);

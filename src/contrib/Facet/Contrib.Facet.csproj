@@ -30,6 +30,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Lucene.Net">
+      <HintPath>..\..\..\build\bin\core\Debug\NET40\Lucene.Net.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
@@ -175,12 +178,6 @@
     <Compile Include="Util\ResultSortUtils.cs" />
     <Compile Include="Util\ScoredDocIdsUtils.cs" />
     <Compile Include="Util\TaxonomyMergeUtils.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\core\Lucene.Net.csproj">
-      <Project>{5d4ad9be-1ffb-41ab-9943-25737971bf57}</Project>
-      <Name>Lucene.Net</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

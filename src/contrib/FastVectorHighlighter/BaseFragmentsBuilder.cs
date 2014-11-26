@@ -44,6 +44,8 @@ namespace Lucene.Net.Search.Vectorhighlight
 
         public static String[] COLORED_POST_TAGS = { "</b>" };
 
+        private char multiValuedSeparator = ' ';
+
         protected BaseFragmentsBuilder()
             : this(new String[] { "<b>" }, new String[] { "</b>" })
         {
@@ -92,18 +94,12 @@ namespace Lucene.Net.Search.Vectorhighlight
             return fragments.ToArray();
         }
 
-        [Obsolete]
-        protected virtual String[] GetFieldValues(IndexReader reader, int docId, String fieldName)
-        {
-            Document doc = reader.Document(docId, new MapFieldSelector(new String[] { fieldName }));
-            return doc.GetValues(fieldName); // according to Document class javadoc, this never returns null
-        }
-
         protected virtual Field[] GetFields(IndexReader reader, int docId, String fieldName)
         {
             // according to javadoc, doc.getFields(fieldName) cannot be used with lazy loaded field???
-            Document doc = reader.Document(docId, new MapFieldSelector(new String[] { fieldName }));
-            return doc.GetFields(fieldName); // according to Document class javadoc, this never returns null
+            var fields = new List<Field>();
+            reader.Document(docId, new StoredFieldVisitorImpl(fields,fieldName));
+            return fields.ToArray();
         }
 
         [Obsolete]
@@ -178,8 +174,7 @@ namespace Lucene.Net.Search.Vectorhighlight
             while (buffer.Length < endOffset && index[0] < values.Length)
             {
                 buffer.Append(values[index[0]].StringValue);
-                if (values[index[0]].IsTokenized && values[index[0]].StringValue.Length > 0 && index[0] + 1 < values.Length)
-                    buffer.Append(' ');
+                buffer.Append(this.multiValuedSeparator);
                 index[0]++;
             }
             int eo = buffer.Length < endOffset ? buffer.Length : endOffset;
@@ -196,6 +191,29 @@ namespace Lucene.Net.Search.Vectorhighlight
         {
             int n = num % postTags.Length;
             return postTags[n];
+        }
+    }
+
+    public class StoredFieldVisitorImpl : StoredFieldVisitor
+    {
+        private readonly List<Field> fields;
+        private readonly string fieldName;
+
+        public StoredFieldVisitorImpl(List<Field> fields, string fieldName)
+        {
+            this.fields = fields;
+            this.fieldName = fieldName;
+        }
+
+        public override void StringField(FieldInfo fieldInfo, string value)
+        {
+            var ft = new FieldType(TextField.TYPE_STORED) {StoreTermVectors = fieldInfo.HasVectors};
+            fields.Add(new Field(fieldInfo.name, value, ft));
+        }
+
+        public override Status NeedsField(FieldInfo fieldInfo)
+        {
+            return fieldInfo.name.Equals(fieldName) ? Status.YES : Status.NO;
         }
     }
 }

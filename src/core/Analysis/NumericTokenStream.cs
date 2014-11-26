@@ -315,9 +315,10 @@ namespace Lucene.Net.Analysis
 
         public override bool IncrementToken()
         {
-            if (valSize == 0)
-                throw new InvalidOperationException("call set???Value() before usage");
-
+			if (valSize == 0)
+			{
+				throw new InvalidOperationException("call set???Value() before usage");
+			}
             ClearAttributes();
             int shift = numericAtt.IncShift();
             typeAtt.Type = (shift == 0) ? TOKEN_TYPE_FULL_PREC : TOKEN_TYPE_LOWER_PREC;

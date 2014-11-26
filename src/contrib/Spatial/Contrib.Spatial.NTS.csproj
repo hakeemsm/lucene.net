@@ -115,6 +115,9 @@
     <AssemblyOriginatorKeyFile>Lucene.Net.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Lucene.Net">
+      <HintPath>..\..\..\build\bin\core\Debug\NET40\Lucene.Net.dll</HintPath>
+    </Reference>
     <Reference Include="Spatial4n.Core.NTS">
       <HintPath>..\..\..\lib\Spatial4n\$(Framework)\Spatial4n.Core.NTS.dll</HintPath>
     </Reference>
@@ -158,12 +161,6 @@
     <Compile Include="Util\ValueSourceFilter.cs" />
     <Compile Include="Vector\DistanceValueSource.cs" />
     <Compile Include="Vector\PointVectorStrategy.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\core\Lucene.Net.csproj">
-      <Project>{5D4AD9BE-1FFB-41AB-9943-25737971BF57}</Project>
-      <Name>Lucene.Net</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0">

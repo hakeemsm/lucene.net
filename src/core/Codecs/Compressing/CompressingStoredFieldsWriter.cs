@@ -29,7 +29,10 @@ namespace Lucene.Net.Codecs.Compressing
         internal const String CODEC_SFX_IDX = "Index";
         internal const String CODEC_SFX_DAT = "Data";
         internal const int VERSION_START = 0;
-        internal const int VERSION_CURRENT = VERSION_START;
+		internal const int VERSION_BIG_CHUNKS = 1;
+
+		internal const int VERSION_CHECKSUM = 2;
+		internal const int VERSION_CURRENT = VERSION_CHECKSUM;
 
         private readonly Directory directory;
         private readonly string segment;
@@ -53,7 +56,7 @@ namespace Lucene.Net.Codecs.Compressing
             this.segment = si.name;
             this.segmentSuffix = segmentSuffix;
             this.compressionMode = compressionMode;
-            this.compressor = compressionMode.newCompressor();
+			this.compressor = compressionMode.NewCompressor();
             this.chunkSize = chunkSize;
             this.docBase = 0;
             this.bufferedDocs = new GrowableByteArrayDataOutput(chunkSize);
@@ -74,7 +77,7 @@ namespace Lucene.Net.Codecs.Compressing
 
                 indexWriter = new CompressingStoredFieldsIndexWriter(indexStream);
                 indexStream = null;
-
+				fieldsStream.WriteVInt(chunkSize);
                 fieldsStream.WriteVInt(PackedInts.VERSION_CURRENT);
 
                 success = true;
@@ -197,8 +200,19 @@ namespace Lucene.Net.Codecs.Compressing
             WriteHeader(docBase, numBufferedDocs, numStoredFields, lengths);
 
             // compress stored fields to fieldsStream
-            compressor.Compress(bufferedDocs.Bytes, 0, bufferedDocs.Length, fieldsStream);
-
+			if (bufferedDocs.Length >= 2 * chunkSize)
+			{
+				// big chunk, slice it
+				for (int compressed = 0; compressed < bufferedDocs.Length; compressed += chunkSize)
+				{
+					compressor.Compress(bufferedDocs.Bytes, compressed, Math.Min(chunkSize, bufferedDocs
+						.Length - compressed), fieldsStream);
+				}
+			}
+			else
+			{
+				compressor.Compress(bufferedDocs.Bytes, 0, bufferedDocs.Length, fieldsStream);
+			}
             // reset
             docBase += numBufferedDocs;
             numBufferedDocs = 0;
@@ -254,7 +268,7 @@ namespace Lucene.Net.Codecs.Compressing
             } else if (number is long) {
               bufferedDocs.WriteLong((long)number);
             } else if (number is float) {
-              bufferedDocs.WriteInt(Number.FloatToIntBits((float)number));
+                bufferedDocs.WriteInt(((float)number).FloatToIntBits());
             } else if (number is double) {
               bufferedDocs.WriteLong(BitConverter.DoubleToInt64Bits((double)number));
             } else {
@@ -285,7 +299,8 @@ namespace Lucene.Net.Codecs.Compressing
             {
                 throw new SystemException("Wrote " + docBase + " docs, finish called with numDocs=" + numDocs);
             }
-            indexWriter.Finish(numDocs);
+			indexWriter.Finish(numDocs, fieldsStream.FilePointer);
+			CodecUtil.WriteFooter(fieldsStream);
         }
 
         public override int Merge(MergeState mergeState)
@@ -310,7 +325,8 @@ namespace Lucene.Net.Codecs.Compressing
                 int maxDoc = reader.MaxDoc;
                 IBits liveDocs = reader.LiveDocs;
 
-                if (matchingFieldsReader == null)
+				if (matchingFieldsReader == null || matchingFieldsReader.GetVersion() != VERSION_CURRENT
+					 || matchingFieldsReader.CompressionMode != compressionMode || matchingFieldsReader.ChunkSize != chunkSize)
                 {
                     // naive merge...
                     for (int i = NextLiveDoc(0, liveDocs, maxDoc); i < maxDoc; i = NextLiveDoc(i + 1, liveDocs, maxDoc))
@@ -343,11 +359,9 @@ namespace Lucene.Net.Codecs.Compressing
                                 startOffsets[i] = startOffsets[i - 1] + it.lengths[i - 1];
                             }
 
-                            if (compressionMode == matchingFieldsReader.CompressionMode // same compression mode
-                                && numBufferedDocs == 0 // starting a new chunk
-                                && startOffsets[it.chunkDocs - 1] < chunkSize // chunk is small enough
-                                && startOffsets[it.chunkDocs - 1] + it.lengths[it.chunkDocs - 1] >= chunkSize // chunk is large enough
-                                && NextDeletedDoc(it.docBase, liveDocs, it.docBase + it.chunkDocs) == it.docBase + it.chunkDocs)
+							if (numBufferedDocs == 0 && startOffsets[it.chunkDocs - 1] < chunkSize && startOffsets
+								[it.chunkDocs - 1] + it.lengths[it.chunkDocs - 1] >= chunkSize && NextDeletedDoc
+								(it.docBase, liveDocs, it.docBase + it.chunkDocs) == it.docBase + it.chunkDocs)
                             { // no deletion in the chunk
 
                                 // no need to decompress, just copy data
@@ -379,6 +393,7 @@ namespace Lucene.Net.Codecs.Compressing
                                 }
                             }
                         } while (docID < maxDoc);
+						it.CheckIntegrity();
                     }
                 }
             }

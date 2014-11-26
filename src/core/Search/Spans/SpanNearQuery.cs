@@ -206,7 +206,7 @@ namespace Lucene.Net.Search.Spans
             var result = clauses.GetHashCode();
 
             result ^= (result << 14) | Number.URShift(result, 19); // reversible
-            result += Number.FloatToIntBits(Boost);
+            result += Boost.FloatToIntBits();
             result += internalSlop;
             result ^= (int)(inOrder ? 0x99AFD3BD : 0);
             return result;

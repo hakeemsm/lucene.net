@@ -2059,7 +2059,7 @@ namespace Lucene.Net.Index
             if (indexPath == null)
             {
                 Console.Out.WriteLine("\nERROR: index path not specified");
-                Console.Out.WriteLine("\nUsage: java org.apache.lucene.index.CheckIndex pathToIndex [-fix] [-crossCheckTermVectors] [-segment X] [-segment Y] [-dir-impl X]\n" +
+                Console.Out.WriteLine("\nUsage: java Lucene.Net.index.CheckIndex pathToIndex [-fix] [-crossCheckTermVectors] [-segment X] [-segment Y] [-dir-impl X]\n" +
                                    "\n" +
                                    "  -fix: actually write a new segments_N file, removing any problematic segments\n" +
                                    "  -crossCheckTermVectors: verifies that term vectors match postings; THIS IS VERY SLOW!\n" +
@@ -2088,7 +2088,7 @@ namespace Lucene.Net.Index
             }
 
             if (!AssertsOn())
-                Console.Out.WriteLine("\nNOTE: testing will be more thorough if you run java with '-ea:org.apache.lucene...', so assertions are enabled");
+                Console.Out.WriteLine("\nNOTE: testing will be more thorough if you run java with '-ea:Lucene.Net...', so assertions are enabled");
 
             if (onlySegments.Count == 0)
                 onlySegments = null;

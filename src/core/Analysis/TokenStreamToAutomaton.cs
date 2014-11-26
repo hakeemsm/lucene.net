@@ -1,4 +1,5 @@
 ﻿using Lucene.Net.Analysis.Tokenattributes;
+using Lucene.Net.Support;
 using Lucene.Net.Util;
 using Lucene.Net.Util.Automaton;
 using System;
@@ -10,10 +11,32 @@ namespace Lucene.Net.Analysis
 {
     public class TokenStreamToAutomaton
     {
+		private bool preservePositionIncrements;
+
+		private bool unicodeArcs;
         public TokenStreamToAutomaton()
         {
+			// TODO: maybe also toFST?  then we can translate atts into FST outputs/weights
+			this.preservePositionIncrements = true;
         }
 
+		/// <summary>Whether to generate holes in the automaton for missing positions, <code>true</code> by default.
+		/// 	</summary>
+		/// <remarks>Whether to generate holes in the automaton for missing positions, <code>true</code> by default.
+		/// 	</remarks>
+		public virtual void SetPreservePositionIncrements(bool enablePositionIncrements)
+		{
+			this.preservePositionIncrements = enablePositionIncrements;
+		}
+
+		/// <summary>
+		/// Whether to make transition labels Unicode code points instead of UTF8 bytes,
+		/// <code>false</code> by default
+		/// </summary>
+		public virtual void SetUnicodeArcs(bool unicodeArcs)
+		{
+			this.unicodeArcs = unicodeArcs;
+		}
         private class Position : RollingBuffer.Resettable
         {
             // Any tokens that ended at our position arrive to this state:
@@ -125,6 +148,7 @@ namespace Lucene.Net.Analysis
 
                 termBytesAtt.FillBytesRef();
                 BytesRef term2 = ChangeToken(term);
+				int[] termUnicode = null;
                 Position endPosData = positions.Get(endPos);
                 if (endPosData.arriving == null)
                 {
@@ -132,10 +156,35 @@ namespace Lucene.Net.Analysis
                 }
 
                 State state = posData.leaving;
-                for (int byteIDX = 0; byteIDX < term2.length; byteIDX++)
+				int termLen;
+				if (unicodeArcs)
+				{
+					string utf16 = term2.Utf8ToString();
+                    
+					termUnicode = new int[utf16.Length];
+					termLen = termUnicode.Length;
+                    for (int cp, i = 0, j = 0; i < utf16.Length; i += Character.CharCount(cp))
+                    {
+                        termUnicode[j++] = cp = (int) utf16[i];
+                    }
+				}
+				else
+				{
+					termLen = term2.length;
+				}
+				for (int byteIDX = 0; byteIDX < termLen; byteIDX++)
                 {
-                    State nextState = byteIDX == term2.length - 1 ? endPosData.arriving : new State();
-                    state.AddTransition(new Transition(term2.bytes[term2.offset + byteIDX] & 0xff, nextState));
+					State nextState = byteIDX == termLen - 1 ? endPosData.arriving : new State();
+					int c;
+					if (unicodeArcs)
+					{
+						c = termUnicode[byteIDX];
+					}
+					else
+					{
+						c = term2.bytes[term2.offset + byteIDX] & unchecked((int)(0xff));
+					}
+					state.AddTransition(new Transition(c, nextState));
                     state = nextState;
                 }
 

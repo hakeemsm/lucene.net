@@ -58,7 +58,7 @@ namespace Lucene.Net.Codecs.Compressing
          * <p>
          * <code>formatName</code> is the name of the format. This name will be used
          * in the file formats to perform
-         * {@link CodecUtil#checkHeader(org.apache.lucene.store.DataInput, String, int, int) codec header checks}.
+         * {@link CodecUtil#checkHeader(Lucene.Net.store.DataInput, String, int, int) codec header checks}.
          * <p>
          * <code>segmentSuffix</code> is the segment suffix. This suffix is added to 
          * the result file name only if it's not the empty string.

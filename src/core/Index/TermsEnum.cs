@@ -34,23 +34,19 @@ namespace Lucene.Net.Index
             NOT_FOUND
         }
 
-        public virtual bool SeekExact(BytesRef text, bool useCache)
+		public virtual bool SeekExact(BytesRef text)
         {
-            return SeekCeil(text, useCache) == SeekStatus.FOUND;
+			return SeekCeil(text) == SeekStatus.FOUND;
         }
 
-        public abstract SeekStatus SeekCeil(BytesRef text, bool useCache);
+		public abstract SeekStatus SeekCeil(BytesRef text);
 
-        public SeekStatus SeekCeil(BytesRef text)
-        {
-            return SeekCeil(text, true);
-        }
 
         public abstract void SeekExact(long ord);
 
         public virtual void SeekExact(BytesRef term, TermState state)
         {
-            if (!SeekExact(term, true))
+			if (!SeekExact(term))
             {
                 throw new ArgumentException("term=" + term + " does not exist");
             }
@@ -93,7 +89,7 @@ namespace Lucene.Net.Index
 
         private sealed class AnonymousEmptyTermsEnum : TermsEnum
         {
-            public override SeekStatus SeekCeil(BytesRef text, bool useCache)
+			public override TermsEnum.SeekStatus SeekCeil(BytesRef term)
             {
                 return SeekStatus.END;
             }

@@ -13,6 +13,7 @@ namespace Lucene.Net.Codecs
         {
         }
 
-        public abstract void Write(Directory directory, string segmentName, FieldInfos infos, IOContext context);
+		public abstract void Write(Directory directory, string segmentName, string segmentSuffix
+			, FieldInfos infos, IOContext context);
     }
 }

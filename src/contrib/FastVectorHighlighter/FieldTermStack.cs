@@ -17,47 +17,34 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 using Lucene.Net.Analysis;
+using Lucene.Net.Analysis.Core;
 using Lucene.Net.Documents;
+using Lucene.Net.QueryParsers.Classic;
 using Lucene.Net.Search;
 using Lucene.Net.Index;
 using Lucene.Net.QueryParsers;
 using Lucene.Net.Store;
+using Lucene.Net.Util;
+using Version = Lucene.Net.Util.Version;
 
 
 namespace Lucene.Net.Search.Vectorhighlight
 {
-   
-   /// <summary>
-   /// <c>FieldTermStack</c> is a stack that keeps query terms in the specified field
-   /// of the document to be highlighted.
-   /// </summary>
+
+    /// <summary>
+    /// <c>FieldTermStack</c> is a stack that keeps query terms in the specified field
+    /// of the document to be highlighted.
+    /// </summary>
     public class FieldTermStack
     {
         private String fieldName;
         public LinkedList<TermInfo> termList = new LinkedList<TermInfo>();
 
-        public static void Main(String[] args)
-        {
-            Analyzer analyzer = new WhitespaceAnalyzer();
-            QueryParser parser = new QueryParser(Util.Version.LUCENE_CURRENT, "f", analyzer);
-            Query query = parser.Parse("a x:b");
-            FieldQuery fieldQuery = new FieldQuery(query, true, false);
 
-            Directory dir = new RAMDirectory();
-            IndexWriter writer = new IndexWriter(dir, analyzer, IndexWriter.MaxFieldLength.LIMITED);
-            Document doc = new Document();
-            doc.Add(new Field("f", "a a a b b c a b b c d e f", Field.Store.YES, Field.Index.ANALYZED, Field.TermVector.WITH_POSITIONS_OFFSETS));
-            doc.Add(new Field("f", "b a b a f", Field.Store.YES, Field.Index.ANALYZED, Field.TermVector.WITH_POSITIONS_OFFSETS));
-            writer.AddDocument(doc);
-            writer.Close();
-
-            IndexReader reader = IndexReader.Open(dir,true);
-            FieldTermStack ftl = new FieldTermStack(reader, 0, "f", fieldQuery);
-            reader.Close();
-        }
 
         /// <summary>
         /// a constructor. 
@@ -70,33 +57,86 @@ namespace Lucene.Net.Search.Vectorhighlight
         public FieldTermStack(IndexReader reader, int docId, String fieldName, FieldQuery fieldQuery)
         {
             this.fieldName = fieldName;
-            
+
             List<string> termSet = fieldQuery.getTermSet(fieldName);
 
             // just return to make null snippet if un-matched fieldName specified when fieldMatch == true
             if (termSet == null) return;
 
             //TermFreqVector tfv = reader.GetTermFreqVector(docId, fieldName);
-            VectorHighlightMapper tfv = new VectorHighlightMapper(termSet);    
-            reader.GetTermFreqVector(docId, fieldName, tfv);
-                
-            if (tfv.Size==0) return; // just return to make null snippets
             
-            string[] terms = tfv.GetTerms();
-            foreach (String term in terms)
+            Fields vectors = reader.GetTermVectors(docId);
+            Terms vector = vectors.Terms(fieldName);
+            if (vector == null)
             {
-                if (!StringUtils.AnyTermMatch(termSet, term)) continue;
-                int index = tfv.IndexOf(term);
-                TermVectorOffsetInfo[] tvois = tfv.GetOffsets(index);
-                if (tvois == null) return; // just return to make null snippets
-                int[] poss = tfv.GetTermPositions(index);
-                if (poss == null) return; // just return to make null snippets
-                for (int i = 0; i < tvois.Length; i++)
-                    termList.AddLast(new TermInfo(term, tvois[i].StartOffset, tvois[i].EndOffset, poss[i]));
+                return;
+            }
+
+            CharsRef spare = new CharsRef();
+            TermsEnum termsEnum = vector.Iterator(null);
+            DocsAndPositionsEnum dpEnum = null;
+            BytesRef text;
+            int numDocs = reader.MaxDoc;
+            while ((text = termsEnum.Next()) != null)
+            {
+                UnicodeUtil.UTF8toUTF16(text, spare);
+                string term = spare.ToString();
+                if (!termSet.Contains(term))
+                {
+                    continue;
+                }
+                dpEnum = termsEnum.DocsAndPositions(null, dpEnum);
+                if (dpEnum == null)
+                {
+                    // null snippet
+                    return;
+                }
+                dpEnum.NextDoc();
+                // For weight look here: http://lucene.apache.org/core/3_6_0/api/core/org/apache/lucene/search/DefaultSimilarity.html
+                float weight = (float)(Math.Log(numDocs / (double)(reader.DocFreq(new Term(fieldName
+                    , text)) + 1)) + 1.0);
+                int freq = dpEnum.Freq;
+                for (int i = 0; i < freq; i++)
+                {
+                    int pos = dpEnum.NextPosition();
+                    if (dpEnum.StartOffset < 0)
+                    {
+                        return;
+                    }
+                    // no offsets, null snippet
+                    termList.AddLast(new TermInfo(term, dpEnum.StartOffset, dpEnum.EndOffset
+                        , pos, weight));
+                }
             }
             // sort by position
-            //Collections.sort(termList);
             Sort(termList);
+            // now look for dups at the same position, linking them together
+            int currentPos = -1;
+            TermInfo previous = null;
+            TermInfo first = null;
+            foreach (var termInfo in termList)
+            {
+                if (termInfo.Position == currentPos)
+                {
+                    previous.Next = termInfo;
+                    previous = termInfo;
+                    termList.Remove(termInfo);
+                }
+                else
+                {
+                    if (previous != null)
+                    {
+                        previous.Next = first;
+                    }
+                    previous = first = termInfo;
+                    currentPos = termInfo.Position;
+                }
+            }
+            
+            if (previous != null)
+            {
+                previous.Next = first;
+            }
         }
 #else   //Original Port
         public FieldTermStack(IndexReader reader, int docId, String fieldName, FieldQuery fieldQuery)
@@ -147,21 +187,21 @@ namespace Lucene.Net.Search.Vectorhighlight
             foreach (TermInfo t in arr) linkList.AddLast(t);
         }
 
-        int PosComparer(TermInfo t1,TermInfo t2)
+        int PosComparer(TermInfo t1, TermInfo t2)
         {
             return t1.Position - t2.Position;
         }
 
-       /// <summary>
-       /// 
-       /// </summary>
-       /// <value> field name </value>
-       public string FieldName
-       {
-           get { return fieldName; }
-       }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <value> field name </value>
+        public string FieldName
+        {
+            get { return fieldName; }
+        }
 
-       /// <summary>
+        /// <summary>
         /// 
         /// </summary>
         /// <returns>the top TermInfo object of the stack</returns>
@@ -169,11 +209,11 @@ namespace Lucene.Net.Search.Vectorhighlight
         {
             if (termList.Count == 0) return null;
 
-            LinkedListNode<TermInfo> top =  termList.First;
+            LinkedListNode<TermInfo> top = termList.First;
             termList.RemoveFirst();
             return top.Value;
         }
-                
+
         /// <summary>
         /// 
         /// </summary>
@@ -200,13 +240,17 @@ namespace Lucene.Net.Search.Vectorhighlight
             int startOffset;
             int endOffset;
             int position;
+            private readonly float weight;
+            private TermInfo next;
 
-            public TermInfo(String text, int startOffset, int endOffset, int position)
+            public TermInfo(String text, int startOffset, int endOffset, int position, float weight)
             {
                 this.text = text;
                 this.startOffset = startOffset;
                 this.endOffset = endOffset;
                 this.position = position;
+                this.weight = weight;
+                this.next = this;
             }
 
             public string Text
@@ -227,6 +271,17 @@ namespace Lucene.Net.Search.Vectorhighlight
             public int Position
             {
                 get { return position; }
+            }
+
+            public float Weight
+            {
+                get { return weight; }
+            }
+
+            public TermInfo Next
+            {
+                get { return next; }
+                set { next = value; }
             }
 
             public override string ToString()

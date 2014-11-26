@@ -39,6 +39,7 @@ namespace Lucene.Net.Index
 
         private IDictionary<string, string> attributes;
 
+		private long dvGen = -1;
         public enum IndexOptions
         {
             DOCS_ONLY,
@@ -52,7 +53,8 @@ namespace Lucene.Net.Index
             NUMERIC,
             BINARY,
             SORTED,
-            SORTED_SET
+            SORTED_SET,
+            UNKNOWN
         }
 
         public FieldInfo(String name, bool indexed, int number, bool storeTermVector,
@@ -178,6 +180,15 @@ namespace Lucene.Net.Index
             get { return docValueType != null; }
         }
 
+		public DocValuesType GetDocValuesType()
+		{
+			return docValueType.Value;
+		}
+		public long DocValuesGen
+		{
+            get { return dvGen; }
+		    set { this.dvGen = value; }
+		}
         public DocValuesType? NormType
         {
             get { return normType; }

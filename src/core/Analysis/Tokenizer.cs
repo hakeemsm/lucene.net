@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+using System;
+using System.IO;
 using AttributeSource = Lucene.Net.Util.AttributeSource;
 
 namespace Lucene.Net.Analysis
@@ -32,19 +34,31 @@ namespace Lucene.Net.Analysis
         /// <summary>The text source for this Tokenizer. </summary>
         protected System.IO.TextReader input;
 
+
+		/// <summary>Pending reader: not actually assigned to input until reset()</summary>
+		private TextReader inputPending = ILLEGAL_STATE_READER;
+
         private bool isDisposed;
 
         /// <summary>Construct a token stream processing the given input. </summary>
         protected Tokenizer(System.IO.TextReader input)
         {
-            this.input = input;
+			if (input == null)
+			{
+				throw new ArgumentNullException("input must not be null");
+			}
+			this.inputPending = input;
         }
 
         /// <summary>Construct a token stream processing the given input using the given AttributeFactory. </summary>
         protected internal Tokenizer(AttributeFactory factory, System.IO.TextReader input)
             : base(factory)
         {
-            this.input = input;
+			if (input == null)
+			{
+				throw new ArgumentNullException("input must not be null");
+			}
+			this.inputPending = input;
         }
         
         protected override void Dispose(bool disposing)
@@ -61,7 +75,7 @@ namespace Lucene.Net.Analysis
 
             // LUCENE-2387: don't hold onto Reader after close, so
             // GC can reclaim
-            input = null;
+            input = inputPending = ILLEGAL_STATE_READER;
             isDisposed = true;
         }
 
@@ -79,21 +93,60 @@ namespace Lucene.Net.Analysis
             return (input is CharFilter) ? ((CharFilter) input).CorrectOffset(currentOff) : currentOff;
         }
 
-        public System.IO.TextReader Reader
+        public TextReader Reader
         {
             get { return input; }
-            set 
+            set
             {
-                //assert input != null: "input must not be null";
-                input = value; 
-                //assert setReaderTestPoint();
+                if (value == null)
+                {
+                    throw new ArgumentNullException("input must not be null");
+                }
+                if (this.input != ILLEGAL_STATE_READER)
+                {
+                    throw new InvalidOperationException("TokenStream contract violation: close() call missing");
+                }
+                this.inputPending = input;
+                
             }
         }
+    
 
-        // only used by assert, for testing
-        private bool SetReaderTestPoint()
-        {
-            return true;
-        }
-    }
+		//HM:revisit 
+		//assert setReaderTestPoint();
+		/// <exception cref="System.IO.IOException"></exception>
+		public override void Reset()
+		{
+			base.Reset();
+			input = inputPending;
+			inputPending = ILLEGAL_STATE_READER;
+		}
+
+		// only used by 
+		//HM:revisit 
+		//assert, for testing
+		internal virtual bool SetReaderTestPoint()
+		{
+			return true;
+		}
+
+		private sealed class IllegalStateReader : TextReader
+		{
+			
+
+			public override int Read(char[] cbuf, int off, int len)
+			{
+				throw new InvalidOperationException("TokenStream contract violation: reset()/close() call missing, "
+					 + "reset() called multiple times, or subclass does not call super.reset(). " + 
+					"Please see Javadocs of TokenStream class for more information about the correct consuming workflow."
+					);
+			}
+
+			public override void Close()
+			{
+			}
+		}
+
+		private static readonly TextReader ILLEGAL_STATE_READER = new IllegalStateReader();
+	}
 }

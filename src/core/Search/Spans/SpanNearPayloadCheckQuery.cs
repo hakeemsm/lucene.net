@@ -87,7 +87,7 @@ namespace Lucene.Net.Search.Spans
             h ^= (h << 8) | Support.Number.URShift(h, 25); // reversible
             //TODO: is this right?
             h ^= payloadToMatch.GetHashCode();
-            h ^= Support.Number.FloatToIntBits(Boost);
+            h ^= Boost.FloatToIntBits();
             return h;
         }
     }

@@ -16,29 +16,27 @@
  */
 
 using System;
-using System.Collections.Generic;
-using Lucene.Net.Documents;
+using System.IO;
 using Lucene.Net.Store;
 using Lucene.Net.Support;
 using Lucene.Net.Util;
 
 namespace Lucene.Net.Analysis
 {
-	/// <summary>
+    /// <summary>
     /// An Analyzer builds TokenStreams, which analyze text.  It thus represents a
-	/// policy for extracting index terms from text.
-	/// <p/>
-	/// Typical implementations first build a Tokenizer, which breaks the stream of
-	/// characters from the Reader into raw Tokens.  One or more TokenFilters may
-	/// then be applied to the output of the Tokenizer.
-	/// </summary>
-	public abstract class Analyzer : IDisposable
-	{
+    /// policy for extracting index terms from text.
+    /// <p/>
+    /// Typical implementations first build a Tokenizer, which breaks the stream of
+    /// characters from the Reader into raw Tokens.  One or more TokenFilters may
+    /// then be applied to the output of the Tokenizer.
+    /// </summary>
+    public abstract class Analyzer : IDisposable
+    {
         private readonly ReuseStrategy reuseStrategy;
         private bool isDisposed;
 
-        public Analyzer()
-            : this(new GlobalReuseStrategy())
+        public Analyzer(): this(new GlobalReuseStrategy())
         {
         }
 
@@ -47,13 +45,13 @@ namespace Lucene.Net.Analysis
             this.reuseStrategy = reuseStrategy;
         }
 
-        public abstract TokenStreamComponents CreateComponents(String fieldName, System.IO.TextReader reader);
+        public abstract TokenStreamComponents CreateComponents(string fieldName, TextReader reader);
 
-		/// <summary>Creates a TokenStream which tokenizes all the text in the provided
-		/// Reader.  Must be able to handle null field name for
-		/// backward compatibility.
-		/// </summary>
-        public TokenStream TokenStream(String fieldName, System.IO.TextReader reader)
+        /// <summary>Creates a TokenStream which tokenizes all the text in the provided
+        /// Reader.  Must be able to handle null field name for
+        /// backward compatibility.
+        /// </summary>
+        public TokenStream TokenStream(String fieldName, TextReader reader)
         {
             TokenStreamComponents components = reuseStrategy.GetReusableComponents(fieldName);
             System.IO.TextReader r = InitReader(fieldName, reader);
@@ -71,59 +69,77 @@ namespace Lucene.Net.Analysis
             return components.TokenStream;
         }
 
-        public virtual System.IO.TextReader InitReader(String fieldName, System.IO.TextReader reader)
+        public TokenStream TokenStream(string fieldName, string text)
+        {
+            TokenStreamComponents components = reuseStrategy.GetReusableComponents(fieldName);
+            ReusableStringReader strReader = (components == null || components.reusableStringReader
+                 == null) ? new ReusableStringReader() : components.reusableStringReader;
+            strReader.SetValue(text);
+            TextReader r = InitReader(fieldName, strReader);
+            if (components == null)
+            {
+                components = CreateComponents(fieldName, r);
+                reuseStrategy.SetReusableComponents(fieldName, components);
+            }
+            else
+            {
+                components.SetReader(r);
+            }
+            components.reusableStringReader = strReader;
+            return components.TokenStream;
+        }
+        public virtual TextReader InitReader(String fieldName, System.IO.TextReader reader)
         {
             return reader;
         }
-		
-		/// <summary>Creates a TokenStream that is allowed to be re-used
-		/// from the previous time that the same thread called
-		/// this method.  Callers that do not need to use more
-		/// than one TokenStream at the same time from this
-		/// analyzer should use this method for better
-		/// performance.
-		/// </summary>
-		public virtual TokenStream ReusableTokenStream(String fieldName, System.IO.TextReader reader)
-		{
-			return TokenStream(fieldName, reader);
-		}
-		
-		/// <summary> Invoked before indexing a Fieldable instance if
-		/// terms have already been added to that field.  This allows custom
-		/// analyzers to place an automatic position increment gap between
-		/// Fieldable instances using the same field name.  The default value
-		/// position increment gap is 0.  With a 0 position increment gap and
-		/// the typical default token position increment of 1, all terms in a field,
-		/// including across Fieldable instances, are in successive positions, allowing
-		/// exact PhraseQuery matches, for instance, across Fieldable instance boundaries.
-		/// 
-		/// </summary>
-		/// <param name="fieldName">Fieldable name being indexed.
-		/// </param>
-		/// <returns> position increment gap, added to the next token emitted from <see cref="TokenStream(String,System.IO.TextReader)" />
-		/// </returns>
-		public virtual int GetPositionIncrementGap(String fieldName)
-		{
-			return 0;
-		}
-		
-		/// <summary> Just like <see cref="GetPositionIncrementGap" />, except for
-		/// Token offsets instead.  By default this returns 1 for
-		/// tokenized fields and, as if the fields were joined
-		/// with an extra space character, and 0 for un-tokenized
-		/// fields.  This method is only called if the field
-		/// produced at least one token for indexing.
-		/// 
-		/// </summary>
-		/// <param name="fieldName">the field just indexed
-		/// </param>
-		/// <returns> offset gap, added to the next token emitted from <see cref="TokenStream(String,System.IO.TextReader)" />
-		/// </returns>
-		public virtual int GetOffsetGap(string fieldName)
-		{
+
+
+        /// <summary> Invoked before indexing a Fieldable instance if
+        /// terms have already been added to that field.  This allows custom
+        /// analyzers to place an automatic position increment gap between
+        /// Fieldable instances using the same field name.  The default value
+        /// position increment gap is 0.  With a 0 position increment gap and
+        /// the typical default token position increment of 1, all terms in a field,
+        /// including across Fieldable instances, are in successive positions, allowing
+        /// exact PhraseQuery matches, for instance, across Fieldable instance boundaries.
+        /// 
+        /// </summary>
+        /// <param name="fieldName">Fieldable name being indexed.
+        /// </param>
+        /// <returns> position increment gap, added to the next token emitted from <see cref="TokenStream(String,System.IO.TextReader)" />
+        /// </returns>
+        public virtual int GetPositionIncrementGap(String fieldName)
+        {
+            return 0;
+        }
+
+        /// <summary> Just like <see cref="GetPositionIncrementGap" />, except for
+        /// Token offsets instead.  By default this returns 1 for
+        /// tokenized fields and, as if the fields were joined
+        /// with an extra space character, and 0 for un-tokenized
+        /// fields.  This method is only called if the field
+        /// produced at least one token for indexing.
+        /// 
+        /// </summary>
+        /// <param name="fieldName">the field just indexed
+        /// </param>
+        /// <returns> offset gap, added to the next token emitted from <see cref="TokenStream(String,System.IO.TextReader)" />
+        /// </returns>
+        public virtual int GetOffsetGap(string fieldName)
+        {
             return 1;
-		}
-        
+        }
+
+        /// <summary>
+        /// Returns the used
+        /// <see cref="ReuseStrategy">ReuseStrategy</see>
+        /// .
+        /// </summary>
+        public ReuseStrategy GetReuseStrategy()
+        {
+            return reuseStrategy;
+        }
+
         public virtual void Dispose()
         {
             Dispose(true);
@@ -145,6 +161,8 @@ namespace Lucene.Net.Analysis
             protected readonly Tokenizer source;
             protected readonly TokenStream sink;
 
+            [System.NonSerialized]
+            internal ReusableStringReader reusableStringReader;
             public TokenStreamComponents(Tokenizer source, TokenStream result)
             {
                 this.source = source;
@@ -197,7 +215,7 @@ namespace Lucene.Net.Analysis
                 {
                     if (storedValue == null)
                         throw new AlreadyClosedException("this Analyzer is disposed");
-                    
+
                     return storedValue.Get();
                 }
                 set
@@ -219,6 +237,8 @@ namespace Lucene.Net.Analysis
             }
         }
 
+        public static readonly Analyzer.ReuseStrategy GLOBAL_REUSE_STRATEGY = new GlobalReuseStrategy();
+        [Obsolete(@"This implementation class will be hidden in Lucene 5.0. Use Analyzer.GLOBAL_REUSE_STRATEGY instead!")]
         public sealed class GlobalReuseStrategy : ReuseStrategy
         {
             public GlobalReuseStrategy()
@@ -236,8 +256,25 @@ namespace Lucene.Net.Analysis
             }
         }
 
+        /// <summary>
+        /// A predefined
+        /// <see cref="ReuseStrategy">ReuseStrategy</see>
+        /// that reuses components per-field by
+        /// maintaining a Map of TokenStreamComponent per field name.
+        /// </summary>
+        public static readonly Analyzer.ReuseStrategy PER_FIELD_REUSE_STRATEGY = new Analyzer.PerFieldReuseStrategy();
+
+        /// <summary>
+        /// Implementation of
+        /// <see cref="ReuseStrategy">ReuseStrategy</see>
+        /// that reuses components per-field by
+        /// maintaining a Map of TokenStreamComponent per field name.
+        /// </summary>
+        [Obsolete(@"This implementation class will be hidden in Lucene 5.0. Use Analyzer.PER_FIELD_REUSE_STRATEGY instead!")]
         public sealed class PerFieldReuseStrategy : ReuseStrategy
         {
+            
+            [Obsolete(@"Don't create instances of this class, use Analyzer.PER_FIELD_REUSE_STRATEGY")]
             public PerFieldReuseStrategy()
             {
             }
@@ -262,5 +299,5 @@ namespace Lucene.Net.Analysis
                 componentsPerField[fieldName] = components;
             }
         }
-	}
+    }
 }

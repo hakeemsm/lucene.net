@@ -151,7 +151,7 @@ namespace Lucene.Net.Util
 
             if (word != 0)
             {
-                return (i << 6) + subIndex + Number.NumberOfTrailingZeros(word);
+                return (i << 6) + subIndex + word.NumberOfTrailingZeros();
             }
 
             while (++i < wordLength)
@@ -159,7 +159,7 @@ namespace Lucene.Net.Util
                 word = bits[i];
                 if (word != 0)
                 {
-                    return (i << 6) + Number.NumberOfTrailingZeros(word);
+                    return (i << 6) + word.NumberOfTrailingZeros();
                 }
             }
 

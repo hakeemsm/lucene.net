@@ -260,7 +260,7 @@ namespace Lucene.Net.Search.Spans
 			h = (h << 1) | (Number.URShift(h, 31)); // rotate left
 			h ^= exclude.GetHashCode();
 			h = (h << 1) | (Number.URShift(h, 31)); // rotate left
-		    h ^= Number.FloatToIntBits(Boost);
+		    h ^= Boost.FloatToIntBits();
 			return h;
 		}
 	}

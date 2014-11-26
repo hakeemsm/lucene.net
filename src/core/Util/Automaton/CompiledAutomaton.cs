@@ -59,7 +59,7 @@ namespace Lucene.Net.Util.Automaton
                     this.finite = null;
                     return;
                 }
-                else if (BasicOperations.IsTotal(automaton))
+                if (BasicOperations.IsTotal(automaton))
                 {
                     // matches all possible strings
                     type = AUTOMATON_TYPE.ALL;
@@ -70,52 +70,49 @@ namespace Lucene.Net.Util.Automaton
                     this.finite = null;
                     return;
                 }
-                else
+                String commonPrefix;
+                String singleton;
+                if (automaton.Singleton == null)
                 {
-                    String commonPrefix;
-                    String singleton;
-                    if (automaton.Singleton == null)
+                    commonPrefix = SpecialOperations.GetCommonPrefix(automaton);
+                    if (commonPrefix.Length > 0 && BasicOperations.SameLanguage(automaton, BasicAutomata.MakeString(commonPrefix)))
                     {
-                        commonPrefix = SpecialOperations.GetCommonPrefix(automaton);
-                        if (commonPrefix.Length > 0 && BasicOperations.SameLanguage(automaton, BasicAutomata.MakeString(commonPrefix)))
-                        {
-                            singleton = commonPrefix;
-                        }
-                        else
-                        {
-                            singleton = null;
-                        }
+                        singleton = commonPrefix;
                     }
                     else
                     {
-                        commonPrefix = null;
-                        singleton = automaton.Singleton;
+                        singleton = null;
                     }
+                }
+                else
+                {
+                    commonPrefix = null;
+                    singleton = automaton.Singleton;
+                }
 
-                    if (singleton != null)
-                    {
-                        // matches a fixed string in singleton or expanded
-                        // representation
-                        type = AUTOMATON_TYPE.SINGLE;
-                        term = new BytesRef(singleton);
-                        commonSuffixRef = null;
-                        runAutomaton = null;
-                        sortedTransitions = null;
-                        this.finite = null;
-                        return;
-                    }
-                    else if (BasicOperations.SameLanguage(automaton, BasicOperations.Concatenate(
-                            BasicAutomata.MakeString(commonPrefix), BasicAutomata.MakeAnyString())))
-                    {
-                        // matches a constant prefix
-                        type = AUTOMATON_TYPE.PREFIX;
-                        term = new BytesRef(commonPrefix);
-                        commonSuffixRef = null;
-                        runAutomaton = null;
-                        sortedTransitions = null;
-                        this.finite = null;
-                        return;
-                    }
+                if (singleton != null)
+                {
+                    // matches a fixed string in singleton or expanded
+                    // representation
+                    type = AUTOMATON_TYPE.SINGLE;
+                    term = new BytesRef(singleton);
+                    commonSuffixRef = null;
+                    runAutomaton = null;
+                    sortedTransitions = null;
+                    this.finite = null;
+                    return;
+                }
+                else if (BasicOperations.SameLanguage(automaton, BasicOperations.Concatenate(
+                    BasicAutomata.MakeString(commonPrefix), BasicAutomata.MakeAnyString())))
+                {
+                    // matches a constant prefix
+                    type = AUTOMATON_TYPE.PREFIX;
+                    term = new BytesRef(commonPrefix);
+                    commonSuffixRef = null;
+                    runAutomaton = null;
+                    sortedTransitions = null;
+                    this.finite = null;
+                    return;
                 }
             }
 
@@ -244,10 +241,7 @@ namespace Lucene.Net.Util.Automaton
                     output.length = 0;
                     return output;
                 }
-                else
-                {
-                    return null;
-                }
+                return null;
             }
 
             List<int> stack = new List<int>();
@@ -273,10 +267,7 @@ namespace Lucene.Net.Util.Automaton
                         //if (DEBUG) System.out.println("  input is accepted; return term=" + output.utf8ToString());
                         return output;
                     }
-                    else
-                    {
-                        nextState = -1;
-                    }
+                    nextState = -1;
                 }
 
                 if (nextState == -1)
@@ -294,7 +285,7 @@ namespace Lucene.Net.Util.Automaton
                             //if (DEBUG) System.out.println("  return " + output.utf8ToString());
                             return output;
                         }
-                        else if (label - 1 < transitions[0].min)
+                        if (label - 1 < transitions[0].min)
                         {
 
                             if (runAutomaton.IsAccept(state))
@@ -309,15 +300,11 @@ namespace Lucene.Net.Util.Automaton
                                 //if (DEBUG) System.out.println("  pop ord=" + idx + " return null");
                                 return null;
                             }
-                            else
-                            {
-                                state = stack[stack.Count - 1];
-                                stack.Remove(stack.Count - 1);
-                                idx--;
-                                //if (DEBUG) System.out.println("  pop ord=" + (idx+1) + " label=" + (char) label + " first trans.min=" + (char) transitions[0].min);
-                                label = input.bytes[input.offset + idx] & 0xff;
-                            }
-
+                            state = stack[stack.Count - 1];
+                            stack.Remove(stack.Count - 1);
+                            idx--;
+                            //if (DEBUG) System.out.println("  pop ord=" + (idx+1) + " label=" + (char) label + " first trans.min=" + (char) transitions[0].min);
+                            label = input.bytes[input.offset + idx] & 0xff;
                         }
                         else
                         {
@@ -331,18 +318,92 @@ namespace Lucene.Net.Util.Automaton
                     return AddTail(state, output, idx, label);
 
                 }
-                else
+                if (idx >= output.bytes.Length)
                 {
-                    if (idx >= output.bytes.Length)
-                    {
-                        output.Grow(1 + idx);
-                    }
-                    output.bytes[idx] = (sbyte)label;
-                    stack.Add(state);
-                    state = nextState;
-                    idx++;
+                    output.Grow(1 + idx);
                 }
+                output.bytes[idx] = (sbyte)label;
+                stack.Add(state);
+                state = nextState;
+                idx++;
             }
         }
-    }
+		public virtual string ToDot()
+		{
+			StringBuilder b = new StringBuilder("digraph CompiledAutomaton {\n");
+			b.Append("  rankdir = LR;\n");
+			int initial = runAutomaton.InitialState;
+			for (int i = 0; i < sortedTransitions.Length; i++)
+			{
+				b.Append("  ").Append(i);
+				if (runAutomaton.IsAccept(i))
+				{
+					b.Append(" [shape=doublecircle,label=\"\"];\n");
+				}
+				else
+				{
+					b.Append(" [shape=circle,label=\"\"];\n");
+				}
+				if (i == initial)
+				{
+					b.Append("  initial [shape=plaintext,label=\"\"];\n");
+					b.Append("  initial -> ").Append(i).Append("\n");
+				}
+				for (int j = 0; j < sortedTransitions[i].Length; j++)
+				{
+					b.Append("  ").Append(i);
+					sortedTransitions[i][j].AppendDot(b);
+				}
+			}
+			return b.Append("}\n").ToString();
+		}
+
+		public override int GetHashCode()
+		{
+			int prime = 31;
+			int result = 1;
+			result = prime * result + ((runAutomaton == null) ? 0 : runAutomaton.GetHashCode(
+				));
+			result = prime * result + ((term == null) ? 0 : term.GetHashCode());
+			result = prime * result + ((type == null) ? 0 : type.GetHashCode());
+			return result;
+		}
+
+		public override bool Equals(object obj)
+		{
+			if (this == obj)
+			{
+				return true;
+			}
+			if (obj == null)
+			{
+				return false;
+			}
+			if (GetType() != obj.GetType())
+			{
+				return false;
+			}
+			CompiledAutomaton other = (CompiledAutomaton)obj;
+			if (type != other.type)
+			{
+				return false;
+			}
+			if (type == AUTOMATON_TYPE.SINGLE || type == AUTOMATON_TYPE.PREFIX)
+			{
+				if (!term.Equals(other.term))
+				{
+					return false;
+				}
+			}
+			else
+			{
+			    if (type != AUTOMATON_TYPE.NORMAL){ return true;}
+			    if (!runAutomaton.Equals(other.runAutomaton))
+			    {
+			        return false;
+			    }
+			}
+		    return true;
+		}
+	}
 }

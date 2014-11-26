@@ -128,6 +128,60 @@
   <PropertyGroup>
     <AssemblyOriginatorKeyFile>Lucene.Net.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;NET40</DefineConstants>
+    <BaseAddress>285212672</BaseAddress>
+    <FileAlignment>4096</FileAlignment>
+    <NoWarn>618</NoWarn>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug35|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Debug35\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;NET35</DefineConstants>
+    <BaseAddress>285212672</BaseAddress>
+    <FileAlignment>4096</FileAlignment>
+    <NoWarn>618</NoWarn>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>blah.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Release\</OutputPath>
+    <DefineConstants>TRACE;NET40</DefineConstants>
+    <BaseAddress>285212672</BaseAddress>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DocumentationFile>..\..\build\bin\core\Release\NET40\Lucene.Net.XML</DocumentationFile>
+    <Optimize>true</Optimize>
+    <FileAlignment>4096</FileAlignment>
+    <NoWarn>618,1591</NoWarn>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release35|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Release35\</OutputPath>
+    <DefineConstants>TRACE;NET35</DefineConstants>
+    <BaseAddress>285212672</BaseAddress>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DocumentationFile>..\..\build\bin\core\Release\NET35\Lucene.Net.XML</DocumentationFile>
+    <Optimize>true</Optimize>
+    <FileAlignment>4096</FileAlignment>
+    <NoWarn>618,1591</NoWarn>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System">
       <Name>System</Name>
@@ -146,6 +200,7 @@
     <Compile Include="Analysis\CachingTokenFilter.cs" />
     <Compile Include="Analysis\CharFilter.cs" />
     <Compile Include="Analysis\NumericTokenStream.cs" />
+    <Compile Include="Analysis\ReusableStringReader.cs" />
     <Compile Include="Analysis\Token.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -263,9 +318,20 @@
     <Compile Include="Codecs\Lucene42\Lucene42DocValuesProducer.cs" />
     <Compile Include="Codecs\Lucene42\Lucene42FieldInfosFormat.cs" />
     <Compile Include="Codecs\Lucene42\Lucene42FieldInfosReader.cs" />
-    <Compile Include="Codecs\Lucene42\Lucene42FieldInfosWriter.cs" />
+    <Compile Include="Codecs\Lucene42\Lucene42NormsConsumer.cs" />
     <Compile Include="Codecs\Lucene42\Lucene42NormsFormat.cs" />
     <Compile Include="Codecs\Lucene42\Lucene42TermVectorsFormat.cs" />
+    <Compile Include="Codecs\Lucene45\Lucene45Codec.cs" />
+    <Compile Include="Codecs\Lucene45\Lucene45DocValuesConsumer.cs" />
+    <Compile Include="Codecs\Lucene45\Lucene45DocValuesFormat.cs" />
+    <Compile Include="Codecs\Lucene45\Lucene45DocValuesProducer.cs" />
+    <Compile Include="Codecs\Lucene46\Lucene46Codec.cs" />
+    <Compile Include="Codecs\Lucene46\Lucene46FieldInfosFormat.cs" />
+    <Compile Include="Codecs\Lucene46\Lucene46FieldInfosReader.cs" />
+    <Compile Include="Codecs\Lucene46\Lucene46FieldInfosWriter.cs" />
+    <Compile Include="Codecs\Lucene46\Lucene46SegmentInfoFormat.cs" />
+    <Compile Include="Codecs\Lucene46\Lucene46SegmentInfoReader.cs" />
+    <Compile Include="Codecs\Lucene46\Lucene46SegmentInfoWriter.cs" />
     <Compile Include="Codecs\MappingMultiDocsAndPositionsEnum.cs" />
     <Compile Include="Codecs\MappingMultiDocsEnum.cs" />
     <Compile Include="Codecs\MultiLevelSkipListReader.cs" />
@@ -331,10 +397,13 @@
     <Compile Include="Index\BitsSlice.cs" />
     <Compile Include="Index\BufferedDeletes.cs" />
     <Compile Include="Index\BufferedDeletesStream.cs" />
+    <Compile Include="Index\BufferedUpdates.cs" />
+    <Compile Include="Index\BufferedUpdatesStream.cs" />
     <Compile Include="Index\ByteSliceReader.cs" />
     <Compile Include="Index\ByteSliceWriter.cs" />
     <Compile Include="Index\CheckIndex.cs" />
     <Compile Include="Index\CoalescedDeletes.cs" />
+    <Compile Include="Index\CoalescedUpdates.cs" />
     <Compile Include="Index\CompositeReader.cs" />
     <Compile Include="Index\CompositeReaderContext.cs" />
     <Compile Include="Index\ConcurrentMergeScheduler.cs" />
@@ -357,7 +426,10 @@
     <Compile Include="Index\DocumentsWriterPerThread.cs" />
     <Compile Include="Index\DocumentsWriterPerThreadPool.cs" />
     <Compile Include="Index\DocumentsWriterStallControl.cs" />
+    <Compile Include="Index\DocValues.cs" />
+    <Compile Include="Index\DocValuesFieldUpdates.cs" />
     <Compile Include="Index\DocValuesProcessor.cs" />
+    <Compile Include="Index\DocValuesUpdate.cs" />
     <Compile Include="Index\DocValuesWriter.cs" />
     <Compile Include="Index\FieldInfo.cs">
       <SubType>Code</SubType>
@@ -375,6 +447,7 @@
     <Compile Include="Index\FreqProxTermsWriter.cs" />
     <Compile Include="Index\FreqProxTermsWriterPerField.cs" />
     <Compile Include="Index\FrozenBufferedDeletes.cs" />
+    <Compile Include="Index\FrozenBufferedUpdates.cs" />
     <Compile Include="Index\IIndexableField.cs" />
     <Compile Include="Index\IIndexableFieldType.cs" />
     <Compile Include="Index\IndexCommit.cs" />
@@ -407,10 +480,10 @@
     <Compile Include="Index\LogByteSizeMergePolicy.cs" />
     <Compile Include="Index\LogDocMergePolicy.cs" />
     <Compile Include="Index\LogMergePolicy.cs" />
-    <Compile Include="Index\MergedIterator.cs" />
     <Compile Include="Index\MergePolicy.cs" />
     <Compile Include="Index\MergeScheduler.cs" />
     <Compile Include="Index\MergeState.cs" />
+    <Compile Include="Index\MergeTrigger.cs" />
     <Compile Include="Index\MultiBits.cs" />
     <Compile Include="Index\MultiDocsAndPositionsEnum.cs" />
     <Compile Include="Index\MultiDocsEnum.cs" />
@@ -427,6 +500,7 @@
     <Compile Include="Index\NormsConsumer.cs" />
     <Compile Include="Index\NormsConsumerPerField.cs" />
     <Compile Include="Index\NumericDocValues.cs" />
+    <Compile Include="Index\NumericDocValuesFieldUpdates.cs" />
     <Compile Include="Index\NumericDocValuesWriter.cs" />
     <Compile Include="Index\OrdTermState.cs" />
     <Compile Include="Index\ParallelAtomicReader.cs" />
@@ -434,11 +508,15 @@
     <Compile Include="Index\ParallelPostingsArray.cs" />
     <Compile Include="Index\PersistentSnapshotDeletionPolicy.cs" />
     <Compile Include="Index\PrefixCodedTerms.cs" />
+    <Compile Include="Index\RandomAccessOrds.cs" />
     <Compile Include="Index\ReaderManager.cs" />
     <Compile Include="Index\ReadersAndLiveDocs.cs" />
+    <Compile Include="Index\ReadersAndUpdates.cs" />
     <Compile Include="Index\ReaderSlice.cs" />
     <Compile Include="Index\ReaderUtil.cs" />
+    <Compile Include="Index\SegmentCommitInfo.cs" />
     <Compile Include="Index\SegmentCoreReaders.cs" />
+    <Compile Include="Index\SegmentDocValues.cs" />
     <Compile Include="Index\SegmentInfo.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -455,6 +533,7 @@
     <Compile Include="Index\SegmentReadState.cs" />
     <Compile Include="Index\SegmentWriteState.cs" />
     <Compile Include="Index\SerialMergeScheduler.cs" />
+    <Compile Include="Index\SimpleMergedSegmentWarmer.cs" />
     <Compile Include="Index\SingleTermsEnum.cs" />
     <Compile Include="Index\SingletonSortedSetDocValues.cs" />
     <Compile Include="Index\SlowCompositeReaderWrapper.cs" />
@@ -484,6 +563,8 @@
     <Compile Include="Index\TermVectorsConsumerPerField.cs" />
     <Compile Include="Index\ThreadAffinityDocumentsWriterThreadPool.cs" />
     <Compile Include="Index\TieredMergePolicy.cs" />
+    <Compile Include="Index\TrackingIndexWriter.cs" />
+    <Compile Include="Index\TwoPhaseCommit.cs" />
     <Compile Include="Index\TwoPhaseCommitTool.cs" />
     <Compile Include="Index\TwoStoredFieldsConsumers.cs" />
     <Compile Include="Index\UpgradeIndexMergePolicy.cs" />
@@ -505,6 +586,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Search\BoostAttribute.cs" />
+    <Compile Include="Search\BulkScorer.cs" />
     <Compile Include="Search\CachingCollector.cs" />
     <Compile Include="Search\CachingWrapperFilter.cs">
       <SubType>Code</SubType>
@@ -522,6 +604,7 @@
     <Compile Include="Search\ConstantScoreQuery.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Search\ControlledRealTimeReopenThread.cs" />
     <Compile Include="Search\DisjunctionMaxQuery.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -625,6 +708,7 @@
     <Compile Include="Search\Query.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Search\QueryRescorer.cs" />
     <Compile Include="Search\QueryWrapperFilter.cs" />
     <Compile Include="Search\ReferenceManager.cs" />
     <Compile Include="Search\RegexpQuery.cs" />
@@ -634,6 +718,7 @@
     <Compile Include="Search\ReqOptSumScorer.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Search\Rescorer.cs" />
     <Compile Include="Search\ScoreCachingWrappingScorer.cs" />
     <Compile Include="Search\ScoreDoc.cs">
       <SubType>Code</SubType>
@@ -689,6 +774,7 @@
     <Compile Include="Search\SortField.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Search\SortRescorer.cs" />
     <Compile Include="Search\Spans\FieldMaskingSpanQuery.cs" />
     <Compile Include="Search\Spans\NearSpansOrdered.cs">
       <SubType>Code</SubType>
@@ -761,6 +847,9 @@
     <Compile Include="Store\AlreadyClosedException.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Store\BaseDirectory.cs" />
+    <Compile Include="Store\BufferedChecksum.cs" />
+    <Compile Include="Store\BufferedChecksumIndexInput.cs" />
     <Compile Include="Store\BufferedIndexInput.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -786,6 +875,7 @@
     <Compile Include="Store\FileSwitchDirectory.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Store\FilterDirectory.cs" />
     <Compile Include="Store\FlushInfo.cs" />
     <Compile Include="Store\FSDirectory.cs">
       <SubType>Code</SubType>
@@ -959,11 +1049,23 @@
     <Compile Include="Util\Automaton\StatePair.cs" />
     <Compile Include="Util\Automaton\Transition.cs" />
     <Compile Include="Util\Automaton\UTF32ToUTF8.cs" />
+    <Compile Include="Util\BroadWord.cs" />
+    <Compile Include="Util\BytesRefArray.cs" />
+    <Compile Include="Util\GrowableByteArrayDataOutput.cs" />
     <Compile Include="Util\IBytesRefIterator.cs" />
+    <Compile Include="Util\InPlaceMergeSorter.cs" />
+    <Compile Include="Util\IntroSorter.cs" />
+    <Compile Include="Util\LongBitSet.cs" />
+    <Compile Include="Util\LongValues.cs" />
+    <Compile Include="Util\MergedIterator.cs" />
     <Compile Include="Util\NamedThreadFactory.cs" />
+    <Compile Include="Util\OfflineSorter.cs" />
     <Compile Include="Util\Packed\AbstractAppendingLongBuffer.cs" />
     <Compile Include="Util\Packed\AbstractBlockPackedWriter.cs" />
+    <Compile Include="Util\Packed\AbstractPagedMutable.cs" />
+    <Compile Include="Util\Packed\AppendingDeltaPackedLongBuffer.cs" />
     <Compile Include="Util\Packed\AppendingLongBuffer.cs" />
+    <Compile Include="Util\Packed\AppendingPackedLongBuffer.cs" />
     <Compile Include="Util\Packed\BlockPackedReader.cs" />
     <Compile Include="Util\Packed\BlockPackedReaderIterator.cs" />
     <Compile Include="Util\Packed\BlockPackedWriter.cs" />
@@ -1000,6 +1102,9 @@
     <Compile Include="Util\Packed\Direct8.cs" />
     <Compile Include="Util\Packed\DirectPacked64SingleBlockReader.cs" />
     <Compile Include="Util\Packed\DirectPackedReader.cs" />
+    <Compile Include="Util\Packed\EliasFanoDecoder.cs" />
+    <Compile Include="Util\Packed\EliasFanoDocIdSet.cs" />
+    <Compile Include="Util\Packed\EliasFanoEncoder.cs" />
     <Compile Include="Util\Packed\GrowableWriter.cs" />
     <Compile Include="Util\Packed\MonotonicAppendingLongBuffer.cs" />
     <Compile Include="Util\Packed\MonotonicBlockPackedReader.cs" />
@@ -1013,13 +1118,20 @@
     <Compile Include="Util\Packed\PackedInts.cs" />
     <Compile Include="Util\Packed\PackedReaderIterator.cs" />
     <Compile Include="Util\Packed\PackedWriter.cs" />
+    <Compile Include="Util\Packed\PagedGrowableWriter.cs" />
+    <Compile Include="Util\Packed\PagedMutable.cs" />
     <Compile Include="Util\PagedBytes.cs" />
+    <Compile Include="Util\PForDeltaDocIdSet.cs" />
     <Compile Include="Util\PrintStreamInfoStream.cs" />
+    <Compile Include="Util\QueryBuilder.cs" />
     <Compile Include="Util\RecyclingByteBlockAllocator.cs" />
     <Compile Include="Util\RecyclingIntBlockAllocator.cs" />
+    <Compile Include="Util\RefCount.cs" />
     <Compile Include="Util\RollingBuffer.cs" />
     <Compile Include="Util\SentinelIntSet.cs" />
     <Compile Include="Util\SetOnce.cs" />
+    <Compile Include="Util\SloppyMath.cs" />
+    <Compile Include="Util\Sorter.cs" />
     <Compile Include="Util\SPIClassIterator.cs" />
     <Compile Include="Support\StringCharSequenceWrapper.cs" />
     <Compile Include="Support\TextSupport.cs" />
@@ -1103,12 +1215,14 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Util\ThreadInterruptedException.cs" />
+    <Compile Include="Util\TimSorter.cs" />
     <Compile Include="Util\ToStringUtils.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Util\UnicodeUtil.cs" />
     <Compile Include="Util\Version.cs" />
     <Compile Include="Util\VirtualMethod.cs" />
+    <Compile Include="Util\WAH8DocIdSet.cs" />
     <Compile Include="Util\WeakIdentityMap.cs" />
     <None Include="Lucene.Net.Search.RemoteSearchable.config" />
     <None Include="Lucene.Net.Search.TestSort.config" />

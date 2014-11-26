@@ -419,7 +419,7 @@ namespace Lucene.Net.Search
         /// <summary>Returns a hash code value for this object.</summary>
         public override int GetHashCode()
         {
-            return Number.FloatToIntBits(Boost)
+            return Boost.FloatToIntBits()
               ^ slop
               ^ TermArraysHashCode()
               ^ positions.GetHashCode()

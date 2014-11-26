@@ -53,7 +53,8 @@ namespace Lucene.Net.Index
 
         private IDictionary<string, string> diagnostics;
 
-        private IDictionary<string, string> attributes;
+		[Obsolete(@"not used anymore")]
+		private IDictionary<string, string> attributes;
 
         // Tracks the Lucene version this segment was created with, since 3.1. Null
         // indicates an older than 3.0 index, and it's used to detect a too old index.
@@ -68,6 +69,11 @@ namespace Lucene.Net.Index
             set { diagnostics = value; }
         }
 
+		public SegmentInfo(Directory dir, string version, string name, int docCount, bool
+			 isCompoundFile, Codec codec, IDictionary<string, string> diagnostics) : this(dir
+			, version, name, docCount, isCompoundFile, codec, diagnostics, null)
+		{
+		}
         public SegmentInfo(Directory dir, String version, String name, int docCount,
                      bool isCompoundFile, Codec codec, IDictionary<String, String> diagnostics, IDictionary<String, String> attributes)
         {
@@ -201,6 +207,11 @@ namespace Lucene.Net.Index
 
         private ISet<String> setFiles;
 
+		public void SetFiles(ICollection<string> files)
+		{
+			CheckFileNames(files);
+			setFiles = files;
+		}
         public void AddFiles(ICollection<String> files)
         {
             CheckFileNames(files);
@@ -225,6 +236,7 @@ namespace Lucene.Net.Index
             }
         }
 
+		[System.ObsoleteAttribute(@"no longer supported")]
         public string GetAttribute(string key)
         {
             if (attributes == null)
@@ -237,6 +249,7 @@ namespace Lucene.Net.Index
             }
         }
 
+		[System.ObsoleteAttribute(@"no longer supported")]
         public String PutAttribute(String key, String value)
         {
             if (attributes == null)
@@ -246,6 +259,7 @@ namespace Lucene.Net.Index
             return attributes[key] = value;
         }
 
+		[System.ObsoleteAttribute(@"no longer supported")]
         public IDictionary<String, String> Attributes
         {
             get { return attributes; }

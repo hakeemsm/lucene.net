@@ -62,6 +62,11 @@ namespace Lucene.Net.Index
 
             foreach (FieldInfo info in infos)
             {
+				if (info.number < 0)
+				{
+					throw new ArgumentException("illegal field number: " + info.number + " for field "
+						 + info.name);
+				}
                 FieldInfo previous;
 
                 if (byNumber.TryGetValue(info.number, out previous))
@@ -160,7 +165,11 @@ namespace Lucene.Net.Index
         /// </returns>
         public FieldInfo FieldInfo(int fieldNumber)
         {
-            return (fieldNumber >= 0) ? byNumber[fieldNumber] : null;
+			if (fieldNumber < 0)
+			{
+				throw new ArgumentException("Illegal field number: " + fieldNumber);
+			}
+			return byNumber[fieldNumber];
         }
 
         public sealed class FieldNumbers
@@ -308,7 +317,9 @@ namespace Lucene.Net.Index
 
                     if (docValues != null)
                     {
+						bool updateGlobal = !fi.HasDocValues;
                         fi.DocValuesTypeValue = docValues;
+							globalFieldNumbers.SetDocValuesType(fi.number, name, docValues);
                     }
 
                     if (!fi.OmitsNorms && normType != null)

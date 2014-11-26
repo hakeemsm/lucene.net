@@ -36,7 +36,7 @@ namespace Lucene.Net.Util.Packed
             }
 
             output.WriteVLong(min);
-            output.WriteInt(Number.FloatToIntBits(avg));
+            output.WriteInt(avg.FloatToIntBits());
             if (maxZigZagDelta == 0)
             {
                 output.WriteVInt(0);

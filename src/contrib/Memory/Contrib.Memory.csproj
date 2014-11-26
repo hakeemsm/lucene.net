@@ -88,6 +88,9 @@
     <AssemblyOriginatorKeyFile>Lucene.Net.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Lucene.Net">
+      <HintPath>..\..\..\build\bin\core\Debug\NET40\Lucene.Net.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Condition="'$(Framework)' == 'NET35'" Include="System.Core" />
     <Reference Include="System.Core" />
@@ -108,12 +111,6 @@
     <Compile Include="SliceByteStartArray.cs" />
     <Compile Include="TermComparer.cs" />
     <Compile Include="MemoryTermsEnum.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\core\Lucene.Net.csproj">
-      <Project>{5d4ad9be-1ffb-41ab-9943-25737971bf57}</Project>
-      <Name>Lucene.Net</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="Lucene.Net.snk" />

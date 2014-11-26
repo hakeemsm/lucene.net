@@ -164,6 +164,9 @@
     <SignAssembly>true</SignAssembly>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Lucene.Net">
+      <HintPath>..\..\..\build\bin\core\Debug\NET40\Lucene.Net.dll</HintPath>
+    </Reference>
     <Reference Include="System">
       <Name>System</Name>
     </Reference>
@@ -265,10 +268,6 @@
     <ProjectReference Include="..\Memory\Contrib.Memory.csproj">
       <Project>{112b9a7c-29cc-4539-8f5a-45669c07cd4d}</Project>
       <Name>Contrib.Memory</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\core\Lucene.Net.csproj">
-      <Project>{5D4AD9BE-1FFB-41AB-9943-25737971BF57}</Project>
-      <Name>Lucene.Net</Name>
     </ProjectReference>
     <ProjectReference Include="..\Queries\Contrib.Queries.csproj">
       <Project>{481cf6e3-52af-4621-9deb-022122079af6}</Project>

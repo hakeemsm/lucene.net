@@ -82,7 +82,7 @@ namespace Lucene.Net.Search.Spans
             int h = Match.GetHashCode();
             h ^= (h << 8) | Number.URShift(h, 25);
             h ^= payloadToMatch.GetHashCode();
-            h ^= Number.FloatToIntBits(Boost);
+            h ^= Boost.FloatToIntBits();
             return h;
         }
     }

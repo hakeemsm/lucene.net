@@ -36,7 +36,7 @@ namespace Lucene.Net.Analysis.Tokenattributes
         /// </summary>
         /// <value> The bits </value>
         public virtual int Flags { get; set; }
-
+        
         public override void Clear()
         {
             Flags = 0;

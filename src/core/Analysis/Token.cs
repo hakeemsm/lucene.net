@@ -386,15 +386,18 @@ namespace Lucene.Net.Analysis
             t.flags = flags;
             t.type = type;
             if (payload != null)
+			{
                 t.payload = (BytesRef)payload.Clone();
+			}
             return t;
         }
 
         public override bool Equals(Object obj)
         {
             if (obj == this)
+			{
                 return true;
-
+			}
             if (obj is Token)
             {
                 Token other = (Token)obj;
@@ -418,10 +421,15 @@ namespace Lucene.Net.Analysis
             code = code * 31 + endOffset;
             code = code * 31 + flags;
             code = code * 31 + positionIncrement;
+			code = code * 31 + positionLength;
             if (type != null)
+			{
                 code = code * 31 + type.GetHashCode();
+			}
             if (payload != null)
+			{
                 code = code * 31 + payload.GetHashCode();
+			}
             return code;
         }
 
@@ -429,7 +437,7 @@ namespace Lucene.Net.Analysis
         private void ClearNoTermBuffer()
         {
             payload = null;
-            positionIncrement = 1;
+			positionIncrement = positionLength = 1;
             flags = 0;
             startOffset = endOffset = 0;
             type = DEFAULT_TYPE;
@@ -449,7 +457,7 @@ namespace Lucene.Net.Analysis
             ClearNoTermBuffer();
             CopyBuffer(newTermBuffer, newTermOffset, newTermLength);
             payload = null;
-            positionIncrement = 1;
+			positionIncrement = positionLength = 1;
             startOffset = newStartOffset;
             endOffset = newEndOffset;
             type = newType;
@@ -558,6 +566,7 @@ namespace Lucene.Net.Analysis
         {
             CopyBuffer(prototype.Buffer, 0, prototype.Length);
             positionIncrement = prototype.positionIncrement;
+			positionLength = prototype.positionLength;
             flags = prototype.flags;
             startOffset = prototype.startOffset;
             endOffset = prototype.endOffset;
@@ -574,6 +583,7 @@ namespace Lucene.Net.Analysis
         {
             SetEmpty().Append(newTerm);
             positionIncrement = prototype.positionIncrement;
+			positionLength = prototype.positionLength;
             flags = prototype.flags;
             startOffset = prototype.startOffset;
             endOffset = prototype.endOffset;
@@ -594,6 +604,7 @@ namespace Lucene.Net.Analysis
         {
             CopyBuffer(newTermBuffer, offset, length);
             positionIncrement = prototype.positionIncrement;
+			positionLength = prototype.positionLength;
             flags = prototype.flags;
             startOffset = prototype.startOffset;
             endOffset = prototype.endOffset;

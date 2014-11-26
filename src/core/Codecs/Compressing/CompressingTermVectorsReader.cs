@@ -15,6 +15,7 @@ namespace Lucene.Net.Codecs.Compressing
         private readonly FieldInfos fieldInfos;
         internal readonly CompressingStoredFieldsIndexReader indexReader;
         internal readonly IndexInput vectorsStream;
+		private readonly int version;
         private readonly int packedIntsVersion;
         private readonly CompressionMode compressionMode;
         private readonly Decompressor decompressor;
@@ -34,6 +35,7 @@ namespace Lucene.Net.Codecs.Compressing
             this.chunkSize = reader.chunkSize;
             this.numDocs = reader.numDocs;
             this.reader = new BlockPackedReaderIterator(vectorsStream, packedIntsVersion, CompressingTermVectorsWriter.BLOCK_SIZE, 0);
+			this.version = reader.version;
             this.closed = false;
         }
 
@@ -46,24 +48,45 @@ namespace Lucene.Net.Codecs.Compressing
             bool success = false;
             fieldInfos = fn;
             numDocs = si.DocCount;
-            IndexInput indexStream = null;
+			ChecksumIndexInput indexStream = null;
             try
             {
-                vectorsStream = d.OpenInput(IndexFileNames.SegmentFileName(segment, segmentSuffix, CompressingTermVectorsWriter.VECTORS_EXTENSION), context);
-                string indexStreamFN = IndexFileNames.SegmentFileName(segment, segmentSuffix, CompressingTermVectorsWriter.VECTORS_INDEX_EXTENSION);
-                indexStream = d.OpenInput(indexStreamFN, context);
+				// Load the index into memory
+				string indexStreamFN = IndexFileNames.SegmentFileName(segment, segmentSuffix, CompressingTermVectorsWriter
+					.VECTORS_INDEX_EXTENSION);
+				indexStream = d.OpenChecksumInput(indexStreamFN, context);
 
                 string codecNameIdx = formatName + CompressingTermVectorsWriter.CODEC_SFX_IDX;
-                string codecNameDat = formatName + CompressingTermVectorsWriter.CODEC_SFX_DAT;
-                CodecUtil.CheckHeader(indexStream, codecNameIdx, CompressingTermVectorsWriter.VERSION_START, CompressingTermVectorsWriter.VERSION_CURRENT);
-                CodecUtil.CheckHeader(vectorsStream, codecNameDat, CompressingTermVectorsWriter.VERSION_START, CompressingTermVectorsWriter.VERSION_CURRENT);
+				version = CodecUtil.CheckHeader(indexStream, codecNameIdx, CompressingTermVectorsWriter
+					.VERSION_START, CompressingTermVectorsWriter.VERSION_CURRENT);
 
                 indexReader = new CompressingStoredFieldsIndexReader(indexStream, si);
+				if (version >= CompressingTermVectorsWriter.VERSION_CHECKSUM)
+				{
+					indexStream.ReadVLong();
+					// the end of the data file
+					CodecUtil.CheckFooter(indexStream);
+				}
+				else
+				{
+					CodecUtil.CheckEOF(indexStream);
+				}
+				indexStream.Dispose();
                 indexStream = null;
-
+				string vectorsStreamFN = IndexFileNames.SegmentFileName(segment, segmentSuffix, CompressingTermVectorsWriter
+					.VECTORS_EXTENSION);
+				vectorsStream = d.OpenInput(vectorsStreamFN, context);
+				string codecNameDat = formatName + CompressingTermVectorsWriter.CODEC_SFX_DAT;
+				int version2 = CodecUtil.CheckHeader(vectorsStream, codecNameDat, CompressingTermVectorsWriter
+					.VERSION_START, CompressingTermVectorsWriter.VERSION_CURRENT);
+				if (version != version2)
+				{
+					throw new CorruptIndexException("Version mismatch between stored fields index and data: "
+						 + version + " != " + version2);
+				}
                 packedIntsVersion = vectorsStream.ReadVInt();
                 chunkSize = vectorsStream.ReadVInt();
-                decompressor = compressionMode.newDecompressor();
+                decompressor = compressionMode.NewDecompressor();
                 this.reader = new BlockPackedReaderIterator(vectorsStream, packedIntsVersion, CompressingTermVectorsWriter.BLOCK_SIZE, 0);
 
                 success = true;
@@ -95,11 +118,13 @@ namespace Lucene.Net.Codecs.Compressing
 
         internal int PackedIntsVersion
         {
-            get
-            {
-                return packedIntsVersion;
-            }
+            get { return packedIntsVersion; }
         }
+
+        internal int GetVersion()
+		{
+			return version;
+		}
 
         internal CompressingStoredFieldsIndexReader Index
         {
@@ -132,7 +157,7 @@ namespace Lucene.Net.Codecs.Compressing
         {
             if (!closed)
             {
-                IOUtils.Close(vectorsStream, indexReader);
+				IOUtils.Close(vectorsStream);
                 closed = true;
             }
         }
@@ -159,7 +184,8 @@ namespace Lucene.Net.Codecs.Compressing
             int chunkDocs = vectorsStream.ReadVInt();
             if (doc < docBase || doc >= docBase + chunkDocs || docBase + chunkDocs > numDocs)
             {
-                throw new CorruptIndexException("docBase=" + docBase + ",chunkDocs=" + chunkDocs + ",doc=" + doc);
+				throw new CorruptIndexException("docBase=" + docBase + ",chunkDocs=" + chunkDocs 
+					+ ",doc=" + doc + " (resource=" + vectorsStream + ")");
             }
 
             int skip; // number of fields to skip
@@ -392,7 +418,7 @@ namespace Lucene.Net.Codecs.Compressing
                 float[] charsPerTerm = new float[fieldNums.Length];
                 for (int i = 0; i < charsPerTerm.Length; ++i)
                 {
-                    charsPerTerm[i] = Number.IntBitsToFloat(vectorsStream.ReadInt());
+                    charsPerTerm[i] = vectorsStream.ReadInt().IntBitsToFloat();
                 }
                 startOffsets = ReadPositions(skip, numFields, flags, numTerms, termFreqs, CompressingTermVectorsWriter.OFFSETS, totalOffsets, positionIndex);
                 lengths = ReadPositions(skip, numFields, flags, numTerms, termFreqs, CompressingTermVectorsWriter.OFFSETS, totalOffsets, positionIndex);
@@ -825,6 +851,10 @@ namespace Lucene.Net.Codecs.Compressing
                 get { return 1; }
             }
 
+			public override bool HasFreqs
+			{
+			    get { return true; }
+			}
             public override bool HasOffsets
             {
                 get { return (flags & CompressingTermVectorsWriter.OFFSETS) != 0; }
@@ -908,7 +938,7 @@ namespace Lucene.Net.Codecs.Compressing
                 get { return BytesRef.UTF8SortedAsUnicodeComparer; }
             }
 
-            public override SeekStatus SeekCeil(BytesRef text, bool useCache)
+			public override TermsEnum.SeekStatus SeekCeil(BytesRef text)
             {
                 if (ord < numTerms && ord >= 0)
                 {
@@ -944,18 +974,7 @@ namespace Lucene.Net.Codecs.Compressing
 
             public override void SeekExact(long ord)
             {
-                if (ord < -1 || ord >= numTerms)
-                {
-                    throw new System.IO.IOException("ord is out of range: ord=" + ord + ", numTerms=" + numTerms);
-                }
-                if (ord < this.ord)
-                {
-                    Reset();
-                }
-                for (int i = this.ord; i < ord; ++i)
-                {
-                    Next();
-                }
+				throw new NotSupportedException();
                 //assert ord == this.ord();
             }
 
@@ -964,9 +983,9 @@ namespace Lucene.Net.Codecs.Compressing
                 get { return term; }
             }
 
-            public override long Ord
+			public override long Ord()
             {
-                get { return ord; }
+				throw new NotSupportedException();
             }
 
             public override int DocFreq
@@ -1193,5 +1212,18 @@ namespace Lucene.Net.Codecs.Compressing
             return sum;
         }
 
-    }
+		public override long RamBytesUsed()
+		{
+			return indexReader.RamBytesUsed();
+		}
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public override void CheckIntegrity()
+		{
+			if (version >= CompressingTermVectorsWriter.VERSION_CHECKSUM)
+			{
+				CodecUtil.ChecksumEntireFile(vectorsStream);
+			}
+		}
+	}
 }

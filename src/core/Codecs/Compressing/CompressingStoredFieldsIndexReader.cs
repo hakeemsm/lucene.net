@@ -10,9 +10,8 @@ using System.Text;
 
 namespace Lucene.Net.Codecs.Compressing
 {
-    public sealed class CompressingStoredFieldsIndexReader : ICloneable, IDisposable
+	public sealed class CompressingStoredFieldsIndexReader : ICloneable
     {
-        internal readonly IndexInput fieldsIndexIn;
 
         internal static long MoveLowOrderBitToSign(long n)
         {
@@ -29,7 +28,10 @@ namespace Lucene.Net.Codecs.Compressing
 
         public CompressingStoredFieldsIndexReader(IndexInput fieldsIndexIn, SegmentInfo si)
         {
-            this.fieldsIndexIn = fieldsIndexIn;
+			// delta from the avg
+			// delta from the avg
+			// It is the responsibility of the caller to close fieldsIndexIn after this constructor
+			// has been called
             maxDoc = si.DocCount;
             int[] docBases = new int[16];
             long[] startPointers = new long[16];
@@ -90,18 +92,6 @@ namespace Lucene.Net.Codecs.Compressing
             this.avgChunkSizes = Arrays.CopyOf(avgChunkSizes, blockCount);
             this.docBasesDeltas = Arrays.CopyOf(docBasesDeltas, blockCount);
             this.startPointersDeltas = Arrays.CopyOf(startPointersDeltas, blockCount);
-        }
-
-        private CompressingStoredFieldsIndexReader(CompressingStoredFieldsIndexReader other)
-        {
-            this.fieldsIndexIn = null;
-            this.maxDoc = other.maxDoc;
-            this.docBases = other.docBases;
-            this.startPointers = other.startPointers;
-            this.avgChunkDocs = other.avgChunkDocs;
-            this.avgChunkSizes = other.avgChunkSizes;
-            this.docBasesDeltas = other.docBasesDeltas;
-            this.startPointersDeltas = other.startPointersDeltas;
         }
 
         private int Block(int docID)
@@ -187,10 +177,23 @@ namespace Lucene.Net.Codecs.Compressing
             }
         }
 
-        public void Dispose()
-        {
-            IOUtils.Close(fieldsIndexIn);
-        }
+		internal long RamBytesUsed()
+		{
+			long res = 0;
+			foreach (PackedInts.Reader r in docBasesDeltas)
+			{
+				res += r.RamBytesUsed();
+			}
+			foreach (PackedInts.Reader r_1 in startPointersDeltas)
+			{
+				res += r_1.RamBytesUsed();
+			}
+			res += RamUsageEstimator.SizeOf(docBases);
+			res += RamUsageEstimator.SizeOf(startPointers);
+			res += RamUsageEstimator.SizeOf(avgChunkDocs);
+			res += RamUsageEstimator.SizeOf(avgChunkSizes);
+			return res;
+		}
 
     }
 }

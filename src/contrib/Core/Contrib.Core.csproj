@@ -111,6 +111,9 @@
     <AssemblyOriginatorKeyFile>Lucene.Net.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Lucene.Net">
+      <HintPath>..\..\..\build\bin\core\Debug\NET40\Lucene.Net.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Condition="'$(Framework)' == 'NET35'" Include="System.Core" />
   </ItemGroup>
@@ -123,10 +126,6 @@
     <Compile Include="Util\Cache\SegmentCache.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\core\Lucene.Net.csproj">
-      <Project>{5D4AD9BE-1FFB-41AB-9943-25737971BF57}</Project>
-      <Name>Lucene.Net</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Analyzers\Contrib.Analyzers.csproj">
       <Project>{4286e961-9143-4821-b46d-3d39d3736386}</Project>
       <Name>Contrib.Analyzers</Name>

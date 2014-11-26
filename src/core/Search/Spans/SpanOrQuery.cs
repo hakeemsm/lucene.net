@@ -302,7 +302,7 @@ namespace Lucene.Net.Search.Spans
 		{
 			var h = clauses.GetHashCode();
 			h ^= ((h << 10) | (Number.URShift(h, 23)));
-		    h ^= Number.FloatToIntBits(Boost);
+		    h ^= Boost.FloatToIntBits();
 			return h;
 		}
 		

@@ -16,6 +16,7 @@
  */
 
 using System;
+using Lucene.Net.Analysis.Tokenattributes;
 using Lucene.Net.Util;
 using Document = Lucene.Net.Documents.Document;
 using Field = Lucene.Net.Documents.Field;
@@ -77,8 +78,9 @@ namespace Lucene.Net.Analysis
 	public abstract class TokenStream : AttributeSource, IDisposable
 	{
 		/// <summary> A TokenStream using the default attribute factory.</summary>
-		protected TokenStream()
-		{ }
+		public TokenStream() : base()
+		{
+		}
 		
 		/// <summary> A TokenStream that uses the same attributes as the supplied one.</summary>
         protected TokenStream(AttributeSource input)
@@ -129,7 +131,12 @@ namespace Lucene.Net.Analysis
 		/// <throws>  IOException </throws>
 		public virtual void End()
 		{
-			// do nothing by default
+			ClearAttributes();
+			// LUCENE-3849: don't consume dirty atts
+			if (HasAttribute(typeof(IPositionIncrementAttribute)))
+			{
+				GetAttribute<IPositionIncrementAttribute>().PositionIncrement = 0;
+			}
 		}
 		
 		/// <summary> Resets this stream to the beginning. This is an optional operation, so

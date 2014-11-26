@@ -379,10 +379,23 @@ namespace Lucene.Net.Codecs.Compressing
             {
                 match.start = off;
                 match.len = 0;
-
+                int delta = 0;
+                int repl = 0;
                 Insert(off, buf);
 
                 int r = HashPointer(buf, off);
+                if (r >= off - 4 && r <= off && r >= bse)
+                {
+                    // potential repetition
+                    if (ReadIntEquals(buf, r, off))
+                    {
+                        // confirmed
+                        delta = off - r;
+                        repl = match.len = MIN_MATCH + CommonBytes(buf, r + MIN_MATCH, off + MIN_MATCH, matchLimit);
+                        match.r = r;
+                    }
+                    r = Next(r);
+                }
                 for (int i = 0; i < MAX_ATTEMPTS; ++i)
                 {
                     if (r < Math.Max(bse, off - MAX_DISTANCE + 1))
@@ -400,7 +413,25 @@ namespace Lucene.Net.Codecs.Compressing
                     }
                     r = Next(r);
                 }
-
+                if (repl != 0)
+                {
+                    int ptr = off;
+                    int end = off + repl - (MIN_MATCH - 1);
+                    while (ptr < end - delta)
+                    {
+                        chainTable[ptr & MASK] = (short)delta;
+                        // pre load
+                        ++ptr;
+                    }
+                    do
+                    {
+                        chainTable[ptr & MASK] = (short)delta;
+                        hashTable[HashHC(ReadInt(buf, ptr))] = ptr;
+                        ++ptr;
+                    }
+                    while (ptr < end);
+                    nextToUpdate = end;
+                }
                 return match.len != 0;
             }
 
@@ -453,7 +484,7 @@ namespace Lucene.Net.Codecs.Compressing
 
             int srcEnd = srcOff + srcLen;
             int matchLimit = srcEnd - LAST_LITERALS;
-
+            int mfLimit = matchLimit - MIN_MATCH;
             int sOff = srcOff;
             int anchor = sOff++;
 
@@ -530,26 +561,7 @@ namespace Lucene.Net.Codecs.Compressing
                             // no better match -> 2 sequences to encode
                             if (match2.start < match1.End())
                             {
-                                if (match2.start - match1.start < OPTIMAL_ML)
-                                {
-                                    if (match1.len > OPTIMAL_ML)
-                                    {
-                                        match1.len = OPTIMAL_ML;
-                                    }
-                                    if (match1.End() > match2.End() - MIN_MATCH)
-                                    {
-                                        match1.len = match2.End() - match1.start - MIN_MATCH;
-                                    }
-                                    int correction = match1.len - (match2.start - match1.start);
-                                    if (correction > 0)
-                                    {
-                                        match2.Fix(correction);
-                                    }
-                                }
-                                else
-                                {
-                                    match1.len = match2.start - match1.start;
-                                }
+                                match1.len = match2.start - match1.start;
                             }
                             // encode seq 1
                             EncodeSequence(src, anchor, match1.r, match1.start, match1.len, output);

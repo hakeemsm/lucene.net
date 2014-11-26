@@ -54,6 +54,7 @@ namespace Lucene.Net.Store
         public abstract String[] ListAll();
 
         /// <summary>Returns true iff a file with the given name exists. </summary>
+        [System.ObsoleteAttribute(@"This method will be removed in 5.0")]
         public abstract bool FileExists(String name);
 
         /// <summary>Removes an existing file in the directory. </summary>
@@ -78,6 +79,14 @@ namespace Lucene.Net.Store
         /// <summary>Returns a stream reading an existing file. </summary>
         public abstract IndexInput OpenInput(String name, IOContext context);
 
+        /// <summary>Returns a stream reading an existing file, computing checksum as it reads
+        ///   </summary>
+        /// <exception cref="System.IO.IOException"></exception>
+        public virtual ChecksumIndexInput OpenChecksumInput(string name, IOContext context
+           )
+        {
+            return new BufferedChecksumIndexInput(OpenInput(name, context));
+        }
         /// <summary>Construct a <see cref="Lock" />.</summary>
         /// <param name="name">the name of the lock file
         /// </param>
@@ -236,7 +245,8 @@ namespace Lucene.Net.Store
         {
             public abstract IndexInput OpenSlice(string sliceDescription, long offset, long length);
 
-            [Obsolete]
+
+            [Obsolete(@"Only for reading CFS files from 3.x indexes.")]
             public abstract IndexInput OpenFullSlice();
 
             public abstract void Dispose(bool disposing);
@@ -245,6 +255,8 @@ namespace Lucene.Net.Store
             {
                 Dispose(true);
             }
+            
+            private readonly Directory _enclosing;
         }
 
         private sealed class SlicedIndexInput : BufferedIndexInput
@@ -254,7 +266,7 @@ namespace Lucene.Net.Store
             private long length;
 
             public SlicedIndexInput(String sliceDescription, IndexInput baseinput, long fileOffset, long length)
-                : this(sliceDescription, baseinput, fileOffset, length, BufferedIndexInput.BUFFER_SIZE)
+                : this(sliceDescription, baseinput, fileOffset, length, BUFFER_SIZE)
             {
             }
 

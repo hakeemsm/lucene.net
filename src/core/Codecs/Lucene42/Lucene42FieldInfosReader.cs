@@ -9,13 +9,10 @@ using Lucene.Net.Util;
 
 namespace Lucene.Net.Codecs.Lucene42
 {
+	[Obsolete(@"Only for reading old 4.2-4.5 segments")]
     internal sealed class Lucene42FieldInfosReader : FieldInfosReader
     {
-        public Lucene42FieldInfosReader()
-        {
-        }
-
-        public override FieldInfos Read(Directory directory, string segmentName, IOContext iocontext)
+	    public override FieldInfos Read(Directory directory, string segmentName, IOContext iocontext)
         {
             String fileName = IndexFileNames.SegmentFileName(segmentName, "", Lucene42FieldInfosFormat.EXTENSION);
             IndexInput input = directory.OpenInput(fileName, iocontext);
@@ -74,6 +71,7 @@ namespace Lucene.Net.Codecs.Lucene42
                 {
                     throw new CorruptIndexException("did not read all bytes from file \"" + fileName + "\": read " + input.FilePointer + " vs size " + input.Length + " (resource: " + input + ")");
                 }
+				CodecUtil.CheckEOF(input);
                 FieldInfos fieldInfos = new FieldInfos(infos);
                 success = true;
                 return fieldInfos;

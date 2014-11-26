@@ -19,7 +19,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Lucene.Net.Analysis;
+using Lucene.Net.Analysis.Core;
+using Lucene.Net.Analysis.En;
 using Lucene.Net.Analysis.Standard;
+using Lucene.Net.Analysis.Util;
+using Lucene.Net.Util;
 using SF.Snowball.Ext;
 using Version = Lucene.Net.Util.Version;
 
@@ -39,14 +43,13 @@ namespace Lucene.Net.Analysis.Snowball
     public class SnowballAnalyzer : Analyzer
     {
         private System.String name;
-        private ISet<string> stopSet;
+        private CharArraySet stopSet;
         private readonly Version matchVersion;
 
         /// <summary>Builds the named analyzer with no stop words. </summary>
         public SnowballAnalyzer(Version matchVersion, System.String name)
         {
             this.name = name;
-            SetOverridesTokenStreamMethod<SnowballAnalyzer>();
             this.matchVersion = matchVersion;
         }
 
@@ -55,71 +58,47 @@ namespace Lucene.Net.Analysis.Snowball
         public SnowballAnalyzer(Version matchVersion, System.String name, System.String[] stopWords)
             : this(matchVersion, name)
         {
-            stopSet = StopFilter.MakeStopSet(stopWords);
+            stopSet = CharArraySet.UnmodifiableSet(CharArraySet.Copy(matchVersion, stopWords));
+
         }
 
         /// <summary>
         /// Builds the named analyzer with the given stop words.
         /// </summary>
-        public SnowballAnalyzer(Version matchVersion, string name, ISet<string> stopWords)
+        public SnowballAnalyzer(Version matchVersion, string name, ICollection<object> stopWords)
             : this(matchVersion, name)
         {
-            stopSet = CharArraySet.UnmodifiableSet(CharArraySet.Copy(stopWords));
+            stopSet = CharArraySet.UnmodifiableSet(CharArraySet.Copy(this.matchVersion, stopWords));
         }
 
-        /// <summary>Constructs a <see cref="StandardTokenizer"/> filtered by a {@link
-        /// StandardFilter}, a <see cref="LowerCaseFilter"/> and a <see cref="StopFilter"/>. 
-        /// </summary>
-        public override TokenStream TokenStream(System.String fieldName, System.IO.TextReader reader)
+        public override TokenStreamComponents CreateComponents(string fieldName, TextReader reader)
         {
-            TokenStream result = new StandardTokenizer(matchVersion, reader);
-            result = new StandardFilter(result);
-            result = new LowerCaseFilter(result);
-            if (stopSet != null)
-                result = new StopFilter(StopFilter.GetEnablePositionIncrementsVersionDefault(matchVersion),
-                                        result, stopSet);
-            result = new SnowballFilter(result, name);
-            return result;
-        }
-
-        private class SavedStreams
-        {
-            internal Tokenizer source;
-            internal TokenStream result;
-        };
-
-        /* Returns a (possibly reused) {@link StandardTokenizer} filtered by a 
-         * {@link StandardFilter}, a {@link LowerCaseFilter}, 
-         * a {@link StopFilter}, and a {@link SnowballFilter} */
-
-        public override TokenStream ReusableTokenStream(String fieldName, TextReader reader)
-        {
-            if (overridesTokenStreamMethod)
+            Tokenizer tokenizer = new StandardTokenizer(matchVersion, reader);
+            TokenStream result = new StandardFilter(matchVersion, tokenizer);
+            // remove the possessive 's for english stemmers
+            if (matchVersion.OnOrAfter(Version.LUCENE_31) && (name.Equals("English"
+                ) || name.Equals("Porter") || name.Equals("Lovins")))
             {
-                // LUCENE-1678: force fallback to tokenStream() if we
-                // have been subclassed and that subclass overrides
-                // tokenStream but not reusableTokenStream
-                return TokenStream(fieldName, reader);
+                result = new EnglishPossessiveFilter(result);
             }
-
-            SavedStreams streams = (SavedStreams)PreviousTokenStream;
-            if (streams == null)
+            // Use a special lowercase filter for turkish, the stemmer expects it.
+            if (matchVersion.OnOrAfter(Version.LUCENE_31) && name.Equals("Turkish"
+                ))
             {
-                streams = new SavedStreams();
-                streams.source = new StandardTokenizer(matchVersion, reader);
-                streams.result = new StandardFilter(streams.source);
-                streams.result = new LowerCaseFilter(streams.result);
-                if (stopSet != null)
-                    streams.result = new StopFilter(StopFilter.GetEnablePositionIncrementsVersionDefault(matchVersion),
-                                                    streams.result, stopSet);
-                streams.result = new SnowballFilter(streams.result, name);
-                PreviousTokenStream = streams;
+                result = new TurkishLowerCaseFilter(result);
             }
             else
             {
-                streams.source.Reset(reader);
+                result = new LowerCaseFilter(matchVersion, result);
             }
-            return streams.result;
+            if (stopSet != null)
+            {
+                result = new StopFilter(matchVersion, result, stopSet);
+            }
+            result = new SnowballFilter(result, name);
+            return new Analyzer.TokenStreamComponents(tokenizer, result);
         }
+
+        
     }
 }

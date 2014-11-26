@@ -115,6 +115,9 @@
     <AssemblyOriginatorKeyFile>Lucene.Net.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Lucene.Net">
+      <HintPath>..\..\..\build\bin\core\Debug\NET40\Lucene.Net.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Condition="'$(Framework)' == 'NET35'" Include="System.Core" />
   </ItemGroup>
@@ -133,7 +136,6 @@
     <Compile Include="SimpleFragmentsBuilder.cs" />
     <Compile Include="StringUtils.cs" />
     <Compile Include="Support.cs" />
-    <Compile Include="VectorHighlightMapper.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Lucene.Net.snk" />
@@ -172,9 +174,13 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\core\Lucene.Net.csproj">
-      <Project>{5D4AD9BE-1FFB-41AB-9943-25737971BF57}</Project>
-      <Name>Lucene.Net</Name>
+    <ProjectReference Include="..\Analyzers\Contrib.Analyzers.csproj">
+      <Project>{4286E961-9143-4821-B46D-3D39D3736386}</Project>
+      <Name>Contrib.Analyzers</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\QueryParsers\Contrib.QueryParsers.csproj">
+      <Project>{56438272-B00E-40DE-9C9A-0785E705E7D9}</Project>
+      <Name>Contrib.QueryParsers</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

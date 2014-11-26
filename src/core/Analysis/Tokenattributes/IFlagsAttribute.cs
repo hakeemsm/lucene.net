@@ -15,9 +15,7 @@
  * limitations under the License.
  */
 
-using System;
 using Lucene.Net.Util;
-using Tokenizer = Lucene.Net.Analysis.Tokenizer;
 
 namespace Lucene.Net.Analysis.Tokenattributes
 {
@@ -36,5 +34,6 @@ namespace Lucene.Net.Analysis.Tokenattributes
         /// </summary>
         /// <value> The bits </value>
         int Flags { get; set; }
+		
     }
 }

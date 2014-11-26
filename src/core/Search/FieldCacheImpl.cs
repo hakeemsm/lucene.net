@@ -1018,7 +1018,7 @@ namespace Lucene.Net.Search
 
             public override float Get(int docID)
             {
-                return Number.IntBitsToFloat((int)valuesIn.Get(docID));
+                return ((int)valuesIn.Get(docID)).IntBitsToFloat();
             }
         }
 

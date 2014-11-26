@@ -32,10 +32,14 @@ namespace Lucene.Net.Codecs.Compressing
      */
     public sealed class CompressingStoredFieldsReader : StoredFieldsReader
     {
+        private const int BUFFER_REUSE_THRESHOLD = 1 << 15;
 
+        private readonly int version;
         private FieldInfos fieldInfos;
         private CompressingStoredFieldsIndexReader indexReader;
+        private readonly long maxPointer;
         private IndexInput fieldsStream;
+        private readonly int chunkSize;
         private int packedIntsVersion;
         private CompressionMode compressionMode;
         private Decompressor decompressor;
@@ -46,9 +50,12 @@ namespace Lucene.Net.Codecs.Compressing
         // used by clone
         private CompressingStoredFieldsReader(CompressingStoredFieldsReader reader)
         {
+            this.version = reader.version;
             this.fieldInfos = reader.fieldInfos;
             this.fieldsStream = (IndexInput)reader.fieldsStream.Clone();
             this.indexReader = (CompressingStoredFieldsIndexReader)reader.indexReader.Clone();
+            this.maxPointer = reader.maxPointer;
+            this.chunkSize = reader.chunkSize;
             this.packedIntsVersion = reader.packedIntsVersion;
             this.compressionMode = reader.compressionMode;
             this.decompressor = (Decompressor)reader.decompressor.Clone();
@@ -66,23 +73,64 @@ namespace Lucene.Net.Codecs.Compressing
             bool success = false;
             fieldInfos = fn;
             numDocs = si.DocCount;
-            IndexInput indexStream = null;
+            ChecksumIndexInput indexStream = null;
             try
             {
-                fieldsStream = d.OpenInput(IndexFileNames.SegmentFileName(segment, segmentSuffix, Lucene40StoredFieldsWriter.FIELDS_EXTENSION), context);
                 string indexStreamFN = IndexFileNames.SegmentFileName(segment, segmentSuffix, Lucene40StoredFieldsWriter.FIELDS_INDEX_EXTENSION);
+                string fieldsStreamFN = IndexFileNames.SegmentFileName(segment, segmentSuffix, Lucene40StoredFieldsWriter
+                    .FIELDS_EXTENSION);
                 indexStream = d.OpenInput(indexStreamFN, context);
 
                 string codecNameIdx = formatName + CompressingStoredFieldsWriter.CODEC_SFX_IDX;
-                string codecNameDat = formatName + CompressingStoredFieldsWriter.CODEC_SFX_DAT;
-                CodecUtil.CheckHeader(indexStream, codecNameIdx, CompressingStoredFieldsWriter.VERSION_START, CompressingStoredFieldsWriter.VERSION_CURRENT);
-                CodecUtil.CheckHeader(fieldsStream, codecNameDat, CompressingStoredFieldsWriter.VERSION_START, CompressingStoredFieldsWriter.VERSION_CURRENT);
+                version = CodecUtil.CheckHeader(indexStream, codecNameIdx, CompressingStoredFieldsWriter
+                    .VERSION_START, CompressingStoredFieldsWriter.VERSION_CURRENT);
 
                 indexReader = new CompressingStoredFieldsIndexReader(indexStream, si);
+                long maxPointer = -1;
+                if (version >= CompressingStoredFieldsWriter.VERSION_CHECKSUM)
+                {
+                    maxPointer = indexStream.ReadVLong();
+                    CodecUtil.CheckFooter(indexStream);
+                }
+                else
+                {
+                    CodecUtil.CheckEOF(indexStream);
+                }
+                indexStream.Close();
                 indexStream = null;
-
+                // Open the data file and read metadata
+                fieldsStream = d.OpenInput(fieldsStreamFN, context);
+                if (version >= CompressingStoredFieldsWriter.VERSION_CHECKSUM)
+                {
+                    if (maxPointer + CodecUtil.FooterLength() != fieldsStream.Length())
+                    {
+                        throw new CorruptIndexException("Invalid fieldsStream maxPointer (file truncated?): maxPointer="
+                             + maxPointer + ", length=" + fieldsStream.Length());
+                    }
+                }
+                else
+                {
+                    maxPointer = fieldsStream.Length();
+                }
+                this.maxPointer = maxPointer;
+                string codecNameDat = formatName + CompressingStoredFieldsWriter.CODEC_SFX_DAT;
+                int fieldsVersion = CodecUtil.CheckHeader(fieldsStream, codecNameDat, CompressingStoredFieldsWriter
+                    .VERSION_START, CompressingStoredFieldsWriter.VERSION_CURRENT);
+                if (version != fieldsVersion)
+                {
+                    throw new CorruptIndexException("Version mismatch between stored fields index and data: "
+                         + version + " != " + fieldsVersion);
+                }
+                if (version >= CompressingStoredFieldsWriter.VERSION_BIG_CHUNKS)
+                {
+                    chunkSize = fieldsStream.ReadVInt();
+                }
+                else
+                {
+                    chunkSize = -1;
+                }
                 packedIntsVersion = fieldsStream.ReadVInt();
-                decompressor = compressionMode.newDecompressor();
+                decompressor = compressionMode.NewDecompressor();
                 this.bytes = new BytesRef();
 
                 success = true;
@@ -91,7 +139,7 @@ namespace Lucene.Net.Codecs.Compressing
             {
                 if (!success)
                 {
-                    IOUtils.CloseWhileHandlingException((IDisposable)this, indexStream);
+                    IOUtils.CloseWhileHandlingException(this, indexStream);
                 }
             }
         }
@@ -139,7 +187,7 @@ namespace Lucene.Net.Codecs.Compressing
                     visitor.IntField(info, input.ReadInt());
                     break;
                 case CompressingStoredFieldsWriter.NUMERIC_FLOAT:
-                    visitor.FloatField(info, Number.IntBitsToFloat(input.ReadInt()));
+                    visitor.FloatField(info, input.ReadInt().IntBitsToFloat());
                     break;
                 case CompressingStoredFieldsWriter.NUMERIC_LONG:
                     visitor.LongField(info, input.ReadLong());
@@ -206,7 +254,8 @@ namespace Lucene.Net.Codecs.Compressing
                 }
                 else if (bitsPerStoredFields > 31)
                 {
-                    throw new CorruptIndexException("bitsPerStoredFields=" + bitsPerStoredFields);
+                    throw new CorruptIndexException("bitsPerStoredFields=" + bitsPerStoredFields + " (resource="
+                         + fieldsStream + ")");
                 }
                 else
                 {
@@ -225,7 +274,8 @@ namespace Lucene.Net.Codecs.Compressing
                 }
                 else if (bitsPerStoredFields > 31)
                 {
-                    throw new CorruptIndexException("bitsPerLength=" + bitsPerLength);
+                    throw new CorruptIndexException("bitsPerLength=" + bitsPerLength + " (resource="
+                        + fieldsStream + ")");
                 }
                 else
                 {
@@ -250,17 +300,37 @@ namespace Lucene.Net.Codecs.Compressing
 
             if ((length == 0) != (numStoredFields == 0))
             {
-                throw new CorruptIndexException("length=" + length + ", numStoredFields=" + numStoredFields);
+                throw new CorruptIndexException("length=" + length + ", numStoredFields=" + numStoredFields
+                     + " (resource=" + fieldsStream + ")");
             }
             if (numStoredFields == 0)
             {
                 // nothing to do
                 return;
             }
-
-            decompressor.Decompress(fieldsStream, totalLength, offset, length, bytes);
-
-            ByteArrayDataInput documentInput = new ByteArrayDataInput((byte[])(Array)bytes.bytes, bytes.offset, bytes.length);
+            DataInput documentInput;
+            if (version >= CompressingStoredFieldsWriter.VERSION_BIG_CHUNKS && totalLength >=
+                 2 * chunkSize)
+            {
+                //HM:revisit 
+                //assert chunkSize > 0;
+                //HM:revisit 
+                //assert offset < chunkSize;
+                decompressor.Decompress(fieldsStream, chunkSize, offset, Math.Min(length, chunkSize
+                     - offset), bytes);
+                documentInput = new _DataInput_317(this, length);
+            }
+            else
+            {
+                //HM:revisit 
+                //assert decompressed <= length;
+                BytesRef bytes = totalLength <= BUFFER_REUSE_THRESHOLD ? this.bytes : new BytesRef
+                    ();
+                decompressor.Decompress(fieldsStream, totalLength, offset, length, bytes);
+                //HM:revisit 
+                //assert bytes.length == length;
+                documentInput = new ByteArrayDataInput(bytes.bytes, bytes.offset, bytes.length);
+            }
             for (int fieldIDX = 0; fieldIDX < numStoredFields; fieldIDX++)
             {
                 long infoAndBits = documentInput.ReadVLong();
@@ -283,12 +353,73 @@ namespace Lucene.Net.Codecs.Compressing
             }
         }
 
+        private sealed class _DataInput_317 : DataInput
+        {
+            public _DataInput_317(CompressingStoredFieldsReader _enclosing, int length)
+            {
+                this._enclosing = _enclosing;
+                this.length = length;
+                this.decompressed = this._enclosing.bytes.length;
+            }
+
+            internal int decompressed;
+
+            /// <exception cref="System.IO.IOException"></exception>
+            internal void FillBuffer()
+            {
+                if (this.decompressed == length)
+                {
+                    throw new EOFException();
+                }
+                int toDecompress = Math.Min(length - this.decompressed, this._enclosing.chunkSize
+                    );
+                this._enclosing.decompressor.Decompress(this._enclosing.fieldsStream, toDecompress
+                    , 0, toDecompress, this._enclosing.bytes);
+                this.decompressed += toDecompress;
+            }
+
+            /// <exception cref="System.IO.IOException"></exception>
+            public override byte ReadByte()
+            {
+                if (this._enclosing.bytes.length == 0)
+                {
+                    this.FillBuffer();
+                }
+                --this._enclosing.bytes.length;
+                return this._enclosing.bytes.bytes[this._enclosing.bytes.offset++];
+            }
+
+            /// <exception cref="System.IO.IOException"></exception>
+            public override void ReadBytes(byte[] b, int offset, int len)
+            {
+                while (len > this._enclosing.bytes.length)
+                {
+                    System.Array.Copy(this._enclosing.bytes.bytes, this._enclosing.bytes.offset, b, offset
+                        , this._enclosing.bytes.length);
+                    len -= this._enclosing.bytes.length;
+                    offset += this._enclosing.bytes.length;
+                    this.FillBuffer();
+                }
+                System.Array.Copy(this._enclosing.bytes.bytes, this._enclosing.bytes.offset, b, offset
+                    , len);
+                this._enclosing.bytes.offset += len;
+                this._enclosing.bytes.length -= len;
+            }
+
+            private readonly CompressingStoredFieldsReader _enclosing;
+
+            private readonly int length;
+        }
         public override object Clone()
         {
             EnsureOpen();
             return new CompressingStoredFieldsReader(this);
         }
 
+        internal int GetVersion()
+        {
+            return version;
+        }
         public CompressionMode CompressionMode
         {
             get
@@ -297,16 +428,22 @@ namespace Lucene.Net.Codecs.Compressing
             }
         }
 
+        public int ChunkSize
+        {
+            get { return chunkSize; }
+        }
+
         // .NET Port: renamed to GetChunkIterator to avoid conflict with nested type.
         internal ChunkIterator GetChunkIterator(int startDocID)
         {
             EnsureOpen();
-            fieldsStream.Seek(indexReader.GetStartPointer(startDocID));
-            return new ChunkIterator(this);
+            return new ChunkIterator(this, startDocID);
         }
 
         internal sealed class ChunkIterator
         {
+            internal readonly ChecksumIndexInput fieldsStream;
+            internal readonly BytesRef spare;
             internal BytesRef bytes;
             internal int docBase;
             internal int chunkDocs;
@@ -315,14 +452,19 @@ namespace Lucene.Net.Codecs.Compressing
 
             private readonly CompressingStoredFieldsReader parent;
 
-            public ChunkIterator(CompressingStoredFieldsReader parent)
+            public ChunkIterator(CompressingStoredFieldsReader parent, int startDocId)
             {
                 this.parent = parent; // .NET Port
 
                 this.docBase = -1;
                 bytes = new BytesRef();
+                this.spare = new BytesRef();
                 numStoredFields = new int[1];
                 lengths = new int[1];
+                IndexInput @in = this._enclosing.fieldsStream;
+                @in.Seek(0);
+                this.fieldsStream = new BufferedChecksumIndexInput(@in);
+                this.fieldsStream.Seek(this._enclosing.indexReader.GetStartPointer(startDocId));
             }
 
             /**
@@ -343,67 +485,74 @@ namespace Lucene.Net.Codecs.Compressing
              */
             public void Next(int doc)
             {
-                parent.fieldsStream.Seek(parent.indexReader.GetStartPointer(doc));
-
-                int docBase = parent.fieldsStream.ReadVInt();
-                int chunkDocs = parent.fieldsStream.ReadVInt();
-                if (docBase < this.docBase + this.chunkDocs
-                    || docBase + chunkDocs > parent.numDocs)
+                this.fieldsStream.Seek(this._enclosing.indexReader.GetStartPointer(doc));
+                int docBase = this.fieldsStream.ReadVInt();
+                int chunkDocs = this.fieldsStream.ReadVInt();
+                if (docBase < this.docBase + this.chunkDocs || docBase + chunkDocs > this._enclosing
+                    .numDocs)
                 {
-                    throw new CorruptIndexException("Corrupted: current docBase=" + this.docBase
-                        + ", current numDocs=" + this.chunkDocs + ", new docBase=" + docBase
-                        + ", new numDocs=" + chunkDocs);
+                    throw new CorruptIndexException("Corrupted: current docBase=" + this.docBase + ", current numDocs="
+                         + this.chunkDocs + ", new docBase=" + docBase + ", new numDocs=" + chunkDocs +
+                        " (resource=" + this.fieldsStream + ")");
                 }
                 this.docBase = docBase;
                 this.chunkDocs = chunkDocs;
-
-                if (chunkDocs > numStoredFields.Length)
+                if (chunkDocs > this.numStoredFields.Length)
                 {
                     int newLength = ArrayUtil.Oversize(chunkDocs, 4);
-                    numStoredFields = new int[newLength];
-                    lengths = new int[newLength];
+                    this.numStoredFields = new int[newLength];
+                    this.lengths = new int[newLength];
                 }
-
                 if (chunkDocs == 1)
                 {
-                    numStoredFields[0] = parent.fieldsStream.ReadVInt();
-                    lengths[0] = parent.fieldsStream.ReadVInt();
+                    this.numStoredFields[0] = this.fieldsStream.ReadVInt();
+                    this.lengths[0] = this.fieldsStream.ReadVInt();
                 }
                 else
                 {
-                    int bitsPerStoredFields = parent.fieldsStream.ReadVInt();
+                    int bitsPerStoredFields = this.fieldsStream.ReadVInt();
                     if (bitsPerStoredFields == 0)
                     {
-                        Arrays.Fill(numStoredFields, 0, chunkDocs, parent.fieldsStream.ReadVInt());
-                    }
-                    else if (bitsPerStoredFields > 31)
-                    {
-                        throw new CorruptIndexException("bitsPerStoredFields=" + bitsPerStoredFields);
+                        Arrays.Fill(this.numStoredFields, 0, chunkDocs, this.fieldsStream.ReadVInt());
                     }
                     else
                     {
-                        PackedInts.ReaderIterator it = (PackedInts.ReaderIterator)PackedInts.GetReaderIteratorNoHeader(parent.fieldsStream, PackedInts.Format.PACKED, parent.packedIntsVersion, chunkDocs, bitsPerStoredFields, 1);
-                        for (int i = 0; i < chunkDocs; ++i)
+                        if (bitsPerStoredFields > 31)
                         {
-                            numStoredFields[i] = (int)it.Next();
+                            throw new CorruptIndexException("bitsPerStoredFields=" + bitsPerStoredFields + " (resource="
+                                 + this.fieldsStream + ")");
+                        }
+                        else
+                        {
+                            PackedInts.ReaderIterator it = PackedInts.GetReaderIteratorNoHeader(this.fieldsStream
+                                , PackedInts.Format.PACKED, this._enclosing.packedIntsVersion, chunkDocs, bitsPerStoredFields
+                                , 1);
+                            for (int i = 0; i < chunkDocs; ++i)
+                            {
+                                this.numStoredFields[i] = (int)it.Next();
+                            }
                         }
                     }
-
-                    int bitsPerLength = parent.fieldsStream.ReadVInt();
+                    int bitsPerLength = this.fieldsStream.ReadVInt();
                     if (bitsPerLength == 0)
                     {
-                        Arrays.Fill(lengths, 0, chunkDocs, parent.fieldsStream.ReadVInt());
-                    }
-                    else if (bitsPerLength > 31)
-                    {
-                        throw new CorruptIndexException("bitsPerLength=" + bitsPerLength);
+                        Arrays.Fill(this.lengths, 0, chunkDocs, this.fieldsStream.ReadVInt());
                     }
                     else
                     {
-                        PackedInts.ReaderIterator it = (PackedInts.ReaderIterator)PackedInts.GetReaderIteratorNoHeader(parent.fieldsStream, PackedInts.Format.PACKED, parent.packedIntsVersion, chunkDocs, bitsPerLength, 1);
-                        for (int i = 0; i < chunkDocs; ++i)
+                        if (bitsPerLength > 31)
                         {
-                            lengths[i] = (int)it.Next();
+                            throw new CorruptIndexException("bitsPerLength=" + bitsPerLength);
+                        }
+                        else
+                        {
+                            PackedInts.ReaderIterator it = PackedInts.GetReaderIteratorNoHeader(this.fieldsStream
+                                , PackedInts.Format.PACKED, this._enclosing.packedIntsVersion, chunkDocs, bitsPerLength
+                                , 1);
+                            for (int i = 0; i < chunkDocs; ++i)
+                            {
+                                this.lengths[i] = (int)it.Next();
+                            }
                         }
                     }
                 }
@@ -416,10 +565,32 @@ namespace Lucene.Net.Codecs.Compressing
             {
                 // decompress data
                 int chunkSize = this.ChunkSize();
-                parent.decompressor.Decompress(parent.fieldsStream, chunkSize, 0, chunkSize, bytes);
+                if (this._enclosing.version >= CompressingStoredFieldsWriter.VERSION_BIG_CHUNKS &&
+                     chunkSize >= 2 * this._enclosing.chunkSize)
+                {
+                    this.bytes.offset = this.bytes.length = 0;
+                    for (int decompressed = 0; decompressed < chunkSize; )
+                    {
+                        int toDecompress = Math.Min(chunkSize - decompressed, this._enclosing.chunkSize);
+                        this._enclosing.decompressor.Decompress(this.fieldsStream, toDecompress, 0, toDecompress
+                            , this.spare);
+                        this.bytes.bytes = ArrayUtil.Grow(this.bytes.bytes, this.bytes.length + this.spare
+                            .length);
+                        System.Array.Copy(this.spare.bytes, this.spare.offset, this.bytes.bytes, this.bytes
+                            .length, this.spare.length);
+                        this.bytes.length += this.spare.length;
+                        decompressed += toDecompress;
+                    }
+                }
+                else
+                {
+                    this._enclosing.decompressor.Decompress(this.fieldsStream, chunkSize, 0, chunkSize
+                        , this.bytes);
+                }
                 if (bytes.length != chunkSize)
                 {
-                    throw new CorruptIndexException("Corrupted: expected chunk size = " + this.ChunkSize() + ", got " + bytes.length);
+                    throw new CorruptIndexException("Corrupted: expected chunk size = " + this.ChunkSize
+                        () + ", got " + this.bytes.length + " (resource=" + this.fieldsStream + ")");
                 }
             }
 
@@ -428,13 +599,40 @@ namespace Lucene.Net.Codecs.Compressing
              */
             public void CopyCompressedData(DataOutput output)
             {
-                long chunkEnd = docBase + chunkDocs == parent.numDocs
-                    ? parent.fieldsStream.Length
-                    : parent.indexReader.GetStartPointer(docBase + chunkDocs);
-                output.CopyBytes(parent.fieldsStream, chunkEnd - parent.fieldsStream.FilePointer);
+                long chunkEnd = this.docBase + this.chunkDocs == this._enclosing.numDocs ? this._enclosing
+                    .maxPointer : this._enclosing.indexReader.GetStartPointer(this.docBase + this.chunkDocs
+                    );
+                @out.CopyBytes(this.fieldsStream, chunkEnd - this.fieldsStream.GetFilePointer());
             }
 
+            /// <summary>Check integrity of the data.</summary>
+            /// <remarks>Check integrity of the data. The iterator is not usable after this method has been called.
+            /// 	</remarks>
+            /// <exception cref="System.IO.IOException"></exception>
+            internal void CheckIntegrity()
+            {
+                if (this._enclosing.version >= CompressingStoredFieldsWriter.VERSION_CHECKSUM)
+                {
+                    this.fieldsStream.Seek(this.fieldsStream.Length() - CodecUtil.FooterLength());
+                    CodecUtil.CheckFooter(this.fieldsStream);
+                }
+            }
+
+            private readonly CompressingStoredFieldsReader _enclosing;
         }
 
+        public override long RamBytesUsed()
+        {
+            return indexReader.RamBytesUsed();
+        }
+
+        /// <exception cref="System.IO.IOException"></exception>
+        public override void CheckIntegrity()
+        {
+            if (version >= CompressingStoredFieldsWriter.VERSION_CHECKSUM)
+            {
+                CodecUtil.ChecksumEntireFile(fieldsStream);
+            }
+        }
     }
 }

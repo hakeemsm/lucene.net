@@ -1,4 +1,5 @@
-﻿using Lucene.Net.Index;
+﻿using System.Threading;
+using Lucene.Net.Index;
 using Lucene.Net.Store;
 using Lucene.Net.Support;
 using Lucene.Net.Util;
@@ -18,7 +19,7 @@ namespace Lucene.Net.Codecs.Lucene42
         private readonly IDictionary<int, BinaryEntry> binaries;
         private readonly IDictionary<int, FSTEntry> fsts;
         private readonly IndexInput data;
-
+		private readonly int version;
         // ram instances we have already loaded
         private readonly IDictionary<int, NumericDocValues> numericInstances =
             new HashMap<int, NumericDocValues>();
@@ -29,22 +30,58 @@ namespace Lucene.Net.Codecs.Lucene42
 
         private readonly int maxDoc;
 
+        private long ramBytesUsed;
+
+        internal const byte NUMBER = 0;
+
+        internal const byte BYTES = 1;
+
+        internal const byte FST = 2;
+
+        internal const int BLOCK_SIZE = 4096;
+
+        internal const sbyte DELTA_COMPRESSED = 0;
+
+        internal const sbyte TABLE_COMPRESSED = 1;
+
+        internal const sbyte UNCOMPRESSED = 2;
+
+        internal const sbyte GCD_COMPRESSED = 3;
+
+        internal const int VERSION_START = 0;
+
+        internal const int VERSION_GCD_COMPRESSION = 1;
+
+        internal const int VERSION_CHECKSUM = 2;
+
+        internal const int VERSION_CURRENT = VERSION_CHECKSUM;
         internal Lucene42DocValuesProducer(SegmentReadState state, String dataCodec, String dataExtension, String metaCodec, String metaExtension)
         {
             maxDoc = state.segmentInfo.DocCount;
             String metaName = IndexFileNames.SegmentFileName(state.segmentInfo.name, state.segmentSuffix, metaExtension);
             // read in the entries from the metadata file.
-            IndexInput input = state.directory.OpenInput(metaName, state.context);
+            ChecksumIndexInput input = state.directory.OpenChecksumInput(metaName, state.context
+                );
             bool success = false;
+            
+            
             try
             {
-                CodecUtil.CheckHeader(input, metaCodec,
-                                          Lucene42DocValuesConsumer.VERSION_START,
-                                          Lucene42DocValuesConsumer.VERSION_START);
+                long ramEst = RamUsageEstimator.ShallowSizeOfInstance(GetType());
+                ramBytesUsed = Interlocked.Read(ref ramEst);
+                version = CodecUtil.CheckHeader(input, metaCodec, VERSION_START, VERSION_CURRENT);
                 numerics = new HashMap<int, NumericEntry>();
                 binaries = new HashMap<int, BinaryEntry>();
                 fsts = new HashMap<int, FSTEntry>();
                 ReadFields(input, state.fieldInfos);
+                if (version >= VERSION_CHECKSUM)
+                {
+                    CodecUtil.CheckFooter(input);
+                }
+                else
+                {
+                    CodecUtil.CheckEOF(input);
+                }
                 success = true;
             }
             finally
@@ -58,26 +95,64 @@ namespace Lucene.Net.Codecs.Lucene42
                     IOUtils.CloseWhileHandlingException((IDisposable)input);
                 }
             }
-
-            String dataName = IndexFileNames.SegmentFileName(state.segmentInfo.name, state.segmentSuffix, dataExtension);
-            data = state.directory.OpenInput(dataName, state.context);
-            CodecUtil.CheckHeader(data, dataCodec,
-                                        Lucene42DocValuesConsumer.VERSION_START,
-                                        Lucene42DocValuesConsumer.VERSION_START);
+            success = false;
+            try
+            {
+                string dataName = IndexFileNames.SegmentFileName(state.segmentInfo.name, state.segmentSuffix
+                    , dataExtension);
+                data = state.directory.OpenInput(dataName, state.context);
+                int version2 = CodecUtil.CheckHeader(data, dataCodec, VERSION_START, VERSION_CURRENT
+                    );
+                if (version != version2)
+                {
+                    throw new CorruptIndexException("Format versions mismatch");
+                }
+                success = true;
+            }
+            finally
+            {
+                if (!success)
+                {
+                    IOUtils.CloseWhileHandlingException((IDisposable)data);
+                }
+            }
         }
 
         private void ReadFields(IndexInput meta, FieldInfos infos)
         {
             int fieldNumber = meta.ReadVInt();
-            
+
             while (fieldNumber != -1)
             {
+                if (fieldNumber < 0)
+                {
+                    // trickier to validate more: because we re-use for norms, because we use multiple entries
+                    // for "composite" types like sortedset, etc.
+                    throw new CorruptIndexException("Invalid field number: " + fieldNumber + ", input="
+                         + meta);
+                }
                 int fieldType = meta.ReadByte();
                 if (fieldType == Lucene42DocValuesConsumer.NUMBER)
                 {
                     NumericEntry entry = new NumericEntry();
                     entry.offset = meta.ReadLong();
                     entry.format = (sbyte)meta.ReadByte();
+                    switch (entry.format)
+                    {
+                        case DELTA_COMPRESSED:
+                        case TABLE_COMPRESSED:
+                        case GCD_COMPRESSED:
+                        case UNCOMPRESSED:
+                            {
+                                break;
+                            }
+
+                        default:
+                            {
+                                throw new CorruptIndexException("Unknown format: " + entry.format + ", input=" +
+                                    meta);
+                            }
+                    }
                     if (entry.format != Lucene42DocValuesConsumer.UNCOMPRESSED)
                     {
                         entry.packedIntsVersion = meta.ReadVInt();
@@ -124,6 +199,17 @@ namespace Lucene.Net.Codecs.Lucene42
             return instance;
         }
 
+        public override long RamBytesUsed
+        {
+            get { return ramBytesUsed; }
+        }
+        public override void CheckIntegrity()
+        {
+            if (version >= VERSION_CHECKSUM)
+            {
+                CodecUtil.ChecksumEntireFile(data);
+            }
+        }
         private NumericDocValues LoadNumeric(FieldInfo field)
         {
             NumericEntry entry = numerics[field.number];
@@ -131,6 +217,11 @@ namespace Lucene.Net.Codecs.Lucene42
             if (entry.format == Lucene42DocValuesConsumer.TABLE_COMPRESSED)
             {
                 int size = data.ReadVInt();
+                if (size > 256)
+                {
+                    throw new CorruptIndexException("TABLE_COMPRESSED cannot have more than 256 distinct values, input="
+                         + data);
+                }
                 long[] decode = new long[size];
                 for (int i = 0; i < decode.Length; i++)
                 {
@@ -139,27 +230,36 @@ namespace Lucene.Net.Codecs.Lucene42
                 int formatID = data.ReadVInt();
                 int bitsPerValue = data.ReadVInt();
                 PackedInts.IReader reader = PackedInts.GetReaderNoHeader(data, PackedInts.Format.ById(formatID), entry.packedIntsVersion, maxDoc, bitsPerValue);
-
+                Interlocked.Add(ref ramBytesUsed, RamUsageEstimator.SizeOf(decode) + reader.RamBytesUsed());
+                
                 return new AnonymousTableCompressedNumericDocValues(decode, reader);
             }
-            else if (entry.format == Lucene42DocValuesConsumer.DELTA_COMPRESSED)
+            if (entry.format == Lucene42DocValuesConsumer.DELTA_COMPRESSED)
             {
                 int blockSize = data.ReadVInt();
                 BlockPackedReader reader = new BlockPackedReader(data, entry.packedIntsVersion, blockSize, maxDoc, false);
-
-                return new AnonymousDeltaCompressedNumericDocValues(reader);
+                Interlocked.Add(ref ramBytesUsed, reader.RamBytesUsed);
+                
+                return reader;
             }
-            else if (entry.format == Lucene42DocValuesConsumer.UNCOMPRESSED)
+            if (entry.format == Lucene42DocValuesConsumer.UNCOMPRESSED)
             {
                 byte[] bytes = new byte[maxDoc];
                 data.ReadBytes(bytes, 0, bytes.Length);
-
+                Interlocked.Add(ref ramBytesUsed, RamUsageEstimator.SizeOf(bytes));
                 return new AnonymousUncompressedNumericDocValues(bytes);
             }
-            else
-            {
-                throw new InvalidOperationException();
-            }
+            if(entry.format == GCD_COMPRESSED)
+			{
+				long min = data.ReadLong();
+				long mult = data.ReadLong();
+				int quotientBlockSize = data.ReadVInt();
+				BlockPackedReader quotientReader = new BlockPackedReader(data, entry.packedIntsVersion, quotientBlockSize, maxDoc, false);
+			    Interlocked.Add(ref ramBytesUsed, quotientReader.RamBytesUsed);
+				return new AnonymousGCDCompressedNumericDocValues(min, mult, quotientReader);
+			}
+
+            throw new Exception();
         }
 
         private sealed class AnonymousTableCompressedNumericDocValues : NumericDocValues
@@ -192,6 +292,7 @@ namespace Lucene.Net.Codecs.Lucene42
             {
                 return reader.Get(docID);
             }
+			private readonly byte[] bytes;
         }
 
         private sealed class AnonymousUncompressedNumericDocValues : NumericDocValues
@@ -209,6 +310,27 @@ namespace Lucene.Net.Codecs.Lucene42
             }
         }
 
+		private sealed class AnonymousGCDCompressedNumericDocValues : NumericDocValues
+		{
+			public AnonymousGCDCompressedNumericDocValues(long min, long mult, BlockPackedReader quotientReader
+				)
+			{
+				this.min = min;
+				this.mult = mult;
+				this.quotientReader = quotientReader;
+			}
+
+			public override long Get(int docID)
+			{
+				return min + mult * quotientReader.Get(docID);
+			}
+
+			private readonly long min;
+
+			private readonly long mult;
+
+			private readonly BlockPackedReader quotientReader;
+		}
         public override BinaryDocValues GetBinary(FieldInfo field)
         {
             BinaryDocValues instance = binaryInstances[field.number];
@@ -230,21 +352,16 @@ namespace Lucene.Net.Codecs.Lucene42
             if (entry.minLength == entry.maxLength)
             {
                 int fixedLength = entry.minLength;
-                return new AnonymousDelegatedBinaryDocValues((docID, result) =>
-                {
-                    bytesReader.FillSlice(result, fixedLength * (long)docID, fixedLength);
-                });
+                Interlocked.Add(ref ramBytesUsed, bytes.RamBytesUsed);
+                return new AnonymousDelegatedBinaryDocValues((docID, result) => bytesReader.FillSlice(result, fixedLength * (long)docID, fixedLength));
             }
-            else
+            var addresses = new MonotonicBlockPackedReader(data, entry.packedIntsVersion, entry.blockSize, maxDoc, false);
+            return new AnonymousDelegatedBinaryDocValues((docID, result) =>
             {
-                MonotonicBlockPackedReader addresses = new MonotonicBlockPackedReader(data, entry.packedIntsVersion, entry.blockSize, maxDoc, false);
-                return new AnonymousDelegatedBinaryDocValues((docID, result) =>
-                {
-                    long startAddress = docID == 0 ? 0 : addresses.Get(docID - 1);
-                    long endAddress = addresses.Get(docID);
-                    bytesReader.FillSlice(result, startAddress, (int)(endAddress - startAddress));
-                });
-            }
+                long startAddress = docID == 0 ? 0 : addresses.Get(docID - 1);
+                long endAddress = addresses.Get(docID);
+                bytesReader.FillSlice(result, startAddress, (int)(endAddress - startAddress));
+            });
         }
 
         private sealed class AnonymousDelegatedBinaryDocValues : BinaryDocValues
@@ -273,6 +390,7 @@ namespace Lucene.Net.Codecs.Lucene42
                 {
                     data.Seek(entry.offset);
                     instance = new FST<long>(data, PositiveIntOutputs.GetSingleton(true));
+                    Interlocked.Add(ref ramBytesUsed,instance.SizeInBytes());
                     fstInstances[field.number] = instance;
                 }
             }
@@ -390,6 +508,7 @@ namespace Lucene.Net.Codecs.Lucene42
                 {
                     data.Seek(entry.offset);
                     instance = new FST<long>(data, PositiveIntOutputs.GetSingleton(true));
+                    Interlocked.Add(ref ramBytesUsed, instance.SizeInBytes());
                     fstInstances[field.number] = instance;
                 }
             }
@@ -405,7 +524,7 @@ namespace Lucene.Net.Codecs.Lucene42
             BytesRef bytesref = new BytesRef();
             ByteArrayDataInput input = new ByteArrayDataInput();
 
-            return new AnonymousSortedSetDocValues(docToOrds, fst, in2, firstArc, scratchArc, scratchInts, fstEnum, bytesref, input, entry);
+            return new AnonymousSortedSetDocValues(input, docToOrds, bytesref, in2, fst, firstArc, scratchArc, scratchInts, fstEnum, entry);
         }
 
         private sealed class AnonymousSortedSetDocValues : SortedSetDocValues
@@ -421,22 +540,28 @@ namespace Lucene.Net.Codecs.Lucene42
             private readonly ByteArrayDataInput input;
             private readonly FSTEntry entry;
             private long currentOrd;
+            private readonly BytesRef bytesRef;
+            private readonly FST.BytesReader bytesReader;
+			public AnonymousSortedSetDocValues(ByteArrayDataInput in1, BinaryDocValues docToOrds
+				, BytesRef @ref, FST.BytesReader @in, FST<long> fst, FST.Arc<long> firstArc, FST.Arc
+				<long> scratchArc, IntsRef scratchInts, BytesRefFSTEnum<long> fstEnum, Lucene42DocValuesProducer.FSTEntry
+				 entry)
 
-            public AnonymousSortedSetDocValues(BinaryDocValues docToOrds, FST<long> fst, FST.BytesReader in2, FST.Arc<long> firstArc,
-                FST.Arc<long> scratchArc, IntsRef scratchInts, BytesRefFSTEnum<long> fstEnum, BytesRef bytesref, ByteArrayDataInput input, FSTEntry entry)
+           
             {
+				this.input = in1;
                 this.docToOrds = docToOrds;
+				this.bytesRef = @ref;
+				this.bytesReader = @in;
                 this.fst = fst;
-                this.in2 = in2;
                 this.firstArc = firstArc;
                 this.scratchArc = scratchArc;
                 this.scratchInts = scratchInts;
                 this.fstEnum = fstEnum;
-                this.bytesref = bytesref;
-                this.input = input;
                 this.entry = entry;
             }
 
+			
             public override long NextOrd()
             {
                 if (input.EOF)
@@ -511,8 +636,22 @@ namespace Lucene.Net.Codecs.Lucene42
                     return new FSTTermsEnum(fst);
                 }
             }
+			
+			
         }
 
+		/// <exception cref="System.IO.IOException"></exception>
+		public override IBits GetDocsWithField(FieldInfo field)
+		{
+			if (field.GetDocValuesType() == FieldInfo.DocValuesType.SORTED_SET)
+			{
+				return DocValues.DocsWithValue(GetSortedSet(field), maxDoc);
+			}
+			else
+			{
+				return new Bits.MatchAllBits(maxDoc);
+			}
+		}
         protected override void Dispose(bool disposing)
         {
             if (disposing)
@@ -567,14 +706,7 @@ namespace Lucene.Net.Codecs.Lucene42
             public override BytesRef Next()
             {
                 BytesRefFSTEnum<long>.InputOutput<long> io = in2.Next();
-                if (io == null)
-                {
-                    return null;
-                }
-                else
-                {
-                    return io.Input;
-                }
+                return io == null ? null : io.Input;
             }
 
             public override IComparer<BytesRef> Comparator
@@ -582,34 +714,16 @@ namespace Lucene.Net.Codecs.Lucene42
                 get { return BytesRef.UTF8SortedAsUnicodeComparer; }
             }
 
-            public override SeekStatus SeekCeil(BytesRef text, bool useCache)
-            {
-                if (in2.SeekCeil(text) == null)
-                {
-                    return SeekStatus.END;
-                }
-                else if (Term.Equals(text))
-                {
-                    // TODO: add SeekStatus to FSTEnum like in https://issues.apache.org/jira/browse/LUCENE-3729
-                    // to remove this comparision?
-                    return SeekStatus.FOUND;
-                }
-                else
-                {
-                    return SeekStatus.NOT_FOUND;
-                }
-            }
+			public override SeekStatus SeekCeil(BytesRef text)
+			{
+			    return in2.SeekCeil(text) == null
+			        ? SeekStatus.END
+			        : (Term.Equals(text) ? SeekStatus.FOUND : SeekStatus.NOT_FOUND);
+			}
 
-            public override bool SeekExact(BytesRef text, bool useCache)
+            public override bool SeekExact(BytesRef text)
             {
-                if (in2.SeekExact(text) == null)
-                {
-                    return false;
-                }
-                else
-                {
-                    return true;
-                }
+                return in2.SeekExact(text) != null;
             }
 
             public override void SeekExact(long ord)

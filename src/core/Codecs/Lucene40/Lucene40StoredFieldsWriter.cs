@@ -185,15 +185,11 @@ namespace Lucene.Net.Codecs.Lucene40
                 }
                 else if (number is float)
                 {
-                    fieldsStream.WriteInt(Number.FloatToIntBits((float)number));
-                }
-                else if (number is double)
-                {
-                    fieldsStream.WriteLong(BitConverter.DoubleToInt64Bits((double)number));
+                    fieldsStream.WriteInt(((float)number).FloatToIntBits());
                 }
                 else
                 {
-                    throw new InvalidOperationException("Cannot get here");
+                    fieldsStream.WriteLong(BitConverter.DoubleToInt64Bits((double)number));
                 }
             }
         }

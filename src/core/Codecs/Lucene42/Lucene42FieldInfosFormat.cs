@@ -1,27 +1,20 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace Lucene.Net.Codecs.Lucene42
 {
+	[Obsolete(@"Only for reading old 4.2-4.5 segments")]
     public sealed class Lucene42FieldInfosFormat : FieldInfosFormat
     {
         private readonly FieldInfosReader reader = new Lucene42FieldInfosReader();
-        private readonly FieldInfosWriter writer = new Lucene42FieldInfosWriter();
 
-        public Lucene42FieldInfosFormat()
-        {
-        }
-
-        public override FieldInfosReader FieldInfosReader
+	    public override FieldInfosReader FieldInfosReader
         {
             get { return reader; }
         }
 
         public override FieldInfosWriter FieldInfosWriter
         {
-            get { return writer; }
+            get { throw new NotSupportedException("this codec can only be used for reading"); }
         }
 
         /** Extension of field infos */

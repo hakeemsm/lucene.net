@@ -76,7 +76,7 @@ namespace Lucene.Net.Search.Spans
         {
             int h = match.GetHashCode();
             h ^= (h << 8) | Number.URShift(h, 25); // reversible
-            h ^= Number.FloatToIntBits(Boost) ^ end;
+            h ^= Boost.FloatToIntBits() ^ end;
             return h;
         }
     }

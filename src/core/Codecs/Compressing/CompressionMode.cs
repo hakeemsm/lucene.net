@@ -40,12 +40,12 @@ namespace Lucene.Net.Codecs.Compressing
         /**
          * Create a new {@link Compressor} instance.
          */
-        public abstract Compressor newCompressor();
+        public abstract Compressor NewCompressor();
 
         /**
          * Create a new {@link Decompressor} instance.
          */
-        public abstract Decompressor newDecompressor();
+        public abstract Decompressor NewDecompressor();
 
 
         /**
@@ -57,12 +57,12 @@ namespace Lucene.Net.Codecs.Compressing
         public class CompressionModeFast : CompressionMode
         {
 
-            public override Compressor newCompressor()
+            public override Compressor NewCompressor()
             {
                 return new LZ4FastCompressor();
             }
 
-            public override Decompressor newDecompressor()
+            public override Decompressor NewDecompressor()
             {
                 return new DecompressorLZ4();
             }
@@ -84,12 +84,12 @@ namespace Lucene.Net.Codecs.Compressing
         public class CompressionModeHigh : CompressionMode
         {
 
-            public override Compressor newCompressor()
+            public override Compressor NewCompressor()
             {
                 return new DeflateCompressor(Deflater.BEST_COMPRESSION);
             }
 
-            public override Decompressor newDecompressor()
+            public override Decompressor NewDecompressor()
             {
                 return new DeflateDecompressor();
             }
@@ -109,12 +109,12 @@ namespace Lucene.Net.Codecs.Compressing
         public sealed class CompressionModeFastDecompression : CompressionMode
         {
 
-            public override Compressor newCompressor()
+            public override Compressor NewCompressor()
             {
                 return new LZ4HighCompressor();
             }
 
-            public override Decompressor newDecompressor()
+            public override Decompressor NewDecompressor()
             {
                 return new DecompressorLZ4();
             }

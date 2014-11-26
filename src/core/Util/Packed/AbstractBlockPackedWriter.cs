@@ -9,25 +9,11 @@ namespace Lucene.Net.Util.Packed
 {
     public abstract class AbstractBlockPackedWriter
     {
+		internal const int MIN_BLOCK_SIZE = 64;
         internal const int MAX_BLOCK_SIZE = 1 << (30 - 3);
         internal const int MIN_VALUE_EQUALS_0 = 1 << 0;
         internal const int BPV_SHIFT = 1;
 
-        internal static void CheckBlockSize(int blockSize)
-        {
-            if (blockSize <= 0 || blockSize > MAX_BLOCK_SIZE)
-            {
-                throw new ArgumentException("blockSize must be > 0 and < " + MAX_BLOCK_SIZE + ", got " + blockSize);
-            }
-            if (blockSize < 64)
-            {
-                throw new ArgumentException("blockSize must be >= 64, got " + blockSize);
-            }
-            if ((blockSize & (blockSize - 1)) != 0)
-            {
-                throw new ArgumentException("blockSize must be a power of two, got " + blockSize);
-            }
-        }
 
         internal static long ZigZagEncode(long n)
         {
@@ -55,7 +41,7 @@ namespace Lucene.Net.Util.Packed
 
         public AbstractBlockPackedWriter(DataOutput output, int blockSize)
         {
-            CheckBlockSize(blockSize);
+			PackedInts.CheckBlockSize(blockSize, MIN_BLOCK_SIZE, MAX_BLOCK_SIZE);
             Reset(output);
             values = new long[blockSize];
         }
