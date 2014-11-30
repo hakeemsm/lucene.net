@@ -129,7 +129,7 @@ namespace Lucene.Net.Store
             }
         }
 
-        public virtual void WriteStringSet(ISet<string> set)
+		public virtual void WriteStringSet(ICollection<string> set)
         {
             if (set == null)
             {

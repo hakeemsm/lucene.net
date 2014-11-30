@@ -22,7 +22,7 @@ namespace Lucene.Net.Support
 
         public bool Get()
         {
-            return value == 1 ? true : false;
+            return value == 1;
         }
 
         public bool CompareAndSet(bool expect, bool update)

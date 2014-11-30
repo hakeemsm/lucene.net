@@ -393,6 +393,7 @@
     <Compile Include="Index\AutomatonTermsEnum.cs" />
     <Compile Include="Index\BaseCompositeReader.cs" />
     <Compile Include="Index\BinaryDocValues.cs" />
+    <Compile Include="Index\BinaryDocValuesFieldUpdates.cs" />
     <Compile Include="Index\BinaryDocValuesWriter.cs" />
     <Compile Include="Index\BitsSlice.cs" />
     <Compile Include="Index\BufferedDeletes.cs" />
@@ -483,7 +484,6 @@
     <Compile Include="Index\MergePolicy.cs" />
     <Compile Include="Index\MergeScheduler.cs" />
     <Compile Include="Index\MergeState.cs" />
-    <Compile Include="Index\MergeTrigger.cs" />
     <Compile Include="Index\MultiBits.cs" />
     <Compile Include="Index\MultiDocsAndPositionsEnum.cs" />
     <Compile Include="Index\MultiDocsEnum.cs" />
@@ -561,7 +561,6 @@
     <Compile Include="Index\TermState.cs" />
     <Compile Include="Index\TermVectorsConsumer.cs" />
     <Compile Include="Index\TermVectorsConsumerPerField.cs" />
-    <Compile Include="Index\ThreadAffinityDocumentsWriterThreadPool.cs" />
     <Compile Include="Index\TieredMergePolicy.cs" />
     <Compile Include="Index\TrackingIndexWriter.cs" />
     <Compile Include="Index\TwoPhaseCommit.cs" />
@@ -958,6 +957,8 @@
     <Compile Include="Support\AppSettings.cs" />
     <Compile Include="Support\Arrays.cs" />
     <Compile Include="Support\AtomicBoolean.cs" />
+    <Compile Include="Support\AtomicInteger.cs" />
+    <Compile Include="Support\AtomicLong.cs" />
     <Compile Include="Support\AttributeImplItem.cs" />
     <Compile Include="Support\BitSetSupport.cs" />
     <Compile Include="Support\BreakIterator.cs" />
@@ -1064,7 +1065,6 @@
     <Compile Include="Util\Packed\AbstractBlockPackedWriter.cs" />
     <Compile Include="Util\Packed\AbstractPagedMutable.cs" />
     <Compile Include="Util\Packed\AppendingDeltaPackedLongBuffer.cs" />
-    <Compile Include="Util\Packed\AppendingLongBuffer.cs" />
     <Compile Include="Util\Packed\AppendingPackedLongBuffer.cs" />
     <Compile Include="Util\Packed\BlockPackedReader.cs" />
     <Compile Include="Util\Packed\BlockPackedReaderIterator.cs" />

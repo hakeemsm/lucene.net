@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+using System.Collections.ObjectModel;
+using System.Linq;
 using Lucene.Net.Codecs;
 using Lucene.Net.Codecs.Lucene3x;
 using Lucene.Net.Store;
@@ -41,12 +43,18 @@ namespace Lucene.Net.Index
     /// (subject to change suddenly in the next release)<p/>
     /// </summary>
     [Serializable]
-    public sealed class SegmentInfos : List<SegmentInfoPerCommit>, ICloneable
+    public sealed class SegmentInfos : List<SegmentCommitInfo>, ICloneable
     {
         public const int VERSION_40 = 0;
 
-        public const int FORMAT_SEGMENTS_GEN_CURRENT = -2;
+		public const int VERSION_46 = 1;
+		public const int VERSION_48 = 2;
+		private const int FORMAT_SEGMENTS_GEN_47 = -2;
+        
 
+		private const int FORMAT_SEGMENTS_GEN_CHECKSUM = -3;
+		private const int FORMAT_SEGMENTS_GEN_START = FORMAT_SEGMENTS_GEN_47;
+		public const int FORMAT_SEGMENTS_GEN_CURRENT = FORMAT_SEGMENTS_GEN_CHECKSUM;
         public int counter = 0; // used to name new segments
         /// <summary> counts how often the index has been changed by adding or deleting docs.
         /// starting with the current time in milliseconds forces to create unique version numbers.
@@ -60,6 +68,7 @@ namespace Lucene.Net.Index
 
         internal IDictionary<string, string> userData = new HashMap<string, string>(); // Opaque Map<String, String> that user can specify during IndexWriter.commit
 
+		private IList<SegmentCommitInfo> segments = new List<SegmentCommitInfo>();
         /// <summary> If non-null, information about loading segments_N files</summary>
         /// <seealso cref="SetInfoStream">
         /// </seealso>
@@ -69,9 +78,9 @@ namespace Lucene.Net.Index
         {
         }
 
-        public SegmentInfoPerCommit Info(int i)
+        public SegmentCommitInfo Info(int i)
         {
-            return (SegmentInfoPerCommit)this[i];
+            return (SegmentCommitInfo)this[i];
         }
 
         /// <summary> Get the generation (N) of the current segments_N file
@@ -168,6 +177,49 @@ namespace Lucene.Net.Index
         }
 
 
+		/// <summary>
+		/// A utility for writing the
+		/// <see cref="IndexFileNames.SEGMENTS_GEN">IndexFileNames.SEGMENTS_GEN</see>
+		/// file to a
+		/// <see cref="Lucene.Net.Store.Directory">Lucene.Net.Store.Directory</see>
+		/// .
+		/// <p>
+		/// <b>NOTE:</b> this is an internal utility which is kept public so that it's
+		/// accessible by code from other packages. You should avoid calling this
+		/// method unless you're absolutely sure what you're doing!
+		/// </summary>
+		/// <lucene.internal></lucene.internal>
+		public static void WriteSegmentsGen(Directory dir, long generation)
+		{
+			try
+			{
+				IndexOutput genOutput = dir.CreateOutput(IndexFileNames.SEGMENTS_GEN, IOContext.READONCE);
+				try
+				{
+					genOutput.WriteInt(FORMAT_SEGMENTS_GEN_CURRENT);
+					genOutput.WriteLong(generation);
+					genOutput.WriteLong(generation);
+					CodecUtil.WriteFooter(genOutput);
+				}
+				finally
+				{
+					genOutput.Dispose();
+					dir.Sync(new List<string>{IndexFileNames.SEGMENTS_GEN});
+				}
+			}
+			catch
+			{
+				// It's OK if we fail to write this file since it's
+				// used only as one of the retry fallbacks.
+				try
+				{
+					dir.DeleteFile(IndexFileNames.SEGMENTS_GEN);
+				}
+				catch
+				{
+				}
+			}
+		}
         /// <summary> Get the next segments_N filename that will be written.</summary>
         public string NextSegmentFileName
         {
@@ -208,15 +260,17 @@ namespace Lucene.Net.Index
 
             lastGeneration = generation;
 
-            var input = new ChecksumIndexInput(directory.OpenInput(segmentFileName, IOContext.READ));
-
+			ChecksumIndexInput input = directory.OpenChecksumInput(segmentFileName, IOContext
+				.READ);
             try
             {
                 int format = input.ReadInt();
+				int actualFormat;
                 if (format == CodecUtil.CODEC_MAGIC)
                 {
                     // 4.0+
-                    CodecUtil.CheckHeaderNoMagic(input, "segments", VERSION_40, VERSION_40);
+					actualFormat = CodecUtil.CheckHeaderNoMagic(input, "segments", VERSION_40, VERSION_48
+						);
                     version = input.ReadLong();
                     counter = input.ReadInt();
                     int numSegments = input.ReadInt();
@@ -237,27 +291,58 @@ namespace Lucene.Net.Index
                         {
                             throw new CorruptIndexException("invalid deletion count: " + delCount + " (resource: " + input + ")");
                         }
-                        Add(new SegmentInfoPerCommit(info, delCount, delGen));
-                    }
+						long fieldInfosGen = -1;
+						if (actualFormat >= VERSION_46)
+						{
+							fieldInfosGen = input.ReadLong();
+						}
+						SegmentCommitInfo siPerCommit = new SegmentCommitInfo(info, delCount, delGen, fieldInfosGen
+							);
+						if (actualFormat >= VERSION_46)
+						{
+							int numGensUpdatesFiles = input.ReadInt();
+							IDictionary<long, ICollection<string>> genUpdatesFiles;
+							if (numGensUpdatesFiles == 0)
+							{
+								genUpdatesFiles = new Dictionary<long, ICollection<string>>();
+							}
+							else
+							{
+								genUpdatesFiles = new Dictionary<long, ICollection<string>>(numGensUpdatesFiles);
+								for (int i = 0; i < numGensUpdatesFiles; i++)
+								{
+									genUpdatesFiles[input.ReadLong()] = input.ReadStringSet();
+								}
+							}
+							siPerCommit.SetGenUpdatesFiles(genUpdatesFiles);
+						}
+						Add(siPerCommit);
+	                    }
                     userData = input.ReadStringStringMap();
                 }
                 else
                 {
+					actualFormat = -1;
                     Lucene3xSegmentInfoReader.ReadLegacyInfos(this, directory, input, format);
                     Codec codec = Codec.ForName("Lucene3x");
-                    foreach (SegmentInfoPerCommit info in this)
+					foreach (SegmentCommitInfo info in this)
                     {
                         info.info.Codec = codec;
                     }
                 }
-
+				if (actualFormat >= VERSION_48)
+				{
+					CodecUtil.CheckFooter(input);
+				}
+				else
+				{
                 long checksumNow = input.Checksum;
                 long checksumThen = input.ReadLong();
                 if (checksumNow != checksumThen)
                 {
                     throw new CorruptIndexException("checksum mismatch in segments file (resource: " + input + ")");
                 }
-
+				}
                 success = true;
             }
             finally
@@ -276,6 +361,7 @@ namespace Lucene.Net.Index
             }
         }
 
+		
         private sealed class AnonymousClassFindSegmentsFile : FindSegmentsFile
         {
             private SegmentInfos enclosingInstance;
@@ -309,7 +395,7 @@ namespace Lucene.Net.Index
 
         // Only non-null after prepareCommit has been called and
         // before finishCommit is called
-        internal ChecksumIndexOutput pendingSegnOutput;
+		internal IndexOutput pendingSegnOutput;
 
         private const string SEGMENT_INFO_UPGRADE_CODEC = "SegmentInfo3xUpgrade";
         private const int SEGMENT_INFO_UPGRADE_VERSION = 0;
@@ -328,25 +414,40 @@ namespace Lucene.Net.Index
                 generation++;
             }
 
-            ChecksumIndexOutput segnOutput = null;
+			IndexOutput segnOutput = null;
             bool success = false;
 
             ISet<String> upgradedSIFiles = new HashSet<String>();
 
             try
             {
-                segnOutput = new ChecksumIndexOutput(directory.CreateOutput(segmentsFileName, IOContext.DEFAULT));
-                CodecUtil.WriteHeader(segnOutput, "segments", VERSION_40);
+				segnOutput = directory.CreateOutput(segmentsFileName, IOContext.DEFAULT);
+				CodecUtil.WriteHeader(segnOutput, "segments", VERSION_48);
                 segnOutput.WriteLong(version);
                 segnOutput.WriteInt(counter); // write counter
                 segnOutput.WriteInt(Count); // write infos
-                foreach (SegmentInfoPerCommit siPerCommit in this)
+				foreach (SegmentCommitInfo siPerCommit in this)
                 {
                     SegmentInfo si = siPerCommit.info;
                     segnOutput.WriteString(si.name);
                     segnOutput.WriteString(si.Codec.Name);
                     segnOutput.WriteLong(siPerCommit.DelGen);
+					int delCount = siPerCommit.DelCount;
+					if (delCount < 0 || delCount > si.DocCount)
+					{
+						throw new InvalidOperationException("cannot write segment: invalid docCount segment="
+							 + si.name + " docCount=" + si.DocCount + " delCount=" + delCount);
+					}
                     segnOutput.WriteInt(siPerCommit.DelCount);
+					segnOutput.WriteLong(siPerCommit.FieldInfosGen);
+					IDictionary<long, ICollection<string>> genUpdatesFiles = siPerCommit.GetUpdatesFiles
+						();
+					segnOutput.WriteInt(genUpdatesFiles.Count);
+					foreach (KeyValuePair<long, ICollection<string>> e in genUpdatesFiles)
+					{
+						segnOutput.WriteLong(e.Key);
+						segnOutput.WriteStringSet(e.Value);
+					}
                     //assert si.dir == directory;
 
                     //assert siPerCommit.getDelCount() <= si.getDocCount();
@@ -372,7 +473,6 @@ namespace Lucene.Net.Index
                             // kill/crash, OS crash, power loss, etc. while
                             // writing the upgraded file, the marker file
                             // will be missing:
-                            si.AddFile(markerFileName);
                             IndexOutput output = directory.CreateOutput(markerFileName, IOContext.DEFAULT);
                             try
                             {
@@ -468,7 +568,11 @@ namespace Lucene.Net.Index
             {
                 // we are about to write this SI in 3.x format, dropping all codec information, etc.
                 // so it had better be a 3.x segment or you will get very confusing errors later.
-                //assert si.getCodec() instanceof Lucene3xCodec : "broken test, trying to mix preflex with other codecs";
+				if ((si.Codec is Lucene3xCodec) == false)
+				{
+					throw new InvalidOperationException("cannot write 3x SegmentInfo unless codec is Lucene3x (got: "
+						 + si.Codec + ")");
+				}
                 CodecUtil.WriteHeader(output, Lucene3xSegmentInfoFormat.UPGRADED_SI_CODEC_NAME,
                                               Lucene3xSegmentInfoFormat.UPGRADED_SI_VERSION_CURRENT);
                 // Write the Lucene version that created this segment, since 3.1
@@ -507,18 +611,18 @@ namespace Lucene.Net.Index
         /// <summary> Returns a copy of this instance, also copying each
         /// SegmentInfo.
         /// </summary>
-        public object Clone()
+		public object Clone()
         {
-            SegmentInfos sis = new SegmentInfos();
-            sis.counter = this.counter;
-            sis.version = this.version;
-            sis.generation = this.generation;
-            sis.lastGeneration = this.lastGeneration;
-            sis.pendingSegnOutput = this.pendingSegnOutput;
-            for (int i = 0; i < this.Count; i++)
-            {
-                sis.Add((SegmentInfoPerCommit)this[i].Clone());
-            }
+            SegmentInfos sis = (SegmentInfos) base.MemberwiseClone();
+			// deep clone, first recreate all collections:
+			sis.segments = new List<SegmentCommitInfo>(Count);
+			foreach (SegmentCommitInfo info in this)
+			{
+				//HM:revisit 
+				//assert info.info.getCodec() != null;
+				// dont directly access segments, use add method!!!
+				sis.Add(info.Clone());
+			}
             sis.userData = new HashMap<string, string>(userData);
             return sis;
         }
@@ -648,25 +752,21 @@ namespace Lucene.Net.Index
                         if (files != null)
                             genA = GetLastCommitGeneration(files);
 
-                        Message("directory listing genA=" + genA);
-
+						if (infoStream != null)
+						{
+							Message("directory listing genA=" + genA);
+						}
                         // Method 2: open segments.gen and read its
                         // contents.  Then we take the larger of the two
                         // gens.  This way, if either approach is hitting
                         // a stale cache (NFS) we have a better chance of
                         // getting the right generation.
                         long genB = -1;
-                        IndexInput genInput = null;
+						ChecksumIndexInput genInput = null;
                         try
                         {
-                            genInput = directory.OpenInput(IndexFileNames.SEGMENTS_GEN, IOContext.READONCE);
-                        }
-                        catch (FileNotFoundException e)
-                        {
-                            if (infoStream != null)
-                            {
-                                Message("segments.gen open: FileNotFoundException " + e);
-                            }
+							genInput = directory.OpenChecksumInput(IndexFileNames.SEGMENTS_GEN, IOContext.READONCE
+								);
                         }
                         catch (IOException e)
                         {
@@ -681,7 +781,7 @@ namespace Lucene.Net.Index
                             try
                             {
                                 int version = genInput.ReadInt();
-                                if (version == FORMAT_SEGMENTS_GEN_CURRENT)
+								if (version == FORMAT_SEGMENTS_GEN_47 || version == FORMAT_SEGMENTS_GEN_CHECKSUM)
                                 {
                                     long gen0 = genInput.ReadLong();
                                     long gen1 = genInput.ReadLong();
@@ -689,6 +789,14 @@ namespace Lucene.Net.Index
                                     {
                                         Message("fallback check: " + gen0 + "; " + gen1);
                                     }
+									if (version == FORMAT_SEGMENTS_GEN_CHECKSUM)
+									{
+										CodecUtil.CheckFooter(genInput);
+									}
+									else
+									{
+										CodecUtil.CheckEOF(genInput);
+									}
                                     if (gen0 == gen1)
                                     {
                                         // The file is consistent.
@@ -697,7 +805,8 @@ namespace Lucene.Net.Index
                                 }
                                 else
                                 {
-                                    throw new IndexFormatTooNewException(genInput, version, FORMAT_SEGMENTS_GEN_CURRENT, FORMAT_SEGMENTS_GEN_CURRENT);
+									throw new IndexFormatTooNewException(genInput, version, FORMAT_SEGMENTS_GEN_START
+										, FORMAT_SEGMENTS_GEN_CURRENT);
                                 }
                             }
                             catch (IOException err2)
@@ -809,8 +918,15 @@ namespace Lucene.Net.Index
                                                                                                gen - 1);
 
                             bool prevExists;
-                            prevExists = directory.FileExists(prevSegmentFileName);
-
+							try
+							{
+								directory.OpenInput(prevSegmentFileName, IOContext.DEFAULT).Dispose();
+								prevExists = true;
+							}
+							catch (IOException)
+							{
+								prevExists = false;
+							}
                             if (prevExists)
                             {
                                 if (infoStream != null)
@@ -922,7 +1038,7 @@ namespace Lucene.Net.Index
             int size = Count;
             for (int i = 0; i < size; i++)
             {
-                SegmentInfoPerCommit info = Info(i);
+				SegmentCommitInfo info = Info(i);
                 //assert info.info.dir == dir;
                 if (info.info.dir == dir)
                 {
@@ -939,7 +1055,7 @@ namespace Lucene.Net.Index
             bool success = false;
             try
             {
-                pendingSegnOutput.FinishCommit();
+				CodecUtil.WriteFooter(pendingSegnOutput);
                 success = true;
             }
             finally
@@ -1005,36 +1121,7 @@ namespace Lucene.Net.Index
             }
 
             lastGeneration = generation;
-
-            try
-            {
-                IndexOutput genOutput = dir.CreateOutput(IndexFileNames.SEGMENTS_GEN, IOContext.READONCE);
-                try
-                {
-                    genOutput.WriteInt(FORMAT_SEGMENTS_GEN_CURRENT);
-                    genOutput.WriteLong(generation);
-                    genOutput.WriteLong(generation);
-                }
-                finally
-                {
-                    genOutput.Dispose();
-                    dir.Sync(new[] { IndexFileNames.SEGMENTS_GEN });
-                }
-            }
-            catch (System.Exception)
-            {
-                // It's OK if we fail to write this file since it's
-                // used only as one of the retry fallbacks.
-                try
-                {
-                    dir.DeleteFile(IndexFileNames.SEGMENTS_GEN);
-                }
-                catch
-                {
-                    // Ignore; this file is only used in a retry
-                    // fallback on init.
-                }
-            }
+			WriteSegmentsGen(dir, generation);
         }
 
         /// <summary>Writes &amp; syncs to the Directory dir, taking care to
@@ -1057,7 +1144,7 @@ namespace Lucene.Net.Index
                 {
                     buffer.Append(' ');
                 }
-                SegmentInfoPerCommit info = Info(i);
+				SegmentCommitInfo info = Info(i);
                 buffer.Append(info.ToString(directory, 0));
             }
             return buffer.ToString();
@@ -1086,12 +1173,7 @@ namespace Lucene.Net.Index
         {
             get
             {
-                int count = 0;
-                foreach (SegmentInfoPerCommit info in this)
-                {
-                    count += info.info.DocCount;
-                }
-                return count;
+                return this.Sum(info => info.info.DocCount);
             }
         }
 
@@ -1102,13 +1184,13 @@ namespace Lucene.Net.Index
 
         internal void ApplyMergeChanges(MergePolicy.OneMerge merge, bool dropSegment)
         {
-            ISet<SegmentInfoPerCommit> mergedAway = new HashSet<SegmentInfoPerCommit>(merge.segments);
+            ISet<SegmentCommitInfo> mergedAway = new HashSet<SegmentCommitInfo>(merge.segments);
             bool inserted = false;
             int newSegIdx = 0;
             for (int segIdx = 0, cnt = this.Count; segIdx < cnt; segIdx++)
             {
                 //assert segIdx >= newSegIdx;
-                SegmentInfoPerCommit info = this[segIdx];
+                SegmentCommitInfo info = this[segIdx];
                 if (mergedAway.Contains(info))
                 {
                     if (!inserted && !dropSegment)
@@ -1139,18 +1221,18 @@ namespace Lucene.Net.Index
             }
         }
 
-        internal IList<SegmentInfoPerCommit> CreateBackupSegmentInfos()
+        internal IList<SegmentCommitInfo> CreateBackupSegmentInfos()
         {
-            IList<SegmentInfoPerCommit> list = new List<SegmentInfoPerCommit>(Count);
-            foreach (SegmentInfoPerCommit info in this)
+            IList<SegmentCommitInfo> list = new List<SegmentCommitInfo>(Count);
+            foreach (SegmentCommitInfo info in this)
             {
                 //assert info.info.getCodec() != null;
-                list.Add((SegmentInfoPerCommit)info.Clone());
+                list.Add(info.Clone());
             }
             return list;
         }
 
-        internal void RollbackSegmentInfos(IList<SegmentInfoPerCommit> infos)
+        internal void RollbackSegmentInfos(IList<SegmentCommitInfo> infos)
         {
             this.Clear();
             this.AddRange(infos);
@@ -1190,7 +1272,7 @@ namespace Lucene.Net.Index
             int h = 1;
             for (int i = 0; i < this.Count; i++)
             {
-                SegmentInfoPerCommit si = (this[i] as SegmentInfoPerCommit);
+                SegmentCommitInfo si = this[i];
                 h = 31 * h + (si == null ? 0 : si.GetHashCode());
             }
 

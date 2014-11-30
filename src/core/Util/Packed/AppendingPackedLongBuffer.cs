@@ -43,31 +43,21 @@ namespace Lucene.Net.Util.Packed
 
 		internal override long Get(int block, int element)
 		{
-			if (block == valuesOff)
-			{
-				return pending[element];
-			}
-			else
-			{
-				return values[block].Get(element);
-			}
+		    return block == valuesOff ? pending[element] : values[block].Get(element);
 		}
 
-		internal override int Get(int block, int element, long[] arr, int off, int len)
-		{
-			if (block == valuesOff)
+	    internal override int Get(int block, int element, long[] arr, int off, int len)
+	    {
+	        if (block == valuesOff)
 			{
 				int sysCopyToRead = Math.Min(len, pendingOff - element);
-				System.Array.Copy(pending, element, arr, off, sysCopyToRead);
+				Array.Copy(pending, element, arr, off, sysCopyToRead);
 				return sysCopyToRead;
 			}
-			else
-			{
-				return values[block].Get(element, arr, off, len);
-			}
-		}
+	        return values[block].Get(element, arr, off, len);
+	    }
 
-		internal override void PackPendingValues()
+	    internal override void PackPendingValues()
 		{
 			// compute max delta
 			long minValue = pending[0];
@@ -79,11 +69,10 @@ namespace Lucene.Net.Util.Packed
 			}
 			// build a new packed reader
 			int bitsRequired = minValue < 0 ? 64 : PackedInts.BitsRequired(maxValue);
-			PackedInts.Mutable mutable = PackedInts.GetMutable(pendingOff, bitsRequired, acceptableOverheadRatio
-				);
-			for (int i_1 = 0; i_1 < pendingOff; )
+			PackedInts.IMutable mutable = PackedInts.GetMutable(pendingOff, bitsRequired, acceptableOverheadRatio);
+			for (int i1 = 0; i1 < pendingOff; )
 			{
-				i_1 += mutable.Set(i_1, pending, i_1, pendingOff - i_1);
+				i1 += mutable.Set(i1, pending, i1, pendingOff - i1);
 			}
 			values[valuesOff] = mutable;
 		}

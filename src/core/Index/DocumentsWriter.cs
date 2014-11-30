@@ -107,9 +107,7 @@ namespace Lucene.Net.Index
         private volatile bool closed;
 
         internal readonly InfoStream infoStream;
-        internal Similarity similarity;
 
-        internal IList<String> newFiles;
 
         internal readonly IndexWriter indexWriter;
 
@@ -126,83 +124,111 @@ namespace Lucene.Net.Index
          */
         private volatile bool pendingChangesInCurrentFullFlush;
 
-        private ICollection<String> abortedFiles;               // List of files that were written before last abort()
 
-        internal readonly IndexingChain chain;
 
         internal readonly DocumentsWriterPerThreadPool perThreadPool;
         internal readonly FlushPolicy flushPolicy;
         internal readonly DocumentsWriterFlushControl flushControl;
 
-        internal readonly Codec codec;
-
-        internal DocumentsWriter(Codec codec, LiveIndexWriterConfig config, Directory directory, IndexWriter writer, FieldNumbers globalFieldNumbers,
-            BufferedDeletesStream bufferedDeletesStream)
+        private readonly LiveIndexWriterConfig config;
+        private readonly IndexWriter writer;
+        private readonly Queue<IndexWriter.IEvent> events;
+        internal DocumentsWriter(IndexWriter writer, LiveIndexWriterConfig config, Directory
+             directory)
         {
-            this.codec = codec;
+            // TODO: cut over to BytesRefHash in BufferedDeletes
             this.directory = directory;
-            this.indexWriter = writer;
+            this.config = config;
             this.infoStream = config.InfoStream;
-            this.similarity = config.Similarity;
             this.perThreadPool = config.IndexerThreadPool;
-            this.chain = config.IndexingChain;
-            this.perThreadPool.Initialize(this, globalFieldNumbers, config);
             flushPolicy = config.FlushPolicy;
-            //assert flushPolicy != null;
-            flushPolicy.Init(this);
-            flushControl = new DocumentsWriterFlushControl(this, config);
+            this.writer = writer;
+            
+            this.events = new Queue<IndexWriter.IEvent>(); //could this be wrapped using ReaderWriterLockSlim?
+            flushControl = new DocumentsWriterFlushControl(this, config, writer.bufferedUpdatesStream);
         }
 
-        internal void DeleteQueries(params Query[] queries)
+        internal bool DeleteQueries(params Query[] queries)
         {
+			lock (this)
+			{
+            DocumentsWriterDeleteQueue deleteQueue = this.deleteQueue;
             deleteQueue.AddDelete(queries);
             flushControl.DoOnDelete();
-            if (flushControl.DoApplyAllDeletes())
-            {
-                ApplyAllDeletes(deleteQueue);
-            }
+            return ApplyAllDeletes(deleteQueue);
+			}
         }
 
         // TODO: we could check w/ FreqProxTermsWriter: if the
         // term doesn't exist, don't bother buffering into the
         // per-DWPT map (but still must go into the global map)
-        internal void DeleteTerms(params Term[] terms)
+        internal bool DeleteTerms(params Term[] terms)
         {
             lock (this)
             {
                 DocumentsWriterDeleteQueue deleteQueue = this.deleteQueue;
                 deleteQueue.AddDelete(terms);
                 flushControl.DoOnDelete();
-                if (flushControl.DoApplyAllDeletes())
-                {
-                    ApplyAllDeletes(deleteQueue);
-                }
+                return ApplyAllDeletes(deleteQueue);
             }
         }
 
+        internal bool UpdateNumericDocValue(Term term, string field, long value)
+        {
+            lock (this)
+            {
+                DocumentsWriterDeleteQueue deleteQueue = this.deleteQueue;
+                deleteQueue.AddNumericUpdate(new DocValuesUpdate.NumericDocValuesUpdate(term, field
+                    , value));
+                flushControl.DoOnDelete();
+                return ApplyAllDeletes(deleteQueue);
+            }
+        }
+        internal bool UpdateBinaryDocValue(Term term, string field, BytesRef value)
+        {
+            lock (this)
+            {
+                DocumentsWriterDeleteQueue deleteQueue = this.deleteQueue;
+                deleteQueue.AddBinaryUpdate(new DocValuesUpdate.BinaryDocValuesUpdate(term, field
+                    , value));
+                flushControl.DoOnDelete();
+                return ApplyAllDeletes(deleteQueue);
+            }
+        }
         internal DocumentsWriterDeleteQueue CurrentDeleteSession
         {
             get { return deleteQueue; }
         }
 
-        private void ApplyAllDeletes(DocumentsWriterDeleteQueue deleteQueue)
+        private bool ApplyAllDeletes(DocumentsWriterDeleteQueue deleteQueue)
         {
-            if (deleteQueue != null && !flushControl.IsFullFlush)
+            if (flushControl.GetAndResetApplyAllDeletes())
             {
-                ticketQueue.AddDeletesAndPurge(this, deleteQueue);
+                if (deleteQueue != null && !flushControl.IsFullFlush)
+                {
+                    ticketQueue.AddDeletes(deleteQueue);
+                }
+                PutEvent(DocumentsWriter.ApplyDeletesEvent.INSTANCE);
+                // apply deletes event forces a purge
+                return true;
             }
-            indexWriter.ApplyAllDeletes();
-            Interlocked.Increment(ref indexWriter.flushCount);
+            return false;
         }
 
+        internal int PurgeBuffer(IndexWriter writer, bool forced)
+        {
+            if (forced)
+            {
+                return ticketQueue.ForcePurge(writer);
+            }
+            else
+            {
+                return ticketQueue.TryPurge(writer);
+            }
+        }
         internal int NumDocs
         {
             get { return numDocsInRAM; }
-        }
-
-        internal ICollection<String> AbortedFiles
-        {
-            get { return abortedFiles; }
         }
 
         private void EnsureOpen()
@@ -213,12 +239,12 @@ namespace Lucene.Net.Index
             }
         }
 
-        internal void Abort()
+		internal void Abort(IndexWriter writer)
         {
             lock (this)
             {
                 bool success = false;
-
+                ICollection<string> newFilesSet = new HashSet<string>();
                 try
                 {
                     deleteQueue.Clear();
@@ -234,29 +260,15 @@ namespace Lucene.Net.Index
                         perThread.Lock();
                         try
                         {
-                            if (perThread.IsActive)
-                            { // we might be closed
-                                try
-                                {
-                                    perThread.dwpt.Abort();
-                                }
-                                finally
-                                {
-                                    perThread.dwpt.CheckAndResetHasAborted();
-                                    flushControl.DoOnAbort(perThread);
-                                }
-                            }
-                            else
-                            {
-                                //assert closed;
-                            }
+                            AbortThreadState(perThread, newFilesSet);
                         }
                         finally
                         {
                             perThread.Unlock();
                         }
                     }
-                    flushControl.AbortPendingFlushes();
+                    flushControl.AbortPendingFlushes(newFilesSet);
+                    PutEvent(new DocumentsWriter.DeleteNewFilesEvent(newFilesSet));
                     flushControl.WaitForFlush();
                     success = true;
                 }
@@ -264,14 +276,17 @@ namespace Lucene.Net.Index
                 {
                     if (infoStream.IsEnabled("DW"))
                     {
-                        infoStream.Message("DW", "done abort; abortedFiles=" + abortedFiles + " success=" + success);
+                        infoStream.Message("DW", "done abort; abortedFiles=" + newFilesSet + " success="
+                            + success);
                     }
                 }
             }
         }
 
-        internal void LockAndAbortAll()
+        internal void LockAndAbortAll(IndexWriter indexWriter)
         {
+			lock (this)
+			{
             //assert indexWriter.holdsFullFlushLock();
             if (infoStream.IsEnabled("DW"))
             {
@@ -282,25 +297,16 @@ namespace Lucene.Net.Index
             {
                 deleteQueue.Clear();
                 int limit = perThreadPool.MaxThreadStates;
+                ICollection<string> newFilesSet = new HashSet<string>();
                 for (int i = 0; i < limit; i++)
                 {
                     ThreadState perThread = perThreadPool.GetThreadState(i);
                     perThread.Lock();
-                    if (perThread.IsActive)
-                    { // we might be closed or 
-                        try
-                        {
-                            perThread.dwpt.Abort();
-                        }
-                        finally
-                        {
-                            perThread.dwpt.CheckAndResetHasAborted();
-                            flushControl.DoOnAbort(perThread);
-                        }
-                    }
+                    AbortThreadState(perThread, newFilesSet);
                 }
                 deleteQueue.Clear();
-                flushControl.AbortPendingFlushes();
+                flushControl.AbortPendingFlushes(newFilesSet);
+                PutEvent(new DocumentsWriter.DeleteNewFilesEvent(newFilesSet));
                 flushControl.WaitForFlush();
                 success = true;
             }
@@ -313,12 +319,40 @@ namespace Lucene.Net.Index
                 if (!success)
                 {
                     // if something happens here we unlock all states again
-                    UnlockAllAfterAbortAll();
+                    UnlockAllAfterAbortAll(indexWriter);
+                }
+            }
+			}
+        }
+
+        private void AbortThreadState(DocumentsWriterPerThreadPool.ThreadState perThread,
+            ICollection<string> newFiles)
+        {
+            //HM:revisit 
+            //assert perThread.isHeldByCurrentThread();
+            if (perThread.IsActive)
+            {
+                // we might be closed
+                if (perThread.IsInitialized())
+                {
+                    try
+                    {
+                        SubtractFlushedNumDocs(perThread.dwpt.NumDocsInRAM);
+                        perThread.dwpt.Abort(newFiles);
+                    }
+                    finally
+                    {
+                        perThread.dwpt.CheckAndResetHasAborted();
+                        flushControl.DoOnAbort(perThread);
+                    }
+                }
+                else
+                {
+                    flushControl.DoOnAbort(perThread);
                 }
             }
         }
-
-        internal void UnlockAllAfterAbortAll()
+        internal void UnlockAllAfterAbortAll(IndexWriter indexWriter)
         {
             lock (this)
             {
@@ -383,7 +417,7 @@ namespace Lucene.Net.Index
         {
             get
             {
-                return deleteQueue.BufferedDeleteTermsSize;
+			return deleteQueue.BufferedUpdatesTermsSize;
             }
         }
 
@@ -413,7 +447,7 @@ namespace Lucene.Net.Index
         private bool PreUpdate()
         {
             EnsureOpen();
-            bool maybeMerge = false;
+            bool hasEvents = false;
             if (flushControl.AnyStalledThreads || flushControl.NumQueuedFlushes > 0)
             {
                 // Help out flushing any queued DWPTs so we can un-stall:
@@ -428,7 +462,7 @@ namespace Lucene.Net.Index
                     while ((flushingDWPT = flushControl.NextPendingFlush) != null)
                     {
                         // Don't push the delete here since the update could fail!
-                        maybeMerge |= DoFlush(flushingDWPT);
+                        hasEvents |= DoFlush(flushingDWPT);
                     }
 
                     if (infoStream.IsEnabled("DW"))
@@ -447,34 +481,39 @@ namespace Lucene.Net.Index
                     infoStream.Message("DW", "continue indexing after helping out flushing DocumentsWriter is healthy");
                 }
             }
-            return maybeMerge;
+			return hasEvents;
         }
 
-        private bool PostUpdate(DocumentsWriterPerThread flushingDWPT, bool maybeMerge)
+        private bool PostUpdate(DocumentsWriterPerThread flushingDWPT, bool hasEvents)
         {
-            if (flushControl.DoApplyAllDeletes())
-            {
-                ApplyAllDeletes(deleteQueue);
-            }
+            hasEvents |= ApplyAllDeletes(deleteQueue);
             if (flushingDWPT != null)
             {
-                maybeMerge |= DoFlush(flushingDWPT);
+                hasEvents |= DoFlush(flushingDWPT);
             }
             else
             {
                 DocumentsWriterPerThread nextPendingFlush = flushControl.NextPendingFlush;
                 if (nextPendingFlush != null)
                 {
-                    maybeMerge |= DoFlush(nextPendingFlush);
+                    hasEvents |= DoFlush(nextPendingFlush);
                 }
             }
-
-            return maybeMerge;
+            return hasEvents;
         }
 
+        private void EnsureInitialized(DocumentsWriterPerThreadPool.ThreadState state)
+        {
+            if (state.IsActive && state.dwpt == null)
+            {
+                FieldInfos.Builder infos = new FieldInfos.Builder(writer.globalFieldNumberMap);
+                state.dwpt = new DocumentsWriterPerThread(writer.NewSegmentName(), directory, config
+                    , infoStream, deleteQueue, infos);
+            }
+        }
         internal bool UpdateDocuments(IEnumerable<IEnumerable<IIndexableField>> docs, Analyzer analyzer, Term delTerm)
         {
-            bool maybeMerge = PreUpdate();
+            bool hasEvents = PreUpdate();
 
             ThreadState perThread = flushControl.ObtainAndLock();
             DocumentsWriterPerThread flushingDWPT;
@@ -487,7 +526,9 @@ namespace Lucene.Net.Index
                     //assert false: "perThread is not active but we are still open";
                 }
 
+                EnsureInitialized(perThread);
                 DocumentsWriterPerThread dwpt = perThread.dwpt;
+                int dwptNumDocs = dwpt.NumDocsInRAM;
                 try
                 {
                     int docCount = dwpt.UpdateDocuments(docs, analyzer, delTerm);
@@ -497,6 +538,11 @@ namespace Lucene.Net.Index
                 {
                     if (dwpt.CheckAndResetHasAborted())
                     {
+                        if (dwpt.PendingFilesToDelete().Any())
+                        {
+                            PutEvent(new DeleteNewFilesEvent(dwpt.PendingFilesToDelete()));
+                        }
+                        SubtractFlushedNumDocs(dwptNumDocs);
                         flushControl.DoOnAbort(perThread);
                     }
                 }
@@ -505,16 +551,16 @@ namespace Lucene.Net.Index
             }
             finally
             {
-                perThread.Unlock();
+				perThreadPool.Release(perThread);
             }
 
-            return PostUpdate(flushingDWPT, maybeMerge);
+            return PostUpdate(flushingDWPT, hasEvents);
         }
 
         internal bool UpdateDocument(IEnumerable<IIndexableField> doc, Analyzer analyzer, Term delTerm)
         {
 
-            bool maybeMerge = PreUpdate();
+            bool hasEvents = PreUpdate();
 
             ThreadState perThread = flushControl.ObtainAndLock();
 
@@ -526,10 +572,11 @@ namespace Lucene.Net.Index
                 if (!perThread.IsActive)
                 {
                     EnsureOpen();
-                    throw new InvalidOperationException("perThread is not active but we are still open");
                 }
 
+                EnsureInitialized(perThread);
                 DocumentsWriterPerThread dwpt = perThread.dwpt;
+                int dwptNumDocs = dwpt.NumDocsInRAM;
                 try
                 {
                     dwpt.UpdateDocument(doc, analyzer, delTerm);
@@ -539,6 +586,11 @@ namespace Lucene.Net.Index
                 {
                     if (dwpt.CheckAndResetHasAborted())
                     {
+                        if (dwpt.PendingFilesToDelete().Any())
+                        {
+                            PutEvent(new DeleteNewFilesEvent(dwpt.PendingFilesToDelete()));
+                        }
+                        SubtractFlushedNumDocs(dwptNumDocs);
                         flushControl.DoOnAbort(perThread);
                     }
                 }
@@ -547,18 +599,18 @@ namespace Lucene.Net.Index
             }
             finally
             {
-                perThread.Unlock();
+				perThreadPool.Release(perThread);
             }
 
-            return PostUpdate(flushingDWPT, maybeMerge);
+            return PostUpdate(flushingDWPT, hasEvents);
         }
 
         private bool DoFlush(DocumentsWriterPerThread flushingDWPT)
         {
-            bool maybeMerge = false;
+            bool hasEvents = false;
             while (flushingDWPT != null)
             {
-                maybeMerge = true;
+                hasEvents = true;
                 bool success = false;
                 SegmentFlushTicket ticket = null;
                 try
@@ -585,10 +637,29 @@ namespace Lucene.Net.Index
                     {
                         // Each flush is assigned a ticket in the order they acquire the ticketQueue lock
                         ticket = ticketQueue.AddFlushTicket(flushingDWPT);
-
-                        // flush concurrently without locking
-                        FlushedSegment newSegment = flushingDWPT.Flush();
-                        ticketQueue.AddSegment(ticket, newSegment);
+                        int flushingDocsInRam = flushingDWPT.NumDocsInRAM;
+                        bool dwptSuccess = false;
+                        try
+                        {
+                            // flush concurrently without locking
+                            DocumentsWriterPerThread.FlushedSegment newSegment = flushingDWPT.Flush();
+                            ticketQueue.AddSegment(ticket, newSegment);
+                            dwptSuccess = true;
+                        }
+                        finally
+                        {
+                            SubtractFlushedNumDocs(flushingDocsInRam);
+                            if (flushingDWPT.PendingFilesToDelete().Any())
+                            {
+                                PutEvent(new DeleteNewFilesEvent(flushingDWPT.PendingFilesToDelete()));
+                                hasEvents = true;
+                            }
+                            if (!dwptSuccess)
+                            {
+                                PutEvent(new FlushFailedEvent(flushingDWPT.SegmentInfo));
+                                hasEvents = true;
+                            }
+                        }
                         // flush was successful once we reached this point - new seg. has been assigned to the ticket!
                         success = true;
                     }
@@ -612,11 +683,8 @@ namespace Lucene.Net.Index
                         // thread in innerPurge can't keep up with all
                         // other threads flushing segments.  In this case
                         // we forcefully stall the producers.
-                        ticketQueue.ForcePurge(this);
-                    }
-                    else
-                    {
-                        ticketQueue.TryPurge(this);
+                        PutEvent(ForcedPurgeEvent.INSTANCE);
+                        break;
                     }
 
                 }
@@ -624,18 +692,19 @@ namespace Lucene.Net.Index
                 {
                     flushControl.DoAfterFlush(flushingDWPT);
                     flushingDWPT.CheckAndResetHasAborted();
-                    Interlocked.Increment(ref indexWriter.flushCount);
-                    indexWriter.DoAfterFlush();
                 }
 
                 flushingDWPT = flushControl.NextPendingFlush;
             }
-
+            if (hasEvents)
+            {
+                PutEvent(DocumentsWriter.MergePendingEvent.INSTANCE);
+            }
             // If deletes alone are consuming > 1/2 our RAM
             // buffer, force them all to apply now. This is to
             // prevent too-frequent flushing of a long tail of
             // tiny segments:
-            double ramBufferSizeMB = indexWriter.Config.RAMBufferSizeMB;
+            double ramBufferSizeMB = config.RAMBufferSizeMB;
             if (ramBufferSizeMB != IndexWriterConfig.DISABLE_AUTO_FLUSH &&
                 flushControl.DeleteBytesUsed > (1024 * 1024 * ramBufferSizeMB / 2))
             {
@@ -643,32 +712,16 @@ namespace Lucene.Net.Index
                 {
                     infoStream.Message("DW", "force apply deletes bytesUsed=" + flushControl.DeleteBytesUsed + " vs ramBuffer=" + (1024 * 1024 * ramBufferSizeMB));
                 }
-                ApplyAllDeletes(deleteQueue);
-            }
-
-            return maybeMerge;
-        }
-
-        internal void FinishFlush(FlushedSegment newSegment, FrozenBufferedDeletes bufferedDeletes)
-        {
-            // Finish the flushed segment and publish it to IndexWriter
-            if (newSegment == null)
-            {
-                //assert bufferedDeletes != null;
-                if (bufferedDeletes != null && bufferedDeletes.Any())
+                hasEvents = true;
+                if (!this.ApplyAllDeletes(deleteQueue))
                 {
-                    indexWriter.PublishFrozenDeletes(bufferedDeletes);
-                    if (infoStream.IsEnabled("DW"))
-                    {
-                        infoStream.Message("DW", "flush: push buffered deletes: " + bufferedDeletes);
-                    }
+                    PutEvent(DocumentsWriter.ApplyDeletesEvent.INSTANCE);
                 }
             }
-            else
-            {
-                PublishFlushedSegment(newSegment, bufferedDeletes);
-            }
+
+            return hasEvents;
         }
+
 
         internal void SubtractFlushedNumDocs(int numFlushed)
         {
@@ -679,24 +732,6 @@ namespace Lucene.Net.Index
             }
         }
 
-        private void PublishFlushedSegment(FlushedSegment newSegment, FrozenBufferedDeletes globalPacket)
-        {
-            //assert newSegment != null;
-            //assert newSegment.segmentInfo != null;
-            FrozenBufferedDeletes segmentDeletes = newSegment.segmentDeletes;
-            //System.out.println("FLUSH: " + newSegment.segmentInfo.info.name);
-            if (infoStream.IsEnabled("DW"))
-            {
-                infoStream.Message("DW", "publishFlushedSegment seg-private deletes=" + segmentDeletes);
-            }
-
-            if (segmentDeletes != null && infoStream.IsEnabled("DW"))
-            {
-                infoStream.Message("DW", "flush: push buffered seg private deletes: " + segmentDeletes);
-            }
-            // now publish!
-            indexWriter.PublishFlushedSegment(newSegment.segmentInfo, segmentDeletes, globalPacket);
-        }
 
         private volatile DocumentsWriterDeleteQueue currentFullFlushDelQueue = null;
 
@@ -710,7 +745,7 @@ namespace Lucene.Net.Index
             }
         }
 
-        internal bool FlushAllThreads()
+        internal bool FlushAllThreads(IndexWriter indexWriter)
         {
             DocumentsWriterDeleteQueue flushingDeleteQueue;
             if (infoStream.IsEnabled("DW"))
@@ -748,12 +783,9 @@ namespace Lucene.Net.Index
                     {
                         infoStream.Message("DW", Thread.CurrentThread.Name + ": flush naked frozen global deletes");
                     }
-                    ticketQueue.AddDeletesAndPurge(this, flushingDeleteQueue);
+                    ticketQueue.AddDeletes(flushingDeleteQueue);
                 }
-                else
-                {
-                    ticketQueue.ForcePurge(this);
-                }
+                ticketQueue.ForcePurge(indexWriter);
                 //assert !flushingDeleteQueue.anyChanges() && !ticketQueue.hasTickets();
             }
             finally
@@ -779,13 +811,124 @@ namespace Lucene.Net.Index
                 }
                 else
                 {
-                    flushControl.AbortFullFlushes();
+                    ICollection<string> newFilesSet = new HashSet<string>();
+                    flushControl.AbortFullFlushes(newFilesSet);
+                    PutEvent(new DocumentsWriter.DeleteNewFilesEvent(newFilesSet));
                 }
             }
             finally
             {
                 pendingChangesInCurrentFullFlush = false;
             }
+        }
+        public LiveIndexWriterConfig GetIndexWriterConfig()
+        {
+            return config;
+        }
+
+        private void PutEvent(IndexWriter.IEvent @event)
+        {
+            events.Enqueue(@event);
+        }
+
+        internal sealed class ApplyDeletesEvent : IndexWriter.IEvent
+        {
+            internal static readonly IndexWriter.IEvent INSTANCE = new ApplyDeletesEvent();
+
+            private int instCount = 0;
+
+            public ApplyDeletesEvent()
+            {
+                //HM:revisit 
+                //assert instCount == 0;
+                instCount++;
+            }
+
+            /// <exception cref="System.IO.IOException"></exception>
+            public void Process(IndexWriter writer, bool triggerMerge, bool forcePurge)
+            {
+                writer.ApplyDeletesAndPurge(true);
+            }
+            // we always purge!
+        }
+
+        internal sealed class MergePendingEvent : IndexWriter.IEvent
+        {
+            internal static readonly IndexWriter.IEvent INSTANCE = new MergePendingEvent();
+
+            private int instCount = 0;
+
+            public MergePendingEvent()
+            {
+                //HM:revisit 
+                //assert instCount == 0;
+                instCount++;
+            }
+
+            /// <exception cref="System.IO.IOException"></exception>
+            public void Process(IndexWriter writer, bool triggerMerge, bool forcePurge)
+            {
+                writer.DoAfterSegmentFlushed(triggerMerge, forcePurge);
+            }
+        }
+
+        internal sealed class ForcedPurgeEvent : IndexWriter.IEvent
+        {
+            internal static readonly IndexWriter.IEvent INSTANCE = new ForcedPurgeEvent();
+
+            private int instCount = 0;
+
+            public ForcedPurgeEvent()
+            {
+                //HM:revisit 
+                //assert instCount == 0;
+                instCount++;
+            }
+
+            /// <exception cref="System.IO.IOException"></exception>
+            public void Process(IndexWriter writer, bool triggerMerge, bool forcePurge)
+            {
+                writer.Purge(true);
+            }
+        }
+
+        internal class FlushFailedEvent : IndexWriter.IEvent
+        {
+            private readonly SegmentInfo info;
+
+            public FlushFailedEvent(SegmentInfo info)
+            {
+                this.info = info;
+            }
+
+            /// <exception cref="System.IO.IOException"></exception>
+            public virtual void Process(IndexWriter writer, bool triggerMerge, bool forcePurge
+                )
+            {
+                writer.FlushFailed(info);
+            }
+        }
+
+        internal class DeleteNewFilesEvent : IndexWriter.IEvent
+        {
+            private readonly ICollection<string> files;
+
+            public DeleteNewFilesEvent(ICollection<string> files)
+            {
+                this.files = files;
+            }
+
+            /// <exception cref="System.IO.IOException"></exception>
+            public virtual void Process(IndexWriter writer, bool triggerMerge, bool forcePurge
+                )
+            {
+                writer.DeleteNewFiles(files);
+            }
+        }
+
+        internal Queue<IndexWriter.IEvent> EventQueue()
+        {
+            return events;
         }
     }
 }

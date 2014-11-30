@@ -1,13 +1,6 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using System.Collections.Generic;
-using Lucene.Net.Util;
-using Sharpen;
+using Lucene.Net.Support;
 
 namespace Lucene.Net.Util
 {
@@ -200,7 +193,7 @@ namespace Lucene.Net.Util
 		/// 	</see>
 		/// with a <code>null</code> comparator
 		/// </summary>
-		public BytesRefIterator Iterator()
+		public IBytesRefIterator Iterator()
 		{
 			return Iterator(null);
 		}
@@ -226,17 +219,17 @@ namespace Lucene.Net.Util
 		/// This is a non-destructive operation.
 		/// </p>
 		/// </summary>
-		public BytesRefIterator Iterator(IComparer<BytesRef> comp)
+		public IBytesRefIterator Iterator(IComparer<BytesRef> comp)
 		{
 			BytesRef spare = new BytesRef();
 			int size = Size();
 			int[] indices = comp == null ? null : Sort(comp);
-			return new _BytesRefIterator_182(this, size, spare, indices, comp);
+			return new BytesRefIteratorImpl(this, size, spare, indices, comp);
 		}
 
-		private sealed class _BytesRefIterator_182 : BytesRefIterator
+		private sealed class BytesRefIteratorImpl : IBytesRefIterator
 		{
-			public _BytesRefIterator_182(BytesRefArray _enclosing, int size, BytesRef spare, 
+			public BytesRefIteratorImpl(BytesRefArray _enclosing, int size, BytesRef spare, 
 				int[] indices, IComparer<BytesRef> comp)
 			{
 				this._enclosing = _enclosing;
@@ -249,7 +242,7 @@ namespace Lucene.Net.Util
 
 			internal int pos;
 
-			public override BytesRef Next()
+			public BytesRef Next()
 			{
 				if (this.pos < size)
 				{
@@ -259,9 +252,9 @@ namespace Lucene.Net.Util
 				return null;
 			}
 
-			public override IComparer<BytesRef> GetComparator()
+			public IComparer<BytesRef> Comparator
 			{
-				return comp;
+			    get { return comp; }
 			}
 
 			private readonly BytesRefArray _enclosing;

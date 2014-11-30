@@ -80,7 +80,7 @@ namespace Lucene.Net.Codecs.Simpletext
 						SimpleTextUtil.WriteNewline(output);
 					}
 				}
-				ICollection<string> files = si.Files();
+				ICollection<string> files = si.Files;
 				int numFiles = files == null ? 0 : files.Count;
 				SimpleTextUtil.Write(output, SI_NUM_FILES);
 				SimpleTextUtil.Write(output, Sharpen.Extensions.ToString(numFiles), scratch);

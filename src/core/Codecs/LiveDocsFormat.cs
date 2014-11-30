@@ -18,10 +18,10 @@ namespace Lucene.Net.Codecs
 
         public abstract IMutableBits NewLiveDocs(IBits existing);
 
-        public abstract IBits ReadLiveDocs(Directory dir, SegmentInfoPerCommit info, IOContext context);
+        public abstract IBits ReadLiveDocs(Directory dir, SegmentCommitInfo info, IOContext context);
 
-        public abstract void WriteLiveDocs(IMutableBits bits, Directory dir, SegmentInfoPerCommit info, int newDelCount, IOContext context);
+        public abstract void WriteLiveDocs(IMutableBits bits, Directory dir, SegmentCommitInfo info, int newDelCount, IOContext context);
 
-        public abstract void Files(SegmentInfoPerCommit info, ICollection<String> files);
+        public abstract void Files(SegmentCommitInfo info, ICollection<String> files);
     }
 }

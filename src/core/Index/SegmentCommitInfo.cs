@@ -1,14 +1,8 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using System.Collections.Generic;
-using Lucene.Net.Index;
+using System.Linq;
 using Lucene.Net.Store;
-using Sharpen;
+using Lucene.Net.Support;
 
 namespace Lucene.Net.Index
 {
@@ -43,7 +37,7 @@ namespace Lucene.Net.Index
 		private readonly IDictionary<long, ICollection<string>> genUpdatesFiles = new Dictionary
 			<long, ICollection<string>>();
 
-		private volatile long sizeInBytes = -1;
+		private long sizeInBytes = -1;
 
 		/// <summary>Sole constructor.</summary>
 		/// <remarks>Sole constructor.</remarks>
@@ -93,14 +87,13 @@ namespace Lucene.Net.Index
 		/// <remarks>Returns the per generation updates files.</remarks>
 		public virtual IDictionary<long, ICollection<string>> GetUpdatesFiles()
 		{
-			return Sharpen.Collections.UnmodifiableMap(genUpdatesFiles);
+			return new HashMap<long, ICollection<string>>(genUpdatesFiles);
 		}
 
 		/// <summary>Sets the updates file names per generation.</summary>
 		/// <remarks>Sets the updates file names per generation. Does not deep clone the map.
 		/// 	</remarks>
-		public virtual void SetGenUpdatesFiles(IDictionary<long, ICollection<string>> genUpdatesFiles
-			)
+		public virtual void SetGenUpdatesFiles(IDictionary<long, ICollection<string>> genUpdatesFiles)
 		{
 			this.genUpdatesFiles.Clear();
 			this.genUpdatesFiles.PutAll(genUpdatesFiles);
@@ -166,48 +159,43 @@ namespace Lucene.Net.Index
 		{
 			if (sizeInBytes == -1)
 			{
-				long sum = 0;
-				foreach (string fileName in Files())
-				{
-					sum += info.dir.FileLength(fileName);
-				}
-				sizeInBytes = sum;
+				long sum = Files.Sum(fileName => info.dir.FileLength(fileName));
+			    sizeInBytes = sum;
 			}
 			return sizeInBytes;
 		}
 
-		/// <summary>Returns all files in use by this segment.</summary>
-		/// <remarks>Returns all files in use by this segment.</remarks>
-		/// <exception cref="System.IO.IOException"></exception>
-		public virtual ICollection<string> Files()
+		public virtual ICollection<string> Files
 		{
-			// Start from the wrapped info's files:
-			ICollection<string> files = new HashSet<string>(info.Files());
-			// TODO we could rely on TrackingDir.getCreatedFiles() (like we do for
-			// updates) and then maybe even be able to remove LiveDocsFormat.files().
-			// Must separately add any live docs files:
-			info.GetCodec().LiveDocsFormat().Files(this, files);
-			// Must separately add any field updates files
-			foreach (ICollection<string> updateFiles in genUpdatesFiles.Values)
-			{
-				Sharpen.Collections.AddAll(files, updateFiles);
-			}
-			return files;
+		    get
+		    {
+		        // Start from the wrapped info's files:
+		        ICollection<string> files = new HashSet<string>(info.Files);
+		        // TODO we could rely on TrackingDir.getCreatedFiles() (like we do for
+		        // updates) and then maybe even be able to remove LiveDocsFormat.files().
+		        // Must separately add any live docs files:
+		        info.Codec.LiveDocsFormat.Files(this, files);
+		        // Must separately add any field updates files
+		        foreach (ICollection<string> updateFiles in genUpdatesFiles.Values)
+		        {
+		            files.Concat(updateFiles);
+		        }
+		        return files;
+		    }
 		}
 
 		private long bufferedDeletesGen;
 
 		// NOTE: only used in-RAM by IW to track buffered deletes;
 		// this is never written to/read from the Directory
-		internal virtual long GetBufferedDeletesGen()
+		internal virtual long BufferedDeletesGen
 		{
-			return bufferedDeletesGen;
-		}
-
-		internal virtual void SetBufferedDeletesGen(long v)
-		{
-			bufferedDeletesGen = v;
-			sizeInBytes = -1;
+		    get { return bufferedDeletesGen; }
+		    set
+		    {
+                bufferedDeletesGen = value;
+                sizeInBytes = -1;
+		    }
 		}
 
 		/// <summary>
@@ -218,25 +206,25 @@ namespace Lucene.Net.Index
 		/// Returns true if there are any deletions for the
 		/// segment at this commit.
 		/// </remarks>
-		public virtual bool HasDeletions()
+		public virtual bool HasDeletions
 		{
-			return delGen != -1;
+		    get { return delGen != -1; }
 		}
 
 		/// <summary>Returns true if there are any field updates for the segment in this commit.
 		/// 	</summary>
 		/// <remarks>Returns true if there are any field updates for the segment in this commit.
 		/// 	</remarks>
-		public virtual bool HasFieldUpdates()
+		public virtual bool HasFieldUpdates
 		{
-			return fieldInfosGen != -1;
+		    get { return fieldInfosGen != -1; }
 		}
 
 		/// <summary>Returns the next available generation number of the FieldInfos files.</summary>
 		/// <remarks>Returns the next available generation number of the FieldInfos files.</remarks>
-		public virtual long GetNextFieldInfosGen()
+		public virtual long NextFieldInfosGen
 		{
-			return nextWriteFieldInfosGen;
+		    get { return nextWriteFieldInfosGen; }
 		}
 
 		/// <summary>
@@ -247,9 +235,9 @@ namespace Lucene.Net.Index
 		/// Returns the generation number of the field infos file or -1 if there are no
 		/// field updates yet.
 		/// </remarks>
-		public virtual long GetFieldInfosGen()
+		public virtual long FieldInfosGen
 		{
-			return fieldInfosGen;
+		    get { return fieldInfosGen; }
 		}
 
 		/// <summary>
@@ -260,9 +248,9 @@ namespace Lucene.Net.Index
 		/// Returns the next available generation number
 		/// of the live docs file.
 		/// </remarks>
-		public virtual long GetNextDelGen()
+		public virtual long NextDelGen
 		{
-			return nextWriteDelGen;
+		    get { return nextWriteDelGen; }
 		}
 
 		/// <summary>
@@ -273,26 +261,24 @@ namespace Lucene.Net.Index
 		/// Returns generation number of the live docs file
 		/// or -1 if there are no deletes yet.
 		/// </remarks>
-		public virtual long GetDelGen()
+		public virtual long DelGen
 		{
-			return delGen;
+		    get { return delGen; }
 		}
 
 		/// <summary>Returns the number of deleted docs in the segment.</summary>
 		/// <remarks>Returns the number of deleted docs in the segment.</remarks>
-		public virtual int GetDelCount()
+		public virtual int DelCount
 		{
-			return delCount;
-		}
-
-		internal virtual void SetDelCount(int delCount)
-		{
-			if (delCount < 0 || delCount > info.GetDocCount())
-			{
-				throw new ArgumentException("invalid delCount=" + delCount + " (docCount=" + info
-					.GetDocCount() + ")");
-			}
-			this.delCount = delCount;
+		    get { return delCount; }
+		    set
+		    {
+                if (value < 0 || value > info.DocCount)
+                {
+                    throw new ArgumentException("invalid delCount=" + delCount + " (docCount=" + info.DocCount + ")");
+                }
+                this.delCount = value;
+		    }
 		}
 
 		/// <summary>Returns a description of this segment.</summary>
@@ -316,20 +302,22 @@ namespace Lucene.Net.Index
 			return ToString(info.dir, 0);
 		}
 
-		public virtual Lucene.Net.Index.SegmentCommitInfo Clone()
+		public virtual SegmentCommitInfo Clone()
 		{
-			Lucene.Net.Index.SegmentCommitInfo other = new Lucene.Net.Index.SegmentCommitInfo
-				(info, delCount, delGen, fieldInfosGen);
+			var other = new SegmentCommitInfo
+				(info, delCount, delGen, fieldInfosGen)
+			{
+			    nextWriteDelGen = nextWriteDelGen,
+			    nextWriteFieldInfosGen = nextWriteFieldInfosGen
+			};
 			// Not clear that we need to carry over nextWriteDelGen
 			// (i.e. do we ever clone after a failed write and
 			// before the next successful write?), but just do it to
 			// be safe:
-			other.nextWriteDelGen = nextWriteDelGen;
-			other.nextWriteFieldInfosGen = nextWriteFieldInfosGen;
-			// deep clone
-			foreach (KeyValuePair<long, ICollection<string>> e in genUpdatesFiles.EntrySet())
+		    // deep clone
+			foreach (KeyValuePair<long, ICollection<string>> e in genUpdatesFiles)
 			{
-				other.genUpdatesFiles.Put(e.Key, new HashSet<string>(e.Value));
+				other.genUpdatesFiles[e.Key] = new HashSet<string>(e.Value);
 			}
 			return other;
 		}

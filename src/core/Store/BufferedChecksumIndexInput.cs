@@ -16,7 +16,7 @@ namespace Lucene.Net.Store
 		internal readonly IChecksum digest;
 
 		/// <summary>Creates a new BufferedChecksumIndexInput</summary>
-		public BufferedChecksumIndexInput(IndexInput main) : base(main)
+		public BufferedChecksumIndexInput(IndexInput main) : base("BufferedChecksumIndexInput(" + main + ")")
 		{
 			this.main = main;
 			this.digest = new BufferedChecksum(new CRC32());
@@ -37,28 +37,28 @@ namespace Lucene.Net.Store
 			digest.Update(b, offset, len);
 		}
 
-		public override long GetChecksum()
+		public override long Checksum
 		{
-			return digest.GetValue();
+		    get { return digest.Value; }
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		public override void Close()
+		protected override void Dispose(bool disposing)
 		{
-			main.Close();
+			main.Dispose();
 		}
 
-		public override long GetFilePointer()
+		public override long FilePointer
 		{
-			return main.GetFilePointer();
+		    get { return main.FilePointer; }
 		}
 
-		public override long Length()
+		public override long Length
 		{
-			return main.Length();
+		    get { return main.Length; }
 		}
 
-		public override DataInput Clone()
+		public override object Clone()
 		{
 			throw new NotSupportedException();
 		}

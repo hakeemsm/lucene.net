@@ -493,7 +493,7 @@ namespace Lucene.Net.Search
             }
         }
 
-        private sealed class SearcherCallableWithSort : ICallable<TopFieldDocs>
+        internal sealed class SearcherCallableWithSort : ICallable<TopFieldDocs>
         {
             private readonly ReentrantLock lock_renamed;
             private readonly IndexSearcher searcher;
@@ -522,7 +522,7 @@ namespace Lucene.Net.Search
                 this.doMaxScore = doMaxScore;
             }
 
-            private sealed class FakeScorer : Scorer
+            internal sealed class FakeScorer : Scorer
             {
                 internal float score;
                 internal int doc;

@@ -41,7 +41,7 @@ namespace Lucene.Net.Index
                     threadBindings[requestingThread] = newState;
                     return newState;
                 }
-                else if (minThreadState == null)
+                if (minThreadState == null)
                 {
                     /*
                      * no new threadState available we just take the minContented one

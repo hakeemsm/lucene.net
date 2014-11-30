@@ -32,7 +32,7 @@ namespace Lucene.Net.Store
     /// </code>
     /// </summary>
     /// <seealso cref="Directory.MakeLock(String)" />
-    public abstract class Lock
+	public abstract class Lock : IDisposable
     {
 
         /// <summary>How long <see cref="Obtain(long)" /> waits, in milliseconds,
@@ -111,7 +111,7 @@ namespace Lucene.Net.Store
         }
 
         /// <summary>Releases exclusive access. </summary>
-        public abstract void Release();
+		public abstract void Dispose();
 
         /// <summary>Returns true if the resource is currently locked.  Note that one must
         /// still call <see cref="Obtain()" /> before using the resource. 
@@ -156,7 +156,7 @@ namespace Lucene.Net.Store
                 finally
                 {
                     if (locked)
-                        lock_Renamed.Release();
+                        lock_Renamed.Dispose();
                 }
             }
         }

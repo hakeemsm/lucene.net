@@ -55,8 +55,17 @@ namespace Lucene.Net.Index
         private readonly FieldInfos.Builder fieldInfosBuilder;
 
         public SegmentMerger(IList<AtomicReader> readers, SegmentInfo segmentInfo, InfoStream infoStream, Directory dir, int termIndexInterval,
-                MergeState.CheckAbort checkAbort, FieldInfos.FieldNumbers fieldNumbers, IOContext context)
+                MergeState.CheckAbort checkAbort, FieldInfos.FieldNumbers fieldNumbers, IOContext context, bool validate)
         {
+            // note, just like in codec apis Directory 'dir' is NOT the same as segmentInfo.dir!!
+            // validate incoming readers
+            if (validate)
+            {
+                foreach (AtomicReader reader in readers)
+                {
+                    reader.CheckIntegrity();
+                }
+            }
             mergeState = new MergeState(readers, segmentInfo, infoStream, checkAbort);
             directory = dir;
             this.termIndexInterval = termIndexInterval;
@@ -65,6 +74,10 @@ namespace Lucene.Net.Index
             this.fieldInfosBuilder = new FieldInfos.Builder(fieldNumbers);
         }
 
+        internal bool ShouldMerge()
+        {
+            return mergeState.segmentInfo.DocCount > 0;
+        }
         /// <summary> Merges the readers specified by the <see cref="Add" /> method into the directory passed to the constructor</summary>
         /// <returns> The number of documents that were merged
         /// </returns>
@@ -72,6 +85,10 @@ namespace Lucene.Net.Index
         /// <throws>  IOException if there is a low-level IO error </throws>
         public MergeState Merge()
         {
+            if (!ShouldMerge())
+            {
+                throw new InvalidOperationException("Merge would result in 0 document segment");
+            }
             // NOTE: it's important to add calls to
             // checkAbort.work(...) if you make any changes to this
             // method that will spend alot of time.  The frequency
@@ -79,7 +96,6 @@ namespace Lucene.Net.Index
             // IndexWriter.close(false) takes to actually stop the
             // threads.
 
-            mergeState.segmentInfo.DocCount = SetDocMaps();
             MergeFieldInfos();
             SetMatchingSegmentReaders();
             long t0 = 0;
@@ -153,8 +169,8 @@ namespace Lucene.Net.Index
 
             // write the merged infos
             FieldInfosWriter fieldInfosWriter = codec.FieldInfosFormat.FieldInfosWriter;
-            fieldInfosWriter.Write(directory, mergeState.segmentInfo.name, mergeState.fieldInfos, context);
-
+			fieldInfosWriter.Write(directory, mergeState.segmentInfo.name, string.Empty, mergeState
+				.fieldInfos, context);
             return mergeState;
         }
 
@@ -172,28 +188,36 @@ namespace Lucene.Net.Index
                         if (type == DocValuesType.NUMERIC)
                         {
                             List<NumericDocValues> toMerge = new List<NumericDocValues>();
+                            IList<IBits> docsWithField = new List<IBits>();
                             foreach (AtomicReader reader in mergeState.readers)
                             {
                                 NumericDocValues values = reader.GetNumericDocValues(field.name);
+                                IBits bits = reader.GetDocsWithField(field.name);
                                 if (values == null)
                                 {
-                                    values = NumericDocValues.EMPTY;
+                                    values = DocValues.EMPTY_NUMERIC;
+                                    bits = new Bits.MatchNoBits(reader.MaxDoc);
                                 }
                                 toMerge.Add(values);
+                                docsWithField.Add(bits);
                             }
-                            consumer.MergeNumericField(field, mergeState, toMerge);
+                            consumer.MergeNumericField(field, mergeState, toMerge, docsWithField);
                         }
                         else if (type == DocValuesType.BINARY)
                         {
                             List<BinaryDocValues> toMerge = new List<BinaryDocValues>();
+                            IList<IBits> docsWithField = new List<IBits>();
                             foreach (AtomicReader reader in mergeState.readers)
                             {
                                 BinaryDocValues values = reader.GetBinaryDocValues(field.name);
+                                IBits bits = reader.GetDocsWithField(field.name);
                                 if (values == null)
                                 {
-                                    values = BinaryDocValues.EMPTY;
+                                    values = DocValues.EMPTY_BINARY;
+                                    bits = new Bits.MatchNoBits(reader.MaxDoc);
                                 }
                                 toMerge.Add(values);
+                                docsWithField.Add(bits);
                             }
                             consumer.MergeBinaryField(field, mergeState, toMerge);
                         }
@@ -205,7 +229,7 @@ namespace Lucene.Net.Index
                                 SortedDocValues values = reader.GetSortedDocValues(field.name);
                                 if (values == null)
                                 {
-                                    values = SortedDocValues.EMPTY;
+                                    values = DocValues.EMPTY_SORTED;
                                 }
                                 toMerge.Add(values);
                             }
@@ -219,7 +243,7 @@ namespace Lucene.Net.Index
                                 SortedSetDocValues values = reader.GetSortedSetDocValues(field.name);
                                 if (values == null)
                                 {
-                                    values = SortedSetDocValues.EMPTY;
+                                    values = DocValues.EMPTY_SORTED_SET;
                                 }
                                 toMerge.Add(values);
                             }
@@ -257,16 +281,18 @@ namespace Lucene.Net.Index
                     if (field.HasNorms)
                     {
                         List<NumericDocValues> toMerge = new List<NumericDocValues>();
+                        IList<IBits> docsWithField = new List<IBits>();
                         foreach (AtomicReader reader in mergeState.readers)
                         {
                             NumericDocValues norms = reader.GetNormValues(field.name);
                             if (norms == null)
                             {
-                                norms = NumericDocValues.EMPTY;
+                                norms = DocValues.EMPTY_NUMERIC;
                             }
                             toMerge.Add(norms);
+                            docsWithField.Add(new Bits.MatchAllBits(reader.MaxDoc));
                         }
-                        consumer.MergeNumericField(field, mergeState, toMerge);
+                        consumer.MergeNumericField(field, mergeState, toMerge,docsWithField);
                     }
                 }
                 success = true;

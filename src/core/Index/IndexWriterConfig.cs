@@ -41,12 +41,20 @@ namespace Lucene.Net.Index
 
         public const int DEFAULT_MAX_THREAD_STATES = 8;
 
+		public const bool DEFAULT_USE_COMPOUND_FILE_SYSTEM = true;
+		public const bool DEFAULT_CHECK_INTEGRITY_AT_MERGE = false;
         public static long DefaultWriteLockTimeout
         {
             get { return WRITE_LOCK_TIMEOUT; }
             set { WRITE_LOCK_TIMEOUT = value; }
         }
 
+		private SetOnce<IndexWriter> writer = new SetOnce<IndexWriter>();
+		internal IndexWriterConfig SetIndexWriter(IndexWriter writer)
+		{
+			this.writer.Set(writer);
+			return this;
+		}
         public IndexWriterConfig(Lucene.Net.Util.Version matchVersion, Analyzer analyzer)
             : base(analyzer, matchVersion)
         {
@@ -235,7 +243,7 @@ namespace Lucene.Net.Index
 
         public IndexWriterConfig SetMaxThreadStates(int maxThreadStates)
         {
-            this.indexerThreadPool = new ThreadAffinityDocumentsWriterThreadPool(maxThreadStates);
+			this.indexerThreadPool = new DocumentsWriterPerThreadPool(maxThreadStates);
             return this;
         }
 
@@ -243,14 +251,7 @@ namespace Lucene.Net.Index
         {
             get
             {
-                try
-                {
-                    return ((ThreadAffinityDocumentsWriterThreadPool)indexerThreadPool).MaxThreadStates;
-                }
-                catch (InvalidCastException cce)
-                {
-                    throw new InvalidOperationException(cce.Message);
-                }
+			    return indexerThreadPool.MaxThreadStates;
             }
         }
 
@@ -406,34 +407,12 @@ namespace Lucene.Net.Index
             return SetInfoStream(new PrintStreamInfoStream(printStream));
         }
 
-        public override LiveIndexWriterConfig SetMaxBufferedDeleteTerms(int maxBufferedDeleteTerms)
-        {
-            return (IndexWriterConfig)base.SetMaxBufferedDeleteTerms(maxBufferedDeleteTerms);
-        }
 
-        public override LiveIndexWriterConfig SetMaxBufferedDocs(int maxBufferedDocs)
-        {
-            return (IndexWriterConfig)base.SetMaxBufferedDocs(maxBufferedDocs);
-        }
-
-        public override LiveIndexWriterConfig SetMergedSegmentWarmer(IndexReaderWarmer mergeSegmentWarmer)
-        {
-            return (IndexWriterConfig)base.SetMergedSegmentWarmer(mergeSegmentWarmer);
-        }
-
-        public override LiveIndexWriterConfig SetRAMBufferSizeMB(double ramBufferSizeMB)
-        {
-            return (IndexWriterConfig)base.SetRAMBufferSizeMB(ramBufferSizeMB);
-        }
-
-        public override LiveIndexWriterConfig SetReaderTermsIndexDivisor(int divisor)
-        {
-            return (IndexWriterConfig)base.SetReaderTermsIndexDivisor(divisor);
-        }
-
-        public override LiveIndexWriterConfig SetTermIndexInterval(int interval)
-        {
-            return (IndexWriterConfig)base.SetTermIndexInterval(interval);
-        }
+        public override string ToString()
+		{
+			StringBuilder sb = new StringBuilder(base.ToString());
+			sb.Append("writer=").Append(writer).Append("\n");
+			return sb.ToString();
+		}
     }
 }

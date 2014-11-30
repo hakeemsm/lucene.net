@@ -148,7 +148,7 @@ namespace Lucene.Net.Search
                 this.parent = parent;
             }
 
-            public void OnClose(SegmentReader owner)
+            public void OnClose(object ownerCoreCacheKey)
             {
                 parent.Purge(owner);
             }

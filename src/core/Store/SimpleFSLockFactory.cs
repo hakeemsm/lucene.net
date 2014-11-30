@@ -187,7 +187,7 @@ namespace Lucene.Net.Store
             }
         }
 
-        public override void Release()
+        public override void Dispose()
         {
             bool tmpBool;
             if (System.IO.File.Exists(lockFile.FullName))

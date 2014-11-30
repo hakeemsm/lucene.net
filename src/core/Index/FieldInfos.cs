@@ -247,6 +247,19 @@ namespace Lucene.Net.Index
                 }
             }
 
+			internal bool Contains(string fieldName, FieldInfo.DocValuesType dvType)
+			{
+				lock (this)
+				{
+					// used by IndexWriter.updateNumericDocValue
+					if (!nameToNumber.ContainsKey(fieldName))
+					{
+						return false;
+					}
+				    // only return true if the field has the same dvType as the requested one
+				    return dvType == docValuesType[fieldName];
+				}
+			}
             internal void Clear()
             {
                 lock (this)
@@ -256,6 +269,16 @@ namespace Lucene.Net.Index
                     docValuesType.Clear();
                 }
             }
+
+			internal void SetDocValuesType(int number, string name, FieldInfo.DocValuesType? dvType)
+			{
+				lock (this)
+				{
+					//HM:revisit 
+					//assert containsConsistent(number, name, dvType);
+					docValuesType[name] = dvType;
+				}
+			}
         }
 
         public sealed class Builder

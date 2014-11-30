@@ -39,7 +39,7 @@ namespace Lucene.Net.Index
     {
 
         /// <summary>Run the merges provided by <see cref="IndexWriter.GetNextMerge()" />. </summary>
-        public abstract void Merge(IndexWriter writer);
+        public abstract void Merge(IndexWriter writer, MergePolicy.MergeTrigger trigger, bool newMergesFound);
 
         [Obsolete("Use Dispose() instead")]
         public void Close()

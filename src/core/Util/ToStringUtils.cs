@@ -48,5 +48,16 @@ namespace Lucene.Net.Util
                 }
             }
         }
+		private static readonly char[] HEX = "0123456789abcdef".ToCharArray();
+
+		public static string LongHex(long x)
+		{
+			char[] asHex = new char[16];
+			for (int i = 16; --i >= 0; x = (long)(((ulong)x) >> 4))
+			{
+				asHex[i] = HEX[(int)x & unchecked((int)(0x0F))];
+			}
+			return "0x" + new string(asHex);
+		}
 	}
 }

@@ -55,6 +55,8 @@ namespace Lucene.Net.Index
 
         protected readonly Lucene.Net.Util.Version matchVersion;
 
+        protected internal volatile bool useCompoundFile = IndexWriterConfig.DEFAULT_USE_COMPOUND_FILE_SYSTEM;
+        protected internal volatile bool checkIntegrityAtMerge = IndexWriterConfig.DEFAULT_CHECK_INTEGRITY_AT_MERGE;
         public LiveIndexWriterConfig(Analyzer analyzer, Lucene.Net.Util.Version matchVersion)
         {
             this.analyzer = analyzer;
@@ -67,7 +69,8 @@ namespace Lucene.Net.Index
             termIndexInterval = IndexWriterConfig.DEFAULT_TERM_INDEX_INTERVAL; // TODO: this should be private to the codec, not settable here
             delPolicy = new KeepOnlyLastCommitDeletionPolicy();
             commit = null;
-            openMode = OpenMode.CREATE_OR_APPEND;
+            useCompoundFile = IndexWriterConfig.DEFAULT_USE_COMPOUND_FILE_SYSTEM;
+            openMode = IndexWriterConfig.OpenMode.CREATE_OR_APPEND;
             similarity = IndexSearcher.DefaultSimilarity;
             mergeScheduler = new ConcurrentMergeScheduler();
             Interlocked.Exchange(ref writeLockTimeout, IndexWriterConfig.WRITE_LOCK_TIMEOUT);
@@ -81,7 +84,8 @@ namespace Lucene.Net.Index
             mergePolicy = new TieredMergePolicy();
             flushPolicy = new FlushByRamOrCountsPolicy();
             readerPooling = IndexWriterConfig.DEFAULT_READER_POOLING;
-            indexerThreadPool = new ThreadAffinityDocumentsWriterThreadPool(IndexWriterConfig.DEFAULT_MAX_THREAD_STATES);
+            indexerThreadPool = new DocumentsWriterPerThreadPool(IndexWriterConfig.DEFAULT_MAX_THREAD_STATES
+                );
             perThreadHardLimitMB = IndexWriterConfig.DEFAULT_RAM_PER_THREAD_HARD_LIMIT_MB;
         }
 
@@ -109,6 +113,8 @@ namespace Lucene.Net.Index
             readerPooling = config.ReaderPooling;
             flushPolicy = config.FlushPolicy;
             perThreadHardLimitMB = config.RAMPerThreadHardLimitMB;
+            useCompoundFile = config.UseCompoundFile;
+            checkIntegrityAtMerge = config.GetCheckIntegrityAtMerge();
         }
 
         public virtual Analyzer Analyzer
@@ -117,7 +123,7 @@ namespace Lucene.Net.Index
         }
 
         public virtual LiveIndexWriterConfig SetTermIndexInterval(int interval)
-        { 
+        {
             // TODO: this should be private to the codec, not settable here
             this.termIndexInterval = interval;
             return this;
@@ -265,14 +271,7 @@ namespace Lucene.Net.Index
         {
             get
             {
-                try
-                {
-                    return ((ThreadAffinityDocumentsWriterThreadPool)indexerThreadPool).MaxThreadStates;
-                }
-                catch (InvalidCastException cce)
-                {
-                    throw new InvalidOperationException(cce.Message);
-                }
+                return indexerThreadPool.MaxThreadStates;
             }
         }
 
@@ -301,6 +300,21 @@ namespace Lucene.Net.Index
             get { return infoStream; }
         }
 
+        public virtual bool UseCompoundFile
+        {
+            set { this.useCompoundFile = value; }
+            get { return useCompoundFile; }
+        }
+        public virtual LiveIndexWriterConfig SetCheckIntegrityAtMerge
+            (bool checkIntegrityAtMerge)
+        {
+            this.checkIntegrityAtMerge = checkIntegrityAtMerge;
+            return this;
+        }
+        public virtual bool GetCheckIntegrityAtMerge()
+        {
+            return checkIntegrityAtMerge;
+        }
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();

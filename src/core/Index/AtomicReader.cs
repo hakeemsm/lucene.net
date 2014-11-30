@@ -37,7 +37,7 @@ namespace Lucene.Net.Index
             }
         }
 
-        [Obsolete]
+        [Obsolete(@"(4.0) use GetFieldInfos() and check FieldInfo.HasNorms() for the field instead.")]
         public bool HasNorms(string field)
         {
             EnsureOpen();
@@ -61,7 +61,7 @@ namespace Lucene.Net.Index
                 return 0;
             }
             TermsEnum termsEnum = terms.Iterator(null);
-            if (termsEnum.SeekExact(term.Bytes, true))
+			if (termsEnum.SeekExact(term.Bytes))
             {
                 return termsEnum.DocFreq;
             }
@@ -84,7 +84,7 @@ namespace Lucene.Net.Index
                 return 0;
             }
             TermsEnum termsEnum = terms.Iterator(null);
-            if (termsEnum.SeekExact(term.Bytes, true))
+			if (termsEnum.SeekExact(term.Bytes))
             {
                 return termsEnum.TotalTermFreq;
             }
@@ -188,10 +188,12 @@ namespace Lucene.Net.Index
         
         public abstract SortedSetDocValues GetSortedSetDocValues(String field);
         
+		public abstract IBits GetDocsWithField(string field);
         public abstract NumericDocValues GetNormValues(String field);
 
         public abstract FieldInfos FieldInfos { get; }
         
         public abstract IBits LiveDocs { get; }
+		public abstract void CheckIntegrity();
     }
 }

@@ -15,9 +15,9 @@ namespace Lucene.Net.Index
         // .NET port: no need for AtomicReferenceFieldUpdater, we can use Interlocked instead
 
         private readonly DeleteSlice globalSlice;
-        private readonly BufferedDeletes globalBufferedDeletes;
+        private readonly BufferedUpdates globalBufferedUpdates;
         /* only acquired to update the global deletes */
-        private readonly object globalBufferLock = new object();
+        private readonly ReentrantLock globalBufferLock = new ReentrantLock();
 
         internal readonly long generation;
 
@@ -26,20 +26,22 @@ namespace Lucene.Net.Index
         {
         }
 
-        public DocumentsWriterDeleteQueue(long generation)
-            : this(new BufferedDeletes(), generation)
+        internal DocumentsWriterDeleteQueue(long generation)
+            : this(new BufferedUpdates()
+                , generation)
         {
         }
 
-        public DocumentsWriterDeleteQueue(BufferedDeletes globalBufferedDeletes, long generation)
+        internal DocumentsWriterDeleteQueue(BufferedUpdates globalBufferedUpdates, long generation
+            )
         {
-            this.globalBufferedDeletes = globalBufferedDeletes;
+            this.globalBufferedUpdates = globalBufferedUpdates;
             this.generation = generation;
+            tail = new DocumentsWriterDeleteQueue.Node<object>(null);
             /*
              * we use a sentinel instance as our initial tail. No slice will ever try to
              * apply this tail since the head is always omitted.
              */
-            tail = new Node(null); // sentinel
             globalSlice = new DeleteSlice(tail);
         }
 
@@ -55,6 +57,17 @@ namespace Lucene.Net.Index
             TryApplyGlobalSlice();
         }
 
+        internal void AddNumericUpdate(DocValuesUpdate.NumericDocValuesUpdate update)
+        {
+            Add(new DocumentsWriterDeleteQueue.NumericUpdateNode(update));
+            TryApplyGlobalSlice();
+        }
+
+        internal void AddBinaryUpdate(DocValuesUpdate.BinaryDocValuesUpdate update)
+        {
+            Add(new DocumentsWriterDeleteQueue.BinaryUpdateNode(update));
+            TryApplyGlobalSlice();
+        }
         internal void Add(Term term, DeleteSlice slice)
         {
             TermNode termNode = new TermNode(term);
@@ -123,7 +136,7 @@ namespace Lucene.Net.Index
         {
             get
             {
-                Monitor.Enter(globalBufferLock);
+                globalBufferLock.Lock();
                 try
                 {
                     /*
@@ -131,19 +144,19 @@ namespace Lucene.Net.Index
                      * and if the global slice is up-to-date
                      * and if globalBufferedDeletes has changes
                      */
-                    return globalBufferedDeletes.Any() || !globalSlice.IsEmpty || globalSlice.sliceTail != tail
+                    return globalBufferedUpdates.Any() || !globalSlice.IsEmpty || globalSlice.sliceTail != tail
                         || tail.next != null;
                 }
                 finally
                 {
-                    Monitor.Exit(globalBufferLock);
+                    globalBufferLock.Unlock();
                 }
             }
         }
 
         internal void TryApplyGlobalSlice()
         {
-            if (Monitor.TryEnter(globalBufferLock))
+            if (globalBufferLock.TryLock())
             {
                 /*
                  * The global buffer must be locked but we don't need to update them if
@@ -156,19 +169,19 @@ namespace Lucene.Net.Index
                     if (UpdateSlice(globalSlice))
                     {
                         //          System.out.println(Thread.currentThread() + ": apply globalSlice");
-                        globalSlice.Apply(globalBufferedDeletes, BufferedDeletes.MAX_INT);
+                        globalSlice.Apply(globalBufferedUpdates, BufferedUpdates.MAX_INT);
                     }
                 }
                 finally
                 {
-                    Monitor.Exit(globalBufferLock);
+                    globalBufferLock.Unlock();
                 }
             }
         }
 
-        internal FrozenBufferedDeletes FreezeGlobalBuffer(DeleteSlice callerSlice)
+        internal FrozenBufferedUpdates FreezeGlobalBuffer(DeleteSlice callerSlice)
         {
-            Monitor.Enter(globalBufferLock);
+            globalBufferLock.Lock();
             /*
              * Here we freeze the global buffer so we need to lock it, apply all
              * deletes in the queue and reset the global slice to let the GC prune the
@@ -187,18 +200,18 @@ namespace Lucene.Net.Index
                 if (globalSlice.sliceTail != currentTail)
                 {
                     globalSlice.sliceTail = currentTail;
-                    globalSlice.Apply(globalBufferedDeletes, BufferedDeletes.MAX_INT);
+                    globalSlice.Apply(globalBufferedUpdates, BufferedUpdates.MAX_INT);
                 }
 
                 //      System.out.println(Thread.currentThread().getName() + ": now freeze global buffer " + globalBufferedDeletes);
-                FrozenBufferedDeletes packet = new FrozenBufferedDeletes(
-                    globalBufferedDeletes, false);
-                globalBufferedDeletes.Clear();
+                FrozenBufferedUpdates packet = new FrozenBufferedUpdates(globalBufferedUpdates, false
+                    );
+                globalBufferedUpdates.Clear();
                 return packet;
             }
             finally
             {
-                Monitor.Exit(globalBufferLock);
+                globalBufferLock.Unlock();
             }
         }
 
@@ -233,7 +246,7 @@ namespace Lucene.Net.Index
                 sliceHead = sliceTail = currentTail;
             }
 
-            internal void Apply(BufferedDeletes del, int docIDUpto)
+            internal virtual void Apply(BufferedUpdates del, int docIDUpto)
             {
                 if (sliceHead == sliceTail)
                 {
@@ -276,28 +289,28 @@ namespace Lucene.Net.Index
 
         public int NumGlobalTermDeletes
         {
-            get { return globalBufferedDeletes.numTermDeletes; }
+            get { return globalBufferedUpdates.numTermDeletes.Get(); }
         }
 
         internal void Clear()
         {
-            Monitor.Enter(globalBufferLock);
+            globalBufferLock.Lock();
             try
             {
                 Node currentTail = tail;
                 globalSlice.sliceHead = globalSlice.sliceTail = currentTail;
-                globalBufferedDeletes.Clear();
+                globalBufferedUpdates.Clear();
             }
             finally
             {
-                Monitor.Exit(globalBufferLock);
+                globalBufferLock.Unlock();
             }
         }
 
         internal class Node
         {
             internal Node next; // .NET Port: not using volatile due to Interlocked usage
-            private readonly object item; // .NET Port: can't use Node<?> without specifying type param, so not generic
+            internal readonly object item; // .NET Port: can't use Node<?> without specifying type param, so not generic
 
             internal Node(object item)
             {
@@ -306,7 +319,7 @@ namespace Lucene.Net.Index
 
             // .NET Port: no need for AtomicReferenceFieldUpdater here, we're using Interlocked hotness
 
-            internal virtual void Apply(BufferedDeletes bufferedDeletes, int docIDUpto)
+            internal virtual void Apply(BufferedUpdates bufferedDeletes, int docIDUpto)
             {
                 throw new InvalidOperationException("sentinel item must never be applied");
             }
@@ -349,7 +362,7 @@ namespace Lucene.Net.Index
             {
             }
 
-            internal override void Apply(BufferedDeletes bufferedDeletes, int docIDUpto)
+            internal override void Apply(BufferedUpdates bufferedDeletes, int docIDUpto)
             {
                 bufferedDeletes.AddTerm(Item, docIDUpto);
             }
@@ -367,11 +380,11 @@ namespace Lucene.Net.Index
             {
             }
 
-            internal override void Apply(BufferedDeletes bufferedDeletes, int docIDUpto)
+            internal override void Apply(BufferedUpdates bufferedUpdates, int docIDUpto)
             {
                 foreach (var query in Item)
                 {
-                    bufferedDeletes.AddQuery(query, docIDUpto);
+                    bufferedUpdates.AddQuery(query, docIDUpto);
                 }
             }
         }
@@ -383,11 +396,11 @@ namespace Lucene.Net.Index
             {
             }
 
-            internal override void Apply(BufferedDeletes bufferedDeletes, int docIDUpto)
+            internal override void Apply(BufferedUpdates bufferedUpdates, int docIDUpto)
             {
                 foreach (Term term in Item)
                 {
-                    bufferedDeletes.AddTerm(term, docIDUpto);
+                    bufferedUpdates.AddTerm(term, docIDUpto);
                 }
             }
 
@@ -397,45 +410,80 @@ namespace Lucene.Net.Index
             }
         }
 
+        private sealed class NumericUpdateNode : Node<DocValuesUpdate.NumericDocValuesUpdate>
+        {
+            internal NumericUpdateNode(DocValuesUpdate.NumericDocValuesUpdate update)
+                : base(update)
+            {
+            }
+
+            internal override void Apply(BufferedUpdates bufferedUpdates, int docIDUpto)
+            {
+                bufferedUpdates.AddNumericUpdate((DocValuesUpdate.NumericDocValuesUpdate) item, docIDUpto);
+            }
+
+            public override string ToString()
+            {
+                return "update=" + item;
+            }
+        }
+        private sealed class BinaryUpdateNode : Node<DocValuesUpdate.BinaryDocValuesUpdate
+            >
+        {
+            internal BinaryUpdateNode(DocValuesUpdate.BinaryDocValuesUpdate update)
+                : base(update)
+            {
+            }
+
+            internal override void Apply(BufferedUpdates bufferedUpdates, int docIDUpto)
+            {
+                bufferedUpdates.AddBinaryUpdate((DocValuesUpdate.BinaryDocValuesUpdate) item, docIDUpto);
+            }
+
+            public override string ToString()
+            {
+                return "update=" + item;
+            }
+        }
         private bool ForceApplyGlobalSlice()
         {
-            Monitor.Enter(globalBufferLock);
+            globalBufferLock.Lock();
             Node currentTail = tail;
             try
             {
                 if (globalSlice.sliceTail != currentTail)
                 {
                     globalSlice.sliceTail = currentTail;
-                    globalSlice.Apply(globalBufferedDeletes, BufferedDeletes.MAX_INT);
+                    globalSlice.Apply(globalBufferedUpdates, BufferedUpdates.MAX_INT);
                 }
-                return globalBufferedDeletes.Any();
+                return globalBufferedUpdates.Any();
             }
             finally
             {
-                Monitor.Exit(globalBufferLock);
+                globalBufferLock.Unlock();
             }
         }
 
-        public int BufferedDeleteTermsSize
+        public int BufferedUpdatesTermsSize
         {
             get
             {
-                Monitor.Enter(globalBufferLock);
+                globalBufferLock.Lock();
                 try
                 {
                     ForceApplyGlobalSlice();
-                    return globalBufferedDeletes.terms.Count;
+                    return globalBufferedUpdates.terms.Count;
                 }
                 finally
                 {
-                    Monitor.Exit(globalBufferLock);
+                    globalBufferLock.Unlock();
                 }
             }
         }
 
         public long BytesUsed
         {
-            get { return Interlocked.Read(ref globalBufferedDeletes.bytesUsed); }
+            get { return globalBufferedUpdates.bytesUsed.Get(); }
         }
 
         public override string ToString()

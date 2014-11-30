@@ -10,9 +10,9 @@ namespace Lucene.Net.Index
 {
     public abstract class FlushPolicy : ICloneable
     {
-        protected SetOnce<DocumentsWriter> writer = new SetOnce<DocumentsWriter>();
         protected LiveIndexWriterConfig indexWriterConfig;
 
+		protected internal InfoStream infoStream;
         public abstract void OnDelete(DocumentsWriterFlushControl control, ThreadState state);
 
         public virtual void OnUpdate(DocumentsWriterFlushControl control, ThreadState state)
@@ -23,12 +23,12 @@ namespace Lucene.Net.Index
 
         public abstract void OnInsert(DocumentsWriterFlushControl control, ThreadState state);
 
-        protected internal virtual void Init(DocumentsWriter docsWriter)
+		protected internal virtual void Init(LiveIndexWriterConfig indexWriterConfig)
         {
             lock (this)
             {
-                writer.Set(docsWriter);
-                indexWriterConfig = docsWriter.indexWriter.Config;
+				this.indexWriterConfig = indexWriterConfig;
+				infoStream = indexWriterConfig.GetInfoStream();
             }
         }
 
@@ -60,9 +60,9 @@ namespace Lucene.Net.Index
 
         private bool AssertMessage(String s)
         {
-            if (writer.Get().infoStream.IsEnabled("FP"))
+			if (infoStream.IsEnabled("FP"))
             {
-                writer.Get().infoStream.Message("FP", s);
+				infoStream.Message("FP", s);
             }
             return true;
         }
@@ -70,8 +70,9 @@ namespace Lucene.Net.Index
         public object Clone()
         {
             FlushPolicy clone = (FlushPolicy)this.MemberwiseClone();
-            clone.writer = new SetOnce<DocumentsWriter>();
+			// should not happen
             clone.indexWriterConfig = null;
+			clone.infoStream = null;
             return clone;
         }
     }

@@ -52,8 +52,10 @@ namespace Lucene.Net.Store
 	    /// <summary>Sets current position in this file, where the next write will occur.</summary>
 		/// <seealso cref="FilePointer()">
 		/// </seealso>
+		[System.ObsoleteAttribute(@"(4.1) This method will be removed in Lucene 5.0")]
 		public abstract void Seek(long pos);
 
+		public abstract long GetChecksum();
 	    /// <summary>The number of bytes in the file. </summary>
 	    public abstract long Length { get; }
 

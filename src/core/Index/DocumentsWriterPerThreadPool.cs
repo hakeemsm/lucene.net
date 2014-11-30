@@ -9,8 +9,9 @@ using FieldNumbers = Lucene.Net.Index.FieldInfos.FieldNumbers;
 
 namespace Lucene.Net.Index
 {
-    public abstract class DocumentsWriterPerThreadPool : ICloneable
+    public class DocumentsWriterPerThreadPool : ICloneable
     {
+        [System.Serializable]
         public sealed class ThreadState : ReentrantLock
         {
             internal DocumentsWriterPerThread dwpt;
@@ -28,14 +29,18 @@ namespace Lucene.Net.Index
                 this.dwpt = dpwt;
             }
 
-            internal void ResetWriter(DocumentsWriterPerThread dwpt)
+            internal void Deactivate()
+            {
+                //HM:revisit 
+                //assert this.isHeldByCurrentThread();
+                isActive = false;
+                Reset();
+            }
+
+            internal void Reset()
             {
                 //assert this.isHeldByCurrentThread();
-                if (dwpt == null)
-                {
-                    isActive = false;
-                }
-                this.dwpt = dwpt;
+                this.dwpt = null;
                 this.bytesUsed = 0;
                 this.flushPending = false;
             }
@@ -49,6 +54,12 @@ namespace Lucene.Net.Index
                 }
             }
 
+            internal bool IsInitialized()
+            {
+                //HM:revisit 
+                //assert this.isHeldByCurrentThread();
+                return IsActive && dwpt != null;
+            }
             public long BytesUsedPerThread
             {
                 get
@@ -80,9 +91,10 @@ namespace Lucene.Net.Index
 
         private ThreadState[] threadStates;
         private volatile int numThreadStatesActive;
-        private SetOnce<FieldNumbers> globalFieldMap = new SetOnce<FieldNumbers>();
-        private SetOnce<DocumentsWriter> documentsWriter = new SetOnce<DocumentsWriter>();
 
+        private readonly DocumentsWriterPerThreadPool.ThreadState[] freeList;
+
+        private int freeCount;
         public DocumentsWriterPerThreadPool(int maxNumThreadStates)
         {
             if (maxNumThreadStates < 1)
@@ -91,37 +103,22 @@ namespace Lucene.Net.Index
             }
             threadStates = new ThreadState[maxNumThreadStates];
             numThreadStatesActive = 0;
-        }
-
-        internal virtual void Initialize(DocumentsWriter documentsWriter, FieldNumbers globalFieldMap, LiveIndexWriterConfig config)
-        {
-            this.documentsWriter.Set(documentsWriter); // thread pool is bound to DW
-            this.globalFieldMap.Set(globalFieldMap);
             for (int i = 0; i < threadStates.Length; i++)
             {
-                FieldInfos.Builder infos = new FieldInfos.Builder(globalFieldMap);
-                threadStates[i] = new ThreadState(new DocumentsWriterPerThread(documentsWriter.directory, documentsWriter, infos, documentsWriter.chain));
+                threadStates[i] = new DocumentsWriterPerThreadPool.ThreadState(null);
             }
+            freeList = new DocumentsWriterPerThreadPool.ThreadState[maxNumThreadStates];
         }
+
 
         public virtual object Clone()
         {
             // We should only be cloned before being used:
-            //assert numThreadStatesActive == 0;
-            DocumentsWriterPerThreadPool clone;
-            try
+            if (numThreadStatesActive != 0)
             {
-                clone = (DocumentsWriterPerThreadPool)base.MemberwiseClone();
+                throw new InvalidOperationException("clone this object before it is used!");
             }
-            catch
-            {
-                // should not happen
-                throw;
-            }
-            clone.documentsWriter = new SetOnce<DocumentsWriter>();
-            clone.globalFieldMap = new SetOnce<FieldNumbers>();
-            clone.threadStates = new ThreadState[threadStates.Length];
-            return clone;
+            return new DocumentsWriterPerThreadPool(threadStates.Length);
         }
 
         internal virtual int MaxThreadStates
@@ -150,7 +147,6 @@ namespace Lucene.Net.Index
                             // unreleased thread states are deactivated during DW#close()
                             numThreadStatesActive++; // increment will publish the ThreadState
                             //assert threadState.dwpt != null;
-                            threadState.dwpt.Initialize();
                             unlock = false;
                             return threadState;
                         }
@@ -196,30 +192,29 @@ namespace Lucene.Net.Index
                 threadState.Lock();
                 try
                 {
-                    threadState.ResetWriter(null);
+                    threadState.Deactivate();
                 }
                 finally
                 {
                     threadState.Unlock();
                 }
             }
+            Monitor.PulseAll(this);
         }
 
-        internal virtual DocumentsWriterPerThread ReplaceForFlush(ThreadState threadState, bool closed)
+        internal DocumentsWriterPerThread Reset(DocumentsWriterPerThreadPool.ThreadState
+            threadState, bool closed)
         {
             //assert threadState.isHeldByCurrentThread();
             //assert globalFieldMap.get() != null;
             DocumentsWriterPerThread dwpt = threadState.dwpt;
             if (!closed)
             {
-                FieldInfos.Builder infos = new FieldInfos.Builder(globalFieldMap.Get());
-                DocumentsWriterPerThread newDwpt = new DocumentsWriterPerThread(dwpt, infos);
-                newDwpt.Initialize();
-                threadState.ResetWriter(newDwpt);
+                threadState.Reset();
             }
             else
             {
-                threadState.ResetWriter(null);
+                threadState.Deactivate();
             }
             return dwpt;
         }
@@ -229,8 +224,78 @@ namespace Lucene.Net.Index
             // don't recycle DWPT by default
         }
 
-        internal abstract ThreadState GetAndLock(Thread requestingThread, DocumentsWriter documentsWriter);
+        internal ThreadState GetAndLock(Thread requestingThread, DocumentsWriter documentsWriter)
+        {
+            ThreadState threadState;
+            lock (this)
+            {
+                while (true)
+                {
+                    if (freeCount > 0)
+                    {
+                        // Important that we are LIFO here! This way if number of concurrent indexing threads was once high, but has now reduced, we only use a
+                        // limited number of thread states:
+                        threadState = freeList[freeCount - 1];
+                        if (threadState.dwpt == null)
+                        {
+                            // This thread-state is not initialized, e.g. it
+                            // was just flushed. See if we can instead find
+                            // another free thread state that already has docs
+                            // indexed. This way if incoming thread concurrency
+                            // has decreased, we don't leave docs
+                            // indefinitely buffered, tying up RAM.  This
+                            // will instead get those thread states flushed,
+                            // freeing up RAM for larger segment flushes:
+                            for (int i = 0; i < freeCount; i++)
+                            {
+                                if (freeList[i].dwpt != null)
+                                {
+                                    // Use this one instead, and swap it with
+                                    // the un-initialized one:
+                                    DocumentsWriterPerThreadPool.ThreadState ts = freeList[i];
+                                    freeList[i] = threadState;
+                                    threadState = ts;
+                                    break;
+                                }
+                            }
+                        }
+                        freeCount--;
+                        break;
+                    }
+                    if (numThreadStatesActive < threadStates.Length)
+                    {
+                        // ThreadState is already locked before return by this method:
+                        return NewThreadState();
+                    }
+                    // Wait until a thread state frees up:
+                    try
+                    {
+                        Monitor.Wait(this);
+                    }
+                    catch (Exception ie)
+                    {
+                        throw new ThreadInterruptedException(ie.Message);
+                    }
+                }
+            }
+            // This could take time, e.g. if the threadState is [briefly] checked for flushing:
+            threadState.Lock();
+            return threadState;
+        }
 
+        internal void Release(ThreadState state)
+        {
+            state.Unlock();
+            lock (this)
+            {
+                //HM:revisit 
+                //assert freeCount < freeList.length;
+                freeList[freeCount++] = state;
+                // In case any thread is waiting, wake one of them up since we just released a thread state; notify() should be sufficient but we do
+                // notifyAll defensively:
+                Monitor.PulseAll(this);
+            }
+        }
         internal virtual ThreadState GetThreadState(int ord)
         {
             return threadStates[ord];
@@ -254,17 +319,32 @@ namespace Lucene.Net.Index
             }
         }
 
+        internal int NumDeactivatedThreadStates()
+        {
+            int count = 0;
+            for (int i = 0; i < threadStates.Length; i++)
+            {
+                ThreadState threadState = threadStates[i];
+                threadState.Lock();
+                try
+                {
+                    if (!threadState.IsActive)
+                    {
+                        count++;
+                    }
+                }
+                finally
+                {
+                    threadState.Unlock();
+                }
+            }
+            return count;
+        }
         internal void DeactivateThreadState(ThreadState threadState)
         {
             //assert threadState.isActive();
-            threadState.ResetWriter(null);
+            threadState.Deactivate();
         }
 
-        internal void ReinitThreadState(ThreadState threadState)
-        {
-            //assert threadState.isActive;
-            //assert threadState.dwpt.getNumDocsInRAM() == 0;
-            threadState.dwpt.Initialize();
-        }
     }
 }

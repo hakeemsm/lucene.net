@@ -1,4 +1,5 @@
-﻿using Lucene.Net.Support;
+﻿using System.Diagnostics;
+using Lucene.Net.Support;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,10 +15,10 @@ namespace Lucene.Net.Index
         private readonly Queue<FlushTicket> queue = new Queue<FlushTicket>();
         // we track tickets separately since count must be present even before the ticket is
         // constructed ie. queue.size would not reflect it.
-        private int ticketCount = 0;
+		private readonly AtomicInteger ticketCount = new AtomicInteger();
         private readonly ReentrantLock purgeLock = new ReentrantLock();
 
-        internal void AddDeletesAndPurge(DocumentsWriter writer, DocumentsWriterDeleteQueue deleteQueue)
+		internal virtual void AddDeletes(DocumentsWriterDeleteQueue deleteQueue)
         {
             lock (this)
             {
@@ -39,19 +40,18 @@ namespace Lucene.Net.Index
             }
             // don't hold the lock on the FlushQueue when forcing the purge - this blocks and deadlocks 
             // if we hold the lock.
-            ForcePurge(writer);
         }
 
         private void IncTickets()
         {
-            Interlocked.Increment(ref ticketCount);
-            //assert numTickets > 0;
+			int numTickets = ticketCount.IncrementAndGet();
+            Debug.Assert(numTickets > 0);
         }
 
         private void DecTickets()
         {
-            Interlocked.Decrement(ref ticketCount);
-            //assert numTickets >= 0;
+			int numTickets = ticketCount.DecrementAndGet();
+            Debug.Assert(numTickets >= 0);
         }
 
         internal SegmentFlushTicket AddFlushTicket(DocumentsWriterPerThread dwpt)
@@ -104,13 +104,14 @@ namespace Lucene.Net.Index
             get
             {
                 //assert ticketCount.get() >= 0 : "ticketCount should be >= 0 but was: " + ticketCount.get();
-                return ticketCount != 0;
+			return ticketCount.Get() != 0;
             }
         }
 
-        private void InnerPurge(DocumentsWriter writer)
+		private int InnerPurge(IndexWriter writer)
         {
             //assert purgeLock.isHeldByCurrentThread();
+			int numPurged = 0;
             while (true)
             {
                 FlushTicket head;
@@ -122,6 +123,7 @@ namespace Lucene.Net.Index
                 }
                 if (canPublish)
                 {
+					numPurged++;
                     try
                     {
                         /*
@@ -138,7 +140,7 @@ namespace Lucene.Net.Index
                         {
                             // finally remove the published ticket from the queue
                             FlushTicket poll = queue.Dequeue();
-                            Interlocked.Decrement(ref ticketCount);
+							ticketCount.DecrementAndGet();
                             //assert poll == head;
                         }
                     }
@@ -148,15 +150,16 @@ namespace Lucene.Net.Index
                     break;
                 }
             }
+			return numPurged;
         }
 
-        internal void ForcePurge(DocumentsWriter writer)
+		internal virtual int ForcePurge(IndexWriter writer)
         {
             //assert !Thread.holdsLock(this);
             purgeLock.Lock();
             try
             {
-                InnerPurge(writer);
+				return InnerPurge(writer);
             }
             finally
             {
@@ -164,25 +167,26 @@ namespace Lucene.Net.Index
             }
         }
 
-        internal void TryPurge(DocumentsWriter writer)
+		internal virtual int TryPurge(IndexWriter writer)
         {
             //assert !Thread.holdsLock(this);
             if (purgeLock.TryLock())
             {
                 try
                 {
-                    InnerPurge(writer);
+					return InnerPurge(writer);
                 }
                 finally
                 {
                     purgeLock.Unlock();
                 }
             }
+			return 0;
         }
 
         public int TicketCount
         {
-            get { return ticketCount; }
+            get { return ticketCount.Get(); }
         }
 
         internal void Clear()
@@ -190,38 +194,84 @@ namespace Lucene.Net.Index
             lock (this)
             {
                 queue.Clear();
-                Interlocked.Exchange(ref ticketCount, 0);
+                ticketCount.Set(0);
             }
         }
 
         internal abstract class FlushTicket
         {
-            protected FrozenBufferedDeletes frozenDeletes;
+			protected internal FrozenBufferedUpdates frozenUpdates;
             protected bool published = false;
 
-            protected FlushTicket(FrozenBufferedDeletes frozenDeletes)
+			protected internal FlushTicket(FrozenBufferedUpdates frozenUpdates)
             {
                 //assert frozenDeletes != null;
-                this.frozenDeletes = frozenDeletes;
+				this.frozenUpdates = frozenUpdates;
             }
 
-            public abstract void Publish(DocumentsWriter writer);
+			protected internal abstract void Publish(IndexWriter writer);
             public abstract bool CanPublish { get; }
-        }
+			protected internal void PublishFlushedSegment(IndexWriter indexWriter, DocumentsWriterPerThread.FlushedSegment
+				 newSegment, FrozenBufferedUpdates globalPacket)
+			{
+				//HM:revisit 
+				//assert newSegment != null;
+				//HM:revisit 
+				//assert newSegment.segmentInfo != null;
+				FrozenBufferedUpdates segmentUpdates = newSegment.segmentUpdates;
+				//System.out.println("FLUSH: " + newSegment.segmentInfo.info.name);
+				if (indexWriter.infoStream.IsEnabled("DW"))
+				{
+					indexWriter.infoStream.Message("DW", "publishFlushedSegment seg-private updates="
+						 + segmentUpdates);
+				}
+				if (segmentUpdates != null && indexWriter.infoStream.IsEnabled("DW"))
+				{
+					indexWriter.infoStream.Message("DW", "flush: push buffered seg private updates: "
+						 + segmentUpdates);
+				}
+				// now publish!
+				indexWriter.PublishFlushedSegment(newSegment.segmentInfo, segmentUpdates, globalPacket
+					);
+			}
 
+			protected internal void FinishFlush(IndexWriter indexWriter, DocumentsWriterPerThread.FlushedSegment
+				 newSegment, FrozenBufferedUpdates bufferedUpdates)
+			{
+				// Finish the flushed segment and publish it to IndexWriter
+				if (newSegment == null)
+				{
+					//HM:revisit 
+					//assert bufferedUpdates != null;
+					if (bufferedUpdates != null && bufferedUpdates.Any())
+					{
+						indexWriter.PublishFrozenUpdates(bufferedUpdates);
+						if (indexWriter.infoStream.IsEnabled("DW"))
+						{
+							indexWriter.infoStream.Message("DW", "flush: push buffered updates: " + bufferedUpdates
+								);
+						}
+					}
+				}
+				else
+				{
+					PublishFlushedSegment(indexWriter, newSegment, bufferedUpdates);
+				}
+			}
+		}
         internal sealed class GlobalDeletesTicket : FlushTicket
         {
-            public GlobalDeletesTicket(FrozenBufferedDeletes frozenDeletes)
-                : base(frozenDeletes)
+			protected internal GlobalDeletesTicket(FrozenBufferedUpdates frozenUpdates) : base
+				(frozenUpdates)
             {
             }
 
-            public override void Publish(DocumentsWriter writer)
+			protected internal override void Publish(IndexWriter writer)
             {
                 //assert !published : "ticket was already publised - can not publish twice";
                 published = true;
                 // its a global ticket - no segment to publish
-                writer.FinishFlush(null, frozenDeletes);
+				FinishFlush(writer, null, frozenUpdates);
             }
 
             public override bool CanPublish
@@ -235,16 +285,16 @@ namespace Lucene.Net.Index
             private FlushedSegment segment;
             private bool failed = false;
 
-            public SegmentFlushTicket(FrozenBufferedDeletes frozenDeletes)
-                : base(frozenDeletes)
+			protected internal SegmentFlushTicket(FrozenBufferedUpdates frozenDeletes) : base
+				(frozenDeletes)
             {
             }
 
-            public override void Publish(DocumentsWriter writer)
+			protected internal override void Publish(IndexWriter writer)
             {
                 //assert !published : "ticket was already publised - can not publish twice";
                 published = true;
-                writer.FinishFlush(segment, frozenDeletes);
+				FinishFlush(writer, segment, frozenUpdates);
             }
 
             public void SetSegment(FlushedSegment segment)

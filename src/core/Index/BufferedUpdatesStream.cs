@@ -1,23 +1,15 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using System.Collections.Generic;
-using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
+using Lucene.Net.Support;
 using Lucene.Net.Util;
-using Sharpen;
 
 namespace Lucene.Net.Index
 {
 	internal class BufferedUpdatesStream
 	{
-		private readonly IList<FrozenBufferedUpdates> updates = new AList<FrozenBufferedUpdates
-			>();
+		private readonly IList<FrozenBufferedUpdates> updates = new List<FrozenBufferedUpdates>();
 
 		private long nextGen = 1;
 
@@ -86,14 +78,14 @@ namespace Lucene.Net.Index
 			return bytesUsed.Get() != 0;
 		}
 
-		public virtual int NumTerms()
+		public virtual int NumTerms
 		{
-			return numTerms.Get();
+		    get { return numTerms.Get(); }
 		}
 
-		public virtual long BytesUsed()
+		public virtual long BytesUsed
 		{
-			return bytesUsed.Get();
+		    get { return bytesUsed.Get(); }
 		}
 
 		public class ApplyDeletesResult
@@ -250,10 +242,10 @@ namespace Lucene.Net.Index
 								{
 									rld.WriteFieldUpdates(info.info.dir, dvUpdates);
 								}
-								int fullDelCount = rld.info.GetDelCount() + rld.GetPendingDeleteCount();
+								int fullDelCount = rld.Info.GetDelCount() + rld.GetPendingDeleteCount();
 								//HM:revisit 
 								//assert fullDelCount <= rld.info.info.getDocCount();
-								segAllDeletes = fullDelCount == rld.info.info.GetDocCount();
+								segAllDeletes = fullDelCount == rld.Info.info.GetDocCount();
 							}
 							finally
 							{
@@ -309,10 +301,10 @@ namespace Lucene.Net.Index
 									{
 										rld.WriteFieldUpdates(info.info.dir, dvUpdates);
 									}
-									int fullDelCount = rld.info.GetDelCount() + rld.GetPendingDeleteCount();
+									int fullDelCount = rld.Info.GetDelCount() + rld.GetPendingDeleteCount();
 									//HM:revisit 
 									//assert fullDelCount <= rld.info.info.getDocCount();
-									segAllDeletes = fullDelCount == rld.info.info.GetDocCount();
+									segAllDeletes = fullDelCount == rld.Info.info.GetDocCount();
 								}
 								finally
 								{

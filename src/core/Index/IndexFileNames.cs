@@ -167,6 +167,18 @@ namespace Lucene.Net.Index
             return filename;
         } 
 
+		public static string GetExtension(string filename)
+		{
+			int idx = filename.IndexOf('.');
+			if (idx == -1)
+			{
+				return null;
+			}
+			else
+			{
+				return Sharpen.Runtime.Substring(filename, idx + 1, filename.Length);
+			}
+		}
         // All files created by codecs much match this pattern (we
         // check this in SegmentInfo.java):
         internal static readonly Regex CODEC_FILE_PATTERN = new Regex("_[a-z0-9]+(_.*)?\\..*", RegexOptions.Compiled);

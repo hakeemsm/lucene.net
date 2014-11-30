@@ -1,13 +1,5 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
-using Lucene.Net.Util;
-using Lucene.Net.Util.Packed;
-using Sharpen;
+using Lucene.Net.Support;
 
 namespace Lucene.Net.Util.Packed
 {
@@ -121,7 +113,7 @@ namespace Lucene.Net.Util.Packed
 				{
 					pending[i_1] -= minValue;
 				}
-				PackedInts.Mutable mutable = PackedInts.GetMutable(pendingOff, bitsRequired, acceptableOverheadRatio
+				PackedInts.IMutable mutable = PackedInts.GetMutable(pendingOff, bitsRequired, acceptableOverheadRatio
 					);
 				for (int i_2 = 0; i_2 < pendingOff; )
 				{
@@ -137,15 +129,15 @@ namespace Lucene.Net.Util.Packed
 			this.minValues = Arrays.CopyOf(minValues, newBlockCount);
 		}
 
-		internal override long BaseRamBytesUsed()
+		internal override long BaseRamBytesUsed
 		{
-			return base.BaseRamBytesUsed() + RamUsageEstimator.NUM_BYTES_OBJECT_REF;
+		    get { return base.BaseRamBytesUsed + RamUsageEstimator.NUM_BYTES_OBJECT_REF; }
 		}
 
 		// additional array
-		public override long RamBytesUsed()
+		public override long RamBytesUsed
 		{
-			return base.RamBytesUsed() + RamUsageEstimator.SizeOf(minValues);
+		    get { return base.RamBytesUsed + RamUsageEstimator.SizeOf(minValues); }
 		}
 	}
 }

@@ -1,22 +1,14 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using System.Collections.Generic;
-using Lucene.Net.Index;
-using Sharpen;
 
 namespace Lucene.Net.Index
 {
 	/// <summary>Holds updates of a single DocValues field, for a set of documents.</summary>
 	/// <remarks>Holds updates of a single DocValues field, for a set of documents.</remarks>
 	/// <lucene.experimental></lucene.experimental>
-	internal abstract class DocValuesFieldUpdates
+	public abstract class DocValuesFieldUpdates
 	{
-		internal enum Type
+	    public enum Type
 		{
 			NUMERIC,
 			BINARY
@@ -180,7 +172,7 @@ namespace Lucene.Net.Index
 		/// over the updated documents and their
 		/// values.
 		/// </summary>
-		public abstract DocValuesFieldUpdates.Iterator Iterator();
+		public abstract Iterator GetIterator();
 
 		/// <summary>
 		/// Merge with another

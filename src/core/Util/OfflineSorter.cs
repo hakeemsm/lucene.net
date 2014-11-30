@@ -1,15 +1,7 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using Lucene.Net.Util;
-using Sharpen;
 
 namespace Lucene.Net.Util
 {
@@ -90,9 +82,10 @@ namespace Lucene.Net.Util
 			/// is insufficient or if there is a large portion of unallocated heap-space available
 			/// for sorting consult with max allowed heap size.
 			/// </summary>
-			public static OfflineSorter.BufferSize Automatic()
+			public static BufferSize Automatic()
 			{
-				Runtime rt = Runtime.GetRuntime();
+			    long totalMemory = GC.GetTotalMemory(false);
+			    Runtime rt = Runtime.GetRuntime();
 				// take sizes in "conservative" order
 				long max = rt.MaxMemory();
 				// max allocated
@@ -119,8 +112,7 @@ namespace Lucene.Net.Util
 						sortBufferByteSize = Math.Max(ABSOLUTE_MIN_SORT_BUFFER_SIZE, sortBufferByteSize);
 					}
 				}
-				return new OfflineSorter.BufferSize(Math.Min((long)int.MaxValue, sortBufferByteSize
-					));
+				return new BufferSize(Math.Min((long)int.MaxValue, sortBufferByteSize));
 			}
 		}
 

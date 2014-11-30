@@ -316,7 +316,7 @@ namespace Lucene.Net.Index
             }
         }
 
-        public override void Merge(IndexWriter writer)
+        public override void Merge(IndexWriter writer, MergeTrigger trigger, bool newMergesFound)
         {
             // TODO: .NET doesn't support this
             // assert !Thread.holdsLock(writer);

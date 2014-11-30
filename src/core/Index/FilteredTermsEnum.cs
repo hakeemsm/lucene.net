@@ -82,12 +82,12 @@ namespace Lucene.Net.Index
             get { return tenum.TotalTermFreq; }
         }
 
-        public override bool SeekExact(BytesRef text, bool useCache)
+		public override bool SeekExact(BytesRef term)
         {
             throw new NotSupportedException(GetType().Name + " does not support seeking");
         }
 
-        public override SeekStatus SeekCeil(BytesRef text, bool useCache)
+		public override TermsEnum.SeekStatus SeekCeil(BytesRef term)
         {
             throw new NotSupportedException(GetType().Name + " does not support seeking");
         }
@@ -140,7 +140,7 @@ namespace Lucene.Net.Index
                     //System.out.println("  seek to t=" + (t == null ? "null" : t.utf8ToString()) + " tenum=" + tenum);
                     // Make sure we always seek forward:
                     //assert actualTerm == null || t == null || getComparator().compare(t, actualTerm) > 0: "curTerm=" + actualTerm + " seekTerm=" + t;
-                    if (t == null || tenum.SeekCeil(t, false) == SeekStatus.END)
+					if (t == null || tenum.SeekCeil(t) == SeekStatus.END)
                     {
                         // no more terms to seek to or enum exhausted
                         //System.out.println("  return null");

@@ -1,13 +1,7 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
+using System;
 using System.Collections.Generic;
 using Lucene.Net.Index;
-using Lucene.Net.Search;
-using Sharpen;
+using Lucene.Net.Support;
 
 namespace Lucene.Net.Search
 {
@@ -53,9 +47,9 @@ namespace Lucene.Net.Search
 		public override TopDocs Rescore(IndexSearcher searcher, TopDocs firstPassTopDocs, 
 			int topN)
 		{
-			ScoreDoc[] hits = firstPassTopDocs.scoreDocs.Clone();
+			ScoreDoc[] hits = new ScoreDoc[firstPassTopDocs.ScoreDocs.Length];
 			Arrays.Sort(hits, new _IComparer_54());
-			IList<AtomicReaderContext> leaves = searcher.GetIndexReader().Leaves();
+			IList<AtomicReaderContext> leaves = searcher.IndexReader.Leaves;
 			Weight weight = searcher.CreateNormalizedWeight(query);
 			// Now merge sort docIDs from hits, with reader's leaves:
 			int hitUpto = 0;
@@ -66,13 +60,13 @@ namespace Lucene.Net.Search
 			while (hitUpto < hits.Length)
 			{
 				ScoreDoc hit = hits[hitUpto];
-				int docID = hit.doc;
+				int docID = hit.Doc;
 				AtomicReaderContext readerContext = null;
 				while (docID >= endDoc)
 				{
 					readerUpto++;
 					readerContext = leaves[readerUpto];
-					endDoc = readerContext.docBase + ((AtomicReader)readerContext.Reader()).MaxDoc();
+					endDoc = readerContext.docBase + ((AtomicReader)readerContext.Reader).MaxDoc;
 				}
 				if (readerContext != null)
 				{
@@ -81,7 +75,7 @@ namespace Lucene.Net.Search
 					scorer = weight.Scorer(readerContext, null);
 				}
 				int targetDoc = docID - docBase;
-				int actualDoc = scorer.DocID();
+				int actualDoc = scorer.DocID;
 				if (actualDoc < targetDoc)
 				{
 					actualDoc = scorer.Advance(targetDoc);
@@ -89,14 +83,14 @@ namespace Lucene.Net.Search
 				if (actualDoc == targetDoc)
 				{
 					// Query did match this doc:
-					hit.score = Combine(hit.score, true, scorer.Score());
+					hit.Score = Combine(hit.Score, true, scorer.Score());
 				}
 				else
 				{
 					// Query did not match this doc:
 					//HM:revisit 
 					//assert actualDoc > targetDoc;
-					hit.score = Combine(hit.score, false, 0.0f);
+					hit.Score = Combine(hit.Score, false, 0.0f);
 				}
 				hitUpto++;
 			}
@@ -113,7 +107,7 @@ namespace Lucene.Net.Search
 				System.Array.Copy(hits, 0, subset, 0, topN);
 				hits = subset;
 			}
-			return new TopDocs(firstPassTopDocs.totalHits, hits, hits[0].score);
+			return new TopDocs(firstPassTopDocs.TotalHits, hits, hits[0].Score);
 		}
 
 		private sealed class _IComparer_54 : IComparer<ScoreDoc>
@@ -124,34 +118,24 @@ namespace Lucene.Net.Search
 
 			public int Compare(ScoreDoc a, ScoreDoc b)
 			{
-				return a.doc - b.doc;
+				return a.Doc - b.Doc;
 			}
 		}
 
 		private sealed class _IComparer_112 : IComparer<ScoreDoc>
 		{
-			public _IComparer_112()
-			{
-			}
-
-			public int Compare(ScoreDoc a, ScoreDoc b)
-			{
-				if (a.score > b.score)
+		    public int Compare(ScoreDoc a, ScoreDoc b)
+		    {
+		        if (a.Score > b.Score)
 				{
 					return -1;
 				}
-				else
-				{
-					if (a.score < b.score)
-					{
-						return 1;
-					}
-					else
-					{
-						return a.doc - b.doc;
-					}
-				}
-			}
+		        if (a.Score < b.Score)
+		        {
+		            return 1;
+		        }
+		        return a.Doc - b.Doc;
+		    }
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -159,21 +143,12 @@ namespace Lucene.Net.Search
 			, int docID)
 		{
 			Explanation secondPassExplanation = searcher.Explain(query, docID);
-			float secondPassScore = secondPassExplanation.IsMatch() ? secondPassExplanation.GetValue
-				() : null;
+			float? secondPassScore = secondPassExplanation.IsMatch ? secondPassExplanation.Value : new float?();
 			float score;
-			if (secondPassScore == null)
-			{
-				score = Combine(firstPassExplanation.GetValue(), false, 0.0f);
-			}
-			else
-			{
-				score = Combine(firstPassExplanation.GetValue(), true, secondPassScore);
-			}
+			score = !secondPassScore.HasValue ? Combine(firstPassExplanation.Value, false, 0.0f) : Combine(firstPassExplanation.Value, true, secondPassScore.Value);
 			Explanation result = new Explanation(score, "combined first and second pass score using "
 				 + GetType());
-			Explanation first = new Explanation(firstPassExplanation.GetValue(), "first pass score"
-				);
+			Explanation first = new Explanation(firstPassExplanation.Value, "first pass score");
 			first.AddDetail(firstPassExplanation);
 			result.AddDetail(first);
 			Explanation second;
@@ -183,7 +158,7 @@ namespace Lucene.Net.Search
 			}
 			else
 			{
-				second = new Explanation(secondPassScore, "second pass score");
+				second = new Explanation(secondPassScore.Value, "second pass score");
 			}
 			second.AddDetail(secondPassExplanation);
 			result.AddDetail(second);
@@ -214,7 +189,7 @@ namespace Lucene.Net.Search
 				float score = firstPassScore;
 				if (secondPassMatches)
 				{
-					score += weight * secondPassScore;
+					score += (float)weight * secondPassScore;
 				}
 				return score;
 			}

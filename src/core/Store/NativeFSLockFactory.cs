@@ -347,7 +347,7 @@ namespace Lucene.Net.Store
             }
         }
 
-        public override void Release()
+        public override void Dispose()
         {
             lock (this)
             {
@@ -424,7 +424,7 @@ namespace Lucene.Net.Store
                 {
                     bool obtained = Obtain();
                     if (obtained)
-                        Release();
+                        Dispose();
                     return !obtained;
                 }
                 catch (System.IO.IOException)

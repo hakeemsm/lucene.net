@@ -21,70 +21,46 @@ using Lucene.Net.Support;
 namespace Lucene.Net.Store
 {
 
-    /// <summary>Writes bytes through to a primary IndexOutput, computing
-    /// checksum as it goes. Note that you cannot use seek(). 
-    /// </summary>
-    public class ChecksumIndexInput : IndexInput
+	/// <summary>Extension of IndexInput, computing checksum as it goes.</summary>
+	/// <remarks>
+	/// Extension of IndexInput, computing checksum as it goes.
+	/// Callers can retrieve the checksum via
+	/// <see cref="GetChecksum()">GetChecksum()</see>
+	/// .
+	/// </remarks>
+	public abstract class ChecksumIndexInput : IndexInput
     {
-        internal IndexInput main;
-        internal IChecksum digest;
+		/// <summary>
+		/// resourceDescription should be a non-null, opaque string
+		/// describing this resource; it's returned from
+		/// <see cref="IndexInput.ToString()">IndexInput.ToString()</see>
+		/// .
+		/// </summary>
+		protected internal ChecksumIndexInput(string resourceDescription) : base(resourceDescription)
+		{
+		}
 
-        private bool isDisposed;
+		/// <summary>Returns the current checksum value</summary>
+		/// <exception cref="System.IO.IOException"></exception>
+		public abstract long Checksum { get; }
 
-        public ChecksumIndexInput(IndexInput main)
-            : base("ChecksumIndexInput(" + main + ")")
-        {
-            this.main = main;
-            digest = new CRC32();
-        }
-
-        public override byte ReadByte()
-        {
-            byte b = main.ReadByte();
-            digest.Update(b);
-            return b;
-        }
-
-        public override void ReadBytes(byte[] b, int offset, int len)
-        {
-            main.ReadBytes(b, offset, len);
-            digest.Update(b, offset, len);
-        }
-
-        public virtual long Checksum
-        {
-            get { return digest.Value; }
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (isDisposed) return;
-
-            if (disposing)
-            {
-                if (main != null)
-                {
-                    main.Dispose();
-                }
-            }
-
-            main = null;
-            isDisposed = true;
-        }
-
-        public override long FilePointer
-        {
-            get { return main.FilePointer; }
-        }
+		/// <summary>
+		/// <inheritDoc></inheritDoc>
+		/// <see cref="ChecksumIndexInput">ChecksumIndexInput</see>
+		/// can only seek forward and seeks are expensive
+		/// since they imply to read bytes in-between the current position and the
+		/// target position in order to update the checksum.
+		/// </summary>
+		/// <exception cref="System.IO.IOException"></exception>
 
         public override void Seek(long pos)
         {
-            throw new InvalidOperationException("not allowed");
-        }
-
-        public override long Length
-        {
-            get { return main.Length; }
+			long skip = pos - FilePointer;
+			if (skip < 0)
+			{
+				throw new InvalidOperationException(GetType() + " cannot seek backwards");
+			}
+			SkipBytes(skip);
         }
     }
 }

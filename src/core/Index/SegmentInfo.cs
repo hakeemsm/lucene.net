@@ -134,7 +134,7 @@ namespace Lucene.Net.Index
             }
         }
 
-        public ISet<string> Files
+        public ICollection<string> Files
         {
             get
             {
@@ -205,7 +205,7 @@ namespace Lucene.Net.Index
             set { version = value; }
         }
 
-        private ISet<String> setFiles;
+        private ICollection<string> setFiles;
 
 		public void SetFiles(ICollection<string> files)
 		{

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 
 namespace Lucene.Net.Util
 {
@@ -126,7 +127,7 @@ namespace Lucene.Net.Util
             // Java version sets suppress method here, not sure if needed for .NET
         }
 
-        private static void AddSuppressed(Exception exception, Exception suppressed)
+        public static void AddSuppressed(Exception exception, Exception suppressed)
         {
             // noop in .NET?
         }
@@ -217,5 +218,70 @@ namespace Lucene.Net.Util
                 Close(fis, fos);
             }
         }
+		public static void ReThrow(Exception th)
+		{
+			if (th != null)
+			{
+			    var exception = th as IOException;
+			    if (exception != null)
+				{
+					throw exception;
+				}
+			}
+		}
+		
+		public static void Fsync(FileInfo fileToSync, bool isDir)
+		{
+			IOException exc = null;
+			// If the file is a directory we have to open read-only, for regular files we must open r/w for the fsync to have an effect.
+			// See http://blog.httrack.com/blog/2013/11/15/everything-you-always-wanted-to-know-about-fsync/
+			try
+			{
+			    var file = isDir ? fileToSync.OpenRead() : fileToSync.OpenWrite();
+			    for (int retry = 0; retry < 5; retry++)
+				{
+
+					try
+					{
+						file.Flush();
+						return;
+					}
+					catch (IOException ioe)
+					{
+						if (exc == null)
+						{
+							exc = ioe;
+						}
+						try
+						{
+							// Pause 5 msec
+							Thread.Sleep(5);
+						}
+						catch (Exception ie)
+						{
+							ThreadInterruptedException ex = new ThreadInterruptedException("File sync interrupted",ie);
+							AddSuppressed(ex,exc);
+							throw ex;
+						}
+					}
+				}
+			}
+			catch (IOException ioe)
+			{
+				if (exc == null)
+				{
+					exc = ioe;
+				}
+			}
+			if (isDir)
+			{
+				//HM:revisit 
+				//assert (Constants.LINUX || Constants.MAC_OS_X) == false :
+				// Ignore exception if it is a directory
+				return;
+			}
+			// Throw original exception
+			throw exc;
+		}
     }
 }

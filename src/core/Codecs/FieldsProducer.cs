@@ -8,16 +8,6 @@ namespace Lucene.Net.Codecs
 {
     public abstract class FieldsProducer : Fields, IDisposable
     {
-        protected FieldsProducer()
-        {
-        }
-
-        public abstract override IEnumerator<string> GetEnumerator();
-
-        public abstract override Terms Terms(string field);
-
-        public abstract override int Size { get; }
-        
         public void Dispose()
         {
             Dispose(true);
@@ -25,5 +15,7 @@ namespace Lucene.Net.Codecs
         }
 
         protected abstract void Dispose(bool disposing);
+        public abstract long RamBytesUsed { get; }
+		public abstract void CheckIntegrity();
     }
 }

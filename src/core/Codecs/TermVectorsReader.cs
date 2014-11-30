@@ -14,6 +14,8 @@ namespace Lucene.Net.Codecs
 
         public abstract Fields Get(int doc);
 
+        public abstract long RamBytesUsed { get; }
+		public abstract void CheckIntegrity();
         public abstract object Clone();
 
         public void Dispose()

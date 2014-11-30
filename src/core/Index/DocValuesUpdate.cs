@@ -4,8 +4,7 @@ using Lucene.Net.Util;
 namespace Lucene.Net.Index
 {
 	/// <summary>An in-place update to a DocValues field.</summary>
-	/// <remarks>An in-place update to a DocValues field.</remarks>
-	internal abstract class DocValuesUpdate
+	public abstract class DocValuesUpdate
 	{
 		private static readonly long RAW_SIZE_IN_BYTES = 8 * RamUsageEstimator.NUM_BYTES_OBJECT_HEADER
 			 + 8 * RamUsageEstimator.NUM_BYTES_OBJECT_REF + 8 * RamUsageEstimator.NUM_BYTES_INT;
@@ -62,7 +61,7 @@ namespace Lucene.Net.Index
 		}
 
 		/// <summary>An in-place update to a binary DocValues field</summary>
-		internal sealed class BinaryDocValuesUpdate : DocValuesUpdate
+		public sealed class BinaryDocValuesUpdate : DocValuesUpdate
 		{
 			private static readonly long RAW_VALUE_SIZE_IN_BYTES = RamUsageEstimator.NUM_BYTES_ARRAY_HEADER
 				 + 2 * RamUsageEstimator.NUM_BYTES_INT + RamUsageEstimator.NUM_BYTES_OBJECT_REF;
@@ -81,7 +80,7 @@ namespace Lucene.Net.Index
 		}
 
 		/// <summary>An in-place update to a numeric DocValues field</summary>
-		internal sealed class NumericDocValuesUpdate : DocValuesUpdate
+		public sealed class NumericDocValuesUpdate : DocValuesUpdate
 		{
 			internal static readonly long MISSING = System.Convert.ToInt64(0);
 

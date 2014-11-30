@@ -115,14 +115,14 @@ namespace Lucene.Net.Store
                 }
             }
 
-            public override void Release()
+            public override void Dispose()
             {
                 lock (this)
                 {
                     if (IsLocked())
                     {
                         Verify((sbyte)0);
-                        lock_Renamed.Release();
+                        lock_Renamed.Dispose();
                     }
                 }
             }

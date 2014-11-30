@@ -83,7 +83,7 @@ namespace Lucene.Net.Store
             }
         }
 
-        public override void Release()
+        public override void Dispose()
         {
             lock (locks)
             {

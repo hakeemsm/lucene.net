@@ -24,12 +24,11 @@ namespace Lucene.Net.Index
         internal readonly FieldInfos fieldInfos;
 
         internal readonly FieldsProducer fields;
-        internal readonly DocValuesProducer dvProducer;
+
         internal readonly DocValuesProducer normsProducer;
 
         internal readonly int termsIndexDivisor;
 
-        private readonly SegmentReader owner;
 
         internal readonly StoredFieldsReader fieldsReaderOrig;
         internal readonly TermVectorsReader termVectorsReaderOrig;
@@ -39,7 +38,6 @@ namespace Lucene.Net.Index
         // Thingy class holding fieldsReader, termVectorsReader,
         // normsProducer, dvProducer
 
-        internal readonly CloseableThreadLocal<StoredFieldsReader> fieldsReaderLocal;
 
         private sealed class AnonymousFieldsReaderLocal : CloseableThreadLocal<StoredFieldsReader>
         {
@@ -56,6 +54,7 @@ namespace Lucene.Net.Index
             }
         }
 
+        internal readonly CloseableThreadLocal<StoredFieldsReader> fieldsReaderLocal;
         internal readonly CloseableThreadLocal<TermVectorsReader> termVectorsLocal;
 
         private sealed class AnonymousTermVectorsLocal : CloseableThreadLocal<TermVectorsReader>
@@ -87,7 +86,7 @@ namespace Lucene.Net.Index
 
         private readonly ISet<ICoreClosedListener> coreClosedListeners = new ConcurrentHashSet<ICoreClosedListener>(new IdentityComparer<ICoreClosedListener>());
 
-        public SegmentCoreReaders(SegmentReader owner, Directory dir, SegmentInfoPerCommit si, IOContext context, int termsIndexDivisor)
+        public SegmentCoreReaders(SegmentReader owner, Directory dir, SegmentCommitInfo si, IOContext context, int termsIndexDivisor)
         {
             // .NET Port: These lines are necessary as we can't use "this" inline above
             fieldsReaderLocal = new AnonymousFieldsReaderLocal(this);
@@ -114,7 +113,7 @@ namespace Lucene.Net.Index
                     cfsReader = null;
                     cfsDir = dir;
                 }
-                fieldInfos = codec.FieldInfosFormat.FieldInfosReader.Read(cfsDir, si.info.name, IOContext.READONCE);
+                FieldInfos fieldInfos = owner.fieldInfos;
 
                 this.termsIndexDivisor = termsIndexDivisor;
                 PostingsFormat format = codec.PostingsFormat;
@@ -126,15 +125,6 @@ namespace Lucene.Net.Index
                 // TODO: since we don't write any norms file if there are no norms,
                 // kinda jaky to assume the codec handles the case of no norms file at all gracefully?!
 
-                if (fieldInfos.HasDocValues)
-                {
-                    dvProducer = codec.DocValuesFormat.FieldsProducer(segmentReadState);
-                    //assert dvProducer != null;
-                }
-                else
-                {
-                    dvProducer = null;
-                }
 
                 if (fieldInfos.HasNorms)
                 {
@@ -171,168 +161,41 @@ namespace Lucene.Net.Index
             // exception above core, we don't want to attempt to
             // purge the FieldCache (will hit NPE because core is
             // not assigned yet).
-            this.owner = owner;
         }
 
+        internal int RefCount
+        {
+            get { return ref_renamed; }
+        }
         internal void IncRef()
         {
-            Interlocked.Increment(ref ref_renamed);
+            int count;
+            //could this be done with a simple Increment Op?
+            while ((count = ref_renamed) > 0)
+            {
+                int refOld = Interlocked.CompareExchange(ref ref_renamed, count + 1, count);
+                if (refOld != ref_renamed)
+                {
+                    return;
+                }
+
+            }
+            throw new AlreadyClosedException("SegmentCoreReaders is already closed");
         }
 
-        internal NumericDocValues GetNumericDocValues(String field)
+
+        internal NumericDocValues GetNormValues(FieldInfo field)
         {
-            FieldInfo fi = fieldInfos.FieldInfo(field);
-            if (fi == null)
-            {
-                // Field does not exist
-                return null;
-            }
-            if (fi.DocValuesTypeValue == null)
-            {
-                // Field was not indexed with doc values
-                return null;
-            }
-            if (fi.DocValuesTypeValue != FieldInfo.DocValuesType.NUMERIC)
-            {
-                // DocValues were not numeric
-                return null;
-            }
-
-            //assert dvProducer != null;
-
-            IDictionary<String, Object> dvFields = docValuesLocal.Get();
-
-            NumericDocValues dvs = (NumericDocValues)dvFields[field];
-            if (dvs == null)
-            {
-                dvs = dvProducer.GetNumeric(fi);
-                dvFields[field] = dvs;
-            }
-
-            return dvs;
-        }
-
-        internal BinaryDocValues GetBinaryDocValues(String field)
-        {
-            FieldInfo fi = fieldInfos.FieldInfo(field);
-            if (fi == null)
-            {
-                // Field does not exist
-                return null;
-            }
-            if (fi.DocValuesTypeValue == null)
-            {
-                // Field was not indexed with doc values
-                return null;
-            }
-            if (fi.DocValuesTypeValue != FieldInfo.DocValuesType.BINARY)
-            {
-                // DocValues were not binary
-                return null;
-            }
-
-            //assert dvProducer != null;
-
-            IDictionary<String, Object> dvFields = docValuesLocal.Get();
-
-            BinaryDocValues dvs = (BinaryDocValues)dvFields[field];
-            if (dvs == null)
-            {
-                dvs = dvProducer.GetBinary(fi);
-                dvFields[field] = dvs;
-            }
-
-            return dvs;
-        }
-
-        internal SortedDocValues GetSortedDocValues(String field)
-        {
-            FieldInfo fi = fieldInfos.FieldInfo(field);
-            if (fi == null)
-            {
-                // Field does not exist
-                return null;
-            }
-            if (fi.DocValuesTypeValue == null)
-            {
-                // Field was not indexed with doc values
-                return null;
-            }
-            if (fi.DocValuesTypeValue != FieldInfo.DocValuesType.SORTED)
-            {
-                // DocValues were not sorted
-                return null;
-            }
-
-            //assert dvProducer != null;
-
-            IDictionary<String, Object> dvFields = docValuesLocal.Get();
-
-            SortedDocValues dvs = (SortedDocValues)dvFields[field];
-            if (dvs == null)
-            {
-                dvs = dvProducer.GetSorted(fi);
-                dvFields[field] = dvs;
-            }
-
-            return dvs;
-        }
-
-        internal SortedSetDocValues GetSortedSetDocValues(String field)
-        {
-            FieldInfo fi = fieldInfos.FieldInfo(field);
-            if (fi == null)
-            {
-                // Field does not exist
-                return null;
-            }
-            if (fi.DocValuesTypeValue == null)
-            {
-                // Field was not indexed with doc values
-                return null;
-            }
-            if (fi.DocValuesTypeValue != FieldInfo.DocValuesType.SORTED_SET)
-            {
-                // DocValues were not sorted
-                return null;
-            }
-
-            //assert dvProducer != null;
-
-            IDictionary<String, Object> dvFields = docValuesLocal.Get();
-
-            SortedSetDocValues dvs = (SortedSetDocValues)dvFields[field];
-            if (dvs == null)
-            {
-                dvs = dvProducer.GetSortedSet(fi);
-                dvFields[field] = dvs;
-            }
-
-            return dvs;
-        }
-
-        internal NumericDocValues GetNormValues(String field)
-        {
-            FieldInfo fi = fieldInfos.FieldInfo(field);
-            if (fi == null)
-            {
-                // Field does not exist
-                return null;
-            }
-            if (!fi.HasNorms)
-            {
-                return null;
-            }
-
+            //HM:revisit 
             //assert normsProducer != null;
 
             IDictionary<String, Object> normFields = normsLocal.Get();
 
-            NumericDocValues norms = (NumericDocValues)normFields[field];
+            NumericDocValues norms = (NumericDocValues)normFields[field.name];
             if (norms == null)
             {
-                norms = normsProducer.GetNumeric(fi);
-                normFields[field] = norms;
+                norms = normsProducer.GetNumeric(field);
+                normFields[field.name] = norms;
             }
 
             return norms;
@@ -342,20 +205,47 @@ namespace Lucene.Net.Index
         {
             if (Interlocked.Decrement(ref ref_renamed) == 0)
             {
-                IOUtils.Close(termVectorsLocal, fieldsReaderLocal, docValuesLocal, normsLocal, fields, dvProducer,
-                              termVectorsReaderOrig, fieldsReaderOrig, cfsReader, normsProducer);
-                NotifyCoreClosedListeners();
+                //      System.err.println("--- closing core readers");
+                Exception th = null;
+                try
+                {
+                    IOUtils.Close(termVectorsLocal, fieldsReaderLocal, normsLocal, fields, termVectorsReaderOrig
+                        , fieldsReaderOrig, cfsReader, normsProducer);
+                }
+                catch (Exception throwable)
+                {
+                    th = throwable;
+                }
+                finally
+                {
+                    NotifyCoreClosedListeners(th);
+                }
             }
         }
 
-        private void NotifyCoreClosedListeners()
+        private void NotifyCoreClosedListeners(Exception th)
         {
             lock (coreClosedListeners)
             {
                 foreach (ICoreClosedListener listener in coreClosedListeners)
                 {
-                    listener.OnClose(owner);
+                    try
+                    {
+                        listener.OnClose(this);
+                    }
+                    catch (Exception t)
+                    {
+                        if (th == null)
+                        {
+                            th = t;
+                        }
+                        else
+                        {
+                            IOUtils.AddSuppressed(th, t);
+                        }
+                    }
                 }
+                throw th;
             }
         }
 
@@ -368,10 +258,16 @@ namespace Lucene.Net.Index
         {
             coreClosedListeners.Remove(listener);
         }
-
-        public override string ToString()
+        public long RamBytesUsed
         {
-            return "SegmentCoreReader(owner=" + owner + ")";
+            get
+            {
+                return ((normsProducer != null) ? normsProducer.RamBytesUsed : 0) + 
+                    ((fields != null) ? fields.RamBytesUsed : 0) + 
+                    ((fieldsReaderOrig != null) ? fieldsReaderOrig.RamBytesUsed : 0) + 
+                    ((termVectorsReaderOrig != null) ? termVectorsReaderOrig.RamBytesUsed : 0);
+            }
         }
+
     }
 }

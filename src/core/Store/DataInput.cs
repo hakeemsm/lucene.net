@@ -9,6 +9,9 @@ namespace Lucene.Net.Store
 {
     public abstract class DataInput : ICloneable
     {
+		private const int SKIP_BUFFER_SIZE = 1024;
+
+		private byte[] skipBuffer;
         public abstract byte ReadByte();
 
         public sbyte ReadSByte()
@@ -176,9 +179,9 @@ namespace Lucene.Net.Store
             return map;
         }
 
-        public ISet<string> ReadStringSet()
+		public virtual ICollection<string> ReadStringSet()
         {
-            ISet<String> set = new HashSet<String>();
+			ICollection<string> set = new HashSet<string>();
             int count = ReadInt();
             for (int i = 0; i < count; i++)
             {
@@ -187,5 +190,32 @@ namespace Lucene.Net.Store
 
             return set;
         }
+		/// <summary>Skip over <code>numBytes</code> bytes.</summary>
+		/// <remarks>
+		/// Skip over <code>numBytes</code> bytes. The contract on this method is that it
+		/// should have the same behavior as reading the same number of bytes into a
+		/// buffer and discarding its content. Negative values of <code>numBytes</code>
+		/// are not supported.
+		/// </remarks>
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void SkipBytes(long numBytes)
+		{
+			if (numBytes < 0)
+			{
+				throw new ArgumentException("numBytes must be >= 0, got " + numBytes);
+			}
+			if (skipBuffer == null)
+			{
+				skipBuffer = new byte[SKIP_BUFFER_SIZE];
+			}
+			//HM:revisit 
+			//assert skipBuffer.length == SKIP_BUFFER_SIZE;
+			for (long skipped = 0; skipped < numBytes; )
+			{
+				int step = (int)Math.Min(SKIP_BUFFER_SIZE, numBytes - skipped);
+				ReadBytes(skipBuffer, 0, step, false);
+				skipped += step;
+			}
+		}
     }
 }

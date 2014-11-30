@@ -1,18 +1,12 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
+using System;
 using System.Collections.Generic;
-using Lucene.Net.Index;
 using Lucene.Net.Search;
+using Lucene.Net.Support;
 using Lucene.Net.Util;
-using Sharpen;
 
 namespace Lucene.Net.Index
 {
-	internal class BufferedUpdates
+    public class BufferedUpdates
 	{
 		internal static readonly int BYTES_PER_DEL_TERM = 9 * RamUsageEstimator.NUM_BYTES_OBJECT_REF
 			 + 7 * RamUsageEstimator.NUM_BYTES_OBJECT_HEADER + 10 * RamUsageEstimator.NUM_BYTES_INT;
@@ -48,21 +42,19 @@ namespace Lucene.Net.Index
 
 		internal readonly AtomicInteger numBinaryUpdates = new AtomicInteger();
 
-		internal readonly IDictionary<Term, int> terms = new Dictionary<Term, int>();
+		internal readonly IDictionary<Term, int?> terms = new Dictionary<Term, int?>();
 
-		internal readonly IDictionary<Query, int> queries = new Dictionary<Query, int>();
+		internal readonly IDictionary<Query, int?> queries = new Dictionary<Query, int?>();
 
-		internal readonly IList<int> docIDs = new AList<int>();
+		internal readonly IList<int> docIDs = new List<int>();
 
-		internal readonly IDictionary<string, LinkedHashMap<Term, DocValuesUpdate.NumericDocValuesUpdate
-			>> numericUpdates = new Dictionary<string, LinkedHashMap<Term, DocValuesUpdate.NumericDocValuesUpdate
-			>>();
+		internal readonly IDictionary<string, HashMap<Term, DocValuesUpdate.NumericDocValuesUpdate>> numericUpdates = 
+            new Dictionary<string, HashMap<Term, DocValuesUpdate.NumericDocValuesUpdate>>();
 
-		internal readonly IDictionary<string, LinkedHashMap<Term, DocValuesUpdate.BinaryDocValuesUpdate
-			>> binaryUpdates = new Dictionary<string, LinkedHashMap<Term, DocValuesUpdate.BinaryDocValuesUpdate
-			>>();
+		internal readonly IDictionary<string, HashMap<Term, DocValuesUpdate.BinaryDocValuesUpdate>> binaryUpdates = 
+            new Dictionary<string, HashMap<Term, DocValuesUpdate.BinaryDocValuesUpdate>>();
 
-		public static readonly int MAX_INT = Sharpen.Extensions.ValueOf(int.MaxValue);
+		public static readonly int MAX_INT = int.MaxValue;
 
 		internal readonly AtomicLong bytesUsed;
 
@@ -97,8 +89,7 @@ namespace Lucene.Net.Index
 			string s = "gen=" + gen;
 			if (numTermDeletes.Get() != 0)
 			{
-				s += " " + numTermDeletes.Get() + " deleted terms (unique count=" + terms.Count +
-					 ")";
+				s += " " + numTermDeletes.Get() + " deleted terms (unique count=" + terms.Count + ")";
 			}
 			if (queries.Count != 0)
 			{
@@ -110,13 +101,11 @@ namespace Lucene.Net.Index
 			}
 			if (numNumericUpdates.Get() != 0)
 			{
-				s += " " + numNumericUpdates.Get() + " numeric updates (unique count=" + numericUpdates
-					.Count + ")";
+				s += " " + numNumericUpdates.Get() + " numeric updates (unique count=" + numericUpdates.Count + ")";
 			}
 			if (numBinaryUpdates.Get() != 0)
 			{
-				s += " " + numBinaryUpdates.Get() + " binary updates (unique count=" + binaryUpdates
-					.Count + ")";
+				s += " " + numBinaryUpdates.Get() + " binary updates (unique count=" + binaryUpdates.Count + ")";
 			}
 			if (bytesUsed.Get() != 0)
 			{
@@ -127,8 +116,10 @@ namespace Lucene.Net.Index
 
 		public virtual void AddQuery(Query query, int docIDUpto)
 		{
-			int current = queries.Put(query, docIDUpto);
+			int? current = queries[query];
+            queries[query] = docIDUpto;
 			// increment bytes used only if the query wasn't added so far.
+            
 			if (current == null)
 			{
 				bytesUsed.AddAndGet(BYTES_PER_DEL_QUERY);
@@ -137,13 +128,13 @@ namespace Lucene.Net.Index
 
 		public virtual void AddDocID(int docID)
 		{
-			docIDs.AddItem(Sharpen.Extensions.ValueOf(docID));
+			docIDs.Add(docID);
 			bytesUsed.AddAndGet(BYTES_PER_DEL_DOCID);
 		}
 
 		public virtual void AddTerm(Term term, int docIDUpto)
 		{
-			int current = terms.Get(term);
+			int? current = terms[term];
 			if (current != null && docIDUpto < current)
 			{
 				// Only record the new number if it's greater than the
@@ -155,7 +146,7 @@ namespace Lucene.Net.Index
 				// incorrectly get both docs indexed.
 				return;
 			}
-			terms.Put(term, Sharpen.Extensions.ValueOf(docIDUpto));
+			terms[term] = docIDUpto;
 			// note that if current != null then it means there's already a buffered
 			// delete on that term, therefore we seem to over-count. this over-counting
 			// is done to respect IndexWriterConfig.setMaxBufferedDeleteTerms.
@@ -163,22 +154,20 @@ namespace Lucene.Net.Index
 			if (current == null)
 			{
 				bytesUsed.AddAndGet(BYTES_PER_DEL_TERM + term.bytes.length + (RamUsageEstimator.NUM_BYTES_CHAR
-					 * term.Field().Length));
+					 * term.Field.Length));
 			}
 		}
 
-		public virtual void AddNumericUpdate(DocValuesUpdate.NumericDocValuesUpdate update
-			, int docIDUpto)
+		public virtual void AddNumericUpdate(DocValuesUpdate.NumericDocValuesUpdate update, int docIDUpto)
 		{
-			LinkedHashMap<Term, DocValuesUpdate.NumericDocValuesUpdate> fieldUpdates = numericUpdates
-				.Get(update.field);
+			HashMap<Term, DocValuesUpdate.NumericDocValuesUpdate> fieldUpdates = numericUpdates[update.field];
 			if (fieldUpdates == null)
 			{
-				fieldUpdates = new LinkedHashMap<Term, DocValuesUpdate.NumericDocValuesUpdate>();
-				numericUpdates.Put(update.field, fieldUpdates);
+				fieldUpdates = new HashMap<Term, DocValuesUpdate.NumericDocValuesUpdate>();
+				numericUpdates[update.field] = fieldUpdates;
 				bytesUsed.AddAndGet(BYTES_PER_NUMERIC_FIELD_ENTRY);
 			}
-			DocValuesUpdate.NumericDocValuesUpdate current = fieldUpdates.Get(update.term);
+			DocValuesUpdate.NumericDocValuesUpdate current = fieldUpdates[update.term];
 			if (current != null && docIDUpto < current.docIDUpto)
 			{
 				// Only record the new number if it's greater than or equal to the current
@@ -192,28 +181,26 @@ namespace Lucene.Net.Index
 			// it's added last (we're interested in insertion-order).
 			if (current != null)
 			{
-				Sharpen.Collections.Remove(fieldUpdates, update.term);
+				fieldUpdates.Remove(update.term);
 			}
-			fieldUpdates.Put(update.term, update);
+			fieldUpdates[update.term] = update;
 			numNumericUpdates.IncrementAndGet();
 			if (current == null)
 			{
-				bytesUsed.AddAndGet(BYTES_PER_NUMERIC_UPDATE_ENTRY + update.SizeInBytes());
+				bytesUsed.AddAndGet((int) (BYTES_PER_NUMERIC_UPDATE_ENTRY + update.SizeInBytes()));
 			}
 		}
 
-		public virtual void AddBinaryUpdate(DocValuesUpdate.BinaryDocValuesUpdate update, 
-			int docIDUpto)
+		public virtual void AddBinaryUpdate(DocValuesUpdate.BinaryDocValuesUpdate update, int docIDUpto)
 		{
-			LinkedHashMap<Term, DocValuesUpdate.BinaryDocValuesUpdate> fieldUpdates = binaryUpdates
-				.Get(update.field);
+			HashMap<Term, DocValuesUpdate.BinaryDocValuesUpdate> fieldUpdates = binaryUpdates[update.field];
 			if (fieldUpdates == null)
 			{
-				fieldUpdates = new LinkedHashMap<Term, DocValuesUpdate.BinaryDocValuesUpdate>();
-				binaryUpdates.Put(update.field, fieldUpdates);
+				fieldUpdates = new HashMap<Term, DocValuesUpdate.BinaryDocValuesUpdate>();
+				binaryUpdates[update.field] = fieldUpdates;
 				bytesUsed.AddAndGet(BYTES_PER_BINARY_FIELD_ENTRY);
 			}
-			DocValuesUpdate.BinaryDocValuesUpdate current = fieldUpdates.Get(update.term);
+			DocValuesUpdate.BinaryDocValuesUpdate current = fieldUpdates[update.term];
 			if (current != null && docIDUpto < current.docIDUpto)
 			{
 				// Only record the new number if it's greater than or equal to the current
@@ -227,13 +214,13 @@ namespace Lucene.Net.Index
 			// it's added last (we're interested in insertion-order).
 			if (current != null)
 			{
-				Sharpen.Collections.Remove(fieldUpdates, update.term);
+				fieldUpdates.Remove(update.term);
 			}
-			fieldUpdates.Put(update.term, update);
+			fieldUpdates[update.term] = update;
 			numBinaryUpdates.IncrementAndGet();
 			if (current == null)
 			{
-				bytesUsed.AddAndGet(BYTES_PER_BINARY_UPDATE_ENTRY + update.SizeInBytes());
+				bytesUsed.AddAndGet((int) (BYTES_PER_BINARY_UPDATE_ENTRY + update.SizeInBytes()));
 			}
 		}
 

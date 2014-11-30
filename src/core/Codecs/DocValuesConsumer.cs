@@ -22,12 +22,13 @@ namespace Lucene.Net.Codecs
 
         public abstract void AddSortedSetField(FieldInfo field, IEnumerable<BytesRef> values, IEnumerable<int> docToOrdCount, IEnumerable<long> ords);
 
-        public void MergeNumericField(FieldInfo fieldInfo, MergeState mergeState, IList<NumericDocValues> toMerge)
+		public virtual void MergeNumericField(FieldInfo fieldInfo, MergeState mergeState, 
+			IList<NumericDocValues> toMerge, IList<IBits> docsWithField)
         {
-            AddNumericField(fieldInfo, GetMergeNumericFieldEnumerable(fieldInfo, mergeState, toMerge));
+            AddNumericField(fieldInfo, GetMergeNumericFieldEnumerable(toMerge, mergeState));
         }
 
-        private IEnumerable<long> GetMergeNumericFieldEnumerable(FieldInfo fieldInfo, MergeState mergeState, IList<NumericDocValues> toMerge)
+        private IEnumerable<long> GetMergeNumericFieldEnumerable(IList<NumericDocValues> toMerge, MergeState mergeState)
         {
             int readerUpto = -1;
             int docIDUpto = 0;
@@ -68,10 +69,10 @@ namespace Lucene.Net.Codecs
 
         public void MergeBinaryField(FieldInfo fieldInfo, MergeState mergeState, IList<BinaryDocValues> toMerge)
         {
-            AddBinaryField(fieldInfo, GetMergeBinaryFieldEnumerable(fieldInfo, mergeState, toMerge));
+            AddBinaryField(fieldInfo, GetMergeBinaryFieldEnumerable(mergeState, toMerge));
         }
 
-        private IEnumerable<BytesRef> GetMergeBinaryFieldEnumerable(FieldInfo fieldInfo, MergeState mergeState, IList<BinaryDocValues> toMerge)
+        private IEnumerable<BytesRef> GetMergeBinaryFieldEnumerable(MergeState mergeState, IList<BinaryDocValues> toMerge)
         {
             int readerUpto = -1;
             int docIDUpto = 0;

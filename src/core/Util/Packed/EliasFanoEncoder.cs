@@ -1,14 +1,6 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using System.Text;
-using Lucene.Net.Util;
-using Lucene.Net.Util.Packed;
-using Sharpen;
+using Lucene.Net.Support;
 
 namespace Lucene.Net.Util.Packed
 {
@@ -87,8 +79,7 @@ namespace Lucene.Net.Util.Packed
 
 		internal readonly long[] lowerLongs;
 
-		private static readonly int LOG2_LONG_SIZE = long.NumberOfTrailingZeros(long.SIZE
-			);
+        private static readonly int LOG2_LONG_SIZE = (sizeof(long) * 8).NumberOfTrailingZeros();
 
 		internal long numEncoded = 0L;
 
@@ -180,12 +171,12 @@ namespace Lucene.Net.Util.Packed
 				long lowBitsFac = this.upperBound / this.numValues;
 				if (lowBitsFac > 0)
 				{
-					nLowBits = 63 - long.NumberOfLeadingZeros(lowBitsFac);
+                    nLowBits = 63 - lowBitsFac.NumberOfLeadingZeros();
 				}
 			}
 			// see Long.numberOfLeadingZeros javadocs
 			this.numLowBits = nLowBits;
-			this.lowerBitsMask = (long)(((ulong)long.MaxValue) >> (long.SIZE - 1 - this.numLowBits
+			this.lowerBitsMask = (long)(((ulong)long.MaxValue) >> ((sizeof(long) * 8) - 1 - this.numLowBits
 				));
 			long numLongsForLowBits = NumLongsForBits(numValues * numLowBits);
 			if (numLongsForLowBits > int.MaxValue)
@@ -217,8 +208,7 @@ namespace Lucene.Net.Util.Packed
 			this.numIndexEntries = (nIndexEntries >= 0) ? nIndexEntries : 0;
 			long maxIndexEntry = maxHighValue + numValues - 1;
 			// clear upper bits, set upper bits, start at zero
-			this.nIndexEntryBits = (maxIndexEntry <= 0) ? 0 : (64 - long.NumberOfLeadingZeros
-				(maxIndexEntry));
+            this.nIndexEntryBits = (maxIndexEntry <= 0) ? 0 : (64 - maxIndexEntry.NumberOfLeadingZeros());
 			long numLongsForIndexBits = NumLongsForBits(numIndexEntries * nIndexEntryBits);
 			if (numLongsForIndexBits > int.MaxValue)
 			{
@@ -245,7 +235,7 @@ namespace Lucene.Net.Util.Packed
 			// Note: int version in FixedBitSet.bits2words()
 			//HM:revisit 
 			//assert numBits >= 0 : numBits;
-			return (long)(((ulong)(numBits + (long.SIZE - 1))) >> LOG2_LONG_SIZE);
+			return (long)(((ulong)(numBits + ((sizeof(long) * 8) - 1))) >> LOG2_LONG_SIZE);
 		}
 
 		/// <summary>Call at most <code>numValues</code> times to encode a non decreasing sequence of non negative numbers.
@@ -298,8 +288,7 @@ namespace Lucene.Net.Util.Packed
 		{
 			long nextHighBitNum = numEncoded + highValue;
 			// sequence of unary gaps
-			upperLongs[(int)((long)(((ulong)nextHighBitNum) >> LOG2_LONG_SIZE))] |= (1L << (nextHighBitNum
-				 & (long.SIZE - 1)));
+			upperLongs[(int)((long)(((ulong)nextHighBitNum) >> LOG2_LONG_SIZE))] |= (1L << (int)(nextHighBitNum & ((sizeof(long) * 8) - 1)));
 		}
 
 		private void EncodeLowerBits(long lowValue)
@@ -314,11 +303,11 @@ namespace Lucene.Net.Util.Packed
 			{
 				long bitPos = numBits * packIndex;
 				int index = (int)((long)(((ulong)bitPos) >> LOG2_LONG_SIZE));
-				int bitPosAtIndex = (int)(bitPos & (long.SIZE - 1));
+				int bitPosAtIndex = (int)(bitPos & ((sizeof(long) * 8) - 1));
 				longArray[index] |= (value << bitPosAtIndex);
-				if ((bitPosAtIndex + numBits) > long.SIZE)
+				if ((bitPosAtIndex + numBits) > (sizeof(long) * 8))
 				{
-					longArray[index + 1] = ((long)(((ulong)value) >> (long.SIZE - bitPosAtIndex)));
+					longArray[index + 1] = ((long)(((ulong)value) >> ((sizeof(long) * 8) - bitPosAtIndex)));
 				}
 			}
 		}
@@ -346,7 +335,7 @@ namespace Lucene.Net.Util.Packed
 		/// 	</param>
 		public static bool SufficientlySmallerThanBitSet(long numValues, long upperBound)
 		{
-			return (upperBound > (4 * long.SIZE)) && (upperBound / 7) > numValues;
+			return (upperBound > (4 * (sizeof(long) * 8))) && (upperBound / 7) > numValues;
 		}
 
 		// prefer a bit set when it takes no more than 4 longs.
