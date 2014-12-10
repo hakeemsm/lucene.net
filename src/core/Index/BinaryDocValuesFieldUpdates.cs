@@ -158,7 +158,7 @@ namespace Lucene.Net.Index
 			++size;
 		}
 
-		public override DocValuesFieldUpdates.Iterator GetIterator()
+	    internal override DocValuesFieldUpdates.Iterator GetIterator()
 		{
 			PagedMutable docs = this.docs;
 			PagedGrowableWriter offsets = this.offsets;

@@ -1,15 +1,8 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
+using System.Collections;
 using System.Collections.Generic;
-using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Util;
-using Sharpen;
 
 namespace Lucene.Net.Index
 {
@@ -17,13 +10,13 @@ namespace Lucene.Net.Index
 	{
 		internal readonly IDictionary<Query, int> queries = new Dictionary<Query, int>();
 
-		internal readonly IList<Iterable<Term>> iterables = new AList<Iterable<Term>>();
+		internal readonly IList<IEnumerable<Term>> iterables = new List<IEnumerable<Term>>();
 
 		internal readonly IList<DocValuesUpdate.NumericDocValuesUpdate> numericDVUpdates = 
-			new AList<DocValuesUpdate.NumericDocValuesUpdate>();
+			new List<DocValuesUpdate.NumericDocValuesUpdate>();
 
 		internal readonly IList<DocValuesUpdate.BinaryDocValuesUpdate> binaryDVUpdates = 
-			new AList<DocValuesUpdate.BinaryDocValuesUpdate>();
+			new List<DocValuesUpdate.BinaryDocValuesUpdate>();
 
 		public override string ToString()
 		{
@@ -33,99 +26,120 @@ namespace Lucene.Net.Index
 				.Count + ")";
 		}
 
-		internal virtual void Update(FrozenBufferedUpdates @in)
+		internal virtual void Update(FrozenBufferedUpdates updates)
 		{
-			iterables.AddItem(@in.TermsIterable());
-			for (int queryIdx = 0; queryIdx < @in.queries.Length; queryIdx++)
+			iterables.Add(updates.TermsIterable());
+			for (int queryIdx = 0; queryIdx < updates.queries.Length; queryIdx++)
 			{
-				Query query = @in.queries[queryIdx];
-				queries.Put(query, BufferedUpdates.MAX_INT);
+				Query query = updates.queries[queryIdx];
+				queries[query] = BufferedUpdates.MAX_INT;
 			}
-			foreach (DocValuesUpdate.NumericDocValuesUpdate nu in @in.numericDVUpdates)
+			foreach (DocValuesUpdate.NumericDocValuesUpdate nu in updates.numericDVUpdates)
 			{
-				DocValuesUpdate.NumericDocValuesUpdate clone = new DocValuesUpdate.NumericDocValuesUpdate
-					(nu.term, nu.field, (long)nu.value);
-				clone.docIDUpto = int.MaxValue;
-				numericDVUpdates.AddItem(clone);
+				var clone = new DocValuesUpdate.NumericDocValuesUpdate
+					(nu.term, nu.field, (long)nu.value) {docIDUpto = int.MaxValue};
+			    numericDVUpdates.Add(clone);
 			}
-			foreach (DocValuesUpdate.BinaryDocValuesUpdate bu in @in.binaryDVUpdates)
+			foreach (DocValuesUpdate.BinaryDocValuesUpdate bu in updates.binaryDVUpdates)
 			{
-				DocValuesUpdate.BinaryDocValuesUpdate clone = new DocValuesUpdate.BinaryDocValuesUpdate
-					(bu.term, bu.field, (BytesRef)bu.value);
-				clone.docIDUpto = int.MaxValue;
-				binaryDVUpdates.AddItem(clone);
+				var clone = new DocValuesUpdate.BinaryDocValuesUpdate
+					(bu.term, bu.field, (BytesRef)bu.value) {docIDUpto = int.MaxValue};
+			    binaryDVUpdates.Add(clone);
 			}
 		}
 
-		public virtual Iterable<Term> TermsIterable()
+		public virtual IEnumerable<Term> TermsIterable()
 		{
-			return new _Iterable_69(this);
+			return new AnonmousTermEnumerable(this);
 		}
 
-		private sealed class _Iterable_69 : Iterable<Term>
+		private sealed class AnonmousTermEnumerable : IEnumerable<Term>
 		{
-			public _Iterable_69(CoalescedUpdates _enclosing)
+			public AnonmousTermEnumerable(CoalescedUpdates _enclosing)
 			{
 				this._enclosing = _enclosing;
 			}
 
-			public override Iterator<Term> Iterator()
+			public IEnumerator<Term> GetEnumerator()
 			{
-				Iterator<Term>[] subs = new Iterator[this._enclosing.iterables.Count];
+				var subs = new IEnumerator<Term>[this._enclosing.iterables.Count];
 				for (int i = 0; i < this._enclosing.iterables.Count; i++)
 				{
-					subs[i] = this._enclosing.iterables[i].Iterator();
+					subs[i] = this._enclosing.iterables[i].GetEnumerator();
 				}
 				return new MergedIterator<Term>(subs);
 			}
 
 			private readonly CoalescedUpdates _enclosing;
+		    IEnumerator IEnumerable.GetEnumerator()
+		    {
+		        return GetEnumerator();
+		    }
 		}
 
-		public virtual Iterable<BufferedUpdatesStream.QueryAndLimit> QueriesIterable()
+		public virtual IEnumerable<BufferedUpdatesStream.QueryAndLimit> QueriesIterable()
 		{
-			return new _Iterable_83(this);
+			return new AnonymousQueryAndLimitEnumerable(this);
 		}
 
-		private sealed class _Iterable_83 : Iterable<BufferedUpdatesStream.QueryAndLimit>
+		private sealed class AnonymousQueryAndLimitEnumerable : IEnumerable<BufferedUpdatesStream.QueryAndLimit>
 		{
-			public _Iterable_83(CoalescedUpdates _enclosing)
+		    private readonly CoalescedUpdates _enclosing;
+			public AnonymousQueryAndLimitEnumerable(CoalescedUpdates enclosing)
 			{
-				this._enclosing = _enclosing;
+				this._enclosing = enclosing;
 			}
 
-			public override Iterator<BufferedUpdatesStream.QueryAndLimit> Iterator()
+			public IEnumerator<BufferedUpdatesStream.QueryAndLimit> GetEnumerator()
 			{
-				return new _Iterator_87(this);
+				return new AnonymousQueryAndLimitEnumerator(this);
 			}
 
-			private sealed class _Iterator_87 : Iterator<BufferedUpdatesStream.QueryAndLimit>
+			private sealed class AnonymousQueryAndLimitEnumerator : IEnumerator<BufferedUpdatesStream.QueryAndLimit>
 			{
-				public _Iterator_87()
+                
+				public AnonymousQueryAndLimitEnumerator(AnonymousQueryAndLimitEnumerable parent)
 				{
-					this.iter = this._enclosing._enclosing.queries.EntrySet().Iterator();
+					this.iter = parent._enclosing.queries.GetEnumerator();
 				}
 
-				private readonly Iterator<KeyValuePair<Query, int>> iter;
+				private readonly IEnumerator<KeyValuePair<Query, int>> iter;
 
-				public override bool HasNext()
+				public bool MoveNext()
 				{
-					return this.iter.HasNext();
+					return this.iter.MoveNext();
 				}
 
-				public override BufferedUpdatesStream.QueryAndLimit Next()
+				public BufferedUpdatesStream.QueryAndLimit Current
 				{
-					KeyValuePair<Query, int> ent = this.iter.Next();
-					return new BufferedUpdatesStream.QueryAndLimit(ent.Key, ent.Value);
+				    get
+				    {
+				        KeyValuePair<Query, int> ent = this.iter.Current;
+				        return new BufferedUpdatesStream.QueryAndLimit(ent.Key, ent.Value);
+				    }
 				}
 
-				public override void Remove()
+				public void Reset()
 				{
 					throw new NotSupportedException();
 				}
+
+			    object IEnumerator.Current
+			    {
+			        get { return Current; }
+			    }
+
+			    public void Dispose()
+			    {
+			        this.iter.Dispose();
+			    }
 			}
 
-			private readonly CoalescedUpdates _enclosing;
+
+		    IEnumerator IEnumerable.GetEnumerator()
+		    {
+		        return GetEnumerator();
+		    }
 		}
 	}
 }

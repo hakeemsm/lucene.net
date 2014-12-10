@@ -16,7 +16,7 @@ namespace Lucene.Net.Index
             this.basepolicy = basepolicy;
         }
 
-        protected bool ShouldUpgradeSegment(SegmentInfoPerCommit si)
+        protected bool ShouldUpgradeSegment(SegmentCommitInfo si)
         {
             return !Constants.LUCENE_MAIN_VERSION.Equals(si.info.Version);
         }
@@ -32,11 +32,11 @@ namespace Lucene.Net.Index
             return basepolicy.FindMerges(null, segmentInfos);
         }
 
-        public override MergeSpecification FindForcedMerges(SegmentInfos segmentInfos, int maxSegmentCount, IDictionary<SegmentInfoPerCommit, bool> segmentsToMerge)
+        public override MergeSpecification FindForcedMerges(SegmentInfos segmentInfos, int maxSegmentCount, IDictionary<SegmentCommitInfo, bool> segmentsToMerge)
         {
             // first find all old segments
-            IDictionary<SegmentInfoPerCommit, Boolean> oldSegments = new HashMap<SegmentInfoPerCommit, Boolean>();
-            foreach (SegmentInfoPerCommit si in segmentInfos)
+            IDictionary<SegmentCommitInfo, Boolean> oldSegments = new HashMap<SegmentCommitInfo, Boolean>();
+            foreach (SegmentCommitInfo si in segmentInfos)
             {
                 bool v = segmentsToMerge[si];
                 if (v != null && ShouldUpgradeSegment(si))
@@ -62,7 +62,7 @@ namespace Lucene.Net.Index
                 // and will be merged to one additional segment:
                 foreach (OneMerge om in spec.merges)
                 {
-                    foreach (SegmentInfoPerCommit sipc in om.segments)
+                    foreach (var sipc in om.segments)
                     {
                         oldSegments.Remove(sipc);
                     }
@@ -76,8 +76,8 @@ namespace Lucene.Net.Index
                     Message("findForcedMerges: " + basepolicy.GetType().Name +
                     " does not want to merge all old segments, merge remaining ones into new segment: " + oldSegments);
                 }
-                IList<SegmentInfoPerCommit> newInfos = new List<SegmentInfoPerCommit>();
-                foreach (SegmentInfoPerCommit si in segmentInfos)
+                IList<SegmentCommitInfo> newInfos = new List<SegmentCommitInfo>();
+                foreach (SegmentCommitInfo si in segmentInfos)
                 {
                     if (oldSegments.ContainsKey(si))
                     {
@@ -100,7 +100,7 @@ namespace Lucene.Net.Index
             return basepolicy.FindForcedDeletesMerges(segmentInfos);
         }
 
-        public override bool UseCompoundFile(SegmentInfos segments, SegmentInfoPerCommit newSegment)
+        public override bool UseCompoundFile(SegmentInfos segments, SegmentCommitInfo newSegment)
         {
             return basepolicy.UseCompoundFile(segments, newSegment);
         }

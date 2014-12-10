@@ -30,7 +30,7 @@ namespace Lucene.Net.Index
         /// "synchronized" so that even if the application is using
         /// multiple threads, only one merge may run at a time. 
         /// </summary>
-        public override void Merge(IndexWriter writer, MergeTrigger trigger, bool newMergesFound)
+        public override void Merge(IndexWriter writer, MergePolicy.MergeTrigger trigger, bool newMergesFound)
         {
             lock (this)
             {

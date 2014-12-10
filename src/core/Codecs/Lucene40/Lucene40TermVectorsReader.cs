@@ -432,7 +432,7 @@ namespace Lucene.Net.Codecs.Lucene40
             }
 
             // NOTE: slow!  (linear scan)
-            public override SeekStatus SeekCeil(BytesRef text, bool useCache)
+            public override SeekStatus SeekCeil(BytesRef text)
             {
                 if (nextTerm != 0)
                 {
@@ -828,5 +828,14 @@ namespace Lucene.Net.Codecs.Lucene40
 
             return new Lucene40TermVectorsReader(fieldInfos, cloneTvx, cloneTvd, cloneTvf, size, numTotalDocs);
         }
+		public override long RamBytesUsed
+		{
+		    get { return 0; }
+		}
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public override void CheckIntegrity()
+		{
+		}
     }
 }

@@ -1,15 +1,10 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
+using System.Collections;
 using System.Collections.Generic;
-using Lucene.Net.Index;
+using System.Linq;
 using Lucene.Net.Search;
+using Lucene.Net.Support;
 using Lucene.Net.Util;
-using Sharpen;
 
 namespace Lucene.Net.Index
 {
@@ -59,11 +54,10 @@ namespace Lucene.Net.Index
 			this.isSegmentPrivate = isSegmentPrivate;
 			//HM:revisit 
 			//assert !isSegmentPrivate || deletes.terms.size() == 0 : "segment private package should only have del queries"; 
-			Term[] termsArray = Sharpen.Collections.ToArray(deletes.terms.Keys, new Term[deletes
-				.terms.Count]);
+            Term[] termsArray = deletes.terms.Keys.ToArray();
 			termCount = termsArray.Length;
 			ArrayUtil.TimSort(termsArray);
-			PrefixCodedTerms.Builder builder = new PrefixCodedTerms.Builder();
+			var builder = new PrefixCodedTerms.Builder();
 			foreach (Term term in termsArray)
 			{
 				builder.Add(term);
@@ -72,49 +66,46 @@ namespace Lucene.Net.Index
 			queries = new Query[deletes.queries.Count];
 			queryLimits = new int[deletes.queries.Count];
 			int upto = 0;
-			foreach (KeyValuePair<Query, int> ent in deletes.queries.EntrySet())
+			foreach (KeyValuePair<Query, int?> ent in deletes.queries)
 			{
 				queries[upto] = ent.Key;
-				queryLimits[upto] = ent.Value;
+				queryLimits[upto] = ent.Value.Value;
 				upto++;
 			}
 			// TODO if a Term affects multiple fields, we could keep the updates key'd by Term
 			// so that it maps to all fields it affects, sorted by their docUpto, and traverse
 			// that Term only once, applying the update to all fields that still need to be
 			// updated. 
-			IList<DocValuesUpdate.NumericDocValuesUpdate> allNumericUpdates = new AList<DocValuesUpdate.NumericDocValuesUpdate
+			IList<DocValuesUpdate.NumericDocValuesUpdate> allNumericUpdates = new List<DocValuesUpdate.NumericDocValuesUpdate
 				>();
 			int numericUpdatesSize = 0;
-			foreach (LinkedHashMap<Term, DocValuesUpdate.NumericDocValuesUpdate> numericUpdates
-				 in deletes.numericUpdates.Values)
+			foreach (var hashMap in deletes.numericUpdates.Values)
 			{
-				foreach (DocValuesUpdate.NumericDocValuesUpdate update in numericUpdates.Values)
+			    var numericUpdates = hashMap;
+			    foreach (DocValuesUpdate.NumericDocValuesUpdate update in numericUpdates.Values)
 				{
-					allNumericUpdates.AddItem(update);
-					numericUpdatesSize += update.SizeInBytes();
+					allNumericUpdates.Add(update);
+					numericUpdatesSize += (int)update.SizeInBytes();
 				}
 			}
-			numericDVUpdates = Sharpen.Collections.ToArray(allNumericUpdates, new DocValuesUpdate.NumericDocValuesUpdate
-				[allNumericUpdates.Count]);
+            numericDVUpdates = allNumericUpdates.ToArray();
 			// TODO if a Term affects multiple fields, we could keep the updates key'd by Term
 			// so that it maps to all fields it affects, sorted by their docUpto, and traverse
 			// that Term only once, applying the update to all fields that still need to be
 			// updated. 
-			IList<DocValuesUpdate.BinaryDocValuesUpdate> allBinaryUpdates = new AList<DocValuesUpdate.BinaryDocValuesUpdate
-				>();
+			IList<DocValuesUpdate.BinaryDocValuesUpdate> allBinaryUpdates = new List<DocValuesUpdate.BinaryDocValuesUpdate>();
 			int binaryUpdatesSize = 0;
-			foreach (LinkedHashMap<Term, DocValuesUpdate.BinaryDocValuesUpdate> binaryUpdates
+			foreach (HashMap<Term, DocValuesUpdate.BinaryDocValuesUpdate> binaryUpdates
 				 in deletes.binaryUpdates.Values)
 			{
 				foreach (DocValuesUpdate.BinaryDocValuesUpdate update in binaryUpdates.Values)
 				{
-					allBinaryUpdates.AddItem(update);
-					binaryUpdatesSize += update.SizeInBytes();
+					allBinaryUpdates.Add(update);
+					binaryUpdatesSize += (int)update.SizeInBytes();
 				}
 			}
-			binaryDVUpdates = Sharpen.Collections.ToArray(allBinaryUpdates, new DocValuesUpdate.BinaryDocValuesUpdate
-				[allBinaryUpdates.Count]);
-			bytesUsed = (int)terms.GetSizeInBytes() + queries.Length * BYTES_PER_DEL_QUERY + 
+			binaryDVUpdates = allBinaryUpdates.ToArray();
+			bytesUsed = (int)terms.SizeInBytes + queries.Length * BYTES_PER_DEL_QUERY + 
 				numericUpdatesSize + numericDVUpdates.Length * RamUsageEstimator.NUM_BYTES_OBJECT_REF
 				 + binaryUpdatesSize + binaryDVUpdates.Length * RamUsageEstimator.NUM_BYTES_OBJECT_REF;
 			numTermDeletes = deletes.numTermDeletes.Get();
@@ -134,77 +125,95 @@ namespace Lucene.Net.Index
 			return gen;
 		}
 
-		public virtual Iterable<Term> TermsIterable()
+		public virtual IEnumerable<Term> TermsIterable()
 		{
-			return new _Iterable_139(this);
+			return new AnonymousEnumerableTerms(this);
 		}
 
-		private sealed class _Iterable_139 : Iterable<Term>
+		private sealed class AnonymousEnumerableTerms : IEnumerable<Term>
 		{
-			public _Iterable_139(FrozenBufferedUpdates _enclosing)
+			public AnonymousEnumerableTerms(FrozenBufferedUpdates _enclosing)
 			{
 				this._enclosing = _enclosing;
 			}
 
-			public override Iterator<Term> Iterator()
+			public IEnumerator<Term> GetEnumerator()
 			{
-				return this._enclosing.terms.Iterator();
+				return this._enclosing.terms.GetEnumerator();
 			}
 
 			private readonly FrozenBufferedUpdates _enclosing;
+		    IEnumerator IEnumerable.GetEnumerator()
+		    {
+		        return GetEnumerator();
+		    }
 		}
 
-		public virtual Iterable<BufferedUpdatesStream.QueryAndLimit> QueriesIterable()
+		public virtual IEnumerable<BufferedUpdatesStream.QueryAndLimit> QueriesIterable()
 		{
-			return new _Iterable_148(this);
+			return new AnonymousQueryLimitEnumerable(this);
 		}
 
-		private sealed class _Iterable_148 : Iterable<BufferedUpdatesStream.QueryAndLimit
-			>
+		private sealed class AnonymousQueryLimitEnumerable : IEnumerable<BufferedUpdatesStream.QueryAndLimit>
 		{
-			public _Iterable_148(FrozenBufferedUpdates _enclosing)
+			public AnonymousQueryLimitEnumerable(FrozenBufferedUpdates _enclosing)
 			{
 				this._enclosing = _enclosing;
 			}
 
-			public override Iterator<BufferedUpdatesStream.QueryAndLimit> Iterator()
+			public IEnumerator<BufferedUpdatesStream.QueryAndLimit> GetEnumerator()
 			{
-				return new _Iterator_151(this);
+				return new AnonymousQueryLimitEnumerator(this);
 			}
 
-			private sealed class _Iterator_151 : Iterator<BufferedUpdatesStream.QueryAndLimit
-				>
+			private sealed class AnonymousQueryLimitEnumerator : IEnumerator<BufferedUpdatesStream.QueryAndLimit>
 			{
-				public _Iterator_151(_Iterable_148 _enclosing)
+				public AnonymousQueryLimitEnumerator(AnonymousQueryLimitEnumerable _enclosing)
 				{
 					this._enclosing = _enclosing;
 				}
 
 				private int upto;
 
-				public override bool HasNext()
+				public bool MoveNext()
 				{
 					return this.upto < this._enclosing._enclosing.queries.Length;
 				}
 
-				public override BufferedUpdatesStream.QueryAndLimit Next()
+				public BufferedUpdatesStream.QueryAndLimit Current
 				{
-					BufferedUpdatesStream.QueryAndLimit ret = new BufferedUpdatesStream.QueryAndLimit
-						(this._enclosing._enclosing.queries[this.upto], this._enclosing._enclosing.queryLimits
-						[this.upto]);
-					this.upto++;
-					return ret;
+				    get
+				    {
+				        BufferedUpdatesStream.QueryAndLimit ret = new BufferedUpdatesStream.QueryAndLimit
+				            (this._enclosing._enclosing.queries[this.upto], this._enclosing._enclosing.queryLimits
+				                [this.upto]);
+				        this.upto++;
+				        return ret;
+				    }
 				}
 
-				public override void Remove()
+				public void Reset()
 				{
 					throw new NotSupportedException();
 				}
 
-				private readonly _Iterable_148 _enclosing;
+			    object IEnumerator.Current
+			    {
+			        get { return Current; }
+			    }
+
+			    private readonly AnonymousQueryLimitEnumerable _enclosing;
+			    public void Dispose()
+			    {
+			        
+			    }
 			}
 
 			private readonly FrozenBufferedUpdates _enclosing;
+		    IEnumerator IEnumerable.GetEnumerator()
+		    {
+		        return GetEnumerator();
+		    }
 		}
 
 		public override string ToString()

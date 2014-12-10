@@ -1,17 +1,10 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using System.Collections.Generic;
 using System.IO;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
-using Lucene.Net.Util;
+using Lucene.Net.Support;
 using Lucene.Net.Util.Packed;
-using Sharpen;
 
 namespace Lucene.Net.Util
 {
@@ -77,8 +70,7 @@ namespace Lucene.Net.Util
 		private static readonly MonotonicAppendingLongBuffer SINGLE_ZERO_BUFFER = new MonotonicAppendingLongBuffer
 			(1, 64, PackedInts.COMPACT);
 
-		private static Lucene.Net.Util.WAH8DocIdSet EMPTY = new Lucene.Net.Util.WAH8DocIdSet
-			(new byte[0], 0, 1, SINGLE_ZERO_BUFFER, SINGLE_ZERO_BUFFER);
+		private static WAH8DocIdSet EMPTY = new WAH8DocIdSet(new byte[0], 0, 1, SINGLE_ZERO_BUFFER, SINGLE_ZERO_BUFFER);
 
 		static WAH8DocIdSet()
 		{
@@ -91,20 +83,16 @@ namespace Lucene.Net.Util
 			SINGLE_ZERO_BUFFER.Freeze();
 		}
 
-		private sealed class _IComparer_97 : IComparer<WAH8DocIdSet.Iterator>
+		private sealed class AnonymousDocIdComparer : IComparer<DocIdSetIteratorImpl>
 		{
-			public _IComparer_97()
+		    public int Compare(DocIdSetIteratorImpl wi1, DocIdSetIteratorImpl wi2)
 			{
-			}
-
-			public int Compare(WAH8DocIdSet.Iterator wi1, WAH8DocIdSet.Iterator wi2)
-			{
-				return wi1.@in.Length() - wi2.@in.Length();
+				return wi1.byteArrayInput.Length - wi2.byteArrayInput.Length;
 			}
 		}
 
-		private static readonly IComparer<WAH8DocIdSet.Iterator> SERIALIZED_LENGTH_COMPARATOR
-			 = new _IComparer_97();
+		private static readonly IComparer<WAH8DocIdSet.DocIdSetIteratorImpl> SERIALIZED_LENGTH_COMPARATOR
+			 = new AnonymousDocIdComparer();
 
 		/// <summary>
 		/// Same as
@@ -112,8 +100,7 @@ namespace Lucene.Net.Util
 		/// 	</see>
 		/// with the default index interval.
 		/// </summary>
-		public static Lucene.Net.Util.WAH8DocIdSet Intersect(ICollection<Lucene.Net.Util.WAH8DocIdSet
-			> docIdSets)
+		public static WAH8DocIdSet Intersect(ICollection<WAH8DocIdSet> docIdSets)
 		{
 			return Intersect(docIdSets, DEFAULT_INDEX_INTERVAL);
 		}
@@ -123,8 +110,7 @@ namespace Lucene.Net.Util
 		/// Compute the intersection of the provided sets. This method is much faster than
 		/// computing the intersection manually since it operates directly at the byte level.
 		/// </remarks>
-		public static Lucene.Net.Util.WAH8DocIdSet Intersect(ICollection<Lucene.Net.Util.WAH8DocIdSet
-			> docIdSets, int indexInterval)
+		public static WAH8DocIdSet Intersect(ICollection<WAH8DocIdSet> docIdSets, int indexInterval)
 		{
 			switch (docIdSets.Count)
 			{
@@ -135,21 +121,20 @@ namespace Lucene.Net.Util
 
 				case 1:
 				{
-					return docIdSets.Iterator().Next();
+					return docIdSets.GetEnumerator().Current;
 				}
 			}
 			// The logic below is similar to ConjunctionScorer
 			int numSets = docIdSets.Count;
-			WAH8DocIdSet.Iterator[] iterators = new WAH8DocIdSet.Iterator[numSets];
+			var iterators = new DocIdSetIteratorImpl[numSets];
 			int i = 0;
-			foreach (Lucene.Net.Util.WAH8DocIdSet set in docIdSets)
+			foreach (WAH8DocIdSet set in docIdSets)
 			{
-				WAH8DocIdSet.Iterator it = ((WAH8DocIdSet.Iterator)set.Iterator());
+				var it = ((DocIdSetIteratorImpl)set.Iterator());
 				iterators[i++] = it;
 			}
 			Arrays.Sort(iterators, SERIALIZED_LENGTH_COMPARATOR);
-			WAH8DocIdSet.WordBuilder builder = new WAH8DocIdSet.WordBuilder().SetIndexInterval
-				(indexInterval);
+			WordBuilder builder = new WordBuilder().SetIndexInterval(indexInterval);
 			int wordNum = 0;
 			while (true)
 			{
@@ -210,8 +195,7 @@ main_break: ;
 		/// Compute the union of the provided sets. This method is much faster than
 		/// computing the union manually since it operates directly at the byte level.
 		/// </remarks>
-		public static Lucene.Net.Util.WAH8DocIdSet Union(ICollection<Lucene.Net.Util.WAH8DocIdSet
-			> docIdSets, int indexInterval)
+		public static WAH8DocIdSet Union(ICollection<WAH8DocIdSet> docIdSets, int indexInterval)
 		{
 			switch (docIdSets.Count)
 			{
@@ -222,26 +206,26 @@ main_break: ;
 
 				case 1:
 				{
-					return docIdSets.Iterator().Next();
+					return docIdSets.GetEnumerator().Current;
 				}
 			}
 			// The logic below is very similar to DisjunctionScorer
 			int numSets = docIdSets.Count;
-			PriorityQueue<WAH8DocIdSet.Iterator> iterators = new _PriorityQueue_186(numSets);
-			foreach (Lucene.Net.Util.WAH8DocIdSet set in docIdSets)
+			PriorityQueue<DocIdSetIteratorImpl> iterators = new AnonymousPriorityQueue(numSets);
+			foreach (WAH8DocIdSet set in docIdSets)
 			{
-				WAH8DocIdSet.Iterator iterator = ((WAH8DocIdSet.Iterator)set.Iterator());
+				DocIdSetIteratorImpl iterator = ((DocIdSetIteratorImpl)set.Iterator());
 				iterator.NextWord();
 				iterators.Add(iterator);
 			}
-			WAH8DocIdSet.Iterator top = iterators.Top();
+			DocIdSetIteratorImpl top = iterators.Top();
 			if (top.wordNum == int.MaxValue)
 			{
 				return EMPTY;
 			}
 			int wordNum = top.wordNum;
 			byte word = top.word;
-			WAH8DocIdSet.WordBuilder builder = new WAH8DocIdSet.WordBuilder().SetIndexInterval
+			var builder = new WordBuilder().SetIndexInterval
 				(indexInterval);
 			while (true)
 			{
@@ -266,14 +250,13 @@ main_break: ;
 			return builder.Build();
 		}
 
-		private sealed class _PriorityQueue_186 : PriorityQueue<WAH8DocIdSet.Iterator>
+		private sealed class AnonymousPriorityQueue : PriorityQueue<DocIdSetIteratorImpl>
 		{
-			public _PriorityQueue_186(int baseArg1) : base(baseArg1)
+			public AnonymousPriorityQueue(int baseArg1) : base(baseArg1)
 			{
 			}
 
-			protected internal override bool LessThan(WAH8DocIdSet.Iterator a, WAH8DocIdSet.Iterator
-				 b)
+			public override bool LessThan(DocIdSetIteratorImpl a, DocIdSetIteratorImpl b)
 			{
 				return a.wordNum < b.wordNum;
 			}
@@ -290,7 +273,7 @@ main_break: ;
 		/// <remarks>Word-based builder.</remarks>
 		internal class WordBuilder
 		{
-			internal readonly GrowableByteArrayDataOutput @out;
+			internal readonly GrowableByteArrayDataOutput byteArrayDataOutput;
 
 			internal readonly GrowableByteArrayDataOutput dirtyWords;
 
@@ -308,7 +291,7 @@ main_break: ;
 
 			public WordBuilder()
 			{
-				@out = new GrowableByteArrayDataOutput(1024);
+				byteArrayDataOutput = new GrowableByteArrayDataOutput(1024);
 				dirtyWords = new GrowableByteArrayDataOutput(128);
 				clean = 0;
 				lastWordNum = -1;
@@ -332,7 +315,7 @@ main_break: ;
 			/// as an
 			/// index interval.
 			/// </remarks>
-			public virtual WAH8DocIdSet.WordBuilder SetIndexInterval(int indexInterval)
+			public virtual WordBuilder SetIndexInterval(int indexInterval)
 			{
 				if (indexInterval < MIN_INDEX_INTERVAL)
 				{
@@ -364,14 +347,14 @@ main_break: ;
 				{
 					token |= 1 << 3;
 				}
-				@out.WriteByte(unchecked((byte)token));
+				byteArrayDataOutput.WriteByte(unchecked((byte)token));
 				if (cleanLengthMinus2 > unchecked((int)(0x03)))
 				{
-					@out.WriteVInt((int)(((uint)cleanLengthMinus2) >> 2));
+					byteArrayDataOutput.WriteVInt((int)(((uint)cleanLengthMinus2) >> 2));
 				}
 				if (dirtyLength > unchecked((int)(0x07)))
 				{
-					@out.WriteVInt((int)(((uint)dirtyLength) >> 3));
+					byteArrayDataOutput.WriteVInt((int)(((uint)dirtyLength) >> 3));
 				}
 			}
 
@@ -397,9 +380,9 @@ main_break: ;
 				}
 				catch (IOException cannotHappen)
 				{
-					throw new Exception(cannotHappen);
+					throw new Exception(cannotHappen.Message,cannotHappen);
 				}
-				@out.WriteBytes(dirtyWords.bytes, 0, dirtyWords.length);
+				byteArrayDataOutput.WriteBytes(dirtyWords.bytes, 0, dirtyWords.length);
 				dirtyWords.length = 0;
 				++numSequences;
 			}
@@ -527,7 +510,7 @@ main_break: ;
 					return EMPTY;
 				}
 				WriteSequence();
-				byte[] data = Arrays.CopyOf(@out.bytes, @out.length);
+				byte[] data = Arrays.CopyOf(byteArrayDataOutput.bytes, byteArrayDataOutput.length);
 				// Now build the index
 				int valueCount = (numSequences - 1) / indexInterval + 1;
 				MonotonicAppendingLongBuffer indexPositions;
@@ -540,14 +523,11 @@ main_break: ;
 				{
 					int pageSize = 128;
 					int initialPageCount = (valueCount + pageSize - 1) / pageSize;
-					MonotonicAppendingLongBuffer positions = new MonotonicAppendingLongBuffer(initialPageCount
-						, pageSize, PackedInts.COMPACT);
-					MonotonicAppendingLongBuffer wordNums = new MonotonicAppendingLongBuffer(initialPageCount
-						, pageSize, PackedInts.COMPACT);
+					var positions = new MonotonicAppendingLongBuffer(initialPageCount, pageSize, PackedInts.COMPACT);
+					var wordNums = new MonotonicAppendingLongBuffer(initialPageCount, pageSize, PackedInts.COMPACT);
 					positions.Add(0L);
 					wordNums.Add(0L);
-					WAH8DocIdSet.Iterator it = new WAH8DocIdSet.Iterator(data, cardinality, int.MaxValue
-						, SINGLE_ZERO_BUFFER, SINGLE_ZERO_BUFFER);
+					var it = new DocIdSetIteratorImpl(data, cardinality, int.MaxValue, SINGLE_ZERO_BUFFER, SINGLE_ZERO_BUFFER);
 					//HM:revisit 
 					//assert it.in.getPosition() == 0;
 					//HM:revisit 
@@ -562,7 +542,7 @@ main_break: ;
 							//assert readSequence;
 							it.SkipDirtyBytes();
 						}
-						int position = it.@in.GetPosition();
+						int position = it.byteArrayInput.Position;
 						int wordNum = it.wordNum;
 						positions.Add(position);
 						wordNums.Add(wordNum + 1);
@@ -572,8 +552,7 @@ main_break: ;
 					indexPositions = positions;
 					indexWordNums = wordNums;
 				}
-				return new WAH8DocIdSet(data, cardinality, indexInterval, indexPositions, indexWordNums
-					);
+				return new WAH8DocIdSet(data, cardinality, indexInterval, indexPositions, indexWordNums);
 			}
 		}
 
@@ -582,7 +561,7 @@ main_break: ;
 		/// <see cref="WAH8DocIdSet">WAH8DocIdSet</see>
 		/// s.
 		/// </summary>
-		public sealed class Builder : WAH8DocIdSet.WordBuilder
+		internal sealed class Builder : WordBuilder
 		{
 			private int lastDocID;
 
@@ -591,7 +570,7 @@ main_break: ;
 			private int word;
 
 			/// <summary>Sole constructor</summary>
-			public Builder() : base()
+			public Builder()
 			{
 				lastDocID = -1;
 				wordNum = -1;
@@ -600,7 +579,7 @@ main_break: ;
 
 			/// <summary>Add a document to this builder.</summary>
 			/// <remarks>Add a document to this builder. Documents must be added in order.</remarks>
-			public WAH8DocIdSet.Builder Add(int docID)
+			public Builder Add(int docID)
 			{
 				if (docID <= lastDocID)
 				{
@@ -637,22 +616,16 @@ main_break: ;
 			/// .
 			/// </summary>
 			/// <exception cref="System.IO.IOException"></exception>
-			public WAH8DocIdSet.Builder Add(DocIdSetIterator disi)
+			public Builder Add(DocIdSetIterator disi)
 			{
-				for (int doc = disi.NextDoc(); doc != DocIdSetIterator.NO_MORE_DOCS; doc = disi.NextDoc
-					())
+				for (int doc = disi.NextDoc(); doc != DocIdSetIterator.NO_MORE_DOCS; doc = disi.NextDoc())
 				{
 					Add(doc);
 				}
 				return this;
 			}
 
-			public override WAH8DocIdSet.WordBuilder SetIndexInterval(int indexInterval)
-			{
-				return (WAH8DocIdSet.Builder)base.SetIndexInterval(indexInterval);
-			}
-
-			public override WAH8DocIdSet Build()
+		    public override WAH8DocIdSet Build()
 			{
 				if (this.wordNum != -1)
 				{
@@ -685,21 +658,20 @@ main_break: ;
 			this.wordNums = wordNums;
 		}
 
-		public override bool IsCacheable()
+		public override bool IsCacheable
 		{
-			return true;
+		    get { return true; }
 		}
 
 		public override DocIdSetIterator Iterator()
 		{
-			return new WAH8DocIdSet.Iterator(data, cardinality, indexInterval, positions, wordNums
-				);
+			return new DocIdSetIteratorImpl(data, cardinality, indexInterval, positions, wordNums);
 		}
 
 		internal static int ReadCleanLength(ByteArrayDataInput @in, int token)
 		{
 			int len = ((int)(((uint)token) >> 4)) & unchecked((int)(0x07));
-			int startPosition = @in.GetPosition();
+			int startPosition = @in.Position;
 			if ((len & unchecked((int)(0x04))) != 0)
 			{
 				len = (len & unchecked((int)(0x03))) | (@in.ReadVInt() << 2);
@@ -721,7 +693,7 @@ main_break: ;
 			return len;
 		}
 
-		internal class Iterator : DocIdSetIterator
+		internal class DocIdSetIteratorImpl : DocIdSetIterator
 		{
 			internal static int IndexThreshold(int cardinality, int indexInterval)
 			{
@@ -732,7 +704,7 @@ main_break: ;
 				return (int)Math.Min(int.MaxValue, indexThreshold);
 			}
 
-			internal readonly ByteArrayDataInput @in;
+			internal readonly ByteArrayDataInput byteArrayInput;
 
 			internal readonly int cardinality;
 
@@ -758,14 +730,14 @@ main_break: ;
 
 			internal int docID;
 
-			internal Iterator(byte[] data, int cardinality, int indexInterval, MonotonicAppendingLongBuffer
+			internal DocIdSetIteratorImpl(byte[] data, int cardinality, int indexInterval, MonotonicAppendingLongBuffer
 				 positions, MonotonicAppendingLongBuffer wordNums)
 			{
 				// byte offset
 				// current word
 				// list of bits set in the current word
 				// in which sequence are we?
-				this.@in = new ByteArrayDataInput(data);
+				this.byteArrayInput = new ByteArrayDataInput(data);
 				this.cardinality = cardinality;
 				this.indexInterval = indexInterval;
 				this.positions = positions;
@@ -780,22 +752,22 @@ main_break: ;
 
 			internal virtual bool ReadSequence()
 			{
-				if (@in.Eof())
+				if (byteArrayInput.EOF)
 				{
 					wordNum = int.MaxValue;
 					return false;
 				}
-				int token = @in.ReadByte() & unchecked((int)(0xFF));
+				int token = byteArrayInput.ReadByte() & unchecked((int)(0xFF));
 				if ((token & (1 << 7)) == 0)
 				{
-					int cleanLength = ReadCleanLength(@in, token);
+					int cleanLength = ReadCleanLength(byteArrayInput, token);
 					wordNum += cleanLength;
 				}
 				else
 				{
-					allOnesLength = ReadCleanLength(@in, token);
+					allOnesLength = ReadCleanLength(byteArrayInput, token);
 				}
-				dirtyLength = ReadDirtyLength(@in, token);
+				dirtyLength = ReadDirtyLength(byteArrayInput, token);
 				//HM:revisit 
 				//assert in.length() - in.getPosition() >= dirtyLength : in.getPosition() + " " + in.length() + " " + dirtyLength;
 				++sequenceNum;
@@ -817,7 +789,7 @@ main_break: ;
 				{
 					count -= allOnesLength;
 					allOnesLength = 0;
-					@in.SkipBytes(count);
+					byteArrayInput.SkipBytes(count);
 					dirtyLength -= count;
 				}
 			}
@@ -825,7 +797,7 @@ main_break: ;
 			internal virtual void SkipDirtyBytes()
 			{
 				wordNum += allOnesLength + dirtyLength;
-				@in.SkipBytes(dirtyLength);
+				byteArrayInput.SkipBytes(dirtyLength);
 				allOnesLength = 0;
 				dirtyLength = 0;
 			}
@@ -841,7 +813,7 @@ main_break: ;
 				}
 				if (dirtyLength > 0)
 				{
-					word = @in.ReadByte();
+					word = byteArrayInput.ReadByte();
 					++wordNum;
 					--dirtyLength;
 					if (word != 0)
@@ -850,7 +822,7 @@ main_break: ;
 					}
 					if (dirtyLength > 0)
 					{
-						word = @in.ReadByte();
+						word = byteArrayInput.ReadByte();
 						++wordNum;
 						--dirtyLength;
 						//HM:revisit 
@@ -867,7 +839,7 @@ main_break: ;
 			internal virtual int ForwardBinarySearch(int targetWordNum)
 			{
 				// advance forward and double the window at each step
-				int indexSize = (int)wordNums.Size();
+				int indexSize = (int)wordNums.Size;
 				int lo = sequenceNum / indexInterval;
 				int hi = lo + 1;
 				//HM:revisit 
@@ -881,14 +853,11 @@ main_break: ;
 						hi = indexSize - 1;
 						break;
 					}
-					else
-					{
-						if (wordNums.Get(hi) >= targetWordNum)
-						{
-							break;
-						}
-					}
-					int newLo = hi;
+				    if (wordNums.Get(hi) >= targetWordNum)
+				    {
+				        break;
+				    }
+				    int newLo = hi;
 					hi += (hi - lo) << 1;
 					lo = newLo;
 				}
@@ -932,11 +901,11 @@ main_break: ;
 						// use the index
 						int i = ForwardBinarySearch(targetWordNum);
 						int position = (int)positions.Get(i);
-						if (position > @in.GetPosition())
+						if (position > byteArrayInput.Position)
 						{
 							// if the binary search returned a backward offset, don't move
 							wordNum = (int)wordNums.Get(i) - 1;
-							@in.SetPosition(position);
+							byteArrayInput.Position = position;
 							sequenceNum = i * indexInterval - 1;
 						}
 					}
@@ -961,9 +930,10 @@ main_break: ;
 				NextWord();
 			}
 
-			public override int DocID()
+		    
+		    public override int DocID
 			{
-				return docID;
+		        get { return docID; }
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
@@ -1003,9 +973,9 @@ main_break: ;
 				return SlowAdvance(target);
 			}
 
-			public override long Cost()
+			public override long Cost
 			{
-				return cardinality;
+			    get { return cardinality; }
 			}
 		}
 
@@ -1025,7 +995,7 @@ main_break: ;
 		{
 			return RamUsageEstimator.AlignObjectSize(3 * RamUsageEstimator.NUM_BYTES_OBJECT_REF
 				 + 2 * RamUsageEstimator.NUM_BYTES_INT) + RamUsageEstimator.SizeOf(data) + positions
-				.RamBytesUsed() + wordNums.RamBytesUsed();
+				.RamBytesUsed + wordNums.RamBytesUsed;
 		}
 	}
 }

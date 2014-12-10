@@ -222,5 +222,14 @@ namespace Lucene.Net.Codecs.Lucene40
 
             return fieldsStream;
         }
+		public override long RamBytesUsed
+		{
+		    get { return 0; }
+		}
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public override void CheckIntegrity()
+		{
+		}
     }
 }

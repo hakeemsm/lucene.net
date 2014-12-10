@@ -1123,7 +1123,6 @@
     <Compile Include="Util\PagedBytes.cs" />
     <Compile Include="Util\PForDeltaDocIdSet.cs" />
     <Compile Include="Util\PrintStreamInfoStream.cs" />
-    <Compile Include="Util\QueryBuilder.cs" />
     <Compile Include="Util\RecyclingByteBlockAllocator.cs" />
     <Compile Include="Util\RecyclingIntBlockAllocator.cs" />
     <Compile Include="Util\RefCount.cs" />

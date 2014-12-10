@@ -17,7 +17,7 @@ namespace Lucene.Net.Index
             this.values = values;
         }
 
-        public override SeekStatus SeekCeil(BytesRef text, bool useCache)
+        public override SeekStatus SeekCeil(BytesRef text)
         {
             int ord = values.LookupTerm(text);
             if (ord >= 0)
@@ -47,7 +47,7 @@ namespace Lucene.Net.Index
             }
         }
 
-        public override bool SeekExact(BytesRef text, bool useCache)
+        public override bool SeekExact(BytesRef text)
         {
             int ord = values.LookupTerm(text);
             if (ord >= 0)

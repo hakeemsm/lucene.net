@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
 using Lucene.Net.Support;
@@ -48,7 +49,7 @@ namespace Lucene.Net.Index
 				//assert packet.delGen() < nextGen;
 				//HM:revisit 
 				//assert updates.isEmpty() || updates.get(updates.size()-1).delGen() < packet.delGen() : "Delete packets must be in order";
-				updates.AddItem(packet);
+				updates.Add(packet);
 				numTerms.AddAndGet(packet.numTermDeletes);
 				bytesUsed.AddAndGet(packet.bytesUsed);
 				if (infoStream.IsEnabled("BD"))
@@ -108,36 +109,17 @@ namespace Lucene.Net.Index
 			}
 		}
 
-		private sealed class _IComparer_148 : IComparer<SegmentCommitInfo>
+		private sealed class AnonymousSegmentCommitInfoComparer : IComparer<SegmentCommitInfo>
 		{
-			public _IComparer_148()
-			{
-			}
-
-			// Sorts SegmentInfos from smallest to biggest bufferedDelGen:
+		    // Sorts SegmentInfos from smallest to biggest bufferedDelGen:
 			public int Compare(SegmentCommitInfo si1, SegmentCommitInfo si2)
 			{
-				long cmp = si1.GetBufferedDeletesGen() - si2.GetBufferedDeletesGen();
-				if (cmp > 0)
-				{
-					return 1;
-				}
-				else
-				{
-					if (cmp < 0)
-					{
-						return -1;
-					}
-					else
-					{
-						return 0;
-					}
-				}
+			    long cmp = si1.BufferedDeletesGen - si2.BufferedDeletesGen;
+			    return cmp > 0 ? 1 : (cmp < 0 ? -1 : 0);
 			}
 		}
 
-		private static readonly IComparer<SegmentCommitInfo> sortSegInfoByDelGen = new _IComparer_148
-			();
+		private static readonly IComparer<SegmentCommitInfo> sortSegInfoByDelGen = new AnonymousSegmentCommitInfoComparer();
 
 		/// <summary>
 		/// Resolves the buffered deleted Term/Query/docIDs, into
@@ -150,15 +132,14 @@ namespace Lucene.Net.Index
 		/// each SegmentReader.
 		/// </remarks>
 		/// <exception cref="System.IO.IOException"></exception>
-		public virtual BufferedUpdatesStream.ApplyDeletesResult ApplyDeletesAndUpdates(IndexWriter.ReaderPool
-			 readerPool, IList<SegmentCommitInfo> infos)
+		public virtual ApplyDeletesResult ApplyDeletesAndUpdates(IndexWriter.ReaderPool readerPool, IList<SegmentCommitInfo> infos)
 		{
 			lock (this)
 			{
-				long t0 = Runtime.CurrentTimeMillis();
+				long t0 = DateTime.Now.CurrentTimeMillis();
 				if (infos.Count == 0)
 				{
-					return new BufferedUpdatesStream.ApplyDeletesResult(false, nextGen++, null);
+					return new ApplyDeletesResult(false, nextGen++, null);
 				}
 				//HM:revisit 
 				//assert checkDeleteStats();
@@ -168,7 +149,7 @@ namespace Lucene.Net.Index
 					{
 						infoStream.Message("BD", "applyDeletes: no deletes; skipping");
 					}
-					return new BufferedUpdatesStream.ApplyDeletesResult(false, nextGen++, null);
+					return new ApplyDeletesResult(false, nextGen++, null);
 				}
 				if (infoStream.IsEnabled("BD"))
 				{
@@ -176,8 +157,8 @@ namespace Lucene.Net.Index
 						.Count);
 				}
 				long gen = nextGen++;
-				IList<SegmentCommitInfo> infos2 = new AList<SegmentCommitInfo>();
-				Sharpen.Collections.AddAll(infos2, infos);
+				var infos2 = new List<SegmentCommitInfo>();
+				infos2.AddRange(infos);
 				infos2.Sort(sortSegInfoByDelGen);
 				CoalescedUpdates coalescedUpdates = null;
 				bool anyNewDeletes = false;
@@ -189,7 +170,7 @@ namespace Lucene.Net.Index
 					//System.out.println("BD: cycle delIDX=" + delIDX + " infoIDX=" + infosIDX);
 					FrozenBufferedUpdates packet = delIDX >= 0 ? updates[delIDX] : null;
 					SegmentCommitInfo info = infos2[infosIDX];
-					long segGen = info.GetBufferedDeletesGen();
+					long segGen = info.BufferedDeletesGen;
 					if (packet != null && segGen < packet.DelGen())
 					{
 						//        System.out.println("  coalesce");
@@ -215,7 +196,7 @@ namespace Lucene.Net.Index
 							//assert readerPool.infoIsLive(info);
 							ReadersAndUpdates rld = readerPool.Get(info, true);
 							SegmentReader reader = rld.GetReader(IOContext.READ);
-							int delCount = 0;
+							long delCount = 0;
 							bool segAllDeletes;
 							try
 							{
@@ -225,27 +206,27 @@ namespace Lucene.Net.Index
 									//System.out.println("    del coalesced");
 									delCount += ApplyTermDeletes(coalescedUpdates.TermsIterable(), rld, reader);
 									delCount += ApplyQueryDeletes(coalescedUpdates.QueriesIterable(), rld, reader);
-									ApplyDocValuesUpdates(coalescedUpdates.numericDVUpdates.AsIterable(), rld, reader
+									ApplyDocValuesUpdates(coalescedUpdates.numericDVUpdates.AsEnumerable(), rld, reader
 										, dvUpdates);
-									ApplyDocValuesUpdates(coalescedUpdates.binaryDVUpdates.AsIterable(), rld, reader, 
+									ApplyDocValuesUpdates(coalescedUpdates.binaryDVUpdates.AsEnumerable(), rld, reader, 
 										dvUpdates);
 								}
 								//System.out.println("    del exact");
 								// Don't delete by Term here; DocumentsWriterPerThread
 								// already did that on flush:
 								delCount += ApplyQueryDeletes(packet.QueriesIterable(), rld, reader);
-								ApplyDocValuesUpdates(Arrays.AsList(packet.numericDVUpdates).AsIterable(), rld, reader
+								ApplyDocValuesUpdates(Arrays.AsList(packet.numericDVUpdates).AsEnumerable(), rld, reader
 									, dvUpdates);
-								ApplyDocValuesUpdates(Arrays.AsList(packet.binaryDVUpdates).AsIterable(), rld, reader
+								ApplyDocValuesUpdates(Arrays.AsList(packet.binaryDVUpdates).AsEnumerable(), rld, reader
 									, dvUpdates);
 								if (dvUpdates.Any())
 								{
 									rld.WriteFieldUpdates(info.info.dir, dvUpdates);
 								}
-								int fullDelCount = rld.Info.GetDelCount() + rld.GetPendingDeleteCount();
+								int fullDelCount = rld.Info.DelCount + rld.PendingDeleteCount;
 								//HM:revisit 
 								//assert fullDelCount <= rld.info.info.getDocCount();
-								segAllDeletes = fullDelCount == rld.Info.info.GetDocCount();
+								segAllDeletes = fullDelCount == rld.Info.info.DocCount;
 							}
 							finally
 							{
@@ -257,16 +238,13 @@ namespace Lucene.Net.Index
 							{
 								if (allDeleted == null)
 								{
-									allDeleted = new AList<SegmentCommitInfo>();
+									allDeleted = new List<SegmentCommitInfo>();
 								}
-								allDeleted.AddItem(info);
+								allDeleted.Add(info);
 							}
 							if (infoStream.IsEnabled("BD"))
 							{
-								infoStream.Message("BD", "seg=" + info + " segGen=" + segGen + " segDeletes=[" + 
-									packet + "]; coalesced deletes=[" + (coalescedUpdates == null ? "null" : coalescedUpdates
-									) + "] newDelCount=" + delCount + (segAllDeletes ? " 100% deleted" : string.Empty
-									));
+                                infoStream.Message("BD", "seg=" + info + " segGen=" + segGen + " coalesced deletes=[" + coalescedUpdates + "] newDelCount=" + delCount + (segAllDeletes ? " 100% deleted" : ""));
 							}
 							if (coalescedUpdates == null)
 							{
@@ -274,7 +252,7 @@ namespace Lucene.Net.Index
 							}
 							delIDX--;
 							infosIDX--;
-							info.SetBufferedDeletesGen(gen);
+							info.BufferedDeletesGen = gen;
 						}
 						else
 						{
@@ -286,25 +264,25 @@ namespace Lucene.Net.Index
 								//assert readerPool.infoIsLive(info);
 								ReadersAndUpdates rld = readerPool.Get(info, true);
 								SegmentReader reader = rld.GetReader(IOContext.READ);
-								int delCount = 0;
+								long delCount = 0;
 								bool segAllDeletes;
 								try
 								{
 									delCount += ApplyTermDeletes(coalescedUpdates.TermsIterable(), rld, reader);
 									delCount += ApplyQueryDeletes(coalescedUpdates.QueriesIterable(), rld, reader);
 									DocValuesFieldUpdates.Container dvUpdates = new DocValuesFieldUpdates.Container();
-									ApplyDocValuesUpdates(coalescedUpdates.numericDVUpdates.AsIterable(), rld, reader
+									ApplyDocValuesUpdates(coalescedUpdates.numericDVUpdates.AsEnumerable(), rld, reader
 										, dvUpdates);
-									ApplyDocValuesUpdates(coalescedUpdates.binaryDVUpdates.AsIterable(), rld, reader, 
+									ApplyDocValuesUpdates(coalescedUpdates.binaryDVUpdates.AsEnumerable(), rld, reader, 
 										dvUpdates);
 									if (dvUpdates.Any())
 									{
 										rld.WriteFieldUpdates(info.info.dir, dvUpdates);
 									}
-									int fullDelCount = rld.Info.GetDelCount() + rld.GetPendingDeleteCount();
+									int fullDelCount = rld.Info.DelCount + rld.PendingDeleteCount;
 									//HM:revisit 
 									//assert fullDelCount <= rld.info.info.getDocCount();
-									segAllDeletes = fullDelCount == rld.Info.info.GetDocCount();
+									segAllDeletes = fullDelCount == rld.Info.info.DocCount;
 								}
 								finally
 								{
@@ -316,9 +294,9 @@ namespace Lucene.Net.Index
 								{
 									if (allDeleted == null)
 									{
-										allDeleted = new AList<SegmentCommitInfo>();
+										allDeleted = new List<SegmentCommitInfo>();
 									}
-									allDeleted.AddItem(info);
+									allDeleted.Add(info);
 								}
 								if (infoStream.IsEnabled("BD"))
 								{
@@ -327,7 +305,7 @@ namespace Lucene.Net.Index
 										 : string.Empty));
 								}
 							}
-							info.SetBufferedDeletesGen(gen);
+							info.BufferedDeletesGen = gen;
 							infosIDX--;
 						}
 					}
@@ -336,7 +314,7 @@ namespace Lucene.Net.Index
 				//assert checkDeleteStats();
 				if (infoStream.IsEnabled("BD"))
 				{
-					infoStream.Message("BD", "applyDeletes took " + (Runtime.CurrentTimeMillis() - t0
+					infoStream.Message("BD", "applyDeletes took " + (DateTime.Now.CurrentTimeMillis() - t0
 						) + " msec");
 				}
 				// 
@@ -365,7 +343,7 @@ namespace Lucene.Net.Index
 				long minGen = long.MaxValue;
 				foreach (SegmentCommitInfo info in segmentInfos)
 				{
-					minGen = Math.Min(info.GetBufferedDeletesGen(), minGen);
+					minGen = Math.Min(info.BufferedDeletesGen, minGen);
 				}
 				if (infoStream.IsEnabled("BD"))
 				{
@@ -420,13 +398,13 @@ namespace Lucene.Net.Index
 
 		// Delete by Term
 		/// <exception cref="System.IO.IOException"></exception>
-		private long ApplyTermDeletes(Iterable<Term> termsIter, ReadersAndUpdates rld, SegmentReader
+		private long ApplyTermDeletes(IEnumerable<Term> termsIter, ReadersAndUpdates rld, SegmentReader
 			 reader)
 		{
 			lock (this)
 			{
 				long delCount = 0;
-				Fields fields = reader.Fields();
+				Fields fields = reader.Fields;
 				if (fields == null)
 				{
 					// This reader has no postings
@@ -444,11 +422,11 @@ namespace Lucene.Net.Index
 					// Since we visit terms sorted, we gain performance
 					// by re-using the same TermsEnum and seeking only
 					// forwards
-					if (!term.Field().Equals(currentField))
+					if (!term.Field.Equals(currentField))
 					{
 						//HM:revisit 
 						//assert currentField == null || currentField.compareTo(term.field()) < 0;
-						currentField = term.Field();
+						currentField = term.Field;
 						Terms terms = fields.Terms(currentField);
 						if (terms != null)
 						{
@@ -466,10 +444,10 @@ namespace Lucene.Net.Index
 					//HM:revisit 
 					//assert checkDeleteTerm(term);
 					// System.out.println("  term=" + term);
-					if (termsEnum.SeekExact(term.Bytes()))
+					if (termsEnum.SeekExact(term.Bytes))
 					{
 						// we don't need term frequencies for this
-						DocsEnum docsEnum = termsEnum.Docs(rld.GetLiveDocs(), docs, DocsEnum.FLAG_NONE);
+						DocsEnum docsEnum = termsEnum.Docs(rld.LiveDocs, docs, DocsEnum.FLAG_NONE);
 						//System.out.println("BDS: got docsEnum=" + docsEnum);
 						if (docsEnum != null)
 						{
@@ -505,13 +483,13 @@ namespace Lucene.Net.Index
 
 		// DocValues updates
 		/// <exception cref="System.IO.IOException"></exception>
-		private void ApplyDocValuesUpdates<_T0>(Iterable<_T0> updates, ReadersAndUpdates 
+		private void ApplyDocValuesUpdates<T>(IEnumerable<T> updates, ReadersAndUpdates 
 			rld, SegmentReader reader, DocValuesFieldUpdates.Container dvUpdatesContainer) where 
-			_T0:DocValuesUpdate
+			T:DocValuesUpdate
 		{
 			lock (this)
 			{
-				Fields fields = reader.Fields();
+				Fields fields = reader.Fields;
 				if (fields == null)
 				{
 					// This reader has no postings
@@ -543,7 +521,7 @@ namespace Lucene.Net.Index
 					// that we cannot rely only on docIDUpto because an app may send two updates
 					// which will get same docIDUpto, yet will still need to respect the order
 					// those updates arrived.
-					if (!term.Field().Equals(currentField))
+					if (!term.Field.Equals(currentField))
 					{
 						// if we change the code to process updates in terms order, enable this 
 						//HM:revisit 
@@ -551,7 +529,7 @@ namespace Lucene.Net.Index
 						//        
 						//HM:revisit 
 						//assert currentField == null || currentField.compareTo(term.field()) < 0;
-						currentField = term.Field();
+						currentField = term.Field;
 						Terms terms = fields.Terms(currentField);
 						if (terms != null)
 						{
@@ -569,17 +547,16 @@ namespace Lucene.Net.Index
 						continue;
 					}
 					// System.out.println("  term=" + term);
-					if (termsEnum.SeekExact(term.Bytes()))
+					if (termsEnum.SeekExact(term.Bytes))
 					{
 						// we don't need term frequencies for this
-						DocsEnum docsEnum = termsEnum.Docs(rld.GetLiveDocs(), docs, DocsEnum.FLAG_NONE);
+						DocsEnum docsEnum = termsEnum.Docs(rld.LiveDocs, docs, DocsEnum.FLAG_NONE);
 						//System.out.println("BDS: got docsEnum=" + docsEnum);
 						DocValuesFieldUpdates dvUpdates = dvUpdatesContainer.GetUpdates(update.field, update
 							.type);
 						if (dvUpdates == null)
 						{
-							dvUpdates = dvUpdatesContainer.NewUpdates(update.field, update.type, reader.MaxDoc
-								());
+							dvUpdates = dvUpdatesContainer.NewUpdates(update.field, update.type, reader.MaxDoc);
 						}
 						int doc;
 						while ((doc = docsEnum.NextDoc()) != DocIdSetIterator.NO_MORE_DOCS)
@@ -612,18 +589,17 @@ namespace Lucene.Net.Index
 
 		// Delete by query
 		/// <exception cref="System.IO.IOException"></exception>
-		private static long ApplyQueryDeletes(Iterable<BufferedUpdatesStream.QueryAndLimit
+		private static long ApplyQueryDeletes(IEnumerable<QueryAndLimit
 			> queriesIter, ReadersAndUpdates rld, SegmentReader reader)
 		{
 			long delCount = 0;
-			AtomicReaderContext readerContext = ((AtomicReaderContext)reader.GetContext());
+			AtomicReaderContext readerContext = ((AtomicReaderContext)reader.Context);
 			bool any = false;
 			foreach (BufferedUpdatesStream.QueryAndLimit ent in queriesIter)
 			{
 				Query query = ent.query;
 				int limit = ent.limit;
-				DocIdSet docs = new QueryWrapperFilter(query).GetDocIdSet(readerContext, reader.GetLiveDocs
-					());
+				DocIdSet docs = new QueryWrapperFilter(query).GetDocIdSet(readerContext, reader.LiveDocs);
 				if (docs != null)
 				{
 					DocIdSetIterator it = docs.Iterator();
@@ -665,8 +641,7 @@ namespace Lucene.Net.Index
 			// TODO: we re-use term now in our merged iterable, but we shouldn't clone, instead copy for this 
 			//HM:revisit 
 			//assert
-			lastDeleteTerm = term == null ? null : new Term(term.Field(), BytesRef.DeepCopyOf
-				(term.bytes));
+			lastDeleteTerm = term == null ? null : new Term(term.Field, BytesRef.DeepCopyOf(term.bytes));
 			return true;
 		}
 

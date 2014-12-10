@@ -11,6 +11,7 @@ namespace Lucene.Net.Store
         private readonly BufferedIndexOutput bufferedDelegate;
         private readonly RateLimiter rateLimiter;
 
+		private long bytesSinceLastPause;
         internal RateLimitedIndexOutput(RateLimiter rateLimiter, IndexOutput del)
         {
             if (del is BufferedIndexOutput)
@@ -29,7 +30,12 @@ namespace Lucene.Net.Store
 
         public override void FlushBuffer(byte[] b, int offset, int len)
         {
-            rateLimiter.Pause(len);
+			bytesSinceLastPause += len;
+			if (bytesSinceLastPause > rateLimiter.GetMinPauseCheckBytes())
+			{
+				rateLimiter.Pause(bytesSinceLastPause);
+				bytesSinceLastPause = 0;
+			}
             if (bufferedDelegate != null)
             {
                 bufferedDelegate.FlushBuffer(b, offset, len);

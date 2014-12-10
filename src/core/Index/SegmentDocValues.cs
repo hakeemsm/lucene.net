@@ -1,16 +1,10 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Lucene.Net.Codecs;
-using Lucene.Net.Index;
 using Lucene.Net.Store;
+using Lucene.Net.Support;
 using Lucene.Net.Util;
-using Sharpen;
 
 namespace Lucene.Net.Index
 {
@@ -25,8 +19,7 @@ namespace Lucene.Net.Index
 	/// </summary>
 	internal sealed class SegmentDocValues
 	{
-		private readonly IDictionary<long, RefCount<DocValuesProducer>> genDVProducers = 
-			new Dictionary<long, RefCount<DocValuesProducer>>();
+		private readonly IDictionary<long, RefCount<DocValuesProducer>> genDVProducers = new Dictionary<long, RefCount<DocValuesProducer>>();
 
 		/// <exception cref="System.IO.IOException"></exception>
 		private RefCount<DocValuesProducer> NewDocValuesProducer(SegmentCommitInfo si, IOContext
@@ -39,11 +32,10 @@ namespace Lucene.Net.Index
 			{
 				dvDir = si.info.dir;
 				// gen'd files are written outside CFS, so use SegInfo directory
-				segmentSuffix = System.Convert.ToString(gen, char.MAX_RADIX);
+				segmentSuffix = System.Convert.ToString(gen, Character.MAX_RADIX);
 			}
 			// set SegmentReadState to list only the fields that are relevant to that gen
-			SegmentReadState srs = new SegmentReadState(dvDir, si.info, new FieldInfos(Sharpen.Collections.ToArray
-				(infos, new FieldInfo[infos.Count])), context, termsIndexDivisor, segmentSuffix);
+			SegmentReadState srs = new SegmentReadState(dvDir, si.info, new FieldInfos(infos.ToArray()), context, termsIndexDivisor, segmentSuffix);
 			return new _RefCount_51(this, gen, dvFormat.FieldsProducer(srs));
 		}
 
@@ -59,10 +51,10 @@ namespace Lucene.Net.Index
 			/// <exception cref="System.IO.IOException"></exception>
 			protected internal override void Release()
 			{
-				this.genericObject.Close();
+				this.genericObject.Dispose();
 				lock (this._enclosing)
 				{
-					Sharpen.Collections.Remove(this._enclosing.genDVProducers, gen);
+					this._enclosing.genDVProducers.Remove(gen);
 				}
 			}
 
@@ -84,14 +76,14 @@ namespace Lucene.Net.Index
 		{
 			lock (this)
 			{
-				RefCount<DocValuesProducer> dvp = genDVProducers.Get(gen);
+				RefCount<DocValuesProducer> dvp = genDVProducers[gen];
 				if (dvp == null)
 				{
 					dvp = NewDocValuesProducer(si, context, dir, dvFormat, gen, infos, termsIndexDivisor
 						);
 					//HM:revisit 
 					//assert dvp != null;
-					genDVProducers.Put(gen, dvp);
+					genDVProducers[gen] = dvp;
 				}
 				else
 				{
@@ -115,8 +107,8 @@ namespace Lucene.Net.Index
 				Exception t = null;
 				foreach (long gen in dvProducersGens)
 				{
-					RefCount<DocValuesProducer> dvp = genDVProducers.Get(gen);
-					//HM:revisit 
+					RefCount<DocValuesProducer> dvp = genDVProducers[gen];
+					
 					//assert dvp != null : "gen=" + gen;
 					try
 					{

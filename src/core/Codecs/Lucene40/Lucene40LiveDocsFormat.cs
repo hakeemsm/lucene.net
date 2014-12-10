@@ -29,7 +29,7 @@ namespace Lucene.Net.Codecs.Lucene40
             return (IMutableBits)liveDocs.Clone();
         }
 
-        public override IBits ReadLiveDocs(Directory dir, SegmentInfoPerCommit info, IOContext context)
+        public override IBits ReadLiveDocs(Directory dir, SegmentCommitInfo info, IOContext context)
         {
             String filename = IndexFileNames.FileNameFromGeneration(info.info.name, DELETES_EXTENSION, info.DelGen);
             BitVector liveDocs = new BitVector(dir, filename, context);
@@ -39,7 +39,7 @@ namespace Lucene.Net.Codecs.Lucene40
             return liveDocs;
         }
 
-        public override void WriteLiveDocs(IMutableBits bits, Directory dir, SegmentInfoPerCommit info, int newDelCount, IOContext context)
+        public override void WriteLiveDocs(IMutableBits bits, Directory dir, SegmentCommitInfo info, int newDelCount, IOContext context)
         {
             String filename = IndexFileNames.FileNameFromGeneration(info.info.name, DELETES_EXTENSION, info.NextDelGen);
             BitVector liveDocs = (BitVector)bits;
@@ -48,7 +48,7 @@ namespace Lucene.Net.Codecs.Lucene40
             liveDocs.Write(dir, filename, context);
         }
 
-        public override void Files(SegmentInfoPerCommit info, ICollection<string> files)
+        public override void Files(SegmentCommitInfo info, ICollection<string> files)
         {
             if (info.HasDeletions)
             {

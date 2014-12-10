@@ -129,7 +129,7 @@ namespace Lucene.Net.Index
             }
         }
 
-        public override bool SeekExact(BytesRef term, bool useCache)
+        public override bool SeekExact(BytesRef term)
         {
             queue.Clear();
             numTop = 0;
@@ -168,7 +168,7 @@ namespace Lucene.Net.Index
                         }
                         else
                         {
-                            status = currentSubs[i].terms.SeekExact(term, useCache);
+                            status = currentSubs[i].terms.SeekExact(term);
                         }
                     }
                     else
@@ -178,7 +178,7 @@ namespace Lucene.Net.Index
                 }
                 else
                 {
-                    status = currentSubs[i].terms.SeekExact(term, useCache);
+                    status = currentSubs[i].terms.SeekExact(term);
                 }
 
                 if (status)
@@ -194,7 +194,7 @@ namespace Lucene.Net.Index
             return numTop > 0;
         }
 
-        public override SeekStatus SeekCeil(BytesRef term, bool useCache)
+        public override SeekStatus SeekCeil(BytesRef term)
         {
             queue.Clear();
             numTop = 0;
@@ -234,7 +234,7 @@ namespace Lucene.Net.Index
                         }
                         else
                         {
-                            status = currentSubs[i].terms.SeekCeil(term, useCache);
+                            status = currentSubs[i].terms.SeekCeil(term);
                         }
                     }
                     else
@@ -244,7 +244,7 @@ namespace Lucene.Net.Index
                 }
                 else
                 {
-                    status = currentSubs[i].terms.SeekCeil(term, useCache);
+                    status = currentSubs[i].terms.SeekCeil(term);
                 }
 
                 if (status == SeekStatus.FOUND)

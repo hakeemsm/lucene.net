@@ -1,4 +1,5 @@
 ﻿using Lucene.Net.Codecs;
+using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Lucene.Net.Util.Packed;
 using System;
@@ -10,16 +11,27 @@ namespace Lucene.Net.Index
 {
     internal class BinaryDocValuesWriter : DocValuesWriter
     {
-        private readonly ByteBlockPool pool;
-        private readonly AppendingLongBuffer lengths;
+		private int MAX_LENGTH = ArrayUtil.MAX_ARRAY_LENGTH;
+		private const int BLOCK_BITS = 15;
+		private readonly PagedBytes bytes;
+		private readonly DataOutput bytesOut;
+		private readonly Counter iwBytesUsed;
+		private readonly AppendingDeltaPackedLongBuffer lengths;
+		private FixedBitSet docsWithField;
         private readonly FieldInfo fieldInfo;
         private int addedValues = 0;
 
+		private long bytesUsed;
         public BinaryDocValuesWriter(FieldInfo fieldInfo, Counter iwBytesUsed)
         {
             this.fieldInfo = fieldInfo;
-            this.pool = new ByteBlockPool(new ByteBlockPool.DirectTrackingAllocator(iwBytesUsed));
-            this.lengths = new AppendingLongBuffer();
+			this.bytes = new PagedBytes(BLOCK_BITS);
+			this.bytesOut = bytes.GetDataOutput();
+			this.lengths = new AppendingDeltaPackedLongBuffer(PackedInts.COMPACT);
+			this.iwBytesUsed = iwBytesUsed;
+			this.docsWithField = new FixedBitSet(64);
+			this.bytesUsed = DocsWithFieldBytesUsed();
+			iwBytesUsed.AddAndGet(bytesUsed);
         }
 
         public void AddValue(int docID, BytesRef value)
@@ -32,7 +44,7 @@ namespace Lucene.Net.Index
             {
                 throw new ArgumentException("field=\"" + fieldInfo.name + "\": null value not allowed");
             }
-            if (value.length > (ByteBlockPool.BYTE_BLOCK_SIZE - 2))
+			if (value.length > MAX_LENGTH)
             {
                 throw new ArgumentException("DocValuesField \"" + fieldInfo.name + "\" is too large, must be <= " + (ByteBlockPool.BYTE_BLOCK_SIZE - 2));
             }
@@ -45,16 +57,40 @@ namespace Lucene.Net.Index
             }
             addedValues++;
             lengths.Add(value.length);
-            pool.Append(value);
+			try
+			{
+				bytesOut.WriteBytes(value.bytes, value.offset, value.length);
+			}
+			catch (IOException ioe)
+			{
+				// Should never happen!
+				throw new RuntimeException(ioe);
+			}
+			docsWithField = FixedBitSet.EnsureCapacity(docsWithField, docID);
+			docsWithField.Set(docID);
+			UpdateBytesUsed();
         }
 
-        internal override void Finish(int numDoc)
+		private long DocsWithFieldBytesUsed()
+		{
+			// size of the long[] + some overhead
+			return RamUsageEstimator.SizeOf(docsWithField.GetBits()) + 64;
+		}
+		private void UpdateBytesUsed()
+		{
+			long newBytesUsed = lengths.RamBytesUsed() + bytes.RamBytesUsed() + DocsWithFieldBytesUsed
+				();
+			iwBytesUsed.AddAndGet(newBytesUsed - bytesUsed);
+			bytesUsed = newBytesUsed;
+		}
+		internal override void Finish(int maxDoc)
         {
         }
 
         internal override void Flush(SegmentWriteState state, DocValuesConsumer dvConsumer)
         {
             int maxDoc = state.segmentInfo.DocCount;
+			bytes.Freeze(false);
             dvConsumer.AddBinaryField(fieldInfo, GetBytesIterator(maxDoc));
         }
 

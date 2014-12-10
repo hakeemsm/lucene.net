@@ -28,7 +28,7 @@ namespace Lucene.Net.Codecs.Lucene3x
         // points to a singleNormFile
         internal IndexInput singleNormStream;
         internal readonly int maxdoc;
-
+		private readonly AtomicLong ramBytesUsed;
         // note: just like segmentreader in 3.x, we open up all the files here (including separate norms) up front.
         // but we just don't do any seeks or reading yet.
         public Lucene3xNormsProducer(Directory dir, SegmentInfo info, FieldInfos fields, IOContext context)
@@ -226,5 +226,19 @@ namespace Lucene.Net.Codecs.Lucene3x
         {
             throw new InvalidOperationException();
         }
+		public override IBits GetDocsWithField(FieldInfo field)
+		{
+			throw new Exception();
+		}
+
+		public override long RamBytesUsed
+		{
+		    get { return ramBytesUsed.Get(); }
+		}
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public override void CheckIntegrity()
+		{
+		}
     }
 }

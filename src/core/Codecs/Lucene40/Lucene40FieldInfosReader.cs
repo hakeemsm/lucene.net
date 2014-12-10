@@ -16,7 +16,8 @@ namespace Lucene.Net.Codecs.Lucene40
         {
         }
 
-        public override FieldInfos Read(Directory directory, string segmentName, IOContext iocontext)
+		public override FieldInfos Read(Directory directory, string segmentName, string segmentSuffix
+			, IOContext iocontext)
         {
             String fileName = IndexFileNames.SegmentFileName(segmentName, "", Lucene40FieldInfosFormat.FIELD_INFOS_EXTENSION);
             IndexInput input = directory.OpenInput(fileName, iocontext);
@@ -94,6 +95,7 @@ namespace Lucene.Net.Codecs.Lucene40
                 {
                     throw new CorruptIndexException("did not read all bytes from file \"" + fileName + "\": read " + input.FilePointer + " vs size " + input.Length + " (resource: " + input + ")");
                 }
+				CodecUtil.CheckEOF(input);
                 FieldInfos fieldInfos = new FieldInfos(infos);
                 success = true;
                 return fieldInfos;

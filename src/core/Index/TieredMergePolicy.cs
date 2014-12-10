@@ -221,7 +221,7 @@ namespace Lucene.Net.Index
             }
         }
 
-        private class SegmentByteSizeDescending : IComparer<SegmentInfoPerCommit>
+        private class SegmentByteSizeDescending : IComparer<SegmentCommitInfo>
         {
             private readonly TieredMergePolicy parent;
 
@@ -230,7 +230,7 @@ namespace Lucene.Net.Index
                 this.parent = parent;
             }
 
-            public int Compare(SegmentInfoPerCommit o1, SegmentInfoPerCommit o2)
+            public int Compare(SegmentCommitInfo o1, SegmentCommitInfo o2)
             {
                 try
                 {
@@ -240,14 +240,11 @@ namespace Lucene.Net.Index
                     {
                         return -1;
                     }
-                    else if (sz2 > sz1)
+                    if (sz2 > sz1)
                     {
                         return 1;
                     }
-                    else
-                    {
-                        return o1.info.name.CompareTo(o2.info.name);
-                    }
+                    return o1.info.name.CompareTo(o2.info.name);
                 }
                 catch (System.IO.IOException)
                 {
@@ -277,16 +274,16 @@ namespace Lucene.Net.Index
             {
                 return null;
             }
-            ICollection<SegmentInfoPerCommit> merging = writer.Get().MergingSegments;
-            ICollection<SegmentInfoPerCommit> toBeMerged = new HashSet<SegmentInfoPerCommit>();
+            ICollection<SegmentCommitInfo> merging = writer.Get().MergingSegments;
+            ICollection<SegmentCommitInfo> toBeMerged = new HashSet<SegmentCommitInfo>();
 
-            List<SegmentInfoPerCommit> infosSorted = new List<SegmentInfoPerCommit>(infos);
+            List<SegmentCommitInfo> infosSorted = new List<SegmentCommitInfo>(infos);
             infosSorted.Sort(new SegmentByteSizeDescending(this));
 
             // Compute total index bytes & print details about the index
             long totIndexBytes = 0;
             long minSegmentBytes = long.MaxValue;
-            foreach (SegmentInfoPerCommit info in infosSorted)
+            foreach (SegmentCommitInfo info in infosSorted)
             {
                 long segBytes = Size(info);
                 if (Verbose)
@@ -348,13 +345,13 @@ namespace Lucene.Net.Index
                 // Gather eligible segments for merging, ie segments
                 // not already being merged and not already picked (by
                 // prior iteration of this loop) for merging:
-                List<SegmentInfoPerCommit> eligible = new List<SegmentInfoPerCommit>();
+                var eligible = new List<SegmentCommitInfo>();
                 for (int idx = tooBigCount; idx < infosSorted.Count; idx++)
                 {
-                    SegmentInfoPerCommit info = infosSorted[idx];
+                    SegmentCommitInfo info = infosSorted[idx];
                     if (merging.Contains(info))
                     {
-                        mergingBytes += info.SizeInBytes;
+                        mergingBytes += info.SizeInBytes();
                     }
                     else if (!toBeMerged.Contains(info))
                     {
@@ -379,7 +376,7 @@ namespace Lucene.Net.Index
 
                     // OK we are over budget -- find best merge!
                     MergeScore bestScore = null;
-                    List<SegmentInfoPerCommit> best = null;
+                    List<SegmentCommitInfo> best = null;
                     bool bestTooLarge = false;
                     long bestMergeBytes = 0;
 
@@ -389,11 +386,11 @@ namespace Lucene.Net.Index
 
                         long totAfterMergeBytes = 0;
 
-                        List<SegmentInfoPerCommit> candidate = new List<SegmentInfoPerCommit>();
+                        var candidate = new List<SegmentCommitInfo>();
                         bool hitTooLarge = false;
                         for (int idx = startIdx; idx < eligible.Count && candidate.Count < maxMergeAtOnce; idx++)
                         {
-                            SegmentInfoPerCommit info = eligible[idx];
+                            SegmentCommitInfo info = eligible[idx];
                             long segBytes = Size(info);
 
                             if (totAfterMergeBytes + segBytes > maxMergedSegmentBytes)
@@ -437,7 +434,7 @@ namespace Lucene.Net.Index
                         }
                         OneMerge merge = new OneMerge(best);
                         spec.Add(merge);
-                        foreach (SegmentInfoPerCommit info in merge.segments)
+                        foreach (var info in merge.segments)
                         {
                             toBeMerged.Add(info);
                         }
@@ -459,17 +456,17 @@ namespace Lucene.Net.Index
             }
         }
 
-        protected virtual MergeScore Score(IList<SegmentInfoPerCommit> candidate, bool hitTooLarge, long mergingBytes)
+        protected virtual MergeScore Score(IList<SegmentCommitInfo> candidate, bool hitTooLarge, long mergingBytes)
         {
             long totBeforeMergeBytes = 0;
             long totAfterMergeBytes = 0;
             long totAfterMergeBytesFloored = 0;
-            foreach (SegmentInfoPerCommit info in candidate)
+            foreach (var info in candidate)
             {
                 long segBytes = Size(info);
                 totAfterMergeBytes += segBytes;
                 totAfterMergeBytesFloored += FloorSize(segBytes);
-                totBeforeMergeBytes += info.SizeInBytes;
+                totBeforeMergeBytes += info.SizeInBytes();
             }
 
             // Measure "skew" of the merge, which can range
@@ -536,18 +533,18 @@ namespace Lucene.Net.Index
             }
         }
 
-        public override MergeSpecification FindForcedMerges(SegmentInfos infos, int maxSegmentCount, IDictionary<SegmentInfoPerCommit, bool> segmentsToMerge)
+        public override MergeSpecification FindForcedMerges(SegmentInfos infos, int maxSegmentCount, IDictionary<SegmentCommitInfo, bool> segmentsToMerge)
         {
             if (Verbose)
             {
                 Message("findForcedMerges maxSegmentCount=" + maxSegmentCount + " infos=" + writer.Get().SegString(infos) + " segmentsToMerge=" + segmentsToMerge);
             }
 
-            List<SegmentInfoPerCommit> eligible = new List<SegmentInfoPerCommit>();
+            var eligible = new List<SegmentCommitInfo>();
             bool forceMergeRunning = false;
-            ICollection<SegmentInfoPerCommit> merging = writer.Get().MergingSegments;
+            ICollection<SegmentCommitInfo> merging = writer.Get().MergingSegments;
             bool segmentIsOriginal = false;
-            foreach (SegmentInfoPerCommit info in infos)
+            foreach (var info in infos)
             {
                 Boolean isOriginal = segmentsToMerge[info];
                 if (isOriginal != null)
@@ -629,9 +626,9 @@ namespace Lucene.Net.Index
             {
                 Message("findForcedDeletesMerges infos=" + writer.Get().SegString(infos) + " forceMergeDeletesPctAllowed=" + forceMergeDeletesPctAllowed);
             }
-            List<SegmentInfoPerCommit> eligible = new List<SegmentInfoPerCommit>();
-            ICollection<SegmentInfoPerCommit> merging = writer.Get().MergingSegments;
-            foreach (SegmentInfoPerCommit info in infos)
+            var eligible = new List<SegmentCommitInfo>();
+            ICollection<SegmentCommitInfo> merging = writer.Get().MergingSegments;
+            foreach (var info in infos)
             {
                 double pctDeletes = 100.0 * ((double)writer.Get().NumDeletedDocs(info)) / info.info.DocCount;
                 if (pctDeletes > forceMergeDeletesPctAllowed && !merging.Contains(info))
@@ -678,7 +675,7 @@ namespace Lucene.Net.Index
             return spec;
         }
 
-        public override bool UseCompoundFile(SegmentInfos infos, SegmentInfoPerCommit mergedInfo)
+        public override bool UseCompoundFile(SegmentInfos infos, SegmentCommitInfo mergedInfo)
         {
             if (!UseCompoundFileValue)
             {
@@ -693,11 +690,7 @@ namespace Lucene.Net.Index
             {
                 return true;
             }
-            long totalSize = 0;
-            foreach (SegmentInfoPerCommit info in infos)
-            {
-                totalSize += Size(info);
-            }
+            long totalSize = infos.Sum(info => Size(info));
             return mergedInfoSize <= NoCFSRatio * totalSize;
         }
 
@@ -705,7 +698,7 @@ namespace Lucene.Net.Index
         {
         }
 
-        private bool IsMerged(SegmentInfoPerCommit info)
+        private bool IsMerged(SegmentCommitInfo info)
         {
             IndexWriter w = writer.Get();
             //assert w != null;
@@ -717,9 +710,9 @@ namespace Lucene.Net.Index
         }
 
         // Segment size in bytes, pro-rated by % deleted
-        private long Size(SegmentInfoPerCommit info)
+        private long Size(SegmentCommitInfo info)
         {
-            long byteSize = info.SizeInBytes;
+            long byteSize = info.SizeInBytes();
             int delCount = writer.Get().NumDeletedDocs(info);
             double delRatio = (info.info.DocCount <= 0 ? 0.0f : ((double)delCount / (double)info.info.DocCount));
             //assert delRatio <= 1.0;

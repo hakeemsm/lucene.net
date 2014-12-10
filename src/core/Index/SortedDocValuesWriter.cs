@@ -11,12 +11,12 @@ namespace Lucene.Net.Index
     internal class SortedDocValuesWriter : DocValuesWriter
     {
         internal readonly BytesRefHash hash;
-        private AppendingLongBuffer pending;
+		private AppendingDeltaPackedLongBuffer pending;
         private readonly Counter iwBytesUsed;
         private long bytesUsed; // this currently only tracks differences in 'pending'
         private readonly FieldInfo fieldInfo;
 
-        private static readonly BytesRef EMPTY = new BytesRef(BytesRef.EMPTY_BYTES);
+		private const int EMPTY_ORD = -1;
 
         public SortedDocValuesWriter(FieldInfo fieldInfo, Counter iwBytesUsed)
         {
@@ -27,7 +27,7 @@ namespace Lucene.Net.Index
                     new ByteBlockPool.DirectTrackingAllocator(iwBytesUsed)),
                     BytesRefHash.DEFAULT_CAPACITY,
                     new BytesRefHash.DirectBytesStartArray(BytesRefHash.DEFAULT_CAPACITY, iwBytesUsed));
-            pending = new AppendingLongBuffer();
+			pending = new AppendingDeltaPackedLongBuffer(PackedInts.COMPACT);
             bytesUsed = pending.RamBytesUsed;
             iwBytesUsed.AddAndGet(bytesUsed);
         }
@@ -50,7 +50,7 @@ namespace Lucene.Net.Index
             // Fill in any holes:
             while (pending.Size < docID)
             {
-                AddOneValue(EMPTY);
+				pending.Add(EMPTY_ORD);
             }
 
             AddOneValue(value);
@@ -60,8 +60,9 @@ namespace Lucene.Net.Index
         {
             while (pending.Size < maxDoc)
             {
-                AddOneValue(EMPTY);
+				pending.Add(EMPTY_ORD);
             }
+			UpdateBytesUsed();
         }
 
         private void AddOneValue(BytesRef value)

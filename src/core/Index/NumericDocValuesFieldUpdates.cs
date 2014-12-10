@@ -1,15 +1,8 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
-using Lucene.Net.Index;
+using Lucene.Net.Documents;
 using Lucene.Net.Search;
 using Lucene.Net.Util;
 using Lucene.Net.Util.Packed;
-using Sharpen;
 
 namespace Lucene.Net.Index
 {
@@ -17,7 +10,7 @@ namespace Lucene.Net.Index
 	/// A
 	/// <see cref="DocValuesFieldUpdates">DocValuesFieldUpdates</see>
 	/// which holds updates of documents, of a single
-	/// <see cref="Lucene.Net.Document.NumericDocValuesField">Lucene.Net.Document.NumericDocValuesField
+	/// NumericDocValuesFieldValuesField">Lucene.Net.Document.NumericDocValuesField
 	/// 	</see>
 	/// .
 	/// </summary>
@@ -38,7 +31,7 @@ namespace Lucene.Net.Index
 
 			private int doc = -1;
 
-			private long value = null;
+			private long? value = null;
 
 			internal Iterator(int size, PagedGrowableWriter values, FixedBitSet docsWithField
 				, PagedMutable docs)
@@ -68,14 +61,14 @@ namespace Lucene.Net.Index
 				{
 					++idx;
 				}
-				if (!docsWithField.Get((int)(idx - 1)))
+				if (!docsWithField[(int)(idx - 1)])
 				{
 					value = null;
 				}
 				else
 				{
 					// idx points to the "next" element
-					value = Sharpen.Extensions.ValueOf(values.Get(idx - 1));
+					value = values.Get(idx - 1);
 				}
 				return doc;
 			}
@@ -141,19 +134,18 @@ namespace Lucene.Net.Index
 			++size;
 		}
 
-		public override DocValuesFieldUpdates.Iterator GetIterator()
+	    internal override DocValuesFieldUpdates.Iterator GetIterator()
 		{
 			PagedMutable docs = this.docs;
 			PagedGrowableWriter values = this.values;
 			FixedBitSet docsWithField = this.docsWithField;
-			new _InPlaceMergeSorter_138(docs, values, docsWithField).Sort(0, size);
-			return new NumericDocValuesFieldUpdates.Iterator(size, values, docsWithField, docs
-				);
+			new AnonymousInPlaceMergeSorter(docs, values, docsWithField).Sort(0, size);
+			return new Iterator(size, values, docsWithField, docs);
 		}
 
-		private sealed class _InPlaceMergeSorter_138 : InPlaceMergeSorter
+		private sealed class AnonymousInPlaceMergeSorter : InPlaceMergeSorter
 		{
-			public _InPlaceMergeSorter_138(PagedMutable docs, PagedGrowableWriter values, FixedBitSet
+			public AnonymousInPlaceMergeSorter(PagedMutable docs, PagedGrowableWriter values, FixedBitSet
 				 docsWithField)
 			{
 				this.docs = docs;
@@ -169,8 +161,8 @@ namespace Lucene.Net.Index
 				long tmpVal = values.Get(j);
 				values.Set(j, values.Get(i));
 				values.Set(i, tmpVal);
-				bool tmpBool = docsWithField.Get(j);
-				if (docsWithField.Get(i))
+				bool tmpBool = docsWithField[j];
+				if (docsWithField[i])
 				{
 					docsWithField.Set(j);
 				}
@@ -218,7 +210,7 @@ namespace Lucene.Net.Index
 			for (int i = 0; i < otherUpdates.size; i++)
 			{
 				int doc = (int)otherUpdates.docs.Get(i);
-				if (otherUpdates.docsWithField.Get(i))
+				if (otherUpdates.docsWithField[i])
 				{
 					docsWithField.Set(size);
 				}

@@ -8,6 +8,20 @@ namespace Lucene.Net.Index
 {
     public class FilterAtomicReader : AtomicReader
     {
+		/// <summary>
+		/// Get the wrapped instance by <code>reader</code> as long as this reader is
+		/// an intance of
+		/// <see cref="FilterAtomicReader">FilterAtomicReader</see>
+		/// .
+		/// </summary>
+		public static AtomicReader Unwrap(AtomicReader reader)
+		{
+			while (reader is Org.Apache.Lucene.Index.FilterAtomicReader)
+			{
+				reader = ((Org.Apache.Lucene.Index.FilterAtomicReader)reader).@in;
+			}
+			return reader;
+		}
         public class FilterFields : Fields
         {
             protected readonly Fields instance;
@@ -105,9 +119,9 @@ namespace Lucene.Net.Index
                 }
             }
 
-            public override SeekStatus SeekCeil(BytesRef text, bool useCache)
+            public override SeekStatus SeekCeil(BytesRef text)
             {
-                return instance.SeekCeil(text, useCache);
+                return instance.SeekCeil(text);
             }
 
             public override void SeekExact(long ord)
@@ -358,5 +372,17 @@ namespace Lucene.Net.Index
             EnsureOpen();
             return instance.GetNormValues(field);
         }
+		public override IBits GetDocsWithField(string field)
+		{
+			EnsureOpen();
+			return instance.GetDocsWithField(field);
+		}
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public override void CheckIntegrity()
+		{
+			EnsureOpen();
+			instance.CheckIntegrity();
+		}
     }
 }

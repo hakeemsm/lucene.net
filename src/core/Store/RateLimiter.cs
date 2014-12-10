@@ -12,10 +12,12 @@ namespace Lucene.Net.Store
 
         public abstract long Pause(long bytes);
 
+		public abstract long GetMinPauseCheckBytes();
         public class SimpleRateLimiter : RateLimiter
         {
+			private const int MIN_PAUSE_CHECK_MSEC = 5;
             private double mbPerSec;
-            private double nsPerByte;
+			private long minPauseCheckBytes;
             private long lastNS;
 
             public SimpleRateLimiter(double mbPerSec)
@@ -23,6 +25,10 @@ namespace Lucene.Net.Store
                 this.MbPerSec = mbPerSec;
             }
 
+			public override long GetMinPauseCheckBytes()
+			{
+				return minPauseCheckBytes;
+			}
             public override double MbPerSec
             {
                 get
@@ -32,28 +38,30 @@ namespace Lucene.Net.Store
                 set
                 {
                     this.mbPerSec = value;
-                    nsPerByte = (double)1000000000 / (1024 * 1024 * value);
+                    	minPauseCheckBytes = (long)((MIN_PAUSE_CHECK_MSEC / 1000.0) * mbPerSec * 1024 * 1024
+					);
                 }
             }
 
             public override long Pause(long bytes)
             {
-                if (bytes == 1)
+                long startNS = DateTime.UtcNow.Ticks*100;
+				double secondsToPause = (bytes / 1024.0 / 1024.0) / mbPerSec;
+                Interlocked.Exchange(ref lastNS, Interlocked.Read(ref lastNS) + (long)(1000000000 * secondsToPause));
+                long targetNS = Interlocked.Read(ref lastNS);
+
+                if (startNS >= targetNS)
                 {
+                    Interlocked.Exchange(ref lastNS, startNS);
                     return 0;
                 }
 
                 // TODO: this is purely instantaneous rate; maybe we
                 // should also offer decayed recent history one?
-                Interlocked.Exchange(ref lastNS, Interlocked.Read(ref lastNS) + ((long)(bytes * nsPerByte)));
-                long targetNS = Interlocked.Read(ref lastNS);
-                long startNS;
-                long curNS = startNS = DateTime.UtcNow.Ticks * 100 /* ns */;
-                if (Interlocked.Read(ref lastNS) < curNS)
-                {
-                    Interlocked.Exchange(ref lastNS, curNS);
-                }
+                Interlocked.Exchange(ref lastNS, targetNS);
 
+                long curNS = startNS;
+                
                 // While loop because Thread.sleep doesn't always sleep
                 // enough:
                 while (true)

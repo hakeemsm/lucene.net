@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace Lucene.Net.Index
+﻿namespace Lucene.Net.Index
 {
     public sealed class NoMergeScheduler : MergeScheduler
     {
@@ -18,7 +13,7 @@ namespace Lucene.Net.Index
         {
         }
 
-        public override void Merge(IndexWriter writer, MergeTrigger trigger, bool newMergesFound)
+        public override void Merge(IndexWriter writer, MergePolicy.MergeTrigger trigger, bool newMergesFound)
         {
         }
 

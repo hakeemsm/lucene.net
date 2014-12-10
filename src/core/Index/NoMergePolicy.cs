@@ -30,7 +30,7 @@ namespace Lucene.Net.Index
             return null;
         }
 
-        public override MergeSpecification FindForcedMerges(SegmentInfos segmentInfos, int maxSegmentCount, IDictionary<SegmentInfoPerCommit, bool> segmentsToMerge)
+        public override MergeSpecification FindForcedMerges(SegmentInfos segmentInfos, int maxSegmentCount, IDictionary<SegmentCommitInfo, bool> segmentsToMerge)
         {
             return null;
         }
@@ -40,7 +40,7 @@ namespace Lucene.Net.Index
             return null;
         }
 
-        public override bool UseCompoundFile(SegmentInfos segments, SegmentInfoPerCommit newSegment)
+        public override bool UseCompoundFile(SegmentInfos segments, SegmentCommitInfo newSegment)
         {
             return useCompoundFile;
         }

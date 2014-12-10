@@ -58,6 +58,11 @@ namespace Lucene.Net.Index
             return MultiDocValues.GetNumericValues(in_renamed, field);
         }
 
+		public override IBits GetDocsWithField(string field)
+		{
+			EnsureOpen();
+			return MultiDocValues.GetDocsWithField(in_renamed, field);
+		}
         public override BinaryDocValues GetBinaryDocValues(string field)
         {
             EnsureOpen();
@@ -226,5 +231,13 @@ namespace Lucene.Net.Index
             // TODO: as this is a wrapper, should we really close the delegate?
             in_renamed.Dispose();
         }
+		public override void CheckIntegrity()
+		{
+			EnsureOpen();
+			foreach (AtomicReaderContext ctx in in_renamed.Leaves)
+			{
+				((AtomicReader)ctx.Reader).CheckIntegrity();
+			}
+		}
     }
 }

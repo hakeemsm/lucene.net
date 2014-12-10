@@ -8,7 +8,7 @@ using System.Threading;
 
 namespace Lucene.Net.Index
 {
-    internal sealed class DocumentsWriterDeleteQueue
+    public sealed class DocumentsWriterDeleteQueue
     {
         private Node tail; // .NET port: can't use type without specifying type parameter, also not volatile due to Interlocked
 

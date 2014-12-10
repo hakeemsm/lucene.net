@@ -11,6 +11,10 @@ namespace Lucene.Net.Support
             _value = value;
         }
 
+        public AtomicInteger()
+        {
+        }
+
 
         //Keeping Get & Set separate to match with Java
         public int Get()
@@ -31,6 +35,11 @@ namespace Lucene.Net.Support
         public int DecrementAndGet()
         {
             return (int)Interlocked.Decrement(ref _value);
+        }
+
+        public int AddAndGet(int value)
+        {
+            return (int)Interlocked.Add(ref _value, value);
         }
     }
 }

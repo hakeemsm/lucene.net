@@ -9,6 +9,7 @@ using System.Text;
 
 namespace Lucene.Net.Codecs.Lucene3x
 {
+	[Obsolete(@"Only for reading existing 3.x indexes")]
     internal sealed class Lucene3xStoredFieldsReader : StoredFieldsReader, ICloneable, IDisposable
     {
         private const int FORMAT_SIZE = 4;
@@ -249,19 +250,16 @@ namespace Lucene.Net.Codecs.Lucene3x
                         throw new CorruptIndexException("Invalid numeric type: " + numeric.ToString("X"));
                 }
             }
+            int length = fieldsStream.ReadVInt();
+            sbyte[] bytes = new sbyte[length];
+            fieldsStream.ReadBytes(bytes, 0, length);
+            if ((bits & FIELD_IS_BINARY) != 0)
+            {
+                visitor.BinaryField(info, bytes);
+            }
             else
             {
-                int length = fieldsStream.ReadVInt();
-                sbyte[] bytes = new sbyte[length];
-                fieldsStream.ReadBytes(bytes, 0, length);
-                if ((bits & FIELD_IS_BINARY) != 0)
-                {
-                    visitor.BinaryField(info, bytes);
-                }
-                else
-                {
-                    visitor.StringField(info, IOUtils.CHARSET_UTF_8.GetString((byte[])(Array)bytes));
-                }
+                visitor.StringField(info, IOUtils.CHARSET_UTF_8.GetString((byte[])(Array)bytes));
             }
         }
 
@@ -284,11 +282,21 @@ namespace Lucene.Net.Codecs.Lucene3x
                         throw new CorruptIndexException("Invalid numeric type: " + numeric.ToString("X"));
                 }
             }
-            else
-            {
-                int length = fieldsStream.ReadVInt();
-                fieldsStream.Seek(fieldsStream.FilePointer + length);
-            }
+            int length = fieldsStream.ReadVInt();
+            fieldsStream.Seek(fieldsStream.FilePointer + length);
         }
+		public override long RamBytesUsed
+		{
+		    get
+		    {
+		        // everything is stored on disk
+		        return 0;
+		    }
+		}
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public override void CheckIntegrity()
+		{
+		}
     }
 }

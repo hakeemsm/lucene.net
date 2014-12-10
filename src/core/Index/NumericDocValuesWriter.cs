@@ -12,15 +12,18 @@ namespace Lucene.Net.Index
     {
         private const long MISSING = 0L;
 
-        private AppendingLongBuffer pending;
+		private AppendingDeltaPackedLongBuffer pending;
         private Counter iwBytesUsed;
         private long bytesUsed;
+		private FixedBitSet docsWithField;
         private FieldInfo fieldInfo;
 
-        public NumericDocValuesWriter(FieldInfo fieldInfo, Counter iwBytesUsed)
+		public NumericDocValuesWriter(FieldInfo fieldInfo, Counter iwBytesUsed, bool trackDocsWithField
+			)
         {
-            pending = new AppendingLongBuffer();
-            bytesUsed = pending.RamBytesUsed;
+			pending = new AppendingDeltaPackedLongBuffer(PackedInts.COMPACT);
+			docsWithField = trackDocsWithField ? new FixedBitSet(64) : null;
+			bytesUsed = pending.RamBytesUsed + DocsWithFieldBytesUsed();
             this.fieldInfo = fieldInfo;
             this.iwBytesUsed = iwBytesUsed;
             iwBytesUsed.AddAndGet(bytesUsed);
@@ -40,18 +43,28 @@ namespace Lucene.Net.Index
             }
 
             pending.Add(value);
-
+			if (docsWithField != null)
+			{
+				docsWithField = FixedBitSet.EnsureCapacity(docsWithField, docID);
+				docsWithField.Set(docID);
+			}
             UpdateBytesUsed();
         }
 
+		private long DocsWithFieldBytesUsed()
+		{
+			// size of the long[] + some overhead
+			return docsWithField == null ? 0 : RamUsageEstimator.SizeOf(docsWithField.GetBits
+				()) + 64;
+		}
         private void UpdateBytesUsed()
         {
-            long newBytesUsed = pending.RamBytesUsed;
+			long newBytesUsed = pending.RamBytesUsed + DocsWithFieldBytesUsed();
             iwBytesUsed.AddAndGet(newBytesUsed - bytesUsed);
             bytesUsed = newBytesUsed;
         }
 
-        internal override void Finish(int numDoc)
+		internal override void Finish(int maxDoc)
         {
         }
 

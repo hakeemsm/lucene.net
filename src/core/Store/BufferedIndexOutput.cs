@@ -16,6 +16,8 @@
  */
 
 using System;
+using Lucene.Net.Support;
+using Buffer = System.Buffer;
 
 namespace Lucene.Net.Store
 {
@@ -30,7 +32,7 @@ namespace Lucene.Net.Store
         private int bufferPosition = 0; // position in buffer
 
         private bool isDisposed;
-
+		private readonly CRC32 crc = new CRC32();
         public BufferedIndexOutput()
             : this(DEFAULT_BUFFER_SIZE)
         {
@@ -85,6 +87,7 @@ namespace Lucene.Net.Store
                     if (bufferPosition > 0)
                         Flush();
                     // and write data at once
+					crc.Update(b, offset, length);
                     FlushBuffer(b, offset, length);
                     bufferStart += length;
                 }
@@ -114,6 +117,7 @@ namespace Lucene.Net.Store
         /// <summary>Forces any buffered output to be written. </summary>
         public override void Flush()
         {
+			crc.Update(buffer, 0, bufferPosition);
             FlushBuffer(buffer, bufferPosition);
             bufferStart += bufferPosition;
             bufferPosition = 0;
@@ -181,5 +185,10 @@ namespace Lucene.Net.Store
         {
             get { return bufferSize; }
         }
+		public override long GetChecksum()
+		{
+			Flush();
+			return crc.Value;
+		}
     }
 }

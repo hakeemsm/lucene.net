@@ -486,7 +486,7 @@ namespace Lucene.Net.Codecs.Lucene3x
             }
 
             // NOTE: slow!  (linear scan)
-            public override SeekStatus SeekCeil(BytesRef text, bool useCache)
+            public override SeekStatus SeekCeil(BytesRef text)
             {
                 IComparer<BytesRef> comparator = Comparator;
                 for (int i = 0; i < numTerms; i++)
@@ -827,5 +827,18 @@ namespace Lucene.Net.Codecs.Lucene3x
                 return true;
             }
         }
+		public override long RamBytesUsed
+		{
+		    get
+		    {
+		        // everything is disk-based
+		        return 0;
+		    }
+		}
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public override void CheckIntegrity()
+		{
+		}
     }
 }

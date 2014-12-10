@@ -56,7 +56,7 @@ namespace Lucene.Net.Index
                 NumericDocValues v = ((AtomicReader)context.Reader).GetNormValues(field);
                 if (v == null)
                 {
-                    v = NumericDocValues.EMPTY;
+					v = DocValues.EMPTY_NUMERIC;
                 }
                 else
                 {
@@ -112,7 +112,7 @@ namespace Lucene.Net.Index
                 NumericDocValues v = ((AtomicReader)context.Reader).GetNumericDocValues(field);
                 if (v == null)
                 {
-                    v = NumericDocValues.EMPTY;
+					v = DocValues.EMPTY_NUMERIC;
                 }
                 else
                 {
@@ -151,6 +151,62 @@ namespace Lucene.Net.Index
             }
         }
 
+		public static IBits GetDocsWithField(IndexReader r, string field)
+		{
+			IList<AtomicReaderContext> leaves = r.Leaves;
+			int size = leaves.Count;
+			if (size == 0)
+			{
+				return null;
+			}
+			else
+			{
+				if (size == 1)
+				{
+					return ((AtomicReader)leaves[0].Reader).GetDocsWithField(field);
+				}
+			}
+			bool anyReal = false;
+			bool anyMissing = false;
+			var values = new IBits[size];
+			var starts = new int[size + 1];
+			for (int i = 0; i < size; i++)
+			{
+				AtomicReaderContext context = leaves[i];
+				IBits v = ((AtomicReader)context.Reader).GetDocsWithField(field);
+				if (v == null)
+				{
+					v = new Bits.MatchNoBits(context.Reader.MaxDoc);
+					anyMissing = true;
+				}
+				else
+				{
+					anyReal = true;
+					if (v is Bits.MatchAllBits == false)
+					{
+						anyMissing = true;
+					}
+				}
+				values[i] = v;
+				starts[i] = context.docBase;
+			}
+			starts[size] = r.MaxDoc;
+			if (!anyReal)
+			{
+				return null;
+			}
+			else
+			{
+				if (!anyMissing)
+				{
+					return new Bits.MatchAllBits(r.MaxDoc);
+				}
+				else
+				{
+					return new MultiBits(values, starts, false);
+				}
+			}
+		}
         public static BinaryDocValues GetBinaryValues(IndexReader r, string field)
         {
             IList<AtomicReaderContext> leaves = r.Leaves;
@@ -174,7 +230,7 @@ namespace Lucene.Net.Index
                 BinaryDocValues v = ((AtomicReader)context.Reader).GetBinaryDocValues(field);
                 if (v == null)
                 {
-                    v = BinaryDocValues.EMPTY;
+					v = DocValues.EMPTY_BINARY;
                 }
                 else
                 {
@@ -218,7 +274,7 @@ namespace Lucene.Net.Index
                 SortedDocValues v = ((AtomicReader)context.Reader).GetSortedDocValues(field);
                 if (v == null)
                 {
-                    v = SortedDocValues.EMPTY;
+					v = DocValues.EMPTY_SORTED;
                 }
                 else
                 {
@@ -268,7 +324,7 @@ namespace Lucene.Net.Index
                 SortedSetDocValues v = ((AtomicReader)context.Reader).GetSortedSetDocValues(field);
                 if (v == null)
                 {
-                    v = SortedSetDocValues.EMPTY;
+					v = DocValues.EMPTY_SORTED_SET;
                 }
                 else
                 {
@@ -301,7 +357,7 @@ namespace Lucene.Net.Index
 
             internal readonly MonotonicAppendingLongBuffer globalOrdDeltas;
 
-            internal readonly AppendingLongBuffer subIndexes;
+			internal readonly AppendingPackedLongBuffer firstSegments;
 
             internal readonly MonotonicAppendingLongBuffer[] ordDeltas;
 
@@ -310,8 +366,8 @@ namespace Lucene.Net.Index
                 // create the ordinal mappings by pulling a termsenum over each sub's 
                 // unique terms, and walking a multitermsenum over those
                 this.owner = owner;
-                globalOrdDeltas = new MonotonicAppendingLongBuffer();
-                subIndexes = new AppendingLongBuffer();
+				globalOrdDeltas = new MonotonicAppendingLongBuffer(PackedInts.COMPACT);
+				firstSegments = new AppendingPackedLongBuffer(PackedInts.COMPACT);
                 ordDeltas = new MonotonicAppendingLongBuffer[subs.Length];
                 for (int i = 0; i < ordDeltas.Length; i++)
                 {
@@ -333,45 +389,60 @@ namespace Lucene.Net.Index
                     TermsEnumWithSlice[] matches = mte.MatchArray;
                     for (int i = 0; i < mte.MatchCount; i++)
                     {
-                        int subIndex = matches[i].index;
+						int segmentIndex = matches[i].index;
                         long segmentOrd = matches[i].terms.Ord;
                         long delta = globalOrd - segmentOrd;
                         // for each unique term, just mark the first subindex/delta where it occurs
                         if (i == 0)
                         {
-                            subIndexes.Add(subIndex);
+							firstSegments.Add(segmentIndex);
                             globalOrdDeltas.Add(delta);
                         }
                         // for each per-segment ord, map it back to the global term.
-                        while (segmentOrds[subIndex] <= segmentOrd)
+						while (segmentOrds[segmentIndex] <= segmentOrd)
                         {
-                            ordDeltas[subIndex].Add(delta);
-                            segmentOrds[subIndex]++;
+							ordDeltas[segmentIndex].Add(delta);
+							segmentOrds[segmentIndex]++;
                         }
                     }
                     globalOrd++;
                 }
+				firstSegments.Freeze();
+				globalOrdDeltas.Freeze();
+				for (int i_3 = 0; i_3 < ordDeltas.Length; ++i_3)
+				{
+					ordDeltas[i_3].Freeze();
+				}
             }
 
-            public long GetGlobalOrd(int subIndex, long segmentOrd)
+			public virtual long GetGlobalOrd(int segmentIndex, long segmentOrd)
             {
-                return segmentOrd + ordDeltas[subIndex].Get(segmentOrd);
+				return segmentOrd + ordDeltas[segmentIndex].Get(segmentOrd);
             }
 
-            public long GetSegmentOrd(int subIndex, long globalOrd)
+			public virtual long GetFirstSegmentOrd(long globalOrd)
             {
                 return globalOrd - globalOrdDeltas.Get(globalOrd);
             }
 
-            public int GetSegmentNumber(long globalOrd)
+			public virtual int GetFirstSegmentNumber(long globalOrd)
             {
-                return (int)subIndexes.Get(globalOrd);
+				return (int)firstSegments.Get(globalOrd);
             }
 
             public long ValueCount
             {
                 get { return globalOrdDeltas.Size; }
             }
+			public virtual long RamBytesUsed()
+			{
+				long size = globalOrdDeltas.RamBytesUsed + firstSegments.RamBytesUsed;
+				for (int i = 0; i < ordDeltas.Length; i++)
+				{
+					size += ordDeltas[i].RamBytesUsed;
+				}
+				return size;
+			}
         }
 
         public class MultiSortedDocValues : SortedDocValues
@@ -395,13 +466,14 @@ namespace Lucene.Net.Index
             {
                 int subIndex = ReaderUtil.SubIndex(docID, docStarts);
                 int segmentOrd = values[subIndex].GetOrd(docID - docStarts[subIndex]);
-                return (int)mapping.GetGlobalOrd(subIndex, segmentOrd);
+				return segmentOrd == -1 ? segmentOrd : (int)mapping.GetGlobalOrd(subIndex, segmentOrd
+					);
             }
 
             public override void LookupOrd(int ord, BytesRef result)
             {
-                int subIndex = mapping.GetSegmentNumber(ord);
-                int segmentOrd = (int)mapping.GetSegmentOrd(subIndex, ord);
+				int subIndex = mapping.GetFirstSegmentNumber(ord);
+				int segmentOrd = (int)mapping.GetFirstSegmentOrd(ord);
                 values[subIndex].LookupOrd(segmentOrd, result);
             }
 
@@ -448,8 +520,8 @@ namespace Lucene.Net.Index
 
             public override void LookupOrd(long ord, BytesRef result)
             {
-                int subIndex = mapping.GetSegmentNumber(ord);
-                long segmentOrd = mapping.GetSegmentOrd(subIndex, ord);
+				int subIndex = mapping.GetFirstSegmentNumber(ord);
+				long segmentOrd = mapping.GetFirstSegmentOrd(ord);
                 values[subIndex].LookupOrd(segmentOrd, result);
             }
 

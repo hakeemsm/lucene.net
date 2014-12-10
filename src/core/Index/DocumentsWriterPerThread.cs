@@ -102,7 +102,7 @@ namespace Lucene.Net.Index
             internal readonly IMutableBits liveDocs;
             internal readonly int delCount;
 
-			private FlushedSegment(SegmentCommitInfo segmentInfo, FieldInfos fieldInfos, BufferedUpdates
+            internal FlushedSegment(SegmentCommitInfo segmentInfo, FieldInfos fieldInfos, BufferedUpdates
 				 segmentUpdates, IMutableBits liveDocs, int delCount)
             {
                 this.segmentInfo = segmentInfo;
@@ -466,9 +466,9 @@ namespace Lucene.Net.Index
             //assert deleteSlice == null : "all deletes must be applied in prepareFlush";
             segmentInfo.DocCount = numDocsInRAM;
 			SegmentWriteState flushState = new SegmentWriteState(infoStream, directory, segmentInfo
-				, fieldInfos.Finish(), indexWriterConfig.GetTermIndexInterval(), pendingUpdates, 
-				new IOContext(new FlushInfo(numDocsInRAM, BytesUsed())));
-			double startMBUsed = BytesUsed() / 1024. / 1024.;
+				, fieldInfos.Finish(), indexWriterConfig.TermIndexInterval, pendingUpdates, 
+				new IOContext(new FlushInfo(numDocsInRAM, BytesUsed)));
+			double startMBUsed = BytesUsed / 1024.0 / 1024.0;
 
             // Apply delete-by-docID now (delete-byDocID only
             // happens when an exception is hit processing that
@@ -476,7 +476,7 @@ namespace Lucene.Net.Index
 			if (pendingUpdates.docIDs.Count > 0)
             {
                 flushState.liveDocs = codec.LiveDocsFormat.NewLiveDocs(numDocsInRAM);
-                foreach (int delDocID in pendingDeletes.docIDs)
+				foreach (int delDocID in pendingUpdates.docIDs)
                 {
                     flushState.liveDocs.Clear(delDocID);
                 }
@@ -523,8 +523,8 @@ namespace Lucene.Net.Index
                     infoStream.Message("DWPT", "flushed codec=" + codec);
                 }
 				BufferedUpdates segmentDeletes;
-				if (pendingUpdates.queries.IsEmpty() && pendingUpdates.numericUpdates.IsEmpty() &&
-					 pendingUpdates.binaryUpdates.IsEmpty())
+				if (!pendingUpdates.queries.Any() && !pendingUpdates.numericUpdates.Any() &&
+					 !pendingUpdates.binaryUpdates.Any())
 				{
 					pendingUpdates.Clear();
 					segmentDeletes = null;
@@ -536,7 +536,7 @@ namespace Lucene.Net.Index
 
                 if (infoStream.IsEnabled("DWPT"))
                 {
-                    double newSegmentSize = segmentInfoPerCommit.SizeInBytes / 1024.0 / 1024.0;
+                    double newSegmentSize = segmentInfoPerCommit.SizeInBytes() / 1024.0 / 1024.0;
                     infoStream.Message("DWPT", "flushed: segment=" + segmentInfo.name +
                             " ramUsed=" + startMBUsed.ToString(nf) + " MB" +
                             " newFlushedSize(includes docstores)=" + newSegmentSize.ToString(nf) + " MB" +
@@ -575,12 +575,12 @@ namespace Lucene.Net.Index
 
             IndexWriter.SetDiagnostics(newSegment.info, IndexWriter.SOURCE_FLUSH);
 
-            IOContext context = new IOContext(new FlushInfo(newSegment.info.DocCount, newSegment.SizeInBytes));
+            IOContext context = new IOContext(new FlushInfo(newSegment.info.DocCount, newSegment.SizeInBytes()));
 
             bool success = false;
             try
             {
-				if (indexWriterConfig.GetUseCompoundFile())
+				if (indexWriterConfig.UseCompoundFile)
                 {
 
                     // Now build compound file
@@ -636,7 +636,6 @@ namespace Lucene.Net.Index
                         infoStream.Message("DWPT", "hit exception " +
                             "reating compound file for newly flushed segment " + newSegment.info.name);
                     }
-                    writer.FlushFailed(newSegment.info);
                 }
             }
         }
@@ -648,7 +647,7 @@ namespace Lucene.Net.Index
 
         internal long BytesUsed
         {
-            get { return bytesUsed.Get() + pendingDeletes.bytesUsed; }
+            get { return bytesUsed.Get() + pendingUpdates.bytesUsed.Get(); }
         }
 
         internal const int BYTE_BLOCK_NOT_MASK = ~ByteBlockPool.BYTE_BLOCK_MASK;
@@ -685,9 +684,9 @@ namespace Lucene.Net.Index
 
         public override string ToString()
         {
-            return "DocumentsWriterPerThread [pendingDeletes=" + pendingDeletes
-              + ", segment=" + (segmentInfo != null ? segmentInfo.name : "null") + ", aborting=" + aborting + ", numDocsInRAM="
-                + numDocsInRAM + ", deleteQueue=" + deleteQueue + "]";
+			return "DocumentsWriterPerThread [pendingDeletes=" + pendingUpdates + ", segment="
+				 + (segmentInfo != null ? segmentInfo.name : "null") + ", aborting=" + aborting 
+				+ ", numDocsInRAM=" + numDocsInRAM + ", deleteQueue=" + deleteQueue + "]";
         }
     }
 }

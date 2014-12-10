@@ -72,9 +72,9 @@ namespace Lucene.Net.Index
 						return true;
 					}
 				}
-				foreach (BinaryDocValuesFieldUpdates updates_1 in binaryDVUpdates.Values)
+				foreach (BinaryDocValuesFieldUpdates updates2 in binaryDVUpdates.Values)
 				{
-					if (updates_1.Any())
+					if (updates2.Any())
 					{
 						return true;
 					}
@@ -87,19 +87,18 @@ namespace Lucene.Net.Index
 				return numericDVUpdates.Count + binaryDVUpdates.Count;
 			}
 
-			internal virtual DocValuesFieldUpdates GetUpdates(string field, DocValuesFieldUpdates.Type
-				 type)
+			internal virtual DocValuesFieldUpdates GetUpdates(string field, Type type)
 			{
 				switch (type)
 				{
-					case DocValuesFieldUpdates.Type.NUMERIC:
+					case Type.NUMERIC:
 					{
-						return numericDVUpdates.Get(field);
+						return numericDVUpdates[field];
 					}
 
-					case DocValuesFieldUpdates.Type.BINARY:
+					case Type.BINARY:
 					{
-						return binaryDVUpdates.Get(field);
+						return binaryDVUpdates[field];
 					}
 
 					default:
@@ -109,28 +108,25 @@ namespace Lucene.Net.Index
 				}
 			}
 
-			internal virtual DocValuesFieldUpdates NewUpdates(string field, DocValuesFieldUpdates.Type
-				 type, int maxDoc)
+			internal virtual DocValuesFieldUpdates NewUpdates(string field, Type type, int maxDoc)
 			{
 				switch (type)
 				{
-					case DocValuesFieldUpdates.Type.NUMERIC:
+					case Type.NUMERIC:
 					{
 						//HM:revisit 
 						//assert numericDVUpdates.get(field) == null;
-						NumericDocValuesFieldUpdates numericUpdates = new NumericDocValuesFieldUpdates(field
-							, maxDoc);
-						numericDVUpdates.Put(field, numericUpdates);
+						var numericUpdates = new NumericDocValuesFieldUpdates(field, maxDoc);
+						numericDVUpdates[field] = numericUpdates;
 						return numericUpdates;
 					}
 
-					case DocValuesFieldUpdates.Type.BINARY:
+					case Type.BINARY:
 					{
 						//HM:revisit 
 						//assert binaryDVUpdates.get(field) == null;
-						BinaryDocValuesFieldUpdates binaryUpdates = new BinaryDocValuesFieldUpdates(field
-							, maxDoc);
-						binaryDVUpdates.Put(field, binaryUpdates);
+						var binaryUpdates = new BinaryDocValuesFieldUpdates(field, maxDoc);
+						binaryDVUpdates[field] = binaryUpdates;
 						return binaryUpdates;
 					}
 
@@ -172,7 +168,7 @@ namespace Lucene.Net.Index
 		/// over the updated documents and their
 		/// values.
 		/// </summary>
-		public abstract Iterator GetIterator();
+		internal abstract Iterator GetIterator();
 
 		/// <summary>
 		/// Merge with another
