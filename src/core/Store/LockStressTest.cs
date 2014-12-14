@@ -118,7 +118,7 @@ namespace Lucene.Net.Store
                 if (obtained)
                 {
                     Console.Out.Write("l");
-                    l.Release();
+                    l.Dispose();
                 }
                 Thread.Sleep(new TimeSpan((Int64)10000 * sleepTimeMS));
             }

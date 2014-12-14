@@ -380,5 +380,9 @@ namespace Lucene.Net.Codecs.Lucene3x
             Get(term, true);
             return (SegmentTermEnum)GetThreadResources().termEnum.Clone();
         }
+		internal long RamBytesUsed()
+		{
+			return index == null ? 0 : index.RamBytesUsed();
+		}
     }
 }

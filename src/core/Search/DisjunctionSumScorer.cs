@@ -35,8 +35,7 @@ namespace Lucene.Net.Search
         private readonly float[] coord;
 
 
-        public DisjunctionSumScorer(Weight weight, Scorer[] subScorers, float[] coord)
-            : base(weight, subScorers, subScorers.Length)
+        public DisjunctionSumScorer(Weight weight, Scorer[] subScorers, float[] coord) : base(weight, subScorers)
         {
             if (numScorers <= 1)
             {
@@ -46,32 +45,8 @@ namespace Lucene.Net.Search
             this.coord = coord;
         }
 
-        public override int NextDoc()
-        {
-            //assert doc != NO_MORE_DOCS;
-            while (true)
-            {
-                if (subScorers[0].NextDoc() != NO_MORE_DOCS)
-                {
-                    HeapAdjust(0);
-                }
-                else
-                {
-                    HeapRemoveRoot();
-                    if (numScorers == 0)
-                    {
-                        return doc = NO_MORE_DOCS;
-                    }
-                }
-                if (subScorers[0].DocID != doc)
-                {
-                    AfterNext();
-                    return doc;
-                }
-            }
-        }
 
-        private void AfterNext()
+		protected internal override void AfterNext()
         {
             Scorer sub = subScorers[0];
             doc = sub.DocID;
@@ -107,49 +82,11 @@ namespace Lucene.Net.Search
             return (float)score * coord[nrMatchers];
         }
 
-        public override int DocID
-        {
-            get { return doc; }
-        }
 
         public override int Freq
         {
             get { return nrMatchers; }
         }
 
-        /// <summary> Advances to the first match beyond the current whose document number is
-        /// greater than or equal to a given target. <br/>
-        /// The implementation uses the skipTo() method on the subscorers.
-        /// 
-        /// </summary>
-        /// <param name="target">The target document number.
-        /// </param>
-        /// <returns> the document whose number is greater than or equal to the given
-        /// target, or -1 if none exist.
-        /// </returns>
-        public override int Advance(int target)
-        {
-            //assert doc != NO_MORE_DOCS;
-            while (true)
-            {
-                if (subScorers[0].Advance(target) != NO_MORE_DOCS)
-                {
-                    HeapAdjust(0);
-                }
-                else
-                {
-                    HeapRemoveRoot();
-                    if (numScorers == 0)
-                    {
-                        return doc = NO_MORE_DOCS;
-                    }
-                }
-                if (subScorers[0].DocID >= target)
-                {
-                    AfterNext();
-                    return doc;
-                }
-            }
-        }
     }
 }

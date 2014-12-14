@@ -48,9 +48,9 @@ namespace Lucene.Net.Index
 		public static readonly NumericDocValues EMPTY_NUMERIC = new _NumericDocValues_46(
 			);
 
-		private sealed class _SortedDocValues_56 : SortedDocValues
+		private sealed class AnonymousSortedDocValues : SortedDocValues
 		{
-			public _SortedDocValues_56()
+			public AnonymousSortedDocValues()
 			{
 			}
 
@@ -66,9 +66,9 @@ namespace Lucene.Net.Index
 				result.length = 0;
 			}
 
-			public override int GetValueCount()
+			public override int ValueCount
 			{
-				return 0;
+			    get { return 0; }
 			}
 		}
 
@@ -78,17 +78,17 @@ namespace Lucene.Net.Index
 		/// 	</see>
 		/// for every document
 		/// </summary>
-		public static readonly SortedDocValues EMPTY_SORTED = new _SortedDocValues_56();
+		public static readonly SortedDocValues EMPTY_SORTED = new AnonymousSortedDocValues();
 
-		private sealed class _RandomAccessOrds_78 : RandomAccessOrds
+		private sealed class AnonymousRandomAccessOrds : RandomAccessOrds
 		{
-			public _RandomAccessOrds_78()
+			public AnonymousRandomAccessOrds()
 			{
 			}
 
 			public override long NextOrd()
 			{
-				return SortedSetDocValues.NO_MORE_ORDS;
+				return NO_MORE_ORDS;
 			}
 
 			public override void SetDocument(int docID)
@@ -100,9 +100,9 @@ namespace Lucene.Net.Index
 				throw new IndexOutOfRangeException();
 			}
 
-			public override long GetValueCount()
+			public override long ValueCount
 			{
-				return 0;
+			    get { return 0; }
 			}
 
 			public override long OrdAt(int index)
@@ -121,7 +121,7 @@ namespace Lucene.Net.Index
 		/// <see cref="SortedSetDocValues.NO_MORE_ORDS">SortedSetDocValues.NO_MORE_ORDS</see>
 		/// for every document
 		/// </summary>
-		public static readonly SortedSetDocValues EMPTY_SORTED_SET = new _RandomAccessOrds_78
+		public static readonly SortedSetDocValues EMPTY_SORTED_SET = new AnonymousRandomAccessOrds
 			();
 
 		/// <summary>Returns a multi-valued view over the provided SortedDocValues</summary>

@@ -237,6 +237,11 @@ namespace Lucene.Net.Search
             {
                 limit = 1;
             }
+			if (after != null && after.Doc >= limit)
+			{
+				throw new ArgumentException("after.doc exceeds the number of documents in the reader: after.doc="
+					 + after.Doc + " limit=" + limit);
+			}
             nDocs = Math.Min(nDocs, limit);
 
             if (executor == null)
@@ -383,7 +388,7 @@ namespace Lucene.Net.Search
                     // continue with the following leaf
                     continue;
                 }
-                Scorer scorer = weight.Scorer(ctx, !collector.AcceptsDocsOutOfOrder, true, ctx.AtomicReader.LiveDocs);
+				BulkScorer scorer = weight.BulkScorer(ctx, !collector.AcceptsDocsOutOfOrder, ((AtomicReader)ctx.Reader).LiveDocs);
                 if (scorer != null)
                 {
                     try
@@ -522,46 +527,7 @@ namespace Lucene.Net.Search
                 this.doMaxScore = doMaxScore;
             }
 
-            internal sealed class FakeScorer : Scorer
-            {
-                internal float score;
-                internal int doc;
-
-                public FakeScorer()
-                    : base(null)
-                {
-                }
-
-                public override int Advance(int target)
-                {
-                    throw new NotSupportedException("FakeScorer doesn't support advance(int)");
-                }
-
-                public override int DocID
-                {
-                    get { return doc; }
-                }
-
-                public override int Freq
-                {
-                    get { throw new NotSupportedException("FakeScorer doesn't support freq()"); }
-                }
-
-                public override int NextDoc()
-                {
-                    throw new NotSupportedException("FakeScorer doesn't support nextDoc()");
-                }
-
-                public override float Score()
-                {
-                    return score;
-                }
-
-                public override long Cost
-                {
-                    get { return 1; }
-                }
-            }
+            
 
             private readonly FakeScorer fakeScorer = new FakeScorer();
 

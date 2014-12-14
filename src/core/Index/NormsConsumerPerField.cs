@@ -35,7 +35,7 @@ namespace Lucene.Net.Index
                 if (consumer == null)
                 {
                     fieldInfo.NormType = FieldInfo.DocValuesType.NUMERIC;
-                    consumer = new NumericDocValuesWriter(fieldInfo, docState.docWriter.bytesUsed);
+                    consumer = new NumericDocValuesWriter(fieldInfo, docState.docWriter.bytesUsed,false);
                 }
                 consumer.AddValue(docState.docID, similarity.ComputeNorm(fieldState));
             }

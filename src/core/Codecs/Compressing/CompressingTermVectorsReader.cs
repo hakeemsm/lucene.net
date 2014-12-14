@@ -855,6 +855,7 @@ namespace Lucene.Net.Codecs.Compressing
 			{
 			    get { return true; }
 			}
+			
             public override bool HasOffsets
             {
                 get { return (flags & CompressingTermVectorsWriter.OFFSETS) != 0; }
@@ -983,9 +984,9 @@ namespace Lucene.Net.Codecs.Compressing
                 get { return term; }
             }
 
-			public override long Ord()
+			public override long Ord
             {
-				throw new NotSupportedException();
+			    get { throw new NotSupportedException(); }
             }
 
             public override int DocFreq
@@ -1212,9 +1213,9 @@ namespace Lucene.Net.Codecs.Compressing
             return sum;
         }
 
-		public override long RamBytesUsed()
+		public override long RamBytesUsed
 		{
-			return indexReader.RamBytesUsed();
+		    get { return indexReader.RamBytesUsed(); }
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>

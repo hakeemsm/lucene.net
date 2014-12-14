@@ -22,8 +22,8 @@ namespace Lucene.Net.Codecs
 
         public abstract void AddSortedSetField(FieldInfo field, IEnumerable<BytesRef> values, IEnumerable<int> docToOrdCount, IEnumerable<long> ords);
 
-		public virtual void MergeNumericField(FieldInfo fieldInfo, MergeState mergeState, 
-			IList<NumericDocValues> toMerge, IList<IBits> docsWithField)
+        public virtual void MergeNumericField(FieldInfo fieldInfo, MergeState mergeState,
+            IList<NumericDocValues> toMerge, IList<IBits> docsWithField)
         {
             AddNumericField(fieldInfo, GetMergeNumericFieldEnumerable(toMerge, mergeState));
         }
@@ -67,7 +67,8 @@ namespace Lucene.Net.Codecs
             }
         }
 
-        public void MergeBinaryField(FieldInfo fieldInfo, MergeState mergeState, IList<BinaryDocValues> toMerge)
+        public virtual void MergeBinaryField(FieldInfo fieldInfo, MergeState mergeState,
+            IList<BinaryDocValues> toMerge, IList<IBits> docsWithField)
         {
             AddBinaryField(fieldInfo, GetMergeBinaryFieldEnumerable(mergeState, toMerge));
         }
@@ -131,12 +132,16 @@ namespace Lucene.Net.Codecs
                 }
                 else
                 {
-                    OpenBitSet bitset = new OpenBitSet(dv.ValueCount);
+                    LongBitSet bitset = new LongBitSet(dv.ValueCount);
                     for (int i = 0; i < reader.MaxDoc; i++)
                     {
                         if (liveDocs[i])
                         {
-                            bitset.Set(dv.GetOrd(i));
+                            int ord = dv.GetOrd(i);
+                            if (ord >= 0)
+                            {
+                                bitset.Set(ord);
+                            }
                         }
                     }
                     liveTerms[sub] = new BitsFilteredTermsEnum(dv.TermsEnum, bitset);
@@ -157,8 +162,8 @@ namespace Lucene.Net.Codecs
 
             while (currentOrd < map.ValueCount)
             {
-                int segmentNumber = map.GetSegmentNumber(currentOrd);
-                int segmentOrd = (int)map.GetSegmentOrd(segmentNumber, currentOrd);
+                int segmentNumber = map.GetFirstSegmentNumber(currentOrd);
+                int segmentOrd = (int)map.GetFirstSegmentOrd(currentOrd);
                 dvs[segmentNumber].LookupOrd(segmentOrd, scratch);
                 currentOrd++;
                 yield return scratch;
@@ -221,7 +226,7 @@ namespace Lucene.Net.Codecs
                 }
                 else
                 {
-                    OpenBitSet bitset = new OpenBitSet(dv.ValueCount);
+                    LongBitSet bitset = new LongBitSet(dv.ValueCount);
                     for (int i = 0; i < reader.MaxDoc; i++)
                     {
                         if (liveDocs[i])
@@ -254,8 +259,8 @@ namespace Lucene.Net.Codecs
 
             while (currentOrd < map.ValueCount)
             {
-                int segmentNumber = map.GetSegmentNumber(currentOrd);
-                long segmentOrd = map.GetSegmentOrd(segmentNumber, currentOrd);
+                int segmentNumber = map.GetFirstSegmentNumber(currentOrd);
+                long segmentOrd = map.GetFirstSegmentOrd(currentOrd);
                 dvs[segmentNumber].LookupOrd(segmentOrd, scratch);
                 currentOrd++;
                 yield return scratch;
@@ -369,9 +374,9 @@ namespace Lucene.Net.Codecs
 
         internal class BitsFilteredTermsEnum : FilteredTermsEnum
         {
-            internal readonly OpenBitSet liveTerms;
+            internal readonly LongBitSet liveTerms;
 
-            internal BitsFilteredTermsEnum(TermsEnum input, OpenBitSet liveTerms)
+            internal BitsFilteredTermsEnum(TermsEnum input, LongBitSet liveTerms)
                 : base(input, false)
             {
                 //assert liveTerms != null;

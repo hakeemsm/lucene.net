@@ -21,24 +21,27 @@ namespace Lucene.Net.Codecs.Lucene41
 
         // Increment version to change it
         internal const int VERSION_START = 0;
-        internal const int VERSION_CURRENT = VERSION_START;
+		internal const int VERSION_META_ARRAY = 1;
+		internal const int VERSION_CHECKSUM = 2;
+		internal const int VERSION_CURRENT = VERSION_CHECKSUM;
 
         internal readonly IndexOutput docOut;
         internal readonly IndexOutput posOut;
         internal readonly IndexOutput payOut;
 
-        private IndexOutput termsOut;
+		internal static readonly Lucene41PostingsWriter.IntBlockTermState emptyState = new 
+			Lucene41PostingsWriter.IntBlockTermState();
 
-        // How current field indexes postings:
+		internal Lucene41PostingsWriter.IntBlockTermState lastState;
         private bool fieldHasFreqs;
         private bool fieldHasPositions;
         private bool fieldHasOffsets;
         private bool fieldHasPayloads;
 
         // Holds starting file pointers for each term:
-        private long docTermStartFP;
-        private long posTermStartFP;
-        private long payTermStartFP;
+		private long docStartFP;
+		private long posStartFP;
+		private long payStartFP;
 
         internal readonly int[] docDeltaBuffer;
         internal readonly int[] freqBuffer;
@@ -158,14 +161,60 @@ namespace Lucene.Net.Codecs.Lucene41
         {
         }
 
-        public override void Start(IndexOutput termsOut)
-        {
-            this.termsOut = termsOut;
-            CodecUtil.WriteHeader(termsOut, TERMS_CODEC, VERSION_CURRENT);
-            termsOut.WriteVInt(Lucene41PostingsFormat.BLOCK_SIZE);
-        }
+		internal sealed class IntBlockTermState : BlockTermState
+		{
+			internal long docStartFP = 0;
 
-        public override void SetField(FieldInfo fieldInfo)
+			internal long posStartFP = 0;
+
+			internal long payStartFP = 0;
+
+			internal long skipOffset = -1;
+
+			internal long lastPosBlockOffset = -1;
+
+			internal int singletonDocID = -1;
+
+			// docid when there is a single pulsed posting, otherwise -1
+			// freq is always implicitly totalTermFreq in this case.
+			public override object Clone()
+			{
+				var other = new IntBlockTermState();
+				other.CopyFrom(this);
+				return other;
+			}
+
+			public override void CopyFrom(TermState _other)
+			{
+				base.CopyFrom(_other);
+				IntBlockTermState other = (IntBlockTermState)_other;
+				docStartFP = other.docStartFP;
+				posStartFP = other.posStartFP;
+				payStartFP = other.payStartFP;
+				lastPosBlockOffset = other.lastPosBlockOffset;
+				skipOffset = other.skipOffset;
+				singletonDocID = other.singletonDocID;
+			}
+
+			public override string ToString()
+			{
+				return base.ToString() + " docStartFP=" + docStartFP + " posStartFP=" + posStartFP
+					 + " payStartFP=" + payStartFP + " lastPosBlockOffset=" + lastPosBlockOffset + " singletonDocID="
+					 + singletonDocID;
+			}
+		}
+		public override BlockTermState NewTermState()
+		{
+			return new Lucene41PostingsWriter.IntBlockTermState();
+		}
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public override void Init(IndexOutput termsOut)
+		{
+			CodecUtil.WriteHeader(termsOut, TERMS_CODEC, VERSION_CURRENT);
+			termsOut.WriteVInt(Lucene41PostingsFormat.BLOCK_SIZE);
+		}
+		public override int SetField(FieldInfo fieldInfo)
         {
             FieldInfo.IndexOptions indexOptions = fieldInfo.IndexOptionsValue.GetValueOrDefault();
             fieldHasFreqs = indexOptions >= FieldInfo.IndexOptions.DOCS_AND_FREQS;
@@ -173,17 +222,35 @@ namespace Lucene.Net.Codecs.Lucene41
             fieldHasOffsets = indexOptions >= FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS;
             fieldHasPayloads = fieldInfo.HasPayloads;
             skipWriter.SetField(fieldHasPositions, fieldHasOffsets, fieldHasPayloads);
+			lastState = emptyState;
+			if (fieldHasPositions)
+			{
+				if (fieldHasPayloads || fieldHasOffsets)
+				{
+					return 3;
+				}
+				else
+				{
+					// doc + pos + pay FP
+					return 2;
+				}
+			}
+			else
+			{
+				// doc + pos FP
+				return 1;
+			}
         }
 
         public override void StartTerm()
         {
-            docTermStartFP = docOut.FilePointer;
+            docStartFP = docOut.FilePointer;
             if (fieldHasPositions)
             {
-                posTermStartFP = posOut.FilePointer;
+                posStartFP = posOut.FilePointer;
                 if (fieldHasPayloads || fieldHasOffsets)
                 {
-                    payTermStartFP = payOut.FilePointer;
+                    payStartFP = payOut.FilePointer;
                 }
             }
             lastDocID = 0;
@@ -358,8 +425,10 @@ namespace Lucene.Net.Codecs.Lucene41
 
         private readonly IList<PendingTerm> pendingTerms = new List<PendingTerm>();
 
-        public override void FinishTerm(TermStats stats)
+		public override void FinishTerm(BlockTermState _state)
         {
+			Lucene41PostingsWriter.IntBlockTermState state = (Lucene41PostingsWriter.IntBlockTermState
+				)_state;
             //assert stats.docFreq > 0;
 
             // TODO: wasteful we are counting this (counting # docs
@@ -378,7 +447,7 @@ namespace Lucene.Net.Codecs.Lucene41
 
             // docFreq == 1, don't write the single docid/freq to a separate file along with a pointer to it.
             int singletonDocID;
-            if (stats.docFreq == 1)
+			if (state.docFreq == 1)
             {
                 // pulse the singleton docid into the term dictionary, freq is implicitly totalTermFreq
                 singletonDocID = docDeltaBuffer[0];
@@ -420,10 +489,10 @@ namespace Lucene.Net.Codecs.Lucene41
                 // totalTermFreq is just total number of positions(or payloads, or offsets)
                 // associated with current term.
                 //assert stats.totalTermFreq != -1;
-                if (stats.totalTermFreq > Lucene41PostingsFormat.BLOCK_SIZE)
+				if (state.totalTermFreq > Lucene41PostingsFormat.BLOCK_SIZE)
                 {
                     // record file offset for last pos in last block
-                    lastPosBlockOffset = posOut.FilePointer - posTermStartFP;
+					lastPosBlockOffset = posOut.FilePointer - posStartFP;
                 }
                 else
                 {
@@ -513,7 +582,7 @@ namespace Lucene.Net.Codecs.Lucene41
             long skipOffset;
             if (docCount > Lucene41PostingsFormat.BLOCK_SIZE)
             {
-                skipOffset = skipWriter.WriteSkip(docOut) - docTermStartFP;
+				skipOffset = skipWriter.WriteSkip(docOut) - docStartFP;
 
                 // if (DEBUG) {
                 //   System.out.println("skip packet " + (docOut.getFilePointer() - (docTermStartFP + skipOffset)) + " bytes");
@@ -527,87 +596,54 @@ namespace Lucene.Net.Codecs.Lucene41
                 // }
             }
 
-            long payStartFP;
-            if (stats.totalTermFreq >= Lucene41PostingsFormat.BLOCK_SIZE)
-            {
-                payStartFP = payTermStartFP;
-            }
-            else
-            {
-                payStartFP = -1;
-            }
-
-            // if (DEBUG) {
-            //   System.out.println("  payStartFP=" + payStartFP);
-            // }
-
-            pendingTerms.Add(new PendingTerm(docTermStartFP, posTermStartFP, payStartFP, skipOffset, lastPosBlockOffset, singletonDocID));
+			state.docStartFP = docStartFP;
+			state.posStartFP = posStartFP;
+			state.payStartFP = payStartFP;
+			state.singletonDocID = singletonDocID;
+			state.skipOffset = skipOffset;
+			state.lastPosBlockOffset = lastPosBlockOffset;
             docBufferUpto = 0;
             posBufferUpto = 0;
             lastDocID = 0;
             docCount = 0;
         }
 
-        private readonly RAMOutputStream bytesWriter = new RAMOutputStream();
-
-        public override void FlushTermsBlock(int start, int count)
-        {
-            if (count == 0)
-            {
-                termsOut.WriteByte((byte)0);
-                return;
-            }
-
-            //assert start <= pendingTerms.size();
-            //assert count <= start;
-
-            int limit = pendingTerms.Count - start + count;
-
-            long lastDocStartFP = 0;
-            long lastPosStartFP = 0;
-            long lastPayStartFP = 0;
-            for (int idx = limit - count; idx < limit; idx++)
-            {
-                PendingTerm term = pendingTerms[idx];
-
-                if (term.singletonDocID == -1)
-                {
-                    bytesWriter.WriteVLong(term.docStartFP - lastDocStartFP);
-                    lastDocStartFP = term.docStartFP;
-                }
-                else
-                {
-                    bytesWriter.WriteVInt(term.singletonDocID);
-                }
-
-                if (fieldHasPositions)
-                {
-                    bytesWriter.WriteVLong(term.posStartFP - lastPosStartFP);
-                    lastPosStartFP = term.posStartFP;
-                    if (term.lastPosBlockOffset != -1)
-                    {
-                        bytesWriter.WriteVLong(term.lastPosBlockOffset);
-                    }
-                    if ((fieldHasPayloads || fieldHasOffsets) && term.payStartFP != -1)
-                    {
-                        bytesWriter.WriteVLong(term.payStartFP - lastPayStartFP);
-                        lastPayStartFP = term.payStartFP;
-                    }
-                }
-
-                if (term.skipOffset != -1)
-                {
-                    bytesWriter.WriteVLong(term.skipOffset);
-                }
-            }
-
-            termsOut.WriteVInt((int)bytesWriter.FilePointer);
-            bytesWriter.WriteTo(termsOut);
-            bytesWriter.Reset();
-
-            // Remove the terms we just wrote:
-            pendingTerms.SubList(limit - count, limit).Clear();
-        }
+		/// <exception cref="System.IO.IOException"></exception>
+		public override void EncodeTerm(long[] longs, DataOutput @out, FieldInfo fieldInfo
+			, BlockTermState _state, bool absolute)
+		{
+			Lucene41PostingsWriter.IntBlockTermState state = (Lucene41PostingsWriter.IntBlockTermState
+				)_state;
+			if (absolute)
+			{
+				lastState = emptyState;
+			}
+			longs[0] = state.docStartFP - lastState.docStartFP;
+			if (fieldHasPositions)
+			{
+				longs[1] = state.posStartFP - lastState.posStartFP;
+				if (fieldHasPayloads || fieldHasOffsets)
+				{
+					longs[2] = state.payStartFP - lastState.payStartFP;
+				}
+			}
+			if (state.singletonDocID != -1)
+			{
+				@out.WriteVInt(state.singletonDocID);
+			}
+			if (fieldHasPositions)
+			{
+				if (state.lastPosBlockOffset != -1)
+				{
+					@out.WriteVLong(state.lastPosBlockOffset);
+				}
+			}
+			if (state.skipOffset != -1)
+			{
+				@out.WriteVLong(state.skipOffset);
+			}
+			lastState = state;
+		}
 
         protected override void Dispose(bool disposing)
         {

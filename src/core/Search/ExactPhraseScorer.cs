@@ -59,11 +59,10 @@ namespace Lucene.Net.Search
         private int docID = -1;
         private int freq;
 
-        private readonly Similarity.ExactSimScorer docScorer;
+		private readonly SimScorer docScorer;
 
         internal ExactPhraseScorer(Weight weight, PhraseQuery.PostingsAndFreq[] postings,
-                    Similarity.ExactSimScorer docScorer)
-            : base(weight)
+			SimScorer docScorer) : base(weight)
         {
             this.docScorer = docScorer;
 

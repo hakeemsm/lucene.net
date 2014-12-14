@@ -59,7 +59,7 @@ namespace Lucene.Net.Search
             {
                 SortedSetDocValues docTermOrds = FieldCache.DEFAULT.GetDocTermOrds((AtomicReader)context.Reader, query.Field);
                 // Cannot use FixedBitSet because we require long index (ord):
-                OpenBitSet termSet = new OpenBitSet(docTermOrds.ValueCount);
+				LongBitSet termSet = new LongBitSet(docTermOrds.ValueCount);
 
                 TermsEnum termsEnum = query.GetTermsEnum(new AnonymousGetDocIdSetTerms(docTermOrds));
 
@@ -77,7 +77,7 @@ namespace Lucene.Net.Search
                     return DocIdSet.EMPTY_DOCIDSET;
                 }
 
-                return new AnonymousFieldCacheDocIdSet(context.Reader.MaxDoc, acceptDocs, docTermOrds, termSet);
+                return new AnonymousFieldCacheDocIdSet(docTermOrds, termSet, context.Reader.MaxDoc, acceptDocs);
             }
 
             private sealed class AnonymousGetDocIdSetTerms : Terms
@@ -119,6 +119,10 @@ namespace Lucene.Net.Search
                     get { return -1; }
                 }
 
+				public override bool HasFreqs
+				{
+				    get { return false; }
+				}
                 public override bool HasOffsets
                 {
                     get { return false; }
@@ -138,10 +142,11 @@ namespace Lucene.Net.Search
             private sealed class AnonymousFieldCacheDocIdSet : FieldCacheDocIdSet
             {
                 private readonly SortedSetDocValues docTermOrds;
-                private readonly OpenBitSet termSet;
+                private readonly LongBitSet termSet;
 
-                public AnonymousFieldCacheDocIdSet(int maxDoc, IBits acceptDocs, SortedSetDocValues docTermOrds, OpenBitSet termSet)
-                    : base(maxDoc, acceptDocs)
+                public AnonymousFieldCacheDocIdSet(SortedSetDocValues docTermOrds, LongBitSet termSet
+                    , int baseArg1, IBits baseArg2)
+                    : base(baseArg1, baseArg2)
                 {
                     this.docTermOrds = docTermOrds;
                     this.termSet = termSet;

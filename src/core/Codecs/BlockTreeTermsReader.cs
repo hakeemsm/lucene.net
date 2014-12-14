@@ -56,7 +56,10 @@ namespace Lucene.Net.Codecs
                         throw new CorruptIndexException("mixmatched version files: " + input + "=" + version + "," + indexIn + "=" + indexVersion);
                     }
                 }
-
+				if (indexIn != null && version >= BlockTreeTermsWriter.VERSION_CHECKSUM)
+				{
+					CodecUtil.ChecksumEntireFile(indexIn);
+				}
                 // Have PostingsReader init itself
                 postingsReader.Init(input);
 
@@ -87,6 +90,8 @@ namespace Lucene.Net.Codecs
                     long sumTotalTermFreq = fieldInfo.IndexOptionsValue == FieldInfo.IndexOptions.DOCS_ONLY ? -1 : input.ReadVLong();
                     long sumDocFreq = input.ReadVLong();
                     int docCount = input.ReadVInt();
+					int longsSize = version >= BlockTreeTermsWriter.VERSION_META_ARRAY ? input.ReadVInt
+						() : 0;
                     if (docCount < 0 || docCount > info.DocCount)
                     { // #docs with field must be <= #docs
                         throw new CorruptIndexException("invalid docCount: " + docCount + " maxDoc: " + info.DocCount + " (resource=" + input + ")");
@@ -100,12 +105,14 @@ namespace Lucene.Net.Codecs
                         throw new CorruptIndexException("invalid sumTotalTermFreq: " + sumTotalTermFreq + " sumDocFreq: " + sumDocFreq + " (resource=" + input + ")");
                     }
                     long indexStartFP = indexDivisor != -1 ? indexIn.ReadVLong() : 0;
-                    FieldReader previous;
-                    if (fields.TryGetValue(fieldInfo.name, out previous))
-                    {
-                        throw new CorruptIndexException("duplicate field: " + fieldInfo.name + " (resource=" + input + ")");
-                    }
-                    fields[fieldInfo.name] = new FieldReader(this, fieldInfo, numTerms, rootCode, sumTotalTermFreq, sumDocFreq, docCount, indexStartFP, indexIn);
+					FieldReader previous = fields[fieldInfo.name] = new FieldReader
+						(this, fieldInfo, numTerms, rootCode, sumTotalTermFreq, sumDocFreq, docCount, indexStartFP
+						, longsSize, indexIn);
+					if (previous != null)
+					{
+						throw new CorruptIndexException("duplicate field: " + fieldInfo.name + " (resource="
+							 + input + ")");
+					}
                 }
                 if (indexDivisor != -1)
                 {
@@ -127,9 +134,8 @@ namespace Lucene.Net.Codecs
         protected int ReadHeader(IndexInput input)
         {
             int version = CodecUtil.CheckHeader(input, BlockTreeTermsWriter.TERMS_CODEC_NAME,
-                                  BlockTreeTermsWriter.TERMS_VERSION_START,
-                                  BlockTreeTermsWriter.TERMS_VERSION_CURRENT);
-            if (version < BlockTreeTermsWriter.TERMS_VERSION_APPEND_ONLY)
+				BlockTreeTermsWriter.VERSION_START, BlockTreeTermsWriter.VERSION_CURRENT);
+			if (version < BlockTreeTermsWriter.VERSION_APPEND_ONLY)
             {
                 dirOffset = input.ReadLong();
             }
@@ -138,10 +144,9 @@ namespace Lucene.Net.Codecs
 
         protected int ReadIndexHeader(IndexInput input)
         {
-            int version = CodecUtil.CheckHeader(input, BlockTreeTermsWriter.TERMS_INDEX_CODEC_NAME,
-                                  BlockTreeTermsWriter.TERMS_INDEX_VERSION_START,
-                                  BlockTreeTermsWriter.TERMS_INDEX_VERSION_CURRENT);
-            if (version < BlockTreeTermsWriter.TERMS_INDEX_VERSION_APPEND_ONLY)
+			int version = CodecUtil.CheckHeader(input, BlockTreeTermsWriter.TERMS_INDEX_CODEC_NAME
+				, BlockTreeTermsWriter.VERSION_START, BlockTreeTermsWriter.VERSION_CURRENT);
+			if (version < BlockTreeTermsWriter.VERSION_APPEND_ONLY)
             {
                 indexDirOffset = input.ReadLong();
             }
@@ -150,11 +155,19 @@ namespace Lucene.Net.Codecs
 
         protected void SeekDir(IndexInput input, long dirOffset)
         {
-            if (version >= BlockTreeTermsWriter.TERMS_INDEX_VERSION_APPEND_ONLY)
+			if (version >= BlockTreeTermsWriter.VERSION_CHECKSUM)
+			{
+				input.Seek(input.Length - CodecUtil.FooterLength() - 8);
+				dirOffset = input.ReadLong();
+			}
+			else
+			{
+            if (version >= BlockTreeTermsWriter.VERSION_APPEND_ONLY)
             {
                 input.Seek(input.Length - 8);
                 dirOffset = input.ReadLong();
             }
+			}
             input.Seek(dirOffset);
         }
 
@@ -405,11 +418,12 @@ namespace Lucene.Net.Codecs
             internal readonly long indexStartFP;
             internal readonly long rootBlockFP;
             internal readonly BytesRef rootCode;
+			internal readonly int longsSize;
             private readonly FST<BytesRef> index;
 
             internal readonly BlockTreeTermsReader parent;
 
-            internal FieldReader(BlockTreeTermsReader parent, FieldInfo fieldInfo, long numTerms, BytesRef rootCode, long sumTotalTermFreq, long sumDocFreq, int docCount, long indexStartFP, IndexInput indexIn)
+            internal FieldReader(BlockTreeTermsReader parent, FieldInfo fieldInfo, long numTerms, BytesRef rootCode, long sumTotalTermFreq, long sumDocFreq, int docCount, long indexStartFP, int longsSize,IndexInput indexIn)
             {
                 this.parent = parent;
 
@@ -422,6 +436,7 @@ namespace Lucene.Net.Codecs
                 this.docCount = docCount;
                 this.indexStartFP = indexStartFP;
                 this.rootCode = rootCode;
+				this.longsSize = longsSize;
                 // if (DEBUG) {
                 //   System.out.println("BTTR: seg=" + segment + " field=" + fieldInfo.name + " rootBlockCode=" + rootCode + " divisor=" + indexDivisor);
                 // }
@@ -461,6 +476,13 @@ namespace Lucene.Net.Codecs
                 get { return BytesRef.UTF8SortedAsUnicodeComparer; }
             }
 
+			public override bool HasFreqs
+			{
+			    get
+			    {
+			        return this.fieldInfo.IndexOptionsValue.GetValueOrDefault().CompareTo(IndexOptions.DOCS_AND_FREQS) >= 0;
+			    }
+			}
             public override bool HasOffsets
             {
                 get { return fieldInfo.IndexOptionsValue.GetValueOrDefault() >= IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS; }
@@ -511,6 +533,10 @@ namespace Lucene.Net.Codecs
             }
 
             // NOTE: cannot seek!
+			public long RamBytesUsed()
+			{
+				return ((this.index != null) ? this.index.SizeInBytes() : 0);
+			}
             private sealed class IntersectEnum : TermsEnum
             {
                 private readonly IndexInput input;
@@ -579,7 +605,11 @@ namespace Lucene.Net.Codecs
 
                     internal readonly BlockTermState termState;
 
-                    // Cumulative output so far
+					public long[] longs;
+
+					public byte[] bytes;
+
+					internal ByteArrayDataInput bytesReader;
                     internal BytesRef outputPrefix;
 
                     internal int startBytePos;
@@ -593,6 +623,7 @@ namespace Lucene.Net.Codecs
                         this.ord = ord;
                         termState = parent.parent.parent.postingsReader.NewTermState();
                         termState.totalTermFreq = -1;
+						this.longs = new long[this.parent.parent.longsSize];
                     }
 
                     internal void LoadNextFloorBlock()
@@ -710,9 +741,21 @@ namespace Lucene.Net.Codecs
 
                         termState.termBlockOrd = 0;
                         nextEnt = 0;
-
-                        parent.parent.parent.postingsReader.ReadTermsBlock(parent.input, parent.parent.fieldInfo, termState);
-
+						numBytes = this.parent.input.ReadVInt();
+						if (this.bytes == null)
+						{
+							this.bytes = new byte[ArrayUtil.Oversize(numBytes, 1)];
+							this.bytesReader = new ByteArrayDataInput();
+						}
+						else
+						{
+							if (this.bytes.Length < numBytes)
+							{
+								this.bytes = new byte[ArrayUtil.Oversize(numBytes, 1)];
+							}
+						}
+						this.parent.input.ReadBytes(this.bytes, 0, numBytes);
+						this.bytesReader.Reset(this.bytes, 0, numBytes);
                         if (!isLastInFloor)
                         {
                             // Sub-blocks of a single floor block are always
@@ -775,7 +818,7 @@ namespace Lucene.Net.Codecs
 
                         // We must set/incr state.termCount because
                         // postings impl can look at this
-                        termState.termBlockOrd = metaDataUpto;
+						bool absolute = this.metaDataUpto == 0;
 
                         // TODO: better API would be "jump straight to term=N"???
                         while (metaDataUpto < limit)
@@ -796,11 +839,16 @@ namespace Lucene.Net.Codecs
                                 termState.totalTermFreq = termState.docFreq + statsReader.ReadVLong();
                                 //if (DEBUG) System.out.println("    totTF=" + state.totalTermFreq);
                             }
-
-                            parent.parent.parent.postingsReader.NextTerm(parent.parent.fieldInfo, termState);
+							for (int i = 0; i < this.parent.parent.longsSize; i++)
+							{
+								this.longs[i] = this.bytesReader.ReadVLong();
+							}
+							this.parent.parent.parent.postingsReader.DecodeTerm(this.longs, this.
+								bytesReader, this.parent.parent.fieldInfo, this.termState, absolute);
                             metaDataUpto++;
-                            termState.termBlockOrd++;
+							absolute = false;
                         }
+						this.termState.termBlockOrd = this.metaDataUpto;
                     }
                 }
 
@@ -1301,7 +1349,7 @@ namespace Lucene.Net.Codecs
                     get { return BytesRef.UTF8SortedAsUnicodeComparer; }
                 }
 
-                public override bool SeekExact(BytesRef text, bool useCache)
+                public override bool SeekExact(BytesRef text)
                 {
                     throw new NotSupportedException();
                 }
@@ -1316,7 +1364,7 @@ namespace Lucene.Net.Codecs
                     get { throw new NotSupportedException(); }
                 }
 
-                public override SeekStatus SeekCeil(BytesRef text, bool useCache)
+                public override SeekStatus SeekCeil(BytesRef text)
                 {
                     throw new NotSupportedException();
                 }
@@ -1626,7 +1674,7 @@ namespace Lucene.Net.Codecs
                     return true;
                 }
 
-                public override bool SeekExact(BytesRef target, bool useCache)
+                public override bool SeekExact(BytesRef target)
                 {
                     if (parent.index == null)
                     {
@@ -1921,7 +1969,7 @@ namespace Lucene.Net.Codecs
                     }
                 }
 
-                public override SeekStatus SeekCeil(BytesRef target, bool useCache)
+				public override TermsEnum.SeekStatus SeekCeil(BytesRef target)
                 {
                     if (parent.index == null)
                     {
@@ -2297,7 +2345,7 @@ namespace Lucene.Net.Codecs
                         // this method catches up all internal state so next()
                         // works properly:
                         //if (DEBUG) System.out.println("  re-seek to pending term=" + term.utf8ToString() + " " + term);
-                        bool result = SeekExact(term, false);
+						bool result = this.SeekExact(this.term);
                         //assert result;
                     }
 
@@ -2523,6 +2571,11 @@ namespace Lucene.Net.Codecs
 
                     internal readonly BlockTermState state;
 
+					public long[] longs;
+
+					public byte[] bytes;
+
+					internal ByteArrayDataInput bytesReader;
                     private readonly SegmentTermsEnum parent;
 
                     public Frame(SegmentTermsEnum parent, int ord)
@@ -2531,6 +2584,7 @@ namespace Lucene.Net.Codecs
                         this.ord = ord;
                         state = parent.parent.parent.postingsReader.NewTermState();
                         state.totalTermFreq = -1;
+						this.longs = new long[this.parent.parent.longsSize];
                     }
 
                     public void SetFloorData(ByteArrayDataInput input, BytesRef source)
@@ -2626,8 +2680,22 @@ namespace Lucene.Net.Codecs
 
                         // TODO: we could skip this if !hasTerms; but
                         // that's rare so won't help much
-                        parent.parent.parent.postingsReader.ReadTermsBlock(parent.input, parent.parent.fieldInfo, state);
-
+						// metadata
+						numBytes = this.parent.input.ReadVInt();
+						if (this.bytes == null)
+						{
+							this.bytes = new byte[ArrayUtil.Oversize(numBytes, 1)];
+							this.bytesReader = new ByteArrayDataInput();
+						}
+						else
+						{
+							if (this.bytes.Length < numBytes)
+							{
+								this.bytes = new byte[ArrayUtil.Oversize(numBytes, 1)];
+							}
+						}
+						this.parent.input.ReadBytes(this.bytes, 0, numBytes);
+						this.bytesReader.Reset(this.bytes, 0, numBytes);
                         // Sub-blocks of a single floor block are always
                         // written one after another -- tail recurse:
                         fpEnd = parent.input.FilePointer;
@@ -2831,7 +2899,7 @@ namespace Lucene.Net.Codecs
 
                         // We must set/incr state.termCount because
                         // postings impl can look at this
-                        state.termBlockOrd = metaDataUpto;
+						bool absolute = this.metaDataUpto == 0;
 
                         // TODO: better API would be "jump straight to term=N"???
                         while (metaDataUpto < limit)
@@ -2852,11 +2920,16 @@ namespace Lucene.Net.Codecs
                                 state.totalTermFreq = state.docFreq + statsReader.ReadVLong();
                                 //if (DEBUG) System.out.println("    totTF=" + state.totalTermFreq);
                             }
-
-                            parent.parent.parent.postingsReader.NextTerm(parent.parent.fieldInfo, state);
+							for (int i = 0; i < this.parent.parent.longsSize; i++)
+							{
+								this.longs[i] = this.bytesReader.ReadVLong();
+							}
+							this.parent.parent.parent.postingsReader.DecodeTerm(this.longs, this.
+								bytesReader, this.parent.parent.fieldInfo, this.state, absolute);
                             metaDataUpto++;
-                            state.termBlockOrd++;
+							absolute = false;
                         }
+						this.state.termBlockOrd = this.metaDataUpto;
                     }
 
                     private bool PrefixMatches(BytesRef target)
@@ -3253,5 +3326,29 @@ namespace Lucene.Net.Codecs
 
             }
         }
+		public override long RamBytesUsed
+		{
+		    get
+		    {
+		        long sizeInByes = ((postingsReader != null) ? postingsReader.RamBytesUsed() : 0);
+		        foreach (FieldReader reader in fields.Values)
+		        {
+		            sizeInByes += reader.RamBytesUsed();
+		        }
+		        return sizeInByes;
+		    }
+		}
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public override void CheckIntegrity()
+		{
+			if (version >= BlockTreeTermsWriter.VERSION_CHECKSUM)
+			{
+				// term dictionary
+				CodecUtil.ChecksumEntireFile(input);
+				// postings
+				postingsReader.CheckIntegrity();
+			}
+		}
     }
 }

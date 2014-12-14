@@ -279,14 +279,14 @@ namespace Lucene.Net.Search
             get { return actualEnum.Ord; }
         }
 
-        public override bool SeekExact(BytesRef text, bool useCache)
+        public override bool SeekExact(BytesRef text)
         {
-            return actualEnum.SeekExact(text, useCache);
+            return actualEnum.SeekExact(text);
         }
 
-        public override SeekStatus SeekCeil(BytesRef text, bool useCache)
+        public override SeekStatus SeekCeil(BytesRef text)
         {
-            return actualEnum.SeekCeil(text, useCache);
+            return actualEnum.SeekCeil(text);
         }
 
         public override void SeekExact(long ord)

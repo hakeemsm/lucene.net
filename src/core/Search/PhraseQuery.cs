@@ -243,7 +243,7 @@ namespace Lucene.Net.Search
                 for (var i = 0; i < parent.terms.Count; i++)
                 {
                     var term = parent.terms[i];
-                    states[i] = TermContext.Build(context, term, true);
+					this.states[i] = TermContext.Build(context, term);
                     termStats[i] = searcher.TermStatistics(term, states[i]);
                 }
                 stats = similarity.ComputeWeight(parent.Boost, searcher.CollectionStatistics(parent.field),
@@ -273,7 +273,7 @@ namespace Lucene.Net.Search
                 stats.Normalize(queryNorm, topLevelBoost);
             }
 
-            public override Scorer Scorer(AtomicReaderContext context, bool scoreDocsInOrder, bool topScorer, IBits acceptDocs)
+            public override Scorer Scorer(AtomicReaderContext context, IBits acceptDocs)
             {
                 // assert !terms.isEmpty()
 
@@ -312,12 +312,12 @@ namespace Lucene.Net.Search
 
                 if (parent.slop == 0)
                 {
-                    ArrayUtil.MergeSort(postingsFreqs);
+					ArrayUtil.TimSort(postingsFreqs);
                 }
 
                 if (parent.slop == 0)
                 {
-                    var s = new ExactPhraseScorer(this, postingsFreqs, similarity.GetExactSimScorer(stats, context));
+                    var s = new ExactPhraseScorer(this, postingsFreqs, similarity.GetSimScorer(stats, context));
                     if (s.noDocs)
                     {
                         return null;
@@ -329,7 +329,7 @@ namespace Lucene.Net.Search
                 }
                 else
                 {
-                    return new SloppyPhraseScorer(this, postingsFreqs, parent.slop, similarity.GetSloppySimScorer(stats, context));
+                    return new SloppyPhraseScorer(this, postingsFreqs, parent.slop, similarity.GetSimScorer(stats, context));
                 }
             }
 
@@ -341,14 +341,14 @@ namespace Lucene.Net.Search
 
             public override Explanation Explain(AtomicReaderContext context, int doc)
             {
-                var scorer = Scorer(context, true, false, ((AtomicReader)context.Reader).LiveDocs);
+                var scorer = Scorer(context, ((AtomicReader)context.Reader).LiveDocs);
                 if (scorer != null)
                 {
                     var newDoc = scorer.Advance(doc);
                     if (newDoc == doc)
                     {
                         var freq = parent.slop == 0 ? scorer.Freq : ((SloppyPhraseScorer) scorer).SloppyFreq;
-                        var docScorer = similarity.GetSloppySimScorer(stats, context);
+                        var docScorer = similarity.GetSimScorer(stats, context);
                         var result = new ComplexExplanation();
                         result.Description = "weight(" + Query + " in " + doc + ") [" + similarity.GetType().Name + "], result of:";
                         var scoreExplanation = docScorer.Explain(doc, new Explanation(freq, "phraseFreq=" + freq));

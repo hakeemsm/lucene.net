@@ -21,8 +21,8 @@ namespace Lucene.Net.Codecs.Compressing
         internal const string CODEC_SFX_DAT = "Data";
 
         internal const int VERSION_START = 0;
-		internal const int VERSION_CHECKSUM = 1;
-        internal const int VERSION_CURRENT = VERSION_START;
+        internal const int VERSION_CHECKSUM = 1;
+        internal const int VERSION_CURRENT = VERSION_CHECKSUM;
 
         internal const int BLOCK_SIZE = 64;
 
@@ -713,8 +713,8 @@ namespace Lucene.Net.Codecs.Compressing
             {
                 throw new SystemException("Wrote " + this.numDocs + " docs, finish called with numDocs=" + numDocs);
             }
-			indexWriter.Finish(numDocs, vectorsStream.GetFilePointer);
-			CodecUtil.WriteFooter(vectorsStream);
+            indexWriter.Finish(numDocs, vectorsStream.FilePointer);
+            CodecUtil.WriteFooter(vectorsStream);
         }
 
         public override IComparer<Util.BytesRef> Comparator
@@ -795,21 +795,23 @@ namespace Lucene.Net.Codecs.Compressing
             curField.totalPositions += numProx;
         }
 
-        public override int Merge(MergeState mergeState) 
+        public override int Merge(MergeState mergeState)
         {
             int docCount = 0;
             int idx = 0;
 
-            foreach (AtomicReader reader in mergeState.readers) 
+            foreach (AtomicReader reader in mergeState.readers)
             {
                 SegmentReader matchingSegmentReader = mergeState.matchingSegmentReaders[idx++];
                 CompressingTermVectorsReader matchingVectorsReader = null;
-                if (matchingSegmentReader != null) {
-                TermVectorsReader vectorsReader = matchingSegmentReader.TermVectorsReader;
-                // we can only bulk-copy if the matching reader is also a CompressingTermVectorsReader
-                if (vectorsReader != null && vectorsReader is CompressingTermVectorsReader) {
-                    matchingVectorsReader = (CompressingTermVectorsReader) vectorsReader;
-                }
+                if (matchingSegmentReader != null)
+                {
+                    TermVectorsReader vectorsReader = matchingSegmentReader.TermVectorsReader;
+                    // we can only bulk-copy if the matching reader is also a CompressingTermVectorsReader
+                    if (vectorsReader != null && vectorsReader is CompressingTermVectorsReader)
+                    {
+                        matchingVectorsReader = (CompressingTermVectorsReader)vectorsReader;
+                    }
                 }
 
                 int maxDoc = reader.MaxDoc;
@@ -818,54 +820,72 @@ namespace Lucene.Net.Codecs.Compressing
                 if (matchingVectorsReader == null
                     || matchingVectorsReader.CompressionMode != compressionMode
                     || matchingVectorsReader.ChunkSize != chunkSize
-                    || matchingVectorsReader.PackedIntsVersion != PackedInts.VERSION_CURRENT) {
-                // naive merge...
-                for (int i = NextLiveDoc(0, liveDocs, maxDoc); i < maxDoc; i = NextLiveDoc(i + 1, liveDocs, maxDoc)) {
-                    Fields vectors = reader.GetTermVectors(i);
-                    AddAllDocVectors(vectors, mergeState);
-                    ++docCount;
-                    mergeState.checkAbort.Work(300);
-                }
-                } else {
-                CompressingStoredFieldsIndexReader index = matchingVectorsReader.Index;
-                IndexInput vectorsStream = matchingVectorsReader.VectorsStream;
-                for (int i = NextLiveDoc(0, liveDocs, maxDoc); i < maxDoc; ) {
-                    if (pendingDocs.Count == 0
-                        && (i == 0 || index.GetStartPointer(i - 1) < index.GetStartPointer(i))) { // start of a chunk
-                    long startPointer = index.GetStartPointer(i);
-                    vectorsStream.Seek(startPointer);
-                    int docBase = vectorsStream.ReadVInt();
-                    int chunkDocs = vectorsStream.ReadVInt();
-                    if (docBase + chunkDocs < matchingSegmentReader.MaxDoc
-                        && NextDeletedDoc(docBase, liveDocs, docBase + chunkDocs) == docBase + chunkDocs) {
-                        long chunkEnd = index.GetStartPointer(docBase + chunkDocs);
-                        long chunkLength = chunkEnd - vectorsStream.FilePointer;
-                        indexWriter.WriteIndex(chunkDocs, this.vectorsStream.FilePointer);
-                        this.vectorsStream.WriteVInt(docCount);
-                        this.vectorsStream.WriteVInt(chunkDocs);
-                        this.vectorsStream.CopyBytes(vectorsStream, chunkLength);
-                        docCount += chunkDocs;
-                        this.numDocs += chunkDocs;
-                        mergeState.checkAbort.Work(300 * chunkDocs);
-                        i = NextLiveDoc(docBase + chunkDocs, liveDocs, maxDoc);
-                    } else {
-                        for (; i < docBase + chunkDocs; i = NextLiveDoc(i + 1, liveDocs, maxDoc)) {
+                    || matchingVectorsReader.PackedIntsVersion != PackedInts.VERSION_CURRENT)
+                {
+                    // naive merge...
+                    for (int i = NextLiveDoc(0, liveDocs, maxDoc); i < maxDoc; i = NextLiveDoc(i + 1, liveDocs, maxDoc))
+                    {
                         Fields vectors = reader.GetTermVectors(i);
                         AddAllDocVectors(vectors, mergeState);
                         ++docCount;
                         mergeState.checkAbort.Work(300);
-                        }
-                    }
-                    } else {
-                    Fields vectors = reader.GetTermVectors(i);
-                    AddAllDocVectors(vectors, mergeState);
-                    ++docCount;
-                    mergeState.checkAbort.Work(300);
-                    i = NextLiveDoc(i + 1, liveDocs, maxDoc);
                     }
                 }
-					vectorsStream.Seek(vectorsStream.Length - CodecUtil.FooterLength());
-					CodecUtil.CheckFooter(vectorsStream);
+                else
+                {
+                    CompressingStoredFieldsIndexReader index = matchingVectorsReader.Index;
+                    IndexInput vectorsStreamOrig = matchingVectorsReader.VectorsStream;
+                    vectorsStreamOrig.Seek(0);
+                    ChecksumIndexInput vectorsStream = new BufferedChecksumIndexInput(((IndexInput)vectorsStreamOrig
+                        .Clone()));
+                    for (int i = NextLiveDoc(0, liveDocs, maxDoc); i < maxDoc; )
+                    {
+                        long startPointer = index.GetStartPointer(i);
+                        if (startPointer > vectorsStream.FilePointer)
+                        {
+                            vectorsStream.Seek(startPointer);
+                        }
+                        if (!pendingDocs.Any() && (i == 0 || index.GetStartPointer(i - 1) < startPointer
+                            ))
+                        {
+                            int docBase = vectorsStream.ReadVInt();
+                            int chunkDocs = vectorsStream.ReadVInt();
+                            if (docBase + chunkDocs < matchingSegmentReader.MaxDoc
+                                && NextDeletedDoc(docBase, liveDocs, docBase + chunkDocs) == docBase + chunkDocs)
+                            {
+                                long chunkEnd = index.GetStartPointer(docBase + chunkDocs);
+                                long chunkLength = chunkEnd - vectorsStream.FilePointer;
+                                indexWriter.WriteIndex(chunkDocs, this.vectorsStream.FilePointer);
+                                this.vectorsStream.WriteVInt(docCount);
+                                this.vectorsStream.WriteVInt(chunkDocs);
+                                this.vectorsStream.CopyBytes(vectorsStream, chunkLength);
+                                docCount += chunkDocs;
+                                this.numDocs += chunkDocs;
+                                mergeState.checkAbort.Work(300 * chunkDocs);
+                                i = NextLiveDoc(docBase + chunkDocs, liveDocs, maxDoc);
+                            }
+                            else
+                            {
+                                for (; i < docBase + chunkDocs; i = NextLiveDoc(i + 1, liveDocs, maxDoc))
+                                {
+                                    Fields vectors = reader.GetTermVectors(i);
+                                    AddAllDocVectors(vectors, mergeState);
+                                    ++docCount;
+                                    mergeState.checkAbort.Work(300);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            Fields vectors = reader.GetTermVectors(i);
+                            AddAllDocVectors(vectors, mergeState);
+                            ++docCount;
+                            mergeState.checkAbort.Work(300);
+                            i = NextLiveDoc(i + 1, liveDocs, maxDoc);
+                        }
+                    }
+                    vectorsStream.Seek(vectorsStream.Length - CodecUtil.FooterLength());
+                    CodecUtil.CheckFooter(vectorsStream);
                 }
             }
             Finish(mergeState.fieldInfos, docCount);

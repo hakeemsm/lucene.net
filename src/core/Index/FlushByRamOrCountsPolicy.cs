@@ -19,14 +19,13 @@ namespace Lucene.Net.Index
                     control.SetApplyAllDeletes();
                 }
             }
-            DocumentsWriter writer = this.writer.Get();
             if ((FlushOnRAM &&
                 control.DeleteBytesUsed > (1024 * 1024 * indexWriterConfig.RAMBufferSizeMB)))
             {
                 control.SetApplyAllDeletes();
-                if (writer.infoStream.IsEnabled("FP"))
+                if (infoStream.IsEnabled("FP"))
                 {
-                    writer.infoStream.Message("FP", "force apply deletes bytesUsed=" + control.DeleteBytesUsed + " vs ramBuffer=" + (1024 * 1024 * indexWriterConfig.RAMBufferSizeMB));
+                    infoStream.Message("FP", "force apply deletes bytesUsed=" + control.DeleteBytesUsed + " vs ramBuffer=" + (1024 * 1024 * indexWriterConfig.RAMBufferSizeMB));
                 }
             }
         }
@@ -44,10 +43,10 @@ namespace Lucene.Net.Index
                 long totalRam = control.ActiveBytes + control.DeleteBytesUsed;
                 if (totalRam >= limit)
                 {
-                    DocumentsWriter writer = this.writer.Get();
-                    if (writer.infoStream.IsEnabled("FP"))
+						if (infoStream.IsEnabled("FP"))
                     {
-                        writer.infoStream.Message("FP", "flush: activeBytes=" + control.ActiveBytes + " deleteBytes=" + control.DeleteBytesUsed + " vs limit=" + limit);
+							infoStream.Message("FP", "trigger flush: activeBytes=" + control.ActiveBytes + 
+								" deleteBytes=" + control.DeleteBytesUsed + " vs limit=" + limit);
                     }
                     MarkLargestWriterPending(control, state, totalRam);
                 }

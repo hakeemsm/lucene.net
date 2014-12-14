@@ -18,6 +18,10 @@ namespace Lucene.Net.Index
             //assert NO_MORE_ORDS == -1; // this allows our nextOrd() to work for missing values without a check
         }
 
+		public SortedDocValues GetSortedDocValues()
+		{
+			return in_renamed;
+		}
         public override long NextOrd()
         {
             if (set)

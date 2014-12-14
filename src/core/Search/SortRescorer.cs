@@ -37,7 +37,7 @@ namespace Lucene.Net.Search
 			int readerUpto = -1;
 			int endDoc = 0;
 			int docBase = 0;
-			var fakeScorer = new IndexSearcher.SearcherCallableWithSort.FakeScorer();
+			FakeScorer fakeScorer = new FakeScorer();
 			while (hitUpto < hits.Length)
 			{
 				ScoreDoc hit = hits[hitUpto];

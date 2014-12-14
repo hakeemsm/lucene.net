@@ -167,24 +167,13 @@ namespace Lucene.Net.Codecs.Compressing
 
         public object Clone()
         {
-            if (fieldsIndexIn == null)
-            {
-                return this;
-            }
-            else
-            {
-                return new CompressingStoredFieldsIndexReader(this);
-            }
+			return this;
         }
 
 		internal long RamBytesUsed()
 		{
-			long res = 0;
-			foreach (PackedInts.Reader r in docBasesDeltas)
-			{
-				res += r.RamBytesUsed();
-			}
-			foreach (PackedInts.Reader r_1 in startPointersDeltas)
+			long res = docBasesDeltas.Cast<PackedInts.Reader>().Sum(r => r.RamBytesUsed());
+		    foreach (PackedInts.Reader r_1 in startPointersDeltas)
 			{
 				res += r_1.RamBytesUsed();
 			}

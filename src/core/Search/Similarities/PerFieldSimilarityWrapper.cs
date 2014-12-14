@@ -18,16 +18,11 @@ namespace Lucene.Net.Search.Similarities
             return weight;
         }
 
-        public override sealed ExactSimScorer GetExactSimScorer(SimWeight weight, AtomicReaderContext context)
+        public override sealed SimScorer GetSimScorer(SimWeight weight, AtomicReaderContext context)
         {
             var perFieldWeight = (PerFieldSimWeight) weight;
-            return perFieldWeight.Delegate.GetExactSimScorer(perFieldWeight.DelegateWeight, context);
-        }
-
-        public override sealed SloppySimScorer GetSloppySimScorer(SimWeight weight, AtomicReaderContext context)
-        {
-            var perFieldWeight = (PerFieldSimWeight) weight;
-            return perFieldWeight.Delegate.GetSloppySimScorer(perFieldWeight.DelegateWeight, context);
+            return perFieldWeight.Delegate.GetSimScorer(perFieldWeight.DelegateWeight, context);
+			
         }
 
         public abstract Similarity Get(string name);

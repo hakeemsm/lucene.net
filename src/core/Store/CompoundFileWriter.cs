@@ -32,7 +32,8 @@ namespace Lucene.Net.Store
         // versioning for the .cfs file
         internal const String DATA_CODEC = "CompoundFileWriterData";
         internal const int VERSION_START = 0;
-        internal const int VERSION_CURRENT = VERSION_START;
+		internal const int VERSION_CHECKSUM = 1;
+		internal const int VERSION_CURRENT = VERSION_CHECKSUM;
 
         // versioning for the .cfe file
         internal const String ENTRY_CODEC = "CompoundFileWriterEntries";
@@ -111,6 +112,7 @@ namespace Lucene.Net.Store
             IndexOutput entryTableOut = null;
             // TODO this code should clean up after itself
             // (remove partial .cfs/.cfe)
+			bool success = false;
             try
             {
                 if (pendingEntries.Count > 0 || outputTaken.Get())
@@ -121,28 +123,38 @@ namespace Lucene.Net.Store
                 // open the compound stream
                 GetOutput();
                 //assert dataOut != null;
+				CodecUtil.WriteFooter(dataOut);
+				success = true;
             }
-            catch (Exception e)
-            {
-                priorException = e;
-            }
-            finally
-            {
-                IOUtils.CloseWhileHandlingException(priorException, dataOut);
-            }
+			finally
+			{
+				if (success)
+				{
+					IOUtils.Close(dataOut);
+				}
+				else
+				{
+					IOUtils.CloseWhileHandlingException((IDisposable)dataOut);
+				}
+			}
+			success = false;
             try
             {
                 entryTableOut = directory.CreateOutput(entryTableName, IOContext.DEFAULT);
                 WriteEntryTable(entries.Values, entryTableOut);
+				success = true;
             }
-            catch (Exception e)
-            {
-                priorException = e;
-            }
-            finally
-            {
-                IOUtils.CloseWhileHandlingException(priorException, entryTableOut);
-            }
+			finally
+			{
+				if (success)
+				{
+					IOUtils.Close(entryTableOut);
+				}
+				else
+				{
+					IOUtils.CloseWhileHandlingException((IDisposable)entryTableOut);
+				}
+			}
         }
 
         private void EnsureOpen()
@@ -197,6 +209,7 @@ namespace Lucene.Net.Store
                 entryOut.WriteLong(fe.Offset);
                 entryOut.WriteLong(fe.Length);
             }
+			CodecUtil.WriteFooter(entryOut);
         }
 
         internal IndexOutput CreateOutput(String name, IOContext context)
@@ -372,6 +385,10 @@ namespace Lucene.Net.Store
                 writtenBytes += length;
                 del.WriteBytes(b, offset, length);
             }
+			public override long GetChecksum()
+			{
+				return this.del.GetChecksum();
+			}
         }
     }
 }

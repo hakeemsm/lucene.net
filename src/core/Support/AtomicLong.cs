@@ -6,6 +6,16 @@ namespace Lucene.Net.Support
     {
         private long _value;
 
+        public AtomicLong(long value)
+        {
+            _value = value;
+        }
+
+        public AtomicLong()
+        {
+            
+        }
+
         public long Get()
         {
              return Interlocked.Read(ref _value); 
@@ -16,7 +26,7 @@ namespace Lucene.Net.Support
             Interlocked.Exchange(ref _value,value); 
         }
 
-        public long AddAndGet(int value)
+        public long AddAndGet(long value)
         {
             return Interlocked.Add(ref _value, value);
         }

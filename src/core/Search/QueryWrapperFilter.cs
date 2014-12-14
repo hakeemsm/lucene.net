@@ -51,7 +51,7 @@ namespace Lucene.Net.Search
 		    private readonly IBits acceptDocs;
 			public override DocIdSetIterator Iterator()
 			{
-				return weight.Scorer(privateContext, true, false, acceptDocs);
+				return weight.Scorer(privateContext, acceptDocs);
 			}
 
 		    public override bool IsCacheable

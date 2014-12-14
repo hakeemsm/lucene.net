@@ -18,6 +18,7 @@ namespace Lucene.Net.Util
         private int upto;
         private sbyte[] currentBlock;
 
+		private readonly long bytesUsedPerBlock;
         private static readonly sbyte[] EMPTY_BYTES = new sbyte[0];
 
         public sealed class Reader
@@ -49,9 +50,13 @@ namespace Lucene.Net.Util
             {
                 //assert length >= 0: "length=" + length;
                 //assert length <= blockSize+1;
+				b.length = length;
+				if (length == 0)
+				{
+					return;
+				}
                 int index = (int)(start >> blockBits);
                 int offset = (int)(start & blockMask);
-                b.length = length;
                 if (blockSize - offset >= length)
                 {
                     // Within block
@@ -86,6 +91,10 @@ namespace Lucene.Net.Util
                     //assert b.length > 0;
                 }
             }
+			public long RamBytesUsed()
+			{
+				return ((blocks != null) ? (blockSize * blocks.Length) : 0);
+			}
         }
 
         public PagedBytes(int blockBits)
@@ -95,6 +104,8 @@ namespace Lucene.Net.Util
             this.blockBits = blockBits;
             blockMask = blockSize - 1;
             upto = blockSize;
+			bytesUsedPerBlock = blockSize + RamUsageEstimator.NUM_BYTES_ARRAY_HEADER + RamUsageEstimator
+				.NUM_BYTES_OBJECT_REF;
         }
 
         public void Copy(IndexInput input, long byteCount)
@@ -196,6 +207,10 @@ namespace Lucene.Net.Util
             }
         }
 
+		public long RamBytesUsed()
+		{
+			return (blocks.Count + (currentBlock != null ? 1 : 0)) * bytesUsedPerBlock;
+		}
         public long CopyUsingLengthPrefix(BytesRef bytes)
         {
             if (bytes.length >= 32768)

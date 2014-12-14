@@ -99,7 +99,7 @@ namespace Lucene.Net.Store
             {
                 throw new ArgumentException("Maximum chunk size for mmap must be >0");
             }
-            this.chunkSizePower = 31 - Number.NumberOfLeadingZeros(maxChunkSize);
+            this.chunkSizePower = 31 - maxChunkSize.NumberOfLeadingZeros();
             //assert this.chunkSizePower >= 0 && this.chunkSizePower <= 30;
         }
 

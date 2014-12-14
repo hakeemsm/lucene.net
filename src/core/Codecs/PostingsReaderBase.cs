@@ -18,13 +18,20 @@ namespace Lucene.Net.Codecs
 
         public abstract BlockTermState NewTermState();
 
-        public abstract void NextTerm(FieldInfo fieldInfo, BlockTermState state);
+		/// <summary>Actually decode metadata for next term</summary>
+		/// <seealso cref="PostingsWriterBase.EncodeTerm(long[], Org.Apache.Lucene.Store.DataOutput, Org.Apache.Lucene.Index.FieldInfo, BlockTermState, bool)
+		/// 	"></seealso>
+		/// <exception cref="System.IO.IOException"></exception>
+		public abstract void DecodeTerm(long[] longs, DataInput @in, FieldInfo fieldInfo, 
+			BlockTermState state, bool absolute);
 
         public abstract DocsEnum Docs(FieldInfo fieldInfo, BlockTermState state, IBits skipDocs, DocsEnum reuse, int flags);
 
         public abstract DocsAndPositionsEnum DocsAndPositions(FieldInfo fieldInfo, BlockTermState state, IBits skipDocs, DocsAndPositionsEnum reuse,
                                                         int flags);
 
+		public abstract long RamBytesUsed();
+		public abstract void CheckIntegrity();
         public void Dispose()
         {
             Dispose(true);
@@ -33,6 +40,5 @@ namespace Lucene.Net.Codecs
 
         protected abstract void Dispose(bool disposing);
 
-        public abstract void ReadTermsBlock(IndexInput termsIn, FieldInfo fieldInfo, BlockTermState termState);
     }
 }

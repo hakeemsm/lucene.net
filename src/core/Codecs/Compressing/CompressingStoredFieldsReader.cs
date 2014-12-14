@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+using System.IO;
+using System.Linq;
 using Lucene.Net.Codecs.Lucene40;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
@@ -22,6 +24,7 @@ using Lucene.Net.Support;
 using Lucene.Net.Util;
 using Lucene.Net.Util.Packed;
 using System;
+using Directory = Lucene.Net.Store.Directory;
 
 namespace Lucene.Net.Codecs.Compressing
 {
@@ -79,7 +82,7 @@ namespace Lucene.Net.Codecs.Compressing
                 string indexStreamFN = IndexFileNames.SegmentFileName(segment, segmentSuffix, Lucene40StoredFieldsWriter.FIELDS_INDEX_EXTENSION);
                 string fieldsStreamFN = IndexFileNames.SegmentFileName(segment, segmentSuffix, Lucene40StoredFieldsWriter
                     .FIELDS_EXTENSION);
-                indexStream = d.OpenInput(indexStreamFN, context);
+				indexStream = d.OpenChecksumInput(indexStreamFN, context);
 
                 string codecNameIdx = formatName + CompressingStoredFieldsWriter.CODEC_SFX_IDX;
                 version = CodecUtil.CheckHeader(indexStream, codecNameIdx, CompressingStoredFieldsWriter
@@ -96,21 +99,21 @@ namespace Lucene.Net.Codecs.Compressing
                 {
                     CodecUtil.CheckEOF(indexStream);
                 }
-                indexStream.Close();
+                indexStream.Dispose();
                 indexStream = null;
                 // Open the data file and read metadata
                 fieldsStream = d.OpenInput(fieldsStreamFN, context);
                 if (version >= CompressingStoredFieldsWriter.VERSION_CHECKSUM)
                 {
-                    if (maxPointer + CodecUtil.FooterLength() != fieldsStream.Length())
+                    if (maxPointer + CodecUtil.FooterLength() != fieldsStream.Length)
                     {
                         throw new CorruptIndexException("Invalid fieldsStream maxPointer (file truncated?): maxPointer="
-                             + maxPointer + ", length=" + fieldsStream.Length());
+                             + maxPointer + ", length=" + fieldsStream.Length);
                     }
                 }
                 else
                 {
-                    maxPointer = fieldsStream.Length();
+                    maxPointer = fieldsStream.Length;
                 }
                 this.maxPointer = maxPointer;
                 string codecNameDat = formatName + CompressingStoredFieldsWriter.CODEC_SFX_DAT;
@@ -139,7 +142,7 @@ namespace Lucene.Net.Codecs.Compressing
             {
                 if (!success)
                 {
-                    IOUtils.CloseWhileHandlingException(this, indexStream);
+                    IOUtils.CloseWhileHandlingException((IDisposable)this, indexStream);
                 }
             }
         }
@@ -162,12 +165,12 @@ namespace Lucene.Net.Codecs.Compressing
         {
             if (!closed)
             {
-                IOUtils.Close(fieldsStream, indexReader);
+				IOUtils.Close(fieldsStream);
                 closed = true;
             }
         }
 
-        private static void ReadField(ByteArrayDataInput input, StoredFieldVisitor visitor, FieldInfo info, int bits)
+        private static void ReadField(DataInput input, StoredFieldVisitor visitor, FieldInfo info, int bits)
         {
             switch (bits & CompressingStoredFieldsWriter.TYPE_MASK)
             {
@@ -200,7 +203,7 @@ namespace Lucene.Net.Codecs.Compressing
             }
         }
 
-        private static void SkipField(ByteArrayDataInput input, int bits)
+        private static void SkipField(DataInput input, int bits)
         {
             switch (bits & CompressingStoredFieldsWriter.TYPE_MASK)
             {
@@ -232,9 +235,9 @@ namespace Lucene.Net.Codecs.Compressing
                 || docID >= docBase + chunkDocs
                 || docBase + chunkDocs > numDocs)
             {
-                throw new CorruptIndexException("Corrupted: docID=" + docID
-                    + ", docBase=" + docBase + ", chunkDocs=" + chunkDocs
-                    + ", numDocs=" + numDocs);
+				throw new CorruptIndexException("Corrupted: docID=" + docID + ", docBase=" + docBase
+					 + ", chunkDocs=" + chunkDocs + ", numDocs=" + numDocs + " (resource=" + fieldsStream
+					 + ")");
             }
 
             int numStoredFields, length, offset, totalLength;
@@ -318,7 +321,7 @@ namespace Lucene.Net.Codecs.Compressing
                 //assert offset < chunkSize;
                 decompressor.Decompress(fieldsStream, chunkSize, offset, Math.Min(length, chunkSize
                      - offset), bytes);
-                documentInput = new _DataInput_317(this, length);
+                documentInput = new AnonymousDataInput(this, length);
             }
             else
             {
@@ -327,9 +330,9 @@ namespace Lucene.Net.Codecs.Compressing
                 BytesRef bytes = totalLength <= BUFFER_REUSE_THRESHOLD ? this.bytes : new BytesRef
                     ();
                 decompressor.Decompress(fieldsStream, totalLength, offset, length, bytes);
-                //HM:revisit 
+                byte[] byteArray = Array.ConvertAll(bytes.bytes, b => (byte) b);
                 //assert bytes.length == length;
-                documentInput = new ByteArrayDataInput(bytes.bytes, bytes.offset, bytes.length);
+                documentInput = new ByteArrayDataInput(byteArray, bytes.offset, bytes.length);
             }
             for (int fieldIDX = 0; fieldIDX < numStoredFields; fieldIDX++)
             {
@@ -353,13 +356,13 @@ namespace Lucene.Net.Codecs.Compressing
             }
         }
 
-        private sealed class _DataInput_317 : DataInput
+        private sealed class AnonymousDataInput : DataInput
         {
-            public _DataInput_317(CompressingStoredFieldsReader _enclosing, int length)
+            public AnonymousDataInput(CompressingStoredFieldsReader parent, int length)
             {
-                this._enclosing = _enclosing;
+                this._parent = parent;
                 this.length = length;
-                this.decompressed = this._enclosing.bytes.length;
+                this.decompressed = this._parent.bytes.length;
             }
 
             internal int decompressed;
@@ -369,44 +372,43 @@ namespace Lucene.Net.Codecs.Compressing
             {
                 if (this.decompressed == length)
                 {
-                    throw new EOFException();
+                    throw new EndOfStreamException();
                 }
-                int toDecompress = Math.Min(length - this.decompressed, this._enclosing.chunkSize
-                    );
-                this._enclosing.decompressor.Decompress(this._enclosing.fieldsStream, toDecompress
-                    , 0, toDecompress, this._enclosing.bytes);
+                int toDecompress = Math.Min(length - this.decompressed, this._parent.chunkSize);
+                this._parent.decompressor.Decompress(this._parent.fieldsStream, toDecompress
+                    , 0, toDecompress, this._parent.bytes);
                 this.decompressed += toDecompress;
             }
 
             /// <exception cref="System.IO.IOException"></exception>
             public override byte ReadByte()
             {
-                if (this._enclosing.bytes.length == 0)
+                if (this._parent.bytes.length == 0)
                 {
                     this.FillBuffer();
                 }
-                --this._enclosing.bytes.length;
-                return this._enclosing.bytes.bytes[this._enclosing.bytes.offset++];
+                --this._parent.bytes.length;
+                return (byte) this._parent.bytes.bytes[this._parent.bytes.offset++];
             }
 
             /// <exception cref="System.IO.IOException"></exception>
             public override void ReadBytes(byte[] b, int offset, int len)
             {
-                while (len > this._enclosing.bytes.length)
+                while (len > this._parent.bytes.length)
                 {
-                    System.Array.Copy(this._enclosing.bytes.bytes, this._enclosing.bytes.offset, b, offset
-                        , this._enclosing.bytes.length);
-                    len -= this._enclosing.bytes.length;
-                    offset += this._enclosing.bytes.length;
+                    System.Array.Copy(this._parent.bytes.bytes, this._parent.bytes.offset, b, offset
+                        , this._parent.bytes.length);
+                    len -= this._parent.bytes.length;
+                    offset += this._parent.bytes.length;
                     this.FillBuffer();
                 }
-                System.Array.Copy(this._enclosing.bytes.bytes, this._enclosing.bytes.offset, b, offset
+                System.Array.Copy(this._parent.bytes.bytes, this._parent.bytes.offset, b, offset
                     , len);
-                this._enclosing.bytes.offset += len;
-                this._enclosing.bytes.length -= len;
+                this._parent.bytes.offset += len;
+                this._parent.bytes.length -= len;
             }
 
-            private readonly CompressingStoredFieldsReader _enclosing;
+            private readonly CompressingStoredFieldsReader _parent;
 
             private readonly int length;
         }
@@ -522,15 +524,12 @@ namespace Lucene.Net.Codecs.Compressing
                             throw new CorruptIndexException("bitsPerStoredFields=" + bitsPerStoredFields + " (resource="
                                  + this.fieldsStream + ")");
                         }
-                        else
+                        PackedInts.IReaderIterator it = PackedInts.GetReaderIteratorNoHeader(this.fieldsStream
+                            , PackedInts.Format.PACKED, this._enclosing.packedIntsVersion, chunkDocs, bitsPerStoredFields
+                            , 1);
+                        for (int i = 0; i < chunkDocs; ++i)
                         {
-                            PackedInts.ReaderIterator it = PackedInts.GetReaderIteratorNoHeader(this.fieldsStream
-                                , PackedInts.Format.PACKED, this._enclosing.packedIntsVersion, chunkDocs, bitsPerStoredFields
-                                , 1);
-                            for (int i = 0; i < chunkDocs; ++i)
-                            {
-                                this.numStoredFields[i] = (int)it.Next();
-                            }
+                            this.numStoredFields[i] = (int)it.Next();
                         }
                     }
                     int bitsPerLength = this.fieldsStream.ReadVInt();
@@ -546,7 +545,7 @@ namespace Lucene.Net.Codecs.Compressing
                         }
                         else
                         {
-                            PackedInts.ReaderIterator it = PackedInts.GetReaderIteratorNoHeader(this.fieldsStream
+                            PackedInts.IReaderIterator it = PackedInts.GetReaderIteratorNoHeader(this.fieldsStream
                                 , PackedInts.Format.PACKED, this._enclosing.packedIntsVersion, chunkDocs, bitsPerLength
                                 , 1);
                             for (int i = 0; i < chunkDocs; ++i)
@@ -602,7 +601,7 @@ namespace Lucene.Net.Codecs.Compressing
                 long chunkEnd = this.docBase + this.chunkDocs == this._enclosing.numDocs ? this._enclosing
                     .maxPointer : this._enclosing.indexReader.GetStartPointer(this.docBase + this.chunkDocs
                     );
-                @out.CopyBytes(this.fieldsStream, chunkEnd - this.fieldsStream.GetFilePointer());
+                output.CopyBytes(this.fieldsStream, chunkEnd - this.fieldsStream.FilePointer);
             }
 
             /// <summary>Check integrity of the data.</summary>
@@ -613,7 +612,7 @@ namespace Lucene.Net.Codecs.Compressing
             {
                 if (this._enclosing.version >= CompressingStoredFieldsWriter.VERSION_CHECKSUM)
                 {
-                    this.fieldsStream.Seek(this.fieldsStream.Length() - CodecUtil.FooterLength());
+                    this.fieldsStream.Seek(this.fieldsStream.Length - CodecUtil.FooterLength());
                     CodecUtil.CheckFooter(this.fieldsStream);
                 }
             }
@@ -621,9 +620,9 @@ namespace Lucene.Net.Codecs.Compressing
             private readonly CompressingStoredFieldsReader _enclosing;
         }
 
-        public override long RamBytesUsed()
+        public override long RamBytesUsed
         {
-            return indexReader.RamBytesUsed();
+            get { return indexReader.RamBytesUsed(); }
         }
 
         /// <exception cref="System.IO.IOException"></exception>

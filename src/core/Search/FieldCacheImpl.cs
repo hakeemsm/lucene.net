@@ -94,13 +94,13 @@ namespace Lucene.Net.Search
         // lucene.net: java version 3.0.3 with patch in rev. 912330 applied:
         // uschindler 21/02/2010 12:16:42 LUCENE-2273: Fixed bug in FieldCacheImpl.getCacheEntries() that used 
         //                     WeakHashMap incorrectly and lead to ConcurrentModificationException
-        public void Purge(AtomicReader r)
+        public void PurgeByCacheKey(object coreCacheKey)
         {
             lock (this)
             {
                 foreach (Cache c in caches.Values)
                 {
-                    c.Purge(r);
+                    c.Purge((AtomicReader) coreCacheKey);
                 }
             }
         }
@@ -150,7 +150,7 @@ namespace Lucene.Net.Search
 
             public void OnClose(object ownerCoreCacheKey)
             {
-                parent.Purge(owner);
+                parent.PurgeByCacheKey(ownerCoreCacheKey);
             }
         }
 
@@ -171,7 +171,7 @@ namespace Lucene.Net.Search
                 if (!(owner is AtomicReader))
                     throw new ArgumentException("owner is not of type AtomicReader");
 
-                parent.Purge((AtomicReader)owner);
+                parent.PurgeByCacheKey((AtomicReader)owner);
             }
         }
 

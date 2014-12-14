@@ -28,7 +28,7 @@ namespace Lucene.Net.Index
             lock (this)
             {
 				this.indexWriterConfig = indexWriterConfig;
-				infoStream = indexWriterConfig.GetInfoStream();
+				infoStream = indexWriterConfig.InfoStream;
             }
         }
 

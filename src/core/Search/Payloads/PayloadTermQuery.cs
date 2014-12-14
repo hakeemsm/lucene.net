@@ -38,11 +38,10 @@ namespace Lucene.Net.Search.Payloads
                 this.parent = query;
             }
 
-            public override Scorer Scorer(AtomicReaderContext context, bool scoreDocsInOrder,
-                bool topScorer, IBits acceptDocs)
+            public override Scorer Scorer(AtomicReaderContext context, IBits acceptDocs)
             {
                 return new PayloadTermSpanScorer(this, (TermSpans)query.GetSpans(context, acceptDocs, termContexts),
-                    this, similarity.GetSloppySimScorer(stats, context));
+                    this, similarity.GetSimScorer(stats, context));
             }
 
             protected class PayloadTermSpanScorer : SpanScorer
@@ -54,7 +53,7 @@ namespace Lucene.Net.Search.Payloads
                 protected internal int payloadsSeen;
                 private readonly TermSpans termSpans;
 
-                public PayloadTermSpanScorer(PayloadTermWeight parent, TermSpans spans, Weight weight, Similarity.SloppySimScorer docScorer)
+                public PayloadTermSpanScorer(PayloadTermWeight parent, TermSpans spans, Weight weight, SimScorer docScorer)
                     : base(spans, weight, docScorer)
                 {
                     this.parent = parent;
@@ -153,14 +152,14 @@ namespace Lucene.Net.Search.Payloads
 
             public override Explanation Explain(AtomicReaderContext context, int doc)
             {
-                PayloadTermSpanScorer scorer = (PayloadTermSpanScorer)Scorer(context, true, false, context.AtomicReader.LiveDocs);
+				PayloadTermSpanScorer scorer = (PayloadTermSpanScorer)Scorer(context, ((AtomicReader)context.Reader).LiveDocs);
                 if (scorer != null)
                 {
                     int newDoc = scorer.Advance(doc);
                     if (newDoc == doc)
                     {
                         float freq = scorer.SloppyFreq();
-                        Similarity.SloppySimScorer docScorer = similarity.GetSloppySimScorer(stats, context);
+						SimScorer docScorer = this.similarity.GetSimScorer(this.stats, context);
                         Explanation expl = new Explanation();
                         expl.Description = "weight(" + Query + " in " + doc + ") [" + similarity.GetType().Name + "], result of:";
                         Explanation scoreExplanation = docScorer.Explain(doc, new Explanation(freq, "phraseFreq=" + freq));

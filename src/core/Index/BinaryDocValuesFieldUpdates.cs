@@ -243,7 +243,7 @@ namespace Lucene.Net.Index
 			for (int i = 0; i < otherUpdates.size; i++)
 			{
 				int doc = (int)otherUpdates.docs.Get(i);
-				if (otherUpdates.docsWithField.Get(i))
+				if (otherUpdates.docsWithField[i])
 				{
 					docsWithField.Set(size);
 				}

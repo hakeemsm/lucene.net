@@ -19,8 +19,8 @@ namespace Lucene.Net.Codecs.PerField
         static PerFieldDocValuesFormat()
         {
             // .NET Port: can't we just make these const with "PerFieldDocValuesFormat.format" etc?
-            PER_FIELD_FORMAT_KEY = typeof(PerFieldDocValuesFormat).Name + ".format";
-            PER_FIELD_SUFFIX_KEY = typeof(PerFieldDocValuesFormat).Name + ".suffix";
+            PER_FIELD_FORMAT_KEY = typeof (PerFieldDocValuesFormat).Name + ".format";
+            PER_FIELD_SUFFIX_KEY = typeof (PerFieldDocValuesFormat).Name + ".suffix";
         }
 
         public PerFieldDocValuesFormat()
@@ -57,7 +57,9 @@ namespace Lucene.Net.Codecs.PerField
 
         private class FieldsWriter : DocValuesConsumer
         {
-            private readonly IDictionary<DocValuesFormat, ConsumerAndSuffix> formats = new HashMap<DocValuesFormat, ConsumerAndSuffix>();
+            private readonly IDictionary<DocValuesFormat, ConsumerAndSuffix> formats =
+                new HashMap<DocValuesFormat, ConsumerAndSuffix>();
+
             private readonly IDictionary<string, int> suffixes = new HashMap<string, int>();
 
             private readonly SegmentWriteState segmentWriteState;
@@ -85,48 +87,76 @@ namespace Lucene.Net.Codecs.PerField
                 GetInstance(field).AddSortedField(field, values, docToOrd);
             }
 
-            public override void AddSortedSetField(FieldInfo field, IEnumerable<BytesRef> values, IEnumerable<int> docToOrdCount, IEnumerable<long> ords)
+            public override void AddSortedSetField(FieldInfo field, IEnumerable<BytesRef> values,
+                IEnumerable<int> docToOrdCount, IEnumerable<long> ords)
             {
                 GetInstance(field).AddSortedSetField(field, values, docToOrdCount, ords);
             }
 
             private DocValuesConsumer GetInstance(FieldInfo field)
             {
-                DocValuesFormat format = parent.GetDocValuesFormatForField(field.name);
+                DocValuesFormat format = null;
+                if (field.DocValuesGen != -1)
+                {
+                    string formatName = field.GetAttribute(PER_FIELD_FORMAT_KEY);
+                    // this means the field never existed in that segment, yet is applied updates
+                    if (formatName != null)
+                    {
+                        format = DocValuesFormat.ForName(formatName);
+                    }
+                }
+                if (format == null)
+                {
+                    format = this.parent.GetDocValuesFormatForField(field.name);
+                }
                 if (format == null)
                 {
                     throw new InvalidOperationException("invalid null DocValuesFormat for field=\"" + field.name + "\"");
                 }
-                String formatName = format.Name;
+                String formatName2 = format.Name;
 
-                String previousValue = field.PutAttribute(PER_FIELD_FORMAT_KEY, formatName);
+                String previousValue = field.PutAttribute(PER_FIELD_FORMAT_KEY, formatName2);
                 //assert previousValue == null: "formatName=" + formatName + " prevValue=" + previousValue;
 
-                int suffix;
+                int? suffix = null;
 
                 ConsumerAndSuffix consumer = formats[format];
                 if (consumer == null)
                 {
                     // First time we are seeing this format; create a new instance
-
-                    // bump the suffix
-                    suffix = suffixes[formatName];
+                    if (field.DocValuesGen != -1)
+                    {
+                        string suffixAtt = field.GetAttribute(PER_FIELD_SUFFIX_KEY);
+                        // even when dvGen is != -1, it can still be a new field, that never
+                        // existed in the segment, and therefore doesn't have the recorded
+                        // attributes yet.
+                        if (suffixAtt != null)
+                        {
+                            suffix = int.Parse(suffixAtt);
+                        }
+                    }
                     if (suffix == null)
                     {
-                        suffix = 0;
+                        // bump the suffix
+                        suffix = suffixes[formatName2];
+                        if (suffix == null)
+                        {
+                            suffix = 0;
+                        }
+                        else
+                        {
+                            suffix = suffix + 1;
+                        }
                     }
-                    else
-                    {
-                        suffix = suffix + 1;
-                    }
-                    suffixes[formatName] = suffix;
+                    suffixes[formatName2] = suffix.Value;
 
-                    String segmentSuffix = GetFullSegmentSuffix(field.name,
-                                                                      segmentWriteState.segmentSuffix,
-                                                                      GetSuffix(formatName, suffix.ToString()));
-                    consumer = new ConsumerAndSuffix();
-                    consumer.consumer = format.FieldsConsumer(new SegmentWriteState(segmentWriteState, segmentSuffix));
-                    consumer.suffix = suffix;
+                    string segmentSuffix = GetFullSegmentSuffix(this.segmentWriteState.segmentSuffix,
+                        GetSuffix(formatName2, suffix.ToString()));
+                    consumer = new ConsumerAndSuffix
+                    {
+                        consumer = format.FieldsConsumer(new SegmentWriteState(segmentWriteState, segmentSuffix)),
+                        suffix = suffix.Value
+                    };
                     formats[format] = consumer;
                 }
                 else
@@ -155,7 +185,7 @@ namespace Lucene.Net.Codecs.PerField
             return formatName + "_" + suffix;
         }
 
-        internal static String GetFullSegmentSuffix(String fieldName, String outerSegmentSuffix, String segmentSuffix)
+        internal static string GetFullSegmentSuffix(string outerSegmentSuffix, string segmentSuffix)
         {
             if (outerSegmentSuffix.Length == 0)
             {
@@ -165,14 +195,17 @@ namespace Lucene.Net.Codecs.PerField
             {
                 // TODO: support embedding; I think it should work but
                 // we need a test confirm to confirm
-                // return outerSegmentSuffix + "_" + segmentSuffix;
-                throw new InvalidOperationException("cannot embed PerFieldPostingsFormat inside itself (field \"" + fieldName + "\" returned PerFieldPostingsFormat)");
+                return outerSegmentSuffix + "_" + segmentSuffix;
+                //where if fieldName defined in the exception message?
+                //throw new InvalidOperationException("cannot embed PerFieldPostingsFormat inside itself (field \"" + fieldName + "\" returned PerFieldPostingsFormat)");
             }
         }
 
         private class FieldsReader : DocValuesProducer
         {
-            private readonly IDictionary<String, DocValuesProducer> fields = new HashMap<String, DocValuesProducer>(); //.NET Port: what to do about TreeMap?
+            private readonly IDictionary<String, DocValuesProducer> fields = new HashMap<String, DocValuesProducer>();
+            //.NET Port: what to do about TreeMap?
+
             private readonly IDictionary<String, DocValuesProducer> formats = new HashMap<String, DocValuesProducer>();
 
             public FieldsReader(SegmentReadState readState)
@@ -197,7 +230,8 @@ namespace Lucene.Net.Codecs.PerField
                                 String segmentSuffix = GetSuffix(formatName, suffix);
                                 if (!formats.ContainsKey(segmentSuffix))
                                 {
-                                    formats[segmentSuffix] = format.FieldsProducer(new SegmentReadState(readState, segmentSuffix));
+                                    formats[segmentSuffix] =
+                                        format.FieldsProducer(new SegmentReadState(readState, segmentSuffix));
                                 }
                                 fields[fieldName] = formats[segmentSuffix];
                             }
@@ -217,7 +251,8 @@ namespace Lucene.Net.Codecs.PerField
             private FieldsReader(FieldsReader other)
             {
 
-                IDictionary<DocValuesProducer, DocValuesProducer> oldToNew = new IdentityDictionary<DocValuesProducer, DocValuesProducer>();
+                IDictionary<DocValuesProducer, DocValuesProducer> oldToNew =
+                    new IdentityDictionary<DocValuesProducer, DocValuesProducer>();
                 // First clone all formats
                 foreach (KeyValuePair<String, DocValuesProducer> ent in other.formats)
                 {
@@ -259,6 +294,11 @@ namespace Lucene.Net.Codecs.PerField
                 return producer == null ? null : producer.GetSortedSet(field);
             }
 
+			public override IBits GetDocsWithField(FieldInfo field)
+			{
+				DocValuesProducer producer = this.fields[field.name];
+				return producer == null ? null : producer.GetDocsWithField(field);
+			}
             protected override void Dispose(bool disposing)
             {
                 IOUtils.Close(formats.Values.ToArray());
@@ -269,13 +309,32 @@ namespace Lucene.Net.Codecs.PerField
                 return new FieldsReader(this);
             }
 
+            public override long RamBytesUsed
+            {
+                get
+                {
+                    return
+                        this.formats.Sum(
+                            entry => (entry.Key.Length*RamUsageEstimator.NUM_BYTES_CHAR) + entry.Value.RamBytesUsed);
+                }
+            }
+
+            /// <exception cref="System.IO.IOException"></exception>
+            public override void CheckIntegrity()
+            {
+                foreach (DocValuesProducer format in this.formats.Values)
+                {
+                    format.CheckIntegrity();
+                }
+            }
         }
 
         public override DocValuesProducer FieldsProducer(SegmentReadState state)
-        {
-            return new FieldsReader(state);
-        }
+            {
+                return new FieldsReader(state);
+            }
 
-        public abstract DocValuesFormat GetDocValuesFormatForField(String field);
+            public abstract DocValuesFormat GetDocValuesFormatForField(String field);
+        
     }
 }

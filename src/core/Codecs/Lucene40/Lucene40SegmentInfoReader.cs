@@ -33,7 +33,7 @@ namespace Lucene.Net.Codecs.Lucene40
                 bool isCompoundFile = input.ReadByte() == SegmentInfo.YES;
                 IDictionary<String, String> diagnostics = input.ReadStringStringMap();
                 IDictionary<String, String> attributes = input.ReadStringStringMap();
-                ISet<String> files = input.ReadStringSet();
+                var files = input.ReadStringSet();
 
                 if (input.FilePointer != input.Length)
                 {

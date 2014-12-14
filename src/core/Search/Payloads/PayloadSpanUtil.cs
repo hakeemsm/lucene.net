@@ -142,7 +142,7 @@ public class PayloadSpanUtil
         query.ExtractTerms(terms);
         foreach (var term in terms)
         {
-            termContexts.Add(term, TermContext.Build(context, term, true));
+            termContexts.Add(term, TermContext.Build(context, term));
         }
         foreach (AtomicReaderContext atomicReaderContext in context.Leaves)
         {

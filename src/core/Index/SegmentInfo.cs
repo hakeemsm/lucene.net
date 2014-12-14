@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Lucene.Net.Codecs;
@@ -215,7 +216,7 @@ namespace Lucene.Net.Index
         public void AddFiles(ICollection<String> files)
         {
             CheckFileNames(files);
-            setFiles.UnionWith(files);
+            setFiles = setFiles.Concat(files) as ICollection<string>;
         }
 
         public void AddFile(String file)

@@ -41,7 +41,7 @@ namespace Lucene.Net.Util.Packed
 			this.format = format;
 		}
 
-		protected internal override PackedInts.Mutable NewMutable(int valueCount, int bitsPerValue)
+		protected internal override PackedInts.IMutable NewMutable(int valueCount, int bitsPerValue)
 		{
 			//HM:revisit 
 			//assert this.bitsPerValue >= bitsPerValue;

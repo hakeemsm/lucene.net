@@ -44,7 +44,7 @@ namespace Lucene.Net.Index
             maxMergeSizeForForcedMerge = (long)(DEFAULT_MAX_MERGE_MB_FOR_FORCED_MERGE * 1024 * 1024);
 		}
 
-		protected internal override long Size(SegmentInfoPerCommit info)
+		protected internal override long Size(SegmentCommitInfo info)
 		{
 			return SizeBytes(info);
 		}

@@ -47,7 +47,7 @@ namespace Lucene.Net.Search.Spans
             int i = 0;
             foreach (var term in terms)
             {
-                var state = TermContext.Build(context, term, true);
+				TermContext state = TermContext.Build(context, term);
                 termStats[i] = searcher.TermStatistics(term, state);
                 termContexts[term] = state;
                 i++;
@@ -82,7 +82,7 @@ namespace Lucene.Net.Search.Spans
             }
         }
 
-        public override Scorer Scorer(AtomicReaderContext context, bool scoreDocsInOrder, bool topScorer, IBits acceptDocs)
+        public override Scorer Scorer(AtomicReaderContext context, IBits acceptDocs)
         {
             if (stats == null)
             {
@@ -90,20 +90,20 @@ namespace Lucene.Net.Search.Spans
             }
             else
             {
-                return new SpanScorer(query.GetSpans(context, acceptDocs, termContexts), this, similarity.GetSloppySimScorer(stats, context));
+                return new SpanScorer(query.GetSpans(context, acceptDocs, termContexts), this, similarity.GetSimScorer(stats, context));
             }
         }
 
         public override Explanation Explain(AtomicReaderContext context, int doc)
         {
-            var scorer = (SpanScorer)Scorer(context, true, false, context.AtomicReader.LiveDocs);
+			SpanScorer scorer = (SpanScorer)Scorer(context, ((AtomicReader)context.Reader).LiveDocs);
             if (scorer != null)
             {
                 var newDoc = scorer.Advance(doc);
                 if (newDoc == doc)
                 {
                     var freq = scorer.SloppyFreq();
-                    var docScorer = similarity.GetSloppySimScorer(stats, context);
+                    var docScorer = similarity.GetSimScorer(stats, context);
                     var result = new ComplexExplanation();
                     result.Description = "weight(" + Query + " in " + doc + ") [" + similarity.GetType().Name + "], result of:";
                     var scoreExplanation = docScorer.Explain(doc, new Explanation(freq, "phraseFreq=" + freq));

@@ -21,6 +21,7 @@ namespace Lucene.Net.Codecs.Lucene3x
         private readonly int indexSize;
         private readonly int skipInterval;
 
+		private readonly long ramBytesUsed;
         internal TermInfosReaderIndex(SegmentTermEnum indexEnum, int indexDivisor, long tiiFileLength, int totalIndexInterval)
         {
             this.totalIndexInterval = totalIndexInterval;
@@ -76,11 +77,14 @@ namespace Lucene.Net.Codecs.Lucene3x
             dataPagedBytes.Freeze(true);
             dataInput = dataPagedBytes.GetDataInput();
             indexToDataOffset = (PackedInts.Reader)indexToTerms.Mutable;
+			ramBytesUsed = fields.Length * (RamUsageEstimator.NUM_BYTES_OBJECT_REF + RamUsageEstimator
+				.ShallowSizeOfInstance(typeof(Term))) + dataPagedBytes.RamBytesUsed() + indexToDataOffset
+				.RamBytesUsed();
         }
 
         private static int EstimatePageBits(long estSize)
         {
-            return Math.Max(Math.Min(64 - Number.NumberOfLeadingZeros(estSize), MAX_PAGE_BITS), 4);
+            return Math.Max(Math.Min(64 - estSize.NumberOfLeadingZeros(), MAX_PAGE_BITS), 4);
         }
 
         internal void SeekEnum(SegmentTermEnum enumerator, int indexOffset)
@@ -178,5 +182,9 @@ namespace Lucene.Net.Codecs.Lucene3x
             input.Position = indexToDataOffset.Get(termIndex);
             return term.Field.CompareTo(fields[input.ReadVInt()].Field);
         }
+		internal virtual long RamBytesUsed()
+		{
+			return ramBytesUsed;
+		}
     }
 }

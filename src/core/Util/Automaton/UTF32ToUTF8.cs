@@ -111,7 +111,7 @@ namespace Lucene.Net.Util.Automaton
                     {
                         b.Append(' ');
                     }
-                    b.Append(Number.ToBinaryString(bytes[i].value));
+                    b.Append(bytes[i].value.ToBinaryString());
                 }
                 return b.ToString();
             }

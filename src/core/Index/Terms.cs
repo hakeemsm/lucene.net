@@ -86,6 +86,8 @@ namespace Lucene.Net.Index
         public abstract int DocCount { get; }
 
         /** Returns true if documents in this field store offsets. */
+        public abstract bool HasFreqs { get; }
+    
         public abstract bool HasOffsets { get; }
 
         /** Returns true if documents in this field store positions. */

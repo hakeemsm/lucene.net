@@ -158,7 +158,7 @@ namespace Lucene.Net.Index
                 }
             }
 
-            public override bool SeekExact(BytesRef text, bool useCache)
+            public override bool SeekExact(BytesRef text)
             {
                 throw new InvalidOperationException("this method should never be called.");
             }

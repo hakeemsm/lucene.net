@@ -80,7 +80,7 @@ namespace Lucene.Net.Search
                 stats.Normalize(queryNorm, topLevelBoost);
             }
 
-            public override Scorer Scorer(AtomicReaderContext context, bool scoreDocsInOrder, bool topScorer, IBits acceptDocs)
+            public override Scorer Scorer(AtomicReaderContext context, IBits acceptDocs)
             {
                 // assert termStates.topReaderContext == ReaderUtil.getTopLevelContext(context) : "The top-reader used to create Weight (" + termStates.topReaderContext + ") is not the same as the current reader's top-reader (" + ReaderUtil.getTopLevelContext(context);
                 var termsEnum = GetTermsEnum(context);
@@ -90,7 +90,7 @@ namespace Lucene.Net.Search
                 }
                 var docs = termsEnum.Docs(acceptDocs, null);
                 // assert docs != null
-                return new TermScorer(this, docs, similarity.GetExactSimScorer(stats, context));
+                return new TermScorer(this, docs, similarity.GetSimScorer(stats, context));
             }
 
             private TermsEnum GetTermsEnum(AtomicReaderContext context)
@@ -114,14 +114,14 @@ namespace Lucene.Net.Search
 
             public override Explanation Explain(AtomicReaderContext context, int doc)
             {
-                var scorer = Scorer(context, true, false, context.AtomicReader.LiveDocs);
+                var scorer = Scorer(context, context.AtomicReader.LiveDocs);
                 if (scorer != null)
                 {
                     int newDoc = scorer.Advance(doc);
                     if (newDoc == doc)
                     {
                         float freq = scorer.Freq;
-                        var docScorer = similarity.GetExactSimScorer(stats, context);
+                        var docScorer = similarity.GetSimScorer(stats, context);
                         var result = new ComplexExplanation();
                         result.Description = "weight(" + Query + " in " + doc + ") [" + similarity.GetType().Name + "], result of:";
                         var scoreExplanation = docScorer.Explain(doc, new Explanation(freq, "termFreq=" + freq));
@@ -166,7 +166,7 @@ namespace Lucene.Net.Search
             if (perReaderTermState == null || perReaderTermState.topReaderContext != context)
             {
                 // make TermQuery single-pass if we don't have a PRTS or if the context differs!
-                termState = TermContext.Build(context, term, true); // cache term lookups!
+                termState = TermContext.Build(context, term); // cache term lookups!
             }
             else
             {

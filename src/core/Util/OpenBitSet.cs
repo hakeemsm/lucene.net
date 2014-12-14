@@ -117,6 +117,10 @@ namespace Lucene.Net.Util
         /// </summary>
         public OpenBitSet(long[] bits, int numWords)
         {
+			if (numWords > bits.Length)
+			{
+				throw new ArgumentException("numWords cannot exceed bits.length");
+			}
             this.bits = bits;
             this.wlen = numWords;
             this.numBits = wlen * 64;
@@ -705,14 +709,14 @@ namespace Lucene.Net.Util
 
             if (word != 0)
             {
-                return (i << 6) + subIndex + BitUtil.Ntz(word);
+                return (i << 6) + subIndex + word.NumberOfTrailingZeros();
             }
 
             while (++i < wlen)
             {
                 word = bits[i];
                 if (word != 0)
-                    return (i << 6) + BitUtil.Ntz(word);
+                    return (i << 6) + word.NumberOfTrailingZeros();
             }
 
             return -1;
@@ -731,14 +735,14 @@ namespace Lucene.Net.Util
 
             if (word != 0)
             {
-                return (((long)i) << 6) + (subIndex + BitUtil.Ntz(word));
+                return (((long)i) << 6) + (subIndex + word.NumberOfTrailingZeros());
             }
 
             while (++i < wlen)
             {
                 word = bits[i];
                 if (word != 0)
-                    return (((long)i) << 6) + BitUtil.Ntz(word);
+                    return (((long)i) << 6) + word.NumberOfTrailingZeros();
             }
 
             return -1;
@@ -765,7 +769,7 @@ namespace Lucene.Net.Util
 
             if (word != 0)
             {
-                return (i << 6) + subIndex - Number.NumberOfLeadingZeros(word); // See LUCENE-3197
+                return (i << 6) + subIndex - word.NumberOfLeadingZeros(); // See LUCENE-3197
             }
 
             while (--i >= 0)
@@ -773,7 +777,7 @@ namespace Lucene.Net.Util
                 word = bits[i];
                 if (word != 0)
                 {
-                    return (i << 6) + 63 - Number.NumberOfLeadingZeros(word);
+                    return (i << 6) + 63 - word.NumberOfLeadingZeros();
                 }
             }
 
@@ -801,7 +805,7 @@ namespace Lucene.Net.Util
 
             if (word != 0)
             {
-                return (((long)i) << 6) + subIndex - Number.NumberOfLeadingZeros(word); // See LUCENE-3197
+                return (((long)i) << 6) + subIndex - word.NumberOfLeadingZeros(); // See LUCENE-3197
             }
 
             while (--i >= 0)
@@ -809,7 +813,7 @@ namespace Lucene.Net.Util
                 word = bits[i];
                 if (word != 0)
                 {
-                    return (((long)i) << 6) + 63 - Number.NumberOfLeadingZeros(word);
+                    return (((long)i) << 6) + 63 - word.NumberOfLeadingZeros();
                 }
             }
 
@@ -948,10 +952,8 @@ namespace Lucene.Net.Util
         /// </summary>
         public virtual void EnsureCapacityWords(int numWords)
         {
-            if (bits.Length < numWords)
-            {
-                bits = ArrayUtil.Grow(bits, numWords);
-            }
+			bits = ArrayUtil.Grow(bits, numWords);
+			wlen = numWords;
         }
 
         /// <summary>Ensure that the long[] is big enough to hold numBits, expanding it if necessary.

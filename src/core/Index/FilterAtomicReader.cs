@@ -16,9 +16,9 @@ namespace Lucene.Net.Index
 		/// </summary>
 		public static AtomicReader Unwrap(AtomicReader reader)
 		{
-			while (reader is Org.Apache.Lucene.Index.FilterAtomicReader)
+			while (reader is FilterAtomicReader)
 			{
-				reader = ((Org.Apache.Lucene.Index.FilterAtomicReader)reader).@in;
+				reader = ((FilterAtomicReader)reader).instance;
 			}
 			return reader;
 		}
@@ -86,6 +86,10 @@ namespace Lucene.Net.Index
                 get { return instance.DocCount; }
             }
 
+			public override bool HasFreqs
+			{
+			    get { return instance.HasFreqs; }
+			}
             public override bool HasOffsets
             {
                 get { return instance.HasOffsets; }

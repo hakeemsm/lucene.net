@@ -32,7 +32,7 @@ namespace Lucene.Net.Search
 
         private float sloppyFreq; //phrase frequency in current doc as computed by phraseFreq().
 
-        private readonly Similarity.SloppySimScorer docScorer;
+        private readonly SimScorer docScorer;
         private readonly int slop;
         private readonly int numPostings;
         private readonly PhraseQueue pq; // for advancing min position
@@ -48,9 +48,7 @@ namespace Lucene.Net.Search
         private int numMatches;
         private readonly long cost;
 
-        internal SloppyPhraseScorer(Weight weight, PhraseQuery.PostingsAndFreq[] postings,
-            int slop, Similarity.SloppySimScorer docScorer)
-            : base(weight)
+        internal SloppyPhraseScorer(Weight weight, PhraseQuery.PostingsAndFreq[] postings, int slop, SimScorer docScorer) : base(weight)
         {
             this.docScorer = docScorer;
             this.slop = slop;
@@ -145,7 +143,8 @@ namespace Lucene.Net.Search
                 return true; // not a repeater
             }
             PhrasePositions[] rg = rptGroups[pp.rptGroup];
-            OpenBitSet bits = new OpenBitSet(rg.Length); // for re-queuing after collisions are resolved
+			FixedBitSet bits = new FixedBitSet(rg.Length);
+			// for re-queuing after collisions are resolved
             int k0 = pp.rptInd;
             int k;
             while ((k = Collide(pp)) >= 0)
@@ -157,17 +156,19 @@ namespace Lucene.Net.Search
                 }
                 if (k != k0)
                 { // careful: mark only those currently in the queue
+					bits = FixedBitSet.EnsureCapacity(bits, k);
                     bits.Set(k); // mark that pp2 need to be re-queued
                 }
             }
             // collisions resolved, now re-queue
             // empty (partially) the queue until seeing all pps advanced for resolving collisions
             int n = 0;
-            while (bits.Cardinality > 0)
+			int numBits = bits.Length;
+            while (bits.Cardinality() > 0)
             {
                 PhrasePositions pp2 = pq.Pop();
                 rptStack[n++] = pp2;
-                if (pp2.rptGroup >= 0 && bits.Get(pp2.rptInd))
+				if (pp2.rptGroup >= 0 && pp2.rptInd < numBits && bits[pp2.rptInd])
                 {
                     bits.Clear(pp2.rptInd);
                 }
@@ -463,23 +464,23 @@ namespace Lucene.Net.Search
             return rp.ToArray();
         }
 
-        private List<OpenBitSet> PpTermsBitSets(PhrasePositions[] rpp, HashMap<Term, int?> tord)
+        private List<FixedBitSet> PpTermsBitSets(PhrasePositions[] rpp, HashMap<Term, int?> tord)
         {
-            var bb = new List<OpenBitSet>(rpp.Length);
+            var bb = new List<FixedBitSet>(rpp.Length);
             foreach (var pp in rpp)
             {
-                var b = new OpenBitSet(tord.Count);
+                var b = new FixedBitSet(tord.Count);
                 var ord = new int?();
                 foreach (var t in pp.terms.Where(t => (ord = tord[t]) != null))
                 {
-                    b.Set((long)ord);
+                    b.Set(ord.Value);
                 }
                 bb.Add(b);
             }
             return bb;
         }
 
-        private void UnionTermGroups(List<OpenBitSet> bb)
+        private void UnionTermGroups(List<FixedBitSet> bb)
         {
             int incr;
             for (int i = 0; i < bb.Count - 1; i += incr)
@@ -490,7 +491,7 @@ namespace Lucene.Net.Search
                 {
                     if (bb[i].Intersects(bb[j]))
                     {
-                        bb[i].Union(bb[j]);
+                        bb[i].Or(bb[j]);
                         bb.Remove(bb[j]);
                         incr = 0;
                     }
@@ -502,7 +503,7 @@ namespace Lucene.Net.Search
             }
         }
 
-        private HashMap<Term, int> TermGroups(HashMap<Term, int?> tord, List<OpenBitSet> bb)
+        private HashMap<Term, int> TermGroups(HashMap<Term, int?> tord, List<FixedBitSet> bb)
         {
             var tg = new HashMap<Term, int>();
             Term[] t = tord.Keys.ToArray();

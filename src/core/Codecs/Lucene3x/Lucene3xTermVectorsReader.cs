@@ -353,6 +353,10 @@ namespace Lucene.Net.Codecs.Lucene3x
                 }
             }
 
+			public override bool HasFreqs
+			{
+			    get { return true; }
+			}
             public override bool HasOffsets
             {
                 get { return storeOffsets; }

@@ -259,7 +259,7 @@ namespace Lucene.Net.Search
                     cIter.MoveNext();
                     Weight w = wIter.Current;
                     BooleanClause c = cIter.Current;
-                    if (w.Scorer(context, true, true, ((AtomicReader)context.Reader).LiveDocs) == null)
+                    if (w.Scorer(context, ((AtomicReader)context.Reader).LiveDocs) == null)
                     {
                         if (c.IsRequired)
                         {
@@ -329,7 +329,53 @@ namespace Lucene.Net.Search
                 }
             }
 
-            public override Scorer Scorer(AtomicReaderContext context, bool scoreDocsInOrder, bool topScorer, IBits acceptDocs)
+			public override BulkScorer BulkScorer(AtomicReaderContext context, bool scoreDocsInOrder, IBits acceptDocs)
+			{
+				if (scoreDocsInOrder || this.enclosingInstance.minNrShouldMatch > 1)
+				{
+					// TODO: (LUCENE-4872) in some cases BooleanScorer may be faster for minNrShouldMatch
+					// but the same is even true of pure conjunctions...
+					return base.BulkScorer(context, scoreDocsInOrder, acceptDocs);
+				}
+				IList<BulkScorer> prohibited = new List<BulkScorer>();
+				IList<BulkScorer> optional = new List<BulkScorer>();
+				IEnumerator<BooleanClause> cIter = this.enclosingInstance.clauses.GetEnumerator();
+				foreach (Weight w in this.weights)
+				{
+					cIter.MoveNext();
+				    BooleanClause c = cIter.Current;
+					BulkScorer subScorer = w.BulkScorer(context, false, acceptDocs);
+					if (subScorer == null)
+					{
+						if (c.IsRequired)
+						{
+							return null;
+						}
+					}
+					else
+					{
+					    if (c.IsRequired)
+						{
+							// TODO: there are some cases where BooleanScorer
+							// would handle conjunctions faster than
+							// BooleanScorer2...
+							return base.BulkScorer(context, scoreDocsInOrder, acceptDocs);
+						}
+					    if (c.IsProhibited)
+					    {
+					        prohibited.Add(subScorer);
+					    }
+					    else
+					    {
+					        optional.Add(subScorer);
+					    }
+					}
+				}
+				// Check if we can and should return a BooleanScorer
+				return new BooleanScorer(this, this.disableCoord, this.enclosingInstance.minNrShouldMatch
+					, optional, prohibited, this.maxCoord);
+			}
+            public override Scorer Scorer(AtomicReaderContext context, IBits acceptDocs)
             {
                 var required = new List<Scorer>();
                 var prohibited = new List<Scorer>();
@@ -340,7 +386,7 @@ namespace Lucene.Net.Search
                 {
                     cIter.MoveNext();
                     BooleanClause c = (BooleanClause)cIter.Current;
-                    Scorer subScorer = w.Scorer(context, true, false, acceptDocs);
+                    Scorer subScorer = w.Scorer(context, acceptDocs);
                     if (subScorer == null)
                     {
                         if (c.IsRequired)
@@ -360,21 +406,6 @@ namespace Lucene.Net.Search
                     {
                         optional.Add(subScorer);
                     }
-                }
-
-                // NOTE: we could also use BooleanScorer, if we knew
-                // this BooleanQuery was embedded in another
-                // BooleanQuery that was also using BooleanScorer (ie,
-                // BooleanScorer can nest).  But this is hard to
-                // detect and we never do so today... (ie, we only
-                // return BooleanScorer for topScorer):
-
-                // Check if we can and should return a BooleanScorer
-                // TODO: (LUCENE-4872) in some cases BooleanScorer may be faster for minNrShouldMatch
-                // but the same is even true of pure conjunctions...
-                if (!scoreDocsInOrder && topScorer && required.Count == 0 && enclosingInstance.minNrShouldMatch <= 1)
-                {
-                    return new BooleanScorer(this, disableCoord, enclosingInstance.minNrShouldMatch, optional, prohibited, maxCoord);
                 }
 
                 if (required.Count == 0 && optional.Count == 0)

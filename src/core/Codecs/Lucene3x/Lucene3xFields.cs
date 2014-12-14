@@ -221,6 +221,13 @@ namespace Lucene.Net.Codecs.Lucene3x
                 get { return -1; }
             }
 
+			public override bool HasFreqs
+			{
+			    get
+			    {
+			        return this.fieldInfo.IndexOptionsValue.GetValueOrDefault().CompareTo(IndexOptions.DOCS_AND_FREQS) >= 0;
+			    }
+			}
             public override bool HasOffsets
             {
                 get
@@ -818,7 +825,7 @@ namespace Lucene.Net.Codecs.Lucene3x
                 get { throw new NotSupportedException(); }
             }
 
-            public override SeekStatus SeekCeil(BytesRef term, bool useCache)
+			public override TermsEnum.SeekStatus SeekCeil(BytesRef term)
             {
                 if (DEBUG_SURROGATES)
                 {
@@ -830,7 +837,7 @@ namespace Lucene.Net.Codecs.Lucene3x
 
                 //assert termEnum != null;
 
-                tis.SeekEnum(termEnum, t0, useCache);
+				tis.SeekEnum(this.termEnum, t0, false);
 
                 Term t = termEnum.Term;
 
@@ -875,7 +882,7 @@ namespace Lucene.Net.Codecs.Lucene3x
                             {
 
                                 scratchTerm.CopyBytes(seekTermEnum.Term.Bytes);
-                                parent.TermsDict.SeekEnum(termEnum, seekTermEnum.Term, useCache);
+                                parent.TermsDict.SeekEnum(termEnum, seekTermEnum.Term, false);
 
                                 newSuffixStart = 1 + i;
 
@@ -1254,5 +1261,25 @@ namespace Lucene.Net.Codecs.Lucene3x
                 get { return pos.df; }
             }
         }
+		public override long RamBytesUsed
+		{
+		    get
+		    {
+		        if (tis != null)
+		        {
+		            return tis.RamBytesUsed();
+		        }
+		        else
+		        {
+		            // when there is no index, there is almost nothing loaded into RAM
+		            return 0L;
+		        }
+		    }
+		}
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public override void CheckIntegrity()
+		{
+		}
     }
 }

@@ -72,6 +72,7 @@ namespace Lucene.Net.Index
             this.codec = segmentInfo.Codec;
             this.context = context;
             this.fieldInfosBuilder = new FieldInfos.Builder(fieldNumbers);
+			mergeState.segmentInfo.DocCount = SetDocMaps();
         }
 
         internal bool ShouldMerge()
@@ -219,7 +220,7 @@ namespace Lucene.Net.Index
                                 toMerge.Add(values);
                                 docsWithField.Add(bits);
                             }
-                            consumer.MergeBinaryField(field, mergeState, toMerge);
+								consumer.MergeBinaryField(field, mergeState, toMerge, docsWithField);
                         }
                         else if (type == DocValuesType.SORTED)
                         {

@@ -130,20 +130,12 @@ namespace Lucene.Net.Search.Similarities
             return new BM25Stats(collectionStats.Field, idf, queryBoost, avgdl, cache);
         }
 
-        public override sealed ExactSimScorer GetExactSimScorer(SimWeight stats, AtomicReaderContext context)
+        public override sealed SimScorer GetSimScorer(SimWeight stats, AtomicReaderContext context)
         {
             var bm25stats = (BM25Stats)stats;
-            NumericDocValues norms = ((AtomicReader)context.Reader).GetNormValues(bm25stats.Field);
-            return norms == null
-                       ? new ExactBM25DocScorerNoNorms(bm25stats, this)
-                       : new ExactBM25DocScorer(bm25stats, norms, this) as ExactSimScorer;
+			return new BM25Similarity.BM25DocScorer(this, bm25stats, context.AtomicReader.GetNormValues(bm25stats.Field));
         }
 
-        public override sealed SloppySimScorer GetSloppySimScorer(SimWeight stats, AtomicReaderContext context)
-        {
-            var bm25stats = (BM25Stats)stats;
-            return new SloppyBM25DocScorer(bm25stats, ((AtomicReader)context.Reader).GetNormValues(bm25stats.Field), this);
-        }
 
         private Explanation ExplainScore(int doc, Explanation freq, BM25Stats stats, NumericDocValues norms)
         {
@@ -181,16 +173,64 @@ namespace Lucene.Net.Search.Similarities
             return "BM25(k1=" + k1 + ",b=" + b + ")";
         }
 
+		private class BM25DocScorer : SimScorer
+		{
+			private readonly BM25Similarity.BM25Stats stats;
+
+			private readonly float weightValue;
+
+			private readonly NumericDocValues norms;
+
+			private readonly float[] cache;
+
+			/// <exception cref="System.IO.IOException"></exception>
+			internal BM25DocScorer(BM25Similarity _enclosing, BM25Stats stats, 
+				NumericDocValues norms)
+			{
+				this._enclosing = _enclosing;
+				// boost * idf * (k1 + 1)
+				this.stats = stats;
+				this.weightValue = stats.weight * (this._enclosing.k1 + 1);
+				this.cache = stats.cache;
+				this.norms = norms;
+			}
+
+			public override float Score(int doc, float freq)
+			{
+				// if there are no norms, we act as if b=0
+				float norm = this.norms == null ? this._enclosing.k1 : this.cache[unchecked((byte
+					)this.norms.Get(doc)) & unchecked((int)(0xFF))];
+				return this.weightValue * freq / (freq + norm);
+			}
+
+			public override Explanation Explain(int doc, Explanation freq)
+			{
+				return this._enclosing.ExplainScore(doc, freq, this.stats, this.norms);
+			}
+
+			public override float ComputeSlopFactor(int distance)
+			{
+				return this._enclosing.SloppyFreq(distance);
+			}
+
+			public override float ComputePayloadFactor(int doc, int start, int end, BytesRef 
+				payload)
+			{
+				return this._enclosing.ScorePayload(doc, start, end, payload);
+			}
+
+			private readonly BM25Similarity _enclosing;
+		}
         private class BM25Stats : SimWeight
         {
             /** BM25's idf */
             private readonly float avgdl;
-            private readonly float[] cache;
+            internal readonly float[] cache;
             private readonly string field;
             private readonly Explanation idf;
             private readonly float queryBoost;
             private float topLevelBoost;
-            private float weight;
+            internal float weight;
 
             public BM25Stats(String field, Explanation idf, float queryBoost, float avgdl, float[] cache)
             {
@@ -266,104 +306,15 @@ namespace Lucene.Net.Search.Similarities
             }
         }
 
-        private class ExactBM25DocScorer : ExactSimScorer
-        {
-            private readonly float[] cache;
-            private readonly NumericDocValues norms;
-            private readonly BM25Similarity parent;
-            private readonly BM25Stats stats;
-            private readonly float weightValue;
 
-            public ExactBM25DocScorer(BM25Stats stats, NumericDocValues norms, BM25Similarity parent)
-            {
-                //assert norms != null;
-                this.stats = stats;
-                weightValue = stats.Weight * (parent.k1 + 1); // boost * idf * (k1 + 1)
-                cache = stats.Cache;
-                this.norms = norms;
-                this.parent = parent;
-            }
 
-            public override float Score(int doc, int freq)
-            {
-                return weightValue * freq / (freq + cache[(byte)norms.Get(doc) & 0xFF]);
-            }
-
-            public override Explanation Explain(int doc, Explanation freq)
-            {
-                return parent.ExplainScore(doc, freq, stats, norms);
-            }
-        }
-
-        private class ExactBM25DocScorerNoNorms : ExactSimScorer
-        {
-            private const int SCORE_CACHE_SIZE = 32;
-            private readonly BM25Similarity parent;
-            private readonly float[] scoreCache = new float[SCORE_CACHE_SIZE];
-            private readonly BM25Stats stats;
-            private readonly float weightValue;
-
-            public ExactBM25DocScorerNoNorms(BM25Stats stats, BM25Similarity parent)
-            {
-                this.stats = stats;
-                weightValue = stats.Weight * (parent.k1 + 1); // boost * idf * (k1 + 1)
-                for (int i = 0; i < SCORE_CACHE_SIZE; i++)
-                    scoreCache[i] = weightValue * i / (i + parent.k1);
-                this.parent = parent;
-            }
-
-            public override float Score(int doc, int freq)
-            {
-                // TODO: maybe score cache is more trouble than its worth?
-                return freq < SCORE_CACHE_SIZE // check cache
-                           ? scoreCache[freq] // cache hit
-                           : weightValue * freq / (freq + parent.k1); // cache miss
-            }
-
-            public override Explanation Explain(int doc, Explanation freq)
-            {
-                return parent.ExplainScore(doc, freq, stats, null);
-            }
-        }
-
-        private class SloppyBM25DocScorer : SloppySimScorer
-        {
-            private readonly float[] cache;
-            private readonly NumericDocValues norms;
-            private readonly BM25Similarity parent;
-            private readonly BM25Stats stats;
-            private readonly float weightValue; // boost * idf * (k1 + 1)
-
-            public SloppyBM25DocScorer(BM25Stats stats, NumericDocValues norms, BM25Similarity parent)
-            {
-                this.stats = stats;
-                weightValue = stats.Weight * (parent.k1 + 1);
-                cache = stats.Cache;
-                this.norms = norms;
-                this.parent = parent;
-            }
-
-            public override float Score(int doc, float freq)
-            {
-                // if there are no norms, we act as if b=0
-                float norm = norms == null ? parent.k1 : cache[(byte)norms.Get(doc) & 0xFF];
-                return weightValue * freq / (freq + norm);
-            }
-
-            public override Explanation Explain(int doc, Explanation freq)
-            {
-                return parent.ExplainScore(doc, freq, stats, norms);
-            }
-
-            public override float ComputeSlopFactor(int distance)
-            {
-                return parent.SloppyFreq(distance);
-            }
-
-            public override float ComputePayloadFactor(int doc, int start, int end, BytesRef payload)
-            {
-                return parent.ScorePayload(doc, start, end, payload);
-            }
-        }
+		public virtual float GetK1()
+		{
+			return k1;
+		}
+		public virtual float GetB()
+		{
+			return b;
+		}
     }
 }

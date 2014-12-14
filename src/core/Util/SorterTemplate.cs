@@ -103,7 +103,7 @@ namespace Lucene.Net.Util
         public void QuickSort(int lo, int hi)
         {
             if (hi <= lo) return;
-            QuickSort(lo, hi, (32 - Number.NumberOfLeadingZeros(hi - lo)) << 1);
+            QuickSort(lo, hi, (32 - (hi - lo).NumberOfLeadingZeros()) << 1);
         }
 
         private void QuickSort(int lo, int hi, int maxDepth)

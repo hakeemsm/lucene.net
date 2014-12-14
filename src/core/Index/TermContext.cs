@@ -37,7 +37,7 @@ namespace Lucene.Net.Index
             Register(state, ord, docFreq, totalTermFreq);
         }
 
-        public static TermContext Build(IndexReaderContext context, Term term, bool cache)
+        public static TermContext Build(IndexReaderContext context, Term term)
         {
             //assert context != null && context.isTopLevel;
             String field = term.Field;
@@ -54,7 +54,7 @@ namespace Lucene.Net.Index
                     if (terms != null)
                     {
                         TermsEnum termsEnum = terms.Iterator(null);
-                        if (termsEnum.SeekExact(bytes, cache))
+						if (termsEnum.SeekExact(bytes))
                         {
                             TermState termState = termsEnum.TermState;
                             //if (DEBUG) System.out.println("    found");

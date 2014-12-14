@@ -359,7 +359,7 @@ namespace Lucene.Net.Index
                 this.dir = dir;
             }
 
-			public MergeException(Exception exc, Directory dir) : base(exc)
+			public MergeException(Exception exc, Directory dir) : base(exc.Message)
             {
                 this.dir = dir;
             }

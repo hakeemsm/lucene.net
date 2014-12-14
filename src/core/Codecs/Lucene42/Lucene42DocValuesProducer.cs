@@ -238,7 +238,7 @@ namespace Lucene.Net.Codecs.Lucene42
             {
                 int blockSize = data.ReadVInt();
                 BlockPackedReader reader = new BlockPackedReader(data, entry.packedIntsVersion, blockSize, maxDoc, false);
-                Interlocked.Add(ref ramBytesUsed, reader.RamBytesUsed);
+                Interlocked.Add(ref ramBytesUsed, reader.RamBytesUsed());
                 
                 return reader;
             }
@@ -255,7 +255,7 @@ namespace Lucene.Net.Codecs.Lucene42
 				long mult = data.ReadLong();
 				int quotientBlockSize = data.ReadVInt();
 				BlockPackedReader quotientReader = new BlockPackedReader(data, entry.packedIntsVersion, quotientBlockSize, maxDoc, false);
-			    Interlocked.Add(ref ramBytesUsed, quotientReader.RamBytesUsed);
+			    Interlocked.Add(ref ramBytesUsed, quotientReader.RamBytesUsed());
 				return new AnonymousGCDCompressedNumericDocValues(min, mult, quotientReader);
 			}
 
@@ -352,7 +352,7 @@ namespace Lucene.Net.Codecs.Lucene42
             if (entry.minLength == entry.maxLength)
             {
                 int fixedLength = entry.minLength;
-                Interlocked.Add(ref ramBytesUsed, bytes.RamBytesUsed);
+                Interlocked.Add(ref ramBytesUsed, bytes.RamBytesUsed());
                 return new AnonymousDelegatedBinaryDocValues((docID, result) => bytesReader.FillSlice(result, fixedLength * (long)docID, fixedLength));
             }
             var addresses = new MonotonicBlockPackedReader(data, entry.packedIntsVersion, entry.blockSize, maxDoc, false);

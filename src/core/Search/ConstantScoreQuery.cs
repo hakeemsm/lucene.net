@@ -74,6 +74,21 @@ namespace Lucene.Net.Search
                     return rewritten;
                 }
             }
+			else
+			{
+				//HM:revisit 
+				//assert filter != null;
+				// Fix outdated usage pattern from Lucene 2.x/early-3.x:
+				// because ConstantScoreQuery only accepted filters,
+				// QueryWrapperFilter was used to wrap queries.
+				if (filter is QueryWrapperFilter)
+				{
+					QueryWrapperFilter qwf = (QueryWrapperFilter)filter;
+					Query rewritten = new ConstantScoreQuery(qwf.Query.Rewrite(reader));
+					rewritten.Boost = Boost;
+					return rewritten;
+				}
+			}
             return this;
         }
 
@@ -127,7 +142,25 @@ namespace Lucene.Net.Search
                 if (innerWeight != null) innerWeight.Normalize(norm, topLevelBoost);
             }
 
-            public override Scorer Scorer(AtomicReaderContext context, bool scoreDocsInOrder, bool topScorer, IBits acceptDocs)
+			public override BulkScorer BulkScorer(AtomicReaderContext context, bool scoreDocsInOrder, IBits acceptDocs)
+			{
+				DocIdSetIterator disi;
+				if (this.enclosingInstance.filter != null)
+				{
+					
+					//assert query == null;
+					return base.BulkScorer(context, scoreDocsInOrder, acceptDocs);
+				}
+			    //assert query != null && innerWeight != null;
+			    BulkScorer bulkScorer = this.innerWeight.BulkScorer(context
+			        , scoreDocsInOrder, acceptDocs);
+			    if (bulkScorer == null)
+			    {
+			        return null;
+			    }
+			    return new ConstantBulkScorer(bulkScorer, this, this.queryWeight);
+			}
+            public override Scorer Scorer(AtomicReaderContext context, IBits acceptDocs)
             {
                 DocIdSetIterator disi;
                 if (enclosingInstance.filter != null)
@@ -143,27 +176,27 @@ namespace Lucene.Net.Search
                 else
                 {
                     //assert query != null && innerWeight != null;
-                    disi = innerWeight.Scorer(context, scoreDocsInOrder, topScorer, acceptDocs);
+                    disi = innerWeight.Scorer(context, acceptDocs);
                 }
 
                 if (disi == null)
                 {
                     return null;
                 }
-                return new ConstantScorer(enclosingInstance, disi, this, queryWeight);
+                return new ConstantScorer(disi, this, queryWeight);
             }
 
             public override bool ScoresDocsOutOfOrder
             {
                 get
                 {
-                    return (innerWeight != null) ? innerWeight.ScoresDocsOutOfOrder : false;
+                    return (innerWeight != null) && innerWeight.ScoresDocsOutOfOrder;
                 }
             }
 
             public override Explanation Explain(AtomicReaderContext context, int doc)
             {
-                Scorer cs = Scorer(context, true, false, ((AtomicReader)context.Reader).LiveDocs);
+				Scorer cs = this.Scorer(context, ((AtomicReader)context.Reader).LiveDocs);
                 bool exists = (cs != null && cs.Advance(doc) == doc);
 
                 ComplexExplanation result = new ComplexExplanation();
@@ -185,17 +218,86 @@ namespace Lucene.Net.Search
             }
         }
 
+		/// <summary>
+		/// We return this as our
+		/// <see cref="BulkScorer">BulkScorer</see>
+		/// so that if the CSQ
+		/// wraps a query with its own optimized top-level
+		/// scorer (e.g. BooleanScorer) we can use that
+		/// top-level scorer.
+		/// </summary>
+		protected internal class ConstantBulkScorer : BulkScorer
+		{
+			internal readonly BulkScorer bulkScorer;
+
+			internal readonly Weight weight;
+
+			internal readonly float theScore;
+
+			public ConstantBulkScorer(BulkScorer bulkScorer, Weight weight, float theScore)
+			{
+				this.bulkScorer = bulkScorer;
+				this.weight = weight;
+				this.theScore = theScore;
+			}
+
+			/// <exception cref="System.IO.IOException"></exception>
+			public override bool Score(Collector collector, int max)
+			{
+				return this.bulkScorer.Score(this.WrapCollector(collector), max);
+			}
+
+			private Collector WrapCollector(Collector collector)
+			{
+				return new AnonymousCollector(this, collector);
+			}
+			private sealed class AnonymousCollector : Collector
+			{
+				public AnonymousCollector(ConstantBulkScorer _enclosing, Collector collector)
+				{
+					this._enclosing = _enclosing;
+					this.collector = collector;
+				}
+
+				/// <exception cref="System.IO.IOException"></exception>
+				public override void SetScorer(Scorer scorer)
+				{
+					// we must wrap again here, but using the scorer passed in as parameter:
+					collector.SetScorer(new ConstantScorer(scorer, this._enclosing
+						.weight, this._enclosing.theScore));
+				}
+
+				/// <exception cref="System.IO.IOException"></exception>
+				public override void Collect(int doc)
+				{
+					collector.Collect(doc);
+				}
+
+				/// <exception cref="System.IO.IOException"></exception>
+				public override void SetNextReader(AtomicReaderContext context)
+				{
+					collector.SetNextReader(context);
+				}
+
+				public override bool AcceptsDocsOutOfOrder
+				{
+				    get { return collector.AcceptsDocsOutOfOrder; }
+				}
+
+				private readonly ConstantBulkScorer _enclosing;
+
+				private readonly Collector collector;
+			}
+
+			private readonly ConstantScoreQuery _enclosing;
+		}
         protected internal class ConstantScorer : Scorer
         {
-            private readonly ConstantScoreQuery enclosingInstance;
-
             internal readonly DocIdSetIterator docIdSetIterator;
             internal readonly float theScore;
 
-            public ConstantScorer(ConstantScoreQuery enclosingInstance, DocIdSetIterator docIdSetIterator, Weight w, float theScore)
-                : base(w)
+            public ConstantScorer(DocIdSetIterator docIdSetIterator, Weight w, float theScore): base(w)
             {
-                this.enclosingInstance = enclosingInstance;
                 this.theScore = theScore;
                 this.docIdSetIterator = docIdSetIterator;
             }
@@ -230,67 +332,6 @@ namespace Lucene.Net.Search
                 get { return docIdSetIterator.Cost; }
             }
 
-            private Collector WrapCollector(Collector collector)
-            {
-                return new AnonymousWrappedCollector(this, collector);
-            }
-
-            private sealed class AnonymousWrappedCollector : Collector
-            {
-                private readonly ConstantScorer enclosingInstance;
-                private readonly Collector collector;
-
-                public AnonymousWrappedCollector(ConstantScorer enclosingInstance, Collector collector)
-                {
-                    this.enclosingInstance = enclosingInstance;
-                    this.collector = collector;
-                }
-
-                public override void SetScorer(Scorer scorer)
-                {
-                    // we must wrap again here, but using the scorer passed in as parameter:
-                    collector.SetScorer(new ConstantScorer(enclosingInstance.enclosingInstance, scorer, enclosingInstance.weight, enclosingInstance.theScore));
-                }
-
-                public override void Collect(int doc)
-                {
-                    collector.Collect(doc);
-                }
-
-                public override void SetNextReader(AtomicReaderContext context)
-                {
-                    collector.SetNextReader(context);
-                }
-
-                public override bool AcceptsDocsOutOfOrder
-                {
-                    get { return collector.AcceptsDocsOutOfOrder; }
-                }
-            }
-
-            public override void Score(Collector collector)
-            {
-                if (docIdSetIterator is Scorer)
-                {
-                    ((Scorer)docIdSetIterator).Score(WrapCollector(collector));
-                }
-                else
-                {
-                    base.Score(collector);
-                }
-            }
-
-            public override bool Score(Collector collector, int max, int firstDocID)
-            {
-                if (docIdSetIterator is Scorer)
-                {
-                    return ((Scorer)docIdSetIterator).Score(WrapCollector(collector), max, firstDocID);
-                }
-                else
-                {
-                    return base.Score(collector, max, firstDocID);
-                }
-            }
 
             public override ICollection<ChildScorer> Children
             {
@@ -306,7 +347,7 @@ namespace Lucene.Net.Search
 
         public override Weight CreateWeight(IndexSearcher searcher)
         {
-            return new ConstantScoreQuery.ConstantWeight(this, searcher);
+            return new ConstantWeight(this, searcher);
         }
 
         /// <summary>Prints a user-readable version of this query. </summary>
@@ -340,7 +381,7 @@ namespace Lucene.Net.Search
         public override int GetHashCode()
         {
             return 31 * base.GetHashCode() +
-                ((query == null) ? (object)filter : query).GetHashCode();
+                (query ?? (object)filter).GetHashCode();
         }
     }
 }

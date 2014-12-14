@@ -712,7 +712,7 @@ namespace Lucene.Net.Search
         /// top-level reader, it usually will have no effect as
         /// Lucene now caches at the segment reader level.
         /// </summary>
-        void Purge(AtomicReader r);
+        void PurgeByCacheKey(object coreCacheKey);
 
         /// <summary> Gets or sets the InfoStream for this FieldCache.
         /// <para>If non-null, FieldCacheImpl will warn whenever

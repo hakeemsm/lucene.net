@@ -7,7 +7,15 @@ namespace Lucene.Net.Search.Similarities
     public class DefaultSimilarity : TFIDFSimilarity
     {
         protected bool discountOverlaps = true;
+		private static readonly float[] NORM_TABLE = new float[256];
 
+		static DefaultSimilarity()
+		{
+			for (int i = 0; i < 256; i++)
+			{
+				NORM_TABLE[i] = SmallFloat.Byte315ToFloat((sbyte)i);
+			}
+		}
         public virtual bool DiscountOverlaps
         {
             get { return discountOverlaps; }
@@ -24,6 +32,14 @@ namespace Lucene.Net.Search.Similarities
             return (float) (1.0/Math.Sqrt(sumOfSquaredWeights));
         }
 
+		public sealed override long EncodeNormValue(float f)
+		{
+			return SmallFloat.FloatToByte315(f);
+		}
+		public sealed override float DecodeNormValue(long norm)
+		{
+			return NORM_TABLE[(int)(norm & unchecked((int)(0xFF)))];
+		}
         public override float LengthNorm(FieldInvertState state)
         {
             int numTerms;

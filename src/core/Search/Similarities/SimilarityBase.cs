@@ -94,49 +94,27 @@ namespace Lucene.Net.Search.Similarities
             return result;
         }
 
-        public override ExactSimScorer GetExactSimScorer(SimWeight stats, AtomicReaderContext context)
+        public override SimScorer GetSimScorer(SimWeight stats, AtomicReaderContext context)
         {
             var multiStats = stats as MultiSimilarity.MultiStats;
             if (multiStats != null)
             {
                 SimWeight[] subStats = multiStats.subStats;
-                var subScorers = new ExactSimScorer[subStats.Length];
+                var subScorers = new SimScorer[subStats.Length];
                 for (int i = 0; i < subScorers.Length; i++)
                 {
                     var basicstats = (BasicStats) subStats[i];
-                    subScorers[i] = new BasicExactDocScorer(basicstats, context.AtomicReader.GetNormValues(basicstats.Field),
-                                                            this);
+                    subScorers[i] = new BasicSimScorer(this, basicstats, context.AtomicReader.GetNormValues(basicstats.Field));
                 }
-                return new MultiSimilarity.MultiExactDocScorer(subScorers);
+				return new MultiSimilarity.MultiSimScorer(subScorers);
             }
             else
             {
                 var basicstats = (BasicStats) stats;
-                return new BasicExactDocScorer(basicstats, context.AtomicReader.GetNormValues(basicstats.Field), this);
+				return new BasicSimScorer(this, basicstats, context.AtomicReader.GetNormValues(basicstats.Field));
             }
         }
 
-        public override SloppySimScorer GetSloppySimScorer(SimWeight stats, AtomicReaderContext context)
-        {
-            var multiStats = stats as MultiSimilarity.MultiStats;
-            if (multiStats != null)
-            {
-                SimWeight[] subStats = multiStats.subStats;
-                var subScorers = new SloppySimScorer[subStats.Length];
-                for (int i = 0; i < subScorers.Length; i++)
-                {
-                    var basicstats = (BasicStats) subStats[i];
-                    subScorers[i] = new BasicSloppyDocScorer(basicstats, context.AtomicReader.GetNormValues(basicstats.Field),
-                                                             this);
-                }
-                return new MultiSimilarity.MultiSloppyDocScorer(subScorers);
-            }
-            else
-            {
-                var basicstats = (BasicStats) stats;
-                return new BasicSloppyDocScorer(basicstats, context.AtomicReader.GetNormValues(basicstats.Field), this);
-            }
-        }
 
         public abstract override string ToString();
 
@@ -146,7 +124,7 @@ namespace Lucene.Net.Search.Similarities
             if (DiscountOverlaps)
                 numTerms = state.Length - state.NumOverlap;
             else
-                numTerms = state.Length/state.Boost;
+				numTerms = state.Length;
             return EncodeNormValue(state.Boost, numTerms);
         }
 
@@ -165,66 +143,48 @@ namespace Lucene.Net.Search.Similarities
             return Math.Log(x)/LOG_2;
         }
 
-        private class BasicExactDocScorer : ExactSimScorer
+		private class BasicSimScorer : SimScorer
         {
-            private readonly NumericDocValues norms;
-            private readonly SimilarityBase parent;
             private readonly BasicStats stats;
 
-            public BasicExactDocScorer(BasicStats stats, NumericDocValues norms, SimilarityBase parent)
-            {
-                this.stats = stats;
-                this.norms = norms;
-                this.parent = parent;
-            }
+			private readonly NumericDocValues norms;
 
-            public override float Score(int doc, int freq)
-            {
-                return parent.Score(stats, freq,
-                                    norms == null ? 1F : parent.DecodeNormValue((sbyte) norms.Get(doc)));
-            }
+			/// <exception cref="System.IO.IOException"></exception>
+			internal BasicSimScorer(SimilarityBase _enclosing, BasicStats stats, NumericDocValues
+				 norms)
+			{
+				this._enclosing = _enclosing;
+				// --------------------------------- Classes ---------------------------------
+				this.stats = stats;
+				this.norms = norms;
+			}
 
-            public override Explanation Explain(int doc, Explanation freq)
-            {
-                return parent.Explain(stats, doc, freq,
-                                      norms == null ? 1F : parent.DecodeNormValue((sbyte) norms.Get(doc)));
-            }
+			public override float Score(int doc, float freq)
+			{
+				// We have to supply something in case norms are omitted
+				return this._enclosing.Score(this.stats, freq, this.norms == null ? 1F : this._enclosing
+					.DecodeNormValue(unchecked((sbyte)this.norms.Get(doc))));
+			}
+
+			public override Explanation Explain(int doc, Explanation freq)
+			{
+				return this._enclosing.Explain(this.stats, doc, freq, this.norms == null ? 1F : this
+					._enclosing.DecodeNormValue(unchecked((sbyte)this.norms.Get(doc))));
+			}
+
+			public override float ComputeSlopFactor(int distance)
+			{
+				return 1.0f / (distance + 1);
+			}
+
+			public override float ComputePayloadFactor(int doc, int start, int end, BytesRef 
+				payload)
+			{
+				return 1f;
+			}
+
+			private readonly SimilarityBase _enclosing;
         }
 
-        private class BasicSloppyDocScorer : SloppySimScorer
-        {
-            private readonly NumericDocValues norms;
-            private readonly SimilarityBase parent;
-            private readonly BasicStats stats;
-
-            public BasicSloppyDocScorer(BasicStats stats, NumericDocValues norms, SimilarityBase parent)
-            {
-                this.stats = stats;
-                this.norms = norms;
-                this.parent = parent;
-            }
-
-            public override float Score(int doc, float freq)
-            {
-                return parent.Score(stats, freq,
-                                    norms == null ? 1F : parent.DecodeNormValue((sbyte) norms.Get(doc)));
-            }
-
-            public override Explanation Explain(int doc, Explanation freq)
-            {
-                return parent.Explain(stats, doc, freq,
-                                      norms == null ? 1F : parent.DecodeNormValue((sbyte) norms.Get(doc)));
-            }
-
-            public override float ComputeSlopFactor(int distance)
-            {
-                return 1.0f/(distance + 1);
-            }
-
-            public override float ComputePayloadFactor(int doc, int start, int end, BytesRef payload)
-            {
-                return 1f;
-            }
-        }
     }
 }

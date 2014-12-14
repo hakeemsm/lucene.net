@@ -22,19 +22,18 @@ namespace Lucene.Net.Search.Spans
     /// <summary> Public for extension only.</summary>
     public class SpanScorer : Scorer
     {
-        protected SpansBase spans;
+		protected internal SpansBase spans;
 
         protected bool more = true;
 
         protected int doc;
         protected float freq;
         protected int numMatches;
-        protected Similarity.SloppySimScorer docScorer;
+		protected internal readonly SimScorer docScorer;
 
 
 
-        public SpanScorer(SpansBase spans, Weight weight, Similarity.SloppySimScorer docScorer)
-            : base(weight)
+		protected internal SpanScorer(SpansBase spans, Weight weight, SimScorer docScorer) : base(weight)
         {
             this.docScorer = docScorer;
             this.spans = spans;

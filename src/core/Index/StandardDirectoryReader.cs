@@ -91,9 +91,9 @@ namespace Lucene.Net.Index
                     // segmentInfos here, so that we are passing the
                     // actual instance of SegmentInfoPerCommit in
                     // IndexWriter's segmentInfos:
-                    SegmentInfoPerCommit info = infos.Info(i);
+                    SegmentCommitInfo info = infos.Info(i);
                     //assert info.info.dir == dir;
-                    ReadersAndLiveDocs rld = writer.readerPool.Get(info, true);
+					ReadersAndUpdates rld = writer.readerPool.Get(info, true);
                     try
                     {
                         SegmentReader reader = rld.GetReadOnlyClone(IOContext.READ);
@@ -185,7 +185,8 @@ namespace Lucene.Net.Index
                     }
                     else
                     {
-                        if (newReaders[i].SegmentInfo.DelGen == infos.Info(i).DelGen)
+						if (newReaders[i].SegmentInfo.DelGen == infos.Info(i).DelGen &&
+							 newReaders[i].SegmentInfo.FieldInfosGen == infos.Info(i).FieldInfosGen)
                         {
                             // No change; this reader will be shared between
                             // the old and the new one, so we must incRef
@@ -199,7 +200,17 @@ namespace Lucene.Net.Index
                             // Steal the ref returned by SegmentReader ctor:
                             //assert infos.info(i).info.dir == newReaders[i].getSegmentInfo().info.dir;
                             //assert infos.info(i).hasDeletions();
-                            newReaders[i] = new SegmentReader(infos.Info(i), newReaders[i].core, IOContext.READ);
+							if (newReaders[i].SegmentInfo.DelGen == infos.Info(i).DelGen)
+							{
+								// only DV updates
+								newReaders[i] = new SegmentReader(infos.Info(i), newReaders[i], newReaders[
+									i].LiveDocs, newReaders[i].NumDocs);
+							}
+							else
+							{
+								// both DV and liveDocs have changed
+								newReaders[i] = new SegmentReader(infos.Info(i), newReaders[i]);
+							}
                         }
                     }
                     success = true;

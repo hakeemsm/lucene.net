@@ -146,74 +146,37 @@ namespace Lucene.Net.Codecs.Lucene40
             }
         }
 
-        public override void ReadTermsBlock(IndexInput termsIn, FieldInfo fieldInfo, BlockTermState _termState)
-        {
-            StandardTermState termState = (StandardTermState)_termState;
+		public override void DecodeTerm(long[] longs, DataInput @in, FieldInfo fieldInfo, 
+			BlockTermState _termState, bool absolute)
+		{
+			Lucene40PostingsReader.StandardTermState termState = (Lucene40PostingsReader.StandardTermState
+				)_termState;
+			// if (DEBUG) System.out.println("SPR: nextTerm seg=" + segment + " tbOrd=" + termState.termBlockOrd + " bytesReader.fp=" + termState.bytesReader.getPosition());
+			bool isFirstTerm = termState.termBlockOrd == 0;
+			if (absolute)
+			{
+				termState.freqOffset = 0;
+				termState.proxOffset = 0;
+			}
+			termState.freqOffset += @in.ReadVLong();
+			//HM:revisit 
+			//assert termState.freqOffset < freqIn.length();
+			if (termState.docFreq >= skipMinimum)
+			{
+				termState.skipOffset = @in.ReadVLong();
+			}
+			// if (DEBUG) System.out.println("  skipOffset=" + termState.skipOffset + " vs freqIn.length=" + freqIn.length());
+			//HM:revisit 
+			//assert termState.freqOffset + termState.skipOffset < freqIn.length();
+			// undefined
+			if (fieldInfo.IndexOptionsValue.GetValueOrDefault().CompareTo(FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS
+				) >= 0)
+			{
+				termState.proxOffset += @in.ReadVLong();
+			}
+		}
 
-            int len = termsIn.ReadVInt();
-
-            // if (DEBUG) System.out.println("  SPR.readTermsBlock bytes=" + len + " ts=" + _termState);
-            if (termState.bytes == null)
-            {
-                termState.bytes = new byte[ArrayUtil.Oversize(len, 1)];
-                termState.bytesReader = new ByteArrayDataInput();
-            }
-            else if (termState.bytes.Length < len)
-            {
-                termState.bytes = new byte[ArrayUtil.Oversize(len, 1)];
-            }
-
-            termsIn.ReadBytes(termState.bytes, 0, len);
-            termState.bytesReader.Reset(termState.bytes, 0, len);
-        }
-
-        public override void NextTerm(FieldInfo fieldInfo, BlockTermState _termState)
-        {
-            StandardTermState termState = (StandardTermState)_termState;
-            // if (DEBUG) System.out.println("SPR: nextTerm seg=" + segment + " tbOrd=" + termState.termBlockOrd + " bytesReader.fp=" + termState.bytesReader.getPosition());
-            bool isFirstTerm = termState.termBlockOrd == 0;
-
-            if (isFirstTerm)
-            {
-                termState.freqOffset = termState.bytesReader.ReadVLong();
-            }
-            else
-            {
-                termState.freqOffset += termState.bytesReader.ReadVLong();
-            }
-            /*
-            if (DEBUG) {
-              System.out.println("  dF=" + termState.docFreq);
-              System.out.println("  freqFP=" + termState.freqOffset);
-            }
-            */
-            //assert termState.freqOffset < freqIn.length();
-
-            if (termState.docFreq >= skipMinimum)
-            {
-                termState.skipOffset = termState.bytesReader.ReadVLong();
-                // if (DEBUG) System.out.println("  skipOffset=" + termState.skipOffset + " vs freqIn.length=" + freqIn.length());
-                //assert termState.freqOffset + termState.skipOffset < freqIn.length();
-            }
-            else
-            {
-                // undefined
-            }
-
-            if (fieldInfo.IndexOptionsValue >= FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS)
-            {
-                if (isFirstTerm)
-                {
-                    termState.proxOffset = termState.bytesReader.ReadVLong();
-                }
-                else
-                {
-                    termState.proxOffset += termState.bytesReader.ReadVLong();
-                }
-                // if (DEBUG) System.out.println("  proxFP=" + termState.proxOffset);
-            }
-        }
-
+		
         public override DocsEnum Docs(FieldInfo fieldInfo, BlockTermState termState, IBits liveDocs, DocsEnum reuse, int flags)
         {
             if (CanReuse(reuse, liveDocs))
@@ -1303,5 +1266,14 @@ namespace Lucene.Net.Codecs.Lucene40
                 get { return limit; }
             }
         }
+		public override long RamBytesUsed()
+		{
+			return 0;
+		}
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public override void CheckIntegrity()
+		{
+		}
     }
 }

@@ -8,13 +8,14 @@ namespace Lucene.Net.Search
     internal abstract class DisjunctionScorer : Scorer
     {
         protected readonly Scorer[] subScorers;
+		protected internal int doc = -1;
         protected int numScorers;
 
-        protected DisjunctionScorer(Weight weight, Scorer[] subScorers, int numScorers)
-            : base(weight)
+		protected internal DisjunctionScorer(Weight weight, Scorer[] subScorers) : base(weight
+			)
         {
             this.subScorers = subScorers;
-            this.numScorers = numScorers;
+			this.numScorers = subScorers.Length;
             Heapify();
         }
 
@@ -112,5 +113,62 @@ namespace Lucene.Net.Search
                 return sum;
             }
         }
+		public override int DocID
+		{
+		    get { return doc; }
+		}
+		public override int NextDoc()
+		{
+			//HM:revisit 
+			//assert doc != NO_MORE_DOCS;
+			while (true)
+			{
+				if (subScorers[0].NextDoc() != NO_MORE_DOCS)
+				{
+					HeapAdjust(0);
+				}
+				else
+				{
+					HeapRemoveRoot();
+					if (numScorers == 0)
+					{
+						return doc = NO_MORE_DOCS;
+					}
+				}
+				if (subScorers[0].DocID != doc)
+				{
+					AfterNext();
+					return doc;
+				}
+			}
+		}
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public override int Advance(int target)
+		{
+			//HM:revisit 
+			//assert doc != NO_MORE_DOCS;
+			while (true)
+			{
+				if (subScorers[0].Advance(target) != NO_MORE_DOCS)
+				{
+					HeapAdjust(0);
+				}
+				else
+				{
+					HeapRemoveRoot();
+					if (numScorers == 0)
+					{
+						return doc = NO_MORE_DOCS;
+					}
+				}
+				if (subScorers[0].DocID >= target)
+				{
+					AfterNext();
+					return doc;
+				}
+			}
+		}
+		protected internal abstract void AfterNext();
     }
 }

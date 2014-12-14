@@ -57,7 +57,8 @@ namespace Lucene.Net.Util.Packed
 
         public BlockPackedReaderIterator(DataInput input, int packedIntsVersion, int blockSize, long valueCount)
         {
-            BlockPackedWriter.CheckBlockSize(blockSize);
+			PackedInts.CheckBlockSize(blockSize, AbstractBlockPackedWriter.MIN_BLOCK_SIZE, AbstractBlockPackedWriter
+				.MAX_BLOCK_SIZE);
             this.packedIntsVersion = packedIntsVersion;
             this.blockSize = blockSize;
             this.values = new long[blockSize];

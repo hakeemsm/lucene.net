@@ -163,7 +163,7 @@ namespace Lucene.Net.Index
             NumericDocValuesWriter numericWriter;
             if (writer == null)
             {
-                numericWriter = new NumericDocValuesWriter(fieldInfo, bytesUsed);
+				numericWriter = new NumericDocValuesWriter(fieldInfo, bytesUsed, true);
                 writers[fieldInfo.name] = numericWriter;
             }
             else if (!(writer is NumericDocValuesWriter))

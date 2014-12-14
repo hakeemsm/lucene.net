@@ -82,7 +82,8 @@ namespace Lucene.Net.Index
             // FreqProxTermsWriter does this with
             // FieldInfo.storePayload.
             FieldInfosWriter infosWriter = codec.FieldInfosFormat.FieldInfosWriter;
-            infosWriter.Write(state.directory, state.segmentInfo.name, state.fieldInfos, IOContext.DEFAULT);
+			infosWriter.Write(state.directory, state.segmentInfo.name, string.Empty, state.fieldInfos
+				, IOContext.DEFAULT);
         }
 
         public override void Abort()

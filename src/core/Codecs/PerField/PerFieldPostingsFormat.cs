@@ -219,6 +219,28 @@ namespace Lucene.Net.Codecs.PerField
             {
                 IOUtils.Close(formats.Values.ToArray());
             }
+			public override long RamBytesUsed
+			{
+			    get
+			    {
+			        long sizeInBytes = 0;
+			        foreach (KeyValuePair<string, FieldsProducer> entry in this.formats)
+			        {
+			            sizeInBytes += entry.Key.Length*RamUsageEstimator.NUM_BYTES_CHAR;
+			            sizeInBytes += entry.Value.RamBytesUsed;
+			        }
+			        return sizeInBytes;
+			    }
+			}
+
+			/// <exception cref="System.IO.IOException"></exception>
+			public override void CheckIntegrity()
+			{
+				foreach (FieldsProducer producer in this.formats.Values)
+				{
+					producer.CheckIntegrity();
+				}
+			}
         }
 
         public override FieldsProducer FieldsProducer(SegmentReadState state)

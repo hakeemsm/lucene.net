@@ -29,36 +29,27 @@ namespace Lucene.Net.Search.Similarities
             return new MultiStats(subStats);
         }
 
-        public override ExactSimScorer GetExactSimScorer(SimWeight stats, AtomicReaderContext context)
+		public override SimScorer GetSimScorer(SimWeight stats, AtomicReaderContext context)
         {
-            var subScorers = new ExactSimScorer[sims.Length];
-            for (int i = 0; i < subScorers.Length; i++)
-            {
-                subScorers[i] = sims[i].GetExactSimScorer(((MultiStats) stats).subStats[i], context);
-            }
-            return new MultiExactDocScorer(subScorers);
+			SimScorer[] subScorers = new SimScorer[sims.Length];
+			for (int i = 0; i < subScorers.Length; i++)
+			{
+				subScorers[i] = sims[i].GetSimScorer(((MultiStats)stats).subStats[i], context);
+			}
+			return new MultiSimScorer(subScorers);
         }
 
-        public override SloppySimScorer GetSloppySimScorer(SimWeight stats, AtomicReaderContext context)
-        {
-            var subScorers = new SloppySimScorer[sims.Length];
-            for (int i = 0; i < subScorers.Length; i++)
-            {
-                subScorers[i] = sims[i].GetSloppySimScorer(((MultiStats) stats).subStats[i], context);
-            }
-            return new MultiSloppyDocScorer(subScorers);
-        }
 
-        internal class MultiExactDocScorer : ExactSimScorer
+		internal class MultiSimScorer : SimScorer
         {
-            private readonly ExactSimScorer[] subScorers;
+			private readonly SimScorer[] subScorers;
 
-            public MultiExactDocScorer(ExactSimScorer[] subScorers)
+			internal MultiSimScorer(SimScorer[] subScorers)
             {
                 this.subScorers = subScorers;
             }
 
-            public override float Score(int doc, int freq)
+			public override float Score(int doc, float freq)
             {
                 return subScorers.Sum(subScorer => subScorer.Score(doc, freq));
             }
@@ -66,48 +57,24 @@ namespace Lucene.Net.Search.Similarities
             public override Explanation Explain(int doc, Explanation freq)
             {
                 var expl = new Explanation(Score(doc, (int) freq.Value), "sum of:");
-                foreach (ExactSimScorer subScorer in subScorers)
+                foreach (SimScorer subScorer in subScorers)
                 {
                     expl.AddDetail(subScorer.Explain(doc, freq));
                 }
                 return expl;
             }
+			public override float ComputeSlopFactor(int distance)
+			{
+				return subScorers[0].ComputeSlopFactor(distance);
+			}
+
+			public override float ComputePayloadFactor(int doc, int start, int end, BytesRef 
+				payload)
+			{
+				return subScorers[0].ComputePayloadFactor(doc, start, end, payload);
+			}
         }
 
-        internal class MultiSloppyDocScorer : SloppySimScorer
-        {
-            private readonly SloppySimScorer[] subScorers;
-
-            public MultiSloppyDocScorer(SloppySimScorer[] subScorers)
-            {
-                this.subScorers = subScorers;
-            }
-
-            public override float Score(int doc, float freq)
-            {
-                return subScorers.Sum(subScorer => subScorer.Score(doc, freq));
-            }
-
-            public override Explanation Explain(int doc, Explanation freq)
-            {
-                var expl = new Explanation(Score(doc, freq.Value), "sum of:");
-                foreach (SloppySimScorer subScorer in subScorers)
-                {
-                    expl.AddDetail(subScorer.Explain(doc, freq));
-                }
-                return expl;
-            }
-
-            public override float ComputeSlopFactor(int distance)
-            {
-                return subScorers[0].ComputeSlopFactor(distance);
-            }
-
-            public override float ComputePayloadFactor(int doc, int start, int end, BytesRef payload)
-            {
-                return subScorers[0].ComputePayloadFactor(doc, start, end, payload);
-            }
-        }
 
         internal class MultiStats : SimWeight
         {

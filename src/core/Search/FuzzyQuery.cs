@@ -106,6 +106,10 @@ namespace Lucene.Net.Search
             get { return prefixLength; }
         }
 
+		public virtual bool GetTranspositions()
+		{
+			return transpositions;
+		}
         protected internal override TermsEnum GetTermsEnum(Terms terms, AttributeSource atts)
         {
             if (maxEdits == 0 || prefixLength >= term.Text.Length)

@@ -36,41 +36,12 @@ namespace Lucene.Net.Search
         private float scoreSum;
         private float scoreMax;
 
-        public DisjunctionMaxScorer(Weight weight, float tieBreakerMultiplier, Scorer[] subScorers, int numScorers)
-            : base(weight, subScorers, numScorers)
+		public DisjunctionMaxScorer(Weight weight, float tieBreakerMultiplier, Scorer[] subScorers
+			) : base(weight, subScorers)
         {
             this.tieBreakerMultiplier = tieBreakerMultiplier;
         }
 
-        public override int NextDoc()
-        {
-            //assert doc != NO_MORE_DOCS;
-            while (true)
-            {
-                if (subScorers[0].NextDoc() != NO_MORE_DOCS)
-                {
-                    HeapAdjust(0);
-                }
-                else
-                {
-                    HeapRemoveRoot();
-                    if (numScorers == 0)
-                    {
-                        return doc = NO_MORE_DOCS;
-                    }
-                }
-                if (subScorers[0].DocID != doc)
-                {
-                    AfterNext();
-                    return doc;
-                }
-            }
-        }
-
-        public override int DocID
-        {
-            get { return doc; }
-        }
 
         /// <summary>Determine the current document score.  Initially invalid, until <see cref="NextDoc()" /> is called the first time.</summary>
         /// <returns> the score of the current generated document
@@ -80,7 +51,7 @@ namespace Lucene.Net.Search
             return scoreMax + (scoreSum - scoreMax) * tieBreakerMultiplier;
         }
 
-        private void AfterNext()
+		protected internal override void AfterNext()
         {
             doc = subScorers[0].DocID;
             if (doc != NO_MORE_DOCS)
@@ -111,29 +82,5 @@ namespace Lucene.Net.Search
             get { return freq; }
         }
 
-        public override int Advance(int target)
-        {
-            //assert doc != NO_MORE_DOCS;
-            while (true)
-            {
-                if (subScorers[0].Advance(target) != NO_MORE_DOCS)
-                {
-                    HeapAdjust(0);
-                }
-                else
-                {
-                    HeapRemoveRoot();
-                    if (numScorers == 0)
-                    {
-                        return doc = NO_MORE_DOCS;
-                    }
-                }
-                if (subScorers[0].DocID >= target)
-                {
-                    AfterNext();
-                    return doc;
-                }
-            }
-        }
     }
 }

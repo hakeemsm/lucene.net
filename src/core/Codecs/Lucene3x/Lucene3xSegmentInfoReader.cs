@@ -19,7 +19,7 @@ namespace Lucene.Net.Codecs.Lucene3x
             Lucene3xSegmentInfoReader reader = new Lucene3xSegmentInfoReader();
             for (int i = input.ReadInt(); i > 0; i--)
             { // read segmentInfos
-                SegmentInfoPerCommit siPerCommit = reader.ReadLegacySegmentInfo(directory, format, input);
+                SegmentCommitInfo siPerCommit = reader.ReadLegacySegmentInfo(directory, format, input);
                 SegmentInfo si = siPerCommit.info;
 
                 if (si.Version == null)
@@ -107,7 +107,7 @@ namespace Lucene.Net.Codecs.Lucene3x
             }
         }
 
-        private SegmentInfoPerCommit ReadLegacySegmentInfo(Directory dir, int format, IndexInput input)
+        private SegmentCommitInfo ReadLegacySegmentInfo(Directory dir, int format, IndexInput input)
         {
             // check that it is a format we can understand
             if (format > Lucene3xSegmentInfoFormat.FORMAT_DIAGNOSTICS)
@@ -259,7 +259,8 @@ namespace Lucene.Net.Codecs.Lucene3x
                                                null, diagnostics, attributes);
             info.Files = files;
 
-            SegmentInfoPerCommit infoPerCommit = new SegmentInfoPerCommit(info, delCount, delGen);
+			SegmentCommitInfo infoPerCommit = new SegmentCommitInfo(info, delCount, delGen, -
+				1);
             return infoPerCommit;
         }
 
@@ -278,7 +279,7 @@ namespace Lucene.Net.Codecs.Lucene3x
 
             IDictionary<String, String> diagnostics = input.ReadStringStringMap();
 
-            ISet<String> files = input.ReadStringSet();
+            var files = input.ReadStringSet();
 
             SegmentInfo info = new SegmentInfo(dir, version, name, docCount, isCompoundFile,
                                                null, diagnostics, attributes);

@@ -12,6 +12,7 @@ namespace Lucene.Net.Index
         private readonly Terms[] subs;
         private readonly ReaderSlice[] subSlices;
         private readonly IComparer<BytesRef> termComp;
+		private readonly bool hasFreqs;
         private readonly bool hasOffsets;
         private readonly bool hasPositions;
         private readonly bool hasPayloads;
@@ -23,6 +24,7 @@ namespace Lucene.Net.Index
 
             IComparer<BytesRef> _termComp = null;
             //assert subs.length > 0 : "inefficient: don't use MultiTerms over one sub";
+			bool _hasFreqs = true;
             bool _hasOffsets = true;
             bool _hasPositions = true;
             bool _hasPayloads = false;
@@ -42,12 +44,14 @@ namespace Lucene.Net.Index
                         throw new InvalidOperationException("sub-readers have different BytesRef.Comparators; cannot merge");
                     }
                 }
+				_hasFreqs &= subs[i].HasFreqs;
                 _hasOffsets &= subs[i].HasOffsets;
                 _hasPositions &= subs[i].HasPositions;
                 _hasPayloads |= subs[i].HasPayloads;
             }
 
             termComp = _termComp;
+			hasFreqs = _hasFreqs;
             hasOffsets = _hasOffsets;
             hasPositions = _hasPositions;
             hasPayloads = hasPositions && _hasPayloads; // if all subs have pos, and at least one has payloads.
@@ -161,6 +165,10 @@ namespace Lucene.Net.Index
             get { return termComp; }
         }
 
+		public override bool HasFreqs
+		{
+		    get { return hasFreqs; }
+		}
         public override bool HasOffsets
         {
             get { return hasOffsets; }

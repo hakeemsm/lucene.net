@@ -25,9 +25,9 @@ namespace Lucene.Net.Search
 	public sealed class TermScorer : Scorer
 	{
 	    private readonly DocsEnum docsEnum;
-	    private readonly Similarity.ExactSimScorer docScorer;
+	    private readonly SimScorer docScorer;
 
-	    public TermScorer(Weight weight, DocsEnum td, Similarity.ExactSimScorer docScorer)
+	    public TermScorer(Weight weight, DocsEnum td, SimScorer docScorer)
 	        : base(weight)
 	    {
 	        this.docScorer = docScorer;

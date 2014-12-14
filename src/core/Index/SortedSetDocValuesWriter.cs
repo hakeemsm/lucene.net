@@ -31,8 +31,8 @@ namespace Lucene.Net.Index
                     new ByteBlockPool.DirectTrackingAllocator(iwBytesUsed)),
                     BytesRefHash.DEFAULT_CAPACITY,
                     new BytesRefHash.DirectBytesStartArray(BytesRefHash.DEFAULT_CAPACITY, iwBytesUsed));
-            pending = new AppendingLongBuffer();
-            pendingCounts = new AppendingLongBuffer();
+			pending = new AppendingPackedLongBuffer(PackedInts.COMPACT);
+			pendingCounts = new AppendingDeltaPackedLongBuffer(PackedInts.COMPACT);
             bytesUsed = pending.RamBytesUsed + pendingCounts.RamBytesUsed;
             iwBytesUsed.AddAndGet(bytesUsed);
         }

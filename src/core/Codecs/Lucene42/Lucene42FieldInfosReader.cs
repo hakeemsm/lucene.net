@@ -12,7 +12,8 @@ namespace Lucene.Net.Codecs.Lucene42
 	[Obsolete(@"Only for reading old 4.2-4.5 segments")]
     internal sealed class Lucene42FieldInfosReader : FieldInfosReader
     {
-	    public override FieldInfos Read(Directory directory, string segmentName, IOContext iocontext)
+		public override FieldInfos Read(Directory directory, string segmentName, string segmentSuffix
+			, IOContext iocontext)
         {
             String fileName = IndexFileNames.SegmentFileName(segmentName, "", Lucene42FieldInfosFormat.EXTENSION);
             IndexInput input = directory.OpenInput(fileName, iocontext);

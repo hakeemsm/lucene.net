@@ -361,7 +361,7 @@ namespace Lucene.Net.Index
             String oldSegs = null;
             bool foundNonNullVersion = false;
             IComparer<String> versionComparator = StringHelper.VersionComparator;
-            foreach (SegmentInfoPerCommit si in sis)
+            foreach (SegmentCommitInfo si in sis)
             {
                 String version = si.info.Version;
                 if (version == null)
@@ -481,7 +481,7 @@ namespace Lucene.Net.Index
 
             for (int i = 0; i < numSegments; i++)
             {
-                SegmentInfoPerCommit info = sis.Info(i);
+                SegmentCommitInfo info = sis.Info(i);
                 int segmentName = int.Parse(info.info.name.Substring(1));
                 if (segmentName > result.maxSegmentName)
                 {
@@ -510,7 +510,7 @@ namespace Lucene.Net.Index
                     segInfoStat.compound = info.info.UseCompoundFile;
                     Msg(infoStream, "    numFiles=" + info.Files.Count);
                     segInfoStat.numFiles = info.Files.Count;
-                    segInfoStat.sizeMB = info.SizeInBytes / (1024.0 * 1024.0);
+                    segInfoStat.sizeMB = info.SizeInBytes() / (1024.0 * 1024.0);
                     if (info.info.GetAttribute(Lucene3xSegmentInfoFormat.DS_OFFSET_KEY) == null)
                     {
                         // don't print size in bytes if its a 3.0 segment with shared docstores
@@ -680,7 +680,7 @@ namespace Lucene.Net.Index
                 }
 
                 // Keeper
-                result.newSegments.Add((SegmentInfoPerCommit)info.Clone());
+                result.newSegments.Add((SegmentCommitInfo)info.Clone());
             }
 
             if (0 == result.numBadSegments)
@@ -1272,7 +1272,7 @@ namespace Lucene.Net.Index
                             long totDocFreq = 0;
                             for (int i = 0; i < seekCount; i++)
                             {
-                                if (!termsEnum.SeekExact(seekTerms[i], true))
+                                if (!termsEnum.SeekExact(seekTerms[i]))
                                 {
                                     throw new SystemException("seek to existing term " + seekTerms[i] + " failed");
                                 }
@@ -1776,7 +1776,7 @@ namespace Lucene.Net.Index
                                     }
 
                                     DocsEnum postingsDocs2;
-                                    if (!postingsTermsEnum.SeekExact(term, true))
+                                    if (!postingsTermsEnum.SeekExact(term))
                                     {
                                         throw new SystemException("vector term=" + term + " field=" + field + " does not exist in postings; doc=" + j);
                                     }

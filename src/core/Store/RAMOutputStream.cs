@@ -16,6 +16,8 @@
  */
 
 using System;
+using Lucene.Net.Support;
+using Buffer = System.Buffer;
 
 namespace Lucene.Net.Store
 {
@@ -38,6 +40,7 @@ namespace Lucene.Net.Store
         private long bufferStart;
         private int bufferLength;
 
+		private IChecksum crc = new BufferedChecksum(new CRC32());
         /// <summary>Construct an empty output buffer. </summary>
         public RAMOutputStream()
             : this(new RAMFile())
@@ -55,7 +58,7 @@ namespace Lucene.Net.Store
         }
 
         /// <summary>Copy the current contents of this buffer to the named output. </summary>
-        public virtual void WriteTo(IndexOutput out_Renamed)
+        public virtual void WriteTo(DataOutput out_Renamed)
         {
             Flush();
             long end = file.length;
@@ -152,6 +155,7 @@ namespace Lucene.Net.Store
         public override void WriteBytes(byte[] b, int offset, int len)
         {
             System.Diagnostics.Debug.Assert(b != null);
+			crc.Update(b, offset, len);
             while (len > 0)
             {
                 if (bufferPosition == bufferLength)
@@ -208,5 +212,9 @@ namespace Lucene.Net.Store
         {
             get { return (long)file.NumBuffers * (long)BUFFER_SIZE; }
         }
+		public override long GetChecksum()
+		{
+			return crc.Value;
+		}
     }
 }

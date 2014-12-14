@@ -105,14 +105,13 @@ namespace Lucene.Net.Codecs
         public static long CheckFooter(ChecksumIndexInput input)
         {
             ValidateFooter(input);
-            long actualChecksum = input.GetChecksum();
+            long actualChecksum = input.Checksum;
             long expectedChecksum = input.ReadLong();
             if (expectedChecksum != actualChecksum)
             {
                 throw new CorruptIndexException("checksum failed (hardware problem?) : expected="
-                                                + long.ToHexString(expectedChecksum) + " actual=" +
-                                                long.ToHexString(actualChecksum
-                                                    ) + " (resource=" + input + ")");
+                                                + expectedChecksum.ToString("x") + " actual=" +
+                                                actualChecksum.ToString("x") + " (resource=" + input + ")");
             }
             if (input.FilePointer != input.Length)
             {

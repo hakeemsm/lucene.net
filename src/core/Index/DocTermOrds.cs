@@ -619,7 +619,7 @@ namespace Lucene.Net.Index
                 get { return parent.ordBase + ord; }
             }
 
-            public override SeekStatus SeekCeil(BytesRef target, bool useCache)
+            public override SeekStatus SeekCeil(BytesRef target)
             {
                 // already here
                 if (term != null && term.Equals(target))
@@ -702,7 +702,7 @@ namespace Lucene.Net.Index
                     //System.out.println("  do seek term=" + base.utf8ToString());
                     ord = idx << parent.indexIntervalBits;
                     delta = (int)(targetOrd - ord);
-                    TermsEnum.SeekStatus seekStatus = termsEnum.SeekCeil(baseref, true);
+                    TermsEnum.SeekStatus seekStatus = termsEnum.SeekCeil(baseref);
                     //assert seekStatus == TermsEnum.SeekStatus.FOUND;
                 }
                 else

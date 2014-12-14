@@ -99,7 +99,16 @@ namespace Lucene.Net.Search
         {
             return GetEnumerator();
         }
+		public virtual List<Query> GetDisjuncts()
+		{
+			return disjuncts;
+		}
 
+		/// <returns>tie breaker value for multiple matches.</returns>
+		public virtual float GetTieBreakerMultiplier()
+		{
+			return tieBreakerMultiplier;
+		}
         /// <summary> Expert: the Weight for DisjunctionMaxQuery, used to
         /// normalize, score and explain these queries.
         /// 
@@ -162,15 +171,14 @@ namespace Lucene.Net.Search
             }
 
             /* Create the scorer used to score our associated DisjunctionMaxQuery */
-            public override Scorer Scorer(AtomicReaderContext context, bool scoreDocsInOrder,
-                bool topScorer, IBits acceptDocs)
+            public override Scorer Scorer(AtomicReaderContext context, IBits acceptDocs)
             {
                 Scorer[] scorers = new Scorer[weights.Count];
                 int idx = 0;
                 foreach (Weight w in weights)
                 {
                     // we will advance() subscorers
-                    Scorer subScorer = w.Scorer(context, true, false, acceptDocs);
+                    Scorer subScorer = w.Scorer(context, acceptDocs);
                     if (subScorer != null)
                     {
                         scorers[idx++] = subScorer;
@@ -178,7 +186,7 @@ namespace Lucene.Net.Search
                 }
                 if (idx == 0)
                     return null; // all scorers did not have documents
-                DisjunctionMaxScorer result = new DisjunctionMaxScorer(this, enclosingInstance.tieBreakerMultiplier, scorers, idx);
+                DisjunctionMaxScorer result = new DisjunctionMaxScorer(this, enclosingInstance.tieBreakerMultiplier, scorers);
                 return result;
             }
 

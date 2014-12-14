@@ -143,7 +143,7 @@ namespace Lucene.Net.Search
                 get { return enclosingInstance; }
             }
 
-            public override Scorer Scorer(AtomicReaderContext context, bool scoreDocsInOrder, bool topScorer, IBits acceptDocs)
+			public override Scorer Scorer(AtomicReaderContext context, IBits acceptDocs)
             {
                 //assert filter != null;
                 DocIdSet filterDocIdSet = enclosingInstance.filter.GetDocIdSet(context, acceptDocs);
@@ -153,8 +153,22 @@ namespace Lucene.Net.Search
                     return null;
                 }
 
-                return enclosingInstance.strategy.FilteredScorer(context, scoreDocsInOrder, topScorer, weight, filterDocIdSet);
+                return enclosingInstance.strategy.FilteredScorer(context, weight, filterDocIdSet);
             }
+			public override BulkScorer BulkScorer(AtomicReaderContext context, bool scoreDocsInOrder
+				, IBits acceptDocs)
+			{
+				//HM:revisit 
+				//assert filter != null;
+				DocIdSet filterDocIdSet = this.enclosingInstance.filter.GetDocIdSet(context, acceptDocs);
+				if (filterDocIdSet == null)
+				{
+					// this means the filter does not accept any documents.
+					return null;
+				}
+				return this.enclosingInstance.strategy.FilteredBulkScorer(context, weight, scoreDocsInOrder
+					, filterDocIdSet);
+			}
         }
 
         private sealed class QueryFirstScorer : Scorer
@@ -170,24 +184,6 @@ namespace Lucene.Net.Search
                 this.filterbits = filterBits;
             }
 
-            public override void Score(Collector collector)
-            {
-                // the normalization trick already applies the boost of this query,
-                // so we can use the wrapped scorer directly:
-                collector.SetScorer(scorer);
-                for (; ; )
-                {
-                    int scorerDoc = scorer.NextDoc();
-                    if (scorerDoc == DocIdSetIterator.NO_MORE_DOCS)
-                    {
-                        break;
-                    }
-                    if (filterbits[scorerDoc])
-                    {
-                        collector.Collect(scorerDoc);
-                    }
-                }
-            }
 
             public override int NextDoc()
             {
@@ -209,10 +205,7 @@ namespace Lucene.Net.Search
                 {
                     return scorerDoc = NextDoc();
                 }
-                else
-                {
-                    return scorerDoc = doc;
-                }
+                return scorerDoc = doc;
             }
 
             public override int DocID
@@ -244,6 +237,47 @@ namespace Lucene.Net.Search
             }
         }
 
+		private class QueryFirstBulkScorer : BulkScorer
+		{
+			private readonly Scorer scorer;
+
+			private readonly IBits filterBits;
+
+			public QueryFirstBulkScorer(Scorer scorer, IBits filterBits)
+			{
+				this.scorer = scorer;
+				this.filterBits = filterBits;
+			}
+
+			/// <exception cref="System.IO.IOException"></exception>
+			public override bool Score(Collector collector, int maxDoc)
+			{
+				// the normalization trick already applies the boost of this query,
+				// so we can use the wrapped scorer directly:
+				collector.SetScorer(scorer);
+				if (scorer.DocID == -1)
+				{
+					scorer.NextDoc();
+				}
+				while (true)
+				{
+					int scorerDoc = scorer.DocID;
+					if (scorerDoc < maxDoc)
+					{
+						if (filterBits[scorerDoc])
+						{
+							collector.Collect(scorerDoc);
+						}
+						scorer.NextDoc();
+					}
+					else
+					{
+						break;
+					}
+				}
+				return scorer.DocID != Scorer.NO_MORE_DOCS;
+			}
+		}
         private class LeapFrogScorer : Scorer
         {
             private readonly DocIdSetIterator secondary;
@@ -260,36 +294,6 @@ namespace Lucene.Net.Search
                 this.scorer = scorer;
             }
 
-            public override void Score(Collector collector)
-            {
-                // the normalization trick already applies the boost of this query,
-                // so we can use the wrapped scorer directly:
-                collector.SetScorer(scorer);
-                int primDoc = PrimaryNext();
-                int secDoc = secondary.Advance(primDoc);
-                for (; ; )
-                {
-                    if (primDoc == secDoc)
-                    {
-                        // Check if scorer has exhausted, only before collecting.
-                        if (primDoc == DocIdSetIterator.NO_MORE_DOCS)
-                        {
-                            break;
-                        }
-                        collector.Collect(primDoc);
-                        primDoc = primary.NextDoc();
-                        secDoc = secondary.Advance(primDoc);
-                    }
-                    else if (secDoc > primDoc)
-                    {
-                        primDoc = primary.Advance(secDoc);
-                    }
-                    else
-                    {
-                        secDoc = secondary.Advance(primDoc);
-                    }
-                }
-            }
 
             private int AdvanceToNextCommonDoc()
             {
@@ -388,15 +392,6 @@ namespace Lucene.Net.Search
         {
             Query queryRewritten = query.Rewrite(reader);
 
-            if (queryRewritten is MatchAllDocsQuery)
-            {
-                // Special case: If the query is a MatchAllDocsQuery, we only
-                // return a CSQ(filter).
-                Query rewritten = new ConstantScoreQuery(filter);
-                // Combine boost of MatchAllDocsQuery and the wrapped rewritten query:
-                rewritten.Boost = this.Boost * queryRewritten.Boost;
-                return rewritten;
-            }
 
             if (queryRewritten != query)
             {
@@ -475,9 +470,11 @@ namespace Lucene.Net.Search
 
         public static readonly FilterStrategy QUERY_FIRST_FILTER_STRATEGY = new QueryFirstFilterStrategy();
 
+		
         public class RandomAccessFilterStrategy : FilterStrategy
         {
-            public override Scorer FilteredScorer(AtomicReaderContext context, bool scoreDocsInOrder, bool topScorer, Weight weight, DocIdSet docIdSet)
+			public override Scorer FilteredScorer(AtomicReaderContext context, Weight weight, 
+				DocIdSet docIdSet)
             {
                 DocIdSetIterator filterIter = docIdSet.Iterator();
                 if (filterIter == null)
@@ -498,14 +495,14 @@ namespace Lucene.Net.Search
                 if (useRandomAccess)
                 {
                     // if we are using random access, we return the inner scorer, just with other acceptDocs
-                    return weight.Scorer(context, scoreDocsInOrder, topScorer, filterAcceptDocs);
+					return weight.Scorer(context, filterAcceptDocs);
                 }
                 else
                 {
                     //assert firstFilterDoc > -1;
                     // we are gonna advance() this scorer, so we set inorder=true/toplevel=false
                     // we pass null as acceptDocs, as our filter has already respected acceptDocs, no need to do twice
-                    Scorer scorer = weight.Scorer(context, true, false, null);
+                    Scorer scorer = weight.Scorer(context, null);
                     // TODO once we have way to figure out if we use RA or LeapFrog we can remove this scorer
                     return (scorer == null) ? null : new PrimaryAdvancedLeapFrogScorer(weight, firstFilterDoc, filterIter, scorer);
                 }
@@ -527,7 +524,8 @@ namespace Lucene.Net.Search
                 this.scorerFirst = scorerFirst;
             }
 
-            public override Scorer FilteredScorer(AtomicReaderContext context, bool scoreDocsInOrder, bool topScorer, Weight weight, DocIdSet docIdSet)
+			public override Scorer FilteredScorer(AtomicReaderContext context, Weight weight, 
+				DocIdSet docIdSet)
             {
                 DocIdSetIterator filterIter = docIdSet.Iterator();
                 if (filterIter == null)
@@ -537,28 +535,26 @@ namespace Lucene.Net.Search
                 }
                 // we are gonna advance() this scorer, so we set inorder=true/toplevel=false
                 // we pass null as acceptDocs, as our filter has already respected acceptDocs, no need to do twice
-                Scorer scorer = weight.Scorer(context, true, false, null);
-                if (scorerFirst)
-                {
-                    return (scorer == null) ? null : new LeapFrogScorer(weight, scorer, filterIter, scorer);
-                }
-                else
-                {
-                    return (scorer == null) ? null : new LeapFrogScorer(weight, filterIter, scorer, scorer);
-                }
+				Scorer scorer = weight.Scorer(context, null);
+				if (scorer == null)
+				{
+					return null;
+				}
+				return scorerFirst ? new LeapFrogScorer(weight, scorer, filterIter, scorer) : new LeapFrogScorer(weight, filterIter, scorer, scorer);
             }
         }
 
         private sealed class QueryFirstFilterStrategy : FilterStrategy
         {
-            public override Scorer FilteredScorer(AtomicReaderContext context, bool scoreDocsInOrder, bool topScorer, Weight weight, DocIdSet docIdSet)
+			public override Scorer FilteredScorer(AtomicReaderContext context, Weight weight, 
+				DocIdSet docIdSet)
             {
                 IBits filterAcceptDocs = docIdSet.Bits;
                 if (filterAcceptDocs == null)
                 {
-                    return LEAP_FROG_QUERY_FIRST_STRATEGY.FilteredScorer(context, scoreDocsInOrder, topScorer, weight, docIdSet);
+					return LEAP_FROG_QUERY_FIRST_STRATEGY.FilteredScorer(context, weight, docIdSet);
                 }
-                Scorer scorer = weight.Scorer(context, true, false, null);
+				Scorer scorer = weight.Scorer(context, null);
                 return scorer == null ? null : new QueryFirstScorer(weight,
                     filterAcceptDocs, scorer);
             }
@@ -566,11 +562,89 @@ namespace Lucene.Net.Search
     }
 
     // .NET Port: Moving this out of FilteredQuery to avoid conflict with property
+    /// <summary>
+    /// Abstract class that defines how the filter (
+    /// <see cref="DocIdSet">DocIdSet</see>
+    /// ) applied during document collection.
+    /// </summary>
     public abstract class FilterStrategy
     {
-        public abstract Scorer FilteredScorer(AtomicReaderContext context,
-            bool scoreDocsInOrder, bool topScorer, Weight weight,
-            DocIdSet docIdSet);
+        /// <summary>
+        /// Returns a filtered
+        /// <see cref="Scorer">Scorer</see>
+        /// based on this strategy.
+        /// </summary>
+        /// <param name="context">
+        /// the
+        /// <see cref="AtomicReaderContext">AtomicReaderContext
+        /// 	</see>
+        /// for which to return the
+        /// <see cref="Scorer">Scorer</see>
+        /// .
+        /// </param>
+        /// <param name="weight">
+        /// the
+        /// <see cref="FilteredQuery">FilteredQuery</see>
+        /// 
+        /// <see cref="Weight">Weight</see>
+        /// to create the filtered scorer.
+        /// </param>
+        /// <param name="docIdSet">
+        /// the filter
+        /// <see cref="DocIdSet">DocIdSet</see>
+        /// to apply
+        /// </param>
+        /// <returns>a filtered scorer</returns>
+        /// <exception cref="System.IO.IOException">
+        /// if an
+        /// <see cref="System.IO.IOException">System.IO.IOException</see>
+        /// occurs
+        /// </exception>
+        public abstract Scorer FilteredScorer(AtomicReaderContext context, Weight weight,DocIdSet docIdSet);
+
+        /// <summary>
+        /// Returns a filtered
+        /// <see cref="BulkScorer">BulkScorer</see>
+        /// based on this
+        /// strategy.  This is an optional method: the default
+        /// implementation just calls
+        /// <see cref="FilteredScorer(AtomicReaderContext, Weight, DocIdSet)">FilteredScorer(AtomicReaderContext, Weight, DocIdSet)</see>
+        /// and
+        /// wraps that into a BulkScorer.
+        /// </summary>
+        /// <param name="context">
+        /// the
+        /// <see cref="AtomicReaderContext">AtomicReaderContext
+        /// 	</see>
+        /// for which to return the
+        /// <see cref="Scorer">Scorer</see>
+        /// .
+        /// </param>
+        /// <param name="weight">
+        /// the
+        /// <see cref="FilteredQuery">FilteredQuery</see>
+        /// 
+        /// <see cref="Weight">Weight</see>
+        /// to create the filtered scorer.
+        /// </param>
+        /// <param name="docIdSet">
+        /// the filter
+        /// <see cref="DocIdSet">DocIdSet</see>
+        /// to apply
+        /// </param>
+        /// <returns>a filtered top scorer</returns>
+        /// <exception cref="System.IO.IOException"></exception>
+        public virtual BulkScorer FilteredBulkScorer(AtomicReaderContext context, Weight weight, bool scoreDocsInOrder, DocIdSet docIdSet)
+        {
+            Scorer scorer = FilteredScorer(context, weight, docIdSet);
+            if (scorer == null)
+            {
+                return null;
+            }
+            // This impl always scores docs in order, so we can
+            // ignore scoreDocsInOrder:
+            return new Weight.DefaultBulkScorer(scorer);
+        }
     }
 
 }

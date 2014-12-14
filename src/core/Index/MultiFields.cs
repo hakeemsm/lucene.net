@@ -107,7 +107,7 @@ namespace Lucene.Net.Index
             if (terms != null)
             {
                 TermsEnum termsEnum = terms.Iterator(null);
-                if (termsEnum.SeekExact(term, true))
+                if (termsEnum.SeekExact(term))
                 {
                     return termsEnum.Docs(liveDocs, null, flags);
                 }
@@ -128,7 +128,7 @@ namespace Lucene.Net.Index
             if (terms != null)
             {
                 TermsEnum termsEnum = terms.Iterator(null);
-                if (termsEnum.SeekExact(term, true))
+                if (termsEnum.SeekExact(term))
                 {
                     return termsEnum.DocsAndPositions(liveDocs, null, flags);
                 }

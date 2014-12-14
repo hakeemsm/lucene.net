@@ -17,6 +17,7 @@
 
 using System;
 using Lucene.Net.Index;
+using Lucene.Net.Search.Similarities;
 using Lucene.Net.Util;
 
 namespace Lucene.Net.Search

@@ -176,7 +176,7 @@ namespace Lucene.Net.Index
 			}
 			else
 			{
-				return Sharpen.Runtime.Substring(filename, idx + 1, filename.Length);
+				return filename.Substring(idx + 1, filename.Length);
 			}
 		}
         // All files created by codecs much match this pattern (we

@@ -27,6 +27,7 @@ namespace Lucene.Net.Codecs.Lucene40
         private readonly IDictionary<int, SortedDocValues> sortedInstances =
             new HashMap<int, SortedDocValues>();
 
+		private readonly AtomicLong ramBytesUsed;
         internal Lucene40DocValuesReader(SegmentReadState state, String filename, String legacyKey)
         {
             this.state = state;
@@ -846,6 +847,10 @@ namespace Lucene.Net.Codecs.Lucene40
             throw new InvalidOperationException("Lucene 4.0 does not support SortedSet: how did you pull this off?");
         }
 
+		public override IBits GetDocsWithField(FieldInfo field)
+		{
+			return new Bits.MatchAllBits(state.segmentInfo.DocCount);
+		}
         protected override void Dispose(bool disposing)
         {
             if (disposing)
@@ -853,5 +858,15 @@ namespace Lucene.Net.Codecs.Lucene40
                 dir.Dispose();
             }
         }
+
+        public override long RamBytesUsed
+		{
+            get { return ramBytesUsed.Get(); }
+		}
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public override void CheckIntegrity()
+		{
+		}
     }
 }

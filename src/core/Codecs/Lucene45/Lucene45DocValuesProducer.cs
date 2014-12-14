@@ -545,7 +545,7 @@ namespace Lucene.Net.Codecs.Lucene45
 					data.Seek(bytes.addressesOffset);
 					addrInstance = new MonotonicBlockPackedReader(data, bytes.packedIntsVersion, bytes.blockSize, bytes.count, false);
 					addressInstances[field.number] = addrInstance;
-					Interlocked.Add(ramBytesUsed,addrInstance.RamBytesUsed + RamUsageEstimator.NUM_BYTES_INT);
+					Interlocked.Add(ref ramBytesUsed,addrInstance.RamBytesUsed() + RamUsageEstimator.NUM_BYTES_INT);
 				}
 				addresses = addrInstance;
 			}
@@ -618,8 +618,7 @@ namespace Lucene.Net.Codecs.Lucene45
 					addrInstance = new MonotonicBlockPackedReader(data, bytes.packedIntsVersion, bytes
 						.blockSize, size, false);
 					addressInstances[field.number] = addrInstance;
-                    Interlocked.Add(ramBytesUsed,addrInstance.RamBytesUsed + RamUsageEstimator.NUM_BYTES_INT
-						);
+                    Interlocked.Add(ref ramBytesUsed,addrInstance.RamBytesUsed() + RamUsageEstimator.NUM_BYTES_INT);
 				}
 				addresses = addrInstance;
 			}
@@ -716,7 +715,7 @@ namespace Lucene.Net.Codecs.Lucene45
 					ordIndexInstance = new MonotonicBlockPackedReader(data, entry.packedIntsVersion, 
 						entry.blockSize, entry.count, false);
 					ordIndexInstances[field.number] = ordIndexInstance;
-                    Interlocked.Add(ramBytesUsed,ordIndexInstance.RamBytesUsed + RamUsageEstimator.NUM_BYTES_INT);
+                    Interlocked.Add(ref ramBytesUsed,ordIndexInstance.RamBytesUsed() + RamUsageEstimator.NUM_BYTES_INT);
 				}
 				ordIndex = ordIndexInstance;
 			}
@@ -1032,7 +1031,7 @@ namespace Lucene.Net.Codecs.Lucene45
 				this.addresses = addresses;
 				this.data = data;
 				this.numValues = bytes.count;
-				this.numIndexValues = addresses.Size;
+				this.numIndexValues = addresses.Size();
 				this.termsEnum = GetTermsEnum(data);
 			}
 

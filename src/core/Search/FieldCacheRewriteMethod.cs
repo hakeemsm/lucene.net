@@ -143,6 +143,10 @@ namespace Lucene.Net.Search
                     get { return -1; }
                 }
 
+				public override bool HasFreqs
+				{
+				    get { return false; }
+				}
                 public override bool HasOffsets
                 {
                     get { return false; }

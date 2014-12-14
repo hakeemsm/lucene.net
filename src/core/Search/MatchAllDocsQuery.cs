@@ -98,7 +98,7 @@ namespace Lucene.Net.Search
 			private float queryWeight;
 			private float queryNorm;
 			
-			public MatchAllDocsWeight(MatchAllDocsQuery parent, IndexSearcher searcher)
+			public MatchAllDocsWeight(MatchAllDocsQuery parent)
 			{
 			    this.parent = parent;
 			}
@@ -128,7 +128,7 @@ namespace Lucene.Net.Search
 				queryWeight *= this.queryNorm;
 			}
 			
-			public override Scorer Scorer(AtomicReaderContext context, bool scoreDocsInOrder, bool topScorer, IBits acceptDocs)
+			public override Scorer Scorer(AtomicReaderContext context, IBits acceptDocs)
 			{
                 return new MatchAllScorer(parent, context.Reader, acceptDocs, this, queryWeight);
 			}
@@ -150,7 +150,7 @@ namespace Lucene.Net.Search
 		
 		public override Weight CreateWeight(IndexSearcher searcher)
 		{
-			return new MatchAllDocsWeight(this, searcher);
+			return new MatchAllDocsWeight(this);
 		}
 		
 		public override void ExtractTerms(ISet<Term> terms)

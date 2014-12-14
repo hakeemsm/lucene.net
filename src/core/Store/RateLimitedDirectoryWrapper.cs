@@ -35,14 +35,14 @@ namespace Lucene.Net.Store
         public override Directory.IndexInputSlicer CreateSlicer(string name, IOContext context)
         {
             EnsureOpen();
-            return del.CreateSlicer(name, context);
+            return dir.CreateSlicer(name, context);
         }
 
 		/// <exception cref="System.IO.IOException"></exception>
         public override void Copy(Directory to, string src, string dest, IOContext context)
         {
             EnsureOpen();
-            del.Copy(to, src, dest, context);
+            dir.Copy(to, src, dest, context);
         }
 
         private RateLimiter GetRateLimiter(IOContext.Context context)

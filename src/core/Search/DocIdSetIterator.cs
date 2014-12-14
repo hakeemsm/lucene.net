@@ -28,6 +28,47 @@ namespace Lucene.Net.Search
 	/// </summary>
 	public abstract class DocIdSetIterator
 	{
+		public static DocIdSetIterator Empty()
+		{
+			return new AnonymousDocIdSetIterator();
+		}
+		private sealed class AnonymousDocIdSetIterator : DocIdSetIterator
+		{
+			public AnonymousDocIdSetIterator()
+			{
+				this.exhausted = false;
+			}
+
+			internal bool exhausted;
+
+			public override int Advance(int target)
+			{
+				//HM:revisit 
+				//assert !exhausted;
+				//HM:revisit 
+				//assert target >= 0;
+				this.exhausted = true;
+				return DocIdSetIterator.NO_MORE_DOCS;
+			}
+
+			public override int DocID
+			{
+			    get { return this.exhausted ? DocIdSetIterator.NO_MORE_DOCS : -1; }
+			}
+
+			public override int NextDoc()
+			{
+				//HM:revisit 
+				//assert !exhausted;
+				this.exhausted = true;
+				return DocIdSetIterator.NO_MORE_DOCS;
+			}
+
+			public override long Cost
+			{
+			    get { return 0; }
+			}
+		}
 		/// <summary> When returned by <see cref="NextDoc()" />, <see cref="Advance(int)" /> and
 		/// <see cref="DocID()" /> it means there are no more docs in the iterator.
 		/// </summary>

@@ -397,13 +397,11 @@
     <Compile Include="Index\BinaryDocValuesWriter.cs" />
     <Compile Include="Index\BitsSlice.cs" />
     <Compile Include="Index\BufferedDeletes.cs" />
-    <Compile Include="Index\BufferedDeletesStream.cs" />
     <Compile Include="Index\BufferedUpdates.cs" />
     <Compile Include="Index\BufferedUpdatesStream.cs" />
     <Compile Include="Index\ByteSliceReader.cs" />
     <Compile Include="Index\ByteSliceWriter.cs" />
     <Compile Include="Index\CheckIndex.cs" />
-    <Compile Include="Index\CoalescedDeletes.cs" />
     <Compile Include="Index\CoalescedUpdates.cs" />
     <Compile Include="Index\CompositeReader.cs" />
     <Compile Include="Index\CompositeReaderContext.cs" />
@@ -447,7 +445,6 @@
     <Compile Include="Index\FlushPolicy.cs" />
     <Compile Include="Index\FreqProxTermsWriter.cs" />
     <Compile Include="Index\FreqProxTermsWriterPerField.cs" />
-    <Compile Include="Index\FrozenBufferedDeletes.cs" />
     <Compile Include="Index\FrozenBufferedUpdates.cs" />
     <Compile Include="Index\IIndexableField.cs" />
     <Compile Include="Index\IIndexableFieldType.cs" />
@@ -510,7 +507,6 @@
     <Compile Include="Index\PrefixCodedTerms.cs" />
     <Compile Include="Index\RandomAccessOrds.cs" />
     <Compile Include="Index\ReaderManager.cs" />
-    <Compile Include="Index\ReadersAndLiveDocs.cs" />
     <Compile Include="Index\ReadersAndUpdates.cs" />
     <Compile Include="Index\ReaderSlice.cs" />
     <Compile Include="Index\ReaderUtil.cs" />
@@ -520,7 +516,6 @@
     <Compile Include="Index\SegmentInfo.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Index\SegmentInfoPerCommit.cs" />
     <Compile Include="Index\SegmentInfos.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -624,6 +619,7 @@
     <Compile Include="Search\Explanation.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Search\FakeScorer.cs" />
     <Compile Include="Search\FieldCache.cs" />
     <Compile Include="Search\FieldCacheDocIdSet.cs" />
     <Compile Include="Search\FieldCacheImpl.cs">
@@ -859,9 +855,6 @@
     <Compile Include="Store\ByteArrayDataOutput.cs" />
     <Compile Include="Store\ByteBufferIndexInput.cs" />
     <Compile Include="Store\CheckSumIndexInput.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Store\CheckSumIndexOutput.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Store\CompoundFileDirectory.cs" />

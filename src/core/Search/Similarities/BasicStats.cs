@@ -5,6 +5,11 @@ namespace Lucene.Net.Search.Similarities
     public class BasicStats : Similarity.SimWeight
     {
         private readonly string field;
+		protected internal long numberOfDocuments;
+		protected internal long numberOfFieldTokens;
+		protected internal float avgFieldLength;
+		protected internal long docFreq;
+		protected internal long totalTermFreq;
         protected readonly float queryBoost;
         protected float topLevelBoost;
         protected float totalBoost;

@@ -7,7 +7,7 @@ using System.Text;
 
 namespace Lucene.Net.Util.Packed
 {
-    public sealed class MonotonicBlockPackedReader
+	public sealed class MonotonicBlockPackedReader : LongValues
     {
         private readonly int blockShift, blockMask;
         private readonly long valueCount;
@@ -17,15 +17,11 @@ namespace Lucene.Net.Util.Packed
 
         public MonotonicBlockPackedReader(IndexInput input, int packedIntsVersion, int blockSize, long valueCount, bool direct)
         {
-            AbstractBlockPackedWriter.CheckBlockSize(blockSize);
             this.valueCount = valueCount;
-            blockShift = blockSize.NumberOfTrailingZeros();
+			blockShift = PackedInts.CheckBlockSize(blockSize, AbstractBlockPackedWriter.MIN_BLOCK_SIZE
+				, AbstractBlockPackedWriter.MAX_BLOCK_SIZE);
             blockMask = blockSize - 1;
-            int numBlocks = (int)(valueCount / blockSize) + (valueCount % blockSize == 0 ? 0 : 1);
-            if ((long)numBlocks * blockSize < valueCount)
-            {
-                throw new ArgumentException("valueCount is too large for this block size");
-            }
+			int numBlocks = PackedInts.NumBlocks(valueCount, blockSize);
             minValues = new long[numBlocks];
             averages = new float[numBlocks];
             subReaders = new PackedInts.Reader[numBlocks];
@@ -59,12 +55,27 @@ namespace Lucene.Net.Util.Packed
             }
         }
 
-        public long Get(long index)
+		public override long Get(long index)
         {
             //assert index >= 0 && index < valueCount;
             int block = (int) Number.URShift(index, blockShift);
             int idx = (int) (index & blockMask);
             return minValues[block] + (long)(idx * averages[block]) + BlockPackedReaderIterator.ZigZagDecode(subReaders[block].Get(idx));
         }
+		public long Size()
+		{
+			return valueCount;
+		}
+		public long RamBytesUsed()
+		{
+			long sizeInBytes = 0;
+			sizeInBytes += RamUsageEstimator.SizeOf(minValues);
+			sizeInBytes += RamUsageEstimator.SizeOf(averages);
+			foreach (PackedInts.Reader reader in subReaders)
+			{
+				sizeInBytes += reader.RamBytesUsed();
+			}
+			return sizeInBytes;
+		}
     }
 }

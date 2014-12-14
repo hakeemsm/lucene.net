@@ -216,7 +216,7 @@ namespace Lucene.Net.Codecs.Compressing
             internal void Reset(int len)
             {
                 int bitsPerOffset = PackedInts.BitsRequired(len - LAST_LITERALS);
-                int bitsPerOffsetLog = 32 - Number.NumberOfLeadingZeros(bitsPerOffset - 1);
+                int bitsPerOffsetLog = 32 - (bitsPerOffset - 1).NumberOfLeadingZeros();
                 hashLog = MEMORY_USAGE + 3 - bitsPerOffsetLog;
 
                 if (hashTable == null || hashTable.Size() < 1 << hashLog || hashTable.GetBitsPerValue() < bitsPerOffset)

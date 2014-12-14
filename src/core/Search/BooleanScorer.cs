@@ -57,7 +57,7 @@ namespace Lucene.Net.Search
     * conjunction can reduce the number of priority queue
     * updates for the optional terms. */
 
-    public sealed class BooleanScorer : Scorer
+    public sealed class BooleanScorer : BulkScorer
     {
         private sealed class BooleanScorerCollector : Collector
         {
@@ -206,20 +206,22 @@ namespace Lucene.Net.Search
 
         internal sealed class SubScorer
         {
-            public Scorer scorer;
+            public BulkScorer scorer;
             // TODO: re-enable this if BQ ever sends us required clauses
             //public bool required = false;
             public bool prohibited;
             public Collector collector;
             public SubScorer next;
 
-            public SubScorer(Scorer scorer, bool required, bool prohibited, Collector collector, SubScorer next)
+            public bool more;
+            public SubScorer(BulkScorer scorer, bool required, bool prohibited, Collector collector, SubScorer next)
             {
                 if (required)
                 {
                     throw new ArgumentException("this scorer cannot handle required=true");
                 }
                 this.scorer = scorer;
+                this.more = true;
                 // TODO: re-enable this if BQ ever sends us required clauses
                 //this.required = required;
                 this.prohibited = prohibited;
@@ -239,50 +241,39 @@ namespace Lucene.Net.Search
         // Any time a prohibited clause matches we set bit 0:
         private const int PROHIBITED_MASK = 1;
 
+        private readonly Weight weight;
         public BooleanScorer(BooleanQuery.BooleanWeight weight, bool disableCoord, int minNrShouldMatch,
-            IList<Scorer> optionalScorers, IList<Scorer> prohibitedScorers, int maxCoord)
-            : base(weight)
+            IList<BulkScorer> optionalScorers, IEnumerable<BulkScorer> prohibitedScorers, int maxCoord)
         {
             this.minNrShouldMatch = minNrShouldMatch;
-
-            if (optionalScorers != null && optionalScorers.Count > 0)
+            this.weight = weight;
+            foreach (BulkScorer scorer in optionalScorers)
             {
-                foreach (Scorer scorer in optionalScorers)
-                {
-                    if (scorer.NextDoc() != NO_MORE_DOCS)
-                    {
-                        scorers = new SubScorer(scorer, false, false, bucketTable.NewCollector(0), scorers);
-                    }
-                }
+                scorers = new SubScorer(scorer, false, false, bucketTable.NewCollector(0), scorers);
             }
 
-            if (prohibitedScorers != null && prohibitedScorers.Count > 0)
+            foreach (BulkScorer scorer in prohibitedScorers)
             {
-                foreach (Scorer scorer in prohibitedScorers)
-                {
-                    if (scorer.NextDoc() != NO_MORE_DOCS)
-                    {
-                        scorers = new SubScorer(scorer, false, true, bucketTable.NewCollector(PROHIBITED_MASK), scorers);
-                    }
-                }
+                scorers = new SubScorer(scorer, false, true, bucketTable.NewCollector(PROHIBITED_MASK), scorers);
+
             }
 
             coordFactors = new float[optionalScorers.Count + 1];
             for (int i = 0; i < coordFactors.Length; i++)
             {
-                coordFactors[i] = disableCoord ? 1.0f : weight.Coord(i, maxCoord); 
+                coordFactors[i] = disableCoord ? 1.0f : weight.Coord(i, maxCoord);
             }
         }
 
         // firstDocID is ignored since nextDoc() initializes 'current'
-        public override bool Score(Collector collector, int max, int firstDocID)
+        public override bool Score(Collector collector, int max)
         {
             bool more;
             Bucket tmp;
-            BucketScorer bs = new BucketScorer(weight);
+            FakeScorer fs = new FakeScorer();
 
             // The internal loop will set the score and doc before calling collect.
-            collector.SetScorer(bs);
+            collector.SetScorer(fs);
             do
             {
                 bucketTable.first = null;
@@ -315,9 +306,9 @@ namespace Lucene.Net.Search
 
                         if (current.coord >= minNrShouldMatch)
                         {
-                            bs.score = current.score * coordFactors[current.coord];
-                            bs.doc = current.doc;
-                            bs.freq = current.coord;
+                            fs.score = (float) (current.score * coordFactors[current.coord]);
+                            fs.doc = current.doc;
+                            fs.freq = current.coord;
                             collector.Collect(current.doc);
                         }
                     }
@@ -337,10 +328,10 @@ namespace Lucene.Net.Search
                 end += BucketTable.SIZE;
                 for (SubScorer sub = scorers; sub != null; sub = sub.next)
                 {
-                    int subScorerDocID = sub.scorer.DocID;
-                    if (subScorerDocID != NO_MORE_DOCS)
+                    if (sub.more)
                     {
-                        more |= sub.scorer.Score(sub.collector, end, subScorerDocID);
+                        sub.more = sub.scorer.Score(sub.collector, end);
+                        more |= sub.more;
                     }
                 }
                 current = bucketTable.first;
@@ -350,43 +341,6 @@ namespace Lucene.Net.Search
             return false;
         }
 
-        public override int Advance(int target)
-        {
-            throw new NotSupportedException();
-        }
-
-        public override int DocID
-        {
-            get { throw new NotSupportedException(); }
-        }
-
-        public override int NextDoc()
-        {
-            throw new NotSupportedException();
-        }
-
-        public override float Score()
-        {
-            throw new NotSupportedException();
-        }
-
-        public override int Freq
-        {
-            get
-            {
-                throw new NotSupportedException();
-            }
-        }
-
-        public override long Cost
-        {
-            get { return int.MaxValue; }
-        }
-
-        public override void Score(Collector collector)
-        {
-            Score(collector, int.MaxValue, -1);
-        }
 
         public override string ToString()
         {

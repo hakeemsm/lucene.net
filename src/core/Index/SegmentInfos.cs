@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-using System.Collections.ObjectModel;
 using System.Linq;
 using Lucene.Net.Codecs;
 using Lucene.Net.Codecs.Lucene3x;
@@ -27,7 +26,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using ChecksumIndexInput = Lucene.Net.Store.ChecksumIndexInput;
-using ChecksumIndexOutput = Lucene.Net.Store.ChecksumIndexOutput;
 using Directory = Lucene.Net.Store.Directory;
 using IndexInput = Lucene.Net.Store.IndexInput;
 using IndexOutput = Lucene.Net.Store.IndexOutput;

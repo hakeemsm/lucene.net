@@ -228,6 +228,15 @@ namespace Lucene.Net.Index
             //assert checkConsistency();
         }
 
+		internal void SetNormValueType(FieldInfo.DocValuesType type)
+		{
+			if (normType != null && normType != type)
+			{
+				throw new ArgumentException("cannot change Norm type from " + normType + " to " +
+					 type + " for field \"" + name + "\"");
+			}
+			normType = type;
+		}
         public bool OmitsNorms
         {
             get { return omitNorms; }

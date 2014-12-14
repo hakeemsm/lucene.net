@@ -30,7 +30,7 @@ namespace Lucene.Net.Search.Payloads
 
         public override Weight CreateWeight(IndexSearcher searcher)
         {
-            return new PayloadNearSpanWeight(this, searcher);
+			return new PayloadNearSpanWeight(this, this, searcher);
         }
 
         public override object Clone()
@@ -110,6 +110,57 @@ namespace Lucene.Net.Search.Payloads
             return true;
         }
 
+		public class PayloadNearSpanWeight : SpanWeight
+		{
+			/// <exception cref="System.IO.IOException"></exception>
+			public PayloadNearSpanWeight(PayloadNearQuery _enclosing, SpanQuery query, IndexSearcher
+				 searcher) : base(query, searcher)
+			{
+				this._enclosing = _enclosing;
+			}
+
+			/// <exception cref="System.IO.IOException"></exception>
+			public override Scorer Scorer(AtomicReaderContext context, IBits acceptDocs)
+			{
+				return new PayloadNearSpanScorer(this._enclosing, this.query.GetSpans(context
+					, acceptDocs, this.termContexts), this, this.similarity, this.similarity.GetSimScorer(this.stats, context));
+			}
+
+			/// <exception cref="System.IO.IOException"></exception>
+			public override Explanation Explain(AtomicReaderContext context, int doc)
+			{
+				PayloadNearSpanScorer scorer = (PayloadNearSpanScorer)this.Scorer(context, context.AtomicReader.LiveDocs);
+				if (scorer != null)
+				{
+					int newDoc = scorer.Advance(doc);
+					if (newDoc == doc)
+					{
+						float freq = scorer.Freq;
+						SimScorer docScorer = this.similarity.GetSimScorer(this.stats, context);
+						Explanation expl = new Explanation();
+						expl.Description = "weight(" + this.Query + " in " + doc + ") [" + this.similarity
+							.GetType().Name + "], result of:";
+						Explanation scoreExplanation = docScorer.Explain(doc, new Explanation(freq, "phraseFreq="+ freq));
+						expl.AddDetail(scoreExplanation);
+						expl.Value = scoreExplanation.Value;
+						string field = ((SpanQuery)this.Query).Field;
+						// now the payloads part
+						Explanation payloadExpl = this._enclosing.function.Explain(doc, field, scorer.payloadsSeen
+							, scorer.payloadScore);
+						// combined
+						ComplexExplanation result = new ComplexExplanation();
+						result.AddDetail(expl);
+						result.AddDetail(payloadExpl);
+						result.Value = expl.Value * payloadExpl.Value;
+						result.Description = "PayloadNearQuery, product of:";
+						return result;
+					}
+				}
+				return new ComplexExplanation(false, 0.0f, "no matching term");
+			}
+
+			private readonly PayloadNearQuery _enclosing;
+		}
         public class PayloadNearSpanScorer : SpanScorer
         {
             private readonly PayloadNearQuery parent;
@@ -120,7 +171,7 @@ namespace Lucene.Net.Search.Payloads
             private SpansBase spans;
 
             public PayloadNearSpanScorer(PayloadNearQuery parent, SpansBase spans, Weight weight,
-                                            Similarity similarity, Similarity.SloppySimScorer docScorer)
+                                            Similarity similarity, SimScorer docScorer)
                 : base(spans, weight, docScorer)
             {
                 this.parent = parent;
@@ -197,54 +248,5 @@ namespace Lucene.Net.Search.Payloads
             }
         }
 
-        public class PayloadNearSpanWeight : SpanWeight
-        {
-            private readonly PayloadNearQuery parent;
-
-            public PayloadNearSpanWeight(PayloadNearQuery query, IndexSearcher searcher)
-                : base(query, searcher)
-            {
-                this.parent = query;
-            }
-            
-            public override Scorer Scorer(AtomicReaderContext context, bool scoreDocsInOrder,
-                                          bool topScorer, IBits acceptDocs)
-            {
-                return new PayloadNearSpanScorer(parent, query.GetSpans(context, acceptDocs, termContexts), this,
-                                                 similarity, similarity.GetSloppySimScorer(stats, context));
-            }
-
-            public override Explanation Explain(AtomicReaderContext context, int doc)
-            {
-                var scorer = (PayloadNearSpanScorer)Scorer(context, true, false, ((AtomicReader)context.Reader).LiveDocs);
-                if (scorer != null)
-                {
-                    int newDoc = scorer.Advance(doc);
-                    if (newDoc == doc)
-                    {
-                        float freq = scorer.Freq;
-                        Similarity.SloppySimScorer docScorer = similarity.GetSloppySimScorer(stats, context);
-                        var expl = new Explanation();
-                        expl.Description = "weight(" + Query + " in " + doc + ") [" + similarity.GetType().Name +
-                                           "], result of:";
-                        Explanation scoreExplanation = docScorer.Explain(doc, new Explanation(freq, "phraseFreq=" + freq));
-                        expl.AddDetail(scoreExplanation);
-                        expl.Value = scoreExplanation.Value;
-                        String field = ((SpanQuery)Query).Field;
-                        // now the payloads part
-                        Explanation payloadExpl = parent.function.Explain(doc, field, scorer.payloadsSeen, scorer.payloadScore);
-                        // combined
-                        var result = new ComplexExplanation();
-                        result.AddDetail(expl);
-                        result.AddDetail(payloadExpl);
-                        result.Value = expl.Value * payloadExpl.Value;
-                        result.Description = "PayloadNearQuery, product of:";
-                        return result;
-                    }
-                }
-
-                return new ComplexExplanation(false, 0.0f, "no matching term");
-            }
-        }
     }
 }

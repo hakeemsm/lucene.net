@@ -30,7 +30,8 @@ namespace Lucene.Net.Codecs.Lucene3x
         internal const sbyte OMIT_TERM_FREQ_AND_POSITIONS = 0x40;
         internal const sbyte OMIT_POSITIONS = -128;
 
-        public override FieldInfos Read(Directory directory, string segmentName, IOContext iocontext)
+		public override FieldInfos Read(Directory directory, string segmentName, string segmentSuffix
+			, IOContext iocontext)
         {
             String fileName = IndexFileNames.SegmentFileName(segmentName, "", FIELD_INFOS_EXTENSION);
             IndexInput input = directory.OpenInput(fileName, iocontext);

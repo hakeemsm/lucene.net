@@ -1,4 +1,5 @@
-﻿using Lucene.Net.Codecs;
+﻿using System.IO;
+using Lucene.Net.Codecs;
 using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Lucene.Net.Util.Packed;
@@ -46,7 +47,8 @@ namespace Lucene.Net.Index
             }
 			if (value.length > MAX_LENGTH)
             {
-                throw new ArgumentException("DocValuesField \"" + fieldInfo.name + "\" is too large, must be <= " + (ByteBlockPool.BYTE_BLOCK_SIZE - 2));
+				throw new ArgumentException("DocValuesField \"" + fieldInfo.name + "\" is too large, must be <= "
+					 + MAX_LENGTH);
             }
 
             // Fill in any holes:
@@ -57,16 +59,8 @@ namespace Lucene.Net.Index
             }
             addedValues++;
             lengths.Add(value.length);
-			try
-			{
-				bytesOut.WriteBytes(value.bytes, value.offset, value.length);
-			}
-			catch (IOException ioe)
-			{
-				// Should never happen!
-				throw new RuntimeException(ioe);
-			}
-			docsWithField = FixedBitSet.EnsureCapacity(docsWithField, docID);
+            bytesOut.WriteBytes(value.bytes, value.offset, value.length);
+            docsWithField = FixedBitSet.EnsureCapacity(docsWithField, docID);
 			docsWithField.Set(docID);
 			UpdateBytesUsed();
         }
@@ -78,7 +72,7 @@ namespace Lucene.Net.Index
 		}
 		private void UpdateBytesUsed()
 		{
-			long newBytesUsed = lengths.RamBytesUsed() + bytes.RamBytesUsed() + DocsWithFieldBytesUsed
+			long newBytesUsed = lengths.RamBytesUsed + bytes.RamBytesUsed() + DocsWithFieldBytesUsed
 				();
 			iwBytesUsed.AddAndGet(newBytesUsed - bytesUsed);
 			bytesUsed = newBytesUsed;
@@ -103,7 +97,7 @@ namespace Lucene.Net.Index
             // .NET port: using yield return instead of a custom IEnumerable type
             
             BytesRef value = new BytesRef();
-            AppendingLongBuffer.Iterator lengthsIterator = (AppendingLongBuffer.Iterator)lengths.GetIterator();
+            AbstractAppendingLongBuffer.Iterator lengthsIterator = lengths.GetIterator();
             int size = (int) lengths.Size;
             int maxDoc = maxDocParam;
             int upto = 0;
@@ -116,7 +110,7 @@ namespace Lucene.Net.Index
                     int length = (int)lengthsIterator.Next();
                     value.Grow(length);
                     value.length = length;
-                    pool.ReadBytes(byteOffset, value.bytes, value.offset, value.length);
+                    this.bytes.GetDataInput().ReadBytes(value.bytes, value.offset, value.length);
                     byteOffset += length;
                 }
                 else
