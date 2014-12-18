@@ -2195,7 +2195,7 @@ namespace Lucene.Net.Index
         /// <summary>
         /// Acquires write locks on all the directories; be sure
         /// to match with a call to
-        /// <see cref="Org.Apache.Lucene.Util.IOUtils.Close(System.IDisposable[])">Org.Apache.Lucene.Util.IOUtils.Close(System.IDisposable[])
+        /// <see cref="Lucene.Net.TestFramework.Util.IOUtils.Close(System.IDisposable[])">Lucene.Net.TestFramework.Util.IOUtils.Close(System.IDisposable[])
         ///     </see>
         /// in a
         /// finally clause.

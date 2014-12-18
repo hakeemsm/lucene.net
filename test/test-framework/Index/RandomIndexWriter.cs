@@ -59,8 +59,8 @@ public class RandomIndexWriter : IDisposable {
     // TODO: this should be solved in a different way; Random should not be shared (!).
     this.r = new Random(r.nextLong());
     w = new MockIndexWriter(r, dir, c);
-    flushAt = _TestUtil.nextInt(r, 10, 1000);
-    codec = w.getConfig().getCodec();
+			flushAt = TestUtil.NextInt(r, 10, 1000);
+			codec = w.GetConfig().GetCodec();
     if (LuceneTestCase.VERBOSE) {
       Console.WriteLine("RIW dir=" + dir + " config=" + w.getConfig());
       Console.WriteLine("codec default=" + codec.getName());
@@ -68,64 +68,95 @@ public class RandomIndexWriter : IDisposable {
 
     // Make sure we sometimes test indices that don't get
     // any forced merges:
-    doRandomForceMerge = r.nextBoolean();
+			doRandomForceMerge = !(c.GetMergePolicy() is NoMergePolicy) && r.NextBoolean();
   } 
   
   /**
    * Adds a Document.
    * @see IndexWriter#addDocument(Iterable)
    */
-  public <T extends IndexableField> void addDocument(Iterable<T> doc) {
-    addDocument(doc, w.getAnalyzer());
+		public virtual void AddDocument<T>(Iterable<T> doc) where T:IndexableField
+		{
+			LuceneTestCase.MaybeChangeLiveIndexWriterConfig(r, w.GetConfig());
+			AddDocument(doc, w.GetAnalyzer());
   }
 
-  public <T extends IndexableField> void addDocument(final Iterable<T> doc, Analyzer a) {
-    if (r.nextInt(5) == 3) {
+		public virtual void AddDocument<T>(Iterable<T> doc, Analyzer a) where T:IndexableField
+		{
+			LuceneTestCase.MaybeChangeLiveIndexWriterConfig(r, w.GetConfig());
+			if (r.Next(5) == 3)
+			{
       // TODO: maybe, we should simply buffer up added docs
       // (but we need to clone them), and only when
       // getReader, commit, etc. are called, we do an
       // addDocuments?  Would be better testing.
-      w.AddDocuments(new Iterable<Iterable<T>>() {
+				w.AddDocuments(new _Iterable_119(doc), a);
+			}
+			else
+			{
+				w.AddDocument(doc, a);
+			}
+			MaybeCommit();
+		}
 
-        public Iterator<Iterable<T>> iterator() {
-          return new Iterator<Iterable<T>>() {
-            boolean done;
-            
-            @Override
-            public boolean hasNext() {
-              return !done;
-            }
+		private sealed class _Iterable_119 : Iterable<Iterable<T>>
+		{
+			public _Iterable_119(Iterable<T> doc)
+			{
+				this.doc = doc;
+			}
 
-            @Override
-            public void remove() {
-              throw new UnsupportedOperationException();
-            }
+			public override Iterator<Iterable<T>> Iterator()
+			{
+				return new _Iterator_123(doc);
+			}
 
-            @Override
-            public Iterable<T> next() {
-              if (done) {
-                throw new IllegalStateException();
-              }
-              done = true;
-              return doc;
-            }
-          };
-        }
-        }, a);
-    } else {
-      w.AddDocument(doc, a);
-    }
-    
-    maybeCommit();
-  }
+			private sealed class _Iterator_123 : Iterator<Iterable<T>>
+			{
+				public _Iterator_123(Iterable<T> doc)
+				{
+					this.doc = doc;
+				}
 
-  private void maybeCommit() {
-    if (docCount++ == flushAt) {
+				internal bool done;
+
+				public override bool HasNext()
+				{
+					return !this.done;
+				}
+
+				public override void Remove()
+				{
+					throw new NotSupportedException();
+				}
+
+				public override Iterable<T> Next()
+				{
+					if (this.done)
+					{
+						throw new InvalidOperationException();
+					}
+					this.done = true;
+					return doc;
+				}
+
+				private readonly Iterable<T> doc;
+			}
+
+			private readonly Iterable<T> doc;
+		}
+
+		private void MaybeCommit()
+		{
+			LuceneTestCase.MaybeChangeLiveIndexWriterConfig(r, w.GetConfig());
+			if (docCount++ == flushAt)
+			{
       if (LuceneTestCase.VERBOSE) {
         Console.WriteLine("RIW.add/updateDocument: now doing a commit at docCount=" + docCount);
       }
       w.Commit();
-      flushAt += _TestUtil.nextInt(r, (int) (flushAtFactor * 10), (int) (flushAtFactor * 1000));
+				flushAt += TestUtil.NextInt(r, (int)(flushAtFactor * 10), (int)(flushAtFactor * 1000
+					));
       if (flushAtFactor < 2e6) {
         // gradually but exponentially increase time b/w flushes
         flushAtFactor *= 1.05;
@@ -133,113 +164,176 @@ public class RandomIndexWriter : IDisposable {
     }
     }
   
-  public void addDocuments(Iterable<? extends Iterable<? extends IIndexableField>> docs) {
+		public virtual void AddDocuments<_T0>(Iterable<_T0> docs) where _T0:Iterable<IndexableField
+			>
+		{
+			LuceneTestCase.MaybeChangeLiveIndexWriterConfig(r, w.GetConfig());
     w.AddDocuments(docs);
-    maybeCommit();
+			MaybeCommit();
   }
 
-  public void updateDocuments(Term delTerm, Iterable<? extends Iterable<? extends IndexableField>> docs) {
+		public virtual void UpdateDocuments<_T0>(Term delTerm, Iterable<_T0> docs) where 
+			_T0:Iterable<IndexableField>
+		{
+			LuceneTestCase.MaybeChangeLiveIndexWriterConfig(r, w.GetConfig());
     w.UpdateDocuments(delTerm, docs);
-    maybeCommit();
+			MaybeCommit();
   }
 
   /**
    * Updates a document.
    * @see IndexWriter#updateDocument(Term, Iterable)
    */
-  public <T extends IndexableField> void updateDocument(Term t, final Iterable<T> doc) {
-    if (r.nextInt(5) == 3) {
-      w.updateDocuments(t, new Iterable<Iterable<T>>() {
-
-        @Override
-        public Iterator<Iterable<T>> iterator() {
-          return new Iterator<Iterable<T>>() {
-            boolean done;
-            
-            @Override
-            public boolean hasNext() {
-              return !done;
-            }
-
-            @Override
-            public void remove() {
-              throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public Iterable<T> next() {
-              if (done) {
-                throw new IllegalStateException();
-              }
-              done = true;
-              return doc;
-            }
-          };
-        }
-        });
-    } else {
-      w.UpdateDocument(t, doc);
-    }
-    maybeCommit();
-  }
+		public virtual void UpdateDocument<T>(Term t, Iterable<T> doc) where T:IndexableField
+		{
+			LuceneTestCase.MaybeChangeLiveIndexWriterConfig(r, w.GetConfig());
+			if (r.Next(5) == 3)
+			{
+				w.UpdateDocuments(t, new _Iterable_188(doc));
+			}
+			else
+			{
+				w.UpdateDocument(t, doc);
+			}
+			MaybeCommit();
+		}
   
-  public void addIndexes(params[] Directory dirs) {
+		private sealed class _Iterable_188 : Iterable<Iterable<T>>
+		{
+			public _Iterable_188(Iterable<T> doc)
+			{
+				this.doc = doc;
+			}
+
+			public override Iterator<Iterable<T>> Iterator()
+			{
+				return new _Iterator_192(doc);
+			}
+
+			private sealed class _Iterator_192 : Iterator<Iterable<T>>
+			{
+				public _Iterator_192(Iterable<T> doc)
+				{
+					this.doc = doc;
+				}
+
+				internal bool done;
+
+				public override bool HasNext()
+				{
+					return !this.done;
+				}
+
+				public override void Remove()
+				{
+					throw new NotSupportedException();
+				}
+
+				public override Iterable<T> Next()
+				{
+					if (this.done)
+					{
+						throw new InvalidOperationException();
+					}
+					this.done = true;
+					return doc;
+				}
+
+				private readonly Iterable<T> doc;
+			}
+
+			private readonly Iterable<T> doc;
+		}
+		public virtual void AddIndexes(params Directory[] dirs)
+		{
+			LuceneTestCase.MaybeChangeLiveIndexWriterConfig(r, w.GetConfig());
     w.AddIndexes(dirs);
   }
 
-  public void addIndexes(IndexReader... readers) {
+		public virtual void AddIndexes(params IndexReader[] readers)
+		{
+			LuceneTestCase.MaybeChangeLiveIndexWriterConfig(r, w.GetConfig());
     w.AddIndexes(readers);
   }
   
-  public void deleteDocuments(Term term) {
+		public virtual void UpdateNumericDocValue(Term term, string field, long value)
+		{
+			LuceneTestCase.MaybeChangeLiveIndexWriterConfig(r, w.GetConfig());
+			w.UpdateNumericDocValue(term, field, value);
+		}
+		public virtual void UpdateBinaryDocValue(Term term, string field, BytesRef value)
+		{
+			LuceneTestCase.MaybeChangeLiveIndexWriterConfig(r, w.GetConfig());
+			w.UpdateBinaryDocValue(term, field, value);
+		}
+		public virtual void DeleteDocuments(Term term)
+		{
+			LuceneTestCase.MaybeChangeLiveIndexWriterConfig(r, w.GetConfig());
     w.DeleteDocuments(term);
   }
 
-  public void deleteDocuments(Query q) {
+		public virtual void DeleteDocuments(Query q)
+		{
+			LuceneTestCase.MaybeChangeLiveIndexWriterConfig(r, w.GetConfig());
     w.DeleteDocuments(q);
   }
   
-  public void commit() {
+		public virtual void Commit()
+		{
+			LuceneTestCase.MaybeChangeLiveIndexWriterConfig(r, w.GetConfig());
     w.Commit();
   }
   
-  public int numDocs() {
+		public virtual int NumDocs()
+		{
     return w.NumDocs;
   }
 
-  public int maxDoc() {
+		public virtual int MaxDoc()
+		{
     return w.MaxDoc;
   }
 
-  public void deleteAll() {
+		public virtual void DeleteAll()
+		{
     w.DeleteAll();
   }
 
-  public DirectoryReader getReader() {
-    return getReader(true);
+		public virtual DirectoryReader GetReader()
+		{
+			LuceneTestCase.MaybeChangeLiveIndexWriterConfig(r, w.GetConfig());
+			return GetReader(true);
   }
 
   private bool doRandomForceMerge = true;
   private bool doRandomForceMergeAssert = true;
 
-  public void forceMergeDeletes(bool doWait) {
+		public virtual void ForceMergeDeletes(bool doWait)
+		{
+			LuceneTestCase.MaybeChangeLiveIndexWriterConfig(r, w.GetConfig());
     w.ForceMergeDeletes(doWait);
   }
 
-  public void forceMergeDeletes() {
+		public virtual void ForceMergeDeletes()
+		{
+			LuceneTestCase.MaybeChangeLiveIndexWriterConfig(r, w.GetConfig());
     w.ForceMergeDeletes();
   }
 
-  public void setDoRandomForceMerge(bool v) {
+		public virtual void SetDoRandomForceMerge(bool v)
+		{
     doRandomForceMerge = v;
   }
 
-  public void setDoRandomForceMergeAssert(bool v) {
+		public virtual void SetDoRandomForceMergeAssert(bool v)
+		{
     doRandomForceMergeAssert = v;
   }
 
-  private void doRandomForceMerge() {
-    if (doRandomForceMerge) {
+		private void DoRandomForceMerge()
+		{
+			if (doRandomForceMerge)
+			{
       int segCount = w.SegmentCount;
       if (r.nextBoolean() || segCount == 0) {
         // full forceMerge
@@ -259,15 +353,18 @@ public class RandomIndexWriter : IDisposable {
     }
   }
 
-  public DirectoryReader getReader(boolean applyDeletions) {
+		public virtual DirectoryReader GetReader(bool applyDeletions)
+			LuceneTestCase.MaybeChangeLiveIndexWriterConfig(r, w.GetConfig());
     getReaderCalled = true;
-    if (r.nextInt(20) == 2) {
-      doRandomForceMerge();
+			if (r.Next(20) == 2)
+			{
+				DoRandomForceMerge();
     }
     // If we are writing with PreFlexRW, force a full
     // IndexReader.open so terms are sorted in codepoint
     // order during searching:
-    if (!applyDeletions || !codec.getName().equals("Lucene3x") && r.nextBoolean()) {
+			if (!applyDeletions || !codec.GetName().Equals("Lucene3x") && r.NextBoolean())
+			{
       if (LuceneTestCase.VERBOSE) {
         System.out.println("RIW.getReader: use NRT reader");
       }
@@ -292,14 +389,20 @@ public class RandomIndexWriter : IDisposable {
    * Close this writer.
    * @see IndexWriter#close()
    */
-  public void close() {
-    // if someone isn't using getReader() API, we want to be sure to
-    // forceMerge since presumably they might open a reader on the dir.
-    if (getReaderCalled == false && r.nextInt(8) == 2) {
-      doRandomForceMerge();
-    }
-    w.Close();
-  }
+		public virtual void Close()
+		{
+			if (!w.IsClosed())
+			{
+				LuceneTestCase.MaybeChangeLiveIndexWriterConfig(r, w.GetConfig());
+			}
+			// if someone isn't using getReader() API, we want to be sure to
+			// forceMerge since presumably they might open a reader on the dir.
+			if (getReaderCalled == false && r.Next(8) == 2)
+			{
+				DoRandomForceMerge();
+			}
+			w.Close();
+		}
 
   /**
    * Forces a forceMerge.
@@ -308,9 +411,61 @@ public class RandomIndexWriter : IDisposable {
    * as it will result in less test coverage.
    * @see IndexWriter#forceMerge(int)
    */
-  public void ForceMerge(int maxSegmentCount) {
-    w.ForceMerge(maxSegmentCount);
-  }
+		public virtual void ForceMerge(int maxSegmentCount)
+		{
+			LuceneTestCase.MaybeChangeLiveIndexWriterConfig(r, w.GetConfig());
+			w.ForceMerge(maxSegmentCount);
+		}
+		internal sealed class TestPointInfoStream : InfoStream
+		{
+			private readonly InfoStream delegate_;
+
+			private readonly RandomIndexWriter.TestPoint testPoint;
+
+			public TestPointInfoStream(InfoStream delegate_, RandomIndexWriter.TestPoint testPoint
+				)
+			{
+				this.delegate_ = delegate_ == null ? new NullInfoStream() : delegate_;
+				this.testPoint = testPoint;
+			}
+
+			/// <exception cref="System.IO.IOException"></exception>
+			public override void Close()
+			{
+				delegate_.Close();
+			}
+
+			public override void Message(string component, string message)
+			{
+				if ("TP".Equals(component))
+				{
+					testPoint.Apply(message);
+				}
+				if (delegate_.IsEnabled(component))
+				{
+					delegate_.Message(component, message);
+				}
+			}
+
+			public override bool IsEnabled(string component)
+			{
+				return "TP".Equals(component) || delegate_.IsEnabled(component);
+			}
+		}
+
+		/// <summary>
+		/// Simple interface that is executed for each <tt>TP</tt>
+		/// <see cref="Lucene.Net.TestFramework.Util.InfoStream">Lucene.Net.TestFramework.Util.InfoStream</see>
+		/// component
+		/// message. See also
+		/// <see cref="RandomIndexWriter.MockIndexWriter(Lucene.Net.TestFramework.Store.Directory, IndexWriterConfig, TestPoint)
+		/// 	">RandomIndexWriter.MockIndexWriter(Lucene.Net.TestFramework.Store.Directory, IndexWriterConfig, TestPoint)
+		/// 	</see>
+		/// </summary>
+		public interface TestPoint
+		{
+			void Apply(string message);
+		}
 }
 
 }

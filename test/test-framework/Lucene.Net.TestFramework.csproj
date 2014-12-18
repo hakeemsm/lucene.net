@@ -74,6 +74,43 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Analysis\BaseTokenStreamTestCase.cs" />
+    <Compile Include="Analysis\CannedBinaryTokenStream.cs" />
+    <Compile Include="Analysis\CannedTokenStream.cs" />
+    <Compile Include="Analysis\CollationTestBase.cs" />
+    <Compile Include="Analysis\CrankyTokenFilter.cs" />
+    <Compile Include="Analysis\LookaheadTokenFilter.cs" />
+    <Compile Include="Analysis\MockAnalyzer.cs" />
+    <Compile Include="Analysis\MockBytesAnalyzer.cs" />
+    <Compile Include="Analysis\MockBytesAttributeFactory.cs" />
+    <Compile Include="Analysis\MockCharFilter.cs" />
+    <Compile Include="Analysis\MockGraphTokenFilter.cs" />
+    <Compile Include="Analysis\MockHoleInjectingTokenFilter.cs" />
+    <Compile Include="Analysis\MockPayloadAnalyzer.cs" />
+    <Compile Include="Analysis\MockRandomLookaheadTokenFilter.cs" />
+    <Compile Include="Analysis\MockReaderWrapper.cs" />
+    <Compile Include="Analysis\MockUTF16TermAttributeImpl.cs" />
+    <Compile Include="Analysis\TokenStreamToDot.cs" />
+    <Compile Include="Analysis\ValidatingTokenFilter.cs" />
+    <Compile Include="Analysis\VocabularyAssert.cs" />
+    <Compile Include="Index\AlcoholicMergePolicy.cs" />
+    <Compile Include="Index\AllDeletedFilterReader.cs" />
+    <Compile Include="Index\AssertingAtomicReader.cs" />
+    <Compile Include="Index\AssertingDirectoryReader.cs" />
+    <Compile Include="Index\BaseCompressingDocValuesFormatTestCase.cs" />
+    <Compile Include="Index\BaseDocValuesFormatTestCase.cs" />
+    <Compile Include="Index\BaseIndexFileFormatTestCase.cs" />
+    <Compile Include="Index\BaseMergePolicyTestCase.cs" />
+    <Compile Include="Index\BasePostingsFormatTestCase.cs" />
+    <Compile Include="Index\BaseStoredFieldsFormatTestCase.cs" />
+    <Compile Include="Index\BaseTermVectorsFormatTestCase.cs" />
+    <Compile Include="Index\DocHelper.cs" />
+    <Compile Include="Index\FieldFilterAtomicReader.cs" />
+    <Compile Include="Index\MockIndexInput.cs" />
+    <Compile Include="Index\MockRandomMergePolicy.cs" />
+    <Compile Include="Index\RandomCodec.cs" />
+    <Compile Include="Index\RandomIndexWriter.cs" />
+    <Compile Include="Index\ThreadedIndexingAndSearchingTestCase.cs" />
     <Compile Include="JavaCompatibility\RandomHelpers.cs" />
     <Compile Include="Randomized\Attributes\SeedAttribute.cs" />
     <Compile Include="Analysis\MockFixedLengthPayloadFilter.cs" />
@@ -98,14 +135,63 @@
     <Compile Include="Randomized\SeedUtils.cs" />
     <Compile Include="Randomized\SingleThreadedRandom.cs" />
     <Compile Include="Randomized\ThreadGroup.cs" />
+    <Compile Include="Search\AssertingBulkOutOfOrderScorer.cs" />
+    <Compile Include="Search\AssertingBulkScorer.cs" />
+    <Compile Include="Search\AssertingCollector.cs" />
+    <Compile Include="Search\AssertingIndexSearcher.cs" />
+    <Compile Include="Search\AssertingQuery.cs" />
+    <Compile Include="Search\AssertingScorer.cs" />
+    <Compile Include="Search\AssertingWeight.cs" />
+    <Compile Include="Search\CheckHits.cs" />
+    <Compile Include="Search\QueryUtils.cs" />
+    <Compile Include="Search\RandomOrderCollector.cs" />
+    <Compile Include="Search\RandomSimilarityProvider.cs" />
+    <Compile Include="Search\SearchEquivalenceTestBase.cs" />
+    <Compile Include="Search\ShardSearchingTestBase.cs" />
     <Compile Include="Store\BaseDirectoryWrapper.cs" />
     <Compile Include="Store\MockDirectoryWrapper.cs" />
+    <Compile Include="Store\MockIndexInputWrapper.cs" />
+    <Compile Include="Store\MockIndexOutputWrapper.cs" />
+    <Compile Include="Store\MockLockFactoryWrapper.cs" />
+    <Compile Include="Store\SlowClosingMockIndexInputWrapper.cs" />
+    <Compile Include="Store\SlowOpeningMockIndexInputWrapper.cs" />
+    <Compile Include="Store\TestHelper.cs" />
     <Compile Include="Support\RandomizedTest.cs" />
     <Compile Include="Support\SystemProperties.cs" />
     <Compile Include="Attributes.cs" />
     <Compile Include="LuceneTestCase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Util\AbstractBeforeAfterRule.cs" />
+    <Compile Include="Util\Automaton\AutomatonTestUtil.cs" />
+    <Compile Include="Util\BaseDocIdSetTestCase.cs" />
+    <Compile Include="Util\CloseableDirectory.cs" />
+    <Compile Include="Util\English.cs" />
+    <Compile Include="Util\FailOnNonBulkMergesInfoStream.cs" />
+    <Compile Include="Util\FailureMarker.cs" />
+    <Compile Include="Util\Fst\FSTTester.cs" />
     <Compile Include="Util\HelperExtensions.cs" />
+    <Compile Include="Util\LineFileDocs.cs" />
+    <Compile Include="Util\LuceneJUnit3MethodProvider.cs" />
+    <Compile Include="Util\NullInfoStream.cs" />
+    <Compile Include="Util\QuickPatchThreadsFilter.cs" />
+    <Compile Include="Util\RemoveUponClose.cs" />
+    <Compile Include="Util\Rethrow.cs" />
+    <Compile Include="Util\RunListenerPrintReproduceInfo.cs" />
+    <Compile Include="Util\TestRuleAssertionsRequired.cs" />
+    <Compile Include="Util\TestRuleDelegate.cs" />
+    <Compile Include="Util\TestRuleFieldCacheSanity.cs" />
+    <Compile Include="Util\TestRuleIgnoreAfterMaxFailures.cs" />
+    <Compile Include="Util\TestRuleIgnoreTestSuites.cs" />
+    <Compile Include="Util\TestRuleMarkFailure.cs" />
+    <Compile Include="Util\TestRuleSetupAndRestoreClassEnv.cs" />
+    <Compile Include="Util\TestRuleSetupAndRestoreInstanceEnv.cs" />
+    <Compile Include="Util\TestRuleSetupTeardownChained.cs" />
+    <Compile Include="Util\TestRuleStoreClassName.cs" />
+    <Compile Include="Util\TestRuleThreadAndTestName.cs" />
+    <Compile Include="Util\TestSecurityManager.cs" />
+    <Compile Include="Util\TestUtil.cs" />
+    <Compile Include="Util\ThrottledIndexOutput.cs" />
+    <Compile Include="Util\TimeUnits.cs" />
     <Compile Include="Util\_TestUtil.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -114,9 +200,7 @@
       <Name>Lucene.Net</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Index\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <None Include="Lucene.Net.snk" />
     <None Include="Notice.md" />

@@ -36,10 +36,10 @@ namespace Lucene.Net.Analysis.Miscellaneous
      * {@link java.io.Reader}, that can flexibly separate text into terms via a regular expression {@link Regex}
      * (with behaviour identical to {@link String#split(String)}),
      * and that combines the functionality of
-     * {@link org.apache.lucene.analysis.LetterTokenizer},
-     * {@link org.apache.lucene.analysis.LowerCaseTokenizer},
-     * {@link org.apache.lucene.analysis.WhitespaceTokenizer},
-     * {@link org.apache.lucene.analysis.StopFilter} into a single efficient
+     * {@link Lucene.Net.TestFramework.Analysis.LetterTokenizer},
+     * {@link Lucene.Net.TestFramework.Analysis.LowerCaseTokenizer},
+     * {@link Lucene.Net.TestFramework.Analysis.WhitespaceTokenizer},
+     * {@link Lucene.Net.TestFramework.Analysis.StopFilter} into a single efficient
      * multi-purpose class.
      * <p>
      * If you are unsure how exactly a regular expression should look like, consider 
@@ -50,7 +50,7 @@ namespace Lucene.Net.Analysis.Miscellaneous
      * <p>
      * This class can be considerably faster than the "normal" Lucene tokenizers. 
      * It can also serve as a building block in a compound Lucene
-     * {@link org.apache.lucene.analysis.TokenFilter} chain. For example as in this 
+     * {@link Lucene.Net.TestFramework.Analysis.TokenFilter} chain. For example as in this 
      * stemming example:
      * <pre>
      * RegexAnalyzer pat = ...
@@ -151,7 +151,7 @@ namespace Lucene.Net.Analysis.Miscellaneous
          *            given stop set (after previously having applied toLowerCase()
          *            if applicable). For example, created via
          *            {@link StopFilter#makeStopSet(String[])}and/or
-         *            {@link org.apache.lucene.analysis.WordlistLoader}as in
+         *            {@link Lucene.Net.TestFramework.Analysis.WordlistLoader}as in
          *            <c>WordlistLoader.getWordSet(new File("samples/fulltext/stopwords.txt")</c>
          *            or <a href="http://www.unine.ch/info/clef/">other stop words
          *            lists </a>.

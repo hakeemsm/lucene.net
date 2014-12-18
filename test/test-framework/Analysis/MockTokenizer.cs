@@ -43,7 +43,9 @@ namespace Lucene.Net.Analysis
         private readonly CharTermAttribute termAtt;
         private readonly OffsetAttribute offsetAtt;
         int off = 0;
-
+		internal int bufferedCodePoint = -1;
+ 
+		internal int bufferedOff = -1;
         // TODO: "register" with LuceneTestCase to ensure all streams are closed() ?
         // currently, we can only check that the lifecycle is correct if someone is reusing,
         // but not for "one-offs".
@@ -97,7 +99,7 @@ namespace Lucene.Net.Analysis
         {
         }
 
-        /** Calls {@link #MockTokenizer(org.apache.lucene.util.AttributeSource.AttributeFactory,Reader,CharacterRunAutomaton,boolean)
+        /** Calls {@link #MockTokenizer(Lucene.Net.TestFramework.Util.AttributeSource.AttributeFactory,Reader,CharacterRunAutomaton,boolean)
          *                MockTokenizer(AttributeFactory, Reader, WHITESPACE, true)} */
 
         public MockTokenizer(AttributeFactory factory, System.IO.TextReader input) :
@@ -113,8 +115,19 @@ namespace Lucene.Net.Analysis
             ClearAttributes();
             for (; ; )
             {
-                int startOffset = off;
-                int cp = readCodePoint();
+				int startOffset;
+				int cp;
+				if (bufferedCodePoint >= 0)
+				{
+					cp = bufferedCodePoint;
+					startOffset = bufferedOff;
+					bufferedCodePoint = -1;
+				}
+				else
+				{
+					startOffset = off;
+					cp = ReadCodePoint();
+				}
                 if (cp < 0)
                 {
                     break;
@@ -132,9 +145,19 @@ namespace Lucene.Net.Analysis
                         {
                             break;
                         }
-                        cp = readCodePoint();
+                        cp = ReadCodePoint();
                     } while (cp >= 0 && isTokenChar(cp));
-
+						if (termAtt.Length < maxTokenLength)
+						{
+							// buffer up, in case the "rejected" char can start a new word of its own
+							bufferedCodePoint = cp;
+							bufferedOff = endOffset;
+						}
+						else
+						{
+							// otherwise, its because we hit term limit.
+							bufferedCodePoint = -1;
+						}
                     int correctedStartOffset = CorrectOffset(startOffset);
                     int correctedEndOffset = CorrectOffset(endOffset);
                     //        assert correctedStartOffset >= 0;
@@ -143,15 +166,18 @@ namespace Lucene.Net.Analysis
                     lastOffset = correctedStartOffset;
                     //        assert correctedEndOffset >= correctedStartOffset;
                     offsetAtt.SetOffset(correctedStartOffset, correctedEndOffset);
+						if (state == -1 || runAutomaton.IsAccept(state))
+						{
                     streamState = State.INCREMENT;
                     return true;
+					}
                 }
             }
             streamState = State.INCREMENT_FALSE;
             return false;
         }
 
-        protected int readCodePoint()
+        protected int ReadCodePoint()
         {
             int ch = ReadChar();
             if (ch < 0)
@@ -235,6 +261,7 @@ namespace Lucene.Net.Analysis
             base.Reset();
             state = runAutomaton.InitialState;
             lastOffset = off = 0;
+			bufferedCodePoint = -1;
             //assert !enableChecks || streamState != State.RESET : "double reset()";
             streamState = State.RESET;
         }

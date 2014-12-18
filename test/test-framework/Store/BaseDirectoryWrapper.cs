@@ -31,109 +31,73 @@ namespace Lucene.Net.Store
     // do NOT make any methods in this class synchronized, volatile
     // do NOT import anything from the concurrency package.
     // no randoms, no nothing.
-    public class BaseDirectoryWrapper : Directory
+	public class BaseDirectoryWrapper : FilterDirectory
     {
-        protected readonly Directory @delegate;
+		private bool checkIndexOnClose = true;
 
+		private bool crossCheckTermVectorsOnClose = true;
 
-        public BaseDirectoryWrapper(Directory @delegate)
-        {
-            this.@delegate = @delegate;
-            this.CheckIndexOnClose = false;
-            this.CrossCheckTermVectorysOnClose = false;
-        }
+		protected internal volatile bool isOpen = true;
 
-        public bool CheckIndexOnClose { get; private set; }
-        public bool CrossCheckTermVectorysOnClose {get; private set;}
+		protected BaseDirectoryWrapper(Directory delegate_) : base(delegate_)
+		{
+		}
 
-        public bool IsOpenFlag
-        {
-            get { return this.isOpen; }
-        }
+		// do NOT make any methods in this class synchronized, volatile
+		// do NOT import anything from the concurrency package.
+		// no randoms, no nothing.
+		/// <exception cref="System.IO.IOException"></exception>
+		public override void Close()
+		{
+			isOpen = false;
+			if (checkIndexOnClose && DirectoryReader.IndexExists(this))
+			{
+				TestUtil.CheckIndex(this, crossCheckTermVectorsOnClose);
+			}
+			base.Close();
+		}
 
-        public override LockFactory LockFactory
-        {
-	       get{ return this.@delegate.LockFactory;}
-           set{this.@delegate.LockFactory = value;}
-        }        public override string LockId
-        {
-	        get 
-	        { 
-		         return this.@delegate.LockId;
-	        }
-        }
+		public virtual bool IsOpen()
+		{
+			return isOpen;
+		}
 
-        public override void Copy(Directory to, string src, string dest, IOContext context)
-        {
- 	         this.@delegate.Copy(to, src, dest, context);
-        }
+		/// <summary>
+		/// Set whether or not checkindex should be run
+		/// on close
+		/// </summary>
+		public virtual void SetCheckIndexOnClose(bool value)
+		{
+			this.checkIndexOnClose = value;
+		}
 
-        public override void ClearLock(string name)
-        {
- 	         this.@delegate.ClearLock(name);
-        }
+		public virtual bool GetCheckIndexOnClose()
+		{
+			return checkIndexOnClose;
+		}
 
-        public override Directory.IndexInputSlicer CreateSlicer(string name, IOContext context)
-        {
- 	
-             return this.@delegate.CreateSlicer(name, context);
-        }
+		public virtual void SetCrossCheckTermVectorsOnClose(bool value)
+		{
+			this.crossCheckTermVectorsOnClose = value;
+		}
 
-        public override string[] ListAll()
-        {
-            
-            return this.@delegate.ListAll();
-        }
+		public virtual bool GetCrossCheckTermVectorsOnClose()
+		{
+			return crossCheckTermVectorsOnClose;
+		}
 
+		/// <exception cref="System.IO.IOException"></exception>
+		public override void Copy(Directory to, string src, string dest, IOContext context
+			)
+		{
+			@in.Copy(to, src, dest, context);
+		}
 
-        public override Lock MakeLock(string name)
-        {
- 	         return this.@delegate.MakeLock(name);
-        }
-
-        public override bool FileExists(string name)
-        {
-           return this.@delegate.FileExists(name);
-        }
-
-        public override void DeleteFile(string name)
-        {
-            this.@delegate.DeleteFile(name);
-        }
-
-        public override long FileLength(string name)
-        {
-            return this.@delegate.FileLength(name);
-        }
-
-        public override IndexOutput CreateOutput(string name, IOContext context)
-        {
-            return this.@delegate.CreateOutput(name, context);
-        }
-
-        public override void Sync(ICollection<string> names)
-        {
-           this.@delegate.Sync(names);
-        }
-
-        public override IndexInput OpenInput(string name, IOContext context)
-        {
-           return this.@delegate.OpenInput(name, context); 
-        }
-
-        public override string ToString()
-        {
- 	         return string.Format("BaseDirectoryWrapper({0})", this.@delegate.ToString());
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            this.isOpen = false;
-            if(this.CheckIndexOnClose && DirectoryReader.IndexExists(this))
-            {
-                _TestUtil.CheckIndex(this, this.CrossCheckTermVectorysOnClose);
-            }
-            this.@delegate.Dispose();
-        }
+		/// <exception cref="System.IO.IOException"></exception>
+		public override Directory.IndexInputSlicer CreateSlicer(string name, IOContext context
+			)
+		{
+			return @in.CreateSlicer(name, context);
+		}
     }
 }

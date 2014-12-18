@@ -8,7 +8,7 @@ namespace Lucene.Net.Analysis.Tokenattributes
 {
     public interface ITermToBytesRefAttribute : IAttribute
     {
-        int FillBytesRef();
+        void FillBytesRef();
 
         BytesRef BytesRef { get; }
     }

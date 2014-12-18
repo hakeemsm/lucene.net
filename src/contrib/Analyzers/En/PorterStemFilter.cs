@@ -46,7 +46,7 @@ namespace Lucene.Net.Analysis.En
     /// in a previous {@link TokenStream}.
     /// 
     /// Note: For including the original term as well as the stemmed version, see
-    /// {@link org.apache.lucene.analysis.miscellaneous.KeywordRepeatFilterFactory}
+    /// {@link Lucene.Net.TestFramework.Analysis.miscellaneous.KeywordRepeatFilterFactory}
     /// </p>
     /// </summary>
     public class PorterStemFilter : TokenFilter

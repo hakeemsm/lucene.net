@@ -27,8 +27,8 @@ namespace Lucene.Net.Search.Similarities
 		/// </summary>
 		/// <param name="weight">
 		/// collection information from
-		/// <see cref="ComputeWeight(float, Org.Apache.Lucene.Search.CollectionStatistics, Org.Apache.Lucene.Search.TermStatistics[])
-		/// 	">ComputeWeight(float, Org.Apache.Lucene.Search.CollectionStatistics, Org.Apache.Lucene.Search.TermStatistics[])
+		/// <see cref="ComputeWeight(float,Lucene.Net.TestFramework.Search.CollectionStatistics,Lucene.Net.TestFramework.Search.TermStatistics[])
+		/// 	">ComputeWeight(float,Lucene.Net.TestFramework.Search.CollectionStatistics,Lucene.Net.TestFramework.Search.TermStatistics[])
 		/// 	</see>
 		/// </param>
 		/// <param name="context">segment of the inverted index to be scored.</param>

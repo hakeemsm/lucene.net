@@ -188,13 +188,14 @@ namespace Lucene.Net.Index
         // Primary entry point (for first TermsHash)
         public override void Add()
         {
+			termAtt.FillBytesRef();
             // We are first in the chain so we must "intern" the
             // term text into textStart address
             // Get the text & hash of this term.
             int termID;
             try
             {
-                termID = bytesHash.Add(termBytesRef, termAtt.FillBytesRef());
+				termID = bytesHash.Add(termBytesRef);
             }
             catch (BytesRefHash.MaxBytesLengthExceededException e)
             {

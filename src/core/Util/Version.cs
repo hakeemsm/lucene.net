@@ -97,7 +97,8 @@ namespace Lucene.Net.Util
 		/// </summary>
         [Obsolete("Use an actual version instead.")]
 		LUCENE_CURRENT,
-	    LUCENE_44
+	    LUCENE_44,
+	    LUCENE_48
 	}
 
     public static class VersionEnumExtensions

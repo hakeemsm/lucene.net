@@ -166,27 +166,27 @@ namespace Lucene.Net.Search
             return Search(query, null, n);
         }
 
-        public TopDocs Search(Query query, Filter filter, int n)
+        public virtual TopDocs Search(Query query, Filter filter, int n)
         {
             return Search(CreateNormalizedWeight(WrapFilter(query, filter)), null, n);
         }
 
-        public void Search(Query query, Filter filter, Collector results)
+        public virtual void Search(Query query, Filter filter, Collector results)
         {
             Search(leafContexts, CreateNormalizedWeight(WrapFilter(query, filter)), results);
         }
 
-        public void Search(Query query, Collector results)
+        public virtual void Search(Query query, Collector results)
         {
             Search(leafContexts, CreateNormalizedWeight(query), results);
         }
 
-        public TopFieldDocs Search(Query query, Filter filter, int n, Sort sort)
+        public virtual TopFieldDocs Search(Query query, Filter filter, int n, Sort sort)
         {
             return Search(CreateNormalizedWeight(WrapFilter(query, filter)), n, sort, false, false);
         }
 
-        public TopFieldDocs Search(Query query, Filter filter, int n, Sort sort, bool doDocScores, bool doMaxScore)
+        public virtual TopFieldDocs Search(Query query, Filter filter, int n, Sort sort, bool doDocScores, bool doMaxScore)
         {
             return Search(CreateNormalizedWeight(WrapFilter(query, filter)), n, sort, doDocScores, doMaxScore);
         }

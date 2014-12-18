@@ -16,13 +16,13 @@ namespace Lucene.Net.Analysis
     {
         /** Empty set of stopwords */
 
-        public static CharacterRunAutomaton EMPTY_STOPSET =
-            new CharacterRunAutomaton(BasicAutomata.MakeEmpty());
+        public static CharacterRunAutomaton EMPTY_STOPSET = new CharacterRunAutomaton(BasicAutomata.MakeEmpty());
+        private int skippedPositions;
 
         /** Set of common english stopwords */
 
         public static CharacterRunAutomaton ENGLISH_STOPSET =
-            new CharacterRunAutomaton(BasicOperations.Union(Arrays.asList<Automaton>(
+            new CharacterRunAutomaton(BasicOperations.Union(Arrays.AsList<Automaton>(
                 makeString("a"), makeString("an"), makeString("and"), makeString("are"),
                 makeString("as"), makeString("at"), makeString("be"), makeString("but"),
                 makeString("by"), makeString("for"), makeString("if"), makeString("in"),
@@ -57,7 +57,7 @@ namespace Lucene.Net.Analysis
             // initial token with posInc=0 ever
 
             // return the first non-stop word found
-            int skippedPositions = 0;
+            
             while (input.IncrementToken())
             {
                 if (!filter.Run(termAtt.Buffer, 0, termAtt.Length))
@@ -74,24 +74,17 @@ namespace Lucene.Net.Analysis
             return false;
         }
 
-        /**
-   * @see #setEnablePositionIncrements(boolean)
-   */
-
-        public bool getEnablePositionIncrements()
+        public override void End()
         {
-            return enablePositionIncrements;
+            base.End();
+            posIncrAtt.PositionIncrement = posIncrAtt.PositionIncrement + skippedPositions;
         }
 
-        /**
-   * If <code>true</code>, this Filter will preserve
-   * positions of the incoming tokens (ie, accumulate and
-   * set position increments of the removed stop tokens).
-   */
-
-        public void setEnablePositionIncrements(bool enable)
+        /// <exception cref="System.IO.IOException"></exception>
+        public override void Reset()
         {
-            this.enablePositionIncrements = enable;
+            base.Reset();
+            skippedPositions = 0;
         }
     }
 }

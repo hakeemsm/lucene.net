@@ -95,10 +95,10 @@ namespace Lucene.Net.Analysis.BR
 
         /**
          * Creates
-         * {@link org.apache.lucene.analysis.Analyzer.TokenStreamComponents}
+         * {@link Lucene.Net.TestFramework.Analysis.Analyzer.TokenStreamComponents}
          * used to tokenize all the text in the provided {@link Reader}.
          * 
-         * @return {@link org.apache.lucene.analysis.Analyzer.TokenStreamComponents}
+         * @return {@link Lucene.Net.TestFramework.Analysis.Analyzer.TokenStreamComponents}
          *         built from a {@link StandardTokenizer} filtered with
          *         {@link LowerCaseFilter}, {@link StandardFilter}, {@link StopFilter}
          *         , and {@link BrazilianStemFilter}.

@@ -114,7 +114,7 @@ namespace Lucene.Net.Util
 
 		public bool Get(long index)
 		{
-			//HM:revisit 
+			 
 			//assert index >= 0 && index < numBits: "index=" + index;
 			int i = (int)(index >> 6);
 			// div 64
@@ -128,7 +128,7 @@ namespace Lucene.Net.Util
 
 		public void Set(long index)
 		{
-			//HM:revisit 
+			
 			//assert index >= 0 && index < numBits: "index=" + index + " numBits=" + numBits;
 			int wordNum = (int)(index >> 6);
 			// div 64

@@ -44,9 +44,11 @@ namespace Lucene.Net.Index
         protected internal IList<MergeThread> mergeThreads = new List<MergeThread>();
 
         // Max number of threads allowed to be merging at once
-        private int maxThreadCount = 1;
+		public const int DEFAULT_MAX_THREAD_COUNT = 1;
+		public const int DEFAULT_MAX_MERGE_COUNT = 2;
+		private int maxThreadCount = DEFAULT_MAX_THREAD_COUNT;
 
-        private int maxMergeCount = 2;
+		private int maxMergeCount = DEFAULT_MAX_MERGE_COUNT;
 
         protected internal Directory dir;
 
@@ -69,6 +71,24 @@ namespace Lucene.Net.Index
         /// is calling add/updateDocument) will block until
         /// a merge thread has completed. 
         /// </summary>
+		public virtual void SetMaxMergesAndThreads(int maxMergeCount, int maxThreadCount)
+		{
+			if (maxThreadCount < 1)
+			{
+				throw new ArgumentException("maxThreadCount should be at least 1");
+			}
+			if (maxMergeCount < 1)
+			{
+				throw new ArgumentException("maxMergeCount should be at least 1");
+			}
+			if (maxThreadCount > maxMergeCount)
+			{
+				throw new ArgumentException("maxThreadCount should be <= maxMergeCount (= " + maxMergeCount
+					 + ")");
+			}
+			this.maxThreadCount = maxThreadCount;
+			this.maxMergeCount = maxMergeCount;
+		}
         public virtual int MaxThreadCount
         {
             set

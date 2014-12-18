@@ -19,7 +19,7 @@ namespace Lucene.Net.Codecs
         public abstract BlockTermState NewTermState();
 
 		/// <summary>Actually decode metadata for next term</summary>
-		/// <seealso cref="PostingsWriterBase.EncodeTerm(long[], Org.Apache.Lucene.Store.DataOutput, Org.Apache.Lucene.Index.FieldInfo, BlockTermState, bool)
+		/// <seealso cref="PostingsWriterBase.EncodeTerm(long[], Lucene.Net.TestFramework.Store.DataOutput, Lucene.Net.TestFramework.Index.FieldInfo, BlockTermState, bool)
 		/// 	"></seealso>
 		/// <exception cref="System.IO.IOException"></exception>
 		public abstract void DecodeTerm(long[] longs, DataInput @in, FieldInfo fieldInfo, 

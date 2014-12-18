@@ -102,7 +102,7 @@ namespace Lucene.Net
             Fail(message);
         }
 
-        protected Random Random()
+        protected static Random Random()
         {
             return new Random();
         }

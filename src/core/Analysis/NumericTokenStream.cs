@@ -139,21 +139,18 @@ namespace Lucene.Net.Analysis
                 }
             }
 
-            public int FillBytesRef()
+			public void FillBytesRef()
             {
-                try
-                {
-                    //assert valueSize == 64 || valueSize == 32;
-                    return (valueSize == 64) ?
-                      NumericUtils.LongToPrefixCoded(value, shift, bytes) :
-                      NumericUtils.IntToPrefixCoded((int)value, shift, bytes);
-                }
-                catch (ArgumentException)
-                {
-                    // return empty token before first or after last
-                    bytes.length = 0;
-                    return 0;
-                }
+				//HM:revisit 
+				//assert valueSize == 64 || valueSize == 32;
+				if (valueSize == 64)
+				{
+					NumericUtils.LongToPrefixCoded(value, shift, bytes);
+				}
+				else
+				{
+					NumericUtils.IntToPrefixCoded((int)value, shift, bytes);
+				}
             }
 
             public int Shift

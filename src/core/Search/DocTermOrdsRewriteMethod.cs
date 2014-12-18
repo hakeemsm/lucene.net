@@ -159,7 +159,7 @@ namespace Lucene.Net.Search
                     // TODO: we could track max bit set and early terminate (since they come in sorted order)
                     while ((ord = docTermOrds.NextOrd()) != SortedSetDocValues.NO_MORE_ORDS)
                     {
-                        if (termSet[(int)ord])
+                        if (termSet.Get(ord))
                         {
                             return true;
                         }

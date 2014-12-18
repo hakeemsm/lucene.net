@@ -27,7 +27,7 @@ namespace Lucene.Net.Analysis.Miscellaneous
     /// The default implementation adds last prefix token end offset to the suffix token start and end offsets.
     /// <p/>
     /// <b>NOTE:</b> This filter might not behave correctly if used with custom Attributes, i.e. Attributes other than
-    /// the ones located in org.apache.lucene.analysis.tokenattributes. 
+    /// the ones located in Lucene.Net.TestFramework.Analysis.tokenattributes. 
     /// </summary>
     public class PrefixAwareTokenFilter : TokenStream
     {

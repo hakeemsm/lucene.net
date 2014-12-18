@@ -230,7 +230,7 @@
 //        public OfflineSorter.SortInfo Sort(FilePath input, FilePath output)
 //        {
 //            sortInfo = new OfflineSorter.SortInfo(this);
-//            sortInfo.totalTime = Runtime.CurrentTimeMillis();
+//            sortInfo.totalTime = DateTime.Now.CurrentTimeMillis();
 //            output.Delete();
 //            AList<FilePath> merges = new AList<FilePath>();
 //            bool success2 = false;
@@ -310,7 +310,7 @@
 //                    output.Delete();
 //                }
 //            }
-//            sortInfo.totalTime = (Runtime.CurrentTimeMillis() - sortInfo.totalTime);
+//            sortInfo.totalTime = (DateTime.Now.CurrentTimeMillis() - sortInfo.totalTime);
 //            return sortInfo;
 //        }
 
@@ -368,8 +368,8 @@
 //        {
 //            BytesRefArray data = this.buffer;
 //            FilePath tempFile = FilePath.CreateTempFile("sort", "partition", tempDirectory);
-//            long start = Runtime.CurrentTimeMillis();
-//            sortInfo.sortTime += (Runtime.CurrentTimeMillis() - start);
+//            long start = DateTime.Now.CurrentTimeMillis();
+//            sortInfo.sortTime += (DateTime.Now.CurrentTimeMillis() - start);
 //            OfflineSorter.ByteSequencesWriter @out = new OfflineSorter.ByteSequencesWriter(tempFile
 //                );
 //            BytesRef spare;
@@ -397,7 +397,7 @@
 //        /// <exception cref="System.IO.IOException"></exception>
 //        internal void MergePartitions(IList<FilePath> merges, FilePath outputFile)
 //        {
-//            long start = Runtime.CurrentTimeMillis();
+//            long start = DateTime.Now.CurrentTimeMillis();
 //            OfflineSorter.ByteSequencesWriter @out = new OfflineSorter.ByteSequencesWriter(outputFile
 //                );
 //            PriorityQueue<OfflineSorter.FileAndTop> queue = new _PriorityQueue_361(this, merges
@@ -433,7 +433,7 @@
 //                        queue.UpdateTop();
 //                    }
 //                }
-//                sortInfo.mergeTime += Runtime.CurrentTimeMillis() - start;
+//                sortInfo.mergeTime += DateTime.Now.CurrentTimeMillis() - start;
 //                sortInfo.mergeRounds++;
 //            }
 //            finally
@@ -472,7 +472,7 @@
 //        /// <exception cref="System.IO.IOException"></exception>
 //        internal int ReadPartition(OfflineSorter.ByteSequencesReader reader)
 //        {
-//            long start = Runtime.CurrentTimeMillis();
+//            long start = DateTime.Now.CurrentTimeMillis();
 //            BytesRef scratch = new BytesRef();
 //            while ((scratch.bytes = reader.Read()) != null)
 //            {
@@ -485,7 +485,7 @@
 //                    break;
 //                }
 //            }
-//            sortInfo.readTime += (Runtime.CurrentTimeMillis() - start);
+//            sortInfo.readTime += (DateTime.Now.CurrentTimeMillis() - start);
 //            return buffer.Size();
 //        }
 
