@@ -1,11 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using Lucene.Net.Analysis;
 using Lucene.Net.Codecs;
 using Lucene.Net.Index;
 using Lucene.Net.Randomized;
+using Lucene.Net.Randomized.Generators;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
+using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
 using Version = System.Version;
 
@@ -75,7 +78,7 @@ public class RandomIndexWriter : IDisposable {
    * Adds a Document.
    * @see IndexWriter#addDocument(Iterable)
    */
-		public virtual void AddDocument<T>(Iterable<T> doc) where T:IndexableField
+		public virtual void AddDocument<T>(IEnumerable<T> doc) where T:IIndexableField
 		{
 			LuceneTestCase.MaybeChangeLiveIndexWriterConfig(r, w.GetConfig());
 			AddDocument(doc, w.GetAnalyzer());

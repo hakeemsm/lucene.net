@@ -16,7 +16,14 @@
  */
 
 using System;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Xml;
 using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
+using Lucene.Net.Index;
 using Lucene.Net.Randomized.Generators;
 using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
@@ -24,9 +31,9 @@ using NUnit.Framework;
 using Lucene.Net.Analysis.Tokenattributes;
 using System.Collections.Generic;
 using Lucene.Net.Support;
-using Lucene.Net.Store;
 using System.Threading;
 using Attribute = Lucene.Net.Util.Attribute;
+using Directory = Lucene.Net.Store.Directory;
 
 namespace Lucene.Net.TestFramework.Analysis
 {
@@ -511,12 +518,12 @@ namespace Lucene.Net.TestFramework.Analysis
             internal readonly bool offsetsAreCorrect;
             internal readonly RandomIndexWriter iw;
 
-			internal readonly ManualResetEvent latch;
+			internal readonly CountdownEvent latch;
             // add memory barriers (ie alter how threads
             // interact)... so this is just "best effort":
             public bool failed;
 
-			internal AnalysisThread(long seed, ManualResetEvent latch, Analyzer a, int iterations
+			internal AnalysisThread(long seed, CountdownEvent latch, Analyzer a, int iterations
 				, int maxWordLength, bool useCharFilter, bool simple, bool offsetsAreCorrect, RandomIndexWriter
 				 iw)
             {
@@ -536,7 +543,7 @@ namespace Lucene.Net.TestFramework.Analysis
                 bool success = false;
                 try
                 {
-					latch.WaitOne();
+                    latch.Wait();
                     // see the part in checkRandomData where it replays the same text again
                     // to verify reproducability/reuse: hopefully this would catch thread hazards.
                     CheckRandomData(new Random((int)seed), a, iterations, maxWordLength, useCharFilter, simple, offsetsAreCorrect, iw);
@@ -558,7 +565,7 @@ namespace Lucene.Net.TestFramework.Analysis
             bool simple, bool offsetsAreCorrect)
         {
 			CheckResetException(a, "best effort");
-            long seed = random.Next();
+            int seed = random.Next();
             bool useCharFilter = random.NextBoolean();
             Directory dir = null;
             RandomIndexWriter iw = null;
@@ -567,9 +574,11 @@ namespace Lucene.Net.TestFramework.Analysis
                 !(postingsFormat.Equals("Memory") ||
                     postingsFormat.Equals("SimpleText"));
 			if (Rarely(random) && codecOk)
-            {
-				dir = NewFSDirectory(CreateTempDir("bttc"));
-                iw = new RandomIndexWriter(new Random((int)seed), dir, a);
+			{
+			    var tmpFile = new FileInfo(Path.GetTempPath() + "bttc");
+
+			    dir = NewFSDirectory(tmpFile);
+                iw = new RandomIndexWriter(new Random(seed), dir, a);
             }
             bool success = false;
             try
@@ -578,7 +587,8 @@ namespace Lucene.Net.TestFramework.Analysis
                 // now test with multiple threads: note we do the EXACT same thing we did before in each thread,
                 // so this should only really fail from another thread if its an actual thread problem
                 int numThreads = _TestUtil.nextInt(random, 2, 4);
-				CountDownLatch startingGun = new CountDownLatch(1);
+                
+				CountdownEvent startingGun = new CountdownEvent(1);
                 AnalysisThread[] threads = new AnalysisThread[numThreads];
                 for (int i = 0; i < threads.Length; i++)
                 {
@@ -588,16 +598,10 @@ namespace Lucene.Net.TestFramework.Analysis
                 {
                     threads[i].Start();
                 }
+                startingGun.Signal();
                 for (int i = 0; i < threads.Length; i++)
                 {
-                    try
-                    {
-                        threads[i].Join();
-                    }
-                    catch (ThreadInterruptedException e)
-                    {
-                        throw;
-                    }
+                    threads[i].Join();
                 }
                 for (int i = 0; i < threads.Length; i++)
                 {
@@ -616,7 +620,7 @@ namespace Lucene.Net.TestFramework.Analysis
                 }
                 else
                 {
-                    IOUtils.CloseWhileHandlingException(iw, dir); // checkindex
+                    IOUtils.CloseWhileHandlingException((IDisposable)iw, dir); // checkindex
                 }
             }
         }
@@ -625,27 +629,27 @@ namespace Lucene.Net.TestFramework.Analysis
 			 iw)
 		{
 			LineFileDocs docs = new LineFileDocs(random);
-			Lucene.NetDocument.Document doc = null;
+			Document doc = null;
 			Field field = null;
 			Field currentField = null;
 			StringReader bogus = new StringReader(string.Empty);
 			if (iw != null)
 			{
-				doc = new Lucene.NetDocument.Document();
+				doc = new Document();
 				FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
 				if (random.NextBoolean())
 				{
-					ft.SetStoreTermVectors(true);
-					ft.SetStoreTermVectorOffsets(random.NextBoolean());
-					ft.SetStoreTermVectorPositions(random.NextBoolean());
-					if (ft.StoreTermVectorPositions() && !OLD_FORMAT_IMPERSONATION_IS_ACTIVE)
+					ft.StoreTermVectors = true;
+					ft.StoreTermVectorOffsets = random.NextBoolean();
+					ft.StoreTermVectorPositions = random.NextBoolean();
+					if (ft.StoreTermVectorPositions && !OLD_FORMAT_IMPERSONATION_IS_ACTIVE)
 					{
-						ft.SetStoreTermVectorPayloads(random.NextBoolean());
+						ft.StoreTermVectorPayloads = random.NextBoolean();
 					}
 				}
 				if (random.NextBoolean())
 				{
-					ft.SetOmitNorms(true);
+					ft.OmitNorms= true;
 				}
 				string pf = TestUtil.GetPostingsFormat("dummy");
 				bool supportsOffsets = !doesntSupportOffsets.Contains(pf);
@@ -653,19 +657,19 @@ namespace Lucene.Net.TestFramework.Analysis
 				{
 					case 0:
 					{
-						ft.SetIndexOptions(FieldInfo.IndexOptions.DOCS_ONLY);
+						ft.IndexOptions = FieldInfo.IndexOptions.DOCS_ONLY;
 						break;
 					}
 
 					case 1:
 					{
-						ft.SetIndexOptions(FieldInfo.IndexOptions.DOCS_AND_FREQS);
+						ft.IndexOptions = FieldInfo.IndexOptions.DOCS_AND_FREQS;
 						break;
 					}
 
 					case 2:
 					{
-						ft.SetIndexOptions(FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS);
+						ft.IndexOptions = FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS;
 						break;
 					}
 
@@ -673,12 +677,11 @@ namespace Lucene.Net.TestFramework.Analysis
 					{
 						if (supportsOffsets && offsetsAreCorrect)
 						{
-							ft.SetIndexOptions(FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS
-								);
+							ft.IndexOptions = FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS;
 						}
 						else
 						{
-							ft.SetIndexOptions(FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS);
+							ft.IndexOptions = FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS;
 						}
 						break;
 					}
@@ -712,7 +715,7 @@ namespace Lucene.Net.TestFramework.Analysis
 								// Take care not to split up a surrogate pair:
 								endPos--;
 							}
-							text = Sharpen.Runtime.Substring(text, startPos, 1 + endPos);
+							text = text.Substring(startPos, 1 + endPos);
 						}
 					}
 					else
@@ -729,7 +732,7 @@ namespace Lucene.Net.TestFramework.Analysis
 							if (random.Next(7) == 0)
 							{
 								// pile up a multivalued field
-								FieldType ft = field.FieldType();
+								FieldType ft = (FieldType) field.FieldTypeValue;
 								currentField = new Field("dummy", bogus, ft);
 								doc.Add(currentField);
 							}
@@ -750,7 +753,7 @@ namespace Lucene.Net.TestFramework.Analysis
 					{
 						// TODO: really we should pass a random seed to
 						// checkAnalysisConsistency then print it here too:
-						System.Console.Error.WriteLine("TEST FAIL: useCharFilter=" + useCharFilter + " text='"
+						Console.Error.WriteLine("TEST FAIL: useCharFilter=" + useCharFilter + " text='"
 							 + Escape(text) + "'");
 						Thrower.Rethrow(t);
 					}
@@ -758,7 +761,7 @@ namespace Lucene.Net.TestFramework.Analysis
 			}
 			finally
 			{
-				IOUtils.CloseWhileHandlingException(docs);
+				IOUtils.CloseWhileHandlingException((IDisposable)docs);
 			}
 		}
 
@@ -805,7 +808,7 @@ namespace Lucene.Net.TestFramework.Analysis
 								{
 									// TODO: we can make ascii easier to read if we
 									// don't escape...
-									sb.Append(string.Format(CultureInfo.ROOT, "\\u%04x", c));
+                                    sb.Append(string.Format(CultureInfo.CurrentCulture.NumberFormat, "\\u%04x", c));
 								}
 							}
 						}
@@ -836,57 +839,53 @@ namespace Lucene.Net.TestFramework.Analysis
 		{
 			if (VERBOSE)
 			{
-				System.Console.Out.WriteLine(Sharpen.Thread.CurrentThread().GetName() + ": NOTE: BaseTokenStreamTestCase: get first token stream now text="
+				System.Console.Out.WriteLine(Thread.CurrentThread.Name + ": NOTE: BaseTokenStreamTestCase: get first token stream now text="
 					 + text);
 			}
 			int remainder = random.Next(10);
-			StreamReader reader = new StringReader(text);
-			TokenStream ts = a.TokenStream("dummy", useCharFilter ? new MockCharFilter(reader
-				, remainder) : reader);
-			CharTermAttribute termAtt = ts.HasAttribute(typeof(CharTermAttribute)) ? ts.GetAttribute
-				<CharTermAttribute>() : null;
-			OffsetAttribute offsetAtt = ts.HasAttribute(typeof(OffsetAttribute)) ? ts.GetAttribute
-				<OffsetAttribute>() : null;
-			PositionIncrementAttribute posIncAtt = ts.HasAttribute(typeof(PositionIncrementAttribute
-				)) ? ts.GetAttribute<PositionIncrementAttribute>() : null;
-			PositionLengthAttribute posLengthAtt = ts.HasAttribute(typeof(PositionLengthAttribute
-				)) ? ts.GetAttribute<PositionLengthAttribute>() : null;
-			TypeAttribute typeAtt = ts.HasAttribute(typeof(TypeAttribute)) ? ts.GetAttribute<
-				TypeAttribute>() : null;
-			IList<string> tokens = new AList<string>();
-			IList<string> types = new AList<string>();
-			IList<int> positions = new AList<int>();
-			IList<int> positionLengths = new AList<int>();
-			IList<int> startOffsets = new AList<int>();
-			IList<int> endOffsets = new AList<int>();
+		    var textBytes = Array.ConvertAll(text.ToCharArray(), Convert.ToByte);
+		    var memoryStream = new MemoryStream(textBytes);
+		    var reader = new StreamReader(memoryStream);
+			TokenStream ts = a.TokenStream("dummy", useCharFilter ? new MockCharFilter(reader, remainder) : reader);
+			CharTermAttribute termAtt = ts.HasAttribute(typeof(CharTermAttribute)) ? ts.GetAttribute<CharTermAttribute>() : null;
+			OffsetAttribute offsetAtt = ts.HasAttribute(typeof(OffsetAttribute)) ? ts.GetAttribute<OffsetAttribute>() : null;
+			PositionIncrementAttribute posIncAtt = ts.HasAttribute(typeof(PositionIncrementAttribute)) ? ts.GetAttribute<PositionIncrementAttribute>() : null;
+			PositionLengthAttribute posLengthAtt = ts.HasAttribute(typeof(PositionLengthAttribute)) ? ts.GetAttribute<PositionLengthAttribute>() : null;
+			TypeAttribute typeAtt = ts.HasAttribute(typeof(TypeAttribute)) ? ts.GetAttribute<TypeAttribute>() : null;
+			IList<string> tokens = new List<string>();
+			IList<string> types = new List<string>();
+			IList<int> positions = new List<int>();
+			IList<int> positionLengths = new List<int>();
+			IList<int> startOffsets = new List<int>();
+			IList<int> endOffsets = new List<int>();
 			ts.Reset();
 			// First pass: save away "correct" tokens
 			while (ts.IncrementToken())
 			{
-				NUnit.Framework.Assert.IsNotNull("has no CharTermAttribute", termAtt);
-				tokens.AddItem(termAtt.ToString());
+				IsNotNull(termAtt, "has no CharTermAttribute");
+				tokens.Add(termAtt.ToString());
 				if (typeAtt != null)
 				{
-					types.AddItem(typeAtt.Type());
+					types.Add(typeAtt.Type);
 				}
 				if (posIncAtt != null)
 				{
-					positions.AddItem(posIncAtt.GetPositionIncrement());
+					positions.Add(posIncAtt.PositionIncrement);
 				}
 				if (posLengthAtt != null)
 				{
-					positionLengths.AddItem(posLengthAtt.GetPositionLength());
+					positionLengths.Add(posLengthAtt.PositionLength);
 				}
 				if (offsetAtt != null)
 				{
-					startOffsets.AddItem(offsetAtt.StartOffset());
-					endOffsets.AddItem(offsetAtt.EndOffset());
+					startOffsets.Add(offsetAtt.StartOffset);
+					endOffsets.Add(offsetAtt.EndOffset);
 				}
 			}
 			ts.End();
-			ts.Close();
+			ts.Dispose();
 			// verify reusing is "reproducable" and also get the normal tokenstream sanity checks
-			if (!tokens.IsEmpty())
+			if (tokens.Any())
 			{
 				// KWTokenizer (for example) can produce a token
 				// even when input is length 0:
@@ -898,12 +897,11 @@ namespace Lucene.Net.TestFramework.Analysis
 					{
 						if (VERBOSE)
 						{
-							System.Console.Out.WriteLine(Sharpen.Thread.CurrentThread().GetName() + ": NOTE: BaseTokenStreamTestCase: re-run analysis w/ exception"
+							Console.Out.WriteLine(Thread.CurrentThread.Name + ": NOTE: BaseTokenStreamTestCase: re-run analysis w/ exception"
 								);
 						}
 						// Throw an errant exception from the Reader:
-						MockReaderWrapper evilReader = new MockReaderWrapper(random, new StringReader(text
-							));
+						var evilReader = new MockReaderWrapper(memoryStream){Random=random};
 						evilReader.ThrowExcAfterChar(random.Next(text.Length + 1));
 						reader = evilReader;
 						try
@@ -917,17 +915,17 @@ namespace Lucene.Net.TestFramework.Analysis
 							// currently allow it, so, we must call
 							// a.tokenStream inside the try since we may
 							// hit the exc on init:
-							ts = a.TokenStream("dummy", useCharFilter ? new MockCharFilter(evilReader, remainder
+							ts = a.TokenStream("dummy", useCharFilter ? (TextReader)new MockCharFilter(evilReader, remainder
 								) : evilReader);
 							ts.Reset();
 							while (ts.IncrementToken())
 							{
 							}
-							NUnit.Framework.Assert.Fail("did not hit exception");
+							Fail("did not hit exception");
 						}
-						catch (RuntimeException re)
+						catch (SystemException re)
 						{
-							NUnit.Framework.Assert.IsTrue(MockReaderWrapper.IsMyEvilException(re));
+							IsTrue(MockReaderWrapper.IsMyEvilException(re));
 						}
 						try
 						{
@@ -946,7 +944,7 @@ namespace Lucene.Net.TestFramework.Analysis
 								throw;
 							}
 						}
-						ts.Close();
+						ts.Dispose();
 					}
 					else
 					{
@@ -956,16 +954,16 @@ namespace Lucene.Net.TestFramework.Analysis
 							int numTokensToRead = random.Next(tokens.Count);
 							if (VERBOSE)
 							{
-								System.Console.Out.WriteLine(Sharpen.Thread.CurrentThread().GetName() + ": NOTE: BaseTokenStreamTestCase: re-run analysis, only consuming "
+								System.Console.Out.WriteLine(Thread.CurrentThread.Name + ": NOTE: BaseTokenStreamTestCase: re-run analysis, only consuming "
 									 + numTokensToRead + " of " + tokens.Count + " tokens");
 							}
-							reader = new StringReader(text);
+                            //reader = new StringReader(text); //reader already initialized
 							ts = a.TokenStream("dummy", useCharFilter ? new MockCharFilter(reader, remainder)
 								 : reader);
 							ts.Reset();
 							for (int tokenCount = 0; tokenCount < numTokensToRead; tokenCount++)
 							{
-								NUnit.Framework.Assert.IsTrue(ts.IncrementToken());
+								IsTrue(ts.IncrementToken());
 							}
 							try
 							{
@@ -984,7 +982,7 @@ namespace Lucene.Net.TestFramework.Analysis
 									throw;
 								}
 							}
-							ts.Close();
+							ts.Dispose();
 						}
 					}
 				}
@@ -993,20 +991,20 @@ namespace Lucene.Net.TestFramework.Analysis
 			// results from first pass:
 			if (VERBOSE)
 			{
-				System.Console.Out.WriteLine(Sharpen.Thread.CurrentThread().GetName() + ": NOTE: BaseTokenStreamTestCase: re-run analysis; "
+				System.Console.Out.WriteLine(Thread.CurrentThread.Name + ": NOTE: BaseTokenStreamTestCase: re-run analysis; "
 					 + tokens.Count + " tokens");
 			}
-			reader = new StringReader(text);
-			long seed = random.NextLong();
+			//reader = new StringReader(text);
+		    int seed = random.Next();
 			random = new Random(seed);
 			if (random.Next(30) == 7)
 			{
 				if (VERBOSE)
 				{
-					System.Console.Out.WriteLine(Sharpen.Thread.CurrentThread().GetName() + ": NOTE: BaseTokenStreamTestCase: using spoon-feed reader"
+					System.Console.Out.WriteLine(Thread.CurrentThread.Name + ": NOTE: BaseTokenStreamTestCase: using spoon-feed reader"
 						);
 				}
-				reader = new MockReaderWrapper(random, reader);
+				reader = new MockReaderWrapper(memoryStream){Random = random};
 			}
 			ts = a.TokenStream("dummy", useCharFilter ? new MockCharFilter(reader, remainder)
 				 : reader);
@@ -1014,28 +1012,23 @@ namespace Lucene.Net.TestFramework.Analysis
 				null)
 			{
 				// offset + pos + posLength + type
-				AssertTokenStreamContents(ts, Sharpen.Collections.ToArray(tokens, new string[tokens
-					.Count]), ToIntArray(startOffsets), ToIntArray(endOffsets), Sharpen.Collections.ToArray
-					(types, new string[types.Count]), ToIntArray(positions), ToIntArray(positionLengths
-					), text.Length, offsetsAreCorrect);
+				AssertTokenStreamContents(ts, tokens.ToArray(), ToIntArray(startOffsets), ToIntArray(endOffsets), 
+                    types.ToArray(), ToIntArray(positions), ToIntArray(positionLengths), text.Length, offsetsAreCorrect);
 			}
 			else
 			{
 				if (typeAtt != null && posIncAtt != null && offsetAtt != null)
 				{
 					// offset + pos + type
-					AssertTokenStreamContents(ts, Sharpen.Collections.ToArray(tokens, new string[tokens
-						.Count]), ToIntArray(startOffsets), ToIntArray(endOffsets), Sharpen.Collections.ToArray
-						(types, new string[types.Count]), ToIntArray(positions), null, text.Length, offsetsAreCorrect
-						);
+					AssertTokenStreamContents(ts, tokens.ToArray(), ToIntArray(startOffsets), ToIntArray(endOffsets), 
+                        types.ToArray(), ToIntArray(positions), null, text.Length, offsetsAreCorrect);
 				}
 				else
 				{
 					if (posIncAtt != null && posLengthAtt != null && offsetAtt != null)
 					{
 						// offset + pos + posLength
-						AssertTokenStreamContents(ts, Sharpen.Collections.ToArray(tokens, new string[tokens
-							.Count]), ToIntArray(startOffsets), ToIntArray(endOffsets), null, ToIntArray(positions
+						AssertTokenStreamContents(ts, tokens.ToArray(), ToIntArray(startOffsets), ToIntArray(endOffsets), null, ToIntArray(positions
 							), ToIntArray(positionLengths), text.Length, offsetsAreCorrect);
 					}
 					else
@@ -1043,8 +1036,7 @@ namespace Lucene.Net.TestFramework.Analysis
 						if (posIncAtt != null && offsetAtt != null)
 						{
 							// offset + pos
-							AssertTokenStreamContents(ts, Sharpen.Collections.ToArray(tokens, new string[tokens
-								.Count]), ToIntArray(startOffsets), ToIntArray(endOffsets), null, ToIntArray(positions
+							AssertTokenStreamContents(ts, tokens.ToArray(), ToIntArray(startOffsets), ToIntArray(endOffsets), null, ToIntArray(positions
 								), null, text.Length, offsetsAreCorrect);
 						}
 						else
@@ -1052,15 +1044,13 @@ namespace Lucene.Net.TestFramework.Analysis
 							if (offsetAtt != null)
 							{
 								// offset
-								AssertTokenStreamContents(ts, Sharpen.Collections.ToArray(tokens, new string[tokens
-									.Count]), ToIntArray(startOffsets), ToIntArray(endOffsets), null, null, null, text
+								AssertTokenStreamContents(ts, tokens.ToArray(), ToIntArray(startOffsets), ToIntArray(endOffsets), null, null, null, text
 									.Length, offsetsAreCorrect);
 							}
 							else
 							{
 								// terms only
-								AssertTokenStreamContents(ts, Sharpen.Collections.ToArray(tokens, new string[tokens
-									.Count]));
+								AssertTokenStreamContents(ts, tokens.ToArray());
 							}
 						}
 					}
@@ -1068,41 +1058,39 @@ namespace Lucene.Net.TestFramework.Analysis
 			}
 			if (field != null)
 			{
-				reader = new StringReader(text);
+				//reader = new StringReader(text);
 				random = new Random(seed);
 				if (random.Next(30) == 7)
 				{
 					if (VERBOSE)
 					{
-						System.Console.Out.WriteLine(Sharpen.Thread.CurrentThread().GetName() + ": NOTE: BaseTokenStreamTestCase: indexing using spoon-feed reader"
+						System.Console.Out.WriteLine(Thread.CurrentThread.Name + ": NOTE: BaseTokenStreamTestCase: indexing using spoon-feed reader"
 							);
 					}
-					reader = new MockReaderWrapper(random, reader);
+					reader = new MockReaderWrapper(memoryStream){Random = random};
 				}
-				field.SetReaderValue(useCharFilter ? new MockCharFilter(reader, remainder) : reader
-					);
+				field.ReaderValue = useCharFilter ? new MockCharFilter(reader, remainder) : reader;
 			}
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
 		protected internal virtual string ToDot(Analyzer a, string inputText)
 		{
-			StringWriter sw = new StringWriter();
-			TokenStream ts = a.TokenStream("field", inputText);
-			ts.Reset();
-			new TokenStreamToDot(inputText, ts, new PrintWriter(sw)).ToDot();
+		    TokenStream ts = a.TokenStream("field", inputText);
+		    var textBytes = Array.ConvertAll(inputText.ToCharArray(), Convert.ToByte);
+		    var sw = new StreamWriter(new MemoryStream(textBytes));
+		    ts.Reset();
+			new TokenStreamToDot(inputText, ts, sw).ToDot();
 			return sw.ToString();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		protected internal virtual void ToDotFile(Analyzer a, string inputText, string localFileName
-			)
+		protected internal virtual void ToDotFile(Analyzer a, string inputText, string localFileName)
 		{
-			TextWriter w = new OutputStreamWriter(new FileOutputStream(localFileName), StandardCharsets
-				.UTF_8);
+			TextWriter w = new StreamWriter(new FileStream(localFileName,FileMode.Append), Encoding.UTF8);
 			TokenStream ts = a.TokenStream("field", inputText);
 			ts.Reset();
-			new TokenStreamToDot(inputText, ts, new PrintWriter(w)).ToDot();
+			new TokenStreamToDot(inputText, ts, (StreamWriter)w).ToDot();
 			w.Close();
 		}
 

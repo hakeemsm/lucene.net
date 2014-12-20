@@ -47,8 +47,8 @@ namespace Lucene.Net.Test.Util
             int num = AtLeast(10000);
             for (int iter = 0; iter < num; iter++)
             {
-                int minTargetSize = rnd.nextInt(int.MaxValue);
-                int elemSize = rnd.nextInt(11);
+                int minTargetSize = rnd.NextInt(int.MaxValue);
+                int elemSize = rnd.NextInt(11);
                 int v = ArrayUtil.Oversize(minTargetSize, elemSize);
                 assertTrue(v >= minTargetSize);
             }
@@ -131,10 +131,10 @@ namespace Lucene.Net.Test.Util
         private int[] CreateRandomArray(int maxSize)
         {
             Random rnd = Random();
-            var a = new int[rnd.nextInt(maxSize) + 1];
+            var a = new int[rnd.NextInt(maxSize) + 1];
             for (int i = 0; i < a.Length; i++)
             {
-                a[i] = rnd.nextInt(a.Length);
+                a[i] = rnd.NextInt(a.Length);
             }
 
             return a;
@@ -165,10 +165,10 @@ namespace Lucene.Net.Test.Util
         private int[] CreateSparseRandomArray(int maxSize)
         {
             Random rnd = Random();
-            var a = new int[rnd.nextInt(maxSize) + 1];
+            var a = new int[rnd.NextInt(maxSize) + 1];
             for (int i = 0; i < a.Length; i++)
             {
-                a[i] = rnd.nextInt(2);
+                a[i] = rnd.NextInt(2);
             }
 
             return a;
@@ -302,7 +302,7 @@ namespace Lucene.Net.Test.Util
             for (int i = 0; i < items.Length; i++)
             {
                 bool equal = rnd.NextBoolean();
-                items[i] = new Item(equal ? (i + 1) : -1, equal ? 0 : (rnd.nextInt(1000) + 1));
+                items[i] = new Item(equal ? (i + 1) : -1, equal ? 0 : (rnd.NextInt(1000) + 1));
             }
 
             if (VERBOSE)
@@ -332,7 +332,7 @@ namespace Lucene.Net.Test.Util
             for (int i = 0; i < items.Length; i++)
             {
                 bool equal = rnd.NextBoolean();
-                items[i] = new Item(equal ? (i + 1) : -1, equal ? 0 : (rnd.nextInt(1000) + 1));
+                items[i] = new Item(equal ? (i + 1) : -1, equal ? 0 : (rnd.NextInt(1000) + 1));
             }
 
             if (VERBOSE)

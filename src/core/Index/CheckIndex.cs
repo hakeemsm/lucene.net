@@ -169,7 +169,7 @@ namespace Lucene.Net.Index
                 /// <summary>True if this segment has pending deletions. </summary>
                 public bool hasDeletions;
 
-                public string deletionsGen;
+				public long deletionsGen;
 
                 /// <summary>Number of deleted documents. </summary>
                 public int numDeleted;
@@ -267,6 +267,10 @@ namespace Lucene.Net.Index
 
                 public long totalValueFields = 0L;
 
+				public long totalNumericFields;
+				public long totalBinaryFields;
+				public long totalSortedFields;
+				public long totalSortedSetFields;
                 public Exception error = null;
             }
         }
@@ -496,7 +500,12 @@ namespace Lucene.Net.Index
                 Msg(infoStream, "  " + (1 + i) + " of " + numSegments + ": name=" + info.info.name + " docCount=" + info.info.DocCount);
                 segInfoStat.name = info.info.name;
                 segInfoStat.docCount = info.info.DocCount;
-
+				string version = info.info.Version;
+				if (info.info.DocCount <= 0 && version != null && versionComparator.Compare(
+					version, "4.5") >= 0)
+				{
+					throw new SystemException("illegal number of documents: maxDoc=" + info.info.DocCount);
+				}
                 int toLoseDocCount = info.info.DocCount;
 
                 AtomicReader reader = null;
@@ -523,11 +532,6 @@ namespace Lucene.Net.Index
                         Msg(infoStream, "    diagnostics = " + diagnostics);
                     }
 
-                    IDictionary<String, String> atts = info.info.Attributes;
-                    if (atts != null && atts.Count > 0)
-                    {
-                        Msg(infoStream, "    attributes = " + atts);
-                    }
 
                     if (!info.HasDeletions)
                     {
@@ -538,14 +542,24 @@ namespace Lucene.Net.Index
                     {
                         Msg(infoStream, "    has deletions [delGen=" + info.DelGen + "]");
                         segInfoStat.hasDeletions = true;
-                        segInfoStat.deletionsGen = info.DelGen.ToString();
+                        segInfoStat.deletionsGen = info.DelGen;
                     }
                     if (infoStream != null)
                         infoStream.Write("    test: open reader.........");
                     reader = new SegmentReader(info, DirectoryReader.DEFAULT_TERMS_INDEX_DIVISOR, IOContext.DEFAULT);
 
+					Msg(infoStream, "OK");
                     segInfoStat.openReaderPassed = true;
-
+					if (infoStream != null)
+					{
+						infoStream.Write("    test: check integrity.....");
+					}
+					reader.CheckIntegrity();
+					Msg(infoStream, "OK");
+					if (infoStream != null)
+					{
+						infoStream.Write("    test: check live docs.....");
+					}
                     int numDocs = reader.NumDocs;
                     toLoseDocCount = numDocs;
                     if (reader.HasDeletions)
@@ -706,7 +720,7 @@ namespace Lucene.Net.Index
         }
 
         /// <summary> Test field norms.</summary>
-        private Status.FieldNormStatus TestFieldNorms(AtomicReader reader, StreamWriter infoStream)
+        public static Status.FieldNormStatus TestFieldNorms(AtomicReader reader, StreamWriter infoStream)
         {
             var status = new Status.FieldNormStatus();
 
@@ -801,12 +815,49 @@ namespace Lucene.Net.Index
                 {
                     continue;
                 }
-
+				bool hasFreqs = terms.HasFreqs;
                 bool hasPositions = terms.HasPositions;
+				bool hasPayloads = terms.HasPayloads;
                 bool hasOffsets = terms.HasOffsets;
                 // term vectors cannot omit TF
-                bool hasFreqs = isVectors || fieldInfo.IndexOptionsValue.GetValueOrDefault() >= FieldInfo.IndexOptions.DOCS_AND_FREQS;
-
+				bool expectedHasFreqs = (isVectors || fieldInfo.IndexOptionsValue.GetValueOrDefault().CompareTo(FieldInfo.IndexOptions
+					.DOCS_AND_FREQS) >= 0);
+				if (hasFreqs != expectedHasFreqs)
+				{
+					throw new SystemException("field \"" + field + "\" should have hasFreqs=" + expectedHasFreqs
+						 + " but got " + hasFreqs);
+				}
+				if (hasFreqs == false)
+				{
+					if (terms.SumTotalTermFreq != -1)
+					{
+						throw new SystemException("field \"" + field + "\" hasFreqs is false, but Terms.getSumTotalTermFreq()="
+							 + terms.SumTotalTermFreq + " (should be -1)");
+					}
+				}
+				if (!isVectors)
+				{
+					bool expectedHasPositions = fieldInfo.IndexOptionsValue.GetValueOrDefault().CompareTo(FieldInfo.IndexOptions
+						.DOCS_AND_FREQS_AND_POSITIONS) >= 0;
+					if (hasPositions != expectedHasPositions)
+					{
+						throw new SystemException("field \"" + field + "\" should have hasPositions=" + 
+							expectedHasPositions + " but got " + hasPositions);
+					}
+					bool expectedHasPayloads = fieldInfo.HasPayloads;
+					if (hasPayloads != expectedHasPayloads)
+					{
+						throw new SystemException("field \"" + field + "\" should have hasPayloads=" + expectedHasPayloads
+							 + " but got " + hasPayloads);
+					}
+					bool expectedHasOffsets = fieldInfo.IndexOptionsValue.GetValueOrDefault().CompareTo(FieldInfo.IndexOptions
+						.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS) >= 0;
+					if (hasOffsets != expectedHasOffsets)
+					{
+						throw new SystemException("field \"" + field + "\" should have hasOffsets=" + expectedHasOffsets
+							 + " but got " + hasOffsets);
+					}
+				}
                 TermsEnum termsEnum = terms.Iterator(null);
 
                 bool hasOrd = true;
@@ -854,7 +905,14 @@ namespace Lucene.Net.Index
 
                     docs = termsEnum.Docs(liveDocs, docs);
                     postings = termsEnum.DocsAndPositions(liveDocs, postings);
-
+					if (hasFreqs == false)
+					{
+						if (termsEnum.TotalTermFreq != -1)
+						{
+							throw new SystemException("field \"" + field + "\" hasFreqs is false, but TermsEnum.totalTermFreq()="
+								 + termsEnum.TotalTermFreq + " (should be -1)");
+						}
+					}
                     if (hasOrd)
                     {
                         long ord = -1;
@@ -910,6 +968,17 @@ namespace Lucene.Net.Index
                             status.totPos += freq;
                             totalTermFreq += freq;
                         }
+						else
+						{
+							// When a field didn't index freq, it must
+							// consistently "lie" and pretend that freq was
+							// 1:
+							if (docs2.Freq != 1)
+							{
+								throw new SystemException("term " + term + ": doc " + doc + ": freq " + freq + " != 1 when Terms.hasFreqs() is false"
+									);
+							}
+						}
                         docCount++;
 
                         if (doc <= lastDoc)
@@ -1394,7 +1463,7 @@ namespace Lucene.Net.Index
         }
 
         /// <summary> Test stored fields for a segment.</summary>
-        private Status.StoredFieldStatus TestStoredFields(AtomicReader reader, StreamWriter infoStream)
+        public static Status.StoredFieldStatus TestStoredFields(AtomicReader reader, StreamWriter infoStream)
         {
             var status = new Status.StoredFieldStatus();
 
@@ -1455,21 +1524,24 @@ namespace Lucene.Net.Index
                     if (fieldInfo.HasDocValues)
                     {
                         status.totalValueFields++;
-                        CheckDocValues(fieldInfo, reader, infoStream);
+                        CheckDocValues(fieldInfo, reader,status);
                     }
                     else
                     {
                         if (reader.GetBinaryDocValues(fieldInfo.name) != null ||
                             reader.GetNumericDocValues(fieldInfo.name) != null ||
                             reader.GetSortedDocValues(fieldInfo.name) != null ||
-                            reader.GetSortedSetDocValues(fieldInfo.name) != null)
+                            reader.GetSortedSetDocValues(fieldInfo.name) != null || reader.GetDocsWithField
+							(fieldInfo.name) != null)
                         {
                             throw new SystemException("field: " + fieldInfo.name + " has docvalues but should omit them!");
                         }
                     }
                 }
 
-                Msg(infoStream, "OK [" + status.docCount + " total doc count; " + status.totalValueFields + " docvalues fields]");
+				Msg(infoStream, "OK [" + status.totalValueFields + " docvalues fields; " + status
+					.totalBinaryFields + " BINARY; " + status.totalNumericFields + " NUMERIC; " + status
+					.totalSortedFields + " SORTED; " + status.totalSortedSetFields + " SORTED_SET]");
             }
             catch (Exception e)
             {
@@ -1483,31 +1555,57 @@ namespace Lucene.Net.Index
             return status;
         }
 
-        private static void CheckBinaryDocValues(String fieldName, AtomicReader reader, BinaryDocValues dv)
+		private static void CheckBinaryDocValues(string fieldName, AtomicReader reader, BinaryDocValues
+			 dv, IBits docsWithField)
         {
             BytesRef scratch = new BytesRef();
             for (int i = 0; i < reader.MaxDoc; i++)
             {
                 dv.Get(i, scratch);
                 //assert scratch.isValid();
+				if (docsWithField[i] == false && scratch.length > 0)
+				{
+					throw new SystemException("dv for field: " + fieldName + " is missing but has value="
+						 + scratch + " for doc: " + i);
+				}
             }
         }
 
-        private static void CheckSortedDocValues(String fieldName, AtomicReader reader, SortedDocValues dv)
+		private static void CheckSortedDocValues(string fieldName, AtomicReader reader, SortedDocValues
+			 dv, IBits docsWithField)
         {
-            CheckBinaryDocValues(fieldName, reader, dv);
+			CheckBinaryDocValues(fieldName, reader, dv, docsWithField);
             int maxOrd = dv.ValueCount - 1;
             FixedBitSet seenOrds = new FixedBitSet(dv.ValueCount);
             int maxOrd2 = -1;
             for (int i = 0; i < reader.MaxDoc; i++)
             {
                 int ord = dv.GetOrd(i);
-                if (ord < 0 || ord > maxOrd)
+				if (ord == -1)
+				{
+					if (docsWithField[i])
+					{
+						throw new SystemException("dv for field: " + fieldName + " has -1 ord but is not marked missing for doc: "
+							 + i);
+					}
+				}
+				else
+				{
+					if (ord < -1 || ord > maxOrd)
                 {
                     throw new SystemException("ord out of bounds: " + ord);
                 }
+					else
+					{
+						if (!docsWithField[i])
+						{
+							throw new SystemException("dv for field: " + fieldName + " is missing but has ord="
+								 + ord + " for doc: " + i);
+						}
                 maxOrd2 = Math.Max(maxOrd2, ord);
                 seenOrds.Set(ord);
+					}
+				}
             }
             if (maxOrd != maxOrd2)
             {
@@ -1534,16 +1632,19 @@ namespace Lucene.Net.Index
             }
         }
 
-        private static void CheckSortedSetDocValues(String fieldName, AtomicReader reader, SortedSetDocValues dv)
+		private static void CheckSortedSetDocValues(string fieldName, AtomicReader reader, SortedSetDocValues dv, IBits docsWithField)
         {
             long maxOrd = dv.ValueCount - 1;
-            OpenBitSet seenOrds = new OpenBitSet(dv.ValueCount);
+			LongBitSet seenOrds = new LongBitSet(dv.ValueCount);
             long maxOrd2 = -1;
             for (int i = 0; i < reader.MaxDoc; i++)
             {
                 dv.SetDocument(i);
                 long lastOrd = -1;
                 long ord;
+				if (docsWithField[i])
+				{
+					int ordCount = 0;
                 while ((ord = dv.NextOrd()) != SortedSetDocValues.NO_MORE_ORDS)
                 {
                     if (ord <= lastOrd)
@@ -1554,18 +1655,61 @@ namespace Lucene.Net.Index
                     {
                         throw new SystemException("ord out of bounds: " + ord);
                     }
+						if (dv is RandomAccessOrds)
+						{
+							long ord2 = ((RandomAccessOrds)dv).OrdAt(ordCount);
+							if (ord != ord2)
+							{
+								throw new SystemException("ordAt(" + ordCount + ") inconsistent, expected=" + ord
+									 + ",got=" + ord2 + " for doc: " + i);
+							}
+						}
                     lastOrd = ord;
                     maxOrd2 = Math.Max(maxOrd2, ord);
                     seenOrds.Set(ord);
+						ordCount++;
                 }
+					if (ordCount == 0)
+					{
+						throw new SystemException("dv for field: " + fieldName + " has no ordinals but is not marked missing for doc: "
+							 + i);
+					}
+					if (dv is RandomAccessOrds)
+					{
+						long ordCount2 = ((RandomAccessOrds)dv).Cardinality();
+						if (ordCount != ordCount2)
+						{
+							throw new SystemException("cardinality inconsistent, expected=" + ordCount + ",got="
+								 + ordCount2 + " for doc: " + i);
+						}
+					}
+				}
+				else
+				{
+					long o = dv.NextOrd();
+					if (o != SortedSetDocValues.NO_MORE_ORDS)
+					{
+						throw new SystemException("dv for field: " + fieldName + " is marked missing but has ord="
+							 + o + " for doc: " + i);
+					}
+					if (dv is RandomAccessOrds)
+					{
+						long ordCount2 = ((RandomAccessOrds)dv).Cardinality();
+						if (ordCount2 != 0)
+						{
+							throw new SystemException("dv for field: " + fieldName + " is marked missing but has cardinality "
+								 + ordCount2 + " for doc: " + i);
+						}
+					}
+				}
             }
             if (maxOrd != maxOrd2)
             {
                 throw new SystemException("dv for field: " + fieldName + " reports wrong maxOrd=" + maxOrd + " but this is not the case: " + maxOrd2);
             }
-            if (seenOrds.Cardinality != dv.ValueCount)
+            if (seenOrds.Cardinality() != dv.ValueCount)
             {
-                throw new SystemException("dv for field: " + fieldName + " has holes in its ords, valueCount=" + dv.ValueCount + " but only used: " + seenOrds.Cardinality);
+                throw new SystemException("dv for field: " + fieldName + " has holes in its ords, valueCount=" + dv.ValueCount + " but only used: " + seenOrds.Cardinality());
             }
 
             BytesRef lastValue = null;
@@ -1585,20 +1729,39 @@ namespace Lucene.Net.Index
             }
         }
 
-        private static void CheckNumericDocValues(String fieldName, AtomicReader reader, NumericDocValues ndv)
+		private static void CheckNumericDocValues(string fieldName, AtomicReader reader, 
+			NumericDocValues ndv, IBits docsWithField)
         {
             for (int i = 0; i < reader.MaxDoc; i++)
             {
-                ndv.Get(i);
+				long value = ndv.Get(i);
+				if (docsWithField[i] == false && value != 0)
+				{
+					throw new SystemException("dv for field: " + fieldName + " is marked missing but has value="
+						 + value + " for doc: " + i);
+				}
             }
         }
 
-        private static void CheckDocValues(FieldInfo fi, AtomicReader reader, StreamWriter infoStream)
+        private static void CheckDocValues(FieldInfo fi, AtomicReader reader,Status.DocValuesStatus status)
         {
+			IBits docsWithField = reader.GetDocsWithField(fi.name);
+			if (docsWithField == null)
+			{
+				throw new SystemException(fi.name + " docsWithField does not exist");
+			}
+			else
+			{
+				if (docsWithField.Length != reader.MaxDoc)
+				{
+					throw new SystemException(fi.name + " docsWithField has incorrect length: " + docsWithField.Length + ",expected: " + reader.MaxDoc);
+				}
+			}
             switch (fi.DocValuesTypeValue.GetValueOrDefault())
             {
                 case FieldInfo.DocValuesType.SORTED:
-                    CheckSortedDocValues(fi.name, reader, reader.GetSortedDocValues(fi.name));
+					status.totalSortedFields++;
+					CheckSortedDocValues(fi.name, reader, reader.GetSortedDocValues(fi.name), docsWithField);
                     if (reader.GetBinaryDocValues(fi.name) != null ||
                         reader.GetNumericDocValues(fi.name) != null ||
                         reader.GetSortedSetDocValues(fi.name) != null)
@@ -1607,7 +1770,9 @@ namespace Lucene.Net.Index
                     }
                     break;
                 case FieldInfo.DocValuesType.SORTED_SET:
-                    CheckSortedSetDocValues(fi.name, reader, reader.GetSortedSetDocValues(fi.name));
+					status.totalSortedSetFields++;
+					CheckSortedSetDocValues(fi.name, reader, reader.GetSortedSetDocValues(fi.name), docsWithField
+						);
                     if (reader.GetBinaryDocValues(fi.name) != null ||
                         reader.GetNumericDocValues(fi.name) != null ||
                         reader.GetSortedDocValues(fi.name) != null)
@@ -1616,7 +1781,9 @@ namespace Lucene.Net.Index
                     }
                     break;
                 case FieldInfo.DocValuesType.BINARY:
-                    CheckBinaryDocValues(fi.name, reader, reader.GetBinaryDocValues(fi.name));
+					status.totalBinaryFields++;
+					CheckBinaryDocValues(fi.name, reader, reader.GetBinaryDocValues(fi.name), docsWithField
+						);
                     if (reader.GetNumericDocValues(fi.name) != null ||
                         reader.GetSortedDocValues(fi.name) != null ||
                         reader.GetSortedSetDocValues(fi.name) != null)
@@ -1625,7 +1792,9 @@ namespace Lucene.Net.Index
                     }
                     break;
                 case FieldInfo.DocValuesType.NUMERIC:
-                    CheckNumericDocValues(fi.name, reader, reader.GetNumericDocValues(fi.name));
+					status.totalNumericFields++;
+					CheckNumericDocValues(fi.name, reader, reader.GetNumericDocValues(fi.name), docsWithField
+						);
                     if (reader.GetBinaryDocValues(fi.name) != null ||
                         reader.GetSortedDocValues(fi.name) != null ||
                         reader.GetSortedSetDocValues(fi.name) != null)
@@ -1643,7 +1812,8 @@ namespace Lucene.Net.Index
             switch (fi.NormType.GetValueOrDefault())
             {
                 case FieldInfo.DocValuesType.NUMERIC:
-                    CheckNumericDocValues(fi.name, reader, reader.GetNormValues(fi.name));
+					CheckNumericDocValues(fi.name, reader, reader.GetNormValues(fi.name), new Bits.MatchAllBits
+						(reader.MaxDoc));
                     break;
                 default:
                     throw new SystemException("wtf: " + fi.NormType);
@@ -1939,7 +2109,7 @@ namespace Lucene.Net.Index
         /// <p/><b>WARNING</b>: Make sure you only call this when the
         /// index is not opened  by any writer. 
         /// </summary>
-        public virtual void FixIndex(Status result, Codec codec)
+		public virtual void FixIndex(CheckIndex.Status result)
         {
             if (result.partial)
                 throw new System.ArgumentException("can only fix an index that was fully checked (this status checked a subset of segments)");
@@ -2009,16 +2179,6 @@ namespace Lucene.Net.Index
                 else if ("-crossCheckTermVectors".Equals(arg))
                 {
                     doCrossCheckTermVectors = true;
-                }
-                else if ("-codec".Equals(arg))
-                {
-                    if (i == args.Length - 1)
-                    {
-                        Console.Out.WriteLine("ERROR: missing name for -codec option");
-                        Environment.Exit(1);
-                    }
-                    i++;
-                    codec = Codec.ForName(args[i]);
                 }
                 else if (arg.Equals("-verbose"))
                 {
@@ -2144,7 +2304,7 @@ namespace Lucene.Net.Index
                         Console.Out.WriteLine("  " + (5 - s) + "...");
                     }
                     Console.Out.WriteLine("Writing...");
-                    checker.FixIndex(result, codec);
+					checker.FixIndex(result);
                     Console.Out.WriteLine("OK");
                     Console.Out.WriteLine("Wrote new segments file \"" + result.newSegments.SegmentsFileName + "\"");
                 }

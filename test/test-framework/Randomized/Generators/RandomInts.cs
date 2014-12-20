@@ -5,7 +5,7 @@ namespace Lucene.Net.Randomized.Generators
 {
     public static class RandomInts
     {
-        public static int randomIntBetween(Random random, int start, int end)
+        public static int RandomIntBetween(Random random, int start, int end)
         {
             return random.NextIntBetween(start, end);
         }

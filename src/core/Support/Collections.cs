@@ -22,6 +22,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 
 namespace Lucene.Net.Support
 {
@@ -29,7 +31,7 @@ namespace Lucene.Net.Support
     /// Support class used to handle Hashtable addition, which does a check 
     /// first to make sure the added item is unique in the hash.
     /// </summary>
-    public class Collections
+    public static class Collections
     {
         public static void Add(System.Collections.Hashtable hashtable, System.Object item)
         {
@@ -378,5 +380,19 @@ namespace Lucene.Net.Support
         {
             return new ReverseComparer<T>();
         }
+
+        public static void Shuffle<T>(this ICollection<T> collection, Random random)
+        {
+            var list = collection.ToList();
+            for (int i = collection.Count; i > 1; i--)
+            {
+                int rnd = random.Next(i + 1);
+                var value1 = list[rnd];
+                list[rnd] = list[i];
+                list[i] = value1;
+            }
+        }
     }
+
+   
 }

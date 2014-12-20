@@ -497,18 +497,15 @@ namespace Lucene.Net.Search
                     // if we are using random access, we return the inner scorer, just with other acceptDocs
 					return weight.Scorer(context, filterAcceptDocs);
                 }
-                else
-                {
-                    //assert firstFilterDoc > -1;
-                    // we are gonna advance() this scorer, so we set inorder=true/toplevel=false
-                    // we pass null as acceptDocs, as our filter has already respected acceptDocs, no need to do twice
-                    Scorer scorer = weight.Scorer(context, null);
-                    // TODO once we have way to figure out if we use RA or LeapFrog we can remove this scorer
-                    return (scorer == null) ? null : new PrimaryAdvancedLeapFrogScorer(weight, firstFilterDoc, filterIter, scorer);
-                }
+			    //assert firstFilterDoc > -1;
+			    // we are gonna advance() this scorer, so we set inorder=true/toplevel=false
+			    // we pass null as acceptDocs, as our filter has already respected acceptDocs, no need to do twice
+			    Scorer scorer = weight.Scorer(context, null);
+			    // TODO once we have way to figure out if we use RA or LeapFrog we can remove this scorer
+			    return (scorer == null) ? null : new PrimaryAdvancedLeapFrogScorer(weight, firstFilterDoc, filterIter, scorer);
             }
 
-            protected bool UseRandomAccess(IBits bits, int firstFilterDoc)
+            protected virtual bool UseRandomAccess(IBits bits, int firstFilterDoc)
             {
                 //TODO once we have a cost API on filters and scorers we should rethink this heuristic
                 return firstFilterDoc < 100;

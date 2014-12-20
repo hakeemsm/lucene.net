@@ -561,6 +561,7 @@ namespace Lucene.Net.Documents
 
             public override void End()
             {
+				base.End();
                 int finalOffset = value.Length;
                 offsetAttribute.SetOffset(finalOffset, finalOffset);
             }
@@ -677,6 +678,8 @@ namespace Lucene.Net.Documents
             WITH_POSITIONS_OFFSETS,
         }
 
+		[System.ObsoleteAttribute(@"This is here only to ease transition from the pre-4.0 APIs."
+			)]
         public static FieldType TranslateFieldType(Store store, Index index, TermVector termVector)
         {
             FieldType ft = new FieldType();

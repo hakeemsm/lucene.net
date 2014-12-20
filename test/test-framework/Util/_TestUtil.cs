@@ -13,7 +13,7 @@ namespace Lucene.Net.Util
 
         public static int nextInt(Random r, int start, int end)
         {
-            return RandomInts.randomIntBetween(r, start, end);
+            return RandomInts.RandomIntBetween(r, start, end);
         }
 
         /** Returns random string, including full unicode range. */
@@ -50,7 +50,7 @@ namespace Lucene.Net.Util
             int end = offset + length;
             while (i < end)
             {
-                int t = random.nextInt(5);
+                int t = random.NextInt(5);
                 if (0 == t && i < length - 1)
                 {
                     // Make a surrogate pair
@@ -61,7 +61,7 @@ namespace Lucene.Net.Util
                 }
                 else if (t <= 1)
                 {
-                    chars[i++] = (char)random.nextInt(0x80);
+                    chars[i++] = (char)random.NextInt(0x80);
                 }
                 else if (2 == t)
                 {

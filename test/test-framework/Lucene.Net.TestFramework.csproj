@@ -67,6 +67,7 @@
     <Reference Include="System" />
     <Reference Include="System.configuration" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Numerics" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -135,6 +136,7 @@
     <Compile Include="Randomized\SeedUtils.cs" />
     <Compile Include="Randomized\SingleThreadedRandom.cs" />
     <Compile Include="Randomized\ThreadGroup.cs" />
+    <Compile Include="RandomPicks.cs" />
     <Compile Include="Search\AssertingBulkOutOfOrderScorer.cs" />
     <Compile Include="Search\AssertingBulkScorer.cs" />
     <Compile Include="Search\AssertingCollector.cs" />

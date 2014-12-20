@@ -1,4 +1,5 @@
-﻿using System.Configuration;
+﻿using System;
+using System.Configuration;
 
 namespace Lucene.Net.TestFramework.Support
 {
@@ -34,6 +35,21 @@ namespace Lucene.Net.TestFramework.Support
                 return v;
 
             return defaultValue;
+        }
+
+        public static void AssumeTrue(string msg, bool condition)
+        {
+            
+        }
+
+        public static void AssumeFalse(string msg, bool condition)
+        {
+            
+        }
+
+        public static void AssumeNoException(string msg, Exception exception)
+        {
+            
         }
     }
 }

@@ -18,14 +18,23 @@
 using System;
 using System.Globalization;
 using System.IO;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Lucene.Net.Analysis;
 using Lucene.Net.Codecs;
 using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Randomized;
 using Lucene.Net.Randomized.Generators;
+using Lucene.Net.Search.Similarities;
+using Lucene.Net.Support;
+using Lucene.Net.TestFramework.Index;
+using Lucene.Net.TestFramework.Search;
 using Lucene.Net.TestFramework.Util;
+using Lucene.Net.TestFramework.Util.Automaton;
 using Lucene.Net.Util;
+using Lucene.Net.Util.Automaton;
 using NUnit.Framework;
 
 using ConcurrentMergeScheduler = Lucene.Net.Index.ConcurrentMergeScheduler;
@@ -79,10 +88,7 @@ namespace Lucene.Net
 
         /** @see #ignoreAfterMaxFailures*/
         private const string SYSPROP_FAILFAST = "tests.failfast";
-
-
-
-
+        
 		public static readonly Version TEST_VERSION_CURRENT = Version.LUCENE_48;
 
         public static readonly bool VERBOSE = RandomizedTest.SystemPropertyAsBoolean("tests.verbose", false);
@@ -97,10 +103,11 @@ namespace Lucene.Net
 
         public static readonly string TEST_CODEC = SystemProperties.GetProperty("tests.codec", "random");
 
-        public static readonly string TEST_DOCVALUESFORMAT = SystemProperties.GetProperty("tests.docvaluesformat",
-            "random");
+        public static readonly string TEST_DOCVALUESFORMAT = SystemProperties.GetProperty("tests.docvaluesformat","random");
 
         public static readonly string TEST_DIRECTORY = SystemProperties.GetProperty("tests.directory", "random");
+
+        public static string testTimeZone = SystemProperties.GetProperty("tests.timezone", "random");
 
         public static readonly string TEST_LINE_DOCS_FILE = SystemProperties.GetProperty("tests.linedocsfile",
             DEFAULT_LINE_DOCS_FILE);
@@ -114,32 +121,39 @@ namespace Lucene.Net
 
         public static readonly bool TEST_SLOW = RandomizedTest.SystemPropertyAsBoolean(SlowAttribute.KEY, false);
 
+        public static bool OLD_FORMAT_IMPERSONATION_IS_ACTIVE = false;
+        
         //public static readonly MockDirectoryWrapper.Throttling TEST_THROTTLING = TEST_NIGHTLY ? MockDirectoryWrapper.Throttling.SOMETIMES : MockDirectoryWrapper.Throttling.NEVER;
 		public static readonly MockDirectoryWrapper.Throttling TEST_THROTTLING = TEST_NIGHTLY
 			 ? MockDirectoryWrapper.Throttling.SOMETIMES : MockDirectoryWrapper.Throttling.NEVER;
 
         public static readonly System.IO.DirectoryInfo TEMP_DIR;
+        static TimeZoneInfo randomTimeZone = RandomTimeZone(Random());
+        private static TimeZoneInfo timeZone;
+        private static Similarity similarity;
 
         static LuceneTestCase()
         {
-            String s = SystemProperties.GetProperty("tempDir", System.IO.Path.GetTempPath());
+            String s = SystemProperties.GetProperty("tempDir", Path.GetTempPath());
             if (s == null)
                 throw new SystemException(
                     "To run tests, you need to define system property 'tempDir' or 'java.io.tmpdir'.");
 
-            TEMP_DIR = new System.IO.DirectoryInfo(s);
+            TEMP_DIR = new DirectoryInfo(s);
             if (!TEMP_DIR.Exists) TEMP_DIR.Create();
 
             CORE_DIRECTORIES = new List<string>(FS_DIRECTORIES);
             CORE_DIRECTORIES.Add("RAMDirectory");
-
-
+            timeZone = testTimeZone.Equals("random") ? randomTimeZone : TimeZoneInfo.FindSystemTimeZoneById(testTimeZone);
+            if (Random().NextBoolean())
+            {
+                similarity = new DefaultSimilarity();
+            }
+            else
+            {
+                similarity = new RandomSimilarityProvider(Random());
+            }
         }
-
-        private static readonly string[] IGNORED_INVARIANT_PROPERTIES =
-        {
-            "user.timezone", "java.rmi.server.randomIDs"
-        };
 
         private static readonly IList<String> FS_DIRECTORIES = new[]
                                                                {
@@ -308,21 +322,20 @@ namespace Lucene.Net
         }
 
 
-		public virtual T CloseAfterTest<T>(T resource) where T:IDisposable
-		{
-			return RandomizedContext.Current.CloseAtEnd(resource, LifecycleScope.TEST);
-		}
+        //public virtual T CloseAfterTest<T>(T resource) where T: class, IDisposable 
+        //{
+        //    return RandomizedContext.Current.CloseAtEnd(resource, LifecycleScope.TEST);
+        //}
 
 		public static SegmentReader GetOnlySegmentReader(DirectoryReader reader)
 		{
 			IList<AtomicReaderContext> subReaders = reader.Leaves;
 			if (subReaders.Count != 1)
 			{
-				throw new ArgumentException(reader + " has " + subReaders.Count + " segments instead of exactly one"
-					);
+				throw new ArgumentException(reader + " has " + subReaders.Count + " segments instead of exactly one");
 			}
 			AtomicReader r = ((AtomicReader)subReaders[0].Reader);
-			NUnit.Framework.Assert.IsTrue(r is SegmentReader);
+			IsTrue(r is SegmentReader);
 			return (SegmentReader)r;
 		}
 		
@@ -371,10 +384,8 @@ namespace Lucene.Net
                 // if no failure, then insanity will be null anyway
                 if (null != insanity)
                 {
-                    System.IO.StreamWriter temp_writer2;
-                    temp_writer2 = new System.IO.StreamWriter(System.Console.OpenStandardError(),
-                        System.Console.Error.Encoding);
-                    temp_writer2.AutoFlush = true;
+                    StreamWriter temp_writer2;
+                    temp_writer2 = new StreamWriter(Console.OpenStandardError(),Console.Error.Encoding) {AutoFlush = true};
                     DumpArray(msg + ": Insane FieldCache usage(s)", insanity, temp_writer2);
                 }
             }
@@ -387,8 +398,7 @@ namespace Lucene.Net
         /// </param>
         /// <param name="stream">Stream to log messages to.
         /// </param>
-        public static void DumpIterator(System.String label, System.Collections.IEnumerator iter,
-            System.IO.StreamWriter stream)
+        public static void DumpIterator(String label, System.Collections.IEnumerator iter,StreamWriter stream)
         {
             stream.WriteLine("*** BEGIN " + label + " ***");
             if (null == iter)
@@ -452,7 +462,7 @@ namespace Lucene.Net
 
 		public static void AssumeFalse(string msg, bool condition)
 		{
-			RandomizedTest.AssumeFalse(msg, condition);
+			RandomizedTest.AssumeFalse(msg, condition); //TODO: implement these
 		}
 
 		public static void AssumeNoException(string msg, Exception e)
@@ -466,18 +476,18 @@ namespace Lucene.Net
 		public static IndexWriterConfig NewIndexWriterConfig(Random r, Version v, Analyzer a)
 		{
 			IndexWriterConfig c = new IndexWriterConfig(v, a);
-			c.SetSimilarity(classEnvRule.similarity);
-			if (VERBOSE)
-			{
-				// Even though TestRuleSetupAndRestoreClassEnv calls
-				// InfoStream.setDefault, we do it again here so that
-				// the PrintStreamInfoStream.messageID increments so
-				// that when there are separate instances of
-				// IndexWriter created we see "IW 0", "IW 1", "IW 2",
-				// ... instead of just always "IW 0":
-				c.SetInfoStream(new TestRuleSetupAndRestoreClassEnv.ThreadNameFixingPrintStreamInfoStream
-					(System.Console.Out));
-			}
+            //c.SetSimilarity(classEnvRule.similarity);
+            //if (VERBOSE)
+            //{
+            //    // Even though TestRuleSetupAndRestoreClassEnv calls
+            //    // InfoStream.setDefault, we do it again here so that
+            //    // the PrintStreamInfoStream.messageID increments so
+            //    // that when there are separate instances of
+            //    // IndexWriter created we see "IW 0", "IW 1", "IW 2",
+            //    // ... instead of just always "IW 0":
+            //    c.SetInfoStream(new TestRuleSetupAndRestoreClassEnv.ThreadNameFixingPrintStreamInfoStream
+            //        (System.Console.Out));
+            //}
 			if (r.NextBoolean())
 			{
 				c.SetMergeScheduler(new SerialMergeScheduler());
@@ -549,19 +559,16 @@ namespace Lucene.Net
 			}
 			else
 			{
-				if (r.NextBoolean())
+			    if (r.NextBoolean())
 				{
 					return NewTieredMergePolicy(r);
 				}
-				else
-				{
-					if (r.Next(5) == 0)
-					{
-						return NewAlcoholicMergePolicy(r, classEnvRule.timeZone);
-					}
-				}
+			    if (r.Next(5) == 0)
+			    {
+			        return NewAlcoholicMergePolicy(r, timeZone);
+			    }
 			}
-			return NewLogMergePolicy(r);
+		    return NewLogMergePolicy(r);
 		}
 
 		public static MergePolicy NewMergePolicy()
@@ -581,27 +588,19 @@ namespace Lucene.Net
 
 		public static AlcoholicMergePolicy NewAlcoholicMergePolicy()
 		{
-			return NewAlcoholicMergePolicy(Random(), classEnvRule.timeZone);
+			return NewAlcoholicMergePolicy(Random(), timeZone);
 		}
 
-		public static AlcoholicMergePolicy NewAlcoholicMergePolicy(Random r, TimeZoneInfo
-			 tz)
+		public static AlcoholicMergePolicy NewAlcoholicMergePolicy(Random r, TimeZoneInfo tz)
 		{
-			return new AlcoholicMergePolicy(tz, new Random(r.NextLong()));
+			return new AlcoholicMergePolicy(tz, new Random(r.NextInt(0,int.MaxValue)));
 		}
 
 		public static LogMergePolicy NewLogMergePolicy(Random r)
 		{
-			LogMergePolicy logmp = r.NextBoolean() ? new LogDocMergePolicy() : new LogByteSizeMergePolicy();
-			logmp.CalibrateSizeByDeletes = r.NextBoolean();
-			if (Rarely(r))
-			{
-				logmp.MergeFactor = TestUtil.NextInt(r, 2, 9);
-			}
-			else
-			{
-				logmp.MergeFactor = TestUtil.NextInt(r, 10, 50);
-			}
+		    LogMergePolicy logmp = r.NextBoolean() ? (LogMergePolicy) new LogDocMergePolicy() : new LogByteSizeMergePolicy();
+		    logmp.CalibrateSizeByDeletes = r.NextBoolean();
+			logmp.MergeFactor = Rarely(r) ? r.NextInt(2, 9) : r.NextInt(10, 50);
 			ConfigureRandom(r, logmp);
 			return logmp;
 		}
@@ -685,8 +684,7 @@ namespace Lucene.Net
 		}
 
 		// if you want it in LiveIndexWriterConfig: it must and will be tested here.
-		public static void MaybeChangeLiveIndexWriterConfig(Random r, LiveIndexWriterConfig
-			 c)
+		public static void MaybeChangeLiveIndexWriterConfig(Random r, LiveIndexWriterConfig c)
 		{
 			bool didChange = false;
 			if (Rarely(r))
@@ -854,7 +852,7 @@ namespace Lucene.Net
 				, false);
 		}
 
-		public static MockDirectoryWrapper NewMockFSDirectory(FileInfo f)
+		public static MockDirectoryWrapper NewMockFSDirectory(DirectoryInfo f)
 		{
 			return (MockDirectoryWrapper)NewFSDirectory(f, null, false);
 		}
@@ -865,16 +863,15 @@ namespace Lucene.Net
             }
         }
 
-		public static BaseDirectoryWrapper NewFSDirectory(FileInfo f)
+		public static BaseDirectoryWrapper NewFSDirectory(FileInfo d)
 		{
-			return NewFSDirectory(f, null);
+			return NewFSDirectory(d, null);
 		}
-		public static BaseDirectoryWrapper NewFSDirectory(FileInfo f, LockFactory lf)
+		public static BaseDirectoryWrapper NewFSDirectory(DirectoryInfo d, LockFactory lf)
 		{
-			return NewFSDirectory(f, lf, Rarely());
+			return NewFSDirectory(d, lf, Rarely());
 		}
-		private static BaseDirectoryWrapper NewFSDirectory(FileInfo f, LockFactory lf, bool
-			 bare)
+		private static BaseDirectoryWrapper NewFSDirectory(DirectoryInfo f, LockFactory lf, bool bare)
 		{
 			string fsdirClass = TEST_DIRECTORY;
 			if (fsdirClass.Equals("random"))
@@ -1048,48 +1045,49 @@ namespace Lucene.Net
 		/// <seealso>"https://issues.apache.org/jira/browse/LUCENE-4020"</seealso>
 		public static TimeZoneInfo RandomTimeZone(Random random)
 		{
-			string[] tzIds = TimeZoneInfo.GetAvailableIDs();
-			return Extensions.GetTimeZone(tzIds[random.Next(tzIds.Length)]);
+			var tzIds = TimeZoneInfo.GetSystemTimeZones();
+			return TimeZoneInfo.FindSystemTimeZoneById(tzIds[random.Next(tzIds.Count)].Id);
 		}
 
 		/// <summary>return a Locale object equivalent to its programmatic name</summary>
-		public static CultureInfo LocaleForName(string localeName)
-		{
-			string[] elements = localeName.Split(new []{'_'});
-			switch (elements.Length)
-			{
-				case 4:
-				case 3:
-				{
-					return new CultureInfo(elements[0], elements[1], elements[2]);
-				}
+        //public static CultureInfo LocaleForName(string localeName)
+        //{
+        //    string[] elements = localeName.Split(new []{'_'});
+        //    switch (elements.Length)
+        //    {
+        //        case 4:
+        //        case 3:
+        //        {
+        //            return new CultureInfo(elements[0], elements[1], elements[2]);
+        //        }
 
-				case 2:
-				{
-					return new CultureInfo(elements[0], elements[1]);
-				}
+        //        case 2:
+        //        {
+        //            return new CultureInfo(elements[0], elements[1]);
+        //        }
 
-				case 1:
-				{
-					return new CultureInfo(elements[0]);
-				}
+        //        case 1:
+        //        {
+        //            return new CultureInfo(elements[0]);
+        //        }
 
-				default:
-				{
-					throw new ArgumentException("Invalid Locale: " + localeName);
-				}
-			}
-		}
+        //        default:
+        //        {
+        //            throw new ArgumentException("Invalid Locale: " + localeName);
+        //        }
+        //    }
+        //}
+
 		public static bool DefaultCodecSupportsDocValues()
 		{
 			return !Codec.Default.Name.Equals("Lucene3x");
 		}
-		private static Directory NewFSDirectoryImpl(Type clazz, FileInfo file)
+		private static Directory NewFSDirectoryImpl(Type clazz, DirectoryInfo file)
 		{
 			FSDirectory d = null;
 			try
 			{
-				d = CommandLineUtil.NewFSDirectory(clazz, file.Directory);
+				d = CommandLineUtil.NewFSDirectory(clazz, file);
 			}
 			catch (Exception e)
 			{
@@ -1116,13 +1114,14 @@ namespace Lucene.Net
 				// If it is a FSDirectory type, try its ctor(File)
 				if (typeof(FSDirectory).IsAssignableFrom(clazz))
 				{
-					FilePath dir = CreateTempDir("index-" + clazzName);
-					dir.Mkdirs();
+                    DirectoryInfo dir = new DirectoryInfo(Path.GetTempPath() + "index-" + clazzName);
+                    dir.Create();
+					
 					// ensure it's created so we 'have' it.
-					return NewFSDirectoryImpl(clazz.AsSubclass<FSDirectory>(), dir);
+					return NewFSDirectoryImpl(clazz, dir);
 				}
 				// try empty ctor
-				return System.Activator.CreateInstance(clazz);
+				return (Directory) Activator.CreateInstance(clazz);
 			}
 			catch (Exception e)
 			{
@@ -1137,7 +1136,7 @@ namespace Lucene.Net
 			{
 				// TODO: remove this, and fix those tests to wrap before putting slow around:
 				bool wasOriginallyAtomic = r is AtomicReader;
-				for (int i = 0; i < c; i++)
+                for (int i = 0, c = random.Next(6) + 1; i < c; i++)
 				{
 					switch (random.Next(5))
 					{
@@ -1150,8 +1149,16 @@ namespace Lucene.Net
 						case 1:
 						{
 							// will create no FC insanity in atomic case, as ParallelAtomicReader has own cache key:
-							r = (r is AtomicReader) ? new ParallelAtomicReader((AtomicReader)r) : new ParallelCompositeReader
-								((CompositeReader)r);
+						    if (r is AtomicReader)
+						    {
+                                r = new ParallelAtomicReader((AtomicReader)r);
+						    }
+						    else
+						    {
+                                r = new ParallelCompositeReader((CompositeReader)r);
+						    }
+
+							
 							break;
 						}
 
@@ -1167,13 +1174,9 @@ namespace Lucene.Net
 						case 3:
 						{
 							AtomicReader ar = SlowCompositeReaderWrapper.Wrap(r);
-							IList<string> allFields = new AList<string>();
-							foreach (FieldInfo fi in ar.GetFieldInfos())
-							{
-								allFields.AddItem(fi.name);
-							}
-							Collections.Shuffle(allFields, random);
-							int end = allFields.IsEmpty() ? 0 : random.Next(allFields.Count);
+							IList<string> allFields = ar.FieldInfos.Select(fi => fi.name).ToList();
+						    allFields.Shuffle(random);
+							int end = !allFields.Any() ? 0 : random.Next(allFields.Count);
 							ICollection<string> fields = new HashSet<string>(allFields.SubList(0, end));
 							// will create no FC insanity as ParallelAtomicReader has own cache key:
 							r = new ParallelAtomicReader(new FieldFilterAtomicReader(ar, fields, false), new 
@@ -1304,8 +1307,7 @@ namespace Lucene.Net
 		{
 			return NewSearcher(r, maybeWrap, true);
 		}
-		public static IndexSearcher NewSearcher(IndexReader r, bool maybeWrap, bool wrapWithAssertions
-			)
+		public static IndexSearcher NewSearcher(IndexReader r, bool maybeWrap, bool wrapWithAssertions)
 		{
 			Random random = Random();
 			if (Usually())
@@ -1340,59 +1342,46 @@ namespace Lucene.Net
 				if (wrapWithAssertions)
 				{
 					ret = random.NextBoolean() ? new AssertingIndexSearcher(random, r) : new AssertingIndexSearcher
-						(random, r.GetContext());
+						(random, r.Context);
 				}
 				else
 				{
-					ret = random.NextBoolean() ? new IndexSearcher(r) : new IndexSearcher(r.GetContext
-						());
+					ret = random.NextBoolean() ? new IndexSearcher(r) : new IndexSearcher(r.Context);
 				}
-				ret.SetSimilarity(classEnvRule.similarity);
+			    ret.Similarity = similarity;
 				return ret;
 			}
 			else
 			{
-				int threads = 0;
-				ThreadPoolExecutor ex;
-				if (random.NextBoolean())
-				{
-					ex = null;
-				}
-				else
-				{
-					threads = TestUtil.NextInt(random, 1, 8);
-					ex = new ThreadPoolExecutor(threads, threads, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue
-						<Runnable>(), new NamedThreadFactory("LuceneTestCase"));
-				}
-				// uncomment to intensify LUCENE-3840
+			    var ex = TaskScheduler.Current;
+			    int threads = ex.MaximumConcurrencyLevel;
+
+			    // uncomment to intensify LUCENE-3840
 				// ex.prestartAllCoreThreads();
 				if (ex != null)
 				{
 					if (VERBOSE)
 					{
-						System.Console.Out.WriteLine("NOTE: newSearcher using ExecutorService with " + threads
-							 + " threads");
+						System.Console.Out.WriteLine("NOTE: newSearcher using ExecutorService with " + threads + " threads");
 					}
-					r.AddReaderClosedListener(new _ReaderClosedListener_1569(ex));
+					r.AddReaderClosedListener(new AnonymousReaderClosedListenerImpl(ex));
 				}
 				IndexSearcher ret;
 				if (wrapWithAssertions)
 				{
-					ret = random.NextBoolean() ? new AssertingIndexSearcher(random, r, ex) : new AssertingIndexSearcher
-						(random, r.GetContext(), ex);
+					ret = random.NextBoolean() ? new AssertingIndexSearcher(random, r, ex) : new AssertingIndexSearcher(random, r.Context, ex);
 				}
 				else
 				{
-					ret = random.NextBoolean() ? new IndexSearcher(r, ex) : new IndexSearcher(r.GetContext
-						(), ex);
+					ret = random.NextBoolean() ? new IndexSearcher(r, ex) : new IndexSearcher(r.Context, ex);
 				}
-				ret.SetSimilarity(classEnvRule.similarity);
+				ret.Similarity = similarity;
 				return ret;
 			}
 		}
-		private sealed class _ReaderClosedListener_1569 : IndexReader.ReaderClosedListener
+		private sealed class AnonymousReaderClosedListenerImpl : IndexReader.IReaderClosedListener
 		{
-			public _ReaderClosedListener_1569(ThreadPoolExecutor ex)
+			public AnonymousReaderClosedListenerImpl(TaskScheduler ex)
 			{
 				this.ex = ex;
 			}
@@ -1402,22 +1391,22 @@ namespace Lucene.Net
 				TestUtil.ShutdownExecutorService(ex);
 			}
 
-			private readonly ThreadPoolExecutor ex;
+			private readonly TaskScheduler ex;
 		}
-		protected internal virtual FilePath GetDataFile(string name)
+		/*protected internal virtual FileInfo GetDataFile(string name)
 		{
 			try
 			{
-				return new FilePath(this.GetType().GetResource(name).ToURI());
+				return new FileInfo(this.GetType().GetResource(name).ToURI());
 			}
 			catch (Exception)
 			{
 				throw new IOException("Cannot find resource: " + name);
 			}
-		}
+		}*/
 		public static bool DefaultCodecSupportsMissingDocValues()
 		{
-			string name = Codec.GetDefault().GetName();
+			string name = Codec.Default.Name;
 			if (name.Equals("Lucene3x") || name.Equals("Lucene40") || name.Equals("Appending"
 				) || name.Equals("Lucene41") || name.Equals("Lucene42"))
 			{
@@ -1431,7 +1420,7 @@ namespace Lucene.Net
 			{
 				return false;
 			}
-			string name = Codec.GetDefault().GetName();
+			string name = Codec.Default.Name;
 			if (name.Equals("Lucene40") || name.Equals("Lucene41") || name.Equals("Appending"
 				))
 			{
@@ -1445,7 +1434,7 @@ namespace Lucene.Net
 			{
 				return false;
 			}
-			string name = Codec.GetDefault().GetName();
+			string name = Codec.Default.Name;
 			if (name.Equals("Appending") || name.Equals("Lucene40") || name.Equals("Lucene41"
 				) || name.Equals("Lucene42"))
 			{
@@ -1455,7 +1444,7 @@ namespace Lucene.Net
 		}
 		public static bool DefaultCodecSupportsFieldUpdates()
 		{
-			string name = Codec.GetDefault().GetName();
+			string name = Codec.Default.Name;
 			if (name.Equals("Lucene3x") || name.Equals("Appending") || name.Equals("Lucene40"
 				) || name.Equals("Lucene41") || name.Equals("Lucene42") || name.Equals("Lucene45"
 				))
@@ -1477,64 +1466,54 @@ namespace Lucene.Net
 			AssertDeletedDocsEquals(info, leftReader, rightReader);
 			AssertFieldInfosEquals(info, leftReader, rightReader);
 		}
-		public virtual void AssertReaderStatisticsEquals(string info, IndexReader leftReader
-			, IndexReader rightReader)
+		public virtual void AssertReaderStatisticsEquals(string info, IndexReader leftReader, IndexReader rightReader)
 		{
 			// Somewhat redundant: we never delete docs
-			NUnit.Framework.Assert.AreEqual(info, leftReader.MaxDoc(), rightReader.MaxDoc());
-			NUnit.Framework.Assert.AreEqual(info, leftReader.NumDocs(), rightReader.NumDocs()
-				);
-			NUnit.Framework.Assert.AreEqual(info, leftReader.NumDeletedDocs(), rightReader.NumDeletedDocs
-				());
-			NUnit.Framework.Assert.AreEqual(info, leftReader.HasDeletions(), rightReader.HasDeletions
-				());
+			AreEqual(leftReader.MaxDoc, rightReader.MaxDoc,info);
+			AreEqual(leftReader.NumDocs, rightReader.NumDocs, info);
+			AreEqual(leftReader.NumDeletedDocs, rightReader.NumDeletedDocs, info);
+			AreEqual(leftReader.HasDeletions, rightReader.HasDeletions, info);
 		}
-		public virtual void AssertFieldsEquals(string info, IndexReader leftReader, Fields
-			 leftFields, Fields rightFields, bool deep)
+		public virtual void AssertFieldsEquals(string info, IndexReader leftReader, Fields leftFields, Fields rightFields, bool deep)
 		{
 			// Fields could be null if there are no postings,
 			// but then it must be null for both
 			if (leftFields == null || rightFields == null)
 			{
-				NUnit.Framework.Assert.IsNull(info, leftFields);
-				NUnit.Framework.Assert.IsNull(info, rightFields);
+				Assert.IsNull(leftFields, info);
+				Assert.IsNull(rightFields, info);
 				return;
 			}
 			AssertFieldStatisticsEquals(info, leftFields, rightFields);
-			Iterator<string> leftEnum = leftFields.Iterator();
-			Iterator<string> rightEnum = rightFields.Iterator();
-			while (leftEnum.HasNext())
+			var leftEnum = leftFields.GetEnumerator();
+			var rightEnum = rightFields.GetEnumerator();
+			while (leftEnum.MoveNext())
 			{
-				string field = leftEnum.Next();
-				NUnit.Framework.Assert.AreEqual(info, field, rightEnum.Next());
-				AssertTermsEquals(info, leftReader, leftFields.Terms(field), rightFields.Terms(field
-					), deep);
+				string field = leftEnum.Current;
+				AreEqual(info, field, rightEnum.Current);
+				AssertTermsEquals(info, leftReader, leftFields.Terms(field), rightFields.Terms(field), deep);
 			}
-			NUnit.Framework.Assert.IsFalse(rightEnum.HasNext());
+			IsFalse(rightEnum.MoveNext());
 		}
-		public virtual void AssertFieldStatisticsEquals(string info, Fields leftFields, Fields
-			 rightFields)
+		public virtual void AssertFieldStatisticsEquals(string info, Fields leftFields, Fields rightFields)
 		{
-			if (leftFields.Size() != -1 && rightFields.Size() != -1)
+			if (leftFields.Size != -1 && rightFields.Size != -1)
 			{
-				NUnit.Framework.Assert.AreEqual(info, leftFields.Size(), rightFields.Size());
+				AreEqual(leftFields.Size, rightFields.Size, info);
 			}
 		}
-		public virtual void AssertTermsEquals(string info, IndexReader leftReader, Terms 
-			leftTerms, Terms rightTerms, bool deep)
+		public virtual void AssertTermsEquals(string info, IndexReader leftReader, Terms leftTerms, Terms rightTerms, bool deep)
 		{
 			if (leftTerms == null || rightTerms == null)
 			{
-				NUnit.Framework.Assert.IsNull(info, leftTerms);
-				NUnit.Framework.Assert.IsNull(info, rightTerms);
+				Assert.IsNull(leftTerms, info);
+				Assert.IsNull(rightTerms, info);
 				return;
 			}
 			AssertTermsStatisticsEquals(info, leftTerms, rightTerms);
-			NUnit.Framework.Assert.AreEqual(leftTerms.HasOffsets(), rightTerms.HasOffsets());
-			NUnit.Framework.Assert.AreEqual(leftTerms.HasPositions(), rightTerms.HasPositions
-				());
-			NUnit.Framework.Assert.AreEqual(leftTerms.HasPayloads(), rightTerms.HasPayloads()
-				);
+			Assert.AreEqual(leftTerms.HasOffsets, rightTerms.HasOffsets);
+			Assert.AreEqual(leftTerms.HasPositions, rightTerms.HasPositions);
+			Assert.AreEqual(leftTerms.HasPayloads, rightTerms.HasPayloads);
 			TermsEnum leftTermsEnum = leftTerms.Iterator(null);
 			TermsEnum rightTermsEnum = rightTerms.Iterator(null);
 			AssertTermsEnumEquals(info, leftReader, leftTermsEnum, rightTermsEnum, true);
@@ -1563,28 +1542,24 @@ namespace Lucene.Net
 		{
 			//HM:revisit 
 			//assert leftTerms.getComparator() == rightTerms.getComparator();
-			if (leftTerms.GetDocCount() != -1 && rightTerms.GetDocCount() != -1)
+			if (leftTerms.DocCount != -1 && rightTerms.DocCount != -1)
 			{
-				NUnit.Framework.Assert.AreEqual(info, leftTerms.GetDocCount(), rightTerms.GetDocCount
-					());
+				AreEqual(leftTerms.DocCount, rightTerms.DocCount, info);
 			}
-			if (leftTerms.GetSumDocFreq() != -1 && rightTerms.GetSumDocFreq() != -1)
+			if (leftTerms.SumDocFreq != -1 && rightTerms.SumDocFreq != -1)
 			{
-				NUnit.Framework.Assert.AreEqual(info, leftTerms.GetSumDocFreq(), rightTerms.GetSumDocFreq
-					());
+				AreEqual(leftTerms.SumDocFreq, rightTerms.SumDocFreq, info);
 			}
-			if (leftTerms.GetSumTotalTermFreq() != -1 && rightTerms.GetSumTotalTermFreq() != 
-				-1)
+			if (leftTerms.SumTotalTermFreq != -1 && rightTerms.SumTotalTermFreq != -1)
 			{
-				NUnit.Framework.Assert.AreEqual(info, leftTerms.GetSumTotalTermFreq(), rightTerms
-					.GetSumTotalTermFreq());
+				AreEqual(leftTerms.SumTotalTermFreq, rightTerms.SumTotalTermFreq, info);
 			}
-			if (leftTerms.Size() != -1 && rightTerms.Size() != -1)
+			if (leftTerms.Size != -1 && rightTerms.Size != -1)
 			{
-				NUnit.Framework.Assert.AreEqual(info, leftTerms.Size(), rightTerms.Size());
+				AreEqual(leftTerms.Size, rightTerms.Size, info);
 			}
 		}
-		private class RandomBits : Bits
+		private class RandomBits : IBits
 		{
 			internal FixedBitSet bits;
 
@@ -1600,29 +1575,28 @@ namespace Lucene.Net
 				}
 			}
 
-			public override bool Get(int index)
+			public bool this[int index]
 			{
-				return bits.Get(index);
+			    get { return bits[index]; }
 			}
 
-			public override int Length()
+			public int Length
 			{
-				return bits.Length();
+			    get { return bits.Length; }
 			}
 		}
 		public virtual void AssertTermsEnumEquals(string info, IndexReader leftReader, TermsEnum
 			 leftTermsEnum, TermsEnum rightTermsEnum, bool deep)
 		{
 			BytesRef term;
-			Bits randomBits = new LuceneTestCase.RandomBits(leftReader.MaxDoc(), Random().NextDouble
-				(), Random());
+			IBits randomBits = new RandomBits(leftReader.MaxDoc, Random().NextDouble(), Random());
 			DocsAndPositionsEnum leftPositions = null;
 			DocsAndPositionsEnum rightPositions = null;
 			DocsEnum leftDocs = null;
 			DocsEnum rightDocs = null;
 			while ((term = leftTermsEnum.Next()) != null)
 			{
-				NUnit.Framework.Assert.AreEqual(info, term, rightTermsEnum.Next());
+				AreEqual(term, rightTermsEnum.Next(), info);
 				AssertTermStatsEquals(info, leftTermsEnum, rightTermsEnum);
 				if (deep)
 				{
@@ -1632,10 +1606,10 @@ namespace Lucene.Net
 					AssertDocsAndPositionsEnumEquals(info, leftPositions = leftTermsEnum.DocsAndPositions
 						(randomBits, leftPositions), rightPositions = rightTermsEnum.DocsAndPositions(randomBits
 						, rightPositions));
-					AssertPositionsSkippingEquals(info, leftReader, leftTermsEnum.DocFreq(), leftPositions
+					AssertPositionsSkippingEquals(info, leftReader, leftTermsEnum.DocFreq, leftPositions
 						 = leftTermsEnum.DocsAndPositions(null, leftPositions), rightPositions = rightTermsEnum
 						.DocsAndPositions(null, rightPositions));
-					AssertPositionsSkippingEquals(info, leftReader, leftTermsEnum.DocFreq(), leftPositions
+					AssertPositionsSkippingEquals(info, leftReader, leftTermsEnum.DocFreq, leftPositions
 						 = leftTermsEnum.DocsAndPositions(randomBits, leftPositions), rightPositions = rightTermsEnum
 						.DocsAndPositions(randomBits, rightPositions));
 					// with freqs:
@@ -1651,86 +1625,80 @@ namespace Lucene.Net
 						.FLAG_NONE), rightDocs = rightTermsEnum.Docs(randomBits, rightDocs, DocsEnum.FLAG_NONE
 						), false);
 					// with freqs:
-					AssertDocsSkippingEquals(info, leftReader, leftTermsEnum.DocFreq(), leftDocs = leftTermsEnum
+					AssertDocsSkippingEquals(info, leftReader, leftTermsEnum.DocFreq, leftDocs = leftTermsEnum
 						.Docs(null, leftDocs), rightDocs = rightTermsEnum.Docs(null, rightDocs), true);
-					AssertDocsSkippingEquals(info, leftReader, leftTermsEnum.DocFreq(), leftDocs = leftTermsEnum
+					AssertDocsSkippingEquals(info, leftReader, leftTermsEnum.DocFreq, leftDocs = leftTermsEnum
 						.Docs(randomBits, leftDocs), rightDocs = rightTermsEnum.Docs(randomBits, rightDocs
 						), true);
 					// w/o freqs:
-					AssertDocsSkippingEquals(info, leftReader, leftTermsEnum.DocFreq(), leftDocs = leftTermsEnum
+					AssertDocsSkippingEquals(info, leftReader, leftTermsEnum.DocFreq, leftDocs = leftTermsEnum
 						.Docs(null, leftDocs, DocsEnum.FLAG_NONE), rightDocs = rightTermsEnum.Docs(null, 
 						rightDocs, DocsEnum.FLAG_NONE), false);
-					AssertDocsSkippingEquals(info, leftReader, leftTermsEnum.DocFreq(), leftDocs = leftTermsEnum
+					AssertDocsSkippingEquals(info, leftReader, leftTermsEnum.DocFreq, leftDocs = leftTermsEnum
 						.Docs(randomBits, leftDocs, DocsEnum.FLAG_NONE), rightDocs = rightTermsEnum.Docs
 						(randomBits, rightDocs, DocsEnum.FLAG_NONE), false);
 				}
 			}
-			NUnit.Framework.Assert.IsNull(info, rightTermsEnum.Next());
+			IsNull(rightTermsEnum.Next(), info);
 		}
 		public virtual void AssertDocsAndPositionsEnumEquals(string info, DocsAndPositionsEnum
 			 leftDocs, DocsAndPositionsEnum rightDocs)
 		{
 			if (leftDocs == null || rightDocs == null)
 			{
-				NUnit.Framework.Assert.IsNull(leftDocs);
-				NUnit.Framework.Assert.IsNull(rightDocs);
+				IsNull(leftDocs);
+				IsNull(rightDocs);
 				return;
 			}
-			NUnit.Framework.Assert.AreEqual(info, -1, leftDocs.DocID());
-			NUnit.Framework.Assert.AreEqual(info, -1, rightDocs.DocID());
+			AreEqual(-1, leftDocs.DocID, info);
+			AreEqual(-1, rightDocs.DocID, info);
 			int docid;
 			while ((docid = leftDocs.NextDoc()) != DocIdSetIterator.NO_MORE_DOCS)
 			{
-				NUnit.Framework.Assert.AreEqual(info, docid, rightDocs.NextDoc());
-				int freq = leftDocs.Freq();
-				NUnit.Framework.Assert.AreEqual(info, freq, rightDocs.Freq());
+				Assert.AreEqual(docid, rightDocs.NextDoc(), info);
+				int freq = leftDocs.Freq;
+				AreEqual(freq, rightDocs.Freq, info);
 				for (int i = 0; i < freq; i++)
 				{
-					NUnit.Framework.Assert.AreEqual(info, leftDocs.NextPosition(), rightDocs.NextPosition
-						());
-					NUnit.Framework.Assert.AreEqual(info, leftDocs.GetPayload(), rightDocs.GetPayload
-						());
-					NUnit.Framework.Assert.AreEqual(info, leftDocs.StartOffset(), rightDocs.StartOffset
-						());
-					NUnit.Framework.Assert.AreEqual(info, leftDocs.EndOffset(), rightDocs.EndOffset()
-						);
+					AreEqual(leftDocs.NextPosition(), rightDocs.NextPosition(), info);
+					AreEqual(leftDocs.Payload, rightDocs.Payload, info);
+					AreEqual(leftDocs.StartOffset, rightDocs.StartOffset, info);
+					AreEqual(leftDocs.EndOffset, rightDocs.EndOffset, info);
 				}
 			}
-			NUnit.Framework.Assert.AreEqual(info, DocIdSetIterator.NO_MORE_DOCS, rightDocs.NextDoc
-				());
+			Assert.AreEqual(DocIdSetIterator.NO_MORE_DOCS, rightDocs.NextDoc(), info);
 		}
 		public virtual void AssertDocsEnumEquals(string info, DocsEnum leftDocs, DocsEnum
 			 rightDocs, bool hasFreqs)
 		{
 			if (leftDocs == null)
 			{
-				NUnit.Framework.Assert.IsNull(rightDocs);
+				IsNull(rightDocs);
 				return;
 			}
-			NUnit.Framework.Assert.AreEqual(info, -1, leftDocs.DocID());
-			NUnit.Framework.Assert.AreEqual(info, -1, rightDocs.DocID());
+			AreEqual(-1, leftDocs.DocID, info);
+			AreEqual(-1, rightDocs.DocID, info);
 			int docid;
 			while ((docid = leftDocs.NextDoc()) != DocIdSetIterator.NO_MORE_DOCS)
 			{
-				NUnit.Framework.Assert.AreEqual(info, docid, rightDocs.NextDoc());
+				Assert.AreEqual(docid, rightDocs.NextDoc(), info);
 				if (hasFreqs)
 				{
-					NUnit.Framework.Assert.AreEqual(info, leftDocs.Freq(), rightDocs.Freq());
+					AreEqual(leftDocs.Freq, rightDocs.Freq, info);
 				}
 			}
-			NUnit.Framework.Assert.AreEqual(info, DocIdSetIterator.NO_MORE_DOCS, rightDocs.NextDoc
-				());
+			Assert.AreEqual(DocIdSetIterator.NO_MORE_DOCS, rightDocs.NextDoc(), info);
 		}
 		public virtual void AssertDocsSkippingEquals(string info, IndexReader leftReader, 
 			int docFreq, DocsEnum leftDocs, DocsEnum rightDocs, bool hasFreqs)
 		{
 			if (leftDocs == null)
 			{
-				NUnit.Framework.Assert.IsNull(rightDocs);
+				IsNull(rightDocs);
 				return;
 			}
 			int docid = -1;
-			int averageGap = leftReader.MaxDoc() / (1 + docFreq);
+			int averageGap = leftReader.MaxDoc / (1 + docFreq);
 			int skipInterval = 16;
 			while (true)
 			{
@@ -1738,15 +1706,14 @@ namespace Lucene.Net
 				{
 					// nextDoc()
 					docid = leftDocs.NextDoc();
-					NUnit.Framework.Assert.AreEqual(info, docid, rightDocs.NextDoc());
+					AreEqual(docid, rightDocs.NextDoc(), info);
 				}
 				else
 				{
 					// advance()
-					int skip = docid + (int)Math.Ceil(Math.Abs(skipInterval + Random().NextGaussian()
-						 * averageGap));
+					int skip = docid + (int)Math.Ceiling(Math.Abs(skipInterval + Random().NextGaussian()* averageGap));
 					docid = leftDocs.Advance(skip);
-					NUnit.Framework.Assert.AreEqual(info, docid, rightDocs.Advance(skip));
+					AreEqual(docid, rightDocs.Advance(skip), info);
 				}
 				if (docid == DocIdSetIterator.NO_MORE_DOCS)
 				{
@@ -1754,7 +1721,7 @@ namespace Lucene.Net
 				}
 				if (hasFreqs)
 				{
-					NUnit.Framework.Assert.AreEqual(info, leftDocs.Freq(), rightDocs.Freq());
+					NUnit.Framework.Assert.AreEqual(leftDocs.Freq, rightDocs.Freq, info);
 				}
 			}
 		}
@@ -1763,12 +1730,12 @@ namespace Lucene.Net
 		{
 			if (leftDocs == null || rightDocs == null)
 			{
-				NUnit.Framework.Assert.IsNull(leftDocs);
-				NUnit.Framework.Assert.IsNull(rightDocs);
+				IsNull(leftDocs);
+				IsNull(rightDocs);
 				return;
 			}
 			int docid = -1;
-			int averageGap = leftReader.MaxDoc() / (1 + docFreq);
+			int averageGap = leftReader.MaxDoc / (1 + docFreq);
 			int skipInterval = 16;
 			while (true)
 			{
@@ -1776,28 +1743,25 @@ namespace Lucene.Net
 				{
 					// nextDoc()
 					docid = leftDocs.NextDoc();
-					NUnit.Framework.Assert.AreEqual(info, docid, rightDocs.NextDoc());
+					AreEqual(docid, rightDocs.NextDoc(), info);
 				}
 				else
 				{
 					// advance()
-					int skip = docid + (int)Math.Ceil(Math.Abs(skipInterval + Random().NextGaussian()
-						 * averageGap));
+					int skip = docid + (int)Math.Ceiling(Math.Abs(skipInterval + Random().NextGaussian()* averageGap));
 					docid = leftDocs.Advance(skip);
-					NUnit.Framework.Assert.AreEqual(info, docid, rightDocs.Advance(skip));
+					AreEqual(docid, rightDocs.Advance(skip), info);
 				}
 				if (docid == DocIdSetIterator.NO_MORE_DOCS)
 				{
 					return;
 				}
-				int freq = leftDocs.Freq();
-				NUnit.Framework.Assert.AreEqual(info, freq, rightDocs.Freq());
+				int freq = leftDocs.Freq;
+				AreEqual(freq, rightDocs.Freq, info);
 				for (int i = 0; i < freq; i++)
 				{
-					NUnit.Framework.Assert.AreEqual(info, leftDocs.NextPosition(), rightDocs.NextPosition
-						());
-					NUnit.Framework.Assert.AreEqual(info, leftDocs.GetPayload(), rightDocs.GetPayload
-						());
+					AreEqual(leftDocs.NextPosition(), rightDocs.NextPosition(), info);
+					AreEqual(leftDocs.Payload, rightDocs.Payload, info);
 				}
 			}
 		}
@@ -1822,7 +1786,7 @@ namespace Lucene.Net
 					if (code == 0)
 					{
 						// the term
-						tests.AddItem(BytesRef.DeepCopyOf(term));
+						tests.Add(BytesRef.DeepCopyOf(term));
 					}
 					else
 					{
@@ -1841,9 +1805,9 @@ namespace Lucene.Net
 							if (code == 2)
 							{
 								// term, but ensure a non-zero offset
-								byte[] newbytes = new byte[term.length + 5];
+								var newbytes = new sbyte[term.length + 5];
 								System.Array.Copy(term.bytes, term.offset, newbytes, 5, term.length);
-								tests.AddItem(new BytesRef(newbytes, 5, term.length));
+								tests.Add(new BytesRef(newbytes, 5, term.length));
 							}
 							else
 							{
@@ -1853,22 +1817,21 @@ namespace Lucene.Net
 									{
 										case 0:
 										{
-											tests.AddItem(new BytesRef());
+											tests.Add(new BytesRef());
 											// before the first term
 											break;
 										}
 
 										case 1:
 										{
-											tests.AddItem(new BytesRef(new byte[] { unchecked((byte)unchecked((int)(0xFF))), 
-												unchecked((byte)unchecked((int)(0xFF))) }));
+											tests.Add(new BytesRef(new [] { unchecked((sbyte)unchecked(0xFF)), unchecked((sbyte)unchecked(0xFF)) }));
 											// past the last term
 											break;
 										}
 
 										case 2:
 										{
-											tests.AddItem(new BytesRef(TestUtil.RandomSimpleString(Random())));
+											tests.Add(new BytesRef(TestUtil.RandomSimpleString(Random())));
 											// random term
 											break;
 										}
@@ -1886,8 +1849,8 @@ namespace Lucene.Net
 				numPasses++;
 			}
 			rightEnum = rightTerms.Iterator(rightEnum);
-			AList<BytesRef> shuffledTests = new AList<BytesRef>(tests);
-			Collections.Shuffle(shuffledTests, random);
+			var shuffledTests = new List<BytesRef>(tests);
+			shuffledTests.Shuffle(random);
 			foreach (BytesRef b in shuffledTests)
 			{
 				if (Rarely())
@@ -1899,35 +1862,30 @@ namespace Lucene.Net
 				bool seekExact = Random().NextBoolean();
 				if (seekExact)
 				{
-					NUnit.Framework.Assert.AreEqual(info, leftEnum.SeekExact(b), rightEnum.SeekExact(
-						b));
+					AreEqual(leftEnum.SeekExact(b), rightEnum.SeekExact(b), info);
 				}
 				else
 				{
 					TermsEnum.SeekStatus leftStatus = leftEnum.SeekCeil(b);
 					TermsEnum.SeekStatus rightStatus = rightEnum.SeekCeil(b);
-					NUnit.Framework.Assert.AreEqual(info, leftStatus, rightStatus);
+					AreEqual(leftStatus, rightStatus, info);
 					if (leftStatus != TermsEnum.SeekStatus.END)
 					{
-						NUnit.Framework.Assert.AreEqual(info, leftEnum.Term(), rightEnum.Term());
+						AreEqual(leftEnum.Term, rightEnum.Term, info);
 						AssertTermStatsEquals(info, leftEnum, rightEnum);
 					}
 				}
 			}
 		}
-		public virtual void AssertTermStatsEquals(string info, TermsEnum leftTermsEnum, TermsEnum
-			 rightTermsEnum)
+		public virtual void AssertTermStatsEquals(string info, TermsEnum leftTermsEnum, TermsEnum rightTermsEnum)
 		{
-			NUnit.Framework.Assert.AreEqual(info, leftTermsEnum.DocFreq(), rightTermsEnum.DocFreq
-				());
-			if (leftTermsEnum.TotalTermFreq() != -1 && rightTermsEnum.TotalTermFreq() != -1)
+			AreEqual(leftTermsEnum.DocFreq, rightTermsEnum.DocFreq, info);
+			if (leftTermsEnum.TotalTermFreq != -1 && rightTermsEnum.TotalTermFreq != -1)
 			{
-				NUnit.Framework.Assert.AreEqual(info, leftTermsEnum.TotalTermFreq(), rightTermsEnum
-					.TotalTermFreq());
+				AreEqual(leftTermsEnum.TotalTermFreq, rightTermsEnum.TotalTermFreq, info);
 			}
 		}
-		public virtual void AssertNormsEquals(string info, IndexReader leftReader, IndexReader
-			 rightReader)
+		public virtual void AssertNormsEquals(string info, IndexReader leftReader, IndexReader rightReader)
 		{
 			Fields leftFields = MultiFields.GetFields(leftReader);
 			Fields rightFields = MultiFields.GetFields(rightReader);
@@ -1935,8 +1893,8 @@ namespace Lucene.Net
 			// but then it must be null for both
 			if (leftFields == null || rightFields == null)
 			{
-				NUnit.Framework.Assert.IsNull(info, leftFields);
-				NUnit.Framework.Assert.IsNull(info, rightFields);
+				IsNull(leftFields, info);
+				IsNull(rightFields, info);
 				return;
 			}
 			foreach (string field in leftFields)
@@ -1945,42 +1903,51 @@ namespace Lucene.Net
 				NumericDocValues rightNorms = MultiDocValues.GetNormValues(rightReader, field);
 				if (leftNorms != null && rightNorms != null)
 				{
-					AssertDocValuesEquals(info, leftReader.MaxDoc(), leftNorms, rightNorms);
+					AssertDocValuesEquals(info, leftReader.MaxDoc, leftNorms, rightNorms);
 				}
 				else
 				{
-					NUnit.Framework.Assert.IsNull(info, leftNorms);
-					NUnit.Framework.Assert.IsNull(info, rightNorms);
+					IsNull(leftNorms, info);
+					IsNull(rightNorms, info);
 				}
 			}
 		}
 		public virtual void AssertStoredFieldsEquals(string info, IndexReader leftReader, 
 			IndexReader rightReader)
 		{
-			//HM:revisit 
-			//assert leftReader.maxDoc() == rightReader.maxDoc();
-			for (int i = 0; i < leftReader.MaxDoc(); i++)
+			
+			//assert leftReader.MaxDoc == rightReader.MaxDoc;
+			for (int i = 0; i < leftReader.MaxDoc; i++)
 			{
-				Lucene.NetDocument.Document leftDoc = leftReader.Document(i);
-				Lucene.NetDocument.Document rightDoc = rightReader.Document(i);
+				Document leftDoc = leftReader.Document(i);
+				Document rightDoc = rightReader.Document(i);
 				// TODO: I think this is bogus because we don't document what the order should be
 				// from these iterators, etc. I think the codec/IndexReader should be free to order this stuff
 				// in whatever way it wants (e.g. maybe it packs related fields together or something)
 				// To fix this, we sort the fields in both documents by name, but
 				// we still assume that all instances with same name are in order:
-				IComparer<IndexableField> comp = new _IComparer_2103();
-				leftDoc.GetFields().Sort(comp);
-				rightDoc.GetFields().Sort(comp);
-				Iterator<IndexableField> leftIterator = leftDoc.Iterator();
-				Iterator<IndexableField> rightIterator = rightDoc.Iterator();
-				while (leftIterator.HasNext())
+				IComparer<IIndexableField> comp = new IndexFieldComparer();
+				leftDoc.GetFields().ToList().Sort(comp);
+				rightDoc.GetFields().ToList().Sort(comp);
+				var leftIterator = leftDoc.GetEnumerator();
+				var rightIterator = rightDoc.GetEnumerator();
+				while (leftIterator.MoveNext())
 				{
-					NUnit.Framework.Assert.IsTrue(info, rightIterator.HasNext());
-					AssertStoredFieldEquals(info, leftIterator.Next(), rightIterator.Next());
+					IsTrue(rightIterator.MoveNext(), info);
+					AssertStoredFieldEquals(info, leftIterator.Current, rightIterator.Current);
 				}
-				NUnit.Framework.Assert.IsFalse(info, rightIterator.HasNext());
+				IsFalse(rightIterator.MoveNext(), info);
 			}
 		}
+
+        private sealed class IndexFieldComparer : IComparer<IIndexableField>
+        {
+            public int Compare(IIndexableField arg0, IIndexableField arg1)
+            {
+                return string.CompareOrdinal(arg0.Name, arg1.Name);
+            }
+        }
+
         public class Disposable<T> : IDisposable
             where T:class
         {
@@ -2016,23 +1983,19 @@ namespace Lucene.Net
             }
         }
 
-		public virtual void AssertStoredFieldEquals(string info, IndexableField leftField
-			, IndexableField rightField)
+		public virtual void AssertStoredFieldEquals(string info, IIndexableField leftField, IIndexableField rightField)
 		{
-			NUnit.Framework.Assert.AreEqual(info, leftField.Name(), rightField.Name());
-			NUnit.Framework.Assert.AreEqual(info, leftField.BinaryValue(), rightField.BinaryValue
-				());
-			NUnit.Framework.Assert.AreEqual(info, leftField.StringValue(), rightField.StringValue
-				());
-			NUnit.Framework.Assert.AreEqual(info, leftField.NumericValue(), rightField.NumericValue
-				());
+			AreEqual(info, leftField.Name, rightField.Name);
+			AreEqual(leftField.BinaryValue, rightField.BinaryValue, info);
+			AreEqual(info, leftField.StringValue, rightField.StringValue);
+			AreEqual(leftField.NumericValue, rightField.NumericValue, info);
 		}
 		public virtual void AssertTermVectorsEquals(string info, IndexReader leftReader, 
 			IndexReader rightReader)
 		{
 			//HM:revisit 
-			//assert leftReader.maxDoc() == rightReader.maxDoc();
-			for (int i = 0; i < leftReader.MaxDoc(); i++)
+			//assert leftReader.MaxDoc == rightReader.MaxDoc;
+			for (int i = 0; i < leftReader.MaxDoc; i++)
 			{
 				Fields leftFields = leftReader.GetTermVectors(i);
 				Fields rightFields = rightReader.GetTermVectors(i);
@@ -2044,9 +2007,9 @@ namespace Lucene.Net
 			ICollection<string> fields = new HashSet<string>();
 			foreach (FieldInfo fi in MultiFields.GetMergedFieldInfos(reader))
 			{
-				if (fi.HasDocValues())
+				if (fi.HasDocValues)
 				{
-					fields.AddItem(fi.name);
+					fields.Add(fi.name);
 				}
 			}
 			return fields;
@@ -2056,7 +2019,7 @@ namespace Lucene.Net
 		{
 			ICollection<string> leftFields = GetDVFields(leftReader);
 			ICollection<string> rightFields = GetDVFields(rightReader);
-			NUnit.Framework.Assert.AreEqual(info, leftFields, rightFields);
+			AreEqual(leftFields, rightFields, info);
 			foreach (string field in leftFields)
 			{
 				{
@@ -2066,12 +2029,12 @@ namespace Lucene.Net
 						);
 					if (leftValues != null && rightValues != null)
 					{
-						AssertDocValuesEquals(info, leftReader.MaxDoc(), leftValues, rightValues);
+						AssertDocValuesEquals(info, leftReader.MaxDoc, leftValues, rightValues);
 					}
 					else
 					{
-						NUnit.Framework.Assert.IsNull(info, leftValues);
-						NUnit.Framework.Assert.IsNull(info, rightValues);
+						IsNull(leftValues, info);
+						IsNull(rightValues, info);
 					}
 				}
 				{
@@ -2081,17 +2044,17 @@ namespace Lucene.Net
 					{
 						BytesRef scratchLeft = new BytesRef();
 						BytesRef scratchRight = new BytesRef();
-						for (int docID = 0; docID < leftReader.MaxDoc(); docID++)
+						for (int docID = 0; docID < leftReader.MaxDoc; docID++)
 						{
 							leftValues.Get(docID, scratchLeft);
 							rightValues.Get(docID, scratchRight);
-							NUnit.Framework.Assert.AreEqual(info, scratchLeft, scratchRight);
+							AreEqual(scratchLeft, scratchRight, info);
 						}
 					}
 					else
 					{
-						NUnit.Framework.Assert.IsNull(info, leftValues);
-						NUnit.Framework.Assert.IsNull(info, rightValues);
+						IsNull(leftValues, info);
+						IsNull(rightValues, info);
 					}
 				}
 				{
@@ -2100,119 +2063,112 @@ namespace Lucene.Net
 					if (leftValues != null && rightValues != null)
 					{
 						// numOrds
-						NUnit.Framework.Assert.AreEqual(info, leftValues.GetValueCount(), rightValues.GetValueCount
-							());
+						AreEqual(leftValues.ValueCount, rightValues.ValueCount, info);
 						// ords
 						BytesRef scratchLeft = new BytesRef();
 						BytesRef scratchRight = new BytesRef();
-						for (int i = 0; i < leftValues.GetValueCount(); i++)
+						for (int i = 0; i < leftValues.ValueCount; i++)
 						{
 							leftValues.LookupOrd(i, scratchLeft);
 							rightValues.LookupOrd(i, scratchRight);
-							NUnit.Framework.Assert.AreEqual(info, scratchLeft, scratchRight);
+							AreEqual(scratchLeft, scratchRight, info);
 						}
 						// bytes
-						for (int docID = 0; docID < leftReader.MaxDoc(); docID++)
+						for (int docID = 0; docID < leftReader.MaxDoc; docID++)
 						{
 							leftValues.Get(docID, scratchLeft);
 							rightValues.Get(docID, scratchRight);
-							NUnit.Framework.Assert.AreEqual(info, scratchLeft, scratchRight);
+							AreEqual(scratchLeft, scratchRight, info);
 						}
 					}
 					else
 					{
-						NUnit.Framework.Assert.IsNull(info, leftValues);
-						NUnit.Framework.Assert.IsNull(info, rightValues);
+						IsNull(leftValues, info);
+						IsNull(rightValues, info);
 					}
 				}
 				{
-					SortedSetDocValues leftValues = MultiDocValues.GetSortedSetValues(leftReader, field
-						);
-					SortedSetDocValues rightValues = MultiDocValues.GetSortedSetValues(rightReader, field
-						);
+					SortedSetDocValues leftValues = MultiDocValues.GetSortedSetValues(leftReader, field);
+					SortedSetDocValues rightValues = MultiDocValues.GetSortedSetValues(rightReader, field);
 					if (leftValues != null && rightValues != null)
 					{
 						// numOrds
-						NUnit.Framework.Assert.AreEqual(info, leftValues.GetValueCount(), rightValues.GetValueCount
-							());
+						AreEqual(leftValues.ValueCount, rightValues.ValueCount, info);
 						// ords
 						BytesRef scratchLeft = new BytesRef();
 						BytesRef scratchRight = new BytesRef();
-						for (int i = 0; i < leftValues.GetValueCount(); i++)
+						for (int i = 0; i < leftValues.ValueCount; i++)
 						{
 							leftValues.LookupOrd(i, scratchLeft);
 							rightValues.LookupOrd(i, scratchRight);
-							NUnit.Framework.Assert.AreEqual(info, scratchLeft, scratchRight);
+							AreEqual(scratchLeft, scratchRight, info);
 						}
 						// ord lists
-						for (int docID = 0; docID < leftReader.MaxDoc(); docID++)
+						for (int docID = 0; docID < leftReader.MaxDoc; docID++)
 						{
 							leftValues.SetDocument(docID);
 							rightValues.SetDocument(docID);
 							long ord;
 							while ((ord = leftValues.NextOrd()) != SortedSetDocValues.NO_MORE_ORDS)
 							{
-								NUnit.Framework.Assert.AreEqual(info, ord, rightValues.NextOrd());
+								AreEqual(ord, rightValues.NextOrd(), info);
 							}
-							NUnit.Framework.Assert.AreEqual(info, SortedSetDocValues.NO_MORE_ORDS, rightValues
-								.NextOrd());
+							AreEqual(SortedSetDocValues.NO_MORE_ORDS, rightValues.NextOrd(), info);
 						}
 					}
 					else
 					{
-						NUnit.Framework.Assert.IsNull(info, leftValues);
-						NUnit.Framework.Assert.IsNull(info, rightValues);
+						IsNull(leftValues, info);
+						IsNull(rightValues, info);
 					}
 				}
 				{
-					Bits leftBits = MultiDocValues.GetDocsWithField(leftReader, field);
-					Bits rightBits = MultiDocValues.GetDocsWithField(rightReader, field);
+					IBits leftBits = MultiDocValues.GetDocsWithField(leftReader, field);
+					IBits rightBits = MultiDocValues.GetDocsWithField(rightReader, field);
 					if (leftBits != null && rightBits != null)
 					{
-						NUnit.Framework.Assert.AreEqual(info, leftBits.Length(), rightBits.Length());
-						for (int i = 0; i < leftBits.Length(); i++)
+						AreEqual(leftBits.Length, rightBits.Length, info);
+						for (int i = 0; i < leftBits.Length; i++)
 						{
-							NUnit.Framework.Assert.AreEqual(info, leftBits.Get(i), rightBits.Get(i));
+							AreEqual(leftBits[i], rightBits[i], info);
 						}
 					}
 					else
 					{
-						NUnit.Framework.Assert.IsNull(info, leftBits);
-						NUnit.Framework.Assert.IsNull(info, rightBits);
+						IsNull(leftBits, info);
+						IsNull(rightBits, info);
 					}
 				}
 			}
 		}
-		public virtual void AssertDocValuesEquals(string info, int num, NumericDocValues 
-			leftDocValues, NumericDocValues rightDocValues)
+		public virtual void AssertDocValuesEquals(string info, int num, NumericDocValues leftDocValues, NumericDocValues rightDocValues)
 		{
-			NUnit.Framework.Assert.IsNotNull(info, leftDocValues);
-			NUnit.Framework.Assert.IsNotNull(info, rightDocValues);
+			IsNotNull(leftDocValues, info);
+			IsNotNull(rightDocValues, info);
 			for (int docID = 0; docID < num; docID++)
 			{
-				NUnit.Framework.Assert.AreEqual(leftDocValues.Get(docID), rightDocValues.Get(docID
-					));
+				AreEqual(leftDocValues.Get(docID), rightDocValues.Get(docID));
 			}
 		}
 		public virtual void AssertDeletedDocsEquals(string info, IndexReader leftReader, 
 			IndexReader rightReader)
 		{
-			//HM:revisit 
+			
 			//assert leftReader.numDeletedDocs() == rightReader.numDeletedDocs();
-			Bits leftBits = MultiFields.GetLiveDocs(leftReader);
-			Bits rightBits = MultiFields.GetLiveDocs(rightReader);
+			IBits leftBits = MultiFields.GetLiveDocs(leftReader);
+			IBits rightBits = MultiFields.GetLiveDocs(rightReader);
 			if (leftBits == null || rightBits == null)
 			{
-				NUnit.Framework.Assert.IsNull(info, leftBits);
-				NUnit.Framework.Assert.IsNull(info, rightBits);
+				IsNull(leftBits, info);
+				IsNull(rightBits, info);
 				return;
 			}
-			//HM:revisit 
-			//assert leftReader.maxDoc() == rightReader.maxDoc();
-			NUnit.Framework.Assert.AreEqual(info, leftBits.Length(), rightBits.Length());
-			for (int i = 0; i < leftReader.MaxDoc(); i++)
+			
+			//assert leftReader.MaxDoc == rightReader.MaxDoc;
+			AreEqual(leftBits.Length, rightBits.Length, info);
+			for (int i = 0; i < leftReader.MaxDoc; i++)
 			{
-				NUnit.Framework.Assert.AreEqual(info, leftBits.Get(i), rightBits.Get(i));
+				AreEqual(leftBits[i], rightBits[i], info);
 			}
 		}
 		public virtual void AssertFieldInfosEquals(string info, IndexReader leftReader, IndexReader
@@ -2221,17 +2177,17 @@ namespace Lucene.Net
 			FieldInfos leftInfos = MultiFields.GetMergedFieldInfos(leftReader);
 			FieldInfos rightInfos = MultiFields.GetMergedFieldInfos(rightReader);
 			// TODO: would be great to verify more than just the names of the fields!
-			TreeSet<string> left = new TreeSet<string>();
-			TreeSet<string> right = new TreeSet<string>();
+			var left = new HashSet<string>();
+			var right = new HashSet<string>();
 			foreach (FieldInfo fi in leftInfos)
 			{
-				left.AddItem(fi.name);
+				left.Add(fi.name);
 			}
-			foreach (FieldInfo fi_1 in rightInfos)
+			foreach (FieldInfo fi in rightInfos)
 			{
-				right.AddItem(fi_1.name);
+				right.Add(fi.name);
 			}
-			NUnit.Framework.Assert.AreEqual(info, left, right);
+			AreEqual(left, right, info);
 		}
         public static Disposable<T> CloseAfterSuite<T>(T resource) where T:class
         {
@@ -2242,7 +2198,7 @@ namespace Lucene.Net
 		{
 			try
 			{
-				dir.OpenInput(fileName, IOContext.DEFAULT).Close();
+				dir.OpenInput(fileName, IOContext.DEFAULT).Dispose();
 				return true;
 			}
 			catch (IOException)
@@ -2253,7 +2209,7 @@ namespace Lucene.Net
 
         /// <summary> Returns a {@link Random} instance for generating random numbers during the test.
         /// The random seed is logged during test execution and printed to System.out on any failure
-		private static FilePath tempDirBase;
+		private static FileInfo tempDirBase;
 		private const int TEMP_NAME_RETRY_THRESHOLD = 9999;
         /// for reproducing the test using {@link #NewRandom(long)} with the recorded seed
         /// .
@@ -2287,6 +2243,7 @@ namespace Lucene.Net
 
         // static members
         [NonSerialized] private static readonly System.Random seedRnd = new System.Random();
+        
 
 
         public static int AtLeast(Random random, int minimum)

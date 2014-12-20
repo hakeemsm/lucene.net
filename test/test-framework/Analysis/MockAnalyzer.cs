@@ -99,7 +99,7 @@ namespace Lucene.Net.Analysis
             val = -1; // no payloads
             if (LuceneTestCase.Rarely(random))
             {
-                switch (random.nextInt(3))
+                switch (random.NextInt(3))
                 {
                     case 0:
                         val = -1; // no payloads
