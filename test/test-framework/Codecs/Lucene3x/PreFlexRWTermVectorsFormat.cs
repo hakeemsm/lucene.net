@@ -6,13 +6,13 @@
 
 using System;
 using Org.Apache.Lucene.Codecs;
-using Org.Apache.Lucene.Codecs.Lucene3x;
+using Lucene.Net.Codecs.Lucene3x;
 using Org.Apache.Lucene.Index;
 using Org.Apache.Lucene.Store;
 using Org.Apache.Lucene.Util;
 using Sharpen;
 
-namespace Org.Apache.Lucene.Codecs.Lucene3x
+namespace Lucene.Net.Codecs.Lucene3x
 {
 	internal class PreFlexRWTermVectorsFormat : Lucene3xTermVectorsFormat
 	{

@@ -5,13 +5,13 @@
  */
 
 using Org.Apache.Lucene.Codecs;
-using Org.Apache.Lucene.Codecs.Lucene40;
+using Lucene.Net.Codecs.Lucene40;
 using Org.Apache.Lucene.Index;
 using Org.Apache.Lucene.Store;
 using Org.Apache.Lucene.Util;
 using Sharpen;
 
-namespace Org.Apache.Lucene.Codecs.Lucene40
+namespace Lucene.Net.Codecs.Lucene40
 {
 	/// <summary>Lucene 4.0 FieldInfos writer.</summary>
 	/// <remarks>Lucene 4.0 FieldInfos writer.</remarks>
@@ -57,7 +57,7 @@ namespace Org.Apache.Lucene.Codecs.Lucene40
 					if (fi.IsIndexed())
 					{
 						bits |= Lucene40FieldInfosFormat.IS_INDEXED;
-						//HM:revisit 
+						 
 						//assert indexOptions.compareTo(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS) >= 0 || !fi.hasPayloads();
 						if (indexOptions == FieldInfo.IndexOptions.DOCS_ONLY)
 						{
@@ -86,7 +86,7 @@ namespace Org.Apache.Lucene.Codecs.Lucene40
 						.LEGACY_DV_TYPE_KEY));
 					byte nrm = DocValuesByte(fi.GetNormType(), fi.GetAttribute(Lucene40FieldInfosReader
 						.LEGACY_NORM_TYPE_KEY));
-					//HM:revisit 
+					 
 					//assert (dv & (~0xF)) == 0 && (nrm & (~0x0F)) == 0;
 					byte val = unchecked((byte)(unchecked((int)(0xff)) & ((nrm << 4) | dv)));
 					output.WriteByte(val);
@@ -113,13 +113,13 @@ namespace Org.Apache.Lucene.Codecs.Lucene40
 		{
 			if (type == null)
 			{
-				//HM:revisit 
+				 
 				//assert legacyTypeAtt == null;
 				return 0;
 			}
 			else
 			{
-				//HM:revisit 
+				 
 				//assert legacyTypeAtt != null;
 				return unchecked((byte)(int)(Lucene40FieldInfosReader.LegacyDocValuesType.ValueOf
 					(legacyTypeAtt)));

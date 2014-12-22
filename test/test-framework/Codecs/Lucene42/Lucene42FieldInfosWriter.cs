@@ -6,13 +6,13 @@
 
 using System;
 using Org.Apache.Lucene.Codecs;
-using Org.Apache.Lucene.Codecs.Lucene42;
+using Lucene.Net.Codecs.Lucene42;
 using Org.Apache.Lucene.Index;
 using Org.Apache.Lucene.Store;
 using Org.Apache.Lucene.Util;
 using Sharpen;
 
-namespace Org.Apache.Lucene.Codecs.Lucene42
+namespace Lucene.Net.Codecs.Lucene42
 {
 	/// <summary>Lucene 4.2 FieldInfos writer.</summary>
 	/// <remarks>Lucene 4.2 FieldInfos writer.</remarks>
@@ -58,7 +58,7 @@ namespace Org.Apache.Lucene.Codecs.Lucene42
 					if (fi.IsIndexed())
 					{
 						bits |= Lucene42FieldInfosFormat.IS_INDEXED;
-						//HM:revisit 
+						 
 						//assert indexOptions.compareTo(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS) >= 0 || !fi.hasPayloads();
 						if (indexOptions == FieldInfo.IndexOptions.DOCS_ONLY)
 						{
@@ -85,7 +85,7 @@ namespace Org.Apache.Lucene.Codecs.Lucene42
 					// pack the DV types in one byte
 					byte dv = DocValuesByte(fi.GetDocValuesType());
 					byte nrm = DocValuesByte(fi.GetNormType());
-					//HM:revisit 
+					 
 					//assert (dv & (~0xF)) == 0 && (nrm & (~0x0F)) == 0;
 					byte val = unchecked((byte)(unchecked((int)(0xff)) & ((nrm << 4) | dv)));
 					output.WriteByte(val);

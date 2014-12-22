@@ -14,7 +14,7 @@ namespace Lucene.Net.TestFramework.Index
 			liveDocs = new Bits.MatchNoBits(input.MaxDoc);
 		}
 
-		//HM:revisit 
+		 
 		//assert maxDoc() == 0 || hasDeletions();
 		public override IBits LiveDocs
 		{

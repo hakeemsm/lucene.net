@@ -12,7 +12,7 @@ using Org.Apache.Lucene.Store;
 using Org.Apache.Lucene.Util;
 using Sharpen;
 
-namespace Org.Apache.Lucene.Codecs.Cranky
+namespace Lucene.Net.Codecs.Cranky
 {
 	internal class CrankyLiveDocsFormat : LiveDocsFormat
 	{

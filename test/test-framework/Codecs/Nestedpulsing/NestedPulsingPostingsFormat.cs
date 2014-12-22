@@ -5,13 +5,13 @@
  */
 
 using Org.Apache.Lucene.Codecs;
-using Org.Apache.Lucene.Codecs.Lucene41;
-using Org.Apache.Lucene.Codecs.Pulsing;
+using Lucene.Net.Codecs.Lucene41;
+using Lucene.Net.Codecs.Pulsing;
 using Org.Apache.Lucene.Index;
 using Org.Apache.Lucene.Util;
 using Sharpen;
 
-namespace Org.Apache.Lucene.Codecs.Nestedpulsing
+namespace Lucene.Net.Codecs.Nestedpulsing
 {
 	/// <summary>Pulsing(1, Pulsing(2, Lucene41))</summary>
 	/// <lucene.experimental></lucene.experimental>
@@ -25,7 +25,7 @@ namespace Org.Apache.Lucene.Codecs.Nestedpulsing
 		// can simplify this? note: I don't like the *BaseFormat
 		// hierarchy, maybe we can clean that up...
 		/// <exception cref="System.IO.IOException"></exception>
-		public override Org.Apache.Lucene.Codecs.FieldsConsumer FieldsConsumer(SegmentWriteState
+		public override Lucene.Net.Codecs.FieldsConsumer FieldsConsumer(SegmentWriteState
 			 state)
 		{
 			PostingsWriterBase docsWriter = null;
@@ -38,7 +38,7 @@ namespace Org.Apache.Lucene.Codecs.Nestedpulsing
 				docsWriter = new Lucene41PostingsWriter(state);
 				pulsingWriterInner = new PulsingPostingsWriter(state, 2, docsWriter);
 				pulsingWriter = new PulsingPostingsWriter(state, 1, pulsingWriterInner);
-				Org.Apache.Lucene.Codecs.FieldsConsumer ret = new BlockTreeTermsWriter(state, pulsingWriter
+				Lucene.Net.Codecs.FieldsConsumer ret = new BlockTreeTermsWriter(state, pulsingWriter
 					, BlockTreeTermsWriter.DEFAULT_MIN_BLOCK_SIZE, BlockTreeTermsWriter.DEFAULT_MAX_BLOCK_SIZE
 					);
 				success = true;
@@ -55,7 +55,7 @@ namespace Org.Apache.Lucene.Codecs.Nestedpulsing
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		public override Org.Apache.Lucene.Codecs.FieldsProducer FieldsProducer(SegmentReadState
+		public override Lucene.Net.Codecs.FieldsProducer FieldsProducer(SegmentReadState
 			 state)
 		{
 			PostingsReaderBase docsReader = null;
@@ -68,7 +68,7 @@ namespace Org.Apache.Lucene.Codecs.Nestedpulsing
 					segmentInfo, state.context, state.segmentSuffix);
 				pulsingReaderInner = new PulsingPostingsReader(state, docsReader);
 				pulsingReader = new PulsingPostingsReader(state, pulsingReaderInner);
-				Org.Apache.Lucene.Codecs.FieldsProducer ret = new BlockTreeTermsReader(state.directory
+				Lucene.Net.Codecs.FieldsProducer ret = new BlockTreeTermsReader(state.directory
 					, state.fieldInfos, state.segmentInfo, pulsingReader, state.context, state.segmentSuffix
 					, state.termsIndexDivisor);
 				success = true;

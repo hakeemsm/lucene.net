@@ -1,14 +1,9 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System.Collections.Generic;
+using System.Diagnostics;
+using Lucene.Net.Analysis;
+using Lucene.Net.Analysis.Tokenattributes;
 using Lucene.Net.TestFramework.Analysis;
-using Lucene.Net.TestFramework.Analysis.Tokenattributes;
-using Lucene.Net.TestFramework.Util;
-using Sharpen;
+using Lucene.Net.Util;
 
 namespace Lucene.Net.TestFramework.Analysis
 {
@@ -22,18 +17,15 @@ namespace Lucene.Net.TestFramework.Analysis
 	/// the details of buffering up tokens, recording them by
 	/// position, restoring them, providing access to them, etc.
 	/// </remarks>
-	public abstract class LookaheadTokenFilter<T> : TokenFilter where T:LookaheadTokenFilter.Position
+	public abstract class LookaheadTokenFilter<T> : TokenFilter where T:Position
 	{
 		private const bool DEBUG = false;
 
-		protected internal readonly PositionIncrementAttribute posIncAtt = AddAttribute<PositionIncrementAttribute
-			>();
+	    protected internal readonly PositionIncrementAttribute posIncAtt;
 
-		protected internal readonly PositionLengthAttribute posLenAtt = AddAttribute<PositionLengthAttribute
-			>();
+	    protected internal readonly PositionLengthAttribute posLenAtt;
 
-		protected internal readonly OffsetAttribute offsetAtt = AddAttribute<OffsetAttribute
-			>();
+	    protected internal readonly OffsetAttribute offsetAtt;
 
 		protected internal int inputPos;
 
@@ -45,70 +37,20 @@ namespace Lucene.Net.TestFramework.Analysis
 
 		private bool insertPending;
 
-		/// <summary>
-		/// Holds all state for a single position; subclass this
-		/// to record other state at each position.
-		/// </summary>
-		/// <remarks>
-		/// Holds all state for a single position; subclass this
-		/// to record other state at each position.
-		/// </remarks>
-		protected internal class Position : RollingBuffer.Resettable
-		{
-			public readonly IList<AttributeSource.State> inputTokens = new AList<AttributeSource.State
-				>();
-
-			public int nextRead;
-
-			public int startOffset = -1;
-
-			public int endOffset = -1;
-
-			// TODO: cut SynFilter over to this
-			// TODO: somehow add "nuke this input token" capability...
-			// Position of last read input token:
-			// Position of next possible output token to return:
-			// True if we hit end from our input:
-			// Buffered input tokens at this position:
-			// Next buffered token to be returned to consumer:
-			// Any token leaving from this position should have this startOffset:
-			// Any token arriving to this position should have this endOffset:
-			public virtual void Reset()
-			{
-				inputTokens.Clear();
-				nextRead = 0;
-				startOffset = -1;
-				endOffset = -1;
-			}
-
-			public virtual void Add(AttributeSource.State state)
-			{
-				inputTokens.AddItem(state);
-			}
-
-			public virtual AttributeSource.State NextState()
-			{
-				//HM:revisit 
-				//assert nextRead < inputTokens.size();
-				return inputTokens[nextRead++];
-			}
-		}
+		
 
 		protected LookaheadTokenFilter(TokenStream input) : base(input)
 		{
-			positions = new _RollingBuffer_121(this);
+			positions = new AnonymousRollingBuffer(this);
+            posIncAtt = AddAttribute<PositionIncrementAttribute>();
+            posLenAtt = AddAttribute<PositionLengthAttribute>();
+            offsetAtt = AddAttribute<OffsetAttribute>();
 		}
 
 		/// <summary>
 		/// Call this only from within afterPosition, to insert a new
 		/// token.
 		/// </summary>
-		/// <remarks>
-		/// Call this only from within afterPosition, to insert a new
-		/// token.  After calling this you should set any
-		/// necessary token you need.
-		/// </remarks>
-		/// <exception cref="System.IO.IOException"></exception>
 		protected internal virtual void InsertToken()
 		{
 			if (tokenPending)
@@ -116,7 +58,7 @@ namespace Lucene.Net.TestFramework.Analysis
 				positions.Get(inputPos).Add(CaptureState());
 				tokenPending = false;
 			}
-			//HM:revisit 
+			 
 			//assert !insertPending;
 			insertPending = true;
 		}
@@ -139,9 +81,9 @@ namespace Lucene.Net.TestFramework.Analysis
 
 		protected internal abstract T NewPosition();
 
-		private sealed class _RollingBuffer_121 : RollingBuffer<T>
+		private sealed class AnonymousRollingBuffer : RollingBuffer<T>
 		{
-			public _RollingBuffer_121(LookaheadTokenFilter<T> _enclosing)
+			public AnonymousRollingBuffer(LookaheadTokenFilter<T> _enclosing)
 			{
 				this._enclosing = _enclosing;
 			}
@@ -161,9 +103,9 @@ namespace Lucene.Net.TestFramework.Analysis
 		/// <exception cref="System.IO.IOException"></exception>
 		protected internal virtual bool PeekToken()
 		{
-			//HM:revisit 
+			
 			//assert !end;
-			//HM:revisit 
+			
 			//assert inputPos == -1 || outputPos <= inputPos;
 			if (tokenPending)
 			{
@@ -173,27 +115,26 @@ namespace Lucene.Net.TestFramework.Analysis
 			bool gotToken = input.IncrementToken();
 			if (gotToken)
 			{
-				inputPos += posIncAtt.GetPositionIncrement();
-				//HM:revisit 
+				inputPos += posIncAtt.PositionIncrement;
+				
 				//assert inputPos >= 0;
-				LookaheadTokenFilter.Position startPosData = positions.Get(inputPos);
-				LookaheadTokenFilter.Position endPosData = positions.Get(inputPos + posLenAtt.GetPositionLength
-					());
-				int startOffset = offsetAtt.StartOffset();
+				Position startPosData = positions.Get(inputPos);
+				Position endPosData = positions.Get(inputPos + posLenAtt.PositionLength);
+				int startOffset = offsetAtt.StartOffset;
 				if (startPosData.startOffset == -1)
 				{
 					startPosData.startOffset = startOffset;
 				}
 				// Make sure our input isn't messing up offsets:
-				//HM:revisit 
+				 
 				//assert startPosData.startOffset == startOffset: "prev startOffset=" + startPosData.startOffset + " vs new startOffset=" + startOffset + " inputPos=" + inputPos;
-				int endOffset = offsetAtt.EndOffset();
+				int endOffset = offsetAtt.EndOffset;
 				if (endPosData.endOffset == -1)
 				{
 					endPosData.endOffset = endOffset;
 				}
 				// Make sure our input isn't messing up offsets:
-				//HM:revisit 
+				 
 				//assert endPosData.endOffset == endOffset: "prev endOffset=" + endPosData.endOffset + " vs new endOffset=" + endOffset + " inputPos=" + inputPos;
 				tokenPending = true;
 			}
@@ -217,7 +158,7 @@ namespace Lucene.Net.TestFramework.Analysis
 		protected internal virtual bool NextToken()
 		{
 			//System.out.println("  nextToken: tokenPending=" + tokenPending);
-			LookaheadTokenFilter.Position posData = positions.Get(outputPos);
+			Position posData = positions.Get(outputPos);
 			// While loop here in case we have to
 			// skip over a hole from the input:
 			while (true)
@@ -261,7 +202,7 @@ namespace Lucene.Net.TestFramework.Analysis
 							{
 								// Subclass inserted a token at this same
 								// position:
-								//HM:revisit 
+								 
 								//assert insertedTokenConsistent();
 								insertPending = false;
 								return true;
@@ -280,7 +221,7 @@ namespace Lucene.Net.TestFramework.Analysis
 						{
 							// Subclass inserted a token at this same
 							// position:
-							//HM:revisit 
+							 
 							//assert insertedTokenConsistent();
 							insertPending = false;
 							return true;
@@ -294,18 +235,7 @@ namespace Lucene.Net.TestFramework.Analysis
 			}
 		}
 
-		// If subclass inserted a token, make sure it had in fact
-		// looked ahead enough:
-		private bool InsertedTokenConsistent()
-		{
-			int posLen = posLenAtt.GetPositionLength();
-			LookaheadTokenFilter.Position endPosData = positions.Get(outputPos + posLen);
-			//HM:revisit 
-			//assert endPosData.endOffset != -1;
-			//HM:revisit 
-			//assert offsetAtt.endOffset() == endPosData.endOffset: "offsetAtt.endOffset=" + offsetAtt.endOffset() + " vs expected=" + endPosData.endOffset;
-			return true;
-		}
+		
 
 		// TODO: end()?
 		// TODO: close()?
@@ -320,4 +250,49 @@ namespace Lucene.Net.TestFramework.Analysis
 			end = false;
 		}
 	}
+
+        /// <summary>
+		/// Holds all state for a single position; subclass this
+		/// to record other state at each position.
+		/// .NET Port moved out to accomodate type parm T
+		/// </summary>
+        public class Position : RollingBuffer.Resettable
+		{
+			public readonly IList<AttributeSource.State> inputTokens = new List<AttributeSource.State>();
+
+			public int nextRead;
+
+			public int startOffset = -1;
+
+			public int endOffset = -1;
+
+			// TODO: cut SynFilter over to this
+			// TODO: somehow add "nuke this input token" capability...
+			// Position of last read input token:
+			// Position of next possible output token to return:
+			// True if we hit end from our input:
+			// Buffered input tokens at this position:
+			// Next buffered token to be returned to consumer:
+			// Any token leaving from this position should have this startOffset:
+			// Any token arriving to this position should have this endOffset:
+			public virtual void Reset()
+			{
+				inputTokens.Clear();
+				nextRead = 0;
+				startOffset = -1;
+				endOffset = -1;
+			}
+
+			public virtual void Add(AttributeSource.State state)
+			{
+				inputTokens.Add(state);
+			}
+
+			public virtual AttributeSource.State NextState()
+			{
+				 
+				//assert nextRead < inputTokens.size();
+				return inputTokens[nextRead++];
+			}
+		}
 }

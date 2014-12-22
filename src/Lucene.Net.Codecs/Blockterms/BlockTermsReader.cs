@@ -1,17 +1,8 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using System.Collections.Generic;
-using Lucene.Net.Codecs;
-using Lucene.Net.Codecs.Blockterms;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
 using Lucene.Net.Util;
-using Sharpen;
 
 namespace Lucene.Net.Codecs.Blockterms
 {
@@ -116,17 +107,16 @@ namespace Lucene.Net.Codecs.Blockterms
 					//assert numTerms >= 0;
 					long termsStartPointer = @in.ReadVLong();
 					FieldInfo fieldInfo = fieldInfos.FieldInfo(field);
-					long sumTotalTermFreq = fieldInfo.GetIndexOptions() == FieldInfo.IndexOptions.DOCS_ONLY
+					long sumTotalTermFreq = fieldInfo.IndexOptionsValue.GetValueOrDefault() == FieldInfo.IndexOptions.DOCS_ONLY
 						 ? -1 : @in.ReadVLong();
 					long sumDocFreq = @in.ReadVLong();
 					int docCount = @in.ReadVInt();
 					int longsSize = version >= BlockTermsWriter.VERSION_META_ARRAY ? @in.ReadVInt() : 
 						0;
-					if (docCount < 0 || docCount > info.GetDocCount())
+					if (docCount < 0 || docCount > info.DocCount)
 					{
 						// #docs with field must be <= #docs
-						throw new CorruptIndexException("invalid docCount: " + docCount + " maxDoc: " + info
-							.GetDocCount() + " (resource=" + @in + ")");
+						throw new CorruptIndexException("invalid docCount: " + docCount + " maxDoc: " + info.DocCount + " (resource=" + @in + ")");
 					}
 					if (sumDocFreq < docCount)
 					{
@@ -140,9 +130,9 @@ namespace Lucene.Net.Codecs.Blockterms
 						throw new CorruptIndexException("invalid sumTotalTermFreq: " + sumTotalTermFreq +
 							 " sumDocFreq: " + sumDocFreq + " (resource=" + @in + ")");
 					}
-					BlockTermsReader.FieldReader previous = fields.Put(fieldInfo.name, new BlockTermsReader.FieldReader
+					FieldReader previous = fields[fieldInfo.name] = new FieldReader
 						(this, fieldInfo, numTerms, termsStartPointer, sumTotalTermFreq, sumDocFreq, docCount
-						, longsSize));
+						, longsSize);
 					if (previous != null)
 					{
 						throw new CorruptIndexException("duplicate fields: " + fieldInfo.name + " (resource="
@@ -155,13 +145,13 @@ namespace Lucene.Net.Codecs.Blockterms
 			{
 				if (!success)
 				{
-					@in.Close();
+					@in.Dispose();
 				}
 			}
 			this.indexReader = indexReader;
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		
 		private int ReadHeader(IndexInput input)
 		{
 			int version = CodecUtil.CheckHeader(input, BlockTermsWriter.CODEC_NAME, BlockTermsWriter
@@ -173,7 +163,7 @@ namespace Lucene.Net.Codecs.Blockterms
 			return version;
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		
 		private void SeekDir(IndexInput input, long dirOffset)
 		{
 			if (version >= BlockTermsWriter.VERSION_CHECKSUM)
@@ -192,8 +182,8 @@ namespace Lucene.Net.Codecs.Blockterms
 			input.Seek(dirOffset);
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
-		public override void Close()
+
+	    protected override void Dispose(bool disposing)
 		{
 			try
 			{
@@ -212,7 +202,7 @@ namespace Lucene.Net.Codecs.Blockterms
 					indexReader = null;
 					if (@in != null)
 					{
-						@in.Close();
+						@in.Dispose();
 					}
 				}
 			}

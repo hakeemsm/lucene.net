@@ -5,11 +5,11 @@
  */
 
 using Org.Apache.Lucene.Codecs;
-using Org.Apache.Lucene.Codecs.Lucene40;
+using Lucene.Net.Codecs.Lucene40;
 using Org.Apache.Lucene.Util;
 using Sharpen;
 
-namespace Org.Apache.Lucene.Codecs.Lucene40
+namespace Lucene.Net.Codecs.Lucene40
 {
 	/// <summary>Read-write version of Lucene40Codec for testing</summary>
 	public sealed class Lucene40RWCodec : Lucene40Codec
@@ -34,26 +34,26 @@ namespace Org.Apache.Lucene.Codecs.Lucene40
 			}
 		}
 
-		private readonly Org.Apache.Lucene.Codecs.FieldInfosFormat fieldInfos = new _Lucene40FieldInfosFormat_33
+		private readonly Lucene.Net.Codecs.FieldInfosFormat fieldInfos = new _Lucene40FieldInfosFormat_33
 			();
 
-		private readonly Org.Apache.Lucene.Codecs.DocValuesFormat docValues = new Lucene40RWDocValuesFormat
+		private readonly Lucene.Net.Codecs.DocValuesFormat docValues = new Lucene40RWDocValuesFormat
 			();
 
-		private readonly Org.Apache.Lucene.Codecs.NormsFormat norms = new Lucene40RWNormsFormat
+		private readonly Lucene.Net.Codecs.NormsFormat norms = new Lucene40RWNormsFormat
 			();
 
-		public override Org.Apache.Lucene.Codecs.FieldInfosFormat FieldInfosFormat()
+		public override Lucene.Net.Codecs.FieldInfosFormat FieldInfosFormat()
 		{
 			return fieldInfos;
 		}
 
-		public override Org.Apache.Lucene.Codecs.DocValuesFormat DocValuesFormat()
+		public override Lucene.Net.Codecs.DocValuesFormat DocValuesFormat()
 		{
 			return docValues;
 		}
 
-		public override Org.Apache.Lucene.Codecs.NormsFormat NormsFormat()
+		public override Lucene.Net.Codecs.NormsFormat NormsFormat()
 		{
 			return norms;
 		}

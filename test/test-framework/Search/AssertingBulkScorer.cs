@@ -53,7 +53,7 @@ namespace Lucene.Net.TestFramework.Search
 				}
 				catch (NotSupportedException)
 				{
-					//HM:revisit 
+					 
 					//assert !remaining;
 					@in.Score(collector);
 				}

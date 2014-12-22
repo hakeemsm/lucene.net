@@ -140,7 +140,7 @@ namespace Lucene.Net.TestFramework.Index
 				// Rate limit ingest rate:
 				// Maybe add randomly named field
 				// Add/update doc block:
-				//HM:revisit 
+				 
 				//assert !delSubDocs.deleted;
 				// Update doc block, replacing prior packID
 				// Add doc block, using new packID
@@ -148,7 +148,7 @@ namespace Lucene.Net.TestFramework.Index
 				// Update single doc, but we never re-use
 				// and ID so the delete will never
 				// actually happen:
-				//HM:revisit 
+				 
 				//assert !subDocs.deleted;
 				threads[thread].SetDaemon(true);
 				threads[thread].Start();

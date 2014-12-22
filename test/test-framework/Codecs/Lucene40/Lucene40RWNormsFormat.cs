@@ -5,12 +5,12 @@
  */
 
 using Org.Apache.Lucene.Codecs;
-using Org.Apache.Lucene.Codecs.Lucene40;
+using Lucene.Net.Codecs.Lucene40;
 using Org.Apache.Lucene.Index;
 using Org.Apache.Lucene.Util;
 using Sharpen;
 
-namespace Org.Apache.Lucene.Codecs.Lucene40
+namespace Lucene.Net.Codecs.Lucene40
 {
 	/// <summary>
 	/// Read-write version of

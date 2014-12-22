@@ -5,13 +5,13 @@
  */
 
 using Org.Apache.Lucene.Codecs;
-using Org.Apache.Lucene.Codecs.Lucene3x;
+using Lucene.Net.Codecs.Lucene3x;
 using Org.Apache.Lucene.Index;
 using Org.Apache.Lucene.Store;
 using Org.Apache.Lucene.Util;
 using Sharpen;
 
-namespace Org.Apache.Lucene.Codecs.Lucene3x
+namespace Lucene.Net.Codecs.Lucene3x
 {
 	/// <lucene.internal></lucene.internal>
 	/// <lucene.experimental></lucene.experimental>
@@ -74,7 +74,7 @@ namespace Org.Apache.Lucene.Codecs.Lucene3x
 					if (fi.IsIndexed())
 					{
 						bits |= IS_INDEXED;
-						//HM:revisit 
+						 
 						//assert fi.getIndexOptions() == IndexOptions.DOCS_AND_FREQS_AND_POSITIONS || !fi.hasPayloads();
 						if (fi.GetIndexOptions() == FieldInfo.IndexOptions.DOCS_ONLY)
 						{
@@ -98,7 +98,7 @@ namespace Org.Apache.Lucene.Codecs.Lucene3x
 						output.WriteByte(unchecked((byte)(fi.GetNormType() == null ? 0 : 1)));
 					}
 				}
-				//HM:revisit 
+				 
 				//assert fi.attributes() == null; // not used or supported
 				success = true;
 			}

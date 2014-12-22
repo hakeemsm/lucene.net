@@ -56,27 +56,27 @@ namespace Lucene.Net.TestFramework.Search
         }
 
         // null test
-        //HM:revisit 
+         
         //assert.assertFalse(q.equals(null));
         public static void CheckEqual(Query q1, Query q2)
         {
         }
 
-        //HM:revisit 
+         
         //assert.assertEquals(q1, q2);
-        //HM:revisit 
+         
         //assert.assertEquals(q1.hashCode(), q2.hashCode());
         public static void CheckUnequal(Query q1, Query q2)
         {
         }
 
-        //HM:revisit 
+         
         //assert.assertFalse(q1 + " equal to " + q2, q1.equals(q2));
-        //HM:revisit 
+         
         //assert.assertFalse(q2 + " equal to " + q1, q2.equals(q1));
         // possible this test can fail on a hash collision... if that
         // happens, please change test to use a different example.
-        //HM:revisit 
+         
         //assert.assertTrue(q1.hashCode() != q2.hashCode());
         /// <summary>deep check that explanations of a query 'score' correctly</summary>
         /// <exception cref="System.IO.IOException"></exception>
@@ -268,9 +268,9 @@ namespace Lucene.Net.TestFramework.Search
                 // "skip("+(sdoc[0]+1)+")":"next()");
                 // confirm that skipping beyond the last doc, on the
                 // previous reader, hits NO_MORE_DOCS
-                //HM:revisit 
+                 
                 //assert.assertFalse("query's last doc was "+ lastDoc[0] +" but skipTo("+(lastDoc[0]+1)+") got to "+scorer.docID(),more);
-                //HM:revisit 
+                 
                 //assert readerContextArray.get(leafPtr).reader() == context.reader();
                 if (lastReader[0] != null)
                 {
@@ -402,7 +402,7 @@ namespace Lucene.Net.TestFramework.Search
             private readonly AtomicReader[] lastReader;
         }
 
-        //HM:revisit 
+         
         //assert.assertFalse("query's last doc was "+ lastDoc[0] +" but skipTo("+(lastDoc[0]+1)+") got to "+scorer.docID(),more);
         /// <summary>check that first skip on just created scorers always goes to the right doc
         /// 	</summary>
@@ -415,19 +415,19 @@ namespace Lucene.Net.TestFramework.Search
             AtomicReader[] lastReader = { null };
             IList<AtomicReaderContext> context = s.TopReaderContext.Leaves;
             s.Search(q, new AnoynmousCollector2(lastDoc, s, q, context, lastReader));
-            //HM:revisit 
+             
             //assert.assertTrue("query collected "+doc+" but skipTo("+i+") says no more docs!",scorer.advance(i) != DocIdSetIterator.NO_MORE_DOCS);
-            //HM:revisit 
+             
             //assert.assertEquals("query collected "+doc+" but skipTo("+i+") got to "+scorer.docID(),doc,scorer.docID());
-            //HM:revisit 
+             
             //assert.assertEquals("unstable skipTo("+i+") score!",skipToScore,scorer.score(),maxDiff); 
-            //HM:revisit 
+             
             //assert.assertEquals("query assigned doc "+doc+" a score of <"+score+"> but skipTo("+i+") has <"+skipToScore+">!",score,skipToScore,maxDiff);
             // Hurry things along if they are going slow (eg
             // if you got SimpleText codec this will kick in):
             // confirm that skipping beyond the last doc, on the
             // previous reader, hits NO_MORE_DOCS
-            //HM:revisit 
+             
             //assert.assertFalse("query's last doc was "+ lastDoc[0] +" but skipTo("+(lastDoc[0]+1)+") got to "+scorer.docID(),more);
             if (lastReader[0] != null)
             {
@@ -522,7 +522,7 @@ namespace Lucene.Net.TestFramework.Search
 
             private readonly AtomicReader[] lastReader;
         }
-        //HM:revisit 
+         
         //assert.assertFalse("query's last doc was "+ lastDoc[0] +" but skipTo("+(lastDoc[0]+1)+") got to "+scorer.docID(),more);
     }
 }

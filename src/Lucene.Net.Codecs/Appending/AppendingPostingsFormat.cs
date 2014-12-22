@@ -5,11 +5,8 @@
  */
 
 using System;
-using Lucene.Net.Codecs;
-using Lucene.Net.Codecs.Appending;
 using Lucene.Net.Codecs.Lucene40;
 using Lucene.Net.Index;
-using Sharpen;
 
 namespace Lucene.Net.Codecs.Appending
 {

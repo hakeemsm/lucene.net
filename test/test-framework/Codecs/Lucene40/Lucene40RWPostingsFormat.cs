@@ -5,12 +5,12 @@
  */
 
 using Org.Apache.Lucene.Codecs;
-using Org.Apache.Lucene.Codecs.Lucene40;
+using Lucene.Net.Codecs.Lucene40;
 using Org.Apache.Lucene.Index;
 using Org.Apache.Lucene.Util;
 using Sharpen;
 
-namespace Org.Apache.Lucene.Codecs.Lucene40
+namespace Lucene.Net.Codecs.Lucene40
 {
 	/// <summary>
 	/// Read-write version of
@@ -20,7 +20,7 @@ namespace Org.Apache.Lucene.Codecs.Lucene40
 	public class Lucene40RWPostingsFormat : Lucene40PostingsFormat
 	{
 		/// <exception cref="System.IO.IOException"></exception>
-		public override Org.Apache.Lucene.Codecs.FieldsConsumer FieldsConsumer(SegmentWriteState
+		public override Lucene.Net.Codecs.FieldsConsumer FieldsConsumer(SegmentWriteState
 			 state)
 		{
 			if (!LuceneTestCase.OLD_FORMAT_IMPERSONATION_IS_ACTIVE)
@@ -37,7 +37,7 @@ namespace Org.Apache.Lucene.Codecs.Lucene40
 				bool success = false;
 				try
 				{
-					Org.Apache.Lucene.Codecs.FieldsConsumer ret = new BlockTreeTermsWriter(state, docs
+					Lucene.Net.Codecs.FieldsConsumer ret = new BlockTreeTermsWriter(state, docs
 						, minBlockSize, maxBlockSize);
 					success = true;
 					return ret;

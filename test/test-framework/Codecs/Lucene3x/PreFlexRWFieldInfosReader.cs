@@ -6,12 +6,12 @@
 
 using System.Collections.Generic;
 using Org.Apache.Lucene.Codecs;
-using Org.Apache.Lucene.Codecs.Lucene3x;
+using Lucene.Net.Codecs.Lucene3x;
 using Org.Apache.Lucene.Index;
 using Org.Apache.Lucene.Store;
 using Sharpen;
 
-namespace Org.Apache.Lucene.Codecs.Lucene3x
+namespace Lucene.Net.Codecs.Lucene3x
 {
 	/// <lucene.internal></lucene.internal>
 	/// <lucene.experimental></lucene.experimental>

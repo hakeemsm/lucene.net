@@ -682,11 +682,11 @@ namespace Lucene.Net.Analysis
                 this._delegateFactory = delegateFactory;
             }
 
-            public override Util.Attribute CreateAttributeInstance<T>()
+            public override Attribute CreateAttributeInstance<T>(T attClass)
             {
                 return typeof(T).IsAssignableFrom(typeof(Token))
                            ? new Token()
-                           : _delegateFactory.CreateAttributeInstance<T>();
+                           : _delegateFactory.CreateAttributeInstance<T>(attClass);
             }
 
             public override bool Equals(Object other)

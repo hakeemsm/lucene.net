@@ -1124,23 +1124,23 @@ namespace Lucene.Net.TestFramework.Util
 			private readonly IDictionary<string, object> map;
 		}
 
-		//HM:revisit 
+		 
 		//assert.assertEquals("Reflection does not produce same map", reflectedValues, map);
 		public static void AssertEquals(TopDocs expected, TopDocs actual)
 		{
-			//HM:revisit 
+			 
 			//assert.assertEquals("wrong total hits", expected.totalHits, actual.totalHits);
-			//HM:revisit 
+			 
 			//assert.assertEquals("wrong maxScore", expected.getMaxScore(), actual.getMaxScore(), 0.0);
-			//HM:revisit 
+			 
 			//assert.assertEquals("wrong hit count", expected.scoreDocs.length, actual.scoreDocs.length);
 			for (int hitIDX = 0; hitIDX < expected.ScoreDocs.Length; hitIDX++)
 			{
 				ScoreDoc expectedSD = expected.ScoreDocs[hitIDX];
 				ScoreDoc actualSD = actual.ScoreDocs[hitIDX];
-				//HM:revisit 
+				 
 				//assert.assertEquals("wrong hit docID", expectedSD.doc, actualSD.doc);
-				//HM:revisit 
+				 
 				//assert.assertEquals("wrong hit score", expectedSD.score, actualSD.score, 0.0);
 				if (expectedSD is FieldDoc)
 				{
@@ -1148,10 +1148,10 @@ namespace Lucene.Net.TestFramework.Util
 			}
 		}
 
-		//HM:revisit 
+		 
 		//assert.assertTrue(actualSD instanceof FieldDoc);
-		//HM:revisit 
-		//HM:revisit 
+		 
+		 
 		//assert.assertFalse(actualSD instanceof FieldDoc);
 		// NOTE: this is likely buggy, and cannot clone fields
 		// with tokenStreamValues, etc.  Use at your own risk!!
@@ -1528,7 +1528,7 @@ namespace Lucene.Net.TestFramework.Util
 				// mix up case
 				string mixedUp = Lucene.Net.TestFramework.Util.TestUtil.RandomlyRecaseCodePoints(random, 
 					sb.ToString());
-				//HM:revisit 
+				 
 				//assert mixedUp.length() == sb.length();
 				return mixedUp;
 			}

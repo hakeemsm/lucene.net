@@ -11,7 +11,7 @@ using Org.Apache.Lucene.Store;
 using Org.Apache.Lucene.Util;
 using Sharpen;
 
-namespace Org.Apache.Lucene.Codecs.Lucene3x
+namespace Lucene.Net.Codecs.Lucene3x
 {
 	/// <summary>Writes and Merges Lucene 3.x norms format</summary>
 	/// <lucene.experimental></lucene.experimental>
@@ -38,7 +38,7 @@ namespace Org.Apache.Lucene.Codecs.Lucene3x
 			)
 		{
 			// only for 
-			//HM:revisit 
+			 
 			//assert
 			string normsFileName = IndexFileNames.SegmentFileName(segment, string.Empty, NORMS_EXTENSION
 				);
@@ -63,7 +63,7 @@ namespace Org.Apache.Lucene.Codecs.Lucene3x
 		/// <exception cref="System.IO.IOException"></exception>
 		public override void AddNumericField(FieldInfo field, Iterable<Number> values)
 		{
-			//HM:revisit 
+			 
 			//assert field.number > lastFieldNumber : "writing norms fields out of order" + lastFieldNumber + " -> " + field.number;
 			foreach (Number n in values)
 			{

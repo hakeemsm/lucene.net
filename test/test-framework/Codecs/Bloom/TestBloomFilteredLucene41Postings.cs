@@ -1,16 +1,7 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
+using Lucene.Net.Index;
+using Lucene.Net.Codecs.Lucene41;
 
-using Org.Apache.Lucene.Codecs;
-using Org.Apache.Lucene.Codecs.Bloom;
-using Org.Apache.Lucene.Codecs.Lucene41;
-using Org.Apache.Lucene.Index;
-using Sharpen;
-
-namespace Org.Apache.Lucene.Codecs.Bloom
+namespace Lucene.Net.Codecs.Bloom.TestFramework
 {
 	/// <summary>
 	/// A class used for testing

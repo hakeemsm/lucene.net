@@ -7,20 +7,20 @@
 using System;
 using System.Collections.Generic;
 using Org.Apache.Lucene.Codecs;
-using Org.Apache.Lucene.Codecs.Blockterms;
-using Org.Apache.Lucene.Codecs.Lucene41;
-using Org.Apache.Lucene.Codecs.Memory;
-using Org.Apache.Lucene.Codecs.Mockintblock;
-using Org.Apache.Lucene.Codecs.Mockrandom;
-using Org.Apache.Lucene.Codecs.Mocksep;
-using Org.Apache.Lucene.Codecs.Pulsing;
-using Org.Apache.Lucene.Codecs.Sep;
+using Lucene.Net.Codecs.Blockterms;
+using Lucene.Net.Codecs.Lucene41;
+using Lucene.Net.Codecs.Memory;
+using Lucene.Net.Codecs.Mockintblock;
+using Lucene.Net.Codecs.Mockrandom;
+using Lucene.Net.Codecs.Mocksep;
+using Lucene.Net.Codecs.Pulsing;
+using Lucene.Net.Codecs.Sep;
 using Org.Apache.Lucene.Index;
 using Org.Apache.Lucene.Store;
 using Org.Apache.Lucene.Util;
 using Sharpen;
 
-namespace Org.Apache.Lucene.Codecs.Mockrandom
+namespace Lucene.Net.Codecs.Mockrandom
 {
 	/// <summary>Randomly combines terms index impl w/ postings impls.</summary>
 	/// <remarks>Randomly combines terms index impl w/ postings impls.</remarks>
@@ -83,7 +83,7 @@ namespace Org.Apache.Lucene.Codecs.Mockrandom
 			private static string GetExtension(string fileName)
 			{
 				int idx = fileName.IndexOf('.');
-				//HM:revisit 
+				 
 				//assert idx != -1;
 				return Sharpen.Runtime.Substring(fileName, idx);
 			}

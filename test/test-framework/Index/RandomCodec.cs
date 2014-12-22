@@ -78,7 +78,7 @@ namespace Lucene.Net.TestFramework.Index
 				previousMappings.Put(name, codec);
 			}
 			// Safety:
-			//HM:revisit 
+			 
 			//assert previousMappings.size() < 10000: "test went insane";
 			return codec;
 		}
@@ -98,7 +98,7 @@ namespace Lucene.Net.TestFramework.Index
 				previousDVMappings.Put(name, codec);
 			}
 			// Safety:
-			//HM:revisit 
+			 
 			//assert previousDVMappings.size() < 10000: "test went insane";
 			return codec;
 		}

@@ -6,13 +6,13 @@
 
 using System;
 using Org.Apache.Lucene.Codecs;
-using Org.Apache.Lucene.Codecs.Lucene3x;
+using Lucene.Net.Codecs.Lucene3x;
 using Org.Apache.Lucene.Index;
 using Org.Apache.Lucene.Store;
 using Org.Apache.Lucene.Util;
 using Sharpen;
 
-namespace Org.Apache.Lucene.Codecs.Lucene3x
+namespace Lucene.Net.Codecs.Lucene3x
 {
 	/// <lucene.experimental></lucene.experimental>
 	internal sealed class PreFlexRWStoredFieldsWriter : StoredFieldsWriter
@@ -29,7 +29,7 @@ namespace Org.Apache.Lucene.Codecs.Lucene3x
 		public PreFlexRWStoredFieldsWriter(Directory directory, string segment, IOContext
 			 context)
 		{
-			//HM:revisit 
+			 
 			//assert directory != null;
 			this.directory = directory;
 			this.segment = segment;
@@ -198,7 +198,7 @@ namespace Org.Apache.Lucene.Codecs.Lucene3x
 			}
 		}
 
-		//HM:revisit 
+		 
 		//assert false;
 		/// <exception cref="System.IO.IOException"></exception>
 		public override void Finish(FieldInfos fis, int numDocs)

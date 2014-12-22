@@ -21,6 +21,8 @@ using Lucene.Net.Util;
 using AttributeSource = Lucene.Net.Util.AttributeSource;
 using NumericUtils = Lucene.Net.Util.NumericUtils;
 using System;
+using Attribute = Lucene.Net.Util.Attribute;
+
 // javadocs
 
 namespace Lucene.Net.Analysis
@@ -112,12 +114,12 @@ namespace Lucene.Net.Analysis
                 this.@delegate = @delegate;
             }
 
-            public override Util.Attribute CreateAttributeInstance<T>()
+            public override Attribute CreateAttributeInstance<T>(T attClass)
             {
                 if (typeof(CharTermAttribute).IsAssignableFrom(typeof(T)))
                     throw new ArgumentException("NumericTokenStream does not support CharTermAttribute.");
 
-                return @delegate.CreateAttributeInstance<T>();
+                return @delegate.CreateAttributeInstance<T>(attClass);
             }
         }
 

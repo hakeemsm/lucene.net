@@ -9,19 +9,17 @@ namespace Lucene.Net.TestFramework.Analysis
 	{
 		private readonly Token[] tokens;
 
-		private int upto = 0;
+		private int upto;
 
-		private readonly CharTermAttribute termAtt = AddAttribute<CharTermAttribute>();
+	    private CharTermAttribute termAtt;
 
-		private readonly PositionIncrementAttribute posIncrAtt = AddAttribute<PositionIncrementAttribute
-			>();
+	    private PositionIncrementAttribute posIncrAtt;
 
-		private readonly PositionLengthAttribute posLengthAtt = AddAttribute<PositionLengthAttribute
-			>();
+	    private PositionLengthAttribute posLengthAtt;
 
-		private readonly OffsetAttribute offsetAtt = AddAttribute<OffsetAttribute>();
+	    private OffsetAttribute offsetAtt;
 
-		private readonly PayloadAttribute payloadAtt = AddAttribute<PayloadAttribute>();
+	    private PayloadAttribute payloadAtt;
 
 		private readonly int finalOffset;
 
@@ -32,6 +30,7 @@ namespace Lucene.Net.TestFramework.Analysis
 			this.tokens = tokens;
 			finalOffset = 0;
 			finalPosInc = 0;
+		    InitAttributeObjects();
 		}
 
 		/// <summary>
@@ -47,19 +46,29 @@ namespace Lucene.Net.TestFramework.Analysis
 			this.tokens = tokens;
 			this.finalOffset = finalOffset;
 			this.finalPosInc = finalPosInc;
+		    InitAttributeObjects();
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+	    private void InitAttributeObjects()
+	    {
+            termAtt = AddAttribute<CharTermAttribute>();
+            posIncrAtt = AddAttribute<PositionIncrementAttribute>();
+            posLengthAtt = AddAttribute<PositionLengthAttribute>();
+            offsetAtt = AddAttribute<OffsetAttribute>();
+            payloadAtt = AddAttribute<PayloadAttribute>();
+	    }
+
+	    /// <exception cref="System.IO.IOException"></exception>
 		public override void End()
 		{
 			base.End();
-			posIncrAtt.SetPositionIncrement(finalPosInc);
+			posIncrAtt.PositionIncrement = finalPosInc;
 			offsetAtt.SetOffset(finalOffset, finalOffset);
 		}
 
 		public override bool IncrementToken()
 		{
-			if (upto < tokens.Length)
+		    if (upto < tokens.Length)
 			{
 				Token token = tokens[upto++];
 				// TODO: can we just capture/restoreState so
@@ -67,16 +76,13 @@ namespace Lucene.Net.TestFramework.Analysis
 				ClearAttributes();
 				termAtt.SetEmpty();
 				termAtt.Append(token.ToString());
-				posIncrAtt.SetPositionIncrement(token.GetPositionIncrement());
-				posLengthAtt.SetPositionLength(token.GetPositionLength());
-				offsetAtt.SetOffset(token.StartOffset(), token.EndOffset());
-				payloadAtt.SetPayload(token.GetPayload());
+				posIncrAtt.PositionIncrement = token.PositionIncrement;
+				posLengthAtt.PositionLength = token.PositionLength;
+				offsetAtt.SetOffset(token.StartOffset, token.EndOffset);
+				payloadAtt.Payload = token.Payload;
 				return true;
 			}
-			else
-			{
-				return false;
-			}
+		    return false;
 		}
 	}
 }

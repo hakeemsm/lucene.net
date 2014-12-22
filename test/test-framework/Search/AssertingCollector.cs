@@ -47,7 +47,7 @@ namespace Lucene.Net.TestFramework.Search
 			if (inOrder || !AcceptsDocsOutOfOrder())
 			{
 			}
-			//HM:revisit 
+			 
 			//assert doc > lastCollected : "Out of order : " + lastCollected + " " + doc;
 			@in.Collect(doc);
 			lastCollected = doc;

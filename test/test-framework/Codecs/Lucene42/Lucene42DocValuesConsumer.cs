@@ -8,7 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Org.Apache.Lucene.Codecs;
-using Org.Apache.Lucene.Codecs.Lucene42;
+using Lucene.Net.Codecs.Lucene42;
 using Org.Apache.Lucene.Index;
 using Org.Apache.Lucene.Store;
 using Org.Apache.Lucene.Util;
@@ -16,7 +16,7 @@ using Org.Apache.Lucene.Util.Fst;
 using Org.Apache.Lucene.Util.Packed;
 using Sharpen;
 
-namespace Org.Apache.Lucene.Codecs.Lucene42
+namespace Lucene.Net.Codecs.Lucene42
 {
 	/// <summary>
 	/// Writer for
@@ -123,7 +123,7 @@ namespace Org.Apache.Lucene.Codecs.Lucene42
 					++count;
 				}
 			}
-			//HM:revisit 
+			 
 			//assert count == maxDoc;
 			if (uniqueValues != null)
 			{

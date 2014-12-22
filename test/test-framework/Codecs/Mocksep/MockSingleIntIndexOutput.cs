@@ -5,13 +5,13 @@
  */
 
 using Org.Apache.Lucene.Codecs;
-using Org.Apache.Lucene.Codecs.Mocksep;
-using Org.Apache.Lucene.Codecs.Sep;
+using Lucene.Net.Codecs.Mocksep;
+using Lucene.Net.Codecs.Sep;
 using Org.Apache.Lucene.Store;
 using Org.Apache.Lucene.Util;
 using Sharpen;
 
-namespace Org.Apache.Lucene.Codecs.Mocksep
+namespace Lucene.Net.Codecs.Mocksep
 {
 	/// <summary>
 	/// Writes ints directly to the file (not in blocks) as

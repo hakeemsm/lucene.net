@@ -175,7 +175,7 @@ namespace Lucene.Net.TestFramework.Search
 				}
 				else
 				{
-					//HM:revisit 
+					 
 					//assert searchAfter == null;  // not supported yet
 					return s.LocalSearch(q, numHits, sort);
 				}
@@ -267,7 +267,7 @@ namespace Lucene.Net.TestFramework.Search
 					this.myNodeID = nodeID;
 				}
 
-				//HM:revisit 
+				 
 				//assert myNodeID == NodeState.this.myNodeID: "myNodeID=" + nodeID + " NodeState.this.myNodeID=" + NodeState.this.myNodeID;
 				/// <exception cref="System.IO.IOException"></exception>
 				public override Query Rewrite(Query original)
@@ -312,7 +312,7 @@ namespace Lucene.Net.TestFramework.Search
 				public overrideLucene.Net.TestFramework.Search.TermStatistics TermStatistics(Term term, 
 					TermContext context)
 				{
-					//HM:revisit 
+					 
 					//assert term != null;
 					long docFreq = 0;
 					long totalTermFreq = 0;
@@ -331,7 +331,7 @@ namespace Lucene.Net.TestFramework.Search
 						}
 						// We pre-cached during rewrite so all terms
 						// better be here...
-						//HM:revisit 
+						 
 						//assert subStats != null;
 						long nodeDocFreq = subStats.DocFreq();
 						if (docFreq >= 0 && nodeDocFreq >= 0)
@@ -387,7 +387,7 @@ namespace Lucene.Net.TestFramework.Search
 						}
 						// Collection stats are pre-shared on reopen, so,
 						// we better not have a cache miss:
-						//HM:revisit 
+						 
 						//assert nodeStats != null: "myNodeID=" + myNodeID + " nodeID=" + nodeID + " version=" + nodeVersions[nodeID] + " field=" + field;
 						long nodeDocCount = nodeStats.DocCount();
 						if (docCount >= 0 && nodeDocCount >= 0)
@@ -416,7 +416,7 @@ namespace Lucene.Net.TestFramework.Search
 						{
 							sumDocFreq = -1;
 						}
-						//HM:revisit 
+						 
 						//assert nodeStats.maxDoc() >= 0;
 						maxDoc += nodeStats.MaxDoc();
 					}
@@ -526,7 +526,7 @@ namespace Lucene.Net.TestFramework.Search
 				/// <exception cref="System.IO.IOException"></exception>
 				public override TopFieldDocs Search(Query query, int numHits, Sort sort)
 				{
-					//HM:revisit 
+					 
 					//assert sort != null;
 					TopDocs[] shardHits = new TopDocs[this.nodeVersions.Length];
 					for (int nodeID = 0; nodeID < this.nodeVersions.Length; nodeID++)
@@ -588,7 +588,7 @@ namespace Lucene.Net.TestFramework.Search
 			/// <exception cref="System.IO.IOException"></exception>
 			public void InitSearcher(long[] nodeVersions)
 			{
-				//HM:revisit 
+				 
 				//assert currentShardSearcher == null;
 				System.Array.Copy(nodeVersions, 0, this.currentNodeVersions, 0, this.currentNodeVersions
 					.Length);
@@ -789,9 +789,9 @@ namespace Lucene.Net.TestFramework.Search
 			for (int nodeID_2 = 0; nodeID_2 < numNodes; nodeID_2++)
 			{
 				IndexSearcher s = nodes[nodeID_2].mgr.Acquire();
-				//HM:revisit 
+				 
 				//assert nodeVersions[nodeID] == nodes[nodeID].searchers.record(s);
-				//HM:revisit 
+				 
 				//assert s != null;
 				try
 				{

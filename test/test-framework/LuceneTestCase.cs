@@ -1540,7 +1540,7 @@ namespace Lucene.Net
 		public virtual void AssertTermsStatisticsEquals(string info, Terms leftTerms, Terms
 			 rightTerms)
 		{
-			//HM:revisit 
+			 
 			//assert leftTerms.getComparator() == rightTerms.getComparator();
 			if (leftTerms.DocCount != -1 && rightTerms.DocCount != -1)
 			{
@@ -1993,7 +1993,7 @@ namespace Lucene.Net
 		public virtual void AssertTermVectorsEquals(string info, IndexReader leftReader, 
 			IndexReader rightReader)
 		{
-			//HM:revisit 
+			 
 			//assert leftReader.MaxDoc == rightReader.MaxDoc;
 			for (int i = 0; i < leftReader.MaxDoc; i++)
 			{

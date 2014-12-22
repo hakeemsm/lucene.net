@@ -6,13 +6,13 @@
 
 using System;
 using System.IO;
-using Org.Apache.Lucene.Codecs.Lucene3x;
+using Lucene.Net.Codecs.Lucene3x;
 using Org.Apache.Lucene.Index;
 using Org.Apache.Lucene.Store;
 using Org.Apache.Lucene.Util;
 using Sharpen;
 
-namespace Org.Apache.Lucene.Codecs.Lucene3x
+namespace Lucene.Net.Codecs.Lucene3x
 {
 	/// <summary>
 	/// This stores a monotonically increasing set of <Term, TermInfo> pairs in a
@@ -81,7 +81,7 @@ namespace Org.Apache.Lucene.Codecs.Lucene3x
 
 		private int lastFieldNumber = -1;
 
-		private Org.Apache.Lucene.Codecs.Lucene3x.TermInfosWriter other;
+		private Lucene.Net.Codecs.Lucene3x.TermInfosWriter other;
 
 		/// <exception cref="System.IO.IOException"></exception>
 		internal TermInfosWriter(Directory directory, string segment, FieldInfos fis, int
@@ -100,7 +100,7 @@ namespace Org.Apache.Lucene.Codecs.Lucene3x
 			bool success = false;
 			try
 			{
-				other = new Org.Apache.Lucene.Codecs.Lucene3x.TermInfosWriter(directory, segment, 
+				other = new Lucene.Net.Codecs.Lucene3x.TermInfosWriter(directory, segment, 
 					fis, interval, true);
 				other.other = this;
 				success = true;
@@ -153,7 +153,7 @@ namespace Org.Apache.Lucene.Codecs.Lucene3x
 				// write skipInterval
 				output.WriteInt(maxSkipLevels);
 				// write maxSkipLevels
-				//HM:revisit 
+				 
 				//assert initUTF16Results();
 				success = true;
 			}
@@ -182,10 +182,10 @@ namespace Org.Apache.Lucene.Codecs.Lucene3x
 		private readonly BytesRef scratchBytes = new BytesRef();
 
 		// Currently used only by 
-		//HM:revisit 
+		 
 		//assert statements
 		// Currently used only by 
-		//HM:revisit 
+		 
 		//assert statements
 		private bool InitUTF16Results()
 		{
@@ -208,7 +208,7 @@ namespace Org.Apache.Lucene.Codecs.Lucene3x
 		}
 
 		// Currently used only by 
-		//HM:revisit 
+		 
 		//assert statement
 		private int CompareToLastTerm(int fieldNumber, BytesRef term)
 		{
@@ -226,10 +226,10 @@ namespace Org.Apache.Lucene.Codecs.Lucene3x
 				}
 			}
 			scratchBytes.CopyBytes(term);
-			//HM:revisit 
+			 
 			//assert lastTerm.offset == 0;
 			UnicodeUtil.UTF8toUTF16(lastTerm.bytes, 0, lastTerm.length, utf16Result1);
-			//HM:revisit 
+			 
 			//assert scratchBytes.offset == 0;
 			UnicodeUtil.UTF8toUTF16(scratchBytes.bytes, 0, scratchBytes.length, utf16Result2);
 			int len;
@@ -268,11 +268,11 @@ namespace Org.Apache.Lucene.Codecs.Lucene3x
 		/// <exception cref="System.IO.IOException"></exception>
 		public void Add(int fieldNumber, BytesRef term, TermInfo ti)
 		{
-			//HM:revisit 
+			 
 			//assert compareToLastTerm(fieldNumber, term) < 0 ||
-			//HM:revisit 
+			 
 			//assert ti.freqPointer >= lastTi.freqPointer: "freqPointer out of order (" + ti.freqPointer + " < " + lastTi.freqPointer + ")";
-			//HM:revisit 
+			 
 			//assert ti.proxPointer >= lastTi.proxPointer: "proxPointer out of order (" + ti.proxPointer + " < " + lastTi.proxPointer + ")";
 			if (!isIndex && size % indexInterval == 0)
 			{

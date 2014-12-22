@@ -5,16 +5,16 @@
  */
 
 using Org.Apache.Lucene.Codecs;
-using Org.Apache.Lucene.Codecs.Lucene3x;
+using Lucene.Net.Codecs.Lucene3x;
 using Org.Apache.Lucene.Index;
 using Org.Apache.Lucene.Store;
 using Sharpen;
 
-namespace Org.Apache.Lucene.Codecs.Lucene3x
+namespace Lucene.Net.Codecs.Lucene3x
 {
 	/// <summary>
 	/// PreFlex implementation of
-	/// <see cref="Org.Apache.Lucene.Codecs.SegmentInfoWriter">Org.Apache.Lucene.Codecs.SegmentInfoWriter
+	/// <see cref="Lucene.Net.Codecs.SegmentInfoWriter">Lucene.Net.Codecs.SegmentInfoWriter
 	/// 	</see>
 	/// .
 	/// </summary>

@@ -111,7 +111,7 @@ namespace Lucene.Net.TestFramework.Index
 					}
 				}
 			}
-			//HM:revisit 
+			 
 			//assert segmentsToMerge.containsKey(info);
 			return mergeSpec;
 		}

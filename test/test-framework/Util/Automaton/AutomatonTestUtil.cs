@@ -232,7 +232,7 @@ namespace Lucene.Net.TestFramework.Util.Automaton
 					}
 				}
 			}
-			//HM:revisit 
+			 
 			//assert code >= t.min && code <= t.max && (code < UnicodeUtil.UNI_SUR_HIGH_START || code > UnicodeUtil.UNI_SUR_LOW_END):
 			// "code=" + code + " min=" + t.min + " max=" + t.max;
 			return code;
@@ -675,7 +675,7 @@ namespace Lucene.Net.TestFramework.Util.Automaton
 			a.ClearNumberedStates();
 		}
 		// force recomputation of cached numbered states
-		//HM:revisit 
+		 
 		//assert numStates == a.getNumberOfStates() : "automaton has " + (numStates - a.getNumberOfStates()) + " detached states";
 	}
 }

@@ -1,21 +1,12 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
+using Lucene.Net.Index;
+using Lucene.Net.Store;
+using Lucene.Net.Codecs.Lucene41;
 
-using Org.Apache.Lucene.Codecs;
-using Org.Apache.Lucene.Codecs.Asserting;
-using Org.Apache.Lucene.Codecs.Lucene41;
-using Org.Apache.Lucene.Index;
-using Org.Apache.Lucene.Store;
-using Sharpen;
-
-namespace Org.Apache.Lucene.Codecs.Asserting
+namespace Lucene.Net.Codecs.Asserting.TestFramework
 {
 	/// <summary>
 	/// Just like
-	/// <see cref="Org.Apache.Lucene.Codecs.Lucene41.Lucene41StoredFieldsFormat">Org.Apache.Lucene.Codecs.Lucene41.Lucene41StoredFieldsFormat
+	/// <see cref="Lucene.Net.Codecs.Lucene41.Lucene41StoredFieldsFormat">Lucene.Net.Codecs.Lucene41.Lucene41StoredFieldsFormat
 	/// 	</see>
 	/// but with additional asserts.
 	/// </summary>
@@ -23,20 +14,16 @@ namespace Org.Apache.Lucene.Codecs.Asserting
 	{
 		private readonly StoredFieldsFormat @in = new Lucene41StoredFieldsFormat();
 
-		/// <exception cref="System.IO.IOException"></exception>
-		public override StoredFieldsReader FieldsReader(Directory directory, SegmentInfo 
-			si, FieldInfos fn, IOContext context)
+		
+		public override StoredFieldsReader FieldsReader(Directory directory, SegmentInfo si, FieldInfos fn, IOContext context)
 		{
-			return new AssertingStoredFieldsFormat.AssertingStoredFieldsReader(@in.FieldsReader
-				(directory, si, fn, context), si.GetDocCount());
+			return new AssertingStoredFieldsReader(@in.FieldsReader(directory, si, fn, context), si.DocCount);
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
-		public override StoredFieldsWriter FieldsWriter(Directory directory, SegmentInfo 
-			si, IOContext context)
+		
+		public override StoredFieldsWriter FieldsWriter(Directory directory, SegmentInfo si, IOContext context)
 		{
-			return new AssertingStoredFieldsFormat.AssertingStoredFieldsWriter(@in.FieldsWriter
-				(directory, si, context));
+			return new AssertingStoredFieldsWriter(@in.FieldsWriter(directory, si, context));
 		}
 
 		internal class AssertingStoredFieldsReader : StoredFieldsReader
@@ -51,29 +38,28 @@ namespace Org.Apache.Lucene.Codecs.Asserting
 				this.maxDoc = maxDoc;
 			}
 
-			/// <exception cref="System.IO.IOException"></exception>
-			public override void Close()
+
+		    protected override void Dispose(bool disposing)
 			{
-				@in.Close();
+				@in.Dispose();
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
 			public override void VisitDocument(int n, StoredFieldVisitor visitor)
 			{
-				//HM:revisit 
+				 
 				//assert n >= 0 && n < maxDoc;
 				@in.VisitDocument(n, visitor);
 			}
 
-			public override StoredFieldsReader Clone()
+			public override object Clone()
 			{
-				return new AssertingStoredFieldsFormat.AssertingStoredFieldsReader(@in.Clone(), maxDoc
-					);
+				return new AssertingStoredFieldsReader((StoredFieldsReader) @in.Clone(), maxDoc);
 			}
 
-			public override long RamBytesUsed()
+			public override long RamBytesUsed
 			{
-				return @in.RamBytesUsed();
+			    get { return @in.RamBytesUsed; }
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
@@ -103,40 +89,40 @@ namespace Org.Apache.Lucene.Codecs.Asserting
 			internal AssertingStoredFieldsWriter(StoredFieldsWriter @in)
 			{
 				this.@in = @in;
-				this.docStatus = AssertingStoredFieldsFormat.Status.UNDEFINED;
+				this.docStatus = Status.UNDEFINED;
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
 			public override void StartDocument(int numStoredFields)
 			{
-				//HM:revisit 
+				 
 				//assert docStatus != Status.STARTED;
 				@in.StartDocument(numStoredFields);
-				//HM:revisit 
+				 
 				//assert fieldCount == 0;
 				fieldCount = numStoredFields;
 				numWritten++;
-				docStatus = AssertingStoredFieldsFormat.Status.STARTED;
+				docStatus = Status.STARTED;
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
 			public override void FinishDocument()
 			{
-				//HM:revisit 
+				 
 				//assert docStatus == Status.STARTED;
-				//HM:revisit 
+				 
 				//assert fieldCount == 0;
 				@in.FinishDocument();
-				docStatus = AssertingStoredFieldsFormat.Status.FINISHED;
+				docStatus = Status.FINISHED;
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
-			public override void WriteField(FieldInfo info, IndexableField field)
+			public override void WriteField(FieldInfo info, IIndexableField field)
 			{
-				//HM:revisit 
+				 
 				//assert docStatus == Status.STARTED;
 				@in.WriteField(info, field);
-				//HM:revisit 
+				 
 				//assert fieldCount > 0;
 				fieldCount--;
 			}
@@ -149,19 +135,19 @@ namespace Org.Apache.Lucene.Codecs.Asserting
 			/// <exception cref="System.IO.IOException"></exception>
 			public override void Finish(FieldInfos fis, int numDocs)
 			{
-				//HM:revisit 
+				 
 				//assert docStatus == (numDocs > 0 ? Status.FINISHED : Status.UNDEFINED);
 				@in.Finish(fis, numDocs);
 			}
 
-			//HM:revisit 
+			 
 			//assert fieldCount == 0;
-			//HM:revisit 
+			 
 			//assert numDocs == numWritten;
 			/// <exception cref="System.IO.IOException"></exception>
-			public override void Close()
+			protected override void Dispose(bool disposing)
 			{
-				@in.Close();
+				@in.Dispose();
 			}
 		}
 	}

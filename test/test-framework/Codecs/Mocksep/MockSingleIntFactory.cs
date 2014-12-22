@@ -4,12 +4,12 @@
  * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using Org.Apache.Lucene.Codecs.Mocksep;
-using Org.Apache.Lucene.Codecs.Sep;
+using Lucene.Net.Codecs.Mocksep;
+using Lucene.Net.Codecs.Sep;
 using Org.Apache.Lucene.Store;
 using Sharpen;
 
-namespace Org.Apache.Lucene.Codecs.Mocksep
+namespace Lucene.Net.Codecs.Mocksep
 {
 	/// <summary>
 	/// Encodes ints directly as vInts with

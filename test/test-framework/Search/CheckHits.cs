@@ -115,7 +115,7 @@ namespace Lucene.Net.TestFramework.Search
 
 			public SetCollector(ICollection<int> bag)
 			{
-				//HM:revisit 
+				 
 				//assert.assertEquals("Wrap Reader " + i + ": " + query.toString(defaultFieldName), correct, actual);
 				this.bag = bag;
 			}
@@ -184,7 +184,7 @@ namespace Lucene.Net.TestFramework.Search
             //}
 		}
 
-		//HM:revisit 
+		 
 		//assert.assertEquals(mes + " doc nrs for hit " + i, results[i], hits[i].doc);
 		/// <summary>
 		/// Tests that two queries have an expected order of documents,
@@ -224,7 +224,7 @@ namespace Lucene.Net.TestFramework.Search
 			}
 		}
 
-		//HM:revisit 
+		 
 		//assert.fail("Hit " + i + ", doc nrs " + hits1[i].doc + " and " + hits2[i].doc
 		public static string Hits2str(ScoreDoc[] hits1, ScoreDoc[] hits2, int start, int 
 			end)
@@ -347,12 +347,12 @@ namespace Lucene.Net.TestFramework.Search
 		}
 
 		/// <summary>
-		/// //HM:revisit
+		/// 
 		/// //assert that an explanation has the expected score, and optionally that its
 		/// sub-details max/sum/factor match to that score.
 		/// </summary>
 		/// <remarks>
-		/// //HM:revisit
+		/// 
 		/// //assert that an explanation has the expected score, and optionally that its
 		/// sub-details max/sum/factor match to that score.
 		/// </remarks>
@@ -366,7 +366,7 @@ namespace Lucene.Net.TestFramework.Search
 			 expl)
 		{
 			float value = expl.Value;
-			//HM:revisit 
+			 
 			//assert.assertEquals(q+": score(doc="+doc+")="+score+ " != explanationScore="+value+" Explanation: "+expl,
 			//score,value,explainToleranceDelta(score, value));
 			if (!deep)
@@ -424,7 +424,7 @@ namespace Lucene.Net.TestFramework.Search
 						}
 					}
 					// TODO: this is a TERRIBLE assertion!!!!
-					//HM:revisit 
+					 
 					//assert.assertTrue(
 					float sum = 0;
 					float product = 1;
@@ -482,9 +482,9 @@ namespace Lucene.Net.TestFramework.Search
 			{
 			}
 
-			//HM:revisit 
+			 
 			//assert.assertTrue("should never get here!",false);
-			//HM:revisit 
+			 
 			//assert.assertEquals(q+": actual subDetails combined=="+combined+
 			/// <exception cref="System.IO.IOException"></exception>
 			protected internal virtual void CheckExplanations(Query q)
@@ -581,12 +581,12 @@ namespace Lucene.Net.TestFramework.Search
 				{
 					throw new Exception("exception in hitcollector of [[" + d + "]] for #" + doc, e);
 				}
-				//HM:revisit 
+				 
 				//assert.assertNotNull("Explanation of [["+d+"]] for #"+doc+" is null", exp);
 				VerifyExplanation(d, doc, scorer.Score(), deep, exp);
 			}
 
-			//HM:revisit 
+			 
 			//assert.assertTrue("Explanation of [["+d+"]] for #"+ doc + 
 			public override void SetNextReader(AtomicReaderContext context)
 			{

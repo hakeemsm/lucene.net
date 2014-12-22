@@ -21,13 +21,13 @@ namespace Lucene.Net.TestFramework.Util
 		{
 		}
 
-		//HM:revisit 
+		 
 		//assert component != null;
-		//HM:revisit 
+		 
 		//assert message != null;
 		public override bool IsEnabled(string component)
 		{
-			//HM:revisit 
+			 
 			//assert component != null;
 			return true;
 		}

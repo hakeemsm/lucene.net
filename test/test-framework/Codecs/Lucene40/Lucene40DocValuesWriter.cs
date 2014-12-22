@@ -7,14 +7,14 @@
 using System;
 using System.Collections.Generic;
 using Org.Apache.Lucene.Codecs;
-using Org.Apache.Lucene.Codecs.Lucene40;
+using Lucene.Net.Codecs.Lucene40;
 using Org.Apache.Lucene.Index;
 using Org.Apache.Lucene.Store;
 using Org.Apache.Lucene.Util;
 using Org.Apache.Lucene.Util.Packed;
 using Sharpen;
 
-namespace Org.Apache.Lucene.Codecs.Lucene40
+namespace Lucene.Net.Codecs.Lucene40
 {
 	internal class Lucene40DocValuesWriter : DocValuesConsumer
 	{
@@ -352,7 +352,7 @@ namespace Org.Apache.Lucene.Codecs.Lucene40
 			long maxAddress = data.GetFilePointer() - startPos;
 			index.WriteVLong(maxAddress);
 			int maxDoc = state.segmentInfo.GetDocCount();
-			//HM:revisit 
+			 
 			//assert maxDoc != Integer.MAX_VALUE; // unsupported by the 4.0 impl
 			PackedInts.Writer w = PackedInts.GetWriter(index, maxDoc + 1, PackedInts.BitsRequired
 				(maxAddress), PackedInts.DEFAULT);
@@ -366,7 +366,7 @@ namespace Org.Apache.Lucene.Codecs.Lucene40
 				}
 			}
 			// write sentinel
-			//HM:revisit 
+			 
 			//assert currentPosition == maxAddress;
 			w.Add(currentPosition);
 			w.Finish();
@@ -394,7 +394,7 @@ namespace Org.Apache.Lucene.Codecs.Lucene40
 				data.WriteBytes(v_1.bytes, v_1.offset, v_1.length);
 			}
 			int valueCount = dictionary.Count;
-			//HM:revisit 
+			 
 			//assert valueCount > 0;
 			index.WriteInt(valueCount);
 			int maxDoc = state.segmentInfo.GetDocCount();
@@ -454,7 +454,7 @@ namespace Org.Apache.Lucene.Codecs.Lucene40
 		/// <exception cref="System.IO.IOException"></exception>
 		private static void WriteVShort(IndexOutput o, int i)
 		{
-			//HM:revisit 
+			 
 			//assert i >= 0 && i <= Short.MAX_VALUE;
 			if (i < 128)
 			{
@@ -564,7 +564,7 @@ namespace Org.Apache.Lucene.Codecs.Lucene40
 			}
 			index.WriteInt(valueCount);
 			int maxDoc = state.segmentInfo.GetDocCount();
-			//HM:revisit 
+			 
 			//assert valueCount > 0;
 			PackedInts.Writer w = PackedInts.GetWriter(index, maxDoc, PackedInts.BitsRequired
 				(valueCount - 1), PackedInts.DEFAULT);
@@ -594,7 +594,7 @@ namespace Org.Apache.Lucene.Codecs.Lucene40
 			}
 			long maxAddress = data.GetFilePointer() - startPos;
 			index.WriteLong(maxAddress);
-			//HM:revisit 
+			 
 			//assert valueCount != Integer.MAX_VALUE; // unsupported by the 4.0 impl
 			PackedInts.Writer w = PackedInts.GetWriter(index, valueCount + 1, PackedInts.BitsRequired
 				(maxAddress), PackedInts.DEFAULT);
@@ -605,12 +605,12 @@ namespace Org.Apache.Lucene.Codecs.Lucene40
 				currentPosition += v_1.length;
 			}
 			// write sentinel
-			//HM:revisit 
+			 
 			//assert currentPosition == maxAddress;
 			w.Add(currentPosition);
 			w.Finish();
 			int maxDoc = state.segmentInfo.GetDocCount();
-			//HM:revisit 
+			 
 			//assert valueCount > 0;
 			PackedInts.Writer ords = PackedInts.GetWriter(index, maxDoc, PackedInts.BitsRequired
 				(valueCount - 1), PackedInts.DEFAULT);

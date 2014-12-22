@@ -133,7 +133,7 @@
 //                LuceneTestCase.SuppressCodecs a = targetClass.GetAnnotation<LuceneTestCase.SuppressCodecs
 //                    >();
 //            }
-//            //HM:revisit below line throws an exception prolly bcoz of 150 above
+//             below line throws an exception prolly bcoz of 150 above
 //            //avoidCodecs.addAll(Arrays.asList(a.value()));
 //            // set back to default
 //            LuceneTestCase.OLD_FORMAT_IMPERSONATION_IS_ACTIVE = false;
@@ -146,7 +146,7 @@
 //            {
 //                // preflex-only setup
 //                codec = Codec.ForName("Lucene3x");
-//                //HM:revisit 
+//                 
 //                //assert (codec instanceof PreFlexRWCodec) : "fix your classpath to have tests-framework.jar before lucene-core.jar";
 //                LuceneTestCase.OLD_FORMAT_IMPERSONATION_IS_ACTIVE = true;
 //            }
@@ -162,9 +162,9 @@
 //                }
 //                else
 //                {
-//                    //HM:revisit 
+//                     
 //                    //assert codec instanceof Lucene40RWCodec : "fix your classpath to have tests-framework.jar before lucene-core.jar";
-//                    //HM:revisit 
+//                     
 //                    //assert (PostingsFormat.forName("Lucene40") instanceof Lucene40RWPostingsFormat) : "fix your classpath to have tests-framework.jar before lucene-core.jar";
 //                    if ("Lucene41".Equals(LuceneTestCase.TEST_CODEC) || ("random".Equals(LuceneTestCase
 //                        .TEST_CODEC) && "random".Equals(LuceneTestCase.TEST_POSTINGSFORMAT) && "random".
@@ -176,7 +176,7 @@
 //                    }
 //                    else
 //                    {
-//                        //HM:revisit 
+//                         
 //                        //assert codec instanceof Lucene41RWCodec : "fix your classpath to have tests-framework.jar before lucene-core.jar";
 //                        if ("Lucene42".Equals(LuceneTestCase.TEST_CODEC) || ("random".Equals(LuceneTestCase
 //                            .TEST_CODEC) && "random".Equals(LuceneTestCase.TEST_POSTINGSFORMAT) && "random".
@@ -188,7 +188,7 @@
 //                        }
 //                        else
 //                        {
-//                            //HM:revisit 
+//                             
 //                            //assert codec instanceof Lucene42RWCodec : "fix your classpath to have tests-framework.jar before lucene-core.jar";
 //                            if ("Lucene45".Equals(LuceneTestCase.TEST_CODEC) || ("random".Equals(LuceneTestCase
 //                                .TEST_CODEC) && "random".Equals(LuceneTestCase.TEST_POSTINGSFORMAT) && "random".
@@ -200,7 +200,7 @@
 //                            }
 //                            else
 //                            {
-//                                //HM:revisit 
+//                                 
 //                                //assert codec instanceof Lucene45RWCodec : "fix your classpath to have tests-framework.jar before lucene-core.jar";
 //                                if (("random".Equals(LuceneTestCase.TEST_POSTINGSFORMAT) == false) || ("random".Equals
 //                                    (LuceneTestCase.TEST_DOCVALUESFORMAT) == false))
@@ -288,7 +288,7 @@
 //                    }
 //                }
 //            }
-//            //HM:revisit 
+//             
 //            //assert false;
 //            Codec.SetDefault(codec);
 //            // Initialize locale/ timezone.

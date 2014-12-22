@@ -8,7 +8,7 @@ using Org.Apache.Lucene.Codecs;
 using Org.Apache.Lucene.Store;
 using Sharpen;
 
-namespace Org.Apache.Lucene.Codecs.Lucene40
+namespace Lucene.Net.Codecs.Lucene40
 {
 	/// <summary>
 	/// Implements the skip list writer for the 4.0 posting list format
@@ -70,9 +70,9 @@ namespace Org.Apache.Lucene.Codecs.Lucene40
 		public virtual void SetSkipData(int doc, bool storePayloads, int payloadLength, bool
 			 storeOffsets, int offsetLength)
 		{
-			//HM:revisit 
+			 
 			//assert storePayloads || payloadLength == -1;
-			//HM:revisit 
+			 
 			//assert storeOffsets  || offsetLength == -1;
 			this.curDoc = doc;
 			this.curStorePayloads = storePayloads;
@@ -127,9 +127,9 @@ namespace Org.Apache.Lucene.Codecs.Lucene40
 			int delta = curDoc - lastSkipDoc[level];
 			if (curStorePayloads || curStoreOffsets)
 			{
-				//HM:revisit 
+				 
 				//assert curStorePayloads || curPayloadLength == lastSkipPayloadLength[level];
-				//HM:revisit 
+				 
 				//assert curStoreOffsets  || curOffsetLength == lastSkipOffsetLength[level];
 				if (curPayloadLength == lastSkipPayloadLength[level] && curOffsetLength == lastSkipOffsetLength
 					[level])

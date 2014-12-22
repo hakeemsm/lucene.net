@@ -5,11 +5,11 @@
  */
 
 using Org.Apache.Lucene.Codecs;
-using Org.Apache.Lucene.Codecs.Lucene42;
+using Lucene.Net.Codecs.Lucene42;
 using Org.Apache.Lucene.Util;
 using Sharpen;
 
-namespace Org.Apache.Lucene.Codecs.Lucene42
+namespace Lucene.Net.Codecs.Lucene42
 {
 	/// <summary>
 	/// Read-write version of
@@ -20,7 +20,7 @@ namespace Org.Apache.Lucene.Codecs.Lucene42
 	{
 		private static readonly DocValuesFormat dv = new Lucene42RWDocValuesFormat();
 
-		private static readonly Org.Apache.Lucene.Codecs.NormsFormat norms = new Lucene42NormsFormat
+		private static readonly Lucene.Net.Codecs.NormsFormat norms = new Lucene42NormsFormat
 			();
 
 		private sealed class _Lucene42FieldInfosFormat_37 : Lucene42FieldInfosFormat
@@ -43,7 +43,7 @@ namespace Org.Apache.Lucene.Codecs.Lucene42
 			}
 		}
 
-		private readonly Org.Apache.Lucene.Codecs.FieldInfosFormat fieldInfosFormat = new 
+		private readonly Lucene.Net.Codecs.FieldInfosFormat fieldInfosFormat = new 
 			_Lucene42FieldInfosFormat_37();
 
 		public override DocValuesFormat GetDocValuesFormatForField(string field)
@@ -51,12 +51,12 @@ namespace Org.Apache.Lucene.Codecs.Lucene42
 			return dv;
 		}
 
-		public override Org.Apache.Lucene.Codecs.NormsFormat NormsFormat()
+		public override Lucene.Net.Codecs.NormsFormat NormsFormat()
 		{
 			return norms;
 		}
 
-		public override Org.Apache.Lucene.Codecs.FieldInfosFormat FieldInfosFormat()
+		public override Lucene.Net.Codecs.FieldInfosFormat FieldInfosFormat()
 		{
 			return fieldInfosFormat;
 		}

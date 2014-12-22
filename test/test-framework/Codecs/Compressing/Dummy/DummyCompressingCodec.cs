@@ -4,12 +4,12 @@
  * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using Org.Apache.Lucene.Codecs.Compressing;
+using Lucene.Net.Codecs.Compressing;
 using Org.Apache.Lucene.Store;
 using Org.Apache.Lucene.Util;
 using Sharpen;
 
-namespace Org.Apache.Lucene.Codecs.Compressing.Dummy
+namespace Lucene.Net.Codecs.Compressing.Dummy
 {
 	/// <summary>CompressionCodec that does not compress data, useful for testing.</summary>
 	/// <remarks>CompressionCodec that does not compress data, useful for testing.</remarks>
@@ -25,12 +25,12 @@ namespace Org.Apache.Lucene.Codecs.Compressing.Dummy
 			// visible enough to let people write their own CompressionMode
 			public override Compressor NewCompressor()
 			{
-				return Org.Apache.Lucene.Codecs.Compressing.Dummy.DummyCompressingCodec.DUMMY_COMPRESSOR;
+				return Lucene.Net.Codecs.Compressing.Dummy.DummyCompressingCodec.DUMMY_COMPRESSOR;
 			}
 
 			public override Decompressor NewDecompressor()
 			{
-				return Org.Apache.Lucene.Codecs.Compressing.Dummy.DummyCompressingCodec.DUMMY_DECOMPRESSOR;
+				return Lucene.Net.Codecs.Compressing.Dummy.DummyCompressingCodec.DUMMY_DECOMPRESSOR;
 			}
 
 			public override string ToString()
@@ -51,7 +51,7 @@ namespace Org.Apache.Lucene.Codecs.Compressing.Dummy
 			public override void Decompress(DataInput @in, int originalLength, int offset, int
 				 length, BytesRef bytes)
 			{
-				//HM:revisit 
+				 
 				//assert offset + length <= originalLength;
 				if (bytes.bytes.Length < originalLength)
 				{

@@ -84,7 +84,7 @@ namespace Lucene.Net.TestFramework.Search
 		{
 			lock (this)
 			{
-				//HM:revisit 
+				 
 				//assert field != null;
 				Similarity sim = previousMappings.Get(field);
 				if (sim == null)

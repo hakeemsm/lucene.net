@@ -54,7 +54,7 @@ namespace Lucene.Net.TestFramework.Index
 			{
 				Sharpen.Iterator<string> iterator = base.Iterator();
 				////
-				//HM:revisit 
+				 
 				//assert iterator != null;
 				return iterator;
 			}
@@ -92,7 +92,7 @@ namespace Lucene.Net.TestFramework.Index
 				}
 				TermsEnum termsEnum = base.Iterator(reuse);
 				////
-				//HM:revisit 
+				 
 				//assert termsEnum != null;
 				return new AssertingAtomicReader.AssertingTermsEnum(termsEnum);
 			}
@@ -118,7 +118,7 @@ namespace Lucene.Net.TestFramework.Index
 			public override DocsEnum Docs(Bits liveDocs, DocsEnum reuse, int flags)
 			{
 				////
-				//HM:revisit 
+				 
 				//assert state == State.POSITIONED: "docs(...) called on unpositioned TermsEnum";
 				// TODO: should we give this thing a random to be super-evil,
 				// and randomly *not* unwrap?
@@ -135,7 +135,7 @@ namespace Lucene.Net.TestFramework.Index
 				 reuse, int flags)
 			{
 				////
-				//HM:revisit 
+				 
 				//assert state == State.POSITIONED: "docsAndPositions(...) called on unpositioned TermsEnum";
 				// TODO: should we give this thing a random to be super-evil,
 				// and randomly *not* unwrap?
@@ -154,7 +154,7 @@ namespace Lucene.Net.TestFramework.Index
 			public override BytesRef Next()
 			{
 				////
-				//HM:revisit 
+				 
 				//assert state == State.INITIAL || state == State.POSITIONED: "next() called on unpositioned TermsEnum";
 				BytesRef result = base.Next();
 				if (result == null)
@@ -164,7 +164,7 @@ namespace Lucene.Net.TestFramework.Index
 				else
 				{
 					////
-					//HM:revisit 
+					 
 					//assert result.isValid();
 					state = AssertingAtomicReader.AssertingTermsEnum.State.POSITIONED;
 				}
@@ -175,7 +175,7 @@ namespace Lucene.Net.TestFramework.Index
 			public override long Ord()
 			{
 				////
-				//HM:revisit 
+				 
 				//assert state == State.POSITIONED : "ord() called on unpositioned TermsEnum";
 				return base.Ord();
 			}
@@ -184,7 +184,7 @@ namespace Lucene.Net.TestFramework.Index
 			public override int DocFreq()
 			{
 				////
-				//HM:revisit 
+				 
 				//assert state == State.POSITIONED : "docFreq() called on unpositioned TermsEnum";
 				return base.DocFreq();
 			}
@@ -193,7 +193,7 @@ namespace Lucene.Net.TestFramework.Index
 			public override long TotalTermFreq()
 			{
 				////
-				//HM:revisit 
+				 
 				//assert state == State.POSITIONED : "totalTermFreq() called on unpositioned TermsEnum";
 				return base.TotalTermFreq();
 			}
@@ -202,11 +202,11 @@ namespace Lucene.Net.TestFramework.Index
 			public override BytesRef Term()
 			{
 				////
-				//HM:revisit 
+				 
 				//assert state == State.POSITIONED : "term() called on unpositioned TermsEnum";
 				BytesRef ret = base.Term();
 				////
-				//HM:revisit 
+				 
 				//assert ret == null || ret.isValid();
 				return ret;
 			}
@@ -222,7 +222,7 @@ namespace Lucene.Net.TestFramework.Index
 			public override TermsEnum.SeekStatus SeekCeil(BytesRef term)
 			{
 				////
-				//HM:revisit 
+				 
 				//assert term.isValid();
 				TermsEnum.SeekStatus result = base.SeekCeil(term);
 				if (result == TermsEnum.SeekStatus.END)
@@ -240,7 +240,7 @@ namespace Lucene.Net.TestFramework.Index
 			public override bool SeekExact(BytesRef text)
 			{
 				////
-				//HM:revisit 
+				 
 				//assert text.isValid();
 				if (base.SeekExact(text))
 				{
@@ -258,7 +258,7 @@ namespace Lucene.Net.TestFramework.Index
 			public override Lucene.Net.TestFramework.Index.TermState TermState()
 			{
 				////
-				//HM:revisit 
+				 
 				//assert state == State.POSITIONED : "termState() called on unpositioned TermsEnum";
 				return base.TermState();
 			}
@@ -268,7 +268,7 @@ namespace Lucene.Net.TestFramework.Index
 				)
 			{
 				////
-				//HM:revisit 
+				 
 				//assert term.isValid();
 				base.SeekExact(term, state);
 				this.state = AssertingAtomicReader.AssertingTermsEnum.State.POSITIONED;
@@ -303,7 +303,7 @@ namespace Lucene.Net.TestFramework.Index
 				catch (NotSupportedException e)
 				{
 					////
-					//HM:revisit 
+					 
 					//assert docid == -1 : in.getClass() + ": invalid initial doc id: " + docid;
 					if (failOnUnsupportedDocID)
 					{
@@ -317,11 +317,11 @@ namespace Lucene.Net.TestFramework.Index
 			public override int NextDoc()
 			{
 				////
-				//HM:revisit 
+				 
 				//assert state != DocsEnumState.FINISHED : "nextDoc() called after NO_MORE_DOCS";
 				int nextDoc = base.NextDoc();
 				////
-				//HM:revisit 
+				 
 				//assert nextDoc > doc : "backwards nextDoc from " + doc + " to " + nextDoc + " " + in;
 				if (nextDoc == DocIdSetIterator.NO_MORE_DOCS)
 				{
@@ -332,7 +332,7 @@ namespace Lucene.Net.TestFramework.Index
 					state = AssertingAtomicReader.DocsEnumState.ITERATING;
 				}
 				//
-				//HM:revisit 
+				 
 				//assert super.docID() == nextDoc;
 				return doc = nextDoc;
 			}
@@ -342,7 +342,7 @@ namespace Lucene.Net.TestFramework.Index
 			{
 				int advanced = base.Advance(target);
 				////
-				//HM:revisit 
+				 
 				//assert advanced >= target : "backwards advance from: " + target + " to: " + advanced;
 				if (advanced == DocIdSetIterator.NO_MORE_DOCS)
 				{
@@ -353,7 +353,7 @@ namespace Lucene.Net.TestFramework.Index
 					state = AssertingAtomicReader.DocsEnumState.ITERATING;
 				}
 				////
-				//HM:revisit 
+				 
 				//assert super.docID() == advanced;
 				return doc = advanced;
 			}
@@ -361,7 +361,7 @@ namespace Lucene.Net.TestFramework.Index
 			public override int DocID()
 			{
 				////
-				//HM:revisit 
+				 
 				//assert doc == super.docID() : " invalid docID() in " + in.getClass() + " " + super.docID() + " instead of " + doc;
 				return doc;
 			}
@@ -371,7 +371,7 @@ namespace Lucene.Net.TestFramework.Index
 			{
 				int freq = base.Freq();
 				//
-				//HM:revisit 
+				 
 				//assert freq > 0;
 				return freq;
 			}
@@ -392,7 +392,7 @@ namespace Lucene.Net.TestFramework.Index
 			{
 				int docid = @in.DocID();
 				////
-				//HM:revisit 
+				 
 				//assert docid == -1 : "invalid initial doc id: " + docid;
 				doc = -1;
 			}
@@ -401,11 +401,11 @@ namespace Lucene.Net.TestFramework.Index
 			public override int NextDoc()
 			{
 				////
-				//HM:revisit 
+				 
 				//assert state != DocsEnumState.FINISHED : "nextDoc() called after NO_MORE_DOCS";
 				int nextDoc = base.NextDoc();
 				////
-				//HM:revisit 
+				 
 				//assert nextDoc > doc : "backwards nextDoc from " + doc + " to " + nextDoc;
 				positionCount = 0;
 				if (nextDoc == DocIdSetIterator.NO_MORE_DOCS)
@@ -419,7 +419,7 @@ namespace Lucene.Net.TestFramework.Index
 					positionMax = base.Freq();
 				}
 				////
-				//HM:revisit 
+				 
 				//assert super.docID() == nextDoc;
 				return doc = nextDoc;
 			}
@@ -429,7 +429,7 @@ namespace Lucene.Net.TestFramework.Index
 			{
 				int advanced = base.Advance(target);
 				////
-				//HM:revisit 
+				 
 				//assert advanced >= target : "backwards advance from: " + target + " to: " + advanced;
 				positionCount = 0;
 				if (advanced == DocIdSetIterator.NO_MORE_DOCS)
@@ -443,7 +443,7 @@ namespace Lucene.Net.TestFramework.Index
 					positionMax = base.Freq();
 				}
 				////
-				//HM:revisit 
+				 
 				//assert super.docID() == advanced;
 				return doc = advanced;
 			}
@@ -451,7 +451,7 @@ namespace Lucene.Net.TestFramework.Index
 			public override int DocID()
 			{
 				////
-				//HM:revisit 
+				 
 				//assert doc == super.docID() : " invalid docID() in " + in.getClass() + " " + super.docID() + " instead of " + doc;
 				return doc;
 			}
@@ -461,7 +461,7 @@ namespace Lucene.Net.TestFramework.Index
 			{
 				int freq = base.Freq();
 				////
-				//HM:revisit 
+				 
 				//assert freq > 0;
 				return freq;
 			}
@@ -471,7 +471,7 @@ namespace Lucene.Net.TestFramework.Index
 			{
 				int position = base.NextPosition();
 				////
-				//HM:revisit 
+				 
 				//assert position >= 0 || position == -1 : "invalid position: " + position;
 				positionCount++;
 				return position;
@@ -494,7 +494,7 @@ namespace Lucene.Net.TestFramework.Index
 			{
 				BytesRef payload = base.GetPayload();
 				////
-				//HM:revisit 
+				 
 				//assert payload == null || payload.isValid() && payload.length > 0 : "getPayload() returned payload with invalid length!";
 				return payload;
 			}
@@ -516,7 +516,7 @@ namespace Lucene.Net.TestFramework.Index
 			public override long Get(int docID)
 			{
 				////
-				//HM:revisit 
+				 
 				//assert docID >= 0 && docID < maxDoc;
 				return @in.Get(docID);
 			}
@@ -540,7 +540,7 @@ namespace Lucene.Net.TestFramework.Index
 				@in.Get(docID, result);
 			}
 			////
-			//HM:revisit 
+			 
 			//assert result.isValid();
 		}
 
@@ -561,16 +561,16 @@ namespace Lucene.Net.TestFramework.Index
 			}
 
 			////
-			//HM:revisit 
+			 
 			//assert valueCount >= 0 && valueCount <= maxDoc;
 			public override int GetOrd(int docID)
 			{
 				////
-				//HM:revisit 
+				 
 				//assert docID >= 0 && docID < maxDoc;
 				int ord = @in.GetOrd(docID);
 				////
-				//HM:revisit 
+				 
 				//assert ord >= -1 && ord < valueCount;
 				return ord;
 			}
@@ -581,13 +581,13 @@ namespace Lucene.Net.TestFramework.Index
 			}
 
 			////
-			//HM:revisit 
+			 
 			//assert result.isValid();
 			public override int GetValueCount()
 			{
 				int valueCount = @in.GetValueCount();
 				////
-				//HM:revisit 
+				 
 				//assert valueCount == this.valueCount; // should not change
 				return valueCount;
 			}
@@ -598,12 +598,12 @@ namespace Lucene.Net.TestFramework.Index
 			}
 
 			////
-			//HM:revisit 
+			 
 			//assert result.isValid();
 			public override int LookupTerm(BytesRef key)
 			{
 				////
-				//HM:revisit 
+				 
 				//assert key.isValid();
 				int result = @in.LookupTerm(key);
 				return result;
@@ -629,12 +629,12 @@ namespace Lucene.Net.TestFramework.Index
 			}
 
 			//
-			//HM:revisit 
+			 
 			//assert valueCount >= 0;
 			public override long NextOrd()
 			{
 				////
-				//HM:revisit 
+				 
 				//assert lastOrd != NO_MORE_ORDS;
 				long ord = @in.NextOrd();
 				lastOrd = ord;
@@ -644,7 +644,7 @@ namespace Lucene.Net.TestFramework.Index
 			public override void SetDocument(int docID)
 			{
 				////
-				//HM:revisit 
+				 
 				//assert docID >= 0 && docID < maxDoc : "docid=" + docID + ",maxDoc=" + maxDoc;
 				@in.SetDocument(docID);
 				lastOrd = -2;
@@ -656,13 +656,13 @@ namespace Lucene.Net.TestFramework.Index
 			}
 
 			//
-			//HM:revisit 
+			 
 			//assert result.isValid();
 			public override long GetValueCount()
 			{
 				long valueCount = @in.GetValueCount();
 				//
-				//HM:revisit 
+				 
 				//assert valueCount == this.valueCount; // should not change
 				return valueCount;
 			}
@@ -670,14 +670,14 @@ namespace Lucene.Net.TestFramework.Index
 			public override long LookupTerm(BytesRef key)
 			{
 				//
-				//HM:revisit 
+				 
 				//assert key.isValid();
 				long result = @in.LookupTerm(key);
 				//
-				//HM:revisit 
+				 
 				//assert result < valueCount;
 				//
-				//HM:revisit 
+				 
 				//assert key.isValid();
 				return result;
 			}
@@ -691,17 +691,17 @@ namespace Lucene.Net.TestFramework.Index
 			if (dv != null)
 			{
 				//
-				//HM:revisit 
+				 
 				//assert fi != null;
 				//
-				//HM:revisit 
+				 
 				//assert fi.getDocValuesType() == FieldInfo.DocValuesType.NUMERIC;
 				return new AssertingAtomicReader.AssertingNumericDocValues(dv, MaxDoc());
 			}
 			else
 			{
 				////
-				//HM:revisit 
+				 
 				//assert fi == null || fi.getDocValuesType() != FieldInfo.DocValuesType.NUMERIC;
 				return null;
 			}
@@ -715,17 +715,17 @@ namespace Lucene.Net.TestFramework.Index
 			if (dv != null)
 			{
 				//
-				//HM:revisit 
+				 
 				//assert fi != null;
 				//
-				//HM:revisit 
+				 
 				//assert fi.getDocValuesType() == FieldInfo.DocValuesType.BINARY;
 				return new AssertingAtomicReader.AssertingBinaryDocValues(dv, MaxDoc());
 			}
 			else
 			{
 				////
-				//HM:revisit 
+				 
 				//assert fi == null || fi.getDocValuesType() != FieldInfo.DocValuesType.BINARY;
 				return null;
 			}
@@ -739,17 +739,17 @@ namespace Lucene.Net.TestFramework.Index
 			if (dv != null)
 			{
 				//
-				//HM:revisit 
+				 
 				//assert fi != null;
 				//
-				//HM:revisit 
+				 
 				//assert fi.getDocValuesType() == FieldInfo.DocValuesType.SORTED;
 				return new AssertingAtomicReader.AssertingSortedDocValues(dv, MaxDoc());
 			}
 			else
 			{
 				//
-				//HM:revisit 
+				 
 				//assert fi == null || fi.getDocValuesType() != FieldInfo.DocValuesType.SORTED;
 				return null;
 			}
@@ -763,17 +763,17 @@ namespace Lucene.Net.TestFramework.Index
 			if (dv != null)
 			{
 				//
-				//HM:revisit 
+				 
 				//assert fi != null;
 				//
-				//HM:revisit 
+				 
 				//assert fi.getDocValuesType() == FieldInfo.DocValuesType.SORTED_SET;
 				return new AssertingAtomicReader.AssertingSortedSetDocValues(dv, MaxDoc());
 			}
 			else
 			{
 				//
-				//HM:revisit 
+				 
 				//assert fi == null || fi.getDocValuesType() != FieldInfo.DocValuesType.SORTED_SET;
 				return null;
 			}
@@ -787,43 +787,45 @@ namespace Lucene.Net.TestFramework.Index
 			if (dv != null)
 			{
 				//
-				//HM:revisit 
+				 
 				//assert fi != null;
 				//
-				//HM:revisit 
+				 
 				//assert fi.hasNorms();
 				return new AssertingAtomicReader.AssertingNumericDocValues(dv, MaxDoc());
 			}
 			else
 			{
 				//
-				//HM:revisit 
+				 
 				//assert fi == null || fi.hasNorms() == false;
 				return null;
 			}
 		}
 
 		/// <summary>Wraps a Bits but with additional asserts</summary>
-		public class AssertingBits : Bits
+		public class AssertingBits : IBits
 		{
-			internal readonly Bits @in;
+			internal readonly IBits @in;
 
-			public AssertingBits(Bits @in)
+			public AssertingBits(IBits @in)
 			{
 				this.@in = @in;
 			}
 
-			public override bool Get(int index)
+			public bool this[int index]
 			{
-				//
-				//HM:revisit 
-				//assert index >= 0 && index < length();
-				return @in.Get(index);
+			    get
+			    {
+
+			        //assert index >= 0 && index < length();
+			        return @in[index];
+			    }
 			}
 
-			public override int Length()
+			public int Length
 			{
-				return @in.Length();
+			    get { return @in.Length; }
 			}
 		}
 
@@ -833,15 +835,15 @@ namespace Lucene.Net.TestFramework.Index
 			if (liveDocs != null)
 			{
 				//
-				//HM:revisit 
+				 
 				//assert maxDoc() == liveDocs.length();
 				liveDocs = new AssertingAtomicReader.AssertingBits(liveDocs);
 			}
 			//
-			//HM:revisit 
+			 
 			//assert maxDoc() == numDocs();
 			//
-			//HM:revisit 
+			 
 			//assert !hasDeletions();
 			return liveDocs;
 		}
@@ -854,18 +856,18 @@ namespace Lucene.Net.TestFramework.Index
 			if (docsWithField != null)
 			{
 				//
-				//HM:revisit 
+				 
 				//assert fi != null;
 				//
-				//HM:revisit 
+				 
 				//assert fi.hasDocValues();
 				//
-				//HM:revisit 
+				 
 				//assert maxDoc() == docsWithField.length();
 				docsWithField = new AssertingAtomicReader.AssertingBits(docsWithField);
 			}
 			//
-			//HM:revisit 
+			 
 			//assert fi == null || fi.hasDocValues() == false;
 			return docsWithField;
 		}

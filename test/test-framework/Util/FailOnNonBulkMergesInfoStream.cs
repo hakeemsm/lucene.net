@@ -26,7 +26,7 @@ namespace Lucene.Net.TestFramework.Util
 		public override void Message(string component, string message)
 		{
 		}
-		//HM:revisit 
+		 
 		//assert !message.contains("non-bulk merges");
 	}
 }

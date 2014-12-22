@@ -117,13 +117,12 @@ namespace Lucene.Net.TestFramework.Analysis
 
 			public override int GetHashCode()
 			{
-				return Runtime.IdentityHashCode(this);
+			    return 31*bytes.length; //.NET Port
 			}
 
 			public override void CopyTo(Attribute target)
 			{
-				CannedBinaryTokenStream.BinaryTermAttributeImpl other = (CannedBinaryTokenStream.BinaryTermAttributeImpl
-					)target;
+				BinaryTermAttributeImpl other = (BinaryTermAttributeImpl)target;
 				other.bytes.CopyBytes(bytes);
 			}
 

@@ -55,7 +55,7 @@ namespace Lucene.Net.TestFramework.Util
 				if (!this._enclosing.setupCalled)
 				{
 				}
-				//HM:revisit 
+				 
 				//assert.fail("One of the overrides of setUp does not propagate the call.");
 				if (!this._enclosing.teardownCalled)
 				{
@@ -66,7 +66,7 @@ namespace Lucene.Net.TestFramework.Util
 
 			private readonly Statement @base;
 		}
-		//HM:revisit 
+		 
 		//assert.fail("One of the overrides of tearDown does not propagate the call.");
 	}
 }

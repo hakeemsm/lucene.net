@@ -97,12 +97,12 @@ namespace Lucene.Net.TestFramework.Search
 		/// <exception cref="System.IO.IOException"></exception>
 		public override float Score()
 		{
-			//HM:revisit 
+			 
 			//assert iterating();
 			float score = @in.Score();
-			//HM:revisit 
+			 
 			//assert !Float.isNaN(score);
-			//HM:revisit 
+			 
 			//assert !Float.isNaN(score);
 			return score;
 		}
@@ -119,7 +119,7 @@ namespace Lucene.Net.TestFramework.Search
 		/// <exception cref="System.IO.IOException"></exception>
 		public override int Freq()
 		{
-			//HM:revisit 
+			 
 			//assert iterating();
 			return @in.Freq();
 		}

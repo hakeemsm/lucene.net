@@ -32,7 +32,7 @@ namespace Lucene.Net.TestFramework.Util
 		/// 	</remarks>
 		protected internal static BitSet RandomSet(int numBits, int numBitsSet)
 		{
-			//HM:revisit 
+			 
 			//assert numBitsSet <= numBits;
 			BitSet set = new BitSet(numBits);
 			if (numBitsSet == numBits)
@@ -152,7 +152,7 @@ namespace Lucene.Net.TestFramework.Util
 		}
 
 		/// <summary>
-		/// //HM:revisit
+		/// 
 		/// //assert that the content of the
 		/// <see cref="Lucene.NetSearch.DocIdSet">Lucene.NetSearch.DocIdSet</see>
 		/// is the same as the content of the

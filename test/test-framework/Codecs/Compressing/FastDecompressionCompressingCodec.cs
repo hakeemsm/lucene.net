@@ -4,12 +4,12 @@
  * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using Org.Apache.Lucene.Codecs.Compressing;
-using Org.Apache.Lucene.Codecs.Lucene42;
+using Lucene.Net.Codecs.Compressing;
+using Lucene.Net.Codecs.Lucene42;
 using Org.Apache.Lucene.Util.Packed;
 using Sharpen;
 
-namespace Org.Apache.Lucene.Codecs.Compressing
+namespace Lucene.Net.Codecs.Compressing
 {
 	/// <summary>
 	/// CompressionCodec that uses
@@ -33,7 +33,7 @@ namespace Org.Apache.Lucene.Codecs.Compressing
 		{
 		}
 
-		public override Org.Apache.Lucene.Codecs.NormsFormat NormsFormat()
+		public override Lucene.Net.Codecs.NormsFormat NormsFormat()
 		{
 			return new Lucene42NormsFormat(PackedInts.DEFAULT);
 		}

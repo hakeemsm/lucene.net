@@ -1,15 +1,7 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using System.Collections.Generic;
-using Lucene.Net.TestFramework.Analysis;
-using Lucene.Net.TestFramework.Analysis.Tokenattributes;
-using Lucene.Net.TestFramework.Util;
-using Sharpen;
+using Lucene.Net.Analysis;
+using Lucene.Net.Analysis.Tokenattributes;
 
 namespace Lucene.Net.TestFramework.Analysis
 {
@@ -27,11 +19,9 @@ namespace Lucene.Net.TestFramework.Analysis
 
 		private int lastStartOffset;
 
-		private readonly IDictionary<int, int> posToStartOffset = new Dictionary<int, int
-			>();
+		private readonly IDictionary<int, int> posToStartOffset = new Dictionary<int, int>();
 
-		private readonly IDictionary<int, int> posToEndOffset = new Dictionary<int, int>(
-			);
+		private readonly IDictionary<int, int> posToEndOffset = new Dictionary<int, int>();
 
 		private readonly PositionIncrementAttribute posIncAtt;
 
@@ -53,20 +43,13 @@ namespace Lucene.Net.TestFramework.Analysis
 		// instead of checking itself:
 		// Maps position to the start/end offset:
 		// Returns null if the attr wasn't already added
-		private A GetAttrIfExists<A>() where A:Attribute
+		private A GetAttrIfExists<A>() where A:class, Lucene.Net.Util.IAttribute
 		{
-			System.Type att = typeof(A);
-			if (HasAttribute(att))
-			{
-				return GetAttribute(att);
-			}
-			else
-			{
-				return null;
-			}
+		    var att = typeof(A);
+		    return HasAttribute(att) ? (A) GetAttribute(att) : null;
 		}
 
-		/// <summary>
+	    /// <summary>
 		/// The name arg is used to identify this stage when
 		/// throwing exceptions (useful if you have more than one
 		/// instance in your chain).
@@ -76,8 +59,7 @@ namespace Lucene.Net.TestFramework.Analysis
 		/// throwing exceptions (useful if you have more than one
 		/// instance in your chain).
 		/// </remarks>
-		public ValidatingTokenFilter(TokenStream @in, string name, bool offsetsAreCorrect
-			) : base(@in)
+		public ValidatingTokenFilter(TokenStream @in, string name, bool offsetsAreCorrect) : base(@in)
 		{
 			posIncAtt = GetAttrIfExists<PositionIncrementAttribute>();
 			posLenAtt = GetAttrIfExists<PositionLengthAttribute>();
@@ -99,7 +81,7 @@ namespace Lucene.Net.TestFramework.Analysis
 			int posLen = 0;
 			if (posIncAtt != null)
 			{
-				pos += posIncAtt.GetPositionIncrement();
+				pos += posIncAtt.PositionIncrement;
 				if (pos == -1)
 				{
 					throw new InvalidOperationException("first posInc must be > 0");
@@ -108,22 +90,22 @@ namespace Lucene.Net.TestFramework.Analysis
 			// System.out.println("  got token=" + termAtt + " pos=" + pos);
 			if (offsetAtt != null)
 			{
-				startOffset = offsetAtt.StartOffset();
-				endOffset = offsetAtt.EndOffset();
-				if (offsetsAreCorrect && offsetAtt.StartOffset() < lastStartOffset)
+				startOffset = offsetAtt.StartOffset;
+				endOffset = offsetAtt.EndOffset;
+				if (offsetsAreCorrect && offsetAtt.StartOffset < lastStartOffset)
 				{
 					throw new InvalidOperationException(name + ": offsets must not go backwards startOffset="
 						 + startOffset + " is < lastStartOffset=" + lastStartOffset);
 				}
-				lastStartOffset = offsetAtt.StartOffset();
+				lastStartOffset = offsetAtt.StartOffset;
 			}
-			posLen = posLenAtt == null ? 1 : posLenAtt.GetPositionLength();
+			posLen = posLenAtt == null ? 1 : posLenAtt.PositionLength;
 			if (offsetAtt != null && posIncAtt != null && offsetsAreCorrect)
 			{
 				if (!posToStartOffset.ContainsKey(pos))
 				{
 					// First time we've seen a token leaving from this position:
-					posToStartOffset.Put(pos, startOffset);
+					posToStartOffset[pos] = startOffset;
 				}
 				else
 				{
@@ -131,7 +113,7 @@ namespace Lucene.Net.TestFramework.Analysis
 					// We've seen a token leaving from this position
 					// before; verify the startOffset is the same:
 					//System.out.println("  + vs " + pos + " -> " + startOffset);
-					int oldStartOffset = posToStartOffset.Get(pos);
+					int oldStartOffset = posToStartOffset[pos];
 					if (oldStartOffset != startOffset)
 					{
 						throw new InvalidOperationException(name + ": inconsistent startOffset at pos=" +
@@ -142,7 +124,7 @@ namespace Lucene.Net.TestFramework.Analysis
 				if (!posToEndOffset.ContainsKey(endPos))
 				{
 					// First time we've seen a token arriving to this position:
-					posToEndOffset.Put(endPos, endOffset);
+					posToEndOffset[endPos] = endOffset;
 				}
 				else
 				{
@@ -150,7 +132,7 @@ namespace Lucene.Net.TestFramework.Analysis
 					// We've seen a token arriving to this position
 					// before; verify the endOffset is the same:
 					//System.out.println("  + ve " + endPos + " -> " + endOffset);
-					int oldEndOffset = posToEndOffset.Get(endPos);
+					int oldEndOffset = posToEndOffset[endPos];
 					if (oldEndOffset != endOffset)
 					{
 						throw new InvalidOperationException(name + ": inconsistent endOffset at pos=" + endPos
@@ -161,13 +143,7 @@ namespace Lucene.Net.TestFramework.Analysis
 			return true;
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
-		public override void End()
-		{
-			base.End();
-		}
-
-		// TODO: what else to validate
+	    // TODO: what else to validate
 		// TODO: check that endOffset is >= max(endOffset)
 		// we've seen
 		/// <exception cref="System.IO.IOException"></exception>

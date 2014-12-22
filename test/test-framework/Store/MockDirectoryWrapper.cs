@@ -457,13 +457,13 @@ namespace Lucene.Net.Store
 
 		/// <summary>
 		/// Trip a test
-		/// //HM:revisit
+		/// 
 		/// //assert if there is an attempt
 		/// to delete an open file.
 		/// </summary>
 		/// <remarks>
 		/// Trip a test
-		/// //HM:revisit
+		/// 
 		/// //assert if there is an attempt
 		/// to delete an open file.
 		/// </remarks>
@@ -1025,7 +1025,7 @@ namespace Lucene.Net.Store
 										{
 											if (endSet.Contains(s) && !startSet.Contains(s))
 											{
-												//HM:revisit 
+												 
 												//assert pendingDeletions.contains(s);
 												if (LuceneTestCase.VERBOSE)
 												{
@@ -1082,7 +1082,7 @@ namespace Lucene.Net.Store
 									extras += "\n\nThese files we had previously tried to delete, but couldn't: " + pendingDeletions;
 								}
 							}
-							//HM:revisit 
+							 
 							//assert false : "unreferenced files: before delete:\n    " + Arrays.toString(startFiles) + "\n  after delete:\n    " + Arrays.toString(endFiles) + extras;
 							DirectoryReader ir1 = DirectoryReader.Open(this);
 							int numDocs1 = ir1.NumDocs();
@@ -1095,7 +1095,7 @@ namespace Lucene.Net.Store
 						}
 					}
 				}
-				//HM:revisit 
+				 
 				//assert numDocs1 == numDocs2 : "numDocs changed after opening/closing IW: before=" + numDocs1 + " after=" + numDocs2;
 				@in.Close();
 			}

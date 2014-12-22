@@ -1,12 +1,5 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System.IO;
-using Lucene.Net.TestFramework.Analysis;
-using Sharpen;
+using Lucene.Net.Analysis;
 
 namespace Lucene.Net.TestFramework.Analysis
 {
@@ -14,10 +7,7 @@ namespace Lucene.Net.TestFramework.Analysis
 	public class VocabularyAssert
 	{
 		/// <summary>Run a vocabulary test against two data files.</summary>
-		/// <remarks>Run a vocabulary test against two data files.</remarks>
-		/// <exception cref="System.IO.IOException"></exception>
-		public static void AssertVocabulary(Analyzer a, InputStream voc, InputStream @out
-			)
+		public static void AssertVocabulary(Analyzer a, InputStream voc, InputStream @out)
 		{
 			BufferedReader vocReader = new BufferedReader(new InputStreamReader(voc, StandardCharsets
 				.UTF_8));
@@ -54,8 +44,7 @@ namespace Lucene.Net.TestFramework.Analysis
 
 		/// <summary>Run a vocabulary test against two data files inside a zip file</summary>
 		/// <exception cref="System.IO.IOException"></exception>
-		public static void AssertVocabulary(Analyzer a, FilePath zipFile, string voc, string
-			 @out)
+		public static void AssertVocabulary(Analyzer a, FileInfo zipFile, string voc, string @out)
 		{
 			ZipFile zip = new ZipFile(zipFile);
 			InputStream v = zip.GetInputStream(zip.GetEntry(voc));

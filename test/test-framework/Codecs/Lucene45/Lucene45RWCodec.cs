@@ -5,12 +5,12 @@
  */
 
 using Org.Apache.Lucene.Codecs;
-using Org.Apache.Lucene.Codecs.Lucene42;
-using Org.Apache.Lucene.Codecs.Lucene45;
+using Lucene.Net.Codecs.Lucene42;
+using Lucene.Net.Codecs.Lucene45;
 using Org.Apache.Lucene.Util;
 using Sharpen;
 
-namespace Org.Apache.Lucene.Codecs.Lucene45
+namespace Lucene.Net.Codecs.Lucene45
 {
 	/// <summary>
 	/// Read-write version of
@@ -39,10 +39,10 @@ namespace Org.Apache.Lucene.Codecs.Lucene45
 			}
 		}
 
-		private readonly Org.Apache.Lucene.Codecs.FieldInfosFormat fieldInfosFormat = new 
+		private readonly Lucene.Net.Codecs.FieldInfosFormat fieldInfosFormat = new 
 			_Lucene42FieldInfosFormat_34();
 
-		public override Org.Apache.Lucene.Codecs.FieldInfosFormat FieldInfosFormat()
+		public override Lucene.Net.Codecs.FieldInfosFormat FieldInfosFormat()
 		{
 			return fieldInfosFormat;
 		}

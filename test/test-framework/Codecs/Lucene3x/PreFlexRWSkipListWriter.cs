@@ -8,7 +8,7 @@ using Org.Apache.Lucene.Codecs;
 using Org.Apache.Lucene.Store;
 using Sharpen;
 
-namespace Org.Apache.Lucene.Codecs.Lucene3x
+namespace Lucene.Net.Codecs.Lucene3x
 {
 	/// <summary>PreFlexRW skiplist implementation.</summary>
 	/// <remarks>PreFlexRW skiplist implementation.</remarks>

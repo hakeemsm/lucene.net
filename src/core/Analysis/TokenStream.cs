@@ -152,7 +152,7 @@ namespace Lucene.Net.Analysis
 		{
 		}
 		
-        public void Dispose()
+        public virtual void Dispose()
         {
             Dispose(true);
         }

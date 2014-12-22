@@ -1,22 +1,17 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
-using Org.Apache.Lucene.Codecs;
-using Org.Apache.Lucene.Codecs.Asserting;
-using Org.Apache.Lucene.Codecs.Lucene45;
-using Org.Apache.Lucene.Index;
-using Org.Apache.Lucene.Util;
-using Sharpen;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using Lucene.Net.Index;
+using Lucene.Net.Codecs.Lucene45;
+using Lucene.Net.TestFramework.Index;
+using Lucene.Net.Util;
 
-namespace Org.Apache.Lucene.Codecs.Asserting
+namespace Lucene.Net.Codecs.Asserting.TestFramework
 {
 	/// <summary>
 	/// Just like
-	/// <see cref="Org.Apache.Lucene.Codecs.Lucene45.Lucene45DocValuesFormat">Org.Apache.Lucene.Codecs.Lucene45.Lucene45DocValuesFormat
+	/// <see cref="Lucene.Net.Codecs.Lucene45.Lucene45DocValuesFormat">Lucene.Net.Codecs.Lucene45.Lucene45DocValuesFormat
 	/// 	</see>
 	/// but with additional asserts.
 	/// </summary>
@@ -32,22 +27,20 @@ namespace Org.Apache.Lucene.Codecs.Asserting
 		public override DocValuesConsumer FieldsConsumer(SegmentWriteState state)
 		{
 			DocValuesConsumer consumer = @in.FieldsConsumer(state);
-			//HM:revisit 
+			 
 			//assert consumer != null;
-			return new AssertingDocValuesFormat.AssertingDocValuesConsumer(consumer, state.segmentInfo
-				.GetDocCount());
+			return new AssertingDocValuesConsumer(consumer, state.segmentInfo.DocCount);
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
 		public override DocValuesProducer FieldsProducer(SegmentReadState state)
 		{
-			//HM:revisit 
+			 
 			//assert state.fieldInfos.hasDocValues();
 			DocValuesProducer producer = @in.FieldsProducer(state);
-			//HM:revisit 
+			 
 			//assert producer != null;
-			return new AssertingDocValuesFormat.AssertingDocValuesProducer(producer, state.segmentInfo
-				.GetDocCount());
+			return new AssertingDocValuesProducer(producer, state.segmentInfo.DocCount);
 		}
 
 		internal class AssertingDocValuesConsumer : DocValuesConsumer
@@ -63,65 +56,59 @@ namespace Org.Apache.Lucene.Codecs.Asserting
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
-			public override void AddNumericField(FieldInfo field, Iterable<Number> values)
+			public override void AddNumericField(FieldInfo field, IEnumerable<long> values)
 			{
-				int count = 0;
-				foreach (Number v in values)
-				{
-					count++;
-				}
-				//HM:revisit 
-				//assert count == maxDoc;
-				CheckIterator(values.Iterator(), maxDoc, true);
-				@in.AddNumericField(field, values);
+			    var longList = values as IList<long> ?? values.ToList();
+			    int count = longList.Count();
+
+			    Debug.Assert(count == maxDoc);
+				CheckIterator(longList.GetEnumerator(), maxDoc, true);
+				@in.AddNumericField(field, longList);
 			}
 
-			/// <exception cref="System.IO.IOException"></exception>
-			public override void AddBinaryField(FieldInfo field, Iterable<BytesRef> values)
+			
+			public override void AddBinaryField(FieldInfo field, IEnumerable<BytesRef> values)
 			{
 				int count = 0;
 				foreach (BytesRef b in values)
 				{
-					//HM:revisit 
-					//assert b == null || b.isValid();
+					 
+					//Debug.Assert(b == null || b.IsValid);
 					count++;
 				}
-				//HM:revisit 
+				 
 				//assert count == maxDoc;
-				CheckIterator(values.Iterator(), maxDoc, true);
+				CheckIterator(values.GetEnumerator(), maxDoc, true);
 				@in.AddBinaryField(field, values);
 			}
 
-			/// <exception cref="System.IO.IOException"></exception>
-			public override void AddSortedField(FieldInfo field, Iterable<BytesRef> values, Iterable
-				<Number> docToOrd)
+			
+			public override void AddSortedField(FieldInfo field, IEnumerable<BytesRef> values, IEnumerable<int> docToOrd)
 			{
 				int valueCount = 0;
 				BytesRef lastValue = null;
 				foreach (BytesRef b in values)
 				{
-					//HM:revisit 
-					//assert b != null;
-					//HM:revisit 
+                    //assert b != null;
+					 
 					//assert b.isValid();
 					if (valueCount > 0)
 					{
+                        //assert b.compareTo(lastValue) > 0;
 					}
-					//HM:revisit 
-					//assert b.compareTo(lastValue) > 0;
 					lastValue = BytesRef.DeepCopyOf(b);
 					valueCount++;
 				}
-				//HM:revisit 
+				 
 				//assert valueCount <= maxDoc;
 				FixedBitSet seenOrds = new FixedBitSet(valueCount);
 				int count = 0;
-				foreach (Number v in docToOrd)
+				foreach (var v in docToOrd)
 				{
-					//HM:revisit 
+					 
 					//assert v != null;
 					int ord = v;
-					//HM:revisit 
+					 
 					//assert ord >= -1 && ord < valueCount;
 					if (ord >= 0)
 					{
@@ -129,79 +116,76 @@ namespace Org.Apache.Lucene.Codecs.Asserting
 					}
 					count++;
 				}
-				//HM:revisit 
+				 
 				//assert count == maxDoc;
-				//HM:revisit 
+				 
 				//assert seenOrds.cardinality() == valueCount;
-				CheckIterator(values.Iterator(), valueCount, false);
-				CheckIterator(docToOrd.Iterator(), maxDoc, false);
+				CheckIterator(values.GetEnumerator(), valueCount, false);
+				CheckIterator(docToOrd.GetEnumerator(), maxDoc, false);
 				@in.AddSortedField(field, values, docToOrd);
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
-			public override void AddSortedSetField(FieldInfo field, Iterable<BytesRef> values
-				, Iterable<Number> docToOrdCount, Iterable<Number> ords)
+			public override void AddSortedSetField(FieldInfo field, IEnumerable<BytesRef> values, IEnumerable<int> docToOrdCount, IEnumerable<long> ords)
 			{
 				long valueCount = 0;
 				BytesRef lastValue = null;
 				foreach (BytesRef b in values)
 				{
-					//HM:revisit 
+					 
 					//assert b != null;
-					//HM:revisit 
+					 
 					//assert b.isValid();
-					if (valueCount > 0)
-					{
-					}
-					//HM:revisit 
-					//assert b.compareTo(lastValue) > 0;
-					lastValue = BytesRef.DeepCopyOf(b);
+				    if (valueCount > 0)
+				    {
+				        //assert b.compareTo(lastValue) > 0;
+				    }
+				    lastValue = BytesRef.DeepCopyOf(b);
 					valueCount++;
 				}
 				int docCount = 0;
 				long ordCount = 0;
 				LongBitSet seenOrds = new LongBitSet(valueCount);
-				Iterator<Number> ordIterator = ords.Iterator();
-				foreach (Number v in docToOrdCount)
+				IEnumerator<long> ordIterator = ords.GetEnumerator();
+				foreach (var v in docToOrdCount)
 				{
-					//HM:revisit 
 					//assert v != null;
 					int count = v;
-					//HM:revisit 
+					 
 					//assert count >= 0;
 					docCount++;
 					ordCount += count;
 					long lastOrd = -1;
 					for (int i = 0; i < count; i++)
 					{
-						Number o = ordIterator.Next();
-						//HM:revisit 
-						//assert o != null;
+						ordIterator.MoveNext();
+					    long o = ordIterator.Current;
+					    //assert o != null;
 						long ord = o;
-						//HM:revisit 
+						 
 						//assert ord >= 0 && ord < valueCount;
-						//HM:revisit 
+						 
 						//assert ord > lastOrd : "ord=" + ord + ",lastOrd=" + lastOrd;
 						seenOrds.Set(ord);
 						lastOrd = ord;
 					}
 				}
-				//HM:revisit 
+				 
 				//assert ordIterator.hasNext() == false;
-				//HM:revisit 
+				 
 				//assert docCount == maxDoc;
-				//HM:revisit 
+				 
 				//assert seenOrds.cardinality() == valueCount;
-				CheckIterator(values.Iterator(), valueCount, false);
-				CheckIterator(docToOrdCount.Iterator(), maxDoc, false);
-				CheckIterator(ords.Iterator(), ordCount, false);
+				CheckIterator(values.GetEnumerator(), valueCount, false);
+				CheckIterator(docToOrdCount.GetEnumerator(), maxDoc, false);
+				CheckIterator(ords.GetEnumerator(), ordCount, false);
 				@in.AddSortedSetField(field, values, docToOrdCount, ords);
 			}
 
-			/// <exception cref="System.IO.IOException"></exception>
-			public override void Close()
+
+		    protected override void Dispose(bool disposing)
 			{
-				@in.Close();
+				@in.Dispose();
 			}
 		}
 
@@ -217,79 +201,75 @@ namespace Org.Apache.Lucene.Codecs.Asserting
 				this.maxDoc = maxDoc;
 			}
 
-			/// <exception cref="System.IO.IOException"></exception>
-			public override void AddNumericField(FieldInfo field, Iterable<Number> values)
+			
+			public override void AddNumericField(FieldInfo field, IEnumerable<long> values)
 			{
 				int count = 0;
-				foreach (Number v in values)
+				foreach (var v in values)
 				{
-					//HM:revisit 
+					 
 					//assert v != null;
 					count++;
 				}
-				//HM:revisit 
+				 
 				//assert count == maxDoc;
-				CheckIterator(values.Iterator(), maxDoc, false);
+				CheckIterator(values.GetEnumerator(), maxDoc, false);
 				@in.AddNumericField(field, values);
 			}
 
-			/// <exception cref="System.IO.IOException"></exception>
-			public override void Close()
+
+		    protected override void Dispose(bool disposing)
 			{
-				@in.Close();
+				@in.Dispose();
 			}
 
-			/// <exception cref="System.IO.IOException"></exception>
-			public override void AddBinaryField(FieldInfo field, Iterable<BytesRef> values)
-			{
-				throw new InvalidOperationException();
-			}
-
-			/// <exception cref="System.IO.IOException"></exception>
-			public override void AddSortedField(FieldInfo field, Iterable<BytesRef> values, Iterable
-				<Number> docToOrd)
+			
+			public override void AddBinaryField(FieldInfo field, IEnumerable<BytesRef> values)
 			{
 				throw new InvalidOperationException();
 			}
 
-			/// <exception cref="System.IO.IOException"></exception>
-			public override void AddSortedSetField(FieldInfo field, Iterable<BytesRef> values
-				, Iterable<Number> docToOrdCount, Iterable<Number> ords)
+			
+			public override void AddSortedField(FieldInfo field, IEnumerable<BytesRef> values, IEnumerable<int> docToOrd)
+			{
+				throw new InvalidOperationException();
+			}
+
+			
+			public override void AddSortedSetField(FieldInfo field, IEnumerable<BytesRef> values, IEnumerable<int> docToOrdCount, IEnumerable<long> ords)
 			{
 				throw new InvalidOperationException();
 			}
 		}
 
-		private static void CheckIterator<T>(Iterator<T> iterator, long expectedSize, bool
-			 allowNull)
+		private static void CheckIterator<T>(IEnumerator<T> iterator, long expectedSize, bool allowNull)
 		{
 			for (long i = 0; i < expectedSize; i++)
 			{
-				bool hasNext = iterator.HasNext();
-				//HM:revisit 
-				//assert hasNext;
-				T v = iterator.Next();
-				//HM:revisit 
-				//assert allowNull || v != null;
-				try
-				{
-					iterator.Remove();
-					throw new Exception("broken iterator (supports remove): " + iterator);
-				}
-				catch (NotSupportedException)
-				{
-				}
+				bool hasNext = iterator.MoveNext();
+				 
+				Debug.Assert(hasNext);
+				T v = iterator.Current;
+				 
+				Debug.Assert(allowNull || v != null);
+                //try
+                //{
+                //    iterator.Remove();
+                //    throw new Exception("broken iterator (supports remove): " + iterator);
+                //}
+                //catch (NotSupportedException)
+                //{
+                //}
 			}
 			// ok
-			//HM:revisit 
-			//assert !iterator.hasNext();
+			 
+			 Debug.Assert(!iterator.MoveNext());
 			try
 			{
-				iterator.Next();
-				throw new Exception("broken iterator (allows next() when hasNext==false) " + iterator
-					);
+			    T current = iterator.Current;
+			    throw new Exception("broken enumerator (allows Current when MoveNext==false) " + iterator);
 			}
-			catch (NoSuchElementException)
+			catch (ArgumentOutOfRangeException)
 			{
 			}
 		}
@@ -310,10 +290,10 @@ namespace Org.Apache.Lucene.Codecs.Asserting
 			/// <exception cref="System.IO.IOException"></exception>
 			public override NumericDocValues GetNumeric(FieldInfo field)
 			{
-				//HM:revisit 
+				 
 				//assert field.getDocValuesType() == FieldInfo.DocValuesType.NUMERIC || field.getNormType() == FieldInfo.DocValuesType.NUMERIC;
 				NumericDocValues values = @in.GetNumeric(field);
-				//HM:revisit 
+				 
 				//assert values != null;
 				return new AssertingAtomicReader.AssertingNumericDocValues(values, maxDoc);
 			}
@@ -321,10 +301,10 @@ namespace Org.Apache.Lucene.Codecs.Asserting
 			/// <exception cref="System.IO.IOException"></exception>
 			public override BinaryDocValues GetBinary(FieldInfo field)
 			{
-				//HM:revisit 
+				 
 				//assert field.getDocValuesType() == FieldInfo.DocValuesType.BINARY;
 				BinaryDocValues values = @in.GetBinary(field);
-				//HM:revisit 
+				 
 				//assert values != null;
 				return new AssertingAtomicReader.AssertingBinaryDocValues(values, maxDoc);
 			}
@@ -332,10 +312,10 @@ namespace Org.Apache.Lucene.Codecs.Asserting
 			/// <exception cref="System.IO.IOException"></exception>
 			public override SortedDocValues GetSorted(FieldInfo field)
 			{
-				//HM:revisit 
+				 
 				//assert field.getDocValuesType() == FieldInfo.DocValuesType.SORTED;
 				SortedDocValues values = @in.GetSorted(field);
-				//HM:revisit 
+				 
 				//assert values != null;
 				return new AssertingAtomicReader.AssertingSortedDocValues(values, maxDoc);
 			}
@@ -343,36 +323,36 @@ namespace Org.Apache.Lucene.Codecs.Asserting
 			/// <exception cref="System.IO.IOException"></exception>
 			public override SortedSetDocValues GetSortedSet(FieldInfo field)
 			{
-				//HM:revisit 
+				 
 				//assert field.getDocValuesType() == FieldInfo.DocValuesType.SORTED_SET;
 				SortedSetDocValues values = @in.GetSortedSet(field);
-				//HM:revisit 
+				 
 				//assert values != null;
 				return new AssertingAtomicReader.AssertingSortedSetDocValues(values, maxDoc);
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
-			public override Bits GetDocsWithField(FieldInfo field)
+			public override IBits GetDocsWithField(FieldInfo field)
 			{
-				//HM:revisit 
+				 
 				//assert field.getDocValuesType() != null;
-				Bits bits = @in.GetDocsWithField(field);
-				//HM:revisit 
+				IBits bits = @in.GetDocsWithField(field);
+				 
 				//assert bits != null;
-				//HM:revisit 
+				 
 				//assert bits.length() == maxDoc;
 				return new AssertingAtomicReader.AssertingBits(bits);
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
-			public override void Close()
+			protected override void Dispose(bool disposing)
 			{
-				@in.Close();
+				@in.Dispose();
 			}
 
-			public override long RamBytesUsed()
+			public override long RamBytesUsed
 			{
-				return @in.RamBytesUsed();
+			    get { return @in.RamBytesUsed; }
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>

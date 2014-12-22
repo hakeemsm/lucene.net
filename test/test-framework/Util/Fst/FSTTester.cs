@@ -76,7 +76,7 @@ namespace Lucene.Net.TestFramework.Util.Fst
 			for (int i = 0; i < ir.length; i++)
 			{
 				int x = ir.ints[ir.offset + i];
-				//HM:revisit 
+				 
 				//assert x >= 0 && x <= 255;
 				br.bytes[i] = unchecked((byte)x);
 			}
@@ -218,7 +218,7 @@ namespace Lucene.Net.TestFramework.Util.Fst
 		/// <exception cref="System.IO.IOException"></exception>
 		private T Run(FST<T> fst, IntsRef term, int[] prefixLength)
 		{
-			//HM:revisit 
+			 
 			//assert prefixLength == null || prefixLength.length == 1;
 			FST.Arc<T> arc = fst.GetFirstArc(new FST.Arc<T>());
 			T NO_OUTPUT = fst.outputs.GetNoOutput();
@@ -680,7 +680,7 @@ namespace Lucene.Net.TestFramework.Util.Fst
 								{
 									int pos = Sharpen.Collections.BinarySearch(pairs, new FSTTester.InputOutput<T>(term
 										, null));
-									//HM:revisit 
+									 
 									//assert pos < 0;
 									upto = -(pos + 1);
 									if (random.NextBoolean())
@@ -797,7 +797,7 @@ namespace Lucene.Net.TestFramework.Util.Fst
 			// To validate the FST, we brute-force compute all prefixes
 			// in the terms, matched to their "common" outputs, prune that
 			// set according to the prune thresholds, then 
-			//HM:revisit 
+			 
 			//assert the FST
 			// matches that same set.
 			// NOTE: Crazy RAM intensive!!
@@ -867,7 +867,7 @@ namespace Lucene.Net.TestFramework.Util.Fst
 				}
 				else
 				{
-					//HM:revisit 
+					 
 					//assert prune2 > 0;
 					if (prune2 > 1 && cmo.count >= prune2)
 					{

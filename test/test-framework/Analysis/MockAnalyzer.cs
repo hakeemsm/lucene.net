@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using Lucene.Net.JavaCompatibility;
 using Lucene.Net.Support;
 using Lucene.Net.Util.Automaton;

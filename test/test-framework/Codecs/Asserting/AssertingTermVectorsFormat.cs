@@ -1,23 +1,15 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System.Collections.Generic;
-using Org.Apache.Lucene.Codecs;
-using Org.Apache.Lucene.Codecs.Asserting;
-using Org.Apache.Lucene.Codecs.Lucene40;
-using Org.Apache.Lucene.Index;
-using Org.Apache.Lucene.Store;
-using Org.Apache.Lucene.Util;
-using Sharpen;
+using Lucene.Net.Index;
+using Lucene.Net.Store;
+using Lucene.Net.Codecs.Lucene40;
+using Lucene.Net.TestFramework.Index;
+using Lucene.Net.Util;
 
-namespace Org.Apache.Lucene.Codecs.Asserting
+namespace Lucene.Net.Codecs.Asserting.TestFramework
 {
 	/// <summary>
 	/// Just like
-	/// <see cref="Org.Apache.Lucene.Codecs.Lucene40.Lucene40TermVectorsFormat">Org.Apache.Lucene.Codecs.Lucene40.Lucene40TermVectorsFormat
+	/// <see cref="Lucene.Net.Codecs.Lucene40.Lucene40TermVectorsFormat">Lucene.Net.Codecs.Lucene40.Lucene40TermVectorsFormat
 	/// 	</see>
 	/// but with additional asserts.
 	/// </summary>
@@ -51,9 +43,9 @@ namespace Org.Apache.Lucene.Codecs.Asserting
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
-			public override void Close()
+			protected override void Dispose(bool disposing)
 			{
-				@in.Close();
+				@in.Dispose();
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
@@ -65,12 +57,12 @@ namespace Org.Apache.Lucene.Codecs.Asserting
 
 			public override TermVectorsReader Clone()
 			{
-				return new AssertingTermVectorsFormat.AssertingTermVectorsReader(@in.Clone());
+				return new AssertingTermVectorsReader(@in.Clone());
 			}
 
-			public override long RamBytesUsed()
+			public override long RamBytesUsed
 			{
-				return @in.RamBytesUsed();
+			    get { return @in.RamBytesUsed; }
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
@@ -91,11 +83,11 @@ namespace Org.Apache.Lucene.Codecs.Asserting
 		{
 			private readonly TermVectorsWriter @in;
 
-			private AssertingTermVectorsFormat.Status docStatus;
+			private Status docStatus;
 
-			private AssertingTermVectorsFormat.Status fieldStatus;
+			private Status fieldStatus;
 
-			private AssertingTermVectorsFormat.Status termStatus;
+			private Status termStatus;
 
 			private int docCount;
 
@@ -110,21 +102,21 @@ namespace Org.Apache.Lucene.Codecs.Asserting
 			internal AssertingTermVectorsWriter(TermVectorsWriter @in)
 			{
 				this.@in = @in;
-				docStatus = AssertingTermVectorsFormat.Status.UNDEFINED;
-				fieldStatus = AssertingTermVectorsFormat.Status.UNDEFINED;
-				termStatus = AssertingTermVectorsFormat.Status.UNDEFINED;
+				docStatus = Status.UNDEFINED;
+				fieldStatus = Status.UNDEFINED;
+				termStatus = Status.UNDEFINED;
 				fieldCount = termCount = positionCount = 0;
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
 			public override void StartDocument(int numVectorFields)
 			{
-				//HM:revisit 
+				 
 				//assert fieldCount == 0;
-				//HM:revisit 
+				 
 				//assert docStatus != Status.STARTED;
 				@in.StartDocument(numVectorFields);
-				docStatus = AssertingTermVectorsFormat.Status.STARTED;
+				docStatus = Status.STARTED;
 				fieldCount = numVectorFields;
 				docCount++;
 			}
@@ -132,26 +124,26 @@ namespace Org.Apache.Lucene.Codecs.Asserting
 			/// <exception cref="System.IO.IOException"></exception>
 			public override void FinishDocument()
 			{
-				//HM:revisit 
+				 
 				//assert fieldCount == 0;
-				//HM:revisit 
+				 
 				//assert docStatus == Status.STARTED;
 				@in.FinishDocument();
-				docStatus = AssertingTermVectorsFormat.Status.FINISHED;
+				docStatus = Status.FINISHED;
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
 			public override void StartField(FieldInfo info, int numTerms, bool positions, bool
 				 offsets, bool payloads)
 			{
-				//HM:revisit 
+				 
 				//assert termCount == 0;
-				//HM:revisit 
+				 
 				//assert docStatus == Status.STARTED;
-				//HM:revisit 
+				 
 				//assert fieldStatus != Status.STARTED;
 				@in.StartField(info, numTerms, positions, offsets, payloads);
-				fieldStatus = AssertingTermVectorsFormat.Status.STARTED;
+				fieldStatus = Status.STARTED;
 				termCount = numTerms;
 				hasPositions = positions || offsets || payloads;
 			}
@@ -159,42 +151,42 @@ namespace Org.Apache.Lucene.Codecs.Asserting
 			/// <exception cref="System.IO.IOException"></exception>
 			public override void FinishField()
 			{
-				//HM:revisit 
+				 
 				//assert termCount == 0;
-				//HM:revisit 
+				 
 				//assert fieldStatus == Status.STARTED;
 				@in.FinishField();
-				fieldStatus = AssertingTermVectorsFormat.Status.FINISHED;
+				fieldStatus = Status.FINISHED;
 				--fieldCount;
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
 			public override void StartTerm(BytesRef term, int freq)
 			{
-				//HM:revisit 
+				 
 				//assert docStatus == Status.STARTED;
-				//HM:revisit 
+				 
 				//assert fieldStatus == Status.STARTED;
-				//HM:revisit 
+				 
 				//assert termStatus != Status.STARTED;
 				@in.StartTerm(term, freq);
-				termStatus = AssertingTermVectorsFormat.Status.STARTED;
+				termStatus = Status.STARTED;
 				positionCount = hasPositions ? freq : 0;
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
 			public override void FinishTerm()
 			{
-				//HM:revisit 
+				 
 				//assert positionCount == 0;
-				//HM:revisit 
+				 
 				//assert docStatus == Status.STARTED;
-				//HM:revisit 
+				 
 				//assert fieldStatus == Status.STARTED;
-				//HM:revisit 
+				 
 				//assert termStatus == Status.STARTED;
 				@in.FinishTerm();
-				termStatus = AssertingTermVectorsFormat.Status.FINISHED;
+				termStatus = Status.FINISHED;
 				--termCount;
 			}
 
@@ -202,11 +194,11 @@ namespace Org.Apache.Lucene.Codecs.Asserting
 			public override void AddPosition(int position, int startOffset, int endOffset, BytesRef
 				 payload)
 			{
-				//HM:revisit 
+				 
 				//assert docStatus == Status.STARTED;
-				//HM:revisit 
+				 
 				//assert fieldStatus == Status.STARTED;
-				//HM:revisit 
+				 
 				//assert termStatus == Status.STARTED;
 				@in.AddPosition(position, startOffset, endOffset, payload);
 				--positionCount;
@@ -220,27 +212,27 @@ namespace Org.Apache.Lucene.Codecs.Asserting
 			/// <exception cref="System.IO.IOException"></exception>
 			public override void Finish(FieldInfos fis, int numDocs)
 			{
-				//HM:revisit 
+				 
 				//assert docCount == numDocs;
-				//HM:revisit 
+				 
 				//assert docStatus == (numDocs > 0 ? Status.FINISHED : Status.UNDEFINED);
-				//HM:revisit 
+				 
 				//assert fieldStatus != Status.STARTED;
-				//HM:revisit 
+				 
 				//assert termStatus != Status.STARTED;
 				@in.Finish(fis, numDocs);
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
-			public override IComparer<BytesRef> GetComparator()
+			public override IComparer<BytesRef> Comparator
 			{
-				return @in.GetComparator();
+			    get { return @in.Comparator; }
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
-			public override void Close()
+			protected override void Dispose(bool disposing)
 			{
-				@in.Close();
+				@in.Dispose();
 			}
 		}
 	}

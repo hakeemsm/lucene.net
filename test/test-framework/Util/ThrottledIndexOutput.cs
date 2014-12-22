@@ -62,7 +62,7 @@ namespace Lucene.Net.TestFramework.Util
 		public ThrottledIndexOutput(int bytesPerSecond, long flushDelayMillis, long closeDelayMillis
 			, long seekDelayMillis, long minBytesWritten, IndexOutput delegate_)
 		{
-			//HM:revisit 
+			 
 			//assert bytesPerSecond > 0;
 			this.delegate_ = delegate_;
 			this.bytesPerSecond = bytesPerSecond;

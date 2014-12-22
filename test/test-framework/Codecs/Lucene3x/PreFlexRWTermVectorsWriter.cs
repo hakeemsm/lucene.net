@@ -7,13 +7,13 @@
 using System;
 using System.Collections.Generic;
 using Org.Apache.Lucene.Codecs;
-using Org.Apache.Lucene.Codecs.Lucene3x;
+using Lucene.Net.Codecs.Lucene3x;
 using Org.Apache.Lucene.Index;
 using Org.Apache.Lucene.Store;
 using Org.Apache.Lucene.Util;
 using Sharpen;
 
-namespace Org.Apache.Lucene.Codecs.Lucene3x
+namespace Lucene.Net.Codecs.Lucene3x
 {
 	internal sealed class PreFlexRWTermVectorsWriter : TermVectorsWriter
 	{
@@ -84,7 +84,7 @@ namespace Org.Apache.Lucene.Codecs.Lucene3x
 		public override void StartField(FieldInfo info, int numTerms, bool positions, bool
 			 offsets, bool payloads)
 		{
-			//HM:revisit 
+			 
 			//assert lastFieldName == null || info.name.compareTo(lastFieldName) > 0: "fieldName=" + info.name + " lastFieldName=" + lastFieldName;
 			lastFieldName = info.name;
 			if (payloads)
@@ -108,7 +108,7 @@ namespace Org.Apache.Lucene.Codecs.Lucene3x
 				bits |= Lucene3xTermVectorsReader.STORE_OFFSET_WITH_TERMVECTOR;
 			}
 			tvf.WriteByte(bits);
-			//HM:revisit 
+			 
 			//assert fieldCount <= numVectorFields;
 			if (fieldCount == numVectorFields)
 			{
@@ -166,7 +166,7 @@ namespace Org.Apache.Lucene.Codecs.Lucene3x
 		public override void AddPosition(int position, int startOffset, int endOffset, BytesRef
 			 payload)
 		{
-			//HM:revisit 
+			 
 			//assert payload == null;
 			if (positions && offsets)
 			{

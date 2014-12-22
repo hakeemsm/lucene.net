@@ -38,7 +38,7 @@ namespace Lucene.Net.TestFramework.Util
 		/// </param>
 		public TestRuleIgnoreAfterMaxFailures(int maxFailures)
 		{
-			//HM:revisit 
+			 
 			//assert.assertTrue("maxFailures must be >= 1: " + maxFailures, maxFailures >= 1);
 			this.maxFailures = maxFailures;
 		}

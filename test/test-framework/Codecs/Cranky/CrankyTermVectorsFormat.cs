@@ -7,13 +7,13 @@
 using System.Collections.Generic;
 using System.IO;
 using Org.Apache.Lucene.Codecs;
-using Org.Apache.Lucene.Codecs.Cranky;
+using Lucene.Net.Codecs.Cranky;
 using Org.Apache.Lucene.Index;
 using Org.Apache.Lucene.Store;
 using Org.Apache.Lucene.Util;
 using Sharpen;
 
-namespace Org.Apache.Lucene.Codecs.Cranky
+namespace Lucene.Net.Codecs.Cranky
 {
 	internal class CrankyTermVectorsFormat : TermVectorsFormat
 	{

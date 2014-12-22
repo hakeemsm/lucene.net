@@ -207,7 +207,7 @@ namespace Lucene.Net.TestFramework.Index
 					posUpto = freq;
 					return 0;
 				}
-				//HM:revisit 
+				 
 				//assert posUpto < freq;
 				if (posUpto == 0 && random.NextBoolean())
 				{

@@ -5,13 +5,13 @@
  */
 
 using System;
-using Org.Apache.Lucene.Codecs.Lucene3x;
+using Lucene.Net.Codecs.Lucene3x;
 using Org.Apache.Lucene.Index;
 using Org.Apache.Lucene.Store;
 using Org.Apache.Lucene.Util;
 using Sharpen;
 
-namespace Org.Apache.Lucene.Codecs.Lucene3x
+namespace Lucene.Net.Codecs.Lucene3x
 {
 	/// <summary>
 	/// Codec, only for testing, that can write and read the
@@ -31,14 +31,14 @@ namespace Org.Apache.Lucene.Codecs.Lucene3x
 		// NOTE: we impersonate the PreFlex codec so that it can
 		// read the segments we write!
 		/// <exception cref="System.IO.IOException"></exception>
-		public override Org.Apache.Lucene.Codecs.FieldsConsumer FieldsConsumer(SegmentWriteState
+		public override Lucene.Net.Codecs.FieldsConsumer FieldsConsumer(SegmentWriteState
 			 state)
 		{
 			return new PreFlexRWFieldsWriter(state);
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		public override Org.Apache.Lucene.Codecs.FieldsProducer FieldsProducer(SegmentReadState
+		public override Lucene.Net.Codecs.FieldsProducer FieldsProducer(SegmentReadState
 			 state)
 		{
 			// Whenever IW opens readers, eg for merging, we have to

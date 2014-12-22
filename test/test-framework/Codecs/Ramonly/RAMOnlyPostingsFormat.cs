@@ -7,13 +7,13 @@
 using System;
 using System.Collections.Generic;
 using Org.Apache.Lucene.Codecs;
-using Org.Apache.Lucene.Codecs.Ramonly;
+using Lucene.Net.Codecs.Ramonly;
 using Org.Apache.Lucene.Index;
 using Org.Apache.Lucene.Store;
 using Org.Apache.Lucene.Util;
 using Sharpen;
 
-namespace Org.Apache.Lucene.Codecs.Ramonly
+namespace Lucene.Net.Codecs.Ramonly
 {
 	/// <summary>
 	/// Stores all postings data in RAM, but writes a small
@@ -326,9 +326,9 @@ namespace Org.Apache.Lucene.Codecs.Ramonly
 
 			public override void FinishTerm(BytesRef text, TermStats stats)
 			{
-				//HM:revisit 
+				 
 				//assert stats.docFreq > 0;
-				//HM:revisit 
+				 
 				//assert stats.docFreq == current.docs.size();
 				current.totalTermFreq = stats.totalTermFreq;
 				field.termToDocs.Put(current.term, current);
@@ -365,9 +365,9 @@ namespace Org.Apache.Lucene.Codecs.Ramonly
 			public override void AddPosition(int position, BytesRef payload, int startOffset, 
 				int endOffset)
 			{
-				//HM:revisit 
+				 
 				//assert startOffset == -1;
-				//HM:revisit 
+				 
 				//assert endOffset == -1;
 				current.positions[posUpto] = position;
 				if (payload != null && payload.length > 0)
@@ -385,7 +385,7 @@ namespace Org.Apache.Lucene.Codecs.Ramonly
 			public override void FinishDoc()
 			{
 			}
-			//HM:revisit 
+			 
 			//assert posUpto == current.positions.length;
 		}
 

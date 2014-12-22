@@ -5,20 +5,20 @@
  */
 
 using Org.Apache.Lucene.Codecs;
-using Org.Apache.Lucene.Codecs.Blockterms;
-using Org.Apache.Lucene.Codecs.Lucene41;
+using Lucene.Net.Codecs.Blockterms;
+using Lucene.Net.Codecs.Lucene41;
 using Org.Apache.Lucene.Index;
 using Org.Apache.Lucene.Util;
 using Sharpen;
 
-namespace Org.Apache.Lucene.Codecs.Lucene41ords
+namespace Lucene.Net.Codecs.Lucene41ords
 {
 	/// <summary>
 	/// Customized version of
-	/// <see cref="Org.Apache.Lucene.Codecs.Lucene41.Lucene41PostingsFormat">Org.Apache.Lucene.Codecs.Lucene41.Lucene41PostingsFormat
+	/// <see cref="Lucene.Net.Codecs.Lucene41.Lucene41PostingsFormat">Lucene.Net.Codecs.Lucene41.Lucene41PostingsFormat
 	/// 	</see>
 	/// that uses
-	/// <see cref="Org.Apache.Lucene.Codecs.Blockterms.FixedGapTermsIndexWriter">Org.Apache.Lucene.Codecs.Blockterms.FixedGapTermsIndexWriter
+	/// <see cref="Lucene.Net.Codecs.Blockterms.FixedGapTermsIndexWriter">Lucene.Net.Codecs.Blockterms.FixedGapTermsIndexWriter
 	/// 	</see>
 	/// .
 	/// </summary>
@@ -32,7 +32,7 @@ namespace Org.Apache.Lucene.Codecs.Lucene41ords
 		// TODO: we could make separate base class that can wrapp
 		// any PostingsBaseFormat and make it ord-able...
 		/// <exception cref="System.IO.IOException"></exception>
-		public override Org.Apache.Lucene.Codecs.FieldsConsumer FieldsConsumer(SegmentWriteState
+		public override Lucene.Net.Codecs.FieldsConsumer FieldsConsumer(SegmentWriteState
 			 state)
 		{
 			PostingsWriterBase docs = new Lucene41PostingsWriter(state);
@@ -59,7 +59,7 @@ namespace Org.Apache.Lucene.Codecs.Lucene41ords
 			{
 				// Must use BlockTermsWriter (not BlockTree) because
 				// BlockTree doens't support ords (yet)...
-				Org.Apache.Lucene.Codecs.FieldsConsumer ret = new BlockTermsWriter(indexWriter, state
+				Lucene.Net.Codecs.FieldsConsumer ret = new BlockTermsWriter(indexWriter, state
 					, docs);
 				success = true;
 				return ret;
@@ -81,7 +81,7 @@ namespace Org.Apache.Lucene.Codecs.Lucene41ords
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		public override Org.Apache.Lucene.Codecs.FieldsProducer FieldsProducer(SegmentReadState
+		public override Lucene.Net.Codecs.FieldsProducer FieldsProducer(SegmentReadState
 			 state)
 		{
 			PostingsReaderBase postings = new Lucene41PostingsReader(state.directory, state.fieldInfos
@@ -105,7 +105,7 @@ namespace Org.Apache.Lucene.Codecs.Lucene41ords
 			success = false;
 			try
 			{
-				Org.Apache.Lucene.Codecs.FieldsProducer ret = new BlockTermsReader(indexReader, state
+				Lucene.Net.Codecs.FieldsProducer ret = new BlockTermsReader(indexReader, state
 					.directory, state.fieldInfos, state.segmentInfo, postings, state.context, state.
 					segmentSuffix);
 				success = true;

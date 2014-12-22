@@ -1,14 +1,7 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
+using System;
 using System.Text;
-using Lucene.Net.TestFramework.Analysis;
-using Lucene.Net.TestFramework.Analysis.Tokenattributes;
-using Lucene.Net.TestFramework.Util;
-using Sharpen;
+using Lucene.Net.Analysis.Tokenattributes;
+using Lucene.Net.Util;
 
 namespace Lucene.Net.TestFramework.Analysis
 {
@@ -19,15 +12,15 @@ namespace Lucene.Net.TestFramework.Analysis
 	/// that encodes the term
 	/// text as UTF-16 bytes instead of as UTF-8 bytes.
 	/// </summary>
-	public class MockUTF16TermAttributeImpl : CharTermAttributeImpl
+	public class MockUTF16TermAttributeImpl : CharTermAttribute
 	{
-		internal static readonly Encoding charset = Sharpen.Extensions.GetEncoding("UTF-16LE"
-			);
+	    internal static readonly Encoding charset = Encoding.Default; //.NET Port. default is UTF16
+			
 
 		public override void FillBytesRef()
 		{
-			BytesRef bytes = GetBytesRef();
-			byte[] utf16 = Sharpen.Runtime.GetBytesForString(ToString(), charset);
+			BytesRef bytes = BytesRef;
+		    var utf16 = Array.ConvertAll(base.ToString().ToCharArray(), c => (sbyte) c);
 			bytes.bytes = utf16;
 			bytes.offset = 0;
 			bytes.length = utf16.Length;

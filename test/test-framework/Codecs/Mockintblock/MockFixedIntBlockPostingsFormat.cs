@@ -5,16 +5,16 @@
  */
 
 using Org.Apache.Lucene.Codecs;
-using Org.Apache.Lucene.Codecs.Blockterms;
-using Org.Apache.Lucene.Codecs.Intblock;
-using Org.Apache.Lucene.Codecs.Mockintblock;
-using Org.Apache.Lucene.Codecs.Sep;
+using Lucene.Net.Codecs.Blockterms;
+using Lucene.Net.Codecs.Intblock;
+using Lucene.Net.Codecs.Mockintblock;
+using Lucene.Net.Codecs.Sep;
 using Org.Apache.Lucene.Index;
 using Org.Apache.Lucene.Store;
 using Org.Apache.Lucene.Util;
 using Sharpen;
 
-namespace Org.Apache.Lucene.Codecs.Mockintblock
+namespace Lucene.Net.Codecs.Mockintblock
 {
 	/// <summary>
 	/// A silly test codec to verify core support for fixed

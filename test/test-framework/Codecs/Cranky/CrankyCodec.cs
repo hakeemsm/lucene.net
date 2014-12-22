@@ -5,10 +5,10 @@
  */
 
 using Org.Apache.Lucene.Codecs;
-using Org.Apache.Lucene.Codecs.Cranky;
+using Lucene.Net.Codecs.Cranky;
 using Sharpen;
 
-namespace Org.Apache.Lucene.Codecs.Cranky
+namespace Lucene.Net.Codecs.Cranky
 {
 	/// <summary>Codec for testing that throws random IOExceptions</summary>
 	public class CrankyCodec : FilterCodec
@@ -28,42 +28,42 @@ namespace Org.Apache.Lucene.Codecs.Cranky
 			this.random = random;
 		}
 
-		public override Org.Apache.Lucene.Codecs.DocValuesFormat DocValuesFormat()
+		public override Lucene.Net.Codecs.DocValuesFormat DocValuesFormat()
 		{
 			return new CrankyDocValuesFormat(delegate_.DocValuesFormat(), random);
 		}
 
-		public override Org.Apache.Lucene.Codecs.FieldInfosFormat FieldInfosFormat()
+		public override Lucene.Net.Codecs.FieldInfosFormat FieldInfosFormat()
 		{
 			return new CrankyFieldInfosFormat(delegate_.FieldInfosFormat(), random);
 		}
 
-		public override Org.Apache.Lucene.Codecs.LiveDocsFormat LiveDocsFormat()
+		public override Lucene.Net.Codecs.LiveDocsFormat LiveDocsFormat()
 		{
 			return new CrankyLiveDocsFormat(delegate_.LiveDocsFormat(), random);
 		}
 
-		public override Org.Apache.Lucene.Codecs.NormsFormat NormsFormat()
+		public override Lucene.Net.Codecs.NormsFormat NormsFormat()
 		{
 			return new CrankyNormsFormat(delegate_.NormsFormat(), random);
 		}
 
-		public override Org.Apache.Lucene.Codecs.PostingsFormat PostingsFormat()
+		public override Lucene.Net.Codecs.PostingsFormat PostingsFormat()
 		{
 			return new CrankyPostingsFormat(delegate_.PostingsFormat(), random);
 		}
 
-		public override Org.Apache.Lucene.Codecs.SegmentInfoFormat SegmentInfoFormat()
+		public override Lucene.Net.Codecs.SegmentInfoFormat SegmentInfoFormat()
 		{
 			return new CrankySegmentInfoFormat(delegate_.SegmentInfoFormat(), random);
 		}
 
-		public override Org.Apache.Lucene.Codecs.StoredFieldsFormat StoredFieldsFormat()
+		public override Lucene.Net.Codecs.StoredFieldsFormat StoredFieldsFormat()
 		{
 			return new CrankyStoredFieldsFormat(delegate_.StoredFieldsFormat(), random);
 		}
 
-		public override Org.Apache.Lucene.Codecs.TermVectorsFormat TermVectorsFormat()
+		public override Lucene.Net.Codecs.TermVectorsFormat TermVectorsFormat()
 		{
 			return new CrankyTermVectorsFormat(delegate_.TermVectorsFormat(), random);
 		}

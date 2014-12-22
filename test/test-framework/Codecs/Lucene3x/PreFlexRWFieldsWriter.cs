@@ -7,13 +7,13 @@
 using System;
 using System.Collections.Generic;
 using Org.Apache.Lucene.Codecs;
-using Org.Apache.Lucene.Codecs.Lucene3x;
+using Lucene.Net.Codecs.Lucene3x;
 using Org.Apache.Lucene.Index;
 using Org.Apache.Lucene.Store;
 using Org.Apache.Lucene.Util;
 using Sharpen;
 
-namespace Org.Apache.Lucene.Codecs.Lucene3x
+namespace Lucene.Net.Codecs.Lucene3x
 {
 	internal class PreFlexRWFieldsWriter : FieldsConsumer
 	{
@@ -78,7 +78,7 @@ namespace Org.Apache.Lucene.Codecs.Lucene3x
 		/// <exception cref="System.IO.IOException"></exception>
 		public override TermsConsumer AddField(FieldInfo field)
 		{
-			//HM:revisit 
+			 
 			//assert field.number != -1;
 			if (field.GetIndexOptions().CompareTo(FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS
 				) >= 0)
@@ -152,7 +152,7 @@ namespace Org.Apache.Lucene.Codecs.Lucene3x
 						this._enclosing._enclosing.skipListWriter.BufferSkip(this.df);
 					}
 					this.lastDocID = docID;
-					//HM:revisit 
+					 
 					//assert docID < totalNumDocs: "docID=" + docID + " totalNumDocs=" + totalNumDocs;
 					if (this._enclosing.omitTF)
 					{
@@ -178,11 +178,11 @@ namespace Org.Apache.Lucene.Codecs.Lucene3x
 				public override void AddPosition(int position, BytesRef payload, int startOffset, 
 					int endOffset)
 				{
-					//HM:revisit 
+					 
 					//assert proxOut != null;
-					//HM:revisit 
+					 
 					//assert startOffset == -1;
-					//HM:revisit 
+					 
 					//assert endOffset == -1;
 					//System.out.println("      w pos=" + position + " payl=" + payload);
 					int delta = position - this.lastPosition;

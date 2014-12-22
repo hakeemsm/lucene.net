@@ -5,13 +5,13 @@
  */
 
 using Org.Apache.Lucene.Codecs;
-using Org.Apache.Lucene.Codecs.Lucene40;
+using Lucene.Net.Codecs.Lucene40;
 using Org.Apache.Lucene.Index;
 using Org.Apache.Lucene.Store;
 using Org.Apache.Lucene.Util;
 using Sharpen;
 
-namespace Org.Apache.Lucene.Codecs.Lucene40
+namespace Lucene.Net.Codecs.Lucene40
 {
 	/// <summary>Concrete class that writes the 4.0 frq/prx postings format.</summary>
 	/// <remarks>Concrete class that writes the 4.0 frq/prx postings format.</remarks>
@@ -217,7 +217,7 @@ namespace Org.Apache.Lucene.Codecs.Lucene40
 					, lastOffsetLength);
 				skipListWriter.BufferSkip(df);
 			}
-			//HM:revisit 
+			 
 			//assert docID < totalNumDocs: "docID=" + docID + " totalNumDocs=" + totalNumDocs;
 			lastDocID = docID;
 			if (indexOptions == FieldInfo.IndexOptions.DOCS_ONLY)
@@ -246,12 +246,12 @@ namespace Org.Apache.Lucene.Codecs.Lucene40
 			int endOffset)
 		{
 			//if (DEBUG) System.out.println("SPW:     addPos pos=" + position + " payload=" + (payload == null ? "null" : (payload.length + " bytes")) + " proxFP=" + proxOut.getFilePointer());
-			//HM:revisit 
+			 
 			//assert indexOptions.compareTo(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS) >= 0 : "invalid indexOptions: " + indexOptions;
-			//HM:revisit 
+			 
 			//assert proxOut != null;
 			int delta = position - lastPosition;
-			//HM:revisit 
+			 
 			//assert delta >= 0: "position=" + position + " lastPosition=" + lastPosition;            // not quite right (if pos=0 is repeated twice we don't catch it)
 			lastPosition = position;
 			int payloadLength = 0;
@@ -279,7 +279,7 @@ namespace Org.Apache.Lucene.Codecs.Lucene40
 				// and the numbers aren't that much smaller anyways.
 				int offsetDelta = startOffset - lastOffset;
 				int offsetLength = endOffset - startOffset;
-				//HM:revisit 
+				 
 				//assert offsetDelta >= 0 && offsetLength >= 0 : "startOffset=" + startOffset + ",lastOffset=" + lastOffset + ",endOffset=" + endOffset;
 				if (offsetLength != lastOffsetLength)
 				{
@@ -319,11 +319,11 @@ namespace Org.Apache.Lucene.Codecs.Lucene40
 			Lucene40PostingsWriter.StandardTermState state = (Lucene40PostingsWriter.StandardTermState
 				)_state;
 			// if (DEBUG) System.out.println("SPW: finishTerm seg=" + segment + " freqStart=" + freqStart);
-			//HM:revisit 
+			 
 			//assert state.docFreq > 0;
 			// TODO: wasteful we are counting this (counting # docs
 			// for this term) in two places?
-			//HM:revisit 
+			 
 			//assert state.docFreq == df;
 			state.freqStart = freqStart;
 			state.proxStart = proxStart;
@@ -352,7 +352,7 @@ namespace Org.Apache.Lucene.Codecs.Lucene40
 			@out.WriteVLong(state.freqStart - lastState.freqStart);
 			if (state.skipOffset != -1)
 			{
-				//HM:revisit 
+				 
 				//assert state.skipOffset > 0;
 				@out.WriteVLong(state.skipOffset);
 			}

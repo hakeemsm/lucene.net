@@ -707,7 +707,7 @@ namespace Lucene.Net.TestFramework.Analysis
 								// Take care not to split up a surrogate pair:
 								startPos--;
 							}
-							//HM:revisit 
+							 
 							//assert Character.isHighSurrogate(text.charAt(startPos));
 							int endPos = startPos + maxWordLength - 1;
 							if (char.IsHighSurrogate(text[endPos]))

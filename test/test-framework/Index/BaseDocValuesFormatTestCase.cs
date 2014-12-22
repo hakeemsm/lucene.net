@@ -80,7 +80,7 @@ namespace Lucene.Net.TestFramework.Index
 			{
 				Lucene.NetDocument.Document hitDoc = isearcher.Doc(hits.scoreDocs[i].doc);
 				NUnit.Framework.Assert.AreEqual(text, hitDoc.Get("fieldname"));
-				//HM:revisit 
+				 
 				//assert ireader.leaves().size() == 1;
 				NumericDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetNumericDocValues
 					("dv");
@@ -117,7 +117,7 @@ namespace Lucene.Net.TestFramework.Index
 			{
 				Lucene.NetDocument.Document hitDoc = isearcher.Doc(hits.scoreDocs[i].doc);
 				NUnit.Framework.Assert.AreEqual(text, hitDoc.Get("fieldname"));
-				//HM:revisit 
+				 
 				//assert ireader.leaves().size() == 1;
 				NumericDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetNumericDocValues
 					("dv");
@@ -156,7 +156,7 @@ namespace Lucene.Net.TestFramework.Index
 			{
 				Lucene.NetDocument.Document hitDoc = isearcher.Doc(hits.scoreDocs[i].doc);
 				NUnit.Framework.Assert.AreEqual(text, hitDoc.Get("fieldname"));
-				//HM:revisit 
+				 
 				//assert ireader.leaves().size() == 1;
 				NumericDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetNumericDocValues
 					("dv1");
@@ -196,7 +196,7 @@ namespace Lucene.Net.TestFramework.Index
 			{
 				Lucene.NetDocument.Document hitDoc = isearcher.Doc(hits.scoreDocs[i].doc);
 				NUnit.Framework.Assert.AreEqual(text, hitDoc.Get("fieldname"));
-				//HM:revisit 
+				 
 				//assert ireader.leaves().size() == 1;
 				BinaryDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetBinaryDocValues
 					("dv1");
@@ -240,7 +240,7 @@ namespace Lucene.Net.TestFramework.Index
 			{
 				Lucene.NetDocument.Document hitDoc = isearcher.Doc(hits.scoreDocs[i].doc);
 				NUnit.Framework.Assert.AreEqual(text, hitDoc.Get("fieldname"));
-				//HM:revisit 
+				 
 				//assert ireader.leaves().size() == 1;
 				NumericDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetNumericDocValues
 					("dv1");
@@ -284,7 +284,7 @@ namespace Lucene.Net.TestFramework.Index
 			{
 				Lucene.NetDocument.Document hitDoc = isearcher.Doc(hits.scoreDocs[i].doc);
 				NUnit.Framework.Assert.AreEqual(text, hitDoc.Get("fieldname"));
-				//HM:revisit 
+				 
 				//assert ireader.leaves().size() == 1;
 				SortedDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetSortedDocValues
 					("dv1");
@@ -333,7 +333,7 @@ namespace Lucene.Net.TestFramework.Index
 			{
 				Lucene.NetDocument.Document hitDoc = isearcher.Doc(hits.scoreDocs[i].doc);
 				NUnit.Framework.Assert.AreEqual(text, hitDoc.Get("fieldname"));
-				//HM:revisit 
+				 
 				//assert ireader.leaves().size() == 1;
 				SortedDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetSortedDocValues
 					("dv2");
@@ -372,7 +372,7 @@ namespace Lucene.Net.TestFramework.Index
 			// Now search the index:
 			IndexReader ireader = DirectoryReader.Open(directory);
 			// read-only=true
-			//HM:revisit 
+			 
 			//assert ireader.leaves().size() == 1;
 			NumericDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetNumericDocValues
 				("dv");
@@ -405,7 +405,7 @@ namespace Lucene.Net.TestFramework.Index
 			// Now search the index:
 			IndexReader ireader = DirectoryReader.Open(directory);
 			// read-only=true
-			//HM:revisit 
+			 
 			//assert ireader.leaves().size() == 1;
 			NumericDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetNumericDocValues
 				("dv");
@@ -448,7 +448,7 @@ namespace Lucene.Net.TestFramework.Index
 			// Now search the index:
 			IndexReader ireader = DirectoryReader.Open(directory);
 			// read-only=true
-			//HM:revisit 
+			 
 			//assert ireader.leaves().size() == 1;
 			NumericDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetNumericDocValues
 				("dv");
@@ -478,7 +478,7 @@ namespace Lucene.Net.TestFramework.Index
 			// Now search the index:
 			IndexReader ireader = DirectoryReader.Open(directory);
 			// read-only=true
-			//HM:revisit 
+			 
 			//assert ireader.leaves().size() == 1;
 			NumericDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetNumericDocValues
 				("dv");
@@ -518,7 +518,7 @@ namespace Lucene.Net.TestFramework.Index
 			{
 				Lucene.NetDocument.Document hitDoc = isearcher.Doc(hits.scoreDocs[i].doc);
 				NUnit.Framework.Assert.AreEqual(text, hitDoc.Get("fieldname"));
-				//HM:revisit 
+				 
 				//assert ireader.leaves().size() == 1;
 				BinaryDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetBinaryDocValues
 					("dv");
@@ -552,7 +552,7 @@ namespace Lucene.Net.TestFramework.Index
 			// Now search the index:
 			IndexReader ireader = DirectoryReader.Open(directory);
 			// read-only=true
-			//HM:revisit 
+			 
 			//assert ireader.leaves().size() == 1;
 			BinaryDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetBinaryDocValues
 				("dv");
@@ -607,7 +607,7 @@ namespace Lucene.Net.TestFramework.Index
 			{
 				Lucene.NetDocument.Document hitDoc = isearcher.Doc(hits.scoreDocs[i].doc);
 				NUnit.Framework.Assert.AreEqual(text, hitDoc.Get("fieldname"));
-				//HM:revisit 
+				 
 				//assert ireader.leaves().size() == 1;
 				SortedDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetSortedDocValues
 					("dv");
@@ -638,7 +638,7 @@ namespace Lucene.Net.TestFramework.Index
 			// Now search the index:
 			IndexReader ireader = DirectoryReader.Open(directory);
 			// read-only=true
-			//HM:revisit 
+			 
 			//assert ireader.leaves().size() == 1;
 			SortedDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetSortedDocValues
 				("dv");
@@ -674,7 +674,7 @@ namespace Lucene.Net.TestFramework.Index
 			// Now search the index:
 			IndexReader ireader = DirectoryReader.Open(directory);
 			// read-only=true
-			//HM:revisit 
+			 
 			//assert ireader.leaves().size() == 1;
 			SortedDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetSortedDocValues
 				("dv");
@@ -714,7 +714,7 @@ namespace Lucene.Net.TestFramework.Index
 			// Now search the index:
 			IndexReader ireader = DirectoryReader.Open(directory);
 			// read-only=true
-			//HM:revisit 
+			 
 			//assert ireader.leaves().size() == 1;
 			SortedDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetSortedDocValues
 				("dv");
@@ -800,7 +800,7 @@ namespace Lucene.Net.TestFramework.Index
 			// Now search the index:
 			IndexReader ireader = DirectoryReader.Open(directory);
 			// read-only=true
-			//HM:revisit 
+			 
 			//assert ireader.leaves().size() == 1;
 			BinaryDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetBinaryDocValues
 				("dv");
@@ -829,7 +829,7 @@ namespace Lucene.Net.TestFramework.Index
 			// Now search the index:
 			IndexReader ireader = DirectoryReader.Open(directory);
 			// read-only=true
-			//HM:revisit 
+			 
 			//assert ireader.leaves().size() == 1;
 			SortedDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetSortedDocValues
 				("dv");
@@ -934,7 +934,7 @@ namespace Lucene.Net.TestFramework.Index
 			// Now search the index:
 			IndexReader ireader = DirectoryReader.Open(directory);
 			// read-only=true
-			//HM:revisit 
+			 
 			//assert ireader.leaves().size() == 1;
 			SortedDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetSortedDocValues
 				("dv");
@@ -967,7 +967,7 @@ namespace Lucene.Net.TestFramework.Index
 			// Now search the index:
 			IndexReader ireader = DirectoryReader.Open(directory);
 			// read-only=true
-			//HM:revisit 
+			 
 			//assert ireader.leaves().size() == 1;
 			BinaryDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetBinaryDocValues
 				("dv");
@@ -999,7 +999,7 @@ namespace Lucene.Net.TestFramework.Index
 			// Now search the index:
 			IndexReader ireader = DirectoryReader.Open(directory);
 			// read-only=true
-			//HM:revisit 
+			 
 			//assert ireader.leaves().size() == 1;
 			BinaryDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetBinaryDocValues
 				("dv");
@@ -1029,7 +1029,7 @@ namespace Lucene.Net.TestFramework.Index
 			// Now search the index:
 			IndexReader ireader = DirectoryReader.Open(directory);
 			// read-only=true
-			//HM:revisit 
+			 
 			//assert ireader.leaves().size() == 1;
 			BinaryDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetSortedDocValues
 				("dv");
@@ -1056,7 +1056,7 @@ namespace Lucene.Net.TestFramework.Index
 			// Now search the index:
 			IndexReader ireader = DirectoryReader.Open(directory);
 			// read-only=true
-			//HM:revisit 
+			 
 			//assert ireader.leaves().size() == 1;
 			BinaryDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetBinaryDocValues
 				("dv");
@@ -1085,7 +1085,7 @@ namespace Lucene.Net.TestFramework.Index
 			// Now search the index:
 			IndexReader ireader = DirectoryReader.Open(directory);
 			// read-only=true
-			//HM:revisit 
+			 
 			//assert ireader.leaves().size() == 1;
 			BinaryDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetSortedDocValues
 				("dv");
@@ -1117,7 +1117,7 @@ namespace Lucene.Net.TestFramework.Index
 			// Now search the index:
 			IndexReader ireader = DirectoryReader.Open(directory);
 			// read-only=true
-			//HM:revisit 
+			 
 			//assert ireader.leaves().size() == 1;
 			BinaryDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetBinaryDocValues
 				("dv");
@@ -1152,7 +1152,7 @@ namespace Lucene.Net.TestFramework.Index
 			// Now search the index:
 			IndexReader ireader = DirectoryReader.Open(directory);
 			// read-only=true
-			//HM:revisit 
+			 
 			//assert ireader.leaves().size() == 1;
 			BinaryDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetSortedDocValues
 				("dv");
@@ -1360,7 +1360,7 @@ namespace Lucene.Net.TestFramework.Index
 			int numDocs = AtLeast(300);
 			// numDocs should be always > 256 so that in case of a codec that optimizes
 			// for numbers of values <= 256, all storage layouts are tested
-			//HM:revisit 
+			 
 			//assert numDocs > 256;
 			for (int i = 0; i < numDocs; i++)
 			{
@@ -1442,7 +1442,7 @@ namespace Lucene.Net.TestFramework.Index
 			int numDocs = AtLeast(300);
 			// numDocs should be always > 256 so that in case of a codec that optimizes
 			// for numbers of values <= 256, all storage layouts are tested
-			//HM:revisit 
+			 
 			//assert numDocs > 256;
 			for (int i = 0; i < numDocs; i++)
 			{
@@ -2322,17 +2322,17 @@ namespace Lucene.Net.TestFramework.Index
 					}
 					for (int j = 0; j < stringValues.Length; j++)
 					{
-						//HM:revisit 
+						 
 						//assert docValues != null;
 						long ord = docValues.NextOrd();
-						//HM:revisit 
+						 
 						//assert ord != NO_MORE_ORDS;
 						docValues.LookupOrd(ord, scratch);
 						NUnit.Framework.Assert.AreEqual(stringValues[j], scratch.Utf8ToString());
 					}
 				}
 			}
-			//HM:revisit 
+			 
 			//assert docValues == null || docValues.nextOrd() == NO_MORE_ORDS;
 			ir.Close();
 			dir.Close();

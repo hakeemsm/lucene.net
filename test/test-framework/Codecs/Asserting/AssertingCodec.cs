@@ -1,66 +1,52 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
+using Lucene.Net.Codecs.Lucene46;
 
-using Org.Apache.Lucene.Codecs;
-using Org.Apache.Lucene.Codecs.Asserting;
-using Org.Apache.Lucene.Codecs.Lucene46;
-using Sharpen;
-
-namespace Org.Apache.Lucene.Codecs.Asserting
+namespace Lucene.Net.Codecs.Asserting.TestFramework
 {
 	/// <summary>
 	/// Acts like
-	/// <see cref="Org.Apache.Lucene.Codecs.Lucene46.Lucene46Codec">Org.Apache.Lucene.Codecs.Lucene46.Lucene46Codec
+	/// <see cref="Lucene.Net.Codecs.Lucene46.Lucene46Codec">Lucene.Net.Codecs.Lucene46.Lucene46Codec
 	/// 	</see>
 	/// but with additional asserts.
 	/// </summary>
 	public sealed class AssertingCodec : FilterCodec
 	{
-		private readonly Org.Apache.Lucene.Codecs.PostingsFormat postings = new AssertingPostingsFormat
-			();
+		private readonly PostingsFormat postings = new AssertingPostingsFormat();
 
-		private readonly Org.Apache.Lucene.Codecs.TermVectorsFormat vectors = new AssertingTermVectorsFormat
-			();
+		private readonly TermVectorsFormat vectors = new AssertingTermVectorsFormat();
 
-		private readonly Org.Apache.Lucene.Codecs.StoredFieldsFormat storedFields = new AssertingStoredFieldsFormat
-			();
+		private readonly StoredFieldsFormat storedFields = new AssertingStoredFieldsFormat();
 
-		private readonly Org.Apache.Lucene.Codecs.DocValuesFormat docValues = new AssertingDocValuesFormat
-			();
+		private readonly DocValuesFormat docValues = new AssertingDocValuesFormat();
 
-		private readonly Org.Apache.Lucene.Codecs.NormsFormat norms = new AssertingNormsFormat
-			();
+		private readonly NormsFormat norms = new AssertingNormsFormat();
 
 		public AssertingCodec() : base("Asserting", new Lucene46Codec())
 		{
 		}
 
-		public override Org.Apache.Lucene.Codecs.PostingsFormat PostingsFormat()
+		public override PostingsFormat PostingsFormat
 		{
-			return postings;
+		    get { return postings; }
 		}
 
-		public override Org.Apache.Lucene.Codecs.TermVectorsFormat TermVectorsFormat()
+		public override TermVectorsFormat TermVectorsFormat
 		{
-			return vectors;
+		    get { return vectors; }
 		}
 
-		public override Org.Apache.Lucene.Codecs.StoredFieldsFormat StoredFieldsFormat()
+		public override StoredFieldsFormat StoredFieldsFormat
 		{
-			return storedFields;
+		    get { return storedFields; }
 		}
 
-		public override Org.Apache.Lucene.Codecs.DocValuesFormat DocValuesFormat()
+		public override DocValuesFormat DocValuesFormat
 		{
-			return docValues;
+		    get { return docValues; }
 		}
 
-		public override Org.Apache.Lucene.Codecs.NormsFormat NormsFormat()
+		public override NormsFormat NormsFormat
 		{
-			return norms;
+		    get { return norms; }
 		}
 	}
 }

@@ -7,12 +7,12 @@
 using System.Collections.Generic;
 using System.IO;
 using Org.Apache.Lucene.Codecs;
-using Org.Apache.Lucene.Codecs.Cranky;
+using Lucene.Net.Codecs.Cranky;
 using Org.Apache.Lucene.Index;
 using Org.Apache.Lucene.Util;
 using Sharpen;
 
-namespace Org.Apache.Lucene.Codecs.Cranky
+namespace Lucene.Net.Codecs.Cranky
 {
 	internal class CrankyPostingsFormat : PostingsFormat
 	{
@@ -30,7 +30,7 @@ namespace Org.Apache.Lucene.Codecs.Cranky
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		public override Org.Apache.Lucene.Codecs.FieldsConsumer FieldsConsumer(SegmentWriteState
+		public override Lucene.Net.Codecs.FieldsConsumer FieldsConsumer(SegmentWriteState
 			 state)
 		{
 			if (random.Next(100) == 0)
@@ -42,7 +42,7 @@ namespace Org.Apache.Lucene.Codecs.Cranky
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		public override Org.Apache.Lucene.Codecs.FieldsProducer FieldsProducer(SegmentReadState
+		public override Lucene.Net.Codecs.FieldsProducer FieldsProducer(SegmentReadState
 			 state)
 		{
 			return delegate_.FieldsProducer(state);

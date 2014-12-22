@@ -1,12 +1,7 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
+using System;
 using System.IO;
-using Lucene.Net.TestFramework.Analysis;
-using Sharpen;
+using Lucene.Net.Analysis;
+using Lucene.Net.Randomized.Generators;
 
 namespace Lucene.Net.TestFramework.Analysis
 {
@@ -61,9 +56,9 @@ namespace Lucene.Net.TestFramework.Analysis
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		public override void Close()
+		public override void Dispose()
 		{
-			base.Close();
+			base.Dispose();
 			if (thingToDo == 3 && random.NextBoolean())
 			{
 				throw new IOException("Fake IOException from TokenStream.close()");

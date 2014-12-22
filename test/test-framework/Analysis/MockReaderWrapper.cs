@@ -50,7 +50,7 @@ namespace Lucene.Net.TestFramework.Analysis
 		}
 
 		// You should only call this on init!:
-		//HM:revisit 
+		 
 		//assert readSoFar == 0;
 		public virtual void ThrowExcNext()
 		{
@@ -85,10 +85,10 @@ namespace Lucene.Net.TestFramework.Analysis
 			if (excAtChar != -1)
 			{
 				int left = excAtChar - readSoFar;
-				//HM:revisit 
+				 
 				//assert left != 0;
 				read = inputReader.Read(cbuf, off, Math.Min(realLen, left));
-				//HM:revisit 
+				 
 				//assert read != -1;
 				readSoFar += read;
 			}

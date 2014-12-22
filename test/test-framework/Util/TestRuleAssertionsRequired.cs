@@ -35,7 +35,7 @@ namespace Lucene.Net.TestFramework.Util
 			{
 				try
 				{
-					//HM:revisit 
+					 
 					//assert false;
 					string msg = "Test class requires enabled assertions, enable globally (-ea)" + " or for Solr/Lucene subpackages only: "
 						 + description.GetClassName();
