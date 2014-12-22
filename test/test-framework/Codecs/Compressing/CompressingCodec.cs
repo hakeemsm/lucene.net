@@ -1,18 +1,9 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
-using Com.Carrotsearch.Randomizedtesting.Generators;
-using Org.Apache.Lucene.Codecs;
-using Lucene.Net.Codecs.Compressing;
 using Lucene.Net.Codecs.Compressing.Dummy;
 using Lucene.Net.Codecs.Lucene46;
-using Sharpen;
+using Lucene.Net.Randomized.Generators;
 
-namespace Lucene.Net.Codecs.Compressing
+namespace Lucene.Net.Codecs.Compressing.TestFramework
 {
 	/// <summary>
 	/// A codec that uses
@@ -27,7 +18,7 @@ namespace Lucene.Net.Codecs.Compressing
 	{
 		/// <summary>Create a random instance.</summary>
 		/// <remarks>Create a random instance.</remarks>
-		public static Lucene.Net.Codecs.Compressing.CompressingCodec RandomInstance
+		public static CompressingCodec RandomInstance
 			(Random random, int chunkSize, bool withSegmentSuffix)
 		{
 			switch (random.Next(4))
@@ -76,11 +67,9 @@ namespace Lucene.Net.Codecs.Compressing
 		/// <see cref="CompressingCodec">CompressingCodec</see>
 		/// that is using a segment suffix
 		/// </summary>
-		public static Lucene.Net.Codecs.Compressing.CompressingCodec RandomInstance
-			(Random random, bool withSegmentSuffix)
+		public static CompressingCodec RandomInstance(Random random, bool withSegmentSuffix)
 		{
-			return RandomInstance(random, RandomInts.RandomIntBetween(random, 1, 500), withSegmentSuffix
-				);
+			return RandomInstance(random, RandomInts.RandomIntBetween(random, 1, 500), withSegmentSuffix);
 		}
 
 		private readonly CompressingStoredFieldsFormat storedFieldsFormat;
@@ -103,20 +92,19 @@ namespace Lucene.Net.Codecs.Compressing
 		{
 		}
 
-		public override Lucene.Net.Codecs.StoredFieldsFormat StoredFieldsFormat()
+		public override StoredFieldsFormat StoredFieldsFormat
 		{
-			return storedFieldsFormat;
+		    get { return storedFieldsFormat; }
 		}
 
-		public override Lucene.Net.Codecs.TermVectorsFormat TermVectorsFormat()
+		public override TermVectorsFormat TermVectorsFormat
 		{
-			return termVectorsFormat;
+		    get { return termVectorsFormat; }
 		}
 
 		public override string ToString()
 		{
-			return GetName() + "(storedFieldsFormat=" + storedFieldsFormat + ", termVectorsFormat="
-				 + termVectorsFormat + ")";
+			return Name + "(storedFieldsFormat=" + storedFieldsFormat + ", termVectorsFormat="+ termVectorsFormat + ")";
 		}
 	}
 }

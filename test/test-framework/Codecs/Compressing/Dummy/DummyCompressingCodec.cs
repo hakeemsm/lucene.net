@@ -1,15 +1,8 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
+using Lucene.Net.Codecs.Compressing.TestFramework;
+using Lucene.Net.Store;
+using Lucene.Net.Util;
 
-using Lucene.Net.Codecs.Compressing;
-using Org.Apache.Lucene.Store;
-using Org.Apache.Lucene.Util;
-using Sharpen;
-
-namespace Lucene.Net.Codecs.Compressing.Dummy
+namespace Lucene.Net.Codecs.Compressing.Dummy.TestFramework
 {
 	/// <summary>CompressionCodec that does not compress data, useful for testing.</summary>
 	/// <remarks>CompressionCodec that does not compress data, useful for testing.</remarks>
@@ -25,12 +18,12 @@ namespace Lucene.Net.Codecs.Compressing.Dummy
 			// visible enough to let people write their own CompressionMode
 			public override Compressor NewCompressor()
 			{
-				return Lucene.Net.Codecs.Compressing.Dummy.DummyCompressingCodec.DUMMY_COMPRESSOR;
+				return DUMMY_COMPRESSOR;
 			}
 
 			public override Decompressor NewDecompressor()
 			{
-				return Lucene.Net.Codecs.Compressing.Dummy.DummyCompressingCodec.DUMMY_DECOMPRESSOR;
+				return DUMMY_DECOMPRESSOR;
 			}
 
 			public override string ToString()
@@ -43,26 +36,21 @@ namespace Lucene.Net.Codecs.Compressing.Dummy
 
 		private sealed class _Decompressor_55 : Decompressor
 		{
-			public _Decompressor_55()
-			{
-			}
-
-			/// <exception cref="System.IO.IOException"></exception>
-			public override void Decompress(DataInput @in, int originalLength, int offset, int
-				 length, BytesRef bytes)
+		    /// <exception cref="System.IO.IOException"></exception>
+			public override void Decompress(DataInput @in, int originalLength, int offset, int length, BytesRef bytes)
 			{
 				 
 				//assert offset + length <= originalLength;
 				if (bytes.bytes.Length < originalLength)
 				{
-					bytes.bytes = new byte[ArrayUtil.Oversize(originalLength, 1)];
+					bytes.bytes = new sbyte[ArrayUtil.Oversize(originalLength, 1)];
 				}
 				@in.ReadBytes(bytes.bytes, 0, offset + length);
 				bytes.offset = offset;
 				bytes.length = length;
 			}
 
-			public override Decompressor Clone()
+			public override object Clone()
 			{
 				return this;
 			}
@@ -72,12 +60,8 @@ namespace Lucene.Net.Codecs.Compressing.Dummy
 
 		private sealed class _Compressor_78 : Compressor
 		{
-			public _Compressor_78()
-			{
-			}
-
-			/// <exception cref="System.IO.IOException"></exception>
-			public override void Compress(byte[] bytes, int off, int len, DataOutput @out)
+		    /// <exception cref="System.IO.IOException"></exception>
+			public override void Compress(sbyte[] bytes, int off, int len, DataOutput @out)
 			{
 				@out.WriteBytes(bytes, off, len);
 			}

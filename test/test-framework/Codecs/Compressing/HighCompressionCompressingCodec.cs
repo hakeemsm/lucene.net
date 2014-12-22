@@ -1,15 +1,7 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
-using Lucene.Net.Codecs.Compressing;
 using Lucene.Net.Codecs.Lucene42;
-using Org.Apache.Lucene.Util.Packed;
-using Sharpen;
+using Lucene.Net.Util.Packed;
 
-namespace Lucene.Net.Codecs.Compressing
+namespace Lucene.Net.Codecs.Compressing.TestFramework
 {
 	/// <summary>
 	/// CompressionCodec that uses
@@ -22,7 +14,7 @@ namespace Lucene.Net.Codecs.Compressing
 		/// <remarks>Constructor that allows to configure the chunk size.</remarks>
 		public HighCompressionCompressingCodec(int chunkSize, bool withSegmentSuffix) : base
 			("HighCompressionCompressingStoredFields", withSegmentSuffix ? "HighCompressionCompressingStoredFields"
-			 : string.Empty, CompressionMode.HIGH_COMPRESSION, chunkSize)
+			 : string.Empty, new CompressionMode.CompressionModeHigh(), chunkSize)
 		{
 		}
 
@@ -32,9 +24,9 @@ namespace Lucene.Net.Codecs.Compressing
 		{
 		}
 
-		public override Lucene.Net.Codecs.NormsFormat NormsFormat()
+		public override NormsFormat NormsFormat
 		{
-			return new Lucene42NormsFormat(PackedInts.COMPACT);
+		    get { return new Lucene42NormsFormat(PackedInts.COMPACT); }
 		}
 	}
 }
