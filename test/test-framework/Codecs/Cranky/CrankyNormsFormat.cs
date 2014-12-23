@@ -1,26 +1,18 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
+using System;
 using System.IO;
-using Org.Apache.Lucene.Codecs;
-using Lucene.Net.Codecs.Cranky;
-using Org.Apache.Lucene.Index;
-using Sharpen;
+using Lucene.Net.Index;
 
-namespace Lucene.Net.Codecs.Cranky
+namespace Lucene.Net.Codecs.Cranky.TestFramework
 {
 	internal class CrankyNormsFormat : NormsFormat
 	{
-		internal readonly NormsFormat delegate_;
+		internal readonly NormsFormat normsFormat;
 
 		internal readonly Random random;
 
-		internal CrankyNormsFormat(NormsFormat delegate_, Random random)
+		internal CrankyNormsFormat(NormsFormat del, Random random)
 		{
-			this.delegate_ = delegate_;
+			this.normsFormat = del;
 			this.random = random;
 		}
 
@@ -31,14 +23,13 @@ namespace Lucene.Net.Codecs.Cranky
 			{
 				throw new IOException("Fake IOException from NormsFormat.fieldsConsumer()");
 			}
-			return new CrankyDocValuesFormat.CrankyDocValuesConsumer(delegate_.NormsConsumer(
-				state), random);
+			return new CrankyDocValuesFormat.CrankyDocValuesConsumer(normsFormat.NormsConsumer(state), random);
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
 		public override DocValuesProducer NormsProducer(SegmentReadState state)
 		{
-			return delegate_.NormsProducer(state);
+			return normsFormat.NormsProducer(state);
 		}
 	}
 }

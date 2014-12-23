@@ -9,8 +9,17 @@ using NUnit.Framework;
 namespace Lucene.Net.Test.Util
 {
     [TestFixture]
-    public class TestFixedBitSet : LuceneTestCase
+	public class TestFixedBitSet : BaseDocIdSetTestCase<FixedBitSet>
     {
+		public override FixedBitSet CopyOf(BitSet bs, int length)
+		{
+			FixedBitSet set = new FixedBitSet(length);
+			for (int doc = bs.NextSetBit(0); doc != -1; doc = bs.NextSetBit(doc + 1))
+			{
+				set.Set(doc);
+			}
+			return set;
+		}
         internal virtual void DoGet(BitArray a, FixedBitSet b)
         {
             int max = b.Length;
@@ -23,7 +32,7 @@ namespace Lucene.Net.Test.Util
             }
         }
 
-        internal virtual void doNextSetBit(BitArray a, FixedBitSet b)
+        internal virtual void DoNextSetBit(BitArray a, FixedBitSet b)
         {
             int aa = -1, bb = -1;
             do
@@ -34,7 +43,7 @@ namespace Lucene.Net.Test.Util
             } while (aa >= 0);
         }
 
-        internal virtual void doPrevSetBit(BitArray a, FixedBitSet b)
+        internal virtual void DoPrevSetBit(BitArray a, FixedBitSet b)
         {
             int aa = a.Length + new Random().Next(100);
             int bb = aa;
@@ -194,6 +203,7 @@ namespace Lucene.Net.Test.Util
 
                     Assert.Equals(a_and.Cardinality(), b_and.Cardinality());
                     Assert.Equals(a_or.Cardinality(), b_or.Cardinality());
+					NUnit.Framework.Assert.AreEqual(a_xor.Cardinality(), b_xor.Cardinality());
                     Assert.Equals(a_andn.Cardinality(), b_andn.Cardinality());
                 }
 
@@ -337,7 +347,7 @@ namespace Lucene.Net.Test.Util
         {
             var obs = MakeFixedBitSet(a, numBits);
             var bs = MakeBitSet(a);
-            doPrevSetBit(bs, obs);
+			DoPrevSetBit(bs, obs);
         }
 
         [Test]
@@ -369,5 +379,32 @@ namespace Lucene.Net.Test.Util
 
             CheckNextSetBitArray(new int[0], setBits.Length + random.Next(10));
         }
+		public virtual void TestEnsureCapacity()
+		{
+			FixedBitSet bits = new FixedBitSet(5);
+			bits.Set(1);
+			bits.Set(4);
+			FixedBitSet newBits = FixedBitSet.EnsureCapacity(bits, 8);
+			// grow within the word
+			NUnit.Framework.Assert.IsTrue(newBits.Get(1));
+			NUnit.Framework.Assert.IsTrue(newBits.Get(4));
+			newBits.Clear(1);
+			// we align to 64-bits, so even though it shouldn't have, it re-allocated a long[1]
+			NUnit.Framework.Assert.IsTrue(bits.Get(1));
+			NUnit.Framework.Assert.IsFalse(newBits.Get(1));
+			newBits.Set(1);
+			newBits = FixedBitSet.EnsureCapacity(newBits, newBits.Length() - 2);
+			// reuse
+			NUnit.Framework.Assert.IsTrue(newBits.Get(1));
+			bits.Set(1);
+			newBits = FixedBitSet.EnsureCapacity(bits, 72);
+			// grow beyond one word
+			NUnit.Framework.Assert.IsTrue(newBits.Get(1));
+			NUnit.Framework.Assert.IsTrue(newBits.Get(4));
+			newBits.Clear(1);
+			// we grew the long[], so it's not shared
+			NUnit.Framework.Assert.IsTrue(bits.Get(1));
+			NUnit.Framework.Assert.IsFalse(newBits.Get(1));
+		}
     }
 }

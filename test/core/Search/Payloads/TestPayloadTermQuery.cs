@@ -1,130 +1,72 @@
-/* 
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+/*
+ * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
  * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using System;
-using Lucene.Net.Analysis.Tokenattributes;
+using System.IO;
 using NUnit.Framework;
-
-using Analyzer = Lucene.Net.Analysis.Analyzer;
-using LowerCaseTokenizer = Lucene.Net.Analysis.LowerCaseTokenizer;
-using TokenFilter = Lucene.Net.Analysis.TokenFilter;
-using TokenStream = Lucene.Net.Analysis.TokenStream;
-using Document = Lucene.Net.Documents.Document;
-using Field = Lucene.Net.Documents.Field;
-using IndexWriter = Lucene.Net.Index.IndexWriter;
-using Payload = Lucene.Net.Index.Payload;
-using Term = Lucene.Net.Index.Term;
-using RAMDirectory = Lucene.Net.Store.RAMDirectory;
-using BooleanClause = Lucene.Net.Search.BooleanClause;
-using BooleanQuery = Lucene.Net.Search.BooleanQuery;
-using CheckHits = Lucene.Net.Search.CheckHits;
-using DefaultSimilarity = Lucene.Net.Search.DefaultSimilarity;
-using IndexSearcher = Lucene.Net.Search.IndexSearcher;
-using QueryUtils = Lucene.Net.Search.QueryUtils;
-using ScoreDoc = Lucene.Net.Search.ScoreDoc;
-using TopDocs = Lucene.Net.Search.TopDocs;
-using SpanTermQuery = Lucene.Net.Search.Spans.SpanTermQuery;
-using TermSpans = Lucene.Net.Search.Spans.TermSpans;
-using English = Lucene.Net.Util.English;
-using LuceneTestCase = Lucene.Net.Util.LuceneTestCase;
+using Lucene.Net.Analysis;
+using Lucene.Net.Analysis.Tokenattributes;
+using Lucene.Net.Document;
+using Lucene.Net.Index;
+using Lucene.Net.Search;
+using Lucene.Net.Search.Payloads;
+using Lucene.Net.Search.Similarities;
+using Lucene.Net.Search.Spans;
+using Lucene.Net.Store;
+using Lucene.Net.Util;
+using Sharpen;
 
 namespace Lucene.Net.Search.Payloads
 {
-	
-	
-	/// <summary> 
-	/// 
-	/// 
-	/// </summary>
-    [TestFixture]
-	public class TestPayloadTermQuery:LuceneTestCase
+	public class TestPayloadTermQuery : LuceneTestCase
 	{
-		private void  InitBlock()
+		private static IndexSearcher searcher;
+
+		private static IndexReader reader;
+
+		private static Similarity similarity = new TestPayloadTermQuery.BoostingSimilarity
+			();
+
+		private static readonly byte[] payloadField = new byte[] { 1 };
+
+		private static readonly byte[] payloadMultiField1 = new byte[] { 2 };
+
+		private static readonly byte[] payloadMultiField2 = new byte[] { 4 };
+
+		protected internal static Directory directory;
+
+		private class PayloadAnalyzer : Analyzer
 		{
-			similarity = new BoostingSimilarity();
-		}
-		private IndexSearcher searcher;
-		private BoostingSimilarity similarity;
-		private byte[] payloadField = new byte[]{1};
-		private byte[] payloadMultiField1 = new byte[]{2};
-		private byte[] payloadMultiField2 = new byte[]{4};
-		protected internal RAMDirectory directory;
-		
-		public TestPayloadTermQuery():base()
-		{
-			InitBlock();
-		}
-		
-		private class PayloadAnalyzer:Analyzer
-		{
-			public PayloadAnalyzer(TestPayloadTermQuery enclosingInstance)
+			public PayloadAnalyzer() : base(PER_FIELD_REUSE_STRATEGY)
 			{
-				InitBlock(enclosingInstance);
 			}
-			private void  InitBlock(TestPayloadTermQuery enclosingInstance)
+
+			protected override Analyzer.TokenStreamComponents CreateComponents(string fieldName
+				, StreamReader reader)
 			{
-				this.enclosingInstance = enclosingInstance;
-			}
-			private TestPayloadTermQuery enclosingInstance;
-			public TestPayloadTermQuery Enclosing_Instance
-			{
-				get
-				{
-					return enclosingInstance;
-				}
-				
-			}
-			
-			
-			public override TokenStream TokenStream(System.String fieldName, System.IO.TextReader reader)
-			{
-				TokenStream result = new LowerCaseTokenizer(reader);
-				result = new PayloadFilter(enclosingInstance, result, fieldName);
-				return result;
+				Tokenizer result = new MockTokenizer(reader, MockTokenizer.SIMPLE, true);
+				return new Analyzer.TokenStreamComponents(result, new TestPayloadTermQuery.PayloadFilter
+					(result, fieldName));
 			}
 		}
-		
-		private class PayloadFilter:TokenFilter
+
+		private class PayloadFilter : TokenFilter
 		{
-			private void  InitBlock(TestPayloadTermQuery enclosingInstance)
+			private readonly string fieldName;
+
+			private int numSeen = 0;
+
+			private readonly PayloadAttribute payloadAtt;
+
+			public PayloadFilter(TokenStream input, string fieldName) : base(input)
 			{
-				this.enclosingInstance = enclosingInstance;
-			}
-			private TestPayloadTermQuery enclosingInstance;
-			public TestPayloadTermQuery Enclosing_Instance
-			{
-				get
-				{
-					return enclosingInstance;
-				}
-				
-			}
-			internal System.String fieldName;
-			internal int numSeen = 0;
-			
-			internal IPayloadAttribute payloadAtt;
-			
-			public PayloadFilter(TestPayloadTermQuery enclosingInstance, TokenStream input, System.String fieldName):base(input)
-			{
-				InitBlock(enclosingInstance);
 				this.fieldName = fieldName;
-                payloadAtt = AddAttribute<IPayloadAttribute>();
+				payloadAtt = AddAttribute<PayloadAttribute>();
 			}
-			
+
+			/// <exception cref="System.IO.IOException"></exception>
 			public override bool IncrementToken()
 			{
 				bool hasNext = input.IncrementToken();
@@ -132,19 +74,22 @@ namespace Lucene.Net.Search.Payloads
 				{
 					if (fieldName.Equals("field"))
 					{
-						payloadAtt.Payload = new Payload(Enclosing_Instance.payloadField);
+						payloadAtt.SetPayload(new BytesRef(payloadField));
 					}
-					else if (fieldName.Equals("multiField"))
+					else
 					{
-						if (numSeen % 2 == 0)
+						if (fieldName.Equals("multiField"))
 						{
-							payloadAtt.Payload = new Payload(Enclosing_Instance.payloadMultiField1);
+							if (numSeen % 2 == 0)
+							{
+								payloadAtt.SetPayload(new BytesRef(payloadMultiField1));
+							}
+							else
+							{
+								payloadAtt.SetPayload(new BytesRef(payloadMultiField2));
+							}
+							numSeen++;
 						}
-						else
-						{
-							payloadAtt.Payload = new Payload(Enclosing_Instance.payloadMultiField2);
-						}
-						numSeen++;
 					}
 					return true;
 				}
@@ -153,111 +98,130 @@ namespace Lucene.Net.Search.Payloads
 					return false;
 				}
 			}
+
+			/// <exception cref="System.IO.IOException"></exception>
+			public override void Reset()
+			{
+				base.Reset();
+				this.numSeen = 0;
+			}
 		}
-		
-		[SetUp]
-		public override void  SetUp()
+
+		/// <exception cref="System.Exception"></exception>
+		[BeforeClass]
+		public static void BeforeClass()
 		{
-			base.SetUp();
-			directory = new RAMDirectory();
-			PayloadAnalyzer analyzer = new PayloadAnalyzer(this);
-			IndexWriter writer = new IndexWriter(directory, analyzer, true, IndexWriter.MaxFieldLength.LIMITED);
-			writer.SetSimilarity(similarity);
+			directory = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), directory, NewIndexWriterConfig
+				(TEST_VERSION_CURRENT, new TestPayloadTermQuery.PayloadAnalyzer()).SetSimilarity
+				(similarity).SetMergePolicy(NewLogMergePolicy()));
 			//writer.infoStream = System.out;
 			for (int i = 0; i < 1000; i++)
 			{
-				Document doc = new Document();
-				Field noPayloadField = new Field(PayloadHelper.NO_PAYLOAD_FIELD, English.IntToEnglish(i), Field.Store.YES, Field.Index.ANALYZED);
+				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					();
+				Field noPayloadField = NewTextField(PayloadHelper.NO_PAYLOAD_FIELD, English.IntToEnglish
+					(i), Field.Store.YES);
 				//noPayloadField.setBoost(0);
 				doc.Add(noPayloadField);
-				doc.Add(new Field("field", English.IntToEnglish(i), Field.Store.YES, Field.Index.ANALYZED));
-				doc.Add(new Field("multiField", English.IntToEnglish(i) + "  " + English.IntToEnglish(i), Field.Store.YES, Field.Index.ANALYZED));
+				doc.Add(NewTextField("field", English.IntToEnglish(i), Field.Store.YES));
+				doc.Add(NewTextField("multiField", English.IntToEnglish(i) + "  " + English.IntToEnglish
+					(i), Field.Store.YES));
 				writer.AddDocument(doc);
 			}
-			writer.Optimize();
+			reader = writer.GetReader();
 			writer.Close();
-			
-			searcher = new IndexSearcher(directory, true);
-			searcher.Similarity = similarity;
+			searcher = NewSearcher(reader);
+			searcher.SetSimilarity(similarity);
 		}
-		
-        [Test]
-		public virtual void  Test()
+
+		/// <exception cref="System.Exception"></exception>
+		[AfterClass]
+		public static void AfterClass()
 		{
-			PayloadTermQuery query = new PayloadTermQuery(new Term("field", "seventy"), new MaxPayloadFunction());
+			searcher = null;
+			reader.Close();
+			reader = null;
+			directory.Close();
+			directory = null;
+		}
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void Test()
+		{
+			PayloadTermQuery query = new PayloadTermQuery(new Term("field", "seventy"), new MaxPayloadFunction
+				());
 			TopDocs hits = searcher.Search(query, null, 100);
-			Assert.IsTrue(hits != null, "hits is null and it shouldn't be");
-			Assert.IsTrue(hits.TotalHits == 100, "hits Size: " + hits.TotalHits + " is not: " + 100);
-			
+			NUnit.Framework.Assert.IsTrue("hits is null and it shouldn't be", hits != null);
+			NUnit.Framework.Assert.IsTrue("hits Size: " + hits.totalHits + " is not: " + 100, 
+				hits.totalHits == 100);
 			//they should all have the exact same score, because they all contain seventy once, and we set
 			//all the other similarity factors to be 1
-
-            Assert.IsTrue(hits.MaxScore == 1, hits.MaxScore + " does not equal: " + 1);
-			for (int i = 0; i < hits.ScoreDocs.Length; i++)
+			NUnit.Framework.Assert.IsTrue(hits.GetMaxScore() + " does not equal: " + 1, hits.
+				GetMaxScore() == 1);
+			for (int i = 0; i < hits.scoreDocs.Length; i++)
 			{
-				ScoreDoc doc = hits.ScoreDocs[i];
-				Assert.IsTrue(doc.Score == 1, doc.Score + " does not equal: " + 1);
+				ScoreDoc doc = hits.scoreDocs[i];
+				NUnit.Framework.Assert.IsTrue(doc.score + " does not equal: " + 1, doc.score == 1
+					);
 			}
 			CheckHits.CheckExplanations(query, PayloadHelper.FIELD, searcher, true);
-			Lucene.Net.Search.Spans.Spans spans = query.GetSpans(searcher.IndexReader);
-			Assert.IsTrue(spans != null, "spans is null and it shouldn't be");
-			Assert.IsTrue(spans is TermSpans, "spans is not an instanceof " + typeof(TermSpans));
-            /*float score = hits.score(0);
-            for (int i =1; i < hits.length(); i++)
-            {
-            Assert.IsTrue(score == hits.score(i), "scores are not equal and they should be");
-            }*/
-        }
-		
-        [Test]
-		public virtual void  TestQuery()
+			Lucene.Net.Search.Spans.Spans spans = MultiSpansWrapper.Wrap(searcher.GetTopReaderContext
+				(), query);
+			NUnit.Framework.Assert.IsTrue("spans is null and it shouldn't be", spans != null);
+		}
+
+		public virtual void TestQuery()
 		{
-			PayloadTermQuery boostingFuncTermQuery = new PayloadTermQuery(new Term(PayloadHelper.MULTI_FIELD, "seventy"), new MaxPayloadFunction());
+			PayloadTermQuery boostingFuncTermQuery = new PayloadTermQuery(new Term(PayloadHelper
+				.MULTI_FIELD, "seventy"), new MaxPayloadFunction());
 			QueryUtils.Check(boostingFuncTermQuery);
-			
-			SpanTermQuery spanTermQuery = new SpanTermQuery(new Term(PayloadHelper.MULTI_FIELD, "seventy"));
-			
-			Assert.IsTrue(boostingFuncTermQuery.Equals(spanTermQuery) == spanTermQuery.Equals(boostingFuncTermQuery));
-			
-			PayloadTermQuery boostingFuncTermQuery2 = new PayloadTermQuery(new Term(PayloadHelper.MULTI_FIELD, "seventy"), new AveragePayloadFunction());
-			
+			SpanTermQuery spanTermQuery = new SpanTermQuery(new Term(PayloadHelper.MULTI_FIELD
+				, "seventy"));
+			NUnit.Framework.Assert.IsTrue(boostingFuncTermQuery.Equals(spanTermQuery) == spanTermQuery
+				.Equals(boostingFuncTermQuery));
+			PayloadTermQuery boostingFuncTermQuery2 = new PayloadTermQuery(new Term(PayloadHelper
+				.MULTI_FIELD, "seventy"), new AveragePayloadFunction());
 			QueryUtils.CheckUnequal(boostingFuncTermQuery, boostingFuncTermQuery2);
 		}
-		
-        [Test]
-		public virtual void  TestMultipleMatchesPerDoc()
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestMultipleMatchesPerDoc()
 		{
-			PayloadTermQuery query = new PayloadTermQuery(new Term(PayloadHelper.MULTI_FIELD, "seventy"), new MaxPayloadFunction());
+			PayloadTermQuery query = new PayloadTermQuery(new Term(PayloadHelper.MULTI_FIELD, 
+				"seventy"), new MaxPayloadFunction());
 			TopDocs hits = searcher.Search(query, null, 100);
-			Assert.IsTrue(hits != null, "hits is null and it shouldn't be");
-			Assert.IsTrue(hits.TotalHits == 100, "hits Size: " + hits.TotalHits + " is not: " + 100);
-			
+			NUnit.Framework.Assert.IsTrue("hits is null and it shouldn't be", hits != null);
+			NUnit.Framework.Assert.IsTrue("hits Size: " + hits.totalHits + " is not: " + 100, 
+				hits.totalHits == 100);
 			//they should all have the exact same score, because they all contain seventy once, and we set
 			//all the other similarity factors to be 1
-			
 			//System.out.println("Hash: " + seventyHash + " Twice Hash: " + 2*seventyHash);
-            Assert.IsTrue(hits.MaxScore == 4.0, hits.MaxScore + " does not equal: " + 4.0);
+			NUnit.Framework.Assert.IsTrue(hits.GetMaxScore() + " does not equal: " + 4.0, hits
+				.GetMaxScore() == 4.0);
 			//there should be exactly 10 items that score a 4, all the rest should score a 2
 			//The 10 items are: 70 + i*100 where i in [0-9]
 			int numTens = 0;
-			for (int i = 0; i < hits.ScoreDocs.Length; i++)
+			for (int i = 0; i < hits.scoreDocs.Length; i++)
 			{
-				ScoreDoc doc = hits.ScoreDocs[i];
-				if (doc.Doc % 10 == 0)
+				ScoreDoc doc = hits.scoreDocs[i];
+				if (doc.doc % 10 == 0)
 				{
 					numTens++;
-					Assert.IsTrue(doc.Score == 4.0, doc.Score + " does not equal: " + 4.0);
+					NUnit.Framework.Assert.IsTrue(doc.score + " does not equal: " + 4.0, doc.score ==
+						 4.0);
 				}
 				else
 				{
-					Assert.IsTrue(doc.Score == 2, doc.Score + " does not equal: " + 2);
+					NUnit.Framework.Assert.IsTrue(doc.score + " does not equal: " + 2, doc.score == 2
+						);
 				}
 			}
-			Assert.IsTrue(numTens == 10, numTens + " does not equal: " + 10);
+			NUnit.Framework.Assert.IsTrue(numTens + " does not equal: " + 10, numTens == 10);
 			CheckHits.CheckExplanations(query, "field", searcher, true);
-			Lucene.Net.Search.Spans.Spans spans = query.GetSpans(searcher.IndexReader);
-			Assert.IsTrue(spans != null, "spans is null and it shouldn't be");
-			Assert.IsTrue(spans is TermSpans, "spans is not an instanceof " + typeof(TermSpans));
+			Lucene.Net.Search.Spans.Spans spans = MultiSpansWrapper.Wrap(searcher.GetTopReaderContext
+				(), query);
+			NUnit.Framework.Assert.IsTrue("spans is null and it shouldn't be", spans != null);
 			//should be two matches per document
 			int count = 0;
 			//100 hits times 2 matches per hit, we should have 200 in count
@@ -265,47 +229,50 @@ namespace Lucene.Net.Search.Payloads
 			{
 				count++;
 			}
-			Assert.IsTrue(count == 200, count + " does not equal: " + 200);
+			NUnit.Framework.Assert.IsTrue(count + " does not equal: " + 200, count == 200);
 		}
-		
+
 		//Set includeSpanScore to false, in which case just the payload score comes through.
-        [Test]
-		public virtual void  TestIgnoreSpanScorer()
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestIgnoreSpanScorer()
 		{
-			PayloadTermQuery query = new PayloadTermQuery(new Term(PayloadHelper.MULTI_FIELD, "seventy"), new MaxPayloadFunction(), false);
-			
-			IndexSearcher theSearcher = new IndexSearcher(directory, true);
-			theSearcher.Similarity = new FullSimilarity();
+			PayloadTermQuery query = new PayloadTermQuery(new Term(PayloadHelper.MULTI_FIELD, 
+				"seventy"), new MaxPayloadFunction(), false);
+			IndexReader reader = DirectoryReader.Open(directory);
+			IndexSearcher theSearcher = NewSearcher(reader);
+			theSearcher.SetSimilarity(new TestPayloadTermQuery.FullSimilarity());
 			TopDocs hits = searcher.Search(query, null, 100);
-			Assert.IsTrue(hits != null, "hits is null and it shouldn't be");
-			Assert.IsTrue(hits.TotalHits == 100, "hits Size: " + hits.TotalHits + " is not: " + 100);
-			
+			NUnit.Framework.Assert.IsTrue("hits is null and it shouldn't be", hits != null);
+			NUnit.Framework.Assert.IsTrue("hits Size: " + hits.totalHits + " is not: " + 100, 
+				hits.totalHits == 100);
 			//they should all have the exact same score, because they all contain seventy once, and we set
 			//all the other similarity factors to be 1
-			
 			//System.out.println("Hash: " + seventyHash + " Twice Hash: " + 2*seventyHash);
-            Assert.IsTrue(hits.MaxScore == 4.0, hits.MaxScore + " does not equal: " + 4.0);
+			NUnit.Framework.Assert.IsTrue(hits.GetMaxScore() + " does not equal: " + 4.0, hits
+				.GetMaxScore() == 4.0);
 			//there should be exactly 10 items that score a 4, all the rest should score a 2
 			//The 10 items are: 70 + i*100 where i in [0-9]
 			int numTens = 0;
-			for (int i = 0; i < hits.ScoreDocs.Length; i++)
+			for (int i = 0; i < hits.scoreDocs.Length; i++)
 			{
-				ScoreDoc doc = hits.ScoreDocs[i];
-				if (doc.Doc % 10 == 0)
+				ScoreDoc doc = hits.scoreDocs[i];
+				if (doc.doc % 10 == 0)
 				{
 					numTens++;
-					Assert.IsTrue(doc.Score == 4.0, doc.Score + " does not equal: " + 4.0);
+					NUnit.Framework.Assert.IsTrue(doc.score + " does not equal: " + 4.0, doc.score ==
+						 4.0);
 				}
 				else
 				{
-					Assert.IsTrue(doc.Score == 2, doc.Score + " does not equal: " + 2);
+					NUnit.Framework.Assert.IsTrue(doc.score + " does not equal: " + 2, doc.score == 2
+						);
 				}
 			}
-			Assert.IsTrue(numTens == 10, numTens + " does not equal: " + 10);
+			NUnit.Framework.Assert.IsTrue(numTens + " does not equal: " + 10, numTens == 10);
 			CheckHits.CheckExplanations(query, "field", searcher, true);
-			Lucene.Net.Search.Spans.Spans spans = query.GetSpans(searcher.IndexReader);
-			Assert.IsTrue(spans != null, "spans is null and it shouldn't be");
-			Assert.IsTrue(spans is TermSpans, "spans is not an instanceof " + typeof(TermSpans));
+			Lucene.Net.Search.Spans.Spans spans = MultiSpansWrapper.Wrap(searcher.GetTopReaderContext
+				(), query);
+			NUnit.Framework.Assert.IsTrue("spans is null and it shouldn't be", spans != null);
 			//should be two matches per document
 			int count = 0;
 			//100 hits times 2 matches per hit, we should have 200 in count
@@ -313,88 +280,94 @@ namespace Lucene.Net.Search.Payloads
 			{
 				count++;
 			}
+			reader.Close();
 		}
-		
-        [Test]
-		public virtual void  TestNoMatch()
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestNoMatch()
 		{
-			PayloadTermQuery query = new PayloadTermQuery(new Term(PayloadHelper.FIELD, "junk"), new MaxPayloadFunction());
+			PayloadTermQuery query = new PayloadTermQuery(new Term(PayloadHelper.FIELD, "junk"
+				), new MaxPayloadFunction());
 			TopDocs hits = searcher.Search(query, null, 100);
-			Assert.IsTrue(hits != null, "hits is null and it shouldn't be");
-			Assert.IsTrue(hits.TotalHits == 0, "hits Size: " + hits.TotalHits + " is not: " + 0);
+			NUnit.Framework.Assert.IsTrue("hits is null and it shouldn't be", hits != null);
+			NUnit.Framework.Assert.IsTrue("hits Size: " + hits.totalHits + " is not: " + 0, hits
+				.totalHits == 0);
 		}
-		
-        [Test]
-		public virtual void  TestNoPayload()
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestNoPayload()
 		{
-			PayloadTermQuery q1 = new PayloadTermQuery(new Term(PayloadHelper.NO_PAYLOAD_FIELD, "zero"), new MaxPayloadFunction());
-			PayloadTermQuery q2 = new PayloadTermQuery(new Term(PayloadHelper.NO_PAYLOAD_FIELD, "foo"), new MaxPayloadFunction());
-			BooleanClause c1 = new BooleanClause(q1, Occur.MUST);
-			BooleanClause c2 = new BooleanClause(q2, Occur.MUST_NOT);
+			PayloadTermQuery q1 = new PayloadTermQuery(new Term(PayloadHelper.NO_PAYLOAD_FIELD
+				, "zero"), new MaxPayloadFunction());
+			PayloadTermQuery q2 = new PayloadTermQuery(new Term(PayloadHelper.NO_PAYLOAD_FIELD
+				, "foo"), new MaxPayloadFunction());
+			BooleanClause c1 = new BooleanClause(q1, BooleanClause.Occur.MUST);
+			BooleanClause c2 = new BooleanClause(q2, BooleanClause.Occur.MUST_NOT);
 			BooleanQuery query = new BooleanQuery();
 			query.Add(c1);
 			query.Add(c2);
 			TopDocs hits = searcher.Search(query, null, 100);
-			Assert.IsTrue(hits != null, "hits is null and it shouldn't be");
-			Assert.IsTrue(hits.TotalHits == 1, "hits Size: " + hits.TotalHits + " is not: " + 1);
+			NUnit.Framework.Assert.IsTrue("hits is null and it shouldn't be", hits != null);
+			NUnit.Framework.Assert.IsTrue("hits Size: " + hits.totalHits + " is not: " + 1, hits
+				.totalHits == 1);
 			int[] results = new int[1];
-			results[0] = 0; //hits.scoreDocs[0].doc;
-			CheckHits.CheckHitCollector(query, PayloadHelper.NO_PAYLOAD_FIELD, searcher, results);
+			results[0] = 0;
+			//hits.scoreDocs[0].doc;
+			CheckHits.CheckHitCollector(Random(), query, PayloadHelper.NO_PAYLOAD_FIELD, searcher
+				, results);
 		}
-		
-		// must be static for weight serialization tests 
-		[Serializable]
-		internal class BoostingSimilarity:DefaultSimilarity
+
+		internal class BoostingSimilarity : DefaultSimilarity
 		{
-			
-			// TODO: Remove warning after API has been finalized
-			public override float ScorePayload(int docId, System.String fieldName, int start, int end, byte[] payload, int offset, int length)
-			{
-				//we know it is size 4 here, so ignore the offset/length
-				return payload[0];
-			}
-			
-			//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-			//Make everything else 1 so we see the effect of the payload
-			//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-			public override float LengthNorm(System.String fieldName, int numTerms)
-			{
-				return 1;
-			}
-			
 			public override float QueryNorm(float sumOfSquaredWeights)
 			{
 				return 1;
 			}
-			
-			public override float SloppyFreq(int distance)
-			{
-				return 1;
-			}
-			
+
 			public override float Coord(int overlap, int maxOverlap)
 			{
 				return 1;
 			}
-			
-			public override float Idf(int docFreq, int numDocs)
+
+			// TODO: Remove warning after API has been finalized
+			public override float ScorePayload(int docId, int start, int end, BytesRef payload
+				)
+			{
+				//we know it is size 4 here, so ignore the offset/length
+				return payload.bytes[payload.offset];
+			}
+
+			//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+			//Make everything else 1 so we see the effect of the payload
+			//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+			public override float LengthNorm(FieldInvertState state)
+			{
+				return state.GetBoost();
+			}
+
+			public override float SloppyFreq(int distance)
 			{
 				return 1;
 			}
-			
+
+			public override float Idf(long docFreq, long numDocs)
+			{
+				return 1;
+			}
+
 			public override float Tf(float freq)
 			{
-				return freq == 0?0:1;
+				return freq == 0 ? 0 : 1;
 			}
 		}
-		
-		[Serializable]
-		internal class FullSimilarity:DefaultSimilarity
+
+		internal class FullSimilarity : DefaultSimilarity
 		{
-			public virtual float ScorePayload(int docId, System.String fieldName, byte[] payload, int offset, int length)
+			public virtual float ScorePayload(int docId, string fieldName, byte[] payload, int
+				 offset, int length)
 			{
 				//we know it is size 4 here, so ignore the offset/length
-				return payload[0];
+				return payload[offset];
 			}
 		}
 	}

@@ -80,20 +80,23 @@ namespace Lucene.Net.Store
 			
 			// plan to add a set of useful stopwords, consider changing some of the
 			// interior filters.
-			StandardAnalyzer analyzer = new StandardAnalyzer(Util.Version.LUCENE_CURRENT, Support.Compatibility.SetFactory.CreateHashSet<string>());
+			MockAnalyzer analyzer = new MockAnalyzer(Random());
 			// TODO: something about lock timeouts and leftover locks.
-			IndexWriter writer = new IndexWriter(storeDirectory, analyzer, true, IndexWriter.MaxFieldLength.LIMITED);
-            IndexSearcher searcher = new IndexSearcher(storeDirectory, true);
-			
+			IndexWriter writer = new IndexWriter(dir, new IndexWriterConfig(TEST_VERSION_CURRENT
+				, analyzer).SetOpenMode(IndexWriterConfig.OpenMode.CREATE));
+			writer.Commit();
+			IndexReader reader = DirectoryReader.Open(dir);
+			IndexSearcher searcher = NewSearcher(reader);
+			int num = AtLeast(1000);
 			for (int dx = 0; dx < 1000; dx++)
 			{
 				System.String f = RandomField();
 				Document doc = new Document();
-				doc.Add(new Field("data", f, Field.Store.YES, Field.Index.ANALYZED));
+				doc.Add(NewTextField("data", f, Field.Store.YES));
 				writer.AddDocument(doc);
 			}
 			
-			searcher.Close();
+			reader.Close();
 			writer.Close();
 			RmDir(new System.IO.FileInfo(storePathname));
 		}

@@ -1,167 +1,162 @@
-/* 
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+/*
+ * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
  * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using System;
+using System.IO;
+using Lucene.Net.Analysis;
 using Lucene.Net.Analysis.Tokenattributes;
-using NUnit.Framework;
-
-using Analyzer = Lucene.Net.Analysis.Analyzer;
-using TokenStream = Lucene.Net.Analysis.TokenStream;
-using Document = Lucene.Net.Documents.Document;
-using Field = Lucene.Net.Documents.Field;
-using Directory = Lucene.Net.Store.Directory;
-using RAMDirectory = Lucene.Net.Store.RAMDirectory;
-using LuceneTestCase = Lucene.Net.Util.LuceneTestCase;
+using Lucene.Net.Document;
+using Lucene.Net.Index;
+using Lucene.Net.Search;
+using Lucene.Net.Store;
+using Lucene.Net.Util;
+using Sharpen;
 
 namespace Lucene.Net.Index
 {
-	
-	/// <version>  $Id$
-	/// </version>
-	
-	class RepeatingTokenStream:TokenStream
+	internal class RepeatingTokenizer : Tokenizer
 	{
-		public int num;
-		internal ITermAttribute termAtt;
-		internal System.String value_Renamed;
-		
-		public RepeatingTokenStream(System.String val)
+		private readonly Random random;
+
+		private readonly float percentDocs;
+
+		private readonly int maxTF;
+
+		private int num;
+
+		internal CharTermAttribute termAtt;
+
+		internal string value;
+
+		public RepeatingTokenizer(StreamReader reader, string val, Random random, float percentDocs
+			, int maxTF) : base(reader)
 		{
-			this.value_Renamed = val;
-			this.termAtt =  AddAttribute<ITermAttribute>();
+			this.value = val;
+			this.random = random;
+			this.percentDocs = percentDocs;
+			this.maxTF = maxTF;
+			this.termAtt = AddAttribute<CharTermAttribute>();
 		}
-		
+
+		/// <exception cref="System.IO.IOException"></exception>
 		public override bool IncrementToken()
 		{
 			num--;
 			if (num >= 0)
 			{
-                ClearAttributes();
-				termAtt.SetTermBuffer(value_Renamed);
+				ClearAttributes();
+				termAtt.Append(value);
 				return true;
 			}
 			return false;
 		}
 
-	    protected override void Dispose(bool disposing)
-	    {
-	        // Do Nothing
-	    }
-	}
-	
-	
-	public class TestTermdocPerf:LuceneTestCase
-	{
-		private class AnonymousClassAnalyzer:Analyzer
+		/// <exception cref="System.IO.IOException"></exception>
+		public override void Reset()
 		{
-			public AnonymousClassAnalyzer(System.Random random, float percentDocs, Lucene.Net.Index.RepeatingTokenStream ts, int maxTF, TestTermdocPerf enclosingInstance)
+			base.Reset();
+			if (random.NextFloat() < percentDocs)
 			{
-				InitBlock(random, percentDocs, ts, maxTF, enclosingInstance);
+				num = random.Next(maxTF) + 1;
 			}
-			private void  InitBlock(System.Random random, float percentDocs, Lucene.Net.Index.RepeatingTokenStream ts, int maxTF, TestTermdocPerf enclosingInstance)
+			else
 			{
-				this.random = random;
-				this.percentDocs = percentDocs;
-				this.ts = ts;
-				this.maxTF = maxTF;
-				this.enclosingInstance = enclosingInstance;
-			}
-			private System.Random random;
-			private float percentDocs;
-			private Lucene.Net.Index.RepeatingTokenStream ts;
-			private int maxTF;
-			private TestTermdocPerf enclosingInstance;
-			public TestTermdocPerf Enclosing_Instance
-			{
-				get
-				{
-					return enclosingInstance;
-				}
-				
-			}
-			public override TokenStream TokenStream(System.String fieldName, System.IO.TextReader reader)
-			{
-				if ((float) random.NextDouble() < percentDocs)
-					ts.num = random.Next(maxTF) + 1;
-				else
-					ts.num = 0;
-				return ts;
+				num = 0;
 			}
 		}
-		
-		internal virtual void  AddDocs(Directory dir, int ndocs, System.String field, System.String val, int maxTF, float percentDocs)
+	}
+
+	public class TestTermdocPerf : LuceneTestCase
+	{
+		/// <exception cref="System.IO.IOException"></exception>
+		internal virtual void AddDocs(Random random, Directory dir, int ndocs, string field
+			, string val, int maxTF, float percentDocs)
 		{
-			System.Random random = NewRandom();
-			RepeatingTokenStream ts = new RepeatingTokenStream(val);
-			
-			Analyzer analyzer = new AnonymousClassAnalyzer(random, percentDocs, ts, maxTF, this);
-			
-			Document doc = new Document();
-			doc.Add(new Field(field, val, Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
-			IndexWriter writer = new IndexWriter(dir, analyzer, true, IndexWriter.MaxFieldLength.LIMITED);
-			writer.SetMaxBufferedDocs(100);
-			writer.MergeFactor = 100;
-			
+			Analyzer analyzer = new _Analyzer_81(val, random, percentDocs, maxTF);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(NewStringField(field, val, Field.Store.NO));
+			IndexWriter writer = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig
+				(TEST_VERSION_CURRENT, analyzer).SetOpenMode(IndexWriterConfig.OpenMode.CREATE).
+				SetMaxBufferedDocs(100)).SetMergePolicy(NewLogMergePolicy(100)));
 			for (int i = 0; i < ndocs; i++)
 			{
 				writer.AddDocument(doc);
 			}
-			
-			writer.Optimize();
+			writer.ForceMerge(1);
 			writer.Close();
 		}
-		
-		
-		public virtual int doTest(int iter, int ndocs, int maxTF, float percentDocs)
-		{
-			Directory dir = new RAMDirectory();
-			
-			long start = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond);
-			AddDocs(dir, ndocs, "foo", "val", maxTF, percentDocs);
-			long end = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond);
-			System.Console.Out.WriteLine("milliseconds for creation of " + ndocs + " docs = " + (end - start));
 
-		    IndexReader reader = IndexReader.Open(dir, true);
-			TermEnum tenum = reader.Terms(new Term("foo", "val"));
-			TermDocs tdocs = reader.TermDocs();
-			
-			start = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond);
-			
+		private sealed class _Analyzer_81 : Analyzer
+		{
+			public _Analyzer_81(string val, Random random, float percentDocs, int maxTF)
+			{
+				this.val = val;
+				this.random = random;
+				this.percentDocs = percentDocs;
+				this.maxTF = maxTF;
+			}
+
+			protected override Analyzer.TokenStreamComponents CreateComponents(string fieldName
+				, StreamReader reader)
+			{
+				return new Analyzer.TokenStreamComponents(new RepeatingTokenizer(reader, val, random
+					, percentDocs, maxTF));
+			}
+
+			private readonly string val;
+
+			private readonly Random random;
+
+			private readonly float percentDocs;
+
+			private readonly int maxTF;
+		}
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual int DoTest(int iter, int ndocs, int maxTF, float percentDocs)
+		{
+			Directory dir = NewDirectory();
+			long start = Runtime.CurrentTimeMillis();
+			AddDocs(Random(), dir, ndocs, "foo", "val", maxTF, percentDocs);
+			long end = Runtime.CurrentTimeMillis();
+			if (VERBOSE)
+			{
+				System.Console.Out.WriteLine("milliseconds for creation of " + ndocs + " docs = "
+					 + (end - start));
+			}
+			IndexReader reader = DirectoryReader.Open(dir);
+			TermsEnum tenum = MultiFields.GetTerms(reader, "foo").Iterator(null);
+			start = Runtime.CurrentTimeMillis();
 			int ret = 0;
+			DocsEnum tdocs = null;
+			Random random = new Random(Random().NextLong());
 			for (int i = 0; i < iter; i++)
 			{
-				tdocs.Seek(tenum);
-				while (tdocs.Next())
+				tenum.SeekCeil(new BytesRef("val"));
+				tdocs = TestUtil.Docs(random, tenum, MultiFields.GetLiveDocs(reader), tdocs, DocsEnum
+					.FLAG_NONE);
+				while (tdocs.NextDoc() != DocIdSetIterator.NO_MORE_DOCS)
 				{
-					ret += tdocs.Doc;
+					ret += tdocs.DocID();
 				}
 			}
-			
-			end = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond);
-			System.Console.Out.WriteLine("milliseconds for " + iter + " TermDocs iteration: " + (end - start));
-			
+			end = Runtime.CurrentTimeMillis();
+			if (VERBOSE)
+			{
+				System.Console.Out.WriteLine("milliseconds for " + iter + " TermDocs iteration: "
+					 + (end - start));
+			}
 			return ret;
 		}
-		
-		[Test]
-		public virtual void  TestTermDocPerf()
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestTermDocPerf()
 		{
-			// performance test for 10% of documents containing a term
-			// doTest(100000, 10000,3,.1f);
 		}
+		// performance test for 10% of documents containing a term
+		// doTest(100000, 10000,3,.1f);
 	}
 }

@@ -1,14 +1,7 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
+using Lucene.Net.Store;
+using Lucene.Net.Support;
 
-using Org.Apache.Lucene.Codecs;
-using Org.Apache.Lucene.Store;
-using Sharpen;
-
-namespace Lucene.Net.Codecs.Lucene40
+namespace Lucene.Net.Codecs.Lucene40.TestFramework
 {
 	/// <summary>
 	/// Implements the skip list writer for the 4.0 posting list format
@@ -79,14 +72,14 @@ namespace Lucene.Net.Codecs.Lucene40
 			this.curPayloadLength = payloadLength;
 			this.curStoreOffsets = storeOffsets;
 			this.curOffsetLength = offsetLength;
-			this.curFreqPointer = freqOutput.GetFilePointer();
+			this.curFreqPointer = freqOutput.FilePointer;
 			if (proxOutput != null)
 			{
-				this.curProxPointer = proxOutput.GetFilePointer();
+				this.curProxPointer = proxOutput.FilePointer;
 			}
 		}
 
-		protected override void ResetSkip()
+	    public override void ResetSkip()
 		{
 			base.ResetSkip();
 			Arrays.Fill(lastSkipDoc, 0);
@@ -94,10 +87,10 @@ namespace Lucene.Net.Codecs.Lucene40
 			// we don't have to write the first length in the skip list
 			Arrays.Fill(lastSkipOffsetLength, -1);
 			// we don't have to write the first length in the skip list
-			Arrays.Fill(lastSkipFreqPointer, freqOutput.GetFilePointer());
+			Arrays.Fill(lastSkipFreqPointer, freqOutput.FilePointer);
 			if (proxOutput != null)
 			{
-				Arrays.Fill(lastSkipProxPointer, proxOutput.GetFilePointer());
+				Arrays.Fill(lastSkipProxPointer, proxOutput.FilePointer);
 			}
 		}
 

@@ -162,17 +162,17 @@ namespace Lucene.Net.Index
 		{
 			
 			TimedThread[] threads = new TimedThread[4];
-
-            IndexWriter writer = new MockIndexWriter(this, directory, ANALYZER, true, IndexWriter.MaxFieldLength.UNLIMITED);
-			writer.SetMaxBufferedDocs(7);
-			writer.MergeFactor = 3;
+			IndexWriterConfig conf = ((IndexWriterConfig)new IndexWriterConfig(TEST_VERSION_CURRENT
+				, new MockAnalyzer(Random())).SetMaxBufferedDocs(7));
+			((TieredMergePolicy)conf.GetMergePolicy()).SetMaxMergeAtOnce(3);
+			IndexWriter writer = RandomIndexWriter.MockIndexWriter(directory, conf, Random());
 			
 			// Establish a base index of 100 docs:
 			for (int i = 0; i < 100; i++)
 			{
 				Document d = new Document();
-				d.Add(new Field("id", System.Convert.ToString(i), Field.Store.YES, Field.Index.NOT_ANALYZED));
-				d.Add(new Field("contents", English.IntToEnglish(i), Field.Store.NO, Field.Index.ANALYZED));
+				d.Add(NewStringField("id", Sharpen.Extensions.ToString(i), Field.Store.YES));
+				d.Add(NewTextField("contents", English.IntToEnglish(i), Field.Store.NO));
                 if ((i - 1) % 7 == 0)
                 {
                     writer.Commit();
@@ -181,7 +181,7 @@ namespace Lucene.Net.Index
 			}
 			writer.Commit();
 			
-			IndexReader r = IndexReader.Open(directory, true);
+			IndexReader r = DirectoryReader.Open(directory);
 			Assert.AreEqual(100, r.NumDocs());
 			r.Close();
 			
@@ -224,17 +224,16 @@ namespace Lucene.Net.Index
 		[Test]
 		public virtual void  TestAtomicUpdates()
 		{
-			RANDOM = NewRandom();
 			Directory directory;
 			
 			// First in a RAM directory:
-			directory = new MockRAMDirectory();
+			directory = new MockDirectoryWrapper(Random(), new RAMDirectory());
 			RunTest(directory);
 			directory.Close();
 			
 			// Second in an FSDirectory:
             System.IO.DirectoryInfo dirPath = _TestUtil.GetTempDir("lucene.test.atomic");
-			directory = FSDirectory.Open(dirPath);
+			directory = NewFSDirectory(dirPath);
 			RunTest(directory);
 			directory.Close();
 			_TestUtil.RmDir(dirPath);

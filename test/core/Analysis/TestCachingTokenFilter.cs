@@ -16,7 +16,7 @@
  */
 
 using System;
-using Lucene.Net.Analysis.Tokenattributes;
+using Lucene.Net.Test.Analysis.TokenAttributes;
 using Lucene.Net.Test.Analysis;
 using NUnit.Framework;
 using Document = Lucene.Net.Documents.Document;
@@ -63,7 +63,7 @@ namespace Lucene.Net.Analysis
                 else
                 {
                     ClearAttributes();
-                    termAtt.SetTermBuffer(enclosingInstance.tokens[index++]);
+					this.termAtt.Append(this._enclosing.tokens[this.index++]);
                     offsetAtt.SetOffset(0, 0);
                     return true;
                 }
@@ -81,13 +81,13 @@ namespace Lucene.Net.Analysis
         public virtual void TestCaching()
         {
             Directory dir = NewDirectory();
-            IndexWriter writer = new IndexWriter(dir, new SimpleAnalyzer(), IndexWriter.MaxFieldLength.LIMITED);
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
             Document doc = new Document();
             TokenStream stream = new AnonymousClassTokenStream(this);
 
             stream = new CachingTokenFilter(stream);
 
-            doc.Add(new Field("preanalyzed", stream, TermVector.NO));
+			doc.Add(new TextField("preanalyzed", stream));
 
             // 1) we consume all tokens twice before we add the doc to the index
             checkTokens(stream);
@@ -99,24 +99,28 @@ namespace Lucene.Net.Analysis
             writer.AddDocument(doc);
             writer.Close();
 
-            IndexReader reader = IndexReader.Open(dir, true);
-            TermPositions termPositions = reader.TermPositions(new Term("preanalyzed", "term1"));
-            Assert.IsTrue(termPositions.Next());
+			IndexReader reader = writer.GetReader();
+			DocsAndPositionsEnum termPositions = MultiFields.GetTermPositionsEnum(reader, MultiFields
+				.GetLiveDocs(reader), "preanalyzed", new BytesRef("term1"));
+			NUnit.Framework.Assert.IsTrue(termPositions.NextDoc() != DocIdSetIterator.NO_MORE_DOCS
+				);
             Assert.AreEqual(1, termPositions.Freq);
             Assert.AreEqual(0, termPositions.NextPosition());
-
-            termPositions.Seek(new Term("preanalyzed", "term2"));
-            Assert.IsTrue(termPositions.Next());
+			termPositions = MultiFields.GetTermPositionsEnum(reader, MultiFields.GetLiveDocs(
+				reader), "preanalyzed", new BytesRef("term2"));
+			NUnit.Framework.Assert.IsTrue(termPositions.NextDoc() != DocIdSetIterator.NO_MORE_DOCS
+				);
             Assert.AreEqual(2, termPositions.Freq);
             Assert.AreEqual(1, termPositions.NextPosition());
             Assert.AreEqual(3, termPositions.NextPosition());
-
-            termPositions.Seek(new Term("preanalyzed", "term3"));
-            Assert.IsTrue(termPositions.Next());
+			termPositions = MultiFields.GetTermPositionsEnum(reader, MultiFields.GetLiveDocs(
+				reader), "preanalyzed", new BytesRef("term3"));
+			NUnit.Framework.Assert.IsTrue(termPositions.NextDoc() != DocIdSetIterator.NO_MORE_DOCS
+				);
             Assert.AreEqual(1, termPositions.Freq);
             Assert.AreEqual(2, termPositions.NextPosition());
             reader.Close();
-
+			writer.Close();
             // 3) reset stream and consume tokens again
             stream.Reset();
             checkTokens(stream);
@@ -126,7 +130,7 @@ namespace Lucene.Net.Analysis
         {
             int count = 0;
 
-            ITermAttribute termAtt = stream.GetAttribute<ITermAttribute>();
+			CharTermAttribute termAtt = stream.GetAttribute<CharTermAttribute>();
             Assert.IsNotNull(termAtt);
             while (stream.IncrementToken())
             {

@@ -1,20 +1,8 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
+using Lucene.Net.Index;
+using Lucene.Net.Store;
+using Lucene.Net.Util;
 
-using Org.Apache.Lucene.Codecs;
-using Lucene.Net.Codecs.Blockterms;
-using Lucene.Net.Codecs.Intblock;
-using Lucene.Net.Codecs.Mockintblock;
-using Lucene.Net.Codecs.Sep;
-using Org.Apache.Lucene.Index;
-using Org.Apache.Lucene.Store;
-using Org.Apache.Lucene.Util;
-using Sharpen;
-
-namespace Lucene.Net.Codecs.Mockintblock
+namespace Lucene.Net.Codecs.Mockintblock.TestFramework
 {
 	/// <summary>
 	/// A silly test codec to verify core support for fixed
@@ -40,13 +28,13 @@ namespace Lucene.Net.Codecs.Mockintblock
 
 		public override string ToString()
 		{
-			return GetName() + "(blockSize=" + blockSize + ")";
+			return Name + "(blockSize=" + blockSize + ")";
 		}
 
 		// only for testing
 		public IntStreamFactory GetIntFactory()
 		{
-			return new MockFixedIntBlockPostingsFormat.MockIntFactory(blockSize);
+			return new MockIntFactory(blockSize);
 		}
 
 		/// <summary>Encodes blocks as vInts of a fixed block size.</summary>
@@ -64,24 +52,24 @@ namespace Lucene.Net.Codecs.Mockintblock
 			public override IntIndexInput OpenInput(Directory dir, string fileName, IOContext
 				 context)
 			{
-				return new _FixedIntBlockIndexInput_87(dir.OpenInput(fileName, context));
+				return new AnonFixedInputBlock(dir.OpenInput(fileName, context));
 			}
 
-			private sealed class _FixedIntBlockIndexInput_87 : FixedIntBlockIndexInput
+			private sealed class AnonFixedInputBlock : FixedIntBlockIndexInput
 			{
-				public _FixedIntBlockIndexInput_87(IndexInput baseArg1) : base(baseArg1)
+				public AnonFixedInputBlock(IndexInput baseArg1) : base(baseArg1)
 				{
 				}
 
 				protected override FixedIntBlockIndexInput.BlockReader GetBlockReader(IndexInput 
 					@in, int[] buffer)
 				{
-					return new _BlockReader_91(buffer, @in);
+					return new AnonBlockReader(buffer, @in);
 				}
 
-				private sealed class _BlockReader_91 : FixedIntBlockIndexInput.BlockReader
+				private sealed class AnonBlockReader : FixedIntBlockIndexInput.BlockReader
 				{
-					public _BlockReader_91(int[] buffer, IndexInput @in)
+					public AnonBlockReader(int[] buffer, IndexInput @in)
 					{
 						this.buffer = buffer;
 						this.@in = @in;
@@ -114,7 +102,7 @@ namespace Lucene.Net.Codecs.Mockintblock
 				bool success = false;
 				try
 				{
-					FixedIntBlockIndexOutput ret = new _FixedIntBlockIndexOutput_109(@out, blockSize);
+					FixedIntBlockIndexOutput ret = new AnonFixedIndexOutput(@out, blockSize);
 					success = true;
 					return ret;
 				}
@@ -127,9 +115,9 @@ namespace Lucene.Net.Codecs.Mockintblock
 				}
 			}
 
-			private sealed class _FixedIntBlockIndexOutput_109 : FixedIntBlockIndexOutput
+			private sealed class AnonFixedIndexOutput : FixedIntBlockIndexOutput
 			{
-				public _FixedIntBlockIndexOutput_109(IndexOutput baseArg1, int baseArg2) : base(baseArg1
+				public AnonFixedIndexOutput(IndexOutput baseArg1, int baseArg2) : base(baseArg1
 					, baseArg2)
 				{
 				}

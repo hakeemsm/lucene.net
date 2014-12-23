@@ -42,20 +42,20 @@ namespace Lucene.Net.Search
         [Test]
 		public virtual void  TestMissingTerms()
 		{
-			System.String fieldName = "field1";
-			MockRAMDirectory rd = new MockRAMDirectory();
-			IndexWriter w = new IndexWriter(rd, new KeywordAnalyzer(), MaxFieldLength.UNLIMITED);
+			string fieldName = "field1";
+			Directory rd = NewDirectory();
+			RandomIndexWriter w = new RandomIndexWriter(Random(), rd);
 			for (int i = 0; i < 100; i++)
 			{
 				Document doc = new Document();
 				int term = i * 10; //terms are units of 10;
-				doc.Add(new Field(fieldName, "" + term, Field.Store.YES, Field.Index.NOT_ANALYZED));
+				doc.Add(NewStringField(fieldName, string.Empty + term, Field.Store.YES));
 				w.AddDocument(doc);
 			}
+			IndexReader reader = w.GetReader();
 			w.Close();
 
-            IndexReader reader = IndexReader.Open(rd, true);
-			IndexSearcher searcher = new IndexSearcher(reader);
+			IndexSearcher searcher = NewSearcher(reader);
 			int numDocs = reader.NumDocs();
 			ScoreDoc[] results;
 			MatchAllDocsQuery q = new MatchAllDocsQuery();

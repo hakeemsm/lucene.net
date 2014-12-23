@@ -1,305 +1,263 @@
-/* 
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+/*
+ * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
  * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
 using System;
-
-using NUnit.Framework;
-
-using StandardAnalyzer = Lucene.Net.Analysis.Standard.StandardAnalyzer;
-using DateTools = Lucene.Net.Documents.DateTools;
-using Document = Lucene.Net.Documents.Document;
-using Field = Lucene.Net.Documents.Field;
-using IndexReader = Lucene.Net.Index.IndexReader;
-using IndexWriter = Lucene.Net.Index.IndexWriter;
-using Term = Lucene.Net.Index.Term;
-using Directory = Lucene.Net.Store.Directory;
-using RAMDirectory = Lucene.Net.Store.RAMDirectory;
-using LuceneTestCase = Lucene.Net.Util.LuceneTestCase;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Text;
+using Lucene.Net.Document;
+using Lucene.Net.Index;
+using Lucene.Net.Search;
+using Lucene.Net.Store;
+using Lucene.Net.Util;
+using Sharpen;
 
 namespace Lucene.Net.Search
 {
-	
-	/// <summary> Unit test for sorting code.
-	/// 
-	/// </summary>
-	
-	[Serializable]
-    [TestFixture]
-	public class TestCustomSearcherSort:LuceneTestCase
+	/// <summary>Unit test for sorting code.</summary>
+	/// <remarks>Unit test for sorting code.</remarks>
+	public class TestCustomSearcherSort : LuceneTestCase
 	{
-		
 		private Directory index = null;
+
+		private IndexReader reader;
+
 		private Query query = null;
+
+		private int INDEX_SIZE;
+
 		// reduced from 20000 to 2000 to speed up test...
-		private const int INDEX_SIZE = 2000;
-		
-		/*public TestCustomSearcherSort(System.String name):base(name)
+		/// <summary>Create index and query for test cases.</summary>
+		/// <remarks>Create index and query for test cases.</remarks>
+		/// <exception cref="System.Exception"></exception>
+		public override void SetUp()
 		{
-		}*/
-		
-		/*[STAThread]
-		public static void  Main(System.String[] argv)
-		{
-			// TestRunner.run(suite()); // {{Aroush-2.9}} how is this done in NUnit?
-		}*/
-		
-		/*public static Test suite()
-		{
-			return new TestSuite(typeof(TestCustomSearcherSort));
-		}*/
-		
-		
-		// create an index for testing
-		private Directory GetIndex()
-		{
-			RAMDirectory indexStore = new RAMDirectory();
-			IndexWriter writer = new IndexWriter(indexStore, new StandardAnalyzer(Util.Version.LUCENE_CURRENT), true, IndexWriter.MaxFieldLength.LIMITED);
-			RandomGen random = new RandomGen(this, NewRandom());
+			base.SetUp();
+			INDEX_SIZE = AtLeast(2000);
+			index = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), index);
+			TestCustomSearcherSort.RandomGen random = new TestCustomSearcherSort.RandomGen(this
+				, Random());
 			for (int i = 0; i < INDEX_SIZE; ++i)
 			{
-				// don't decrease; if to low the problem doesn't show up
-				Document doc = new Document();
+				// don't decrease; if to low the
+				// problem doesn't show up
+				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					();
 				if ((i % 5) != 0)
 				{
-					// some documents must not have an entry in the first sort field
-					doc.Add(new Field("publicationDate_", random.GetLuceneDate(), Field.Store.YES, Field.Index.NOT_ANALYZED));
+					// some documents must not have an entry in the first
+					// sort field
+					doc.Add(NewStringField("publicationDate_", random.GetLuceneDate(), Field.Store.YES
+						));
 				}
 				if ((i % 7) == 0)
 				{
-					// some documents to match the query (see below) 
-					doc.Add(new Field("content", "test", Field.Store.YES, Field.Index.ANALYZED));
+					// some documents to match the query (see below)
+					doc.Add(NewTextField("content", "test", Field.Store.YES));
 				}
 				// every document has a defined 'mandant' field
-				doc.Add(new Field("mandant", System.Convert.ToString(i % 3), Field.Store.YES, Field.Index.NOT_ANALYZED));
+				doc.Add(NewStringField("mandant", Sharpen.Extensions.ToString(i % 3), Field.Store
+					.YES));
 				writer.AddDocument(doc);
 			}
-			writer.Optimize();
+			reader = writer.GetReader();
 			writer.Close();
-			return indexStore;
-		}
-		
-		/// <summary> Create index and query for test cases. </summary>
-		[SetUp]
-		public override void  SetUp()
-		{
-			base.SetUp();
-			index = GetIndex();
 			query = new TermQuery(new Term("content", "test"));
 		}
-		
-		/// <summary> Run the test using two CustomSearcher instances. </summary>
-		[Test]
-		public virtual void  TestFieldSortCustomSearcher()
+
+		/// <exception cref="System.Exception"></exception>
+		public override void TearDown()
+		{
+			reader.Close();
+			index.Close();
+			base.TearDown();
+		}
+
+		/// <summary>Run the test using two CustomSearcher instances.</summary>
+		/// <remarks>Run the test using two CustomSearcher instances.</remarks>
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestFieldSortCustomSearcher()
 		{
 			// log("Run testFieldSortCustomSearcher");
 			// define the sort criteria
-			Sort custSort = new Sort(new SortField("publicationDate_", SortField.STRING), SortField.FIELD_SCORE);
-			Searcher searcher = new CustomSearcher(this, index, 2);
+			Sort custSort = new Sort(new SortField("publicationDate_", SortField.Type.STRING)
+				, SortField.FIELD_SCORE);
+			IndexSearcher searcher = new TestCustomSearcherSort.CustomSearcher(this, reader, 
+				2);
 			// search and check hits
 			MatchHits(searcher, custSort);
 		}
-		/// <summary> Run the test using one CustomSearcher wrapped by a MultiSearcher. </summary>
-		[Test]
-		public virtual void  TestFieldSortSingleSearcher()
+
+		/// <summary>Run the test using one CustomSearcher wrapped by a MultiSearcher.</summary>
+		/// <remarks>Run the test using one CustomSearcher wrapped by a MultiSearcher.</remarks>
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestFieldSortSingleSearcher()
 		{
 			// log("Run testFieldSortSingleSearcher");
 			// define the sort criteria
-			Sort custSort = new Sort(new SortField("publicationDate_", SortField.STRING), SortField.FIELD_SCORE);
-			Searcher searcher = new MultiSearcher(new Searcher[]{new CustomSearcher(this, index, 2)});
+			Sort custSort = new Sort(new SortField("publicationDate_", SortField.Type.STRING)
+				, SortField.FIELD_SCORE);
+			IndexSearcher searcher = new TestCustomSearcherSort.CustomSearcher(this, reader, 
+				2);
 			// search and check hits
 			MatchHits(searcher, custSort);
 		}
-		/// <summary> Run the test using two CustomSearcher instances. </summary>
-		[Test]
-		public virtual void  TestFieldSortMultiCustomSearcher()
-		{
-			// log("Run testFieldSortMultiCustomSearcher");
-			// define the sort criteria
-            Sort custSort = new Sort(new SortField("publicationDate_", SortField.STRING), SortField.FIELD_SCORE);
-			Searcher searcher = new MultiSearcher(new Searchable[]{new CustomSearcher(this, index, 0), new CustomSearcher(this, index, 2)});
-			// search and check hits
-			MatchHits(searcher, custSort);
-		}
-		
-		
+
 		// make sure the documents returned by the search match the expected list
-		private void  MatchHits(Searcher searcher, Sort sort)
+		/// <exception cref="System.IO.IOException"></exception>
+		private void MatchHits(IndexSearcher searcher, Sort sort)
 		{
 			// make a query without sorting first
-			ScoreDoc[] hitsByRank = searcher.Search(query, null, 1000).ScoreDocs;
-			CheckHits(hitsByRank, "Sort by rank: "); // check for duplicates
-			System.Collections.IDictionary resultMap = new System.Collections.SortedList();
-			// store hits in TreeMap - TreeMap does not allow duplicates; existing entries are silently overwritten
+			ScoreDoc[] hitsByRank = searcher.Search(query, null, int.MaxValue).scoreDocs;
+			CheckHits(hitsByRank, "Sort by rank: ");
+			// check for duplicates
+			IDictionary<int, int> resultMap = new SortedDictionary<int, int>();
+			// store hits in TreeMap - TreeMap does not allow duplicates; existing
+			// entries are silently overwritten
 			for (int hitid = 0; hitid < hitsByRank.Length; ++hitid)
 			{
-				resultMap[hitsByRank[hitid].Doc] = hitid; // Value: Hits-Objekt Index
+				resultMap.Put(Sharpen.Extensions.ValueOf(hitsByRank[hitid].doc), Sharpen.Extensions.ValueOf
+					(hitid));
 			}
-			
+			// Key: Lucene
+			// Document ID
+			// Value: Hits-Objekt Index
 			// now make a query using the sort criteria
-			ScoreDoc[] resultSort = searcher.Search(query, null, 1000, sort).ScoreDocs;
-			CheckHits(resultSort, "Sort by custom criteria: "); // check for duplicates
-			
+			ScoreDoc[] resultSort = searcher.Search(query, null, int.MaxValue, sort).scoreDocs;
+			CheckHits(resultSort, "Sort by custom criteria: ");
+			// check for duplicates
 			// besides the sorting both sets of hits must be identical
-			for (int hitid = 0; hitid < resultSort.Length; ++hitid)
+			for (int hitid_1 = 0; hitid_1 < resultSort.Length; ++hitid_1)
 			{
-				System.Int32 idHitDate = (System.Int32) resultSort[hitid].Doc; // document ID from sorted search
-				if (!resultMap.Contains(idHitDate))
+				int idHitDate = Sharpen.Extensions.ValueOf(resultSort[hitid_1].doc);
+				// document ID
+				// from sorted
+				// search
+				if (!resultMap.ContainsKey(idHitDate))
 				{
 					Log("ID " + idHitDate + " not found. Possibliy a duplicate.");
 				}
-				Assert.IsTrue(resultMap.Contains(idHitDate)); // same ID must be in the Map from the rank-sorted search
-				// every hit must appear once in both result sets --> remove it from the Map.
+				NUnit.Framework.Assert.IsTrue(resultMap.ContainsKey(idHitDate));
+				// same ID must be in the
+				// Map from the rank-sorted
+				// search
+				// every hit must appear once in both result sets --> remove it from the
+				// Map.
 				// At the end the Map must be empty!
-				resultMap.Remove(idHitDate);
+				Sharpen.Collections.Remove(resultMap, idHitDate);
 			}
 			if (resultMap.Count == 0)
 			{
-				// log("All hits matched");
 			}
 			else
 			{
+				// log("All hits matched");
 				Log("Couldn't match " + resultMap.Count + " hits.");
 			}
-			Assert.AreEqual(resultMap.Count, 0);
+			NUnit.Framework.Assert.AreEqual(resultMap.Count, 0);
 		}
-		
-		/// <summary> Check the hits for duplicates.</summary>
-		/// <param name="hits">
-		/// </param>
-		private void  CheckHits(ScoreDoc[] hits, System.String prefix)
+
+		/// <summary>Check the hits for duplicates.</summary>
+		/// <remarks>Check the hits for duplicates.</remarks>
+		private void CheckHits(ScoreDoc[] hits, string prefix)
 		{
 			if (hits != null)
 			{
-				System.Collections.IDictionary idMap = new System.Collections.SortedList();
+				IDictionary<int, int> idMap = new SortedDictionary<int, int>();
 				for (int docnum = 0; docnum < hits.Length; ++docnum)
 				{
-					int luceneId;
-					
-					luceneId = hits[docnum].Doc;
-					if (idMap.Contains(luceneId))
+					int luceneId = null;
+					luceneId = Sharpen.Extensions.ValueOf(hits[docnum].doc);
+					if (idMap.ContainsKey(luceneId))
 					{
-						System.Text.StringBuilder message = new System.Text.StringBuilder(prefix);
+						StringBuilder message = new StringBuilder(prefix);
 						message.Append("Duplicate key for hit index = ");
 						message.Append(docnum);
 						message.Append(", previous index = ");
-						message.Append(((System.Int32) idMap[luceneId]).ToString());
+						message.Append((idMap.Get(luceneId)).ToString());
 						message.Append(", Lucene ID = ");
 						message.Append(luceneId);
 						Log(message.ToString());
 					}
 					else
 					{
-						idMap[luceneId] = docnum;
+						idMap.Put(luceneId, Sharpen.Extensions.ValueOf(docnum));
 					}
 				}
 			}
 		}
-		
-		// Simply write to console - choosen to be independant of log4j etc 
-		private void  Log(System.String message)
+
+		// Simply write to console - choosen to be independant of log4j etc
+		private void Log(string message)
 		{
-			System.Console.Out.WriteLine(message);
+			if (VERBOSE)
+			{
+				System.Console.Out.WriteLine(message);
+			}
 		}
-		
-		public class CustomSearcher:IndexSearcher
+
+		public class CustomSearcher : IndexSearcher
 		{
-			private void  InitBlock(TestCustomSearcherSort enclosingInstance)
-			{
-				this.enclosingInstance = enclosingInstance;
-			}
-			private TestCustomSearcherSort enclosingInstance;
-			public TestCustomSearcherSort Enclosing_Instance
-			{
-				get
-				{
-					return enclosingInstance;
-				}
-				
-			}
 			private int switcher;
 
-		    /// <param name="directory">
-		    /// </param>
-		    /// <throws>  IOException </throws>
-		    public CustomSearcher(TestCustomSearcherSort enclosingInstance, Directory directory, int switcher)
-		        : base(directory, true)
+			public CustomSearcher(TestCustomSearcherSort _enclosing, IndexReader r, int switcher
+				) : base(r)
 			{
-				InitBlock(enclosingInstance);
+				this._enclosing = _enclosing;
 				this.switcher = switcher;
 			}
-			/// <param name="r">
-			/// </param>
-			public CustomSearcher(TestCustomSearcherSort enclosingInstance, IndexReader r, int switcher):base(r)
-			{
-				InitBlock(enclosingInstance);
-				this.switcher = switcher;
-			}
-			/* (non-Javadoc)
-			* @see Lucene.Net.Search.Searchable#search(Lucene.Net.Search.Query, Lucene.Net.Search.Filter, int, Lucene.Net.Search.Sort)
-			*/
-			public override TopFieldDocs Search(Query query, Filter filter, int nDocs, Sort sort)
+
+			/// <exception cref="System.IO.IOException"></exception>
+			public override TopFieldDocs Search(Query query, Filter filter, int nDocs, Sort sort
+				)
 			{
 				BooleanQuery bq = new BooleanQuery();
-				bq.Add(query, Occur.MUST);
-				bq.Add(new TermQuery(new Term("mandant", System.Convert.ToString(switcher))), Occur.MUST);
+				bq.Add(query, BooleanClause.Occur.MUST);
+				bq.Add(new TermQuery(new Term("mandant", Sharpen.Extensions.ToString(this.switcher
+					))), BooleanClause.Occur.MUST);
 				return base.Search(bq, filter, nDocs, sort);
 			}
-			/* (non-Javadoc)
-			* @see Lucene.Net.Search.Searchable#search(Lucene.Net.Search.Query, Lucene.Net.Search.Filter, int)
-			*/
+
+			/// <exception cref="System.IO.IOException"></exception>
 			public override TopDocs Search(Query query, Filter filter, int nDocs)
 			{
 				BooleanQuery bq = new BooleanQuery();
-				bq.Add(query, Occur.MUST);
-				bq.Add(new TermQuery(new Term("mandant", System.Convert.ToString(switcher))), Occur.MUST);
+				bq.Add(query, BooleanClause.Occur.MUST);
+				bq.Add(new TermQuery(new Term("mandant", Sharpen.Extensions.ToString(this.switcher
+					))), BooleanClause.Occur.MUST);
 				return base.Search(bq, filter, nDocs);
 			}
+
+			private readonly TestCustomSearcherSort _enclosing;
 		}
+
 		private class RandomGen
 		{
-			private void  InitBlock(TestCustomSearcherSort enclosingInstance)
+			internal RandomGen(TestCustomSearcherSort _enclosing, Random random)
 			{
-				this.enclosingInstance = enclosingInstance;
-				System.DateTime temp_calendar;
-				temp_calendar = new System.DateTime(1980, 1, 1, 0, 0, 0, 0, new System.Globalization.GregorianCalendar());
-				base_Renamed = temp_calendar;
-			}
-			private TestCustomSearcherSort enclosingInstance;
-			public TestCustomSearcherSort Enclosing_Instance
-			{
-				get
-				{
-					return enclosingInstance;
-				}
-				
-			}
-			internal RandomGen(TestCustomSearcherSort enclosingInstance, System.Random random)
-			{
-				InitBlock(enclosingInstance);
+				this._enclosing = _enclosing;
 				this.random = random;
+				this.@base.Set(1980, 1, 1);
 			}
-			private System.Random random;
-			private System.DateTime base_Renamed;
-			
+
+			private Random random;
+
+			private Calendar @base = new GregorianCalendar(System.TimeZoneInfo.Local, CultureInfo
+				.CurrentCulture);
+
+			// we use the default Locale/TZ since LuceneTestCase randomizes it
 			// Just to generate some different Lucene Date strings
-			public /*private*/ System.String GetLuceneDate()
+			private string GetLuceneDate()
 			{
-                return DateTools.TimeToString((base_Renamed.Ticks / TimeSpan.TicksPerMillisecond) + random.Next() - System.Int32.MinValue, DateTools.Resolution.DAY);
+				return DateTools.TimeToString(this.@base.GetTimeInMillis() + this.random.Next() -
+					 int.MinValue, DateTools.Resolution.DAY);
 			}
+
+			private readonly TestCustomSearcherSort _enclosing;
 		}
 	}
 }

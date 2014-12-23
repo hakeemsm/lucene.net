@@ -1,17 +1,7 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
-using Org.Apache.Lucene.Codecs;
-using Lucene.Net.Codecs.Blockterms;
+using Lucene.Net.Index;
 using Lucene.Net.Codecs.Lucene41;
-using Org.Apache.Lucene.Index;
-using Org.Apache.Lucene.Util;
-using Sharpen;
 
-namespace Lucene.Net.Codecs.Lucene41ords
+namespace Lucene.Net.Codecs.Lucene41ords.TestFramework
 {
 	/// <summary>
 	/// Customized version of
@@ -32,7 +22,7 @@ namespace Lucene.Net.Codecs.Lucene41ords
 		// TODO: we could make separate base class that can wrapp
 		// any PostingsBaseFormat and make it ord-able...
 		/// <exception cref="System.IO.IOException"></exception>
-		public override Lucene.Net.Codecs.FieldsConsumer FieldsConsumer(SegmentWriteState
+		public override FieldsConsumer FieldsConsumer(SegmentWriteState
 			 state)
 		{
 			PostingsWriterBase docs = new Lucene41PostingsWriter(state);
@@ -59,7 +49,7 @@ namespace Lucene.Net.Codecs.Lucene41ords
 			{
 				// Must use BlockTermsWriter (not BlockTree) because
 				// BlockTree doens't support ords (yet)...
-				Lucene.Net.Codecs.FieldsConsumer ret = new BlockTermsWriter(indexWriter, state
+				FieldsConsumer ret = new BlockTermsWriter(indexWriter, state
 					, docs);
 				success = true;
 				return ret;

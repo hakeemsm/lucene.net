@@ -1,253 +1,259 @@
-/* 
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+/*
+ * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
  * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-// Intentionally not in Lucene.Net.Index, to assert
-// that we do not require any package private access.
-
 using System;
-using Lucene.Net.Support;
+using System.Collections.Generic;
 using NUnit.Framework;
-
-using StandardAnalyzer = Lucene.Net.Analysis.Standard.StandardAnalyzer;
-using Document = Lucene.Net.Documents.Document;
-using Field = Lucene.Net.Documents.Field;
-using IndexCommit = Lucene.Net.Index.IndexCommit;
-using IndexWriter = Lucene.Net.Index.IndexWriter;
-using KeepOnlyLastCommitDeletionPolicy = Lucene.Net.Index.KeepOnlyLastCommitDeletionPolicy;
-using SnapshotDeletionPolicy = Lucene.Net.Index.SnapshotDeletionPolicy;
-using Directory = Lucene.Net.Store.Directory;
-using FSDirectory = Lucene.Net.Store.FSDirectory;
-using IndexInput = Lucene.Net.Store.IndexInput;
-using MockRAMDirectory = Lucene.Net.Store.MockRAMDirectory;
-using TestIndexWriter = Lucene.Net.Index.TestIndexWriter;
-using LuceneTestCase = Lucene.Net.Util.LuceneTestCase;
-using _TestUtil = Lucene.Net.Util._TestUtil;
+using Lucene.Net.Analysis;
+using Lucene.Net.Document;
+using Lucene.Net.Index;
+using Lucene.Net.Store;
+using Lucene.Net.Util;
+using Sharpen;
 
 namespace Lucene.Net.Index
 {
-	
-	//
-	// This was developed for Lucene In Action,
-	// http://lucenebook.com
-	//
-	
-    [TestFixture]
-	public class TestSnapshotDeletionPolicy:LuceneTestCase
+	public class TestSnapshotDeletionPolicy : LuceneTestCase
 	{
-		private class AnonymousClassThread:ThreadClass
+		public static readonly string INDEX_PATH = "test.snapshots";
+
+		//
+		// This was developed for Lucene In Action,
+		// http://lucenebook.com
+		//
+		protected internal virtual IndexWriterConfig GetConfig(Random random, IndexDeletionPolicy
+			 dp)
 		{
-			public AnonymousClassThread(long stopTime, Lucene.Net.Index.IndexWriter writer, TestSnapshotDeletionPolicy enclosingInstance)
+			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
+				(random));
+			if (dp != null)
 			{
-				InitBlock(stopTime, writer, enclosingInstance);
+				conf.SetIndexDeletionPolicy(dp);
 			}
-			private void  InitBlock(long stopTime, Lucene.Net.Index.IndexWriter writer, TestSnapshotDeletionPolicy enclosingInstance)
-			{
-				this.stopTime = stopTime;
-				this.writer = writer;
-				this.enclosingInstance = enclosingInstance;
-			}
-			private long stopTime;
-			private Lucene.Net.Index.IndexWriter writer;
-			private TestSnapshotDeletionPolicy enclosingInstance;
-			public TestSnapshotDeletionPolicy Enclosing_Instance
-			{
-				get
-				{
-					return enclosingInstance;
-				}
-				
-			}
-			override public void  Run()
-			{
-				Document doc = new Document();
-				doc.Add(new Field("content", "aaa", Field.Store.YES, Field.Index.ANALYZED, Field.TermVector.WITH_POSITIONS_OFFSETS));
-			    do
-			    {
-			        for (int i = 0; i < 27; i++)
-			        {
-			            try
-			            {
-			                writer.AddDocument(doc);
-			            }
-			            catch (System.Exception t)
-			            {
-			                System.Console.Out.WriteLine(t.StackTrace);
-			                Assert.Fail("addDocument failed");
-			            }
-			            if (i%2 == 0)
-			            {
-			                try
-			                {
-			                    writer.Commit();
-			                }
-			                catch (Exception e)
-			                {
-			                    throw new SystemException("", e);
-			                }
-			            }
-			        }
-			        try
-			        {
-			            System.Threading.Thread.Sleep(new System.TimeSpan((System.Int64) 10000*1));
-			        }
-			        catch (System.Threading.ThreadInterruptedException ie)
-			        {
-			            throw;
-			        }
-			    } while ((DateTime.Now.Ticks/TimeSpan.TicksPerMillisecond) < stopTime);
-			}
+			return conf;
 		}
-		public const System.String INDEX_PATH = "test.snapshots";
-		
-        [Test]
-		public virtual void  TestSnapshotDeletionPolicy_Renamed()
+
+		/// <exception cref="System.Exception"></exception>
+		protected internal virtual void CheckSnapshotExists(Directory dir, IndexCommit c)
 		{
-			System.IO.DirectoryInfo dir = _TestUtil.GetTempDir(INDEX_PATH);
+			string segFileName = c.GetSegmentsFileName();
+			NUnit.Framework.Assert.IsTrue("segments file not found in directory: " + segFileName
+				, SlowFileExists(dir, segFileName));
+		}
+
+		/// <exception cref="System.Exception"></exception>
+		protected internal virtual void CheckMaxDoc(IndexCommit commit, int expectedMaxDoc
+			)
+		{
+			IndexReader reader = DirectoryReader.Open(commit);
 			try
 			{
-				Directory fsDir = FSDirectory.Open(dir);
-				RunTest(fsDir);
-				fsDir.Close();
+				NUnit.Framework.Assert.AreEqual(expectedMaxDoc, reader.MaxDoc());
 			}
 			finally
 			{
-				_TestUtil.RmDir(dir);
+				reader.Close();
 			}
-			
-			MockRAMDirectory dir2 = new MockRAMDirectory();
-			RunTest(dir2);
-			dir2.Close();
 		}
-		
-        [Test]
-		public virtual void  TestReuseAcrossWriters()
+
+		protected internal IList<IndexCommit> snapshots = new AList<IndexCommit>();
+
+		/// <exception cref="Sharpen.RuntimeException"></exception>
+		/// <exception cref="System.IO.IOException"></exception>
+		protected internal virtual void PrepareIndexAndSnapshots(SnapshotDeletionPolicy sdp
+			, IndexWriter writer, int numSnapshots)
 		{
-			Directory dir = new MockRAMDirectory();
-			
-			SnapshotDeletionPolicy dp = new SnapshotDeletionPolicy(new KeepOnlyLastCommitDeletionPolicy());
-            IndexWriter writer = new IndexWriter(dir, new StandardAnalyzer(Util.Version.LUCENE_CURRENT), dp, IndexWriter.MaxFieldLength.UNLIMITED);
-			// Force frequent flushes
-			writer.SetMaxBufferedDocs(2);
-			Document doc = new Document();
-			doc.Add(new Field("content", "aaa", Field.Store.YES, Field.Index.ANALYZED, Field.TermVector.WITH_POSITIONS_OFFSETS));
-            for (int i = 0; i < 7; i++)
-            {
-                writer.AddDocument(doc);
-                if (i % 2 == 0)
-                {
-                    writer.Commit();
-                }
-            }
-            IndexCommit cp =  dp.Snapshot();
-			CopyFiles(dir, cp);
-			writer.Close();
-			CopyFiles(dir, cp);
-
-            writer = new IndexWriter(dir, new StandardAnalyzer(Util.Version.LUCENE_CURRENT), dp, IndexWriter.MaxFieldLength.UNLIMITED);
-			CopyFiles(dir, cp);
-            for (int i = 0; i < 7; i++)
-            {
-                writer.AddDocument(doc);
-                if (i % 2 == 0)
-                {
-                    writer.Commit();
-                }
-            }
-			CopyFiles(dir, cp);
-			writer.Close();
-			CopyFiles(dir, cp);
-			dp.Release();
-            writer = new IndexWriter(dir, new StandardAnalyzer(Util.Version.LUCENE_CURRENT), dp, IndexWriter.MaxFieldLength.UNLIMITED);
-			writer.Close();
-
-            Assert.Throws<System.IO.FileNotFoundException>(() => CopyFiles(dir, cp), "did not hit expected IOException");
-			dir.Close();
+			for (int i = 0; i < numSnapshots; i++)
+			{
+				// create dummy document to trigger commit.
+				writer.AddDocument(new Lucene.Net.Document.Document());
+				writer.Commit();
+				snapshots.AddItem(sdp.Snapshot());
+			}
 		}
-		
-		private void  RunTest(Directory dir)
+
+		/// <exception cref="System.IO.IOException"></exception>
+		protected internal virtual SnapshotDeletionPolicy GetDeletionPolicy()
 		{
-			// Run for ~7 seconds
-			long stopTime = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) + 7000;
-			
-			SnapshotDeletionPolicy dp = new SnapshotDeletionPolicy(new KeepOnlyLastCommitDeletionPolicy());
-			IndexWriter writer = new IndexWriter(dir, new StandardAnalyzer(Util.Version.LUCENE_CURRENT), dp, IndexWriter.MaxFieldLength.UNLIMITED);
-			
-			// Force frequent flushes
-			writer.SetMaxBufferedDocs(2);
-			
-			ThreadClass t = new AnonymousClassThread(stopTime, writer, this);
-			
+			return new SnapshotDeletionPolicy(new KeepOnlyLastCommitDeletionPolicy());
+		}
+
+		/// <exception cref="System.Exception"></exception>
+		protected internal virtual void AssertSnapshotExists(Directory dir, SnapshotDeletionPolicy
+			 sdp, int numSnapshots, bool checkIndexCommitSame)
+		{
+			for (int i = 0; i < numSnapshots; i++)
+			{
+				IndexCommit snapshot = snapshots[i];
+				CheckMaxDoc(snapshot, i + 1);
+				CheckSnapshotExists(dir, snapshot);
+				if (checkIndexCommitSame)
+				{
+					NUnit.Framework.Assert.AreSame(snapshot, sdp.GetIndexCommit(snapshot.GetGeneration
+						()));
+				}
+				else
+				{
+					NUnit.Framework.Assert.AreEqual(snapshot.GetGeneration(), sdp.GetIndexCommit(snapshot
+						.GetGeneration()).GetGeneration());
+				}
+			}
+		}
+
+		/// <exception cref="System.Exception"></exception>
+		[NUnit.Framework.Test]
+		public virtual void TestSnapshotDeletionPolicy()
+		{
+			Directory fsDir = NewDirectory();
+			RunTest(Random(), fsDir);
+			fsDir.Close();
+		}
+
+		/// <exception cref="System.Exception"></exception>
+		private void RunTest(Random random, Directory dir)
+		{
+			// Run for ~1 seconds
+			long stopTime = Runtime.CurrentTimeMillis() + 1000;
+			SnapshotDeletionPolicy dp = GetDeletionPolicy();
+			IndexWriter writer = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig
+				(TEST_VERSION_CURRENT, new MockAnalyzer(random)).SetIndexDeletionPolicy(dp).SetMaxBufferedDocs
+				(2)));
+			// Verify we catch misuse:
+			try
+			{
+				dp.Snapshot();
+				NUnit.Framework.Assert.Fail("did not hit exception");
+			}
+			catch (InvalidOperationException)
+			{
+			}
+			// expected
+			dp = (SnapshotDeletionPolicy)writer.GetConfig().GetIndexDeletionPolicy();
+			writer.Commit();
+			Sharpen.Thread t = new _Thread_122(writer, stopTime);
 			t.Start();
-			
-			// While the above indexing thread is running, take many
-			// backups:
-		    do
-		    {
-		        BackupIndex(dir, dp);
-		        System.Threading.Thread.Sleep(new System.TimeSpan((System.Int64) 10000*20));
-		        if (!t.IsAlive)
-		            break;
-		    } while ((DateTime.Now.Ticks/TimeSpan.TicksPerMillisecond) < stopTime);
-			
+			do
+			{
+				// While the above indexing thread is running, take many
+				// backups:
+				BackupIndex(dir, dp);
+				Sharpen.Thread.Sleep(20);
+			}
+			while (t.IsAlive());
 			t.Join();
-			
 			// Add one more document to force writer to commit a
 			// final segment, so deletion policy has a chance to
 			// delete again:
-			Document doc = new Document();
-			doc.Add(new Field("content", "aaa", Field.Store.YES, Field.Index.ANALYZED, Field.TermVector.WITH_POSITIONS_OFFSETS));
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			FieldType customType = new FieldType(TextField.TYPE_STORED);
+			customType.SetStoreTermVectors(true);
+			customType.SetStoreTermVectorPositions(true);
+			customType.SetStoreTermVectorOffsets(true);
+			doc.Add(NewField("content", "aaa", customType));
 			writer.AddDocument(doc);
-			
 			// Make sure we don't have any leftover files in the
 			// directory:
 			writer.Close();
-			TestIndexWriter.AssertNoUnreferencedFiles(dir, "some files were not deleted but should have been");
+			TestIndexWriter.AssertNoUnreferencedFiles(dir, "some files were not deleted but should have been"
+				);
 		}
-		
-		/// <summary>Example showing how to use the SnapshotDeletionPolicy
-		/// to take a backup.  This method does not really do a
-		/// backup; instead, it reads every byte of every file
-		/// just to test that the files indeed exist and are
-		/// readable even while the index is changing. 
-		/// </summary>
-		public virtual void  BackupIndex(Directory dir, SnapshotDeletionPolicy dp)
+
+		private sealed class _Thread_122 : Sharpen.Thread
+		{
+			public _Thread_122(IndexWriter writer, long stopTime)
+			{
+				this.writer = writer;
+				this.stopTime = stopTime;
+			}
+
+			public override void Run()
+			{
+				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					();
+				FieldType customType = new FieldType(TextField.TYPE_STORED);
+				customType.SetStoreTermVectors(true);
+				customType.SetStoreTermVectorPositions(true);
+				customType.SetStoreTermVectorOffsets(true);
+				doc.Add(LuceneTestCase.NewField("content", "aaa", customType));
+				do
+				{
+					for (int i = 0; i < 27; i++)
+					{
+						try
+						{
+							writer.AddDocument(doc);
+						}
+						catch (Exception t)
+						{
+							Sharpen.Runtime.PrintStackTrace(t, System.Console.Out);
+							NUnit.Framework.Assert.Fail("addDocument failed");
+						}
+						if (i % 2 == 0)
+						{
+							try
+							{
+								writer.Commit();
+							}
+							catch (Exception e)
+							{
+								throw new RuntimeException(e);
+							}
+						}
+					}
+					try
+					{
+						Sharpen.Thread.Sleep(1);
+					}
+					catch (Exception ie)
+					{
+						throw new ThreadInterruptedException(ie);
+					}
+				}
+				while (Runtime.CurrentTimeMillis() < stopTime);
+			}
+
+			private readonly IndexWriter writer;
+
+			private readonly long stopTime;
+		}
+
+		/// <summary>Example showing how to use the SnapshotDeletionPolicy to take a backup.</summary>
+		/// <remarks>
+		/// Example showing how to use the SnapshotDeletionPolicy to take a backup.
+		/// This method does not really do a backup; instead, it reads every byte of
+		/// every file just to test that the files indeed exist and are readable even
+		/// while the index is changing.
+		/// </remarks>
+		/// <exception cref="System.Exception"></exception>
+		public virtual void BackupIndex(Directory dir, SnapshotDeletionPolicy dp)
 		{
 			// To backup an index we first take a snapshot:
+			IndexCommit snapshot = dp.Snapshot();
 			try
 			{
-				CopyFiles(dir, (IndexCommit) dp.Snapshot());
+				CopyFiles(dir, snapshot);
 			}
 			finally
 			{
 				// Make sure to release the snapshot, otherwise these
 				// files will never be deleted during this IndexWriter
 				// session:
-				dp.Release();
+				dp.Release(snapshot);
 			}
 		}
-		
-		private void  CopyFiles(Directory dir, IndexCommit cp)
+
+		/// <exception cref="System.Exception"></exception>
+		private void CopyFiles(Directory dir, IndexCommit cp)
 		{
-			
 			// While we hold the snapshot, and nomatter how long
 			// we take to do the backup, the IndexWriter will
 			// never delete the files in the snapshot:
-			System.Collections.Generic.ICollection<string> files = cp.FileNames;
-            foreach (string fileName in files)
+			ICollection<string> files = cp.GetFileNames();
+			foreach (string fileName in files)
 			{
 				// NOTE: in a real backup you would not use
 				// readFile; you would need to use something else
@@ -258,12 +264,13 @@ namespace Lucene.Net.Index
 				ReadFile(dir, fileName);
 			}
 		}
-		
+
 		internal byte[] buffer = new byte[4096];
-		
-		private void  ReadFile(Directory dir, System.String name)
+
+		/// <exception cref="System.Exception"></exception>
+		private void ReadFile(Directory dir, string name)
 		{
-			IndexInput input = dir.OpenInput(name);
+			IndexInput input = dir.OpenInput(name, NewIOContext(Random()));
 			try
 			{
 				long size = dir.FileLength(name);
@@ -272,9 +279,13 @@ namespace Lucene.Net.Index
 				{
 					int numToRead;
 					if (bytesLeft < buffer.Length)
-						numToRead = (int) bytesLeft;
+					{
+						numToRead = (int)bytesLeft;
+					}
 					else
+					{
 						numToRead = buffer.Length;
+					}
 					input.ReadBytes(buffer, 0, numToRead, false);
 					bytesLeft -= numToRead;
 				}
@@ -283,7 +294,7 @@ namespace Lucene.Net.Index
 				// make sure we are exercising the fact that the
 				// IndexWriter should not delete this file even when I
 				// take my time reading it.
-				System.Threading.Thread.Sleep(new System.TimeSpan((System.Int64) 10000 * 1));
+				Sharpen.Thread.Sleep(1);
 			}
 			finally
 			{
@@ -291,14 +302,206 @@ namespace Lucene.Net.Index
 			}
 		}
 
-        [Test]
-        public void TestNoCommits()
-        {
-            // Tests that if there were no commits when snapshot() is called, then
-            // IllegalStateException is thrown rather than NPE.
-            SnapshotDeletionPolicy sdp = new SnapshotDeletionPolicy(new KeepOnlyLastCommitDeletionPolicy());
+		/// <exception cref="System.Exception"></exception>
+		[NUnit.Framework.Test]
+		public virtual void TestBasicSnapshots()
+		{
+			int numSnapshots = 3;
+			// Create 3 snapshots: snapshot0, snapshot1, snapshot2
+			Directory dir = NewDirectory();
+			IndexWriter writer = new IndexWriter(dir, GetConfig(Random(), GetDeletionPolicy()
+				));
+			SnapshotDeletionPolicy sdp = (SnapshotDeletionPolicy)writer.GetConfig().GetIndexDeletionPolicy
+				();
+			PrepareIndexAndSnapshots(sdp, writer, numSnapshots);
+			writer.Close();
+			NUnit.Framework.Assert.AreEqual(numSnapshots, sdp.GetSnapshots().Count);
+			NUnit.Framework.Assert.AreEqual(numSnapshots, sdp.GetSnapshotCount());
+			AssertSnapshotExists(dir, sdp, numSnapshots, true);
+			// open a reader on a snapshot - should succeed.
+			DirectoryReader.Open(snapshots[0]).Close();
+			// open a new IndexWriter w/ no snapshots to keep and 
+			//HM:revisit 
+			//assert that all snapshots are gone.
+			sdp = GetDeletionPolicy();
+			writer = new IndexWriter(dir, GetConfig(Random(), sdp));
+			writer.DeleteUnusedFiles();
+			writer.Close();
+			NUnit.Framework.Assert.AreEqual("no snapshots should exist", 1, DirectoryReader.ListCommits
+				(dir).Count);
+			dir.Close();
+		}
 
-            Assert.Throws<SystemException>(() => sdp.Snapshot(), "expected exception not hit");
-        }
+		/// <exception cref="System.Exception"></exception>
+		[NUnit.Framework.Test]
+		public virtual void TestMultiThreadedSnapshotting()
+		{
+			Directory dir = NewDirectory();
+			IndexWriter writer = new IndexWriter(dir, GetConfig(Random(), GetDeletionPolicy()
+				));
+			SnapshotDeletionPolicy sdp = (SnapshotDeletionPolicy)writer.GetConfig().GetIndexDeletionPolicy
+				();
+			Sharpen.Thread[] threads = new Sharpen.Thread[10];
+			IndexCommit[] snapshots = new IndexCommit[threads.Length];
+			for (int i = 0; i < threads.Length; i++)
+			{
+				int finalI = i;
+				threads[i] = new _Thread_287(writer, snapshots, finalI, sdp);
+				threads[i].SetName("t" + i);
+			}
+			foreach (Sharpen.Thread t in threads)
+			{
+				t.Start();
+			}
+			foreach (Sharpen.Thread t_1 in threads)
+			{
+				t_1.Join();
+			}
+			// Do one last commit, so that after we release all snapshots, we stay w/ one commit
+			writer.AddDocument(new Lucene.Net.Document.Document());
+			writer.Commit();
+			for (int i_1 = 0; i_1 < threads.Length; i_1++)
+			{
+				sdp.Release(snapshots[i_1]);
+				writer.DeleteUnusedFiles();
+			}
+			NUnit.Framework.Assert.AreEqual(1, DirectoryReader.ListCommits(dir).Count);
+			writer.Close();
+			dir.Close();
+		}
+
+		private sealed class _Thread_287 : Sharpen.Thread
+		{
+			public _Thread_287(IndexWriter writer, IndexCommit[] snapshots, int finalI, SnapshotDeletionPolicy
+				 sdp)
+			{
+				this.writer = writer;
+				this.snapshots = snapshots;
+				this.finalI = finalI;
+				this.sdp = sdp;
+			}
+
+			public override void Run()
+			{
+				try
+				{
+					writer.AddDocument(new Lucene.Net.Document.Document());
+					writer.Commit();
+					snapshots[finalI] = sdp.Snapshot();
+				}
+				catch (Exception e)
+				{
+					throw new RuntimeException(e);
+				}
+			}
+
+			private readonly IndexWriter writer;
+
+			private readonly IndexCommit[] snapshots;
+
+			private readonly int finalI;
+
+			private readonly SnapshotDeletionPolicy sdp;
+		}
+
+		/// <exception cref="System.Exception"></exception>
+		[NUnit.Framework.Test]
+		public virtual void TestRollbackToOldSnapshot()
+		{
+			int numSnapshots = 2;
+			Directory dir = NewDirectory();
+			SnapshotDeletionPolicy sdp = GetDeletionPolicy();
+			IndexWriter writer = new IndexWriter(dir, GetConfig(Random(), sdp));
+			PrepareIndexAndSnapshots(sdp, writer, numSnapshots);
+			writer.Close();
+			// now open the writer on "snapshot0" - make sure it succeeds
+			writer = new IndexWriter(dir, GetConfig(Random(), sdp).SetIndexCommit(snapshots[0
+				]));
+			// this does the actual rollback
+			writer.Commit();
+			writer.DeleteUnusedFiles();
+			AssertSnapshotExists(dir, sdp, numSnapshots - 1, false);
+			writer.Close();
+			// but 'snapshot1' files will still exist (need to release snapshot before they can be deleted).
+			string segFileName = snapshots[1].GetSegmentsFileName();
+			NUnit.Framework.Assert.IsTrue("snapshot files should exist in the directory: " + 
+				segFileName, SlowFileExists(dir, segFileName));
+			dir.Close();
+		}
+
+		/// <exception cref="System.Exception"></exception>
+		[NUnit.Framework.Test]
+		public virtual void TestReleaseSnapshot()
+		{
+			Directory dir = NewDirectory();
+			IndexWriter writer = new IndexWriter(dir, GetConfig(Random(), GetDeletionPolicy()
+				));
+			SnapshotDeletionPolicy sdp = (SnapshotDeletionPolicy)writer.GetConfig().GetIndexDeletionPolicy
+				();
+			PrepareIndexAndSnapshots(sdp, writer, 1);
+			// Create another commit - we must do that, because otherwise the "snapshot"
+			// files will still remain in the index, since it's the last commit.
+			writer.AddDocument(new Lucene.Net.Document.Document());
+			writer.Commit();
+			// Release
+			string segFileName = snapshots[0].GetSegmentsFileName();
+			sdp.Release(snapshots[0]);
+			writer.DeleteUnusedFiles();
+			writer.Close();
+			NUnit.Framework.Assert.IsFalse("segments file should not be found in dirctory: " 
+				+ segFileName, SlowFileExists(dir, segFileName));
+			dir.Close();
+		}
+
+		/// <exception cref="System.Exception"></exception>
+		[NUnit.Framework.Test]
+		public virtual void TestSnapshotLastCommitTwice()
+		{
+			Directory dir = NewDirectory();
+			IndexWriter writer = new IndexWriter(dir, GetConfig(Random(), GetDeletionPolicy()
+				));
+			SnapshotDeletionPolicy sdp = (SnapshotDeletionPolicy)writer.GetConfig().GetIndexDeletionPolicy
+				();
+			writer.AddDocument(new Lucene.Net.Document.Document());
+			writer.Commit();
+			IndexCommit s1 = sdp.Snapshot();
+			IndexCommit s2 = sdp.Snapshot();
+			NUnit.Framework.Assert.AreSame(s1, s2);
+			// should be the same instance
+			// create another commit
+			writer.AddDocument(new Lucene.Net.Document.Document());
+			writer.Commit();
+			// release "s1" should not delete "s2"
+			sdp.Release(s1);
+			writer.DeleteUnusedFiles();
+			CheckSnapshotExists(dir, s2);
+			writer.Close();
+			dir.Close();
+		}
+
+		/// <exception cref="System.Exception"></exception>
+		[NUnit.Framework.Test]
+		public virtual void TestMissingCommits()
+		{
+			// Tests the behavior of SDP when commits that are given at ctor are missing
+			// on onInit().
+			Directory dir = NewDirectory();
+			IndexWriter writer = new IndexWriter(dir, GetConfig(Random(), GetDeletionPolicy()
+				));
+			SnapshotDeletionPolicy sdp = (SnapshotDeletionPolicy)writer.GetConfig().GetIndexDeletionPolicy
+				();
+			writer.AddDocument(new Lucene.Net.Document.Document());
+			writer.Commit();
+			IndexCommit s1 = sdp.Snapshot();
+			// create another commit, not snapshotted.
+			writer.AddDocument(new Lucene.Net.Document.Document());
+			writer.Close();
+			// open a new writer w/ KeepOnlyLastCommit policy, so it will delete "s1"
+			// commit.
+			new IndexWriter(dir, GetConfig(Random(), null)).Close();
+			NUnit.Framework.Assert.IsFalse("snapshotted commit should not exist", SlowFileExists
+				(dir, s1.GetSegmentsFileName()));
+			dir.Close();
+		}
 	}
 }

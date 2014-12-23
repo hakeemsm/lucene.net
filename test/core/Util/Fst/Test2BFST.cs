@@ -35,13 +35,13 @@ namespace Lucene.Net.Test.Util.Fst
                     Console.WriteLine("\nTEST: 3B nodes; doPack=false output=NO_OUTPUTS");
                     Outputs<object> outputs = NoOutputs.GetSingleton();
                     var NO_OUTPUT = outputs.GetNoOutput();
-                    var b = new Builder<object>(FST.INPUT_TYPE.BYTE1, 0, 0, false, false, int.MaxValue, outputs,
-                                                                  null, doPack, PackedInts.COMPACT, true, 15);
+					Builder<object> b = new Builder<object>(FST.INPUT_TYPE.BYTE1, 0, 0, true, true, int.MaxValue
+						, outputs, null, doPack, PackedInts.COMPACT, true, 15);
 
                     var count = 0;
                     var r = new Random((int)seed);
                     var ints2 = new int[200];
-                    var input2 = new IntsRefs(ints2, 0, ints2.Length);
+					IntsRef input2 = new IntsRef(ints2, 0, ints2.Length);
                     while (true)
                     {
                         //Console.WriteLine("add: " + input + " -> " + output);
@@ -55,7 +55,7 @@ namespace Lucene.Net.Test.Util.Fst
                         {
                             Console.WriteLine(count + ": " + b.FstSizeInBytes() + " bytes; " + b.TotStateCount + " nodes");
                         }
-                        if (b.TotStateCount > LIMIT)
+						if (b.GetTotStateCount() > int.MaxValue + 100L * 1024 * 1024)
                         {
                             break;
                         }

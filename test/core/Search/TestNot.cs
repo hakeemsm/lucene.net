@@ -37,22 +37,23 @@ namespace Lucene.Net.Search
 		[Test]
 		public virtual void  TestNot_Renamed()
 		{
-			RAMDirectory store = new RAMDirectory();
-			IndexWriter writer = new IndexWriter(store, new SimpleAnalyzer(), true, IndexWriter.MaxFieldLength.LIMITED);
+			Directory store = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), store);
 			
 			Document d1 = new Document();
-			d1.Add(new Field("field", "a b", Field.Store.YES, Field.Index.ANALYZED));
+			d1.Add(NewTextField("field", "a b", Field.Store.YES));
 			
 			writer.AddDocument(d1);
-			writer.Optimize();
+			IndexReader reader = writer.GetReader();
+			IndexSearcher searcher = NewSearcher(reader);
+			BooleanQuery query = new BooleanQuery();
+			query.Add(new TermQuery(new Term("field", "a")), BooleanClause.Occur.SHOULD);
+			query.Add(new TermQuery(new Term("field", "b")), BooleanClause.Occur.MUST_NOT);
+			ScoreDoc[] hits = searcher.Search(query, null, 1000).scoreDocs;
+			NUnit.Framework.Assert.AreEqual(0, hits.Length);
 			writer.Close();
-			
-			Searcher searcher = new IndexSearcher(store, true);
-			QueryParser parser = new QueryParser(Util.Version.LUCENE_CURRENT, "field", new SimpleAnalyzer());
-			Query query = parser.Parse("a NOT b");
-			//System.out.println(query);
-			ScoreDoc[] hits = searcher.Search(query, null, 1000).ScoreDocs;
-			Assert.AreEqual(0, hits.Length);
+			reader.Close();
+			store.Close();
 		}
 	}
 }

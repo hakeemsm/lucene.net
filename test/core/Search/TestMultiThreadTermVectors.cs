@@ -1,74 +1,75 @@
-/* 
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+/*
+ * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
  * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
 using System;
+using System.IO;
+using System.Text;
+using Lucene.Net.Analysis;
+using Lucene.Net.Document;
 using Lucene.Net.Index;
-using Lucene.Net.Support;
-using NUnit.Framework;
-
-using SimpleAnalyzer = Lucene.Net.Analysis.SimpleAnalyzer;
-using Lucene.Net.Documents;
-using IndexReader = Lucene.Net.Index.IndexReader;
-using IndexWriter = Lucene.Net.Index.IndexWriter;
-using RAMDirectory = Lucene.Net.Store.RAMDirectory;
-using English = Lucene.Net.Util.English;
-using LuceneTestCase = Lucene.Net.Util.LuceneTestCase;
+using Lucene.Net.Search;
+using Lucene.Net.Store;
+using Lucene.Net.Util;
+using Sharpen;
 
 namespace Lucene.Net.Search
 {
-    [TestFixture]
-	public class TestMultiThreadTermVectors:LuceneTestCase
+	public class TestMultiThreadTermVectors : LuceneTestCase
 	{
-		private RAMDirectory directory = new RAMDirectory();
+		private Directory directory;
+
 		public int numDocs = 100;
+
 		public int numThreads = 3;
-		
-		[SetUp]
-		public override void  SetUp()
+
+		/// <exception cref="System.Exception"></exception>
+		public override void SetUp()
 		{
 			base.SetUp();
-			IndexWriter writer = new IndexWriter(directory, new SimpleAnalyzer(), true, IndexWriter.MaxFieldLength.LIMITED);
-			//writer.setUseCompoundFile(false);
+			directory = NewDirectory();
+			IndexWriter writer = new IndexWriter(directory, NewIndexWriterConfig(TEST_VERSION_CURRENT
+				, new MockAnalyzer(Random())).SetMergePolicy(NewLogMergePolicy()));
+			//writer.setNoCFSRatio(0.0);
 			//writer.infoStream = System.out;
+			FieldType customType = new FieldType(TextField.TYPE_STORED);
+			customType.SetTokenized(false);
+			customType.SetStoreTermVectors(true);
 			for (int i = 0; i < numDocs; i++)
 			{
-				Document doc = new Document();
-				IFieldable fld = new Field("field", English.IntToEnglish(i), Field.Store.YES, Field.Index.NOT_ANALYZED, Field.TermVector.YES);
+				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					();
+				Field fld = NewField("field", English.IntToEnglish(i), customType);
 				doc.Add(fld);
 				writer.AddDocument(doc);
 			}
 			writer.Close();
 		}
-		
-		[Test]
-		public virtual void  Test()
+
+		/// <exception cref="System.Exception"></exception>
+		public override void TearDown()
 		{
-			
+			directory.Close();
+			base.TearDown();
+		}
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void Test()
+		{
 			IndexReader reader = null;
-			
 			try
 			{
-			    reader = IndexReader.Open(directory, true);
+				reader = DirectoryReader.Open(directory);
 				for (int i = 1; i <= numThreads; i++)
+				{
 					TestTermPositionVectors(reader, i);
+				}
 			}
-			catch (System.IO.IOException ioe)
+			catch (IOException ioe)
 			{
-				Assert.Fail(ioe.Message);
+				NUnit.Framework.Assert.Fail(ioe.Message);
 			}
 			finally
 			{
@@ -76,138 +77,139 @@ namespace Lucene.Net.Search
 				{
 					try
 					{
-						/* close the opened reader */
 						reader.Close();
 					}
-					catch (System.IO.IOException ioe)
+					catch (IOException ioe)
 					{
-						System.Console.Error.WriteLine(ioe.StackTrace);
+						Sharpen.Runtime.PrintStackTrace(ioe);
 					}
 				}
 			}
 		}
-		
 
-		public virtual void  TestTermPositionVectors(IndexReader reader, int threadCount)
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestTermPositionVectors(IndexReader reader, int threadCount)
 		{
-			MultiThreadTermVectorsReader[] mtr = new MultiThreadTermVectorsReader[threadCount];
+			MultiThreadTermVectorsReader[] mtr = new MultiThreadTermVectorsReader[threadCount
+				];
 			for (int i = 0; i < threadCount; i++)
 			{
 				mtr[i] = new MultiThreadTermVectorsReader();
 				mtr[i].Init(reader);
 			}
-			
-			
-			/* run until all threads finished */
 			int threadsAlive = mtr.Length;
 			while (threadsAlive > 0)
 			{
 				//System.out.println("Threads alive");
-				System.Threading.Thread.Sleep(new System.TimeSpan((System.Int64) 10000 * 10));
+				Sharpen.Thread.Sleep(10);
 				threadsAlive = mtr.Length;
-				for (int i = 0; i < mtr.Length; i++)
+				for (int i_1 = 0; i_1 < mtr.Length; i_1++)
 				{
-					if (mtr[i].IsAlive() == true)
+					if (mtr[i_1].IsAlive() == true)
 					{
 						break;
 					}
-					
 					threadsAlive--;
 				}
 			}
-			
 			long totalTime = 0L;
-			for (int i = 0; i < mtr.Length; i++)
+			for (int i_2 = 0; i_2 < mtr.Length; i_2++)
 			{
-				totalTime += mtr[i].timeElapsed;
-				mtr[i] = null;
+				totalTime += mtr[i_2].timeElapsed;
+				mtr[i_2] = null;
 			}
-			
-			//System.out.println("threadcount: " + mtr.length + " average term vector time: " + totalTime/mtr.length);
 		}
+		//System.out.println("threadcount: " + mtr.length + " average term vector time: " + totalTime/mtr.length);
 	}
-	
-	class MultiThreadTermVectorsReader : IThreadRunnable
+
+	internal class MultiThreadTermVectorsReader : Runnable
 	{
-		
 		private IndexReader reader = null;
-		private ThreadClass t = null;
-		
-		private int runsToDo = 100;
+
+		private Sharpen.Thread t = null;
+
+		private readonly int runsToDo = 100;
+
 		internal long timeElapsed = 0;
-		
-		
-		public virtual void  Init(IndexReader reader)
+
+		public virtual void Init(IndexReader reader)
 		{
 			this.reader = reader;
 			timeElapsed = 0;
-			t = new ThreadClass(new System.Threading.ThreadStart(this.Run));
+			t = new Sharpen.Thread(this);
 			t.Start();
 		}
-		
+
 		public virtual bool IsAlive()
 		{
 			if (t == null)
+			{
 				return false;
-			
-			return t.IsAlive;
+			}
+			return t.IsAlive();
 		}
-		
-		public virtual void  Run()
+
+		public virtual void Run()
 		{
 			try
 			{
 				// run the test 100 times
 				for (int i = 0; i < runsToDo; i++)
+				{
 					TestTermVectors();
+				}
 			}
-			catch (System.Exception e)
+			catch (Exception e)
 			{
-				System.Console.Error.WriteLine(e.StackTrace);
+				Sharpen.Runtime.PrintStackTrace(e);
 			}
-			return ;
+			return;
 		}
-		
-		private void  TestTermVectors()
+
+		/// <exception cref="System.Exception"></exception>
+		private void TestTermVectors()
 		{
 			// check:
 			int numDocs = reader.NumDocs();
 			long start = 0L;
 			for (int docId = 0; docId < numDocs; docId++)
 			{
-				start = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond);
-				ITermFreqVector[] vectors = reader.GetTermFreqVectors(docId);
-				timeElapsed += (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - start;
-				
+				start = Runtime.CurrentTimeMillis();
+				Fields vectors = reader.GetTermVectors(docId);
+				timeElapsed += Runtime.CurrentTimeMillis() - start;
 				// verify vectors result
 				VerifyVectors(vectors, docId);
-				
-				start = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond);
-				ITermFreqVector vector = reader.GetTermFreqVector(docId, "field");
-				timeElapsed += (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - start;
-				
-				vectors = new ITermFreqVector[1];
-				vectors[0] = vector;
-				
-				VerifyVectors(vectors, docId);
+				start = Runtime.CurrentTimeMillis();
+				Terms vector = reader.GetTermVectors(docId).Terms("field");
+				timeElapsed += Runtime.CurrentTimeMillis() - start;
+				VerifyVector(vector.Iterator(null), docId);
 			}
 		}
-		
-		private void  VerifyVectors(ITermFreqVector[] vectors, int num)
+
+		/// <exception cref="System.IO.IOException"></exception>
+		private void VerifyVectors(Fields vectors, int num)
 		{
-			System.Text.StringBuilder temp = new System.Text.StringBuilder();
-			System.String[] terms = null;
-			for (int i = 0; i < vectors.Length; i++)
+			foreach (string field in vectors)
 			{
-				terms = vectors[i].GetTerms();
-				for (int z = 0; z < terms.Length; z++)
-				{
-					temp.Append(terms[z]);
-				}
+				Terms terms = vectors.Terms(field);
+				//HM:revisit 
+				//assert terms != null;
+				VerifyVector(terms.Iterator(null), num);
 			}
-			
+		}
+
+		/// <exception cref="System.IO.IOException"></exception>
+		private void VerifyVector(TermsEnum vector, int num)
+		{
+			StringBuilder temp = new StringBuilder();
+			while (vector.Next() != null)
+			{
+				temp.Append(vector.Term().Utf8ToString());
+			}
 			if (!English.IntToEnglish(num).Trim().Equals(temp.ToString().Trim()))
+			{
 				System.Console.Out.WriteLine("wrong term result");
+			}
 		}
 	}
 }

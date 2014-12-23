@@ -1,48 +1,44 @@
-/* 
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+/*
+ * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
  * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
 using System;
-
-using NUnit.Framework;
-
-using WhitespaceAnalyzer = Lucene.Net.Analysis.WhitespaceAnalyzer;
-using Document = Lucene.Net.Documents.Document;
-using Field = Lucene.Net.Documents.Field;
-using Directory = Lucene.Net.Store.Directory;
-using MockRAMDirectory = Lucene.Net.Store.MockRAMDirectory;
-using RAMDirectory = Lucene.Net.Store.RAMDirectory;
-using LuceneTestCase = Lucene.Net.Util.LuceneTestCase;
+using Lucene.Net.Analysis;
+using Lucene.Net.Codecs.Lucene41;
+using Lucene.Net.Document;
+using Lucene.Net.Index;
+using Lucene.Net.Store;
+using Lucene.Net.Util;
+using Sharpen;
 
 namespace Lucene.Net.Index
 {
-	
-	
-    [TestFixture]
-	public class TestSegmentTermEnum:LuceneTestCase
+	public class TestSegmentTermEnum : LuceneTestCase
 	{
-		internal Directory dir = new RAMDirectory();
-		
-		[Test]
-		public virtual void  TestTermEnum()
+		internal Directory dir;
+
+		/// <exception cref="System.Exception"></exception>
+		public override void SetUp()
+		{
+			base.SetUp();
+			dir = NewDirectory();
+		}
+
+		/// <exception cref="System.Exception"></exception>
+		public override void TearDown()
+		{
+			dir.Close();
+			base.TearDown();
+		}
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestTermEnum()
 		{
 			IndexWriter writer = null;
-			
-			writer = new IndexWriter(dir, new WhitespaceAnalyzer(), true, IndexWriter.MaxFieldLength.LIMITED);
-			
+			writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
+				(Random())));
 			// ADD 100 documents with term : aaa
 			// add 100 documents with terms: aaa bbb
 			// Therefore, term 'aaa' has document frequency of 200 and term 'bbb' 100
@@ -51,78 +47,93 @@ namespace Lucene.Net.Index
 				AddDoc(writer, "aaa");
 				AddDoc(writer, "aaa bbb");
 			}
-			
 			writer.Close();
-			
-			// verify document frequency of terms in an unoptimized index
+			// verify document frequency of terms in an multi segment index
 			VerifyDocFreq();
-			
-			// merge segments by optimizing the index
-			writer = new IndexWriter(dir, new WhitespaceAnalyzer(), false, IndexWriter.MaxFieldLength.LIMITED);
-			writer.Optimize();
+			// merge segments
+			writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
+				(Random())).SetOpenMode(IndexWriterConfig.OpenMode.APPEND));
+			writer.ForceMerge(1);
 			writer.Close();
-			
-			// verify document frequency of terms in an optimized index
+			// verify document frequency of terms in a single segment index
 			VerifyDocFreq();
 		}
-		
-		[Test]
-		public virtual void  TestPrevTermAtEnd()
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestPrevTermAtEnd()
 		{
-			Directory dir = new MockRAMDirectory();
-			IndexWriter writer = new IndexWriter(dir, new WhitespaceAnalyzer(), true, IndexWriter.MaxFieldLength.LIMITED);
+			IndexWriter writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT
+				, new MockAnalyzer(Random())).SetCodec(TestUtil.AlwaysPostingsFormat(new Lucene41PostingsFormat
+				())));
 			AddDoc(writer, "aaa bbb");
 			writer.Close();
-			SegmentReader reader = SegmentReader.GetOnlySegmentReader(dir);
-			SegmentTermEnum termEnum = (SegmentTermEnum) reader.Terms();
-			Assert.IsTrue(termEnum.Next());
-			Assert.AreEqual("aaa", termEnum.Term.Text);
-			Assert.IsTrue(termEnum.Next());
-			Assert.AreEqual("aaa", termEnum.Prev().Text);
-			Assert.AreEqual("bbb", termEnum.Term.Text);
-			Assert.IsFalse(termEnum.Next());
-			Assert.AreEqual("bbb", termEnum.Prev().Text);
+			SegmentReader reader = GetOnlySegmentReader(DirectoryReader.Open(dir));
+			TermsEnum terms = reader.Fields().Terms("content").Iterator(null);
+			NUnit.Framework.Assert.IsNotNull(terms.Next());
+			NUnit.Framework.Assert.AreEqual("aaa", terms.Term().Utf8ToString());
+			NUnit.Framework.Assert.IsNotNull(terms.Next());
+			long ordB;
+			try
+			{
+				ordB = terms.Ord();
+			}
+			catch (NotSupportedException)
+			{
+				// ok -- codec is not required to support ord
+				reader.Close();
+				return;
+			}
+			NUnit.Framework.Assert.AreEqual("bbb", terms.Term().Utf8ToString());
+			NUnit.Framework.Assert.IsNull(terms.Next());
+			terms.SeekExact(ordB);
+			NUnit.Framework.Assert.AreEqual("bbb", terms.Term().Utf8ToString());
+			reader.Close();
 		}
-		
-		private void  VerifyDocFreq()
+
+		/// <exception cref="System.IO.IOException"></exception>
+		private void VerifyDocFreq()
 		{
-		    IndexReader reader = IndexReader.Open(dir, true);
-			TermEnum termEnum = null;
-			
+			IndexReader reader = DirectoryReader.Open(dir);
+			TermsEnum termEnum = MultiFields.GetTerms(reader, "content").Iterator(null);
 			// create enumeration of all terms
-			termEnum = reader.Terms();
 			// go to the first term (aaa)
 			termEnum.Next();
-			// assert that term is 'aaa'
-			Assert.AreEqual("aaa", termEnum.Term.Text);
-			Assert.AreEqual(200, termEnum.DocFreq());
+			// 
+			//HM:revisit 
+			//assert that term is 'aaa'
+			NUnit.Framework.Assert.AreEqual("aaa", termEnum.Term().Utf8ToString());
+			NUnit.Framework.Assert.AreEqual(200, termEnum.DocFreq());
 			// go to the second term (bbb)
 			termEnum.Next();
-			// assert that term is 'bbb'
-			Assert.AreEqual("bbb", termEnum.Term.Text);
-			Assert.AreEqual(100, termEnum.DocFreq());
-			
-			termEnum.Close();
-			
-			
-			// create enumeration of terms after term 'aaa', including 'aaa'
-			termEnum = reader.Terms(new Term("content", "aaa"));
-			// assert that term is 'aaa'
-			Assert.AreEqual("aaa", termEnum.Term.Text);
-			Assert.AreEqual(200, termEnum.DocFreq());
+			// 
+			//HM:revisit 
+			//assert that term is 'bbb'
+			NUnit.Framework.Assert.AreEqual("bbb", termEnum.Term().Utf8ToString());
+			NUnit.Framework.Assert.AreEqual(100, termEnum.DocFreq());
+			// create enumeration of terms after term 'aaa',
+			// including 'aaa'
+			termEnum.SeekCeil(new BytesRef("aaa"));
+			// 
+			//HM:revisit 
+			//assert that term is 'aaa'
+			NUnit.Framework.Assert.AreEqual("aaa", termEnum.Term().Utf8ToString());
+			NUnit.Framework.Assert.AreEqual(200, termEnum.DocFreq());
 			// go to term 'bbb'
 			termEnum.Next();
-			// assert that term is 'bbb'
-			Assert.AreEqual("bbb", termEnum.Term.Text);
-			Assert.AreEqual(100, termEnum.DocFreq());
-			
-			termEnum.Close();
+			// 
+			//HM:revisit 
+			//assert that term is 'bbb'
+			NUnit.Framework.Assert.AreEqual("bbb", termEnum.Term().Utf8ToString());
+			NUnit.Framework.Assert.AreEqual(100, termEnum.DocFreq());
+			reader.Close();
 		}
-		
-		private void  AddDoc(IndexWriter writer, System.String value_Renamed)
+
+		/// <exception cref="System.IO.IOException"></exception>
+		private void AddDoc(IndexWriter writer, string value)
 		{
-			Document doc = new Document();
-			doc.Add(new Field("content", value_Renamed, Field.Store.NO, Field.Index.ANALYZED));
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(NewTextField("content", value, Field.Store.NO));
 			writer.AddDocument(doc);
 		}
 	}

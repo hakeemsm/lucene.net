@@ -12,7 +12,7 @@ using Org.Apache.Lucene.Store;
 using Org.Apache.Lucene.Util;
 using Sharpen;
 
-namespace Lucene.Net.Codecs.Lucene42
+namespace Lucene.Net.Codecs.Lucene42.TestFramework
 {
 	/// <summary>Lucene 4.2 FieldInfos writer.</summary>
 	/// <remarks>Lucene 4.2 FieldInfos writer.</remarks>

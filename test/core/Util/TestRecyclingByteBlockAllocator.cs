@@ -26,7 +26,7 @@ namespace Lucene.Net.Test.Util
         [Test]
         public void testAllocate()
         {
-            var allocator = newAllocator();
+			RecyclingByteBlockAllocator allocator = NewAllocator();
             var set = new HashSet<sbyte[]>();
             var block = allocator.ByteBlock;
             set.Add(block);

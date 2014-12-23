@@ -1,41 +1,28 @@
-﻿/* 
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+/*
+ * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
  * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using System;
-
-using Lucene.Net.Index;
 using Lucene.Net.Analysis;
-using Lucene.Net.Documents;
+using Lucene.Net.Index;
 using Lucene.Net.Store;
 using Lucene.Net.Util;
-
-using NUnit.Framework;
+using Sharpen;
 
 namespace Lucene.Net.Index
 {
-    [TestFixture]
-    public class TestNewestSegment : LuceneTestCase
-    {
-        [Test]
-        public void TestNewestSegment_Renamed()
-        {
-            RAMDirectory directory = new RAMDirectory();
-            IndexWriter writer = new IndexWriter(directory, new SimpleAnalyzer(), IndexWriter.MaxFieldLength.LIMITED);
-            Assert.IsNull(writer.NewestSegment());
-        }
-    }
+	public class TestNewestSegment : LuceneTestCase
+	{
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestNewestSegment()
+		{
+			Directory directory = NewDirectory();
+			IndexWriter writer = new IndexWriter(directory, NewIndexWriterConfig(TEST_VERSION_CURRENT
+				, new MockAnalyzer(Random())));
+			NUnit.Framework.Assert.IsNull(writer.NewestSegment());
+			writer.Close();
+			directory.Close();
+		}
+	}
 }

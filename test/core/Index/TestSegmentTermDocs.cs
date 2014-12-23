@@ -1,274 +1,260 @@
-/* 
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+/*
+ * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
  * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using System;
-
-using NUnit.Framework;
-
-using WhitespaceAnalyzer = Lucene.Net.Analysis.WhitespaceAnalyzer;
-using Document = Lucene.Net.Documents.Document;
-using Field = Lucene.Net.Documents.Field;
-using Directory = Lucene.Net.Store.Directory;
-using MockRAMDirectory = Lucene.Net.Store.MockRAMDirectory;
-using RAMDirectory = Lucene.Net.Store.RAMDirectory;
-using LuceneTestCase = Lucene.Net.Util.LuceneTestCase;
+using Lucene.Net.Analysis;
+using Lucene.Net.Document;
+using Lucene.Net.Index;
+using Lucene.Net.Search;
+using Lucene.Net.Store;
+using Lucene.Net.Util;
+using Sharpen;
 
 namespace Lucene.Net.Index
 {
-	
-    [TestFixture]
-	public class TestSegmentTermDocs:LuceneTestCase
+	public class TestSegmentTermDocs : LuceneTestCase
 	{
-		private Document testDoc = new Document();
-		private Directory dir = new RAMDirectory();
-		private SegmentInfo info;
-		
-		public TestSegmentTermDocs(System.String s):base(s)
-		{
-		}
+		private Lucene.Net.Document.Document testDoc = new Lucene.Net.Document.Document
+			();
 
-        public TestSegmentTermDocs() : base("")
-        {
-        }
-		
-		[SetUp]
-		public override void  SetUp()
+		private Directory dir;
+
+		private SegmentCommitInfo info;
+
+		/// <exception cref="System.Exception"></exception>
+		public override void SetUp()
 		{
 			base.SetUp();
+			dir = NewDirectory();
 			DocHelper.SetupDoc(testDoc);
-			info = DocHelper.WriteDoc(dir, testDoc);
+			info = DocHelper.WriteDoc(Random(), dir, testDoc);
 		}
 
-        [TearDown]
-        public override void TearDown()
-        {
-            testDoc = new Document();
-		    dir = new RAMDirectory();
-        }
-		
-		[Test]
-		public virtual void  Test()
+		/// <exception cref="System.Exception"></exception>
+		public override void TearDown()
 		{
-			Assert.IsTrue(dir != null);
+			dir.Close();
+			base.TearDown();
 		}
-		
-		[Test]
-		public virtual void  TestTermDocs()
+
+		public virtual void Test()
+		{
+			NUnit.Framework.Assert.IsTrue(dir != null);
+		}
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestTermDocs()
 		{
 			TestTermDocs(1);
 		}
-		
-		public virtual void  TestTermDocs(int indexDivisor)
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestTermDocs(int indexDivisor)
 		{
 			//After adding the document, we should be able to read it back in
-			SegmentReader reader = SegmentReader.Get(true, info, indexDivisor);
-			Assert.IsTrue(reader != null);
-			Assert.AreEqual(indexDivisor, reader.TermInfosIndexDivisor);
-			SegmentTermDocs segTermDocs = new SegmentTermDocs(reader);
-			Assert.IsTrue(segTermDocs != null);
-			segTermDocs.Seek(new Term(DocHelper.TEXT_FIELD_2_KEY, "field"));
-			if (segTermDocs.Next() == true)
+			SegmentReader reader = new SegmentReader(info, indexDivisor, NewIOContext(Random(
+				)));
+			NUnit.Framework.Assert.IsTrue(reader != null);
+			NUnit.Framework.Assert.AreEqual(indexDivisor, reader.GetTermInfosIndexDivisor());
+			TermsEnum terms = reader.Fields().Terms(DocHelper.TEXT_FIELD_2_KEY).Iterator(null
+				);
+			terms.SeekCeil(new BytesRef("field"));
+			DocsEnum termDocs = TestUtil.Docs(Random(), terms, reader.GetLiveDocs(), null, DocsEnum
+				.FLAG_FREQS);
+			if (termDocs.NextDoc() != DocIdSetIterator.NO_MORE_DOCS)
 			{
-				int docId = segTermDocs.Doc;
-				Assert.IsTrue(docId == 0);
-				int freq = segTermDocs.Freq;
-				Assert.IsTrue(freq == 3);
+				int docId = termDocs.DocID();
+				NUnit.Framework.Assert.IsTrue(docId == 0);
+				int freq = termDocs.Freq();
+				NUnit.Framework.Assert.IsTrue(freq == 3);
 			}
 			reader.Close();
 		}
-		
-		[Test]
-		public virtual void  TestBadSeek()
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestBadSeek()
 		{
-			testBadSeek(1);
+			TestBadSeek(1);
 		}
-		
-		public virtual void  testBadSeek(int indexDivisor)
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestBadSeek(int indexDivisor)
 		{
 			{
 				//After adding the document, we should be able to read it back in
-				SegmentReader reader = SegmentReader.Get(true, info, indexDivisor);
-				Assert.IsTrue(reader != null);
-				SegmentTermDocs segTermDocs = new SegmentTermDocs(reader);
-				Assert.IsTrue(segTermDocs != null);
-				segTermDocs.Seek(new Term("textField2", "bad"));
-				Assert.IsTrue(segTermDocs.Next() == false);
+				SegmentReader reader = new SegmentReader(info, indexDivisor, NewIOContext(Random(
+					)));
+				NUnit.Framework.Assert.IsTrue(reader != null);
+				DocsEnum termDocs = TestUtil.Docs(Random(), reader, "textField2", new BytesRef("bad"
+					), reader.GetLiveDocs(), null, 0);
+				NUnit.Framework.Assert.IsNull(termDocs);
 				reader.Close();
 			}
 			{
 				//After adding the document, we should be able to read it back in
-				SegmentReader reader = SegmentReader.Get(true, info, indexDivisor);
-				Assert.IsTrue(reader != null);
-				SegmentTermDocs segTermDocs = new SegmentTermDocs(reader);
-				Assert.IsTrue(segTermDocs != null);
-				segTermDocs.Seek(new Term("junk", "bad"));
-				Assert.IsTrue(segTermDocs.Next() == false);
+				SegmentReader reader = new SegmentReader(info, indexDivisor, NewIOContext(Random(
+					)));
+				NUnit.Framework.Assert.IsTrue(reader != null);
+				DocsEnum termDocs = TestUtil.Docs(Random(), reader, "junk", new BytesRef("bad"), 
+					reader.GetLiveDocs(), null, 0);
+				NUnit.Framework.Assert.IsNull(termDocs);
 				reader.Close();
 			}
 		}
-		
-		[Test]
-		public virtual void  TestSkipTo()
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestSkipTo()
 		{
-			testSkipTo(1);
+			TestSkipTo(1);
 		}
-		
-		public virtual void  testSkipTo(int indexDivisor)
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestSkipTo(int indexDivisor)
 		{
-			Directory dir = new RAMDirectory();
-			IndexWriter writer = new IndexWriter(dir, new WhitespaceAnalyzer(), true, IndexWriter.MaxFieldLength.LIMITED);
-			
+			Directory dir = NewDirectory();
+			IndexWriter writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT
+				, new MockAnalyzer(Random())).SetMergePolicy(NewLogMergePolicy()));
 			Term ta = new Term("content", "aaa");
 			for (int i = 0; i < 10; i++)
+			{
 				AddDoc(writer, "aaa aaa aaa aaa");
-			
+			}
 			Term tb = new Term("content", "bbb");
-			for (int i = 0; i < 16; i++)
+			for (int i_1 = 0; i_1 < 16; i_1++)
+			{
 				AddDoc(writer, "bbb bbb bbb bbb");
-			
+			}
 			Term tc = new Term("content", "ccc");
-			for (int i = 0; i < 50; i++)
+			for (int i_2 = 0; i_2 < 50; i_2++)
+			{
 				AddDoc(writer, "ccc ccc ccc ccc");
-			
+			}
 			// assure that we deal with a single segment  
-			writer.Optimize();
+			writer.ForceMerge(1);
 			writer.Close();
-			
-			IndexReader reader = IndexReader.Open(dir, null, true, indexDivisor);
-			
-			TermDocs tdocs = reader.TermDocs();
-			
+			IndexReader reader = DirectoryReader.Open(dir, indexDivisor);
+			DocsEnum tdocs = TestUtil.Docs(Random(), reader, ta.Field(), new BytesRef(ta.Text
+				()), MultiFields.GetLiveDocs(reader), null, DocsEnum.FLAG_FREQS);
 			// without optimization (assumption skipInterval == 16)
-			
 			// with next
-			tdocs.Seek(ta);
-			Assert.IsTrue(tdocs.Next());
-			Assert.AreEqual(0, tdocs.Doc);
-			Assert.AreEqual(4, tdocs.Freq);
-			Assert.IsTrue(tdocs.Next());
-			Assert.AreEqual(1, tdocs.Doc);
-			Assert.AreEqual(4, tdocs.Freq);
-			Assert.IsTrue(tdocs.SkipTo(0));
-			Assert.AreEqual(2, tdocs.Doc);
-			Assert.IsTrue(tdocs.SkipTo(4));
-			Assert.AreEqual(4, tdocs.Doc);
-			Assert.IsTrue(tdocs.SkipTo(9));
-			Assert.AreEqual(9, tdocs.Doc);
-			Assert.IsFalse(tdocs.SkipTo(10));
-			
+			NUnit.Framework.Assert.IsTrue(tdocs.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
+			NUnit.Framework.Assert.AreEqual(0, tdocs.DocID());
+			NUnit.Framework.Assert.AreEqual(4, tdocs.Freq());
+			NUnit.Framework.Assert.IsTrue(tdocs.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
+			NUnit.Framework.Assert.AreEqual(1, tdocs.DocID());
+			NUnit.Framework.Assert.AreEqual(4, tdocs.Freq());
+			NUnit.Framework.Assert.IsTrue(tdocs.Advance(2) != DocIdSetIterator.NO_MORE_DOCS);
+			NUnit.Framework.Assert.AreEqual(2, tdocs.DocID());
+			NUnit.Framework.Assert.IsTrue(tdocs.Advance(4) != DocIdSetIterator.NO_MORE_DOCS);
+			NUnit.Framework.Assert.AreEqual(4, tdocs.DocID());
+			NUnit.Framework.Assert.IsTrue(tdocs.Advance(9) != DocIdSetIterator.NO_MORE_DOCS);
+			NUnit.Framework.Assert.AreEqual(9, tdocs.DocID());
+			NUnit.Framework.Assert.IsFalse(tdocs.Advance(10) != DocIdSetIterator.NO_MORE_DOCS
+				);
 			// without next
-			tdocs.Seek(ta);
-			Assert.IsTrue(tdocs.SkipTo(0));
-			Assert.AreEqual(0, tdocs.Doc);
-			Assert.IsTrue(tdocs.SkipTo(4));
-			Assert.AreEqual(4, tdocs.Doc);
-			Assert.IsTrue(tdocs.SkipTo(9));
-			Assert.AreEqual(9, tdocs.Doc);
-			Assert.IsFalse(tdocs.SkipTo(10));
-			
+			tdocs = TestUtil.Docs(Random(), reader, ta.Field(), new BytesRef(ta.Text()), MultiFields
+				.GetLiveDocs(reader), null, 0);
+			NUnit.Framework.Assert.IsTrue(tdocs.Advance(0) != DocIdSetIterator.NO_MORE_DOCS);
+			NUnit.Framework.Assert.AreEqual(0, tdocs.DocID());
+			NUnit.Framework.Assert.IsTrue(tdocs.Advance(4) != DocIdSetIterator.NO_MORE_DOCS);
+			NUnit.Framework.Assert.AreEqual(4, tdocs.DocID());
+			NUnit.Framework.Assert.IsTrue(tdocs.Advance(9) != DocIdSetIterator.NO_MORE_DOCS);
+			NUnit.Framework.Assert.AreEqual(9, tdocs.DocID());
+			NUnit.Framework.Assert.IsFalse(tdocs.Advance(10) != DocIdSetIterator.NO_MORE_DOCS
+				);
 			// exactly skipInterval documents and therefore with optimization
-			
 			// with next
-			tdocs.Seek(tb);
-			Assert.IsTrue(tdocs.Next());
-			Assert.AreEqual(10, tdocs.Doc);
-			Assert.AreEqual(4, tdocs.Freq);
-			Assert.IsTrue(tdocs.Next());
-			Assert.AreEqual(11, tdocs.Doc);
-			Assert.AreEqual(4, tdocs.Freq);
-			Assert.IsTrue(tdocs.SkipTo(5));
-			Assert.AreEqual(12, tdocs.Doc);
-			Assert.IsTrue(tdocs.SkipTo(15));
-			Assert.AreEqual(15, tdocs.Doc);
-			Assert.IsTrue(tdocs.SkipTo(24));
-			Assert.AreEqual(24, tdocs.Doc);
-			Assert.IsTrue(tdocs.SkipTo(25));
-			Assert.AreEqual(25, tdocs.Doc);
-			Assert.IsFalse(tdocs.SkipTo(26));
-			
+			tdocs = TestUtil.Docs(Random(), reader, tb.Field(), new BytesRef(tb.Text()), MultiFields
+				.GetLiveDocs(reader), null, DocsEnum.FLAG_FREQS);
+			NUnit.Framework.Assert.IsTrue(tdocs.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
+			NUnit.Framework.Assert.AreEqual(10, tdocs.DocID());
+			NUnit.Framework.Assert.AreEqual(4, tdocs.Freq());
+			NUnit.Framework.Assert.IsTrue(tdocs.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
+			NUnit.Framework.Assert.AreEqual(11, tdocs.DocID());
+			NUnit.Framework.Assert.AreEqual(4, tdocs.Freq());
+			NUnit.Framework.Assert.IsTrue(tdocs.Advance(12) != DocIdSetIterator.NO_MORE_DOCS);
+			NUnit.Framework.Assert.AreEqual(12, tdocs.DocID());
+			NUnit.Framework.Assert.IsTrue(tdocs.Advance(15) != DocIdSetIterator.NO_MORE_DOCS);
+			NUnit.Framework.Assert.AreEqual(15, tdocs.DocID());
+			NUnit.Framework.Assert.IsTrue(tdocs.Advance(24) != DocIdSetIterator.NO_MORE_DOCS);
+			NUnit.Framework.Assert.AreEqual(24, tdocs.DocID());
+			NUnit.Framework.Assert.IsTrue(tdocs.Advance(25) != DocIdSetIterator.NO_MORE_DOCS);
+			NUnit.Framework.Assert.AreEqual(25, tdocs.DocID());
+			NUnit.Framework.Assert.IsFalse(tdocs.Advance(26) != DocIdSetIterator.NO_MORE_DOCS
+				);
 			// without next
-			tdocs.Seek(tb);
-			Assert.IsTrue(tdocs.SkipTo(5));
-			Assert.AreEqual(10, tdocs.Doc);
-			Assert.IsTrue(tdocs.SkipTo(15));
-			Assert.AreEqual(15, tdocs.Doc);
-			Assert.IsTrue(tdocs.SkipTo(24));
-			Assert.AreEqual(24, tdocs.Doc);
-			Assert.IsTrue(tdocs.SkipTo(25));
-			Assert.AreEqual(25, tdocs.Doc);
-			Assert.IsFalse(tdocs.SkipTo(26));
-			
+			tdocs = TestUtil.Docs(Random(), reader, tb.Field(), new BytesRef(tb.Text()), MultiFields
+				.GetLiveDocs(reader), null, DocsEnum.FLAG_FREQS);
+			NUnit.Framework.Assert.IsTrue(tdocs.Advance(5) != DocIdSetIterator.NO_MORE_DOCS);
+			NUnit.Framework.Assert.AreEqual(10, tdocs.DocID());
+			NUnit.Framework.Assert.IsTrue(tdocs.Advance(15) != DocIdSetIterator.NO_MORE_DOCS);
+			NUnit.Framework.Assert.AreEqual(15, tdocs.DocID());
+			NUnit.Framework.Assert.IsTrue(tdocs.Advance(24) != DocIdSetIterator.NO_MORE_DOCS);
+			NUnit.Framework.Assert.AreEqual(24, tdocs.DocID());
+			NUnit.Framework.Assert.IsTrue(tdocs.Advance(25) != DocIdSetIterator.NO_MORE_DOCS);
+			NUnit.Framework.Assert.AreEqual(25, tdocs.DocID());
+			NUnit.Framework.Assert.IsFalse(tdocs.Advance(26) != DocIdSetIterator.NO_MORE_DOCS
+				);
 			// much more than skipInterval documents and therefore with optimization
-			
 			// with next
-			tdocs.Seek(tc);
-			Assert.IsTrue(tdocs.Next());
-			Assert.AreEqual(26, tdocs.Doc);
-			Assert.AreEqual(4, tdocs.Freq);
-			Assert.IsTrue(tdocs.Next());
-			Assert.AreEqual(27, tdocs.Doc);
-			Assert.AreEqual(4, tdocs.Freq);
-			Assert.IsTrue(tdocs.SkipTo(5));
-			Assert.AreEqual(28, tdocs.Doc);
-			Assert.IsTrue(tdocs.SkipTo(40));
-			Assert.AreEqual(40, tdocs.Doc);
-			Assert.IsTrue(tdocs.SkipTo(57));
-			Assert.AreEqual(57, tdocs.Doc);
-			Assert.IsTrue(tdocs.SkipTo(74));
-			Assert.AreEqual(74, tdocs.Doc);
-			Assert.IsTrue(tdocs.SkipTo(75));
-			Assert.AreEqual(75, tdocs.Doc);
-			Assert.IsFalse(tdocs.SkipTo(76));
-			
+			tdocs = TestUtil.Docs(Random(), reader, tc.Field(), new BytesRef(tc.Text()), MultiFields
+				.GetLiveDocs(reader), null, DocsEnum.FLAG_FREQS);
+			NUnit.Framework.Assert.IsTrue(tdocs.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
+			NUnit.Framework.Assert.AreEqual(26, tdocs.DocID());
+			NUnit.Framework.Assert.AreEqual(4, tdocs.Freq());
+			NUnit.Framework.Assert.IsTrue(tdocs.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
+			NUnit.Framework.Assert.AreEqual(27, tdocs.DocID());
+			NUnit.Framework.Assert.AreEqual(4, tdocs.Freq());
+			NUnit.Framework.Assert.IsTrue(tdocs.Advance(28) != DocIdSetIterator.NO_MORE_DOCS);
+			NUnit.Framework.Assert.AreEqual(28, tdocs.DocID());
+			NUnit.Framework.Assert.IsTrue(tdocs.Advance(40) != DocIdSetIterator.NO_MORE_DOCS);
+			NUnit.Framework.Assert.AreEqual(40, tdocs.DocID());
+			NUnit.Framework.Assert.IsTrue(tdocs.Advance(57) != DocIdSetIterator.NO_MORE_DOCS);
+			NUnit.Framework.Assert.AreEqual(57, tdocs.DocID());
+			NUnit.Framework.Assert.IsTrue(tdocs.Advance(74) != DocIdSetIterator.NO_MORE_DOCS);
+			NUnit.Framework.Assert.AreEqual(74, tdocs.DocID());
+			NUnit.Framework.Assert.IsTrue(tdocs.Advance(75) != DocIdSetIterator.NO_MORE_DOCS);
+			NUnit.Framework.Assert.AreEqual(75, tdocs.DocID());
+			NUnit.Framework.Assert.IsFalse(tdocs.Advance(76) != DocIdSetIterator.NO_MORE_DOCS
+				);
 			//without next
-			tdocs.Seek(tc);
-			Assert.IsTrue(tdocs.SkipTo(5));
-			Assert.AreEqual(26, tdocs.Doc);
-			Assert.IsTrue(tdocs.SkipTo(40));
-			Assert.AreEqual(40, tdocs.Doc);
-			Assert.IsTrue(tdocs.SkipTo(57));
-			Assert.AreEqual(57, tdocs.Doc);
-			Assert.IsTrue(tdocs.SkipTo(74));
-			Assert.AreEqual(74, tdocs.Doc);
-			Assert.IsTrue(tdocs.SkipTo(75));
-			Assert.AreEqual(75, tdocs.Doc);
-			Assert.IsFalse(tdocs.SkipTo(76));
-			
-			tdocs.Close();
+			tdocs = TestUtil.Docs(Random(), reader, tc.Field(), new BytesRef(tc.Text()), MultiFields
+				.GetLiveDocs(reader), null, 0);
+			NUnit.Framework.Assert.IsTrue(tdocs.Advance(5) != DocIdSetIterator.NO_MORE_DOCS);
+			NUnit.Framework.Assert.AreEqual(26, tdocs.DocID());
+			NUnit.Framework.Assert.IsTrue(tdocs.Advance(40) != DocIdSetIterator.NO_MORE_DOCS);
+			NUnit.Framework.Assert.AreEqual(40, tdocs.DocID());
+			NUnit.Framework.Assert.IsTrue(tdocs.Advance(57) != DocIdSetIterator.NO_MORE_DOCS);
+			NUnit.Framework.Assert.AreEqual(57, tdocs.DocID());
+			NUnit.Framework.Assert.IsTrue(tdocs.Advance(74) != DocIdSetIterator.NO_MORE_DOCS);
+			NUnit.Framework.Assert.AreEqual(74, tdocs.DocID());
+			NUnit.Framework.Assert.IsTrue(tdocs.Advance(75) != DocIdSetIterator.NO_MORE_DOCS);
+			NUnit.Framework.Assert.AreEqual(75, tdocs.DocID());
+			NUnit.Framework.Assert.IsFalse(tdocs.Advance(76) != DocIdSetIterator.NO_MORE_DOCS
+				);
 			reader.Close();
 			dir.Close();
 		}
-		
-		[Test]
-		public virtual void  TestIndexDivisor()
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestIndexDivisor()
 		{
-			dir = new MockRAMDirectory();
-			testDoc = new Document();
+			testDoc = new Lucene.Net.Document.Document();
 			DocHelper.SetupDoc(testDoc);
-			DocHelper.WriteDoc(dir, testDoc);
+			DocHelper.WriteDoc(Random(), dir, testDoc);
 			TestTermDocs(2);
-			testBadSeek(2);
-			testSkipTo(2);
+			TestBadSeek(2);
+			TestSkipTo(2);
 		}
-		
-		private void  AddDoc(IndexWriter writer, System.String value_Renamed)
+
+		/// <exception cref="System.IO.IOException"></exception>
+		private void AddDoc(IndexWriter writer, string value)
 		{
-			Document doc = new Document();
-			doc.Add(new Field("content", value_Renamed, Field.Store.NO, Field.Index.ANALYZED));
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(NewTextField("content", value, Field.Store.NO));
 			writer.AddDocument(doc);
 		}
 	}

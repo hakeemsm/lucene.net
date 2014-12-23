@@ -1,16 +1,7 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
-using Org.Apache.Lucene.Codecs;
+using Lucene.Net.Index;
 using Lucene.Net.Codecs.Lucene42;
-using Org.Apache.Lucene.Index;
-using Org.Apache.Lucene.Util;
-using Sharpen;
 
-namespace Lucene.Net.Codecs.Lucene42
+namespace Lucene.Net.Codecs.Lucene42.TestFramework
 {
 	/// <summary>
 	/// Read-write version of

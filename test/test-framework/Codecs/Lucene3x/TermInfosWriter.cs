@@ -1,18 +1,10 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using System.IO;
-using Lucene.Net.Codecs.Lucene3x;
-using Org.Apache.Lucene.Index;
-using Org.Apache.Lucene.Store;
-using Org.Apache.Lucene.Util;
-using Sharpen;
+using Lucene.Net.Index;
+using Lucene.Net.Store;
+using Lucene.Net.Util;
 
-namespace Lucene.Net.Codecs.Lucene3x
+namespace Lucene.Net.Codecs.Lucene3x.TestFramework
 {
 	/// <summary>
 	/// This stores a monotonically increasing set of <Term, TermInfo> pairs in a
@@ -81,10 +73,10 @@ namespace Lucene.Net.Codecs.Lucene3x
 
 		private int lastFieldNumber = -1;
 
-		private Lucene.Net.Codecs.Lucene3x.TermInfosWriter other;
+		private TermInfosWriter other;
 
-		/// <exception cref="System.IO.IOException"></exception>
-		internal TermInfosWriter(Directory directory, string segment, FieldInfos fis, int
+		
+		internal TermInfosWriter(Lucene.Net.Store.Directory directory, string segment, FieldInfos fis, int
 			 interval)
 		{
 			// Changed strings to true utf8 with length-in-bytes not
@@ -100,16 +92,14 @@ namespace Lucene.Net.Codecs.Lucene3x
 			bool success = false;
 			try
 			{
-				other = new Lucene.Net.Codecs.Lucene3x.TermInfosWriter(directory, segment, 
-					fis, interval, true);
-				other.other = this;
-				success = true;
+				other = new TermInfosWriter(directory, segment, fis, interval, true) {other = this};
+			    success = true;
 			}
 			finally
 			{
 				if (!success)
 				{
-					IOUtils.CloseWhileHandlingException(output);
+					IOUtils.CloseWhileHandlingException((IDisposable)output);
 					try
 					{
 						directory.DeleteFile(IndexFileNames.SegmentFileName(segment, string.Empty, (isIndex
@@ -123,15 +113,15 @@ namespace Lucene.Net.Codecs.Lucene3x
 			}
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
-		private TermInfosWriter(Directory directory, string segment, FieldInfos fis, int 
+		
+		private TermInfosWriter(Lucene.Net.Store.Directory directory, string segment, FieldInfos fis, int 
 			interval, bool isIndex)
 		{
 			Initialize(directory, segment, fis, interval, isIndex);
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
-		private void Initialize(Directory directory, string segment, FieldInfos fis, int 
+		
+		private void Initialize(Lucene.Net.Store.Directory directory, string segment, FieldInfos fis, int 
 			interval, bool isi)
 		{
 			indexInterval = interval;
@@ -161,7 +151,7 @@ namespace Lucene.Net.Codecs.Lucene3x
 			{
 				if (!success)
 				{
-					IOUtils.CloseWhileHandlingException(output);
+					IOUtils.CloseWhileHandlingException((IDisposable)output);
 					try
 					{
 						directory.DeleteFile(IndexFileNames.SegmentFileName(segment, string.Empty, (isIndex
@@ -214,7 +204,7 @@ namespace Lucene.Net.Codecs.Lucene3x
 		{
 			if (lastFieldNumber != fieldNumber)
 			{
-				int cmp = Sharpen.Runtime.CompareOrdinal(FieldName(fieldInfos, lastFieldNumber), 
+				int cmp = string.CompareOrdinal(FieldName(fieldInfos, lastFieldNumber), 
 					FieldName(fieldInfos, fieldNumber));
 				// If there is a field named "" (empty string) then we
 				// will get 0 on this comparison, yet, it's "OK".  But
@@ -292,8 +282,8 @@ namespace Lucene.Net.Codecs.Lucene3x
 			}
 			if (isIndex)
 			{
-				output.WriteVLong(other.output.GetFilePointer() - lastIndexPointer);
-				lastIndexPointer = other.output.GetFilePointer();
+				output.WriteVLong(other.output.FilePointer - lastIndexPointer);
+				lastIndexPointer = other.output.FilePointer;
 			}
 			// write pointer
 			lastFieldNumber = fieldNumber;
@@ -344,7 +334,7 @@ namespace Lucene.Net.Codecs.Lucene3x
 			{
 				try
 				{
-					output.Close();
+					output.Dispose();
 				}
 				finally
 				{

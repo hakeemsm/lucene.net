@@ -1,197 +1,218 @@
-/* 
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+/*
+ * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
  * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using System;
-using Lucene.Net.Analysis.Tokenattributes;
+using System.IO;
 using NUnit.Framework;
-
-using Analyzer = Lucene.Net.Analysis.Analyzer;
-using LowerCaseTokenizer = Lucene.Net.Analysis.LowerCaseTokenizer;
-using TokenFilter = Lucene.Net.Analysis.TokenFilter;
-using TokenStream = Lucene.Net.Analysis.TokenStream;
-using Document = Lucene.Net.Documents.Document;
-using Field = Lucene.Net.Documents.Field;
-using Index = Lucene.Net.Documents.Field.Index;
-using Store = Lucene.Net.Documents.Field.Store;
-using IndexInput = Lucene.Net.Store.IndexInput;
-using RAMDirectory = Lucene.Net.Store.RAMDirectory;
-using LuceneTestCase = Lucene.Net.Util.LuceneTestCase;
+using Lucene.Net.Analysis;
+using Lucene.Net.Analysis.Tokenattributes;
+using Lucene.Net.Codecs.Lucene41;
+using Lucene.Net.Document;
+using Lucene.Net.Index;
+using Lucene.Net.Store;
+using Lucene.Net.Util;
+using Sharpen;
 
 namespace Lucene.Net.Index
 {
-	
-	/// <summary> This testcase tests whether multi-level skipping is being used
+	/// <summary>
+	/// This testcase tests whether multi-level skipping is being used
 	/// to reduce I/O while skipping through posting lists.
-	/// 
+	/// </summary>
+	/// <remarks>
+	/// This testcase tests whether multi-level skipping is being used
+	/// to reduce I/O while skipping through posting lists.
 	/// Skipping in general is already covered by several other
 	/// testcases.
-	/// 
-	/// </summary>
-    [TestFixture]
-	public class TestMultiLevelSkipList:LuceneTestCase
+	/// </remarks>
+	public class TestMultiLevelSkipList : LuceneTestCase
 	{
-		[Test]
-		public virtual void  TestSimpleSkip()
+		internal class CountingRAMDirectory : MockDirectoryWrapper
 		{
-			RAMDirectory dir = new RAMDirectory();
-			IndexWriter writer = new IndexWriter(dir, new PayloadAnalyzer(), true, IndexWriter.MaxFieldLength.LIMITED);
+			protected CountingRAMDirectory(TestMultiLevelSkipList _enclosing, Directory delegate_
+				) : base(LuceneTestCase.Random(), delegate_)
+			{
+				this._enclosing = _enclosing;
+			}
+
+			/// <exception cref="System.IO.IOException"></exception>
+			public override IndexInput OpenInput(string fileName, IOContext context)
+			{
+				IndexInput @in = base.OpenInput(fileName, context);
+				if (fileName.EndsWith(".frq"))
+				{
+					@in = new TestMultiLevelSkipList.CountingStream(this, @in);
+				}
+				return @in;
+			}
+
+			private readonly TestMultiLevelSkipList _enclosing;
+		}
+
+		/// <exception cref="System.Exception"></exception>
+		[SetUp]
+		public override void SetUp()
+		{
+			base.SetUp();
+			counter = 0;
+		}
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestSimpleSkip()
+		{
+			Directory dir = new TestMultiLevelSkipList.CountingRAMDirectory(this, new RAMDirectory
+				());
+			IndexWriter writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT
+				, new TestMultiLevelSkipList.PayloadAnalyzer()).SetCodec(TestUtil.AlwaysPostingsFormat
+				(new Lucene41PostingsFormat())).SetMergePolicy(NewLogMergePolicy()));
 			Term term = new Term("test", "a");
 			for (int i = 0; i < 5000; i++)
 			{
-				Document d1 = new Document();
-				d1.Add(new Field(term.Field, term.Text, Field.Store.NO, Field.Index.ANALYZED));
+				Lucene.Net.Document.Document d1 = new Lucene.Net.Document.Document(
+					);
+				d1.Add(NewTextField(term.Field(), term.Text(), Field.Store.NO));
 				writer.AddDocument(d1);
 			}
 			writer.Commit();
-			writer.Optimize();
+			writer.ForceMerge(1);
 			writer.Close();
-			
-			IndexReader reader = SegmentReader.GetOnlySegmentReader(dir);
-			SegmentTermPositions tp = (SegmentTermPositions) reader.TermPositions();
-            tp.freqStream = new CountingStream(this, tp.freqStream);
-			
-			for (int i = 0; i < 2; i++)
+			AtomicReader reader = GetOnlySegmentReader(DirectoryReader.Open(dir));
+			for (int i_1 = 0; i_1 < 2; i_1++)
 			{
 				counter = 0;
-				tp.Seek(term);
-				
-				CheckSkipTo(tp, 14, 185); // no skips
-				CheckSkipTo(tp, 17, 190); // one skip on level 0
-				CheckSkipTo(tp, 287, 200); // one skip on level 1, two on level 0
-				
+				DocsAndPositionsEnum tp = reader.TermPositionsEnum(term);
+				CheckSkipTo(tp, 14, 185);
+				// no skips
+				CheckSkipTo(tp, 17, 190);
+				// one skip on level 0
+				CheckSkipTo(tp, 287, 200);
+				// one skip on level 1, two on level 0
 				// this test would fail if we had only one skip level,
 				// because than more bytes would be read from the freqStream
-				CheckSkipTo(tp, 4800, 250); // one skip on level 2
+				CheckSkipTo(tp, 4800, 250);
 			}
 		}
-		
-		public virtual void  CheckSkipTo(TermPositions tp, int target, int maxCounter)
+
+		// one skip on level 2
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void CheckSkipTo(DocsAndPositionsEnum tp, int target, int maxCounter
+			)
 		{
-			tp.SkipTo(target);
-		    Assert.Greater(maxCounter, counter, "Too many bytes read: " + counter);
-			
-			Assert.AreEqual(target, tp.Doc, "Wrong document " + tp.Doc + " after skipTo target " + target);
-			Assert.AreEqual(1, tp.Freq, "Frequency is not 1: " + tp.Freq);
+			tp.Advance(target);
+			if (maxCounter < counter)
+			{
+				NUnit.Framework.Assert.Fail("Too many bytes read: " + counter + " vs " + maxCounter
+					);
+			}
+			NUnit.Framework.Assert.AreEqual("Wrong document " + tp.DocID() + " after skipTo target "
+				 + target, target, tp.DocID());
+			NUnit.Framework.Assert.AreEqual("Frequency is not 1: " + tp.Freq(), 1, tp.Freq());
 			tp.NextPosition();
-			byte[] b = new byte[1];
-			tp.GetPayload(b, 0);
-			Assert.AreEqual((byte) target, b[0], "Wrong payload for the target " + target + ": " + b[0]);
+			BytesRef b = tp.GetPayload();
+			NUnit.Framework.Assert.AreEqual(1, b.length);
+			NUnit.Framework.Assert.AreEqual("Wrong payload for the target " + target + ": " +
+				 b.bytes[b.offset], unchecked((byte)target), b.bytes[b.offset]);
 		}
-		
-		private class PayloadAnalyzer:Analyzer
+
+		private class PayloadAnalyzer : Analyzer
 		{
-			public override TokenStream TokenStream(System.String fieldName, System.IO.TextReader reader)
+			private readonly AtomicInteger payloadCount = new AtomicInteger(-1);
+
+			protected override Analyzer.TokenStreamComponents CreateComponents(string fieldName
+				, StreamReader reader)
 			{
-				return new PayloadFilter(new LowerCaseTokenizer(reader));
+				Tokenizer tokenizer = new MockTokenizer(reader, MockTokenizer.WHITESPACE, true);
+				return new Analyzer.TokenStreamComponents(tokenizer, new TestMultiLevelSkipList.PayloadFilter
+					(payloadCount, tokenizer));
 			}
 		}
-		
-		private class PayloadFilter:TokenFilter
+
+		private class PayloadFilter : TokenFilter
 		{
-			internal static int count = 0;
-			
-			internal IPayloadAttribute payloadAtt;
-			
-			protected internal PayloadFilter(TokenStream input):base(input)
+			internal PayloadAttribute payloadAtt;
+
+			private AtomicInteger payloadCount;
+
+			protected internal PayloadFilter(AtomicInteger payloadCount, TokenStream input) : 
+				base(input)
 			{
-				payloadAtt =  AddAttribute<IPayloadAttribute>();
+				this.payloadCount = payloadCount;
+				payloadAtt = AddAttribute<PayloadAttribute>();
 			}
-			
+
+			/// <exception cref="System.IO.IOException"></exception>
 			public override bool IncrementToken()
 			{
 				bool hasNext = input.IncrementToken();
 				if (hasNext)
 				{
-					payloadAtt.Payload = new Payload(new byte[]{(byte) count++});
+					payloadAtt.SetPayload(new BytesRef(new byte[] { unchecked((byte)payloadCount.IncrementAndGet
+						()) }));
 				}
 				return hasNext;
 			}
 		}
-		
+
 		private int counter = 0;
-		
-		// Simply extends IndexInput in a way that we are able to count the number
-		// of bytes read
-		internal class CountingStream:IndexInput, System.ICloneable
+
+		internal class CountingStream : IndexInput
 		{
-			private void  InitBlock(TestMultiLevelSkipList enclosingInstance)
-			{
-				this.enclosingInstance = enclosingInstance;
-			}
-			private TestMultiLevelSkipList enclosingInstance;
-			public TestMultiLevelSkipList Enclosing_Instance
-			{
-				get
-				{
-					return enclosingInstance;
-				}
-				
-			}
 			private IndexInput input;
-		    private bool isDisposed;
-			
-			internal CountingStream(TestMultiLevelSkipList enclosingInstance, IndexInput input)
+
+			internal CountingStream(TestMultiLevelSkipList _enclosing, IndexInput input) : base
+				("CountingStream(" + input + ")")
 			{
-				InitBlock(enclosingInstance);
+				this._enclosing = _enclosing;
+				// Simply extends IndexInput in a way that we are able to count the number
+				// of bytes read
 				this.input = input;
 			}
-			
+
+			/// <exception cref="System.IO.IOException"></exception>
 			public override byte ReadByte()
 			{
-				Enclosing_Instance.counter++;
+				this._enclosing.counter++;
 				return this.input.ReadByte();
 			}
-			
-			public override void  ReadBytes(byte[] b, int offset, int len)
+
+			/// <exception cref="System.IO.IOException"></exception>
+			public override void ReadBytes(byte[] b, int offset, int len)
 			{
-				Enclosing_Instance.counter += len;
+				this._enclosing.counter += len;
 				this.input.ReadBytes(b, offset, len);
 			}
 
-            protected override void Dispose(bool disposing)
-            {
-                if (isDisposed) return;
+			/// <exception cref="System.IO.IOException"></exception>
+			public override void Close()
+			{
+				this.input.Close();
+			}
 
-                if (disposing)
-                {
-                    this.input.Close();
-                }
-                isDisposed = true;
-            }
+			public override long GetFilePointer()
+			{
+				return this.input.GetFilePointer();
+			}
 
-		    public override long FilePointer
-		    {
-		        get { return this.input.FilePointer; }
-		    }
-
-		    public override void  Seek(long pos)
+			/// <exception cref="System.IO.IOException"></exception>
+			public override void Seek(long pos)
 			{
 				this.input.Seek(pos);
 			}
-			
+
 			public override long Length()
 			{
 				return this.input.Length();
 			}
-			
-			public override System.Object Clone()
+
+			public override DataInput Clone()
 			{
-				return new CountingStream(enclosingInstance, (IndexInput) this.input.Clone());
+				return new TestMultiLevelSkipList.CountingStream(this, ((IndexInput)this.input.Clone
+					()));
 			}
+
+			private readonly TestMultiLevelSkipList _enclosing;
 		}
 	}
 }

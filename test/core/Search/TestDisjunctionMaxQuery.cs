@@ -71,11 +71,12 @@ namespace Lucene.Net.Search
 				else
 					return 0.0f;
 			}
-			public override float LengthNorm(System.String fieldName, int numTerms)
+			public override float LengthNorm(FieldInvertState state)
 			{
-				return 1.0f;
+				// Disable length norm
+				return state.GetBoost();
 			}
-			public override float Idf(int docFreq, int numDocs)
+			public override float Idf(long docFreq, long numDocs)
 			{
 				return 1.0f;
 			}
@@ -86,62 +87,74 @@ namespace Lucene.Net.Search
 		public IndexReader r;
 		public IndexSearcher s;
 		
+		private static readonly FieldType nonAnalyzedType = new FieldType(TextField.TYPE_STORED
+			);
+
+		static TestDisjunctionMaxQuery()
+		{
+			nonAnalyzedType.SetTokenized(false);
+		}
 		[SetUp]
 		public override void  SetUp()
 		{
 			base.SetUp();
 			
-			index = new RAMDirectory();
-			IndexWriter writer = new IndexWriter(index, new WhitespaceAnalyzer(), true, IndexWriter.MaxFieldLength.LIMITED);
-			writer.SetSimilarity(sim);
-			
+			index = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), index, NewIndexWriterConfig
+				(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetSimilarity(sim).SetMergePolicy
+				(NewLogMergePolicy()));
 			// hed is the most important field, dek is secondary
 			
 			// d1 is an "ok" match for:  albino elephant
 			{
 				Document d1 = new Document();
-				d1.Add(new Field("id", "d1", Field.Store.YES, Field.Index.NOT_ANALYZED)); //Field.Keyword("id", "d1"));
-				d1.Add(new Field("hed", "elephant", Field.Store.YES, Field.Index.ANALYZED)); //Field.Text("hed", "elephant"));
-				d1.Add(new Field("dek", "elephant", Field.Store.YES, Field.Index.ANALYZED)); //Field.Text("dek", "elephant"));
+				d1.Add(NewField("id", "d1", nonAnalyzedType));
+				d1.Add(NewTextField("hed", "elephant", Field.Store.YES));
+				d1.Add(NewTextField("dek", "elephant", Field.Store.YES));
 				writer.AddDocument(d1);
 			}
 			
 			// d2 is a "good" match for:  albino elephant
 			{
 				Document d2 = new Document();
-				d2.Add(new Field("id", "d2", Field.Store.YES, Field.Index.NOT_ANALYZED)); //Field.Keyword("id", "d2"));
-				d2.Add(new Field("hed", "elephant", Field.Store.YES, Field.Index.ANALYZED)); //Field.Text("hed", "elephant"));
-				d2.Add(new Field("dek", "albino", Field.Store.YES, Field.Index.ANALYZED)); //Field.Text("dek", "albino"));
-				d2.Add(new Field("dek", "elephant", Field.Store.YES, Field.Index.ANALYZED)); //Field.Text("dek", "elephant"));
+				d2.Add(NewField("id", "d2", nonAnalyzedType));
+				d2.Add(NewTextField("hed", "elephant", Field.Store.YES));
+				d2.Add(NewTextField("dek", "albino", Field.Store.YES));
+				d2.Add(NewTextField("dek", "elephant", Field.Store.YES));
 				writer.AddDocument(d2);
 			}
 			
 			// d3 is a "better" match for:  albino elephant
 			{
 				Document d3 = new Document();
-				d3.Add(new Field("id", "d3", Field.Store.YES, Field.Index.NOT_ANALYZED)); //Field.Keyword("id", "d3"));
-				d3.Add(new Field("hed", "albino", Field.Store.YES, Field.Index.ANALYZED)); //Field.Text("hed", "albino"));
-				d3.Add(new Field("hed", "elephant", Field.Store.YES, Field.Index.ANALYZED)); //Field.Text("hed", "elephant"));
+				d3.Add(NewField("id", "d3", nonAnalyzedType));
+				d3.Add(NewTextField("hed", "albino", Field.Store.YES));
+				d3.Add(NewTextField("hed", "elephant", Field.Store.YES));
 				writer.AddDocument(d3);
 			}
 			
 			// d4 is the "best" match for:  albino elephant
 			{
 				Document d4 = new Document();
-				d4.Add(new Field("id", "d4", Field.Store.YES, Field.Index.NOT_ANALYZED)); //Field.Keyword("id", "d4"));
-				d4.Add(new Field("hed", "albino", Field.Store.YES, Field.Index.ANALYZED)); //Field.Text("hed", "albino"));
-				d4.Add(new Field("hed", "elephant", Field.Store.YES, Field.Index.ANALYZED)); //Field.Text("hed", "elephant"));
-				d4.Add(new Field("dek", "albino", Field.Store.YES, Field.Index.ANALYZED)); //Field.Text("dek", "albino"));
+				d4.Add(NewField("id", "d4", nonAnalyzedType));
+				d4.Add(NewTextField("hed", "albino", Field.Store.YES));
+				d4.Add(NewField("hed", "elephant", nonAnalyzedType));
+				d4.Add(NewTextField("dek", "albino", Field.Store.YES));
 				writer.AddDocument(d4);
 			}
-			
+			r = SlowCompositeReaderWrapper.Wrap(writer.GetReader());
 			writer.Close();
 
-		    r = IndexReader.Open(index, true);
-			s = new IndexSearcher(r);
-			s.Similarity = sim;
+			s = NewSearcher(r);
+			s.SetSimilarity(sim);
 		}
 		
+		public override void TearDown()
+		{
+			r.Close();
+			index.Close();
+			base.TearDown();
+		}
 		[Test]
 		public virtual void  TestSkipToFirsttimeMiss()
 		{
@@ -149,10 +162,11 @@ namespace Lucene.Net.Search
 			dq.Add(Tq("id", "d1"));
 			dq.Add(Tq("dek", "DOES_NOT_EXIST"));
 			
-			QueryUtils.Check(dq, s);
-			
-			Weight dw = dq.Weight(s);
-			Scorer ds = dw.Scorer(r, true, false);
+			QueryUtils.Check(Random(), dq, s);
+			NUnit.Framework.Assert.IsTrue(s.GetTopReaderContext() is AtomicReaderContext);
+			Weight dw = s.CreateNormalizedWeight(dq);
+			AtomicReaderContext context = (AtomicReaderContext)s.GetTopReaderContext();
+			Scorer ds = dw.Scorer(context, ((AtomicReader)context.Reader()).GetLiveDocs());
 			bool skipOk = ds.Advance(3) != DocIdSetIterator.NO_MORE_DOCS;
 			if (skipOk)
 			{
@@ -166,11 +180,12 @@ namespace Lucene.Net.Search
 			DisjunctionMaxQuery dq = new DisjunctionMaxQuery(0.0f);
 			dq.Add(Tq("dek", "albino"));
 			dq.Add(Tq("dek", "DOES_NOT_EXIST"));
+			NUnit.Framework.Assert.IsTrue(s.GetTopReaderContext() is AtomicReaderContext);
+			QueryUtils.Check(Random(), dq, s);
 			
-			QueryUtils.Check(dq, s);
-			
-			Weight dw = dq.Weight(s);
-			Scorer ds = dw.Scorer(r, true, false);
+			Weight dw = s.CreateNormalizedWeight(dq);
+			AtomicReaderContext context = (AtomicReaderContext)s.GetTopReaderContext();
+			Scorer ds = dw.Scorer(context, ((AtomicReader)context.Reader()).GetLiveDocs());
 			Assert.IsTrue(ds.Advance(3) != DocIdSetIterator.NO_MORE_DOCS, "firsttime skipTo found no match");
 			Assert.AreEqual("d4", r.Document(ds.DocID()).Get("id"), "found wrong docid");
 		}
@@ -182,7 +197,7 @@ namespace Lucene.Net.Search
 			DisjunctionMaxQuery q = new DisjunctionMaxQuery(0.0f);
 			q.Add(Tq("hed", "albino"));
 			q.Add(Tq("hed", "elephant"));
-			QueryUtils.Check(q, s);
+			QueryUtils.Check(Random(), q, s);
 			
 			ScoreDoc[] h = s.Search(q, null, 1000).ScoreDocs;
 			
@@ -210,7 +225,7 @@ namespace Lucene.Net.Search
 			DisjunctionMaxQuery q = new DisjunctionMaxQuery(0.0f);
 			q.Add(Tq("dek", "albino"));
 			q.Add(Tq("dek", "elephant"));
-			QueryUtils.Check(q, s);
+			QueryUtils.Check(Random(), q, s);
 			
 			
 			ScoreDoc[] h = s.Search(q, null, 1000).ScoreDocs;
@@ -240,7 +255,7 @@ namespace Lucene.Net.Search
 			q.Add(Tq("hed", "elephant"));
 			q.Add(Tq("dek", "albino"));
 			q.Add(Tq("dek", "elephant"));
-			QueryUtils.Check(q, s);
+			QueryUtils.Check(Random(), q, s);
 			
 			
 			ScoreDoc[] h = s.Search(q, null, 1000).ScoreDocs;
@@ -268,7 +283,7 @@ namespace Lucene.Net.Search
 			DisjunctionMaxQuery q = new DisjunctionMaxQuery(0.01f);
 			q.Add(Tq("dek", "albino"));
 			q.Add(Tq("dek", "elephant"));
-			QueryUtils.Check(q, s);
+			QueryUtils.Check(Random(), q, s);
 			
 			
 			ScoreDoc[] h = s.Search(q, null, 1000).ScoreDocs;
@@ -300,17 +315,17 @@ namespace Lucene.Net.Search
 				q1.Add(Tq("hed", "albino"));
 				q1.Add(Tq("dek", "albino"));
 				q.Add(q1, Occur.MUST); //true,false);
-				QueryUtils.Check(q1, s);
+				QueryUtils.Check(Random(), q1, s);
 			}
 			{
 				DisjunctionMaxQuery q2 = new DisjunctionMaxQuery(0.0f);
 				q2.Add(Tq("hed", "elephant"));
 				q2.Add(Tq("dek", "elephant"));
 				q.Add(q2, Occur.MUST); //true,false);
-				QueryUtils.Check(q2, s);
+				QueryUtils.Check(Random(), q2, s);
 			}
 			
-			QueryUtils.Check(q, s);
+			QueryUtils.Check(Random(), q, s);
 			
 			ScoreDoc[] h = s.Search(q, null, 1000).ScoreDocs;
 			
@@ -348,7 +363,7 @@ namespace Lucene.Net.Search
 				q2.Add(Tq("dek", "elephant"));
 				q.Add(q2, Occur.SHOULD); //false,false);
 			}
-			QueryUtils.Check(q, s);
+			QueryUtils.Check(Random(), q, s);
 			
 			
 			ScoreDoc[] h = s.Search(q, null, 1000).ScoreDocs;
@@ -391,7 +406,7 @@ namespace Lucene.Net.Search
 				q2.Add(Tq("dek", "elephant"));
 				q.Add(q2, Occur.SHOULD); //false,false);
 			}
-			QueryUtils.Check(q, s);
+			QueryUtils.Check(Random(), q, s);
 			
 			
 			ScoreDoc[] h = s.Search(q, null, 1000).ScoreDocs;
@@ -445,7 +460,7 @@ namespace Lucene.Net.Search
 				q2.Add(Tq("dek", "elephant"));
 				q.Add(q2, Occur.SHOULD); //false,false);
 			}
-			QueryUtils.Check(q, s);
+			QueryUtils.Check(Random(), q, s);
 			
 			
 			ScoreDoc[] h = s.Search(q, null, 1000).ScoreDocs;
@@ -481,19 +496,45 @@ namespace Lucene.Net.Search
 			}
 		}
 		
-		
-		
-		
-		
-		
+		public virtual void TestBooleanSpanQuery()
+		{
+			int hits = 0;
+			Directory directory = NewDirectory();
+			Analyzer indexerAnalyzer = new MockAnalyzer(Random());
+			IndexWriterConfig config = new IndexWriterConfig(TEST_VERSION_CURRENT, indexerAnalyzer
+				);
+			IndexWriter writer = new IndexWriter(directory, config);
+			string FIELD = "content";
+			Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+			d.Add(new TextField(FIELD, "clockwork orange", Field.Store.YES));
+			writer.AddDocument(d);
+			writer.Close();
+			IndexReader indexReader = DirectoryReader.Open(directory);
+			IndexSearcher searcher = NewSearcher(indexReader);
+			DisjunctionMaxQuery query = new DisjunctionMaxQuery(1.0f);
+			SpanQuery sq1 = new SpanTermQuery(new Term(FIELD, "clockwork"));
+			SpanQuery sq2 = new SpanTermQuery(new Term(FIELD, "clckwork"));
+			query.Add(sq1);
+			query.Add(sq2);
+			TopScoreDocCollector collector = TopScoreDocCollector.Create(1000, true);
+			searcher.Search(query, collector);
+			hits = collector.TopDocs().scoreDocs.Length;
+			foreach (ScoreDoc scoreDoc in collector.TopDocs().scoreDocs)
+			{
+				System.Console.Out.WriteLine(scoreDoc.doc);
+			}
+			indexReader.Close();
+			NUnit.Framework.Assert.AreEqual(hits, 1);
+			directory.Close();
+		}
 		
 		/// <summary>macro </summary>
-		protected internal virtual Query Tq(System.String f, System.String t)
+		protected internal virtual Query Tq(string f, string t)
 		{
 			return new TermQuery(new Term(f, t));
 		}
 		/// <summary>macro </summary>
-		protected internal virtual Query Tq(System.String f, System.String t, float b)
+		protected internal virtual Query Tq(string f, string t, float b)
 		{
 			Query q = Tq(f, t);
 			q.Boost = b;
@@ -501,11 +542,13 @@ namespace Lucene.Net.Search
 		}
 		
 		
-		protected internal virtual void  PrintHits(System.String test, ScoreDoc[] h, Searcher searcher)
+		protected internal virtual void PrintHits(string test, ScoreDoc[] h, IndexSearcher
+			 searcher)
 		{
 			
 			System.Console.Error.WriteLine("------- " + test + " -------");
-			
+			DecimalFormat f = new DecimalFormat("0.000000000", DecimalFormatSymbols.GetInstance
+				(CultureInfo.ROOT));
 			for (int i = 0; i < h.Length; i++)
 			{
 				Document d = searcher.Doc(h[i].Doc);

@@ -70,9 +70,9 @@ namespace Lucene.Net.Search
 			{
 				scores[doc + base_Renamed] = scorer.Score();
 			}
-			public override void  SetNextReader(IndexReader reader, int docBase)
+			public override void SetNextReader(AtomicReaderContext context)
 			{
-				base_Renamed = docBase;
+				base_Renamed = context.docBase;
 			}
 
 		    public override bool AcceptsDocsOutOfOrder
@@ -84,43 +84,44 @@ namespace Lucene.Net.Search
 		[Test]
 		public virtual void  TestDocBoost_Renamed()
 		{
-			RAMDirectory store = new RAMDirectory();
-			IndexWriter writer = new IndexWriter(store, new SimpleAnalyzer(), true, IndexWriter.MaxFieldLength.LIMITED);
-			
-			IFieldable f1 = new Field("field", "word", Field.Store.YES, Field.Index.ANALYZED);
-			IFieldable f2 = new Field("field", "word", Field.Store.YES, Field.Index.ANALYZED);
+			Directory store = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), store, NewIndexWriterConfig
+				(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMergePolicy(NewLogMergePolicy
+				()));
+			Field f1 = NewTextField("field", "word", Field.Store.YES);
+			Field f2 = NewTextField("field", "word", Field.Store.YES);
 			f2.Boost = 2.0f;
 			
 			Document d1 = new Document();
 			Document d2 = new Document();
-			Document d3 = new Document();
-			Document d4 = new Document();
-			d3.Boost = 3.0f;
-			d4.Boost = 2.0f;
 			
 			d1.Add(f1); // boost = 1
 			d2.Add(f2); // boost = 2
-			d3.Add(f1); // boost = 3
-			d4.Add(f2); // boost = 4
 			
 			writer.AddDocument(d1);
 			writer.AddDocument(d2);
-			writer.AddDocument(d3);
-			writer.AddDocument(d4);
-			writer.Optimize();
+			IndexReader reader = writer.GetReader();
 			writer.Close();
 			
 			float[] scores = new float[4];
-			
-			new IndexSearcher(store, true).Search(new TermQuery(new Term("field", "word")), new AnonymousClassCollector(scores, this));
-			
+			IndexSearcher searcher = NewSearcher(reader);
+			searcher.Search(new TermQuery(new Term("field", "word")), new _Collector_62(scores
+				));
 			float lastScore = 0.0f;
 			
-			for (int i = 0; i < 4; i++)
+			for (int i = 0; i < 2; i++)
 			{
-				Assert.IsTrue(scores[i] > lastScore);
+				if (VERBOSE)
+				{
+					System.Console.Out.WriteLine(searcher.Explain(new TermQuery(new Term("field", "word"
+						)), i));
+				}
+				NUnit.Framework.Assert.IsTrue("score: " + scores[i] + " should be > lastScore: " 
+					+ lastScore, scores[i] > lastScore);
 				lastScore = scores[i];
 			}
+			reader.Close();
+			store.Close();
 		}
 	}
 }

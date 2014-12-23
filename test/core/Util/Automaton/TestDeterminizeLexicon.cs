@@ -13,7 +13,7 @@ namespace Lucene.Net.Test.Util.Automaton
         private List<Lucene.Net.Util.Automaton.Automaton> automata = new List<Lucene.Net.Util.Automaton.Automaton>();
         private List<string> terms = new List<string>();
 
-        public void testLexicon()
+		public virtual void TestLexicon()
         {
             int num = AtLeast(1);
             for (var i = 0; i < num; i++)
@@ -30,7 +30,7 @@ namespace Lucene.Net.Test.Util.Automaton
             }
         }
 
-        public void assertLexicon()
+		public virtual void AssertLexicon()
         {
             Collections.Shuffle(automata, new Random());
             var lex = BasicOperations.Union(automata);

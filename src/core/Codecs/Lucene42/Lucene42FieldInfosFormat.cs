@@ -3,7 +3,7 @@
 namespace Lucene.Net.Codecs.Lucene42
 {
 	[Obsolete(@"Only for reading old 4.2-4.5 segments")]
-    public sealed class Lucene42FieldInfosFormat : FieldInfosFormat
+    public class Lucene42FieldInfosFormat : FieldInfosFormat
     {
         private readonly FieldInfosReader reader = new Lucene42FieldInfosReader();
 

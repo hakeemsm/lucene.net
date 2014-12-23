@@ -46,10 +46,16 @@ namespace Lucene.Net.Search
 		private static readonly Document DOC_3_B = MakeDocument("X " + S_1 + " A Y N N N N " + S_1 + " A Y");
 		private static readonly Document DOC_4 = MakeDocument("A A X A X B A X B B A A X B A A");
 		
+		private static readonly Lucene.Net.Document.Document DOC_5_3 = MakeDocument
+			("H H H X X X H H H X X X H H H");
+
+		private static readonly Lucene.Net.Document.Document DOC_5_4 = MakeDocument
+			("H H H H");
 		private static readonly PhraseQuery QUERY_1 = MakePhraseQuery(S_1);
 		private static readonly PhraseQuery QUERY_2 = MakePhraseQuery(S_2);
 		private static readonly PhraseQuery QUERY_4 = MakePhraseQuery("X A A");
 		
+		private static readonly PhraseQuery QUERY_5_4 = MakePhraseQuery("H H H H");
 		
 		/// <summary> Test DOC_4 and QUERY_4.
 		/// QUERY_4 has a fuzzy (len=1) match to DOC_4, so all slop values > 0 should succeed.
@@ -128,34 +134,53 @@ namespace Lucene.Net.Search
 			}
 		}
 		
+		public virtual void TestDoc5_Query5_Any_Slop_Should_be_consistent()
+		{
+			int nRepeats = 5;
+			for (int slop = 0; slop < 3; slop++)
+			{
+				for (int trial = 0; trial < nRepeats; trial++)
+				{
+					// should steadily always find this one
+					CheckPhraseQuery(DOC_5_4, QUERY_5_4, slop, 1);
+				}
+				for (int trial_1 = 0; trial_1 < nRepeats; trial_1++)
+				{
+					// should steadily never find this one
+					CheckPhraseQuery(DOC_5_3, QUERY_5_4, slop, 0);
+				}
+			}
+		}
 		private float CheckPhraseQuery(Document doc, PhraseQuery query, int slop, int expectedNumResults)
 		{
 			query.Slop = slop;
 			
-			RAMDirectory ramDir = new RAMDirectory();
-			WhitespaceAnalyzer analyzer = new WhitespaceAnalyzer();
-			IndexWriter writer = new IndexWriter(ramDir, analyzer, MaxFieldLength.UNLIMITED);
+			Directory ramDir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), ramDir, new MockAnalyzer
+				(Random(), MockTokenizer.WHITESPACE, false));
 			writer.AddDocument(doc);
+			IndexReader reader = writer.GetReader();
+			IndexSearcher searcher = NewSearcher(reader);
+			TestSloppyPhraseQuery.MaxFreqCollector c = new TestSloppyPhraseQuery.MaxFreqCollector
+				();
+			searcher.Search(query, c);
+			NUnit.Framework.Assert.AreEqual("slop: " + slop + "  query: " + query + "  doc: "
+				 + doc + "  Wrong number of hits", expectedNumResults, c.totalHits);
 			writer.Close();
 
-		    IndexSearcher searcher = new IndexSearcher(ramDir, true);
-			TopDocs td = searcher.Search(query, null, 10);
-			//System.out.println("slop: "+slop+"  query: "+query+"  doc: "+doc+"  Expecting number of hits: "+expectedNumResults+" maxScore="+td.getMaxScore());
-			Assert.AreEqual(expectedNumResults, td.TotalHits, "slop: " + slop + "  query: " + query + "  doc: " + doc + "  Wrong number of hits");
-			
-			//QueryUtils.check(query,searcher);
-			
-			searcher.Close();
+			reader.Close();
 			ramDir.Close();
-
-            return td.MaxScore;
+			// returns the max Scorer.freq() found, because even though norms are omitted, many index stats are different
+			// with these different tokens/distributions/lengths.. otherwise this test is very fragile.
+			return c.max;
 		}
 		
 		private static Document MakeDocument(System.String docText)
 		{
 			Document doc = new Document();
-			Field f = new Field("f", docText, Field.Store.NO, Field.Index.ANALYZED);
-			f.OmitNorms = true;
+			FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
+			customType.SetOmitNorms(true);
+			Field f = new Field("f", docText, customType);
 			doc.Add(f);
 			return doc;
 		}
@@ -163,12 +188,176 @@ namespace Lucene.Net.Search
 		private static PhraseQuery MakePhraseQuery(System.String terms)
 		{
 			PhraseQuery query = new PhraseQuery();
-			System.String[] t = System.Text.RegularExpressions.Regex.Split(terms, " +");
+			string[] t = terms.Split(" +");
 			for (int i = 0; i < t.Length; i++)
 			{
 				query.Add(new Term("f", t[i]));
 			}
 			return query;
+		}
+		internal class MaxFreqCollector : Collector
+		{
+			internal float max;
+
+			internal int totalHits;
+
+			internal Scorer scorer;
+
+			/// <exception cref="System.IO.IOException"></exception>
+			public override void SetScorer(Scorer scorer)
+			{
+				this.scorer = scorer;
+			}
+
+			/// <exception cref="System.IO.IOException"></exception>
+			public override void Collect(int doc)
+			{
+				totalHits++;
+				max = Math.Max(max, scorer.Freq());
+			}
+
+			/// <exception cref="System.IO.IOException"></exception>
+			public override void SetNextReader(AtomicReaderContext context)
+			{
+			}
+
+			public override bool AcceptsDocsOutOfOrder()
+			{
+				return false;
+			}
+		}
+
+		/// <summary>checks that no scores or freqs are infinite</summary>
+		/// <exception cref="System.Exception"></exception>
+		private void AssertSaneScoring(PhraseQuery pq, IndexSearcher searcher)
+		{
+			searcher.Search(pq, new _Collector_206());
+			// do nothing
+			QueryUtils.Check(Random(), pq, searcher);
+		}
+
+		private sealed class _Collector_206 : Collector
+		{
+			public _Collector_206()
+			{
+			}
+
+			internal Scorer scorer;
+
+			public override void SetScorer(Scorer scorer)
+			{
+				this.scorer = scorer;
+			}
+
+			/// <exception cref="System.IO.IOException"></exception>
+			public override void Collect(int doc)
+			{
+				NUnit.Framework.Assert.IsFalse(float.IsInfinite(this.scorer.Freq()));
+				NUnit.Framework.Assert.IsFalse(float.IsInfinite(this.scorer.Score()));
+			}
+
+			public override void SetNextReader(AtomicReaderContext context)
+			{
+			}
+
+			public override bool AcceptsDocsOutOfOrder()
+			{
+				return false;
+			}
+		}
+
+		// LUCENE-3215
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestSlopWithHoles()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir);
+			FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
+			customType.SetOmitNorms(true);
+			Field f = new Field("lyrics", string.Empty, customType);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(f);
+			f.SetStringValue("drug drug");
+			iw.AddDocument(doc);
+			f.SetStringValue("drug druggy drug");
+			iw.AddDocument(doc);
+			f.SetStringValue("drug druggy druggy drug");
+			iw.AddDocument(doc);
+			f.SetStringValue("drug druggy drug druggy drug");
+			iw.AddDocument(doc);
+			IndexReader ir = iw.GetReader();
+			iw.Close();
+			IndexSearcher @is = NewSearcher(ir);
+			PhraseQuery pq = new PhraseQuery();
+			// "drug the drug"~1
+			pq.Add(new Term("lyrics", "drug"), 1);
+			pq.Add(new Term("lyrics", "drug"), 4);
+			pq.SetSlop(0);
+			NUnit.Framework.Assert.AreEqual(0, @is.Search(pq, 4).totalHits);
+			pq.SetSlop(1);
+			NUnit.Framework.Assert.AreEqual(3, @is.Search(pq, 4).totalHits);
+			pq.SetSlop(2);
+			NUnit.Framework.Assert.AreEqual(4, @is.Search(pq, 4).totalHits);
+			ir.Close();
+			dir.Close();
+		}
+
+		// LUCENE-3215
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestInfiniteFreq1()
+		{
+			string document = "drug druggy drug drug drug";
+			Directory dir = NewDirectory();
+			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(NewField("lyrics", document, new FieldType(TextField.TYPE_NOT_STORED)));
+			iw.AddDocument(doc);
+			IndexReader ir = iw.GetReader();
+			iw.Close();
+			IndexSearcher @is = NewSearcher(ir);
+			PhraseQuery pq = new PhraseQuery();
+			// "drug the drug"~1
+			pq.Add(new Term("lyrics", "drug"), 1);
+			pq.Add(new Term("lyrics", "drug"), 3);
+			pq.SetSlop(1);
+			AssertSaneScoring(pq, @is);
+			ir.Close();
+			dir.Close();
+		}
+
+		// LUCENE-3215
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestInfiniteFreq2()
+		{
+			string document = "So much fun to be had in my head " + "No more sunshine " + "So much fun just lying in my bed "
+				 + "No more sunshine " + "I can't face the sunlight and the dirt outside " + "Wanna stay in 666 where this darkness don't lie "
+				 + "Drug drug druggy " + "Got a feeling sweet like honey " + "Drug drug druggy "
+				 + "Need sensation like my baby " + "Show me your scars you're so aware " + "I'm not barbaric I just care "
+				 + "Drug drug drug " + "I need a reflection to prove I exist " + "No more sunshine "
+				 + "I am a victim of designer blitz " + "No more sunshine " + "Dance like a robot when you're chained at the knee "
+				 + "The C.I.A say you're all they'll ever need " + "Drug drug druggy " + "Got a feeling sweet like honey "
+				 + "Drug drug druggy " + "Need sensation like my baby " + "Snort your lines you're so aware "
+				 + "I'm not barbaric I just care " + "Drug drug druggy " + "Got a feeling sweet like honey "
+				 + "Drug drug druggy " + "Need sensation like my baby";
+			Directory dir = NewDirectory();
+			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(NewField("lyrics", document, new FieldType(TextField.TYPE_NOT_STORED)));
+			iw.AddDocument(doc);
+			IndexReader ir = iw.GetReader();
+			iw.Close();
+			IndexSearcher @is = NewSearcher(ir);
+			PhraseQuery pq = new PhraseQuery();
+			// "drug the drug"~5
+			pq.Add(new Term("lyrics", "drug"), 1);
+			pq.Add(new Term("lyrics", "drug"), 3);
+			pq.SetSlop(5);
+			AssertSaneScoring(pq, @is);
+			ir.Close();
+			dir.Close();
 		}
 	}
 }

@@ -8,7 +8,7 @@ using System.Text;
 namespace Lucene.Net.Codecs.Lucene3x
 {
     [Obsolete]
-    internal class Lucene3xStoredFieldsFormat : StoredFieldsFormat
+    public class Lucene3xStoredFieldsFormat : StoredFieldsFormat
     {
         public override StoredFieldsReader FieldsReader(Directory directory, SegmentInfo si, FieldInfos fn, IOContext context)
         {

@@ -16,10 +16,15 @@
  */
 
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Text;
+using Lucene.Net.Analysis.Tokenattributes;
+using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
 using NUnit.Framework;
 using Attribute = Lucene.Net.Util.Attribute;
+using FlagsAttribute = Lucene.Net.Analysis.Tokenattributes.FlagsAttribute;
 
 namespace Lucene.Net.Analysis
 {	
@@ -27,7 +32,7 @@ namespace Lucene.Net.Analysis
 	public class TestToken:LuceneTestCase
 	{
         [Test]
-        public void testCtor()
+		public virtual void TestCtor()
         {
             Token t = new Token();
             char[] content = "hello".toCharArray();
@@ -68,10 +73,10 @@ namespace Lucene.Net.Analysis
         }
 		
         [Test]
-        public void testResize()
+		public virtual void TestResize()
         {
             Token t = new Token();
-            char[] content = "hello".toCharArray();
+			char[] content = "hello".ToCharArray();
             t.CopyBuffer(content, 0, content.Length);
             for (int i = 0; i < 2000; i++)
             {
@@ -82,7 +87,7 @@ namespace Lucene.Net.Analysis
         }
 		
         [Test]
-        public void testGrow()
+		public virtual void TestGrow()
         {
             Token t = new Token();
             StringBuilder buf = new StringBuilder("ab");
@@ -137,7 +142,7 @@ namespace Lucene.Net.Analysis
         }
 
         [Test]
-        public void testToString()
+		public virtual void TestToString()
         {
             char[] b = {'a', 'l', 'o', 'h', 'a'};
             Token t = new Token("", 0, 5);
@@ -149,7 +154,7 @@ namespace Lucene.Net.Analysis
         }
 
         [Test]
-        public void testTermBufferEquals()
+		public virtual void TestTermBufferEquals()
         {
             Token t1a = new Token();
             char[] content1a = "hello".toCharArray();
@@ -166,7 +171,7 @@ namespace Lucene.Net.Analysis
         }
 
         [Test]
-        public void testMixedStringArray()
+		public virtual void TestMixedStringArray()
         {
             Token t = new Token("hello", 0, 5);
             assertEquals(t.Length, 5);
@@ -183,28 +188,28 @@ namespace Lucene.Net.Analysis
         }
 
         [Test]
-        public void testClone()
+		public virtual void TestClone()
         {
             Token t = new Token(0, 5);
             char[] content = "hello".toCharArray();
             t.CopyBuffer(content, 0, 5);
             char[] buf = t.Buffer;
-            Token copy = assertCloneIsEqual(t);
+            Token copy = AssertCloneIsEqual(t);
             assertEquals(t.toString(), copy.toString());
             assertNotSame(buf, copy.Buffer);
 
             BytesRef pl = new BytesRef(new sbyte[] {1, 2, 3, 4});
             t.Payload = pl;
-            copy = assertCloneIsEqual(t);
+            copy = AssertCloneIsEqual(t);
             assertEquals(pl, copy.Payload);
             assertNotSame(pl, copy.Payload);
         }
 
         [Test]
-        public void testCopyTo()
+		public virtual void TestCopyTo()
         {
             Token t = new Token();
-            Token copy = assertCopyIsEqual(t);
+            Token copy = AssertCopyIsEqual(t);
             assertEquals("", t.toString());
             assertEquals("", copy.toString());
 
@@ -212,13 +217,13 @@ namespace Lucene.Net.Analysis
             char[] content = "hello".toCharArray();
             t.CopyBuffer(content, 0, 5);
             char[] buf = t.Buffer;
-            copy = assertCopyIsEqual(t);
+            copy = AssertCopyIsEqual(t);
             assertEquals(t.toString(), copy.toString());
             assertNotSame(buf, copy.Buffer);
 
             BytesRef pl = new BytesRef(new sbyte[] {1, 2, 3, 4});
             t.Payload = pl;
-            copy = assertCopyIsEqual(t);
+            copy = AssertCopyIsEqual(t);
             assertEquals(pl, copy.Payload);
             assertNotSame(pl, copy.Payload);
         }
@@ -268,52 +273,62 @@ namespace Lucene.Net.Analysis
 //      ts.addAttribute(TypeAttribute.class) instanceof Token);
 //  }
 //
-//        [Test]
-//        public void TestTokenAttributeFactory()
-//        {
-//            TokenStream ts = new WhitespaceTokenizer(Token.TOKEN_ATTRIBUTE_FACTORY, new StringReader("foo, bar"));
-//
-//            Assert.IsTrue(ts.AddAttribute<ISenselessAttribute>() is SenselessAttribute,
-//                          "TypeAttribute is not implemented by SenselessAttributeImpl");
-//
-//            Assert.IsTrue(ts.AddAttribute<ITermAttribute>() is Token, "TermAttribute is not implemented by Token");
-//            Assert.IsTrue(ts.AddAttribute<IOffsetAttribute>() is Token, "OffsetAttribute is not implemented by Token");
-//            Assert.IsTrue(ts.AddAttribute<IFlagsAttribute>() is Token, "FlagsAttribute is not implemented by Token");
-//            Assert.IsTrue(ts.AddAttribute<IPayloadAttribute>() is Token, "PayloadAttribute is not implemented by Token");
-//            Assert.IsTrue(ts.AddAttribute<IPositionIncrementAttribute>() is Token, "PositionIncrementAttribute is not implemented by Token");
-//            Assert.IsTrue(ts.AddAttribute<ITypeAttribute>() is Token, "TypeAttribute is not implemented by Token");
-//        }
-//        [Test]
-//  public void testAttributeReflection() {
-//    Token t = new Token("foobar", 6, 22, 8);
-//    _TestUtil.assertAttributeReflection(t,
-//      new HashMap<String,Object>() {{
-//        put(CharTermAttribute.class.getName() + "#term", "foobar");
-//        put(TermToBytesRefAttribute.class.getName() + "#bytes", new BytesRef("foobar"));
-//        put(OffsetAttribute.class.getName() + "#startOffset", 6);
-//        put(OffsetAttribute.class.getName() + "#endOffset", 22);
-//        put(PositionIncrementAttribute.class.getName() + "#positionIncrement", 1);
-//        put(PayloadAttribute.class.getName() + "#payload", null);
-//        put(TypeAttribute.class.getName() + "#type", TypeAttribute.DEFAULT_TYPE);
-//        put(FlagsAttribute.class.getName() + "#flags", 8);
-//      }});
-//  }
-
-        public static Token assertCloneIsEqual(Token att)
+        [Test]
+        public void TestTokenAttributeFactory()
         {
-            Token clone = (Token) att.Clone();
-            Assert.AreEqual(att, clone, "Clone must be equal");
-            Assert.AreEqual(att.GetHashCode(), clone.GetHashCode(), "Clone's hashcode must be equal");
-            return clone;
+			TokenStream ts = new MockTokenizer(Token.TOKEN_ATTRIBUTE_FACTORY, new StringReader
+				("foo bar"), MockTokenizer.WHITESPACE, false, MockTokenizer.DEFAULT_MAX_TOKEN_LENGTH
+				);
+            IsTrue(ts.AddAttribute<ISenselessAttribute>() is SenselessAttribute,
+                          "TypeAttribute is not implemented by SenselessAttributeImpl");
+
+            IsTrue(ts.AddAttribute<ICharTermAttribute>() is Token, "TermAttribute is not implemented by Token");
+            IsTrue(ts.AddAttribute<IOffsetAttribute>() is Token, "OffsetAttribute is not implemented by Token");
+            IsTrue(ts.AddAttribute<IFlagsAttribute>() is Token, "FlagsAttribute is not implemented by Token");
+            IsTrue(ts.AddAttribute<IPayloadAttribute>() is Token, "PayloadAttribute is not implemented by Token");
+            IsTrue(ts.AddAttribute<IPositionIncrementAttribute>() is Token, "PositionIncrementAttribute is not implemented by Token");
+            IsTrue(ts.AddAttribute<ITypeAttribute>() is Token, "TypeAttribute is not implemented by Token");
+        }
+//        [Test]
+		public virtual void TestAttributeReflection()
+		{
+			Token t = new Token("foobar", 6, 22, 8);
+			TestUtil.AssertAttributeReflection(t, new AnonAttributeDictionary());
+		}
+
+		private sealed class AnonAttributeDictionary : Dictionary<string, object>
+		{
+			public AnonAttributeDictionary()
+			{
+				{
+					this[typeof(CharTermAttribute).FullName + "#term"] =  "foobar";
+					this[typeof(ITermToBytesRefAttribute).FullName + "#bytes"] =  new BytesRef("foobar");
+					this[typeof(OffsetAttribute).FullName + "#startOffset"] =  6;
+					this[typeof(OffsetAttribute).FullName + "#endOffset"] =  22;
+					this[typeof(PositionIncrementAttribute).FullName + "#positionIncrement"] =  1;
+					this[typeof(PositionLengthAttribute).FullName + "#positionLength"] =  1;
+					this[typeof(PayloadAttribute).FullName + "#payload"] =  null;
+					this[typeof(TypeAttribute).FullName + "#type"] =  TypeAttribute.DEFAULT_TYPE;
+					this[typeof(FlagsAttribute).FullName + "#flags"] =  8;
+				}
+			}
+		}
+
+		public static T AssertCloneIsEqual<T>(T att) where T:CharTermAttribute
+        {
+            var clone = att.Clone();
+            AreEqual(att, clone, "Clone must be equal");
+            AreEqual(att.GetHashCode(), clone.GetHashCode(), "Clone's hashcode must be equal");
+            return (T)clone;
         }
 
-        public static Token assertCopyIsEqual(Token att)
+		public static T AssertCopyIsEqual<T>(T att) where T:CharTermAttribute
         {
-            var copy = (Token) System.Activator.CreateInstance(att.GetType());
-            att.CopyTo(copy);
-            Assert.AreEqual(att, copy, "Copied instance must be equal");
-            Assert.AreEqual(att.GetHashCode(), copy.GetHashCode(), "Copied instance's hashcode must be equal");
-            return copy;
+            var copy = Activator.CreateInstance(att.GetType());
+            att.CopyTo((Attribute) copy);
+            AreEqual(att, copy, "Copied instance must be equal");
+            AreEqual(att.GetHashCode(), copy.GetHashCode(), "Copied instance's hashcode must be equal");
+            return (T) copy;
         }
 
         public TestToken()

@@ -7,7 +7,7 @@ using System.Text;
 namespace Lucene.Net.Codecs.Lucene3x
 {
     [Obsolete]
-    internal class Lucene3xPostingsFormat : PostingsFormat
+    public class Lucene3xPostingsFormat : PostingsFormat
     {
         /** Extension of terms file */
         public const string TERMS_EXTENSION = "tis";

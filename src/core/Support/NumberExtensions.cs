@@ -126,6 +126,11 @@ namespace Lucene.Net.Support
             return BitConverter.ToInt32(BitConverter.GetBytes(value), 0);
         }
 
+        public static long DoubleToLongBits(this double value)
+        {
+            return BitConverter.ToInt64(BitConverter.GetBytes(value), 0);
+        }
+
         public static long ToRawLongBits(this double value)
         {
             return BitConverter.DoubleToInt64Bits(value);

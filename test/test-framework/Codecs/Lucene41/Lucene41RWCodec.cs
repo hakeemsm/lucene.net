@@ -1,16 +1,7 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
-using Org.Apache.Lucene.Codecs;
 using Lucene.Net.Codecs.Lucene40;
-using Lucene.Net.Codecs.Lucene41;
-using Org.Apache.Lucene.Util;
-using Sharpen;
+using Lucene.Net.Codecs.Lucene40.TestFramework;
 
-namespace Lucene.Net.Codecs.Lucene41
+namespace Lucene.Net.Codecs.Lucene41.TestFramrwork
 {
 	/// <summary>
 	/// Read-write version of
@@ -29,46 +20,39 @@ namespace Lucene.Net.Codecs.Lucene41
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
-			public override FieldInfosWriter GetFieldInfosWriter()
+			public override FieldInfosWriter FieldInfosWriter
 			{
-				if (!LuceneTestCase.OLD_FORMAT_IMPERSONATION_IS_ACTIVE)
-				{
-					return base.GetFieldInfosWriter();
-				}
-				else
-				{
-					return new Lucene40FieldInfosWriter();
-				}
+			    get
+			    {
+			        return !LuceneTestCase.OLD_FORMAT_IMPERSONATION_IS_ACTIVE ? base.FieldInfosWriter : new Lucene40FieldInfosWriter();
+			    }
 			}
 		}
 
-		private readonly Lucene.Net.Codecs.FieldInfosFormat fieldInfos = new _Lucene40FieldInfosFormat_39
-			();
+		private readonly FieldInfosFormat fieldInfos = new _Lucene40FieldInfosFormat_39();
 
-		private readonly Lucene.Net.Codecs.DocValuesFormat docValues = new Lucene40RWDocValuesFormat
-			();
+		private readonly DocValuesFormat docValues = new Lucene40RWDocValuesFormat();
 
-		private readonly Lucene.Net.Codecs.NormsFormat norms = new Lucene40RWNormsFormat
-			();
+		private readonly NormsFormat norms = new Lucene40RWNormsFormat();
 
-		public override Lucene.Net.Codecs.FieldInfosFormat FieldInfosFormat()
+		public override FieldInfosFormat FieldInfosFormat
 		{
-			return fieldInfos;
+		    get { return fieldInfos; }
 		}
 
-		public override Lucene.Net.Codecs.StoredFieldsFormat StoredFieldsFormat()
+		public override StoredFieldsFormat StoredFieldsFormat
 		{
-			return fieldsFormat;
+		    get { return fieldsFormat; }
 		}
 
-		public override Lucene.Net.Codecs.DocValuesFormat DocValuesFormat()
+		public override DocValuesFormat DocValuesFormat
 		{
-			return docValues;
+		    get { return docValues; }
 		}
 
-		public override Lucene.Net.Codecs.NormsFormat NormsFormat()
+		public override NormsFormat NormsFormat
 		{
-			return norms;
+		    get { return norms; }
 		}
 	}
 }

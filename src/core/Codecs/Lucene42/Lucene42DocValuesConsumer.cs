@@ -11,7 +11,7 @@ using System.Text;
 
 namespace Lucene.Net.Codecs.Lucene42
 {
-    internal class Lucene42DocValuesConsumer : DocValuesConsumer
+    public class Lucene42DocValuesConsumer : DocValuesConsumer
     {
         internal const int VERSION_START = 0;
         internal const int VERSION_CURRENT = VERSION_START;
@@ -30,7 +30,7 @@ namespace Lucene.Net.Codecs.Lucene42
         internal readonly int maxDoc;
         internal readonly float acceptableOverheadRatio;
 
-        internal Lucene42DocValuesConsumer(SegmentWriteState state, String dataCodec, String dataExtension, String metaCodec, String metaExtension, float acceptableOverheadRatio)
+        public Lucene42DocValuesConsumer(SegmentWriteState state, String dataCodec, String dataExtension, String metaCodec, String metaExtension, float acceptableOverheadRatio)
         {
             this.acceptableOverheadRatio = acceptableOverheadRatio;
             maxDoc = state.segmentInfo.DocCount;

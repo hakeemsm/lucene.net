@@ -1,17 +1,10 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
+using System;
+using System.Diagnostics;
+using Lucene.Net.Index;
+using Lucene.Net.Store;
+using Lucene.Net.Util;
 
-using Org.Apache.Lucene.Codecs;
-using Lucene.Net.Codecs.Lucene40;
-using Org.Apache.Lucene.Index;
-using Org.Apache.Lucene.Store;
-using Org.Apache.Lucene.Util;
-using Sharpen;
-
-namespace Lucene.Net.Codecs.Lucene40
+namespace Lucene.Net.Codecs.Lucene40.TestFramework
 {
 	/// <summary>Lucene 4.0 FieldInfos writer.</summary>
 	/// <remarks>Lucene 4.0 FieldInfos writer.</remarks>
@@ -19,13 +12,7 @@ namespace Lucene.Net.Codecs.Lucene40
 	/// <lucene.experimental></lucene.experimental>
 	public class Lucene40FieldInfosWriter : FieldInfosWriter
 	{
-		/// <summary>Sole constructor.</summary>
-		/// <remarks>Sole constructor.</remarks>
-		public Lucene40FieldInfosWriter()
-		{
-		}
-
-		/// <exception cref="System.IO.IOException"></exception>
+	    /// <exception cref="System.IO.IOException"></exception>
 		public override void Write(Directory directory, string segmentName, string segmentSuffix
 			, FieldInfos infos, IOContext context)
 		{
@@ -37,24 +24,24 @@ namespace Lucene.Net.Codecs.Lucene40
 			{
 				CodecUtil.WriteHeader(output, Lucene40FieldInfosFormat.CODEC_NAME, Lucene40FieldInfosFormat
 					.FORMAT_CURRENT);
-				output.WriteVInt(infos.Size());
+				output.WriteVInt(infos.Size);
 				foreach (FieldInfo fi in infos)
 				{
-					FieldInfo.IndexOptions indexOptions = fi.GetIndexOptions();
-					byte bits = unchecked((int)(0x0));
-					if (fi.HasVectors())
+					FieldInfo.IndexOptions indexOptions = fi.IndexOptionsValue.GetValueOrDefault();
+					var bits = 0x0;
+					if (fi.HasVectors)
 					{
 						bits |= Lucene40FieldInfosFormat.STORE_TERMVECTOR;
 					}
-					if (fi.OmitsNorms())
+					if (fi.OmitsNorms)
 					{
 						bits |= Lucene40FieldInfosFormat.OMIT_NORMS;
 					}
-					if (fi.HasPayloads())
+					if (fi.HasPayloads)
 					{
 						bits |= Lucene40FieldInfosFormat.STORE_PAYLOADS;
 					}
-					if (fi.IsIndexed())
+					if (fi.IsIndexed)
 					{
 						bits |= Lucene40FieldInfosFormat.IS_INDEXED;
 						 
@@ -80,17 +67,17 @@ namespace Lucene.Net.Codecs.Lucene40
 					}
 					output.WriteString(fi.name);
 					output.WriteVInt(fi.number);
-					output.WriteByte(bits);
+					output.WriteInt(bits);
 					// pack the DV types in one byte
 					byte dv = DocValuesByte(fi.GetDocValuesType(), fi.GetAttribute(Lucene40FieldInfosReader
 						.LEGACY_DV_TYPE_KEY));
-					byte nrm = DocValuesByte(fi.GetNormType(), fi.GetAttribute(Lucene40FieldInfosReader
+					byte nrm = DocValuesByte(fi.NormType.Value, fi.GetAttribute(Lucene40FieldInfosReader
 						.LEGACY_NORM_TYPE_KEY));
 					 
 					//assert (dv & (~0xF)) == 0 && (nrm & (~0x0F)) == 0;
-					byte val = unchecked((byte)(unchecked((int)(0xff)) & ((nrm << 4) | dv)));
+					byte val = (byte)(0xff & ((nrm << 4) | dv));
 					output.WriteByte(val);
-					output.WriteStringStringMap(fi.Attributes());
+					output.WriteStringStringMap(fi.Attributes);
 				}
 				success = true;
 			}
@@ -98,32 +85,27 @@ namespace Lucene.Net.Codecs.Lucene40
 			{
 				if (success)
 				{
-					output.Close();
+					output.Dispose();
 				}
 				else
 				{
-					IOUtils.CloseWhileHandlingException(output);
+					IOUtils.CloseWhileHandlingException((IDisposable)output);
 				}
 			}
 		}
 
 		/// <summary>4.0-style docvalues byte</summary>
-		public virtual byte DocValuesByte(FieldInfo.DocValuesType type, string legacyTypeAtt
-			)
+		public virtual byte DocValuesByte(FieldInfo.DocValuesType type, string legacyTypeAtt)
 		{
-			if (type == null)
+			if (type == FieldInfo.DocValuesType.UNKNOWN)
 			{
-				 
-				//assert legacyTypeAtt == null;
+				Debug.Assert(legacyTypeAtt == null);
 				return 0;
 			}
-			else
-			{
-				 
-				//assert legacyTypeAtt != null;
-				return unchecked((byte)(int)(Lucene40FieldInfosReader.LegacyDocValuesType.ValueOf
-					(legacyTypeAtt)));
-			}
+		    Debug.Assert(legacyTypeAtt != null);
+            //TODO: verify
+		    var o = Enum.Parse(typeof (Lucene40FieldInfosReader.LegacyDocValuesType), legacyTypeAtt);
+		    return (byte) (o);
 		}
 	}
 }

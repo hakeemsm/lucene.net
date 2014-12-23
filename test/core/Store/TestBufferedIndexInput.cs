@@ -85,35 +85,10 @@ namespace Lucene.Net.Store
 		[Test]
 		public virtual void  TestReadBytes()
 		{
-			System.Random r = NewRandom();
 			
 			MyBufferedIndexInput input = new MyBufferedIndexInput();
-			RunReadBytes(input, BufferedIndexInput.BUFFER_SIZE, r);
+			RunReadBytes(input, BufferedIndexInput.BUFFER_SIZE, Random());
 			
-			// This tests the workaround code for LUCENE-1566 where readBytesInternal
-			// provides a workaround for a JVM Bug that incorrectly raises a OOM Error
-			// when a large byte buffer is passed to a file read.
-			// NOTE: this does only test the chunked reads and NOT if the Bug is triggered.
-			//final int tmpFileSize = 1024 * 1024 * 5;
-			int inputBufferSize = 128;
-			
-            System.String tempDirectory = System.IO.Path.GetTempPath();
-
-			System.IO.FileInfo tmpInputFile = new System.IO.FileInfo(System.IO.Path.Combine(tempDirectory, "IndexInput.tmpFile"));
-			System.IO.File.Delete(tmpInputFile.FullName);
-			WriteBytes(tmpInputFile, TEST_FILE_LENGTH);
-			
-			// run test with chunk size of 10 bytes
-			RunReadBytesAndClose(new SimpleFSIndexInput(tmpInputFile, inputBufferSize, 10), inputBufferSize, r);
-			// run test with chunk size of 100 MB - default
-			RunReadBytesAndClose(new SimpleFSIndexInput(tmpInputFile, inputBufferSize, FSDirectory.DEFAULT_READ_CHUNK_SIZE), inputBufferSize, r);
-            Assert.Pass("Supressing Sub-Tests on NIOFSIndexInput classes");
-			// run test with chunk size of 10 bytes
-			//RunReadBytesAndClose(new NIOFSIndexInput(tmpInputFile, inputBufferSize, 10), inputBufferSize, r);    // {{Aroush-2.9}} suppressing this test since NIOFSIndexInput isn't ported
-            System.Console.Out.WriteLine("Suppressing sub-test: 'RunReadBytesAndClose(new NIOFSIndexInput(tmpInputFile, inputBufferSize, 10), inputBufferSize, r);' since NIOFSIndexInput isn't ported");
-			// run test with chunk size of 100 MB - default
-			//RunReadBytesAndClose(new NIOFSIndexInput(tmpInputFile, inputBufferSize), inputBufferSize, r);     // {{Aroush-2.9}} suppressing this test since NIOFSIndexInput isn't ported
-            System.Console.Out.WriteLine("Suppressing sub-test: 'RunReadBytesAndClose(new NIOFSIndexInput(tmpInputFile, inputBufferSize), inputBufferSize, r);' since NIOFSIndexInput isn't ported");
 		}
 		
 		private void  RunReadBytesAndClose(IndexInput input, int bufferSize, System.Random r)
@@ -267,37 +242,41 @@ namespace Lucene.Net.Store
 		public virtual void  TestSetBufferSize()
 		{
 			System.IO.DirectoryInfo indexDir = new System.IO.DirectoryInfo(System.IO.Path.Combine(AppSettings.Get("tempDir", ""), "testSetBufferSize"));
-			MockFSDirectory dir = new MockFSDirectory(indexDir, NewRandom());
+			TestBufferedIndexInput.MockFSDirectory dir = new TestBufferedIndexInput.MockFSDirectory
+				(indexDir, Random());
 			try
 			{
-				IndexWriter writer = new IndexWriter(dir, new WhitespaceAnalyzer(), true, IndexWriter.MaxFieldLength.LIMITED);
-				writer.UseCompoundFile = false;
+				IndexWriter writer = new IndexWriter(dir, new IndexWriterConfig(TEST_VERSION_CURRENT
+					, new MockAnalyzer(Random())).SetOpenMode(IndexWriterConfig.OpenMode.CREATE).SetMergePolicy
+					(NewLogMergePolicy(false)));
 				for (int i = 0; i < 37; i++)
 				{
 					Document doc = new Document();
-					doc.Add(new Field("content", "aaa bbb ccc ddd" + i, Field.Store.YES, Field.Index.ANALYZED));
-					doc.Add(new Field("id", "" + i, Field.Store.YES, Field.Index.ANALYZED));
+					doc.Add(NewTextField("content", "aaa bbb ccc ddd" + i, Field.Store.YES));
+					doc.Add(NewTextField("id", string.Empty + i, Field.Store.YES));
 					writer.AddDocument(doc);
 				}
-				writer.Close();
 				
 				dir.allIndexInputs.Clear();
 				
-				IndexReader reader = IndexReader.Open(dir, false);
+				IndexReader reader = DirectoryReader.Open(writer, true);
 				Term aaa = new Term("content", "aaa");
 				Term bbb = new Term("content", "bbb");
-				Term ccc = new Term("content", "ccc");
-				Assert.AreEqual(37, reader.DocFreq(ccc));
-				reader.DeleteDocument(0);
-				Assert.AreEqual(37, reader.DocFreq(aaa));
-				dir.tweakBufferSizes();
-				reader.DeleteDocument(4);
-				Assert.AreEqual(reader.DocFreq(bbb), 37);
-				dir.tweakBufferSizes();
-				
-				IndexSearcher searcher = new IndexSearcher(reader);
+				reader.Close();
+				dir.TweakBufferSizes();
+				writer.DeleteDocuments(new Term("id", "0"));
+				reader = DirectoryReader.Open(writer, true);
+				IndexSearcher searcher = NewSearcher(reader);
+				ScoreDoc[] hits = searcher.Search(new TermQuery(bbb), null, 1000).scoreDocs;
+				dir.TweakBufferSizes();
+				NUnit.Framework.Assert.AreEqual(36, hits.Length);
+				reader.Close();
+				dir.TweakBufferSizes();
+				writer.DeleteDocuments(new Term("id", "4"));
+				reader = DirectoryReader.Open(writer, true);
+				searcher = NewSearcher(reader);
 				ScoreDoc[] hits = searcher.Search(new TermQuery(bbb), null, 1000).ScoreDocs;
-				dir.tweakBufferSizes();
+				dir.TweakBufferSizes();
 				Assert.AreEqual(35, hits.Length);
 				dir.tweakBufferSizes();
 				hits = searcher.Search(new TermQuery(new Term("id", "33")), null, 1000).ScoreDocs;
@@ -306,19 +285,19 @@ namespace Lucene.Net.Store
 				hits = searcher.Search(new TermQuery(aaa), null, 1000).ScoreDocs;
 				dir.tweakBufferSizes();
 				Assert.AreEqual(35, hits.Length);
-				searcher.Close();
+				writer.Close();
 				reader.Close();
 			}
 			finally
 			{
-				_TestUtil.RmDir(indexDir);
+				TestUtil.Rm(indexDir);
 			}
 		}
 		
-		private class MockFSDirectory:Directory
+		private class MockFSDirectory : BaseDirectory
 		{
 			
-			internal System.Collections.IList allIndexInputs = new System.Collections.ArrayList();
+			internal IList<IndexInput> allIndexInputs = new AList<IndexInput>();
 			
 			internal System.Random rand;
 			
@@ -328,7 +307,7 @@ namespace Lucene.Net.Store
 			public MockFSDirectory(System.IO.DirectoryInfo path, System.Random rand)
 			{
 				this.rand = rand;
-				interalLockFactory = new NoLockFactory();
+				lockFactory = NoLockFactory.GetNoLockFactory();
 				dir = new SimpleFSDirectory(path, null);
 			}
 			
@@ -337,32 +316,30 @@ namespace Lucene.Net.Store
 				return OpenInput(name, BufferedIndexInput.BUFFER_SIZE);
 			}
 			
-			public virtual void  tweakBufferSizes()
+			public virtual void TweakBufferSizes()
 			{
-				System.Collections.IEnumerator it = allIndexInputs.GetEnumerator();
 				//int count = 0;
-				while (it.MoveNext())
+				foreach (IndexInput ip in allIndexInputs)
 				{
-					BufferedIndexInput bii = (BufferedIndexInput) it.Current;
-					int bufferSize = 1024 + (int) System.Math.Abs(rand.Next() % 32768);
+					BufferedIndexInput bii = (BufferedIndexInput)ip;
+					int bufferSize = 1024 + Math.Abs(rand.Next() % 32768);
 					bii.SetBufferSize(bufferSize);
-					//count++;
 				}
 				//System.out.println("tweak'd " + count + " buffer sizes");
 			}
 			
-			public override IndexInput OpenInput(System.String name, int bufferSize)
+			public override IndexInput OpenInput(string name, IOContext context)
 			{
 				// Make random changes to buffer size
-				bufferSize = 1 + (int) System.Math.Abs(rand.Next() % 10);
-				IndexInput f = dir.OpenInput(name, bufferSize);
+				//bufferSize = 1+Math.abs(rand.nextInt() % 10);
+				IndexInput f = dir.OpenInput(name, context);
 				allIndexInputs.Add(f);
 				return f;
 			}
 			
-			public override IndexOutput CreateOutput(System.String name)
+			public override IndexOutput CreateOutput(string name, IOContext context)
 			{
-				return dir.CreateOutput(name);
+				return dir.CreateOutput(name, context);
 			}
 
             protected override void Dispose(bool disposing)

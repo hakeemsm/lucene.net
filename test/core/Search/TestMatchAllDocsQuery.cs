@@ -46,7 +46,8 @@ namespace Lucene.Net.Search
 		}
 		private void  InitBlock()
 		{
-			analyzer = new StandardAnalyzer(Version.LUCENE_CURRENT);
+			base.SetUp();
+			analyzer = new MockAnalyzer(Random());
 		}
 		private Analyzer analyzer;
 		
@@ -54,16 +55,15 @@ namespace Lucene.Net.Search
 		public virtual void  TestQuery()
 		{
 			
-			RAMDirectory dir = new RAMDirectory();
-			IndexWriter iw = new IndexWriter(dir, analyzer, true, IndexWriter.MaxFieldLength.LIMITED);
-			iw.SetMaxBufferedDocs(2); // force multi-segment
+			Directory dir = NewDirectory();
+			IndexWriter iw = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig(TEST_VERSION_CURRENT
+				, analyzer).SetMaxBufferedDocs(2)).SetMergePolicy(NewLogMergePolicy()));
 			AddDoc("one", iw, 1f);
 			AddDoc("two", iw, 20f);
 			AddDoc("three four", iw, 300f);
-			iw.Close();
 
-		    IndexReader ir = IndexReader.Open(dir, false);
-			IndexSearcher is_Renamed = new IndexSearcher(ir);
+			IndexReader ir = DirectoryReader.Open(iw, true);
+			IndexSearcher is_Renamed = NewSearcher(ir);
 			ScoreDoc[] hits;
 			
 			// assert with norms scoring turned off
@@ -76,23 +76,6 @@ namespace Lucene.Net.Search
 			
 			// assert with norms scoring turned on
 			
-			MatchAllDocsQuery normsQuery = new MatchAllDocsQuery("key");
-			hits = is_Renamed.Search(normsQuery, null, 1000).ScoreDocs;
-			Assert.AreEqual(3, hits.Length);
-			
-			Assert.AreEqual(ir.Document(hits[0].Doc).Get("key"), "three four");
-			Assert.AreEqual(ir.Document(hits[1].Doc).Get("key"), "two");
-			Assert.AreEqual(ir.Document(hits[2].Doc).Get("key"), "one");
-			
-			// change norm & retest
-			ir.SetNorm(0, "key", 400f);
-			normsQuery = new MatchAllDocsQuery("key");
-			hits = is_Renamed.Search(normsQuery, null, 1000).ScoreDocs;
-			Assert.AreEqual(3, hits.Length);
-			
-			Assert.AreEqual(ir.Document(hits[0].Doc).Get("key"), "one");
-			Assert.AreEqual(ir.Document(hits[1].Doc).Get("key"), "three four");
-			Assert.AreEqual(ir.Document(hits[2].Doc).Get("key"), "two");
 			
 			// some artificial queries to trigger the use of skipTo():
 			
@@ -109,21 +92,13 @@ namespace Lucene.Net.Search
 			Assert.AreEqual(1, hits.Length);
 			
 			// delete a document:
-			is_Renamed.IndexReader.DeleteDocument(0);
+			iw.DeleteDocuments(new Term("key", "one"));
+			ir.Close();
+			ir = DirectoryReader.Open(iw, true);
+			@is = NewSearcher(ir);
 			hits = is_Renamed.Search(new MatchAllDocsQuery(), null, 1000).ScoreDocs;
 			Assert.AreEqual(2, hits.Length);
 			
-			// test parsable toString()
-			QueryParser qp = new QueryParser(Util.Version.LUCENE_CURRENT, "key", analyzer);
-			hits = is_Renamed.Search(qp.Parse(new MatchAllDocsQuery().ToString()), null, 1000).ScoreDocs;
-			Assert.AreEqual(2, hits.Length);
-			
-			// test parsable toString() with non default boost
-			Query maq = new MatchAllDocsQuery();
-			maq.Boost = 2.3f;
-			Query pq = qp.Parse(maq.ToString());
-			hits = is_Renamed.Search(pq, null, 1000).ScoreDocs;
-			Assert.AreEqual(2, hits.Length);
 			
 			is_Renamed.Close();
 			ir.Close();
@@ -143,7 +118,7 @@ namespace Lucene.Net.Search
 		private void  AddDoc(System.String text, IndexWriter iw, float boost)
 		{
 			Document doc = new Document();
-			Field f = new Field("key", text, Field.Store.YES, Field.Index.ANALYZED);
+			Field f = NewTextField("key", text, Field.Store.YES);
 			f.Boost = boost;
 			doc.Add(f);
 			iw.AddDocument(doc);

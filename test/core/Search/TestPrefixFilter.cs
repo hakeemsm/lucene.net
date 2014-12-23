@@ -39,22 +39,22 @@ namespace Lucene.Net.Search
 		[Test]
 		public virtual void  TestPrefixFilter_Renamed()
 		{
-			RAMDirectory directory = new RAMDirectory();
+			Directory directory = NewDirectory();
 			
 			System.String[] categories = new System.String[]{"/Computers/Linux", "/Computers/Mac/One", "/Computers/Mac/Two", "/Computers/Windows"};
-			IndexWriter writer = new IndexWriter(directory, new WhitespaceAnalyzer(), true, IndexWriter.MaxFieldLength.LIMITED);
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), directory);
 			for (int i = 0; i < categories.Length; i++)
 			{
 				Document doc = new Document();
-				doc.Add(new Field("category", categories[i], Field.Store.YES, Field.Index.NOT_ANALYZED));
+				doc.Add(NewStringField("category", categories[i], Field.Store.YES));
 				writer.AddDocument(doc);
 			}
-			writer.Close();
+			IndexReader reader = writer.GetReader();
 			
 			// PrefixFilter combined with ConstantScoreQuery
 			PrefixFilter filter = new PrefixFilter(new Term("category", "/Computers"));
 			Query query = new ConstantScoreQuery(filter);
-		    IndexSearcher searcher = new IndexSearcher(directory, true);
+			IndexSearcher searcher = NewSearcher(reader);
 			ScoreDoc[] hits = searcher.Search(query, null, 1000).ScoreDocs;
 			Assert.AreEqual(4, hits.Length);
 			
@@ -105,6 +105,9 @@ namespace Lucene.Net.Search
 			query = new ConstantScoreQuery(filter);
 			hits = searcher.Search(query, null, 1000).ScoreDocs;
 			Assert.AreEqual(0, hits.Length);
+			writer.Close();
+			reader.Close();
+			directory.Close();
 		}
 	}
 }

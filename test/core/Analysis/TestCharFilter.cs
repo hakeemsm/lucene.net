@@ -60,6 +60,10 @@ namespace Lucene.Net.Analysis
 			{
 			}
 
+			public override int Read(char[] cbuf, int off, int len)
+			{
+				return input.Read(cbuf, off, len);
+			}
 		    protected internal override int Correct(int currentOff)
 			{
 				return currentOff + 1;
@@ -73,6 +77,10 @@ namespace Lucene.Net.Analysis
 			{
 			}
 
+			public override int Read(char[] cbuf, int off, int len)
+			{
+				return input.Read(cbuf, off, len);
+			}
 		    protected internal override int Correct(int currentOff)
 			{
 				return currentOff + 2;

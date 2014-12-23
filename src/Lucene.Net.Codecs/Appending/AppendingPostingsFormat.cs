@@ -46,7 +46,7 @@ namespace Lucene.Net.Codecs.Appending
 			{
 				if (!success)
 				{
-					postings.Close();
+					postings.Dispose();
 				}
 			}
 		}

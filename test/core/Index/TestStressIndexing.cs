@@ -1,222 +1,194 @@
-/* 
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+/*
+ * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
  * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
 using System;
-using Lucene.Net.Support;
-using NUnit.Framework;
-
 using Lucene.Net.Analysis;
-using Lucene.Net.Documents;
-using Lucene.Net.QueryParsers;
+using Lucene.Net.Document;
+using Lucene.Net.Index;
+using Lucene.Net.Search;
 using Lucene.Net.Store;
 using Lucene.Net.Util;
-using Lucene.Net.Search;
-using English = Lucene.Net.Util.English;
-using LuceneTestCase = Lucene.Net.Util.LuceneTestCase;
-using _TestUtil = Lucene.Net.Util._TestUtil;
+using Sharpen;
 
 namespace Lucene.Net.Index
 {
-	
-    [TestFixture]
-	public class TestStressIndexing:LuceneTestCase
+	public class TestStressIndexing : LuceneTestCase
 	{
-		private static readonly Analyzer ANALYZER = new SimpleAnalyzer();
-		private System.Random RANDOM;
-		
-		abstract public class TimedThread:ThreadClass
+		private abstract class TimedThread : Sharpen.Thread
 		{
-			internal bool failed;
+			internal volatile bool failed;
+
 			internal int count;
-			private static int RUN_TIME_SEC = 6;
-			private TimedThread[] allThreads;
-			
-			abstract public void  DoWork();
-			
-			internal TimedThread(TimedThread[] threads)
+
+			private static int RUN_TIME_MSEC = AtLeast(1000);
+
+			private TestStressIndexing.TimedThread[] allThreads;
+
+			/// <exception cref="System.Exception"></exception>
+			public abstract void DoWork();
+
+			internal TimedThread(TestStressIndexing.TimedThread[] threads)
 			{
 				this.allThreads = threads;
 			}
-			
-			override public void  Run()
+
+			public override void Run()
 			{
-				long stopTime = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) + 1000 * RUN_TIME_SEC;
-				
+				long stopTime = Runtime.CurrentTimeMillis() + RUN_TIME_MSEC;
 				count = 0;
-				
 				try
 				{
-					while ((DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) < stopTime && !AnyErrors())
+					do
 					{
+						if (AnyErrors())
+						{
+							break;
+						}
 						DoWork();
 						count++;
 					}
+					while (Runtime.CurrentTimeMillis() < stopTime);
 				}
-				catch (System.Exception e)
+				catch (Exception e)
 				{
-					System.Console.Out.WriteLine(ThreadClass.Current() + ": exc");
-					System.Console.Out.WriteLine(e.StackTrace);
+					System.Console.Out.WriteLine(Sharpen.Thread.CurrentThread() + ": exc");
+					Sharpen.Runtime.PrintStackTrace(e, System.Console.Out);
 					failed = true;
 				}
 			}
-			
+
 			private bool AnyErrors()
 			{
 				for (int i = 0; i < allThreads.Length; i++)
+				{
 					if (allThreads[i] != null && allThreads[i].failed)
+					{
 						return true;
+					}
+				}
 				return false;
 			}
 		}
-		
-		private class IndexerThread:TimedThread
+
+		private class IndexerThread : TestStressIndexing.TimedThread
 		{
-			private void  InitBlock(TestStressIndexing enclosingInstance)
-			{
-				this.enclosingInstance = enclosingInstance;
-			}
-			private TestStressIndexing enclosingInstance;
-			public TestStressIndexing Enclosing_Instance
-			{
-				get
-				{
-					return enclosingInstance;
-				}
-				
-			}
 			internal IndexWriter writer;
-			new public int count;
+
 			internal int nextID;
-			
-			public IndexerThread(TestStressIndexing enclosingInstance, IndexWriter writer, TimedThread[] threads):base(threads)
+
+			public IndexerThread(TestStressIndexing _enclosing, IndexWriter writer, TestStressIndexing.TimedThread
+				[] threads) : base(threads)
 			{
-				InitBlock(enclosingInstance);
+				this._enclosing = _enclosing;
 				this.writer = writer;
 			}
-			
-			public override void  DoWork()
+
+			/// <exception cref="System.Exception"></exception>
+			public override void DoWork()
 			{
 				// Add 10 docs:
 				for (int j = 0; j < 10; j++)
 				{
-					Document d = new Document();
-					int n = Enclosing_Instance.RANDOM.Next();
-					d.Add(new Field("id", System.Convert.ToString(nextID++), Field.Store.YES, Field.Index.NOT_ANALYZED));
-					d.Add(new Field("contents", English.IntToEnglish(n), Field.Store.NO, Field.Index.ANALYZED));
-					writer.AddDocument(d);
+					Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+					int n = LuceneTestCase.Random().Next();
+					d.Add(LuceneTestCase.NewStringField("id", Sharpen.Extensions.ToString(this.nextID
+						++), Field.Store.YES));
+					d.Add(LuceneTestCase.NewTextField("contents", English.IntToEnglish(n), Field.Store
+						.NO));
+					this.writer.AddDocument(d);
 				}
-				
 				// Delete 5 docs:
-				int deleteID = nextID - 1;
-				for (int j = 0; j < 5; j++)
+				int deleteID = this.nextID - 1;
+				for (int j_1 = 0; j_1 < 5; j_1++)
 				{
-					writer.DeleteDocuments(new Term("id", "" + deleteID));
+					this.writer.DeleteDocuments(new Term("id", string.Empty + deleteID));
 					deleteID -= 2;
 				}
 			}
+
+			private readonly TestStressIndexing _enclosing;
 		}
-		
-		private class SearcherThread:TimedThread
+
+		private class SearcherThread : TestStressIndexing.TimedThread
 		{
 			private Directory directory;
-			
-			public SearcherThread(Directory directory, TimedThread[] threads):base(threads)
+
+			public SearcherThread(Directory directory, TestStressIndexing.TimedThread[] threads
+				) : base(threads)
 			{
 				this.directory = directory;
 			}
-			
-			public override void  DoWork()
+
+			/// <exception cref="System.Exception"></exception>
+			public override void DoWork()
 			{
 				for (int i = 0; i < 100; i++)
-					(new IndexSearcher(directory)).Close();
+				{
+					IndexReader ir = DirectoryReader.Open(directory);
+					IndexSearcher @is = NewSearcher(ir);
+					ir.Close();
+				}
 				count += 100;
 			}
 		}
-		
-		/*
-		Run one indexer and 2 searchers against single index as
-		stress test.
-		*/
-		public virtual void  RunStressTest(Directory directory, MergeScheduler mergeScheduler)
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void RunStressTest(Directory directory, MergeScheduler mergeScheduler
+			)
 		{
-		    IndexWriter modifier = new IndexWriter(directory, ANALYZER, true, IndexWriter.MaxFieldLength.UNLIMITED);
-			
-			modifier.SetMaxBufferedDocs(10);
-			
-			TimedThread[] threads = new TimedThread[4];
+			IndexWriter modifier = new IndexWriter(directory, ((IndexWriterConfig)NewIndexWriterConfig
+				(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetOpenMode(IndexWriterConfig.OpenMode
+				.CREATE).SetMaxBufferedDocs(10)).SetMergeScheduler(mergeScheduler));
+			modifier.Commit();
+			TestStressIndexing.TimedThread[] threads = new TestStressIndexing.TimedThread[4];
 			int numThread = 0;
-			
-			if (mergeScheduler != null)
-				modifier.SetMergeScheduler(mergeScheduler);
-			
 			// One modifier that writes 10 docs then removes 5, over
 			// and over:
-			IndexerThread indexerThread = new IndexerThread(this, modifier, threads);
+			TestStressIndexing.IndexerThread indexerThread = new TestStressIndexing.IndexerThread
+				(this, modifier, threads);
 			threads[numThread++] = indexerThread;
 			indexerThread.Start();
-			
-			IndexerThread indexerThread2 = new IndexerThread(this, modifier, threads);
+			TestStressIndexing.IndexerThread indexerThread2 = new TestStressIndexing.IndexerThread
+				(this, modifier, threads);
 			threads[numThread++] = indexerThread2;
 			indexerThread2.Start();
-			
 			// Two searchers that constantly just re-instantiate the
 			// searcher:
-			SearcherThread searcherThread1 = new SearcherThread(directory, threads);
+			TestStressIndexing.SearcherThread searcherThread1 = new TestStressIndexing.SearcherThread
+				(directory, threads);
 			threads[numThread++] = searcherThread1;
 			searcherThread1.Start();
-			
-			SearcherThread searcherThread2 = new SearcherThread(directory, threads);
+			TestStressIndexing.SearcherThread searcherThread2 = new TestStressIndexing.SearcherThread
+				(directory, threads);
 			threads[numThread++] = searcherThread2;
 			searcherThread2.Start();
-			
 			for (int i = 0; i < numThread; i++)
+			{
 				threads[i].Join();
-			
+			}
 			modifier.Close();
-			
-			for (int i = 0; i < numThread; i++)
-				Assert.IsTrue(!((TimedThread) threads[i]).failed);
-			
-			//System.out.println("    Writer: " + indexerThread.count + " iterations");
-			//System.out.println("Searcher 1: " + searcherThread1.count + " searchers created");
-			//System.out.println("Searcher 2: " + searcherThread2.count + " searchers created");
+			for (int i_1 = 0; i_1 < numThread; i_1++)
+			{
+				NUnit.Framework.Assert.IsTrue(!threads[i_1].failed);
+			}
 		}
-		
-		/*
-		Run above stress test against RAMDirectory and then
-		FSDirectory.
-		*/
-		[Test]
-		public virtual void  TestStressIndexAndSearching()
-		{
-			RANDOM = NewRandom();
 
-			// With ConcurrentMergeScheduler, in RAMDir
-			Directory directory = new MockRAMDirectory();
+		//System.out.println("    Writer: " + indexerThread.count + " iterations");
+		//System.out.println("Searcher 1: " + searcherThread1.count + " searchers created");
+		//System.out.println("Searcher 2: " + searcherThread2.count + " searchers created");
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestStressIndexAndSearching()
+		{
+			Directory directory = NewDirectory();
+			if (directory is MockDirectoryWrapper)
+			{
+				((MockDirectoryWrapper)directory).SetAssertNoUnrefencedFilesOnClose(true);
+			}
 			RunStressTest(directory, new ConcurrentMergeScheduler());
 			directory.Close();
-			
-			// With ConcurrentMergeScheduler, in FSDir
-		    var dirPath = _TestUtil.GetTempDir("lucene.test.stress");
-			directory = FSDirectory.Open(dirPath);
-			RunStressTest(directory, new ConcurrentMergeScheduler());
-			directory.Close();
-			
-			_TestUtil.RmDir(dirPath);
 		}
 	}
 }

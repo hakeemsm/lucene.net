@@ -58,10 +58,10 @@ namespace Lucene.Net.Codecs.Lucene40
         }
 
         /** Extension of freq postings file */
-        internal const string FREQ_EXTENSION = "frq";
+        public const string FREQ_EXTENSION = "frq";
 
         /** Extension of prox postings file */
-        internal const string PROX_EXTENSION = "prx";
+        public const string PROX_EXTENSION = "prx";
 
         public override string ToString()
         {

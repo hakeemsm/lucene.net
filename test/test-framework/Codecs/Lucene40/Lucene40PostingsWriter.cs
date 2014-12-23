@@ -1,17 +1,9 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
+using System;
+using Lucene.Net.Index;
+using Lucene.Net.Store;
+using Lucene.Net.Util;
 
-using Org.Apache.Lucene.Codecs;
-using Lucene.Net.Codecs.Lucene40;
-using Org.Apache.Lucene.Index;
-using Org.Apache.Lucene.Store;
-using Org.Apache.Lucene.Util;
-using Sharpen;
-
-namespace Lucene.Net.Codecs.Lucene40
+namespace Lucene.Net.Codecs.Lucene40.TestFramework
 {
 	/// <summary>Concrete class that writes the 4.0 frq/prx postings format.</summary>
 	/// <remarks>Concrete class that writes the 4.0 frq/prx postings format.</remarks>
@@ -28,7 +20,7 @@ namespace Lucene.Net.Codecs.Lucene40
 		/// <summary>
 		/// Expert: The fraction of TermDocs entries stored in skip tables,
 		/// used to accelerate
-		/// <see cref="Org.Apache.Lucene.Search.DocIdSetIterator.Advance(int)">Org.Apache.Lucene.Search.DocIdSetIterator.Advance(int)
+		/// <see cref="Lucene.Net.Search.DocIdSetIterator.Advance(int)">Lucene.Net.Search.DocIdSetIterator.Advance(int)
 		/// 	</see>
 		/// .  Larger values result in
 		/// smaller indexes, greater acceleration, but fewer accelerable cases, while
@@ -71,10 +63,9 @@ namespace Lucene.Net.Codecs.Lucene40
 
 		internal int lastOffset;
 
-		internal static readonly Lucene40PostingsWriter.StandardTermState emptyState = new 
-			Lucene40PostingsWriter.StandardTermState();
+	    private static readonly StandardTermState emptyState = new StandardTermState();
 
-		internal Lucene40PostingsWriter.StandardTermState lastState;
+	    private StandardTermState lastState;
 
 		/// <summary>
 		/// Creates a
@@ -105,20 +96,18 @@ namespace Lucene.Net.Codecs.Lucene40
 			this.skipInterval = skipInterval;
 			this.skipMinimum = skipInterval;
 			// this.segment = state.segmentName;
-			string fileName = IndexFileNames.SegmentFileName(state.segmentInfo.name, state.segmentSuffix
-				, Lucene40PostingsFormat.FREQ_EXTENSION);
+			string fileName = IndexFileNames.SegmentFileName(state.segmentInfo.name, state.segmentSuffix, Lucene40PostingsFormat.FREQ_EXTENSION);
 			freqOut = state.directory.CreateOutput(fileName, state.context);
 			bool success = false;
 			IndexOutput proxOut = null;
 			try
 			{
-				CodecUtil.WriteHeader(freqOut, Lucene40PostingsReader.FRQ_CODEC, Lucene40PostingsReader
-					.VERSION_CURRENT);
+				CodecUtil.WriteHeader(freqOut, Lucene40PostingsReader.FRQ_CODEC, Lucene40PostingsReader.VERSION_CURRENT);
 				// TODO: this is a best effort, if one of these fields has no postings
 				// then we make an empty prx file, same as if we are wrapped in 
 				// per-field postingsformat. maybe... we shouldn't
 				// bother w/ this opto?  just create empty prx file...?
-				if (state.fieldInfos.HasProx())
+				if (state.fieldInfos.HasProx)
 				{
 					// At least one field does not omit TF, so create the
 					// prox file
@@ -140,10 +129,10 @@ namespace Lucene.Net.Codecs.Lucene40
 			{
 				if (!success)
 				{
-					IOUtils.CloseWhileHandlingException(freqOut, proxOut);
+					IOUtils.CloseWhileHandlingException((IDisposable)freqOut, proxOut);
 				}
 			}
-			totalNumDocs = state.segmentInfo.GetDocCount();
+			totalNumDocs = state.segmentInfo.DocCount;
 			skipListWriter = new Lucene40SkipListWriter(skipInterval, maxSkipLevels, totalNumDocs
 				, freqOut, proxOut);
 		}
@@ -163,16 +152,16 @@ namespace Lucene.Net.Codecs.Lucene40
 		// write skipMinimum
 		public override BlockTermState NewTermState()
 		{
-			return new Lucene40PostingsWriter.StandardTermState();
+			return new StandardTermState();
 		}
 
 		public override void StartTerm()
 		{
-			freqStart = freqOut.GetFilePointer();
+			freqStart = freqOut.FilePointer;
 			//if (DEBUG) System.out.println("SPW: startTerm freqOut.fp=" + freqStart);
 			if (proxOut != null)
 			{
-				proxStart = proxOut.GetFilePointer();
+				proxStart = proxOut.FilePointer;
 			}
 			// force first payload to write its length
 			lastPayloadLength = -1;
@@ -187,10 +176,10 @@ namespace Lucene.Net.Codecs.Lucene40
 		{
 			//System.out.println("SPW: setField");
 			this.fieldInfo = fieldInfo;
-			indexOptions = fieldInfo.GetIndexOptions();
+			indexOptions = fieldInfo.IndexOptionsValue.GetValueOrDefault();
 			storeOffsets = indexOptions.CompareTo(FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS
 				) >= 0;
-			storePayloads = fieldInfo.HasPayloads();
+			storePayloads = fieldInfo.HasPayloads;
 			lastState = emptyState;
 			//System.out.println("  set init blockFreqStart=" + freqStart);
 			//System.out.println("  set init blockProxStart=" + proxStart);
@@ -364,18 +353,18 @@ namespace Lucene.Net.Codecs.Lucene40
 			lastState = state;
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
-		public override void Close()
+
+	    protected override void Dispose(bool disposing)
 		{
 			try
 			{
-				freqOut.Close();
+				freqOut.Dispose();
 			}
 			finally
 			{
 				if (proxOut != null)
 				{
-					proxOut.Close();
+					proxOut.Dispose();
 				}
 			}
 		}

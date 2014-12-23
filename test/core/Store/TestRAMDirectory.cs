@@ -96,14 +96,16 @@ namespace Lucene.Net.Store
 				throw new System.IO.IOException("java.io.tmpdir undefined, cannot run test");
 			indexDir = new System.IO.DirectoryInfo(Path.Combine(tempDir, "RAMDirIndex"));
 
-		    Directory dir = FSDirectory.Open(indexDir);
-			IndexWriter writer = new IndexWriter(dir, new WhitespaceAnalyzer(), true, IndexWriter.MaxFieldLength.LIMITED);
+			Directory dir = NewFSDirectory(indexDir);
+			IndexWriter writer = new IndexWriter(dir, new IndexWriterConfig(TEST_VERSION_CURRENT
+				, new MockAnalyzer(Random())).SetOpenMode(IndexWriterConfig.OpenMode.CREATE));
 			// add some documents
 			Document doc = null;
 			for (int i = 0; i < docsToAdd; i++)
 			{
 				doc = new Document();
-				doc.Add(new Field("content", English.IntToEnglish(i).Trim(), Field.Store.YES, Field.Index.NOT_ANALYZED));
+				doc.Add(NewStringField("content", English.IntToEnglish(i).Trim(), Field.Store.YES
+					));
 				writer.AddDocument(doc);
 			}
 			Assert.AreEqual(docsToAdd, writer.MaxDoc());
@@ -115,9 +117,9 @@ namespace Lucene.Net.Store
 		public virtual void  TestRAMDirectory_Renamed()
 		{
 			
-			Directory dir = FSDirectory.Open(indexDir);
-			MockRAMDirectory ramDir = new MockRAMDirectory(dir);
-			
+			Directory dir = NewFSDirectory(indexDir);
+			MockDirectoryWrapper ramDir = new MockDirectoryWrapper(Random(), new RAMDirectory
+				(dir, NewIOContext(Random())));
 			// close the underlaying directory
 			dir.Close();
 			
@@ -125,11 +127,11 @@ namespace Lucene.Net.Store
 			Assert.AreEqual(ramDir.SizeInBytes(), ramDir.GetRecomputedSizeInBytes());
 			
 			// open reader to test document count
-			IndexReader reader = IndexReader.Open(ramDir, true);
+			IndexReader reader = DirectoryReader.Open(ramDir);
 			Assert.AreEqual(docsToAdd, reader.NumDocs());
 			
 			// open search zo check if all doc's are there
-			IndexSearcher searcher = new IndexSearcher(reader);
+			IndexSearcher searcher = NewSearcher(reader);
 			
 			// search for all documents
 			for (int i = 0; i < docsToAdd; i++)
@@ -140,7 +142,6 @@ namespace Lucene.Net.Store
 			
 			// cleanup
 			reader.Close();
-			searcher.Close();
 		}
 		
 		private int numThreads = 10;
@@ -149,11 +150,13 @@ namespace Lucene.Net.Store
         [Test]
 		public virtual void  TestRAMDirectorySize()
         {
-            Directory dir = FSDirectory.Open(indexDir);
-			MockRAMDirectory ramDir = new MockRAMDirectory(dir);
+			Directory dir = NewFSDirectory(indexDir);
+			MockDirectoryWrapper ramDir = new MockDirectoryWrapper(Random(), new RAMDirectory
+				(dir, NewIOContext(Random())));
             dir.Close();
-			IndexWriter writer = new IndexWriter(ramDir, new WhitespaceAnalyzer(), false, IndexWriter.MaxFieldLength.LIMITED);
-			writer.Optimize();
+			IndexWriter writer = new IndexWriter(ramDir, new IndexWriterConfig(TEST_VERSION_CURRENT
+				, new MockAnalyzer(Random())).SetOpenMode(IndexWriterConfig.OpenMode.APPEND));
+			writer.ForceMerge(1);
 			
 			Assert.AreEqual(ramDir.SizeInBytes(), ramDir.GetRecomputedSizeInBytes());
 			
@@ -168,9 +171,9 @@ namespace Lucene.Net.Store
 			for (int i = 0; i < numThreads; i++)
 				threads[i].Join();
 			
-			writer.Optimize();
-			Assert.AreEqual(ramDir.SizeInBytes(), ramDir.GetRecomputedSizeInBytes());
-			
+			writer.ForceMerge(1);
+			NUnit.Framework.Assert.AreEqual(ramDir.SizeInBytes(), ramDir.GetRecomputedSizeInBytes
+				());
 			writer.Close();
 		}
 		
@@ -193,12 +196,12 @@ namespace Lucene.Net.Store
 		[TearDown]
 		public override void  TearDown()
 		{
-			base.TearDown();
 			// cleanup 
             if(System.IO.Directory.Exists(indexDir.FullName))
             {
                 System.IO.Directory.Delete(indexDir.FullName, true);
             }
+			base.TearDown();
 		}
 		
 		// LUCENE-1196
@@ -206,12 +209,27 @@ namespace Lucene.Net.Store
 		public virtual void  TestIllegalEOF()
 		{
 			RAMDirectory dir = new RAMDirectory();
-			IndexOutput o = dir.CreateOutput("out");
+			IndexOutput o = dir.CreateOutput("out", NewIOContext(Random()));
 			byte[] b = new byte[1024];
 			o.WriteBytes(b, 0, 1024);
 			o.Close();
-			IndexInput i = dir.OpenInput("out");
+			IndexInput i = dir.OpenInput("out", NewIOContext(Random()));
 			i.Seek(1024);
+			i.Close();
+			dir.Close();
+		}
+		public virtual void TestSeekToEOFThenBack()
+		{
+			RAMDirectory dir = new RAMDirectory();
+			IndexOutput o = dir.CreateOutput("out", NewIOContext(Random()));
+			byte[] bytes = new byte[3 * RAMInputStream.BUFFER_SIZE];
+			o.WriteBytes(bytes, 0, bytes.Length);
+			o.Close();
+			IndexInput i = dir.OpenInput("out", NewIOContext(Random()));
+			i.Seek(2 * RAMInputStream.BUFFER_SIZE - 1);
+			i.Seek(3 * RAMInputStream.BUFFER_SIZE);
+			i.Seek(RAMInputStream.BUFFER_SIZE);
+			i.ReadBytes(bytes, 0, 2 * RAMInputStream.BUFFER_SIZE);
 			i.Close();
 			dir.Close();
 		}

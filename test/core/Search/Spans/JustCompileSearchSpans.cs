@@ -74,6 +74,10 @@ namespace Lucene.Net.Search.Spans
 		    {
 		        throw new System.NotSupportedException(Lucene.Net.Search.Spans.JustCompileSearchSpans.UNSUPPORTED_MSG);
 		    }
+			public override long Cost()
+			{
+				throw new NotSupportedException(UNSUPPORTED_MSG);
+			}
 		}
 		
 		[Serializable]
@@ -84,7 +88,8 @@ namespace Lucene.Net.Search.Spans
 		        get { throw new System.NotSupportedException(Lucene.Net.Search.Spans.JustCompileSearchSpans.UNSUPPORTED_MSG); }
 		    }
 
-		    public override Spans GetSpans(IndexReader reader)
+		    public override Spans GetSpans(AtomicReaderContext
+				 context, Bits acceptDocs, IDictionary<Term, TermContext> termContexts)
 			{
 				throw new System.NotSupportedException(Lucene.Net.Search.Spans.JustCompileSearchSpans.UNSUPPORTED_MSG);
 			}
@@ -131,12 +136,17 @@ namespace Lucene.Net.Search.Spans
 			{
 				throw new System.NotSupportedException(Lucene.Net.Search.Spans.JustCompileSearchSpans.UNSUPPORTED_MSG);
 			}
+			public override long Cost()
+			{
+				throw new NotSupportedException(UNSUPPORTED_MSG);
+			}
 		}
 		
 		internal sealed class JustCompileSpanScorer:SpanScorer
 		{
 			
-			internal JustCompileSpanScorer(Spans spans, Weight weight, Similarity similarity, byte[] norms):base(spans, weight, similarity, norms)
+			protected JustCompileSpanScorer(Lucene.Net.Search.Spans.Spans spans, Weight
+				 weight, Similarity.SimScorer docScorer) : base(spans, weight, docScorer)
 			{
 			}
 			

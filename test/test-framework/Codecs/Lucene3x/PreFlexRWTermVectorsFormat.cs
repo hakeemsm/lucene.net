@@ -1,18 +1,9 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
-using Org.Apache.Lucene.Codecs;
+using Lucene.Net.Index;
+using Lucene.Net.Store;
 using Lucene.Net.Codecs.Lucene3x;
-using Org.Apache.Lucene.Index;
-using Org.Apache.Lucene.Store;
-using Org.Apache.Lucene.Util;
-using Sharpen;
 
-namespace Lucene.Net.Codecs.Lucene3x
+namespace Lucene.Net.Codecs.Lucene3x.TestFramework
 {
 	internal class PreFlexRWTermVectorsFormat : Lucene3xTermVectorsFormat
 	{
@@ -27,38 +18,39 @@ namespace Lucene.Net.Codecs.Lucene3x
 		public override TermVectorsReader VectorsReader(Directory directory, SegmentInfo 
 			segmentInfo, FieldInfos fieldInfos, IOContext context)
 		{
-			return new _Lucene3xTermVectorsReader_39(directory, segmentInfo, fieldInfos, context
-				);
+			return new Anon3xTermVectorsReader(directory, segmentInfo, fieldInfos, context);
 		}
 
-		private sealed class _Lucene3xTermVectorsReader_39 : Lucene3xTermVectorsReader
+		private sealed class Anon3xTermVectorsReader : Lucene3xTermVectorsReader
 		{
-			public _Lucene3xTermVectorsReader_39(Directory baseArg1, SegmentInfo baseArg2, FieldInfos
+			public Anon3xTermVectorsReader(Directory baseArg1, SegmentInfo baseArg2, FieldInfos
 				 baseArg3, IOContext baseArg4) : base(baseArg1, baseArg2, baseArg3, baseArg4)
 			{
 			}
 
-			protected override bool SortTermsByUnicode()
+			protected override bool SortTermsByUnicode
 			{
-				// We carefully peek into stack track above us: if
-				// we are part of a "merge", we must sort by UTF16:
-				bool unicodeSortOrder = true;
-				StackTraceElement[] trace = new Exception().GetStackTrace();
-				for (int i = 0; i < trace.Length; i++)
-				{
-					//System.out.println(trace[i].getClassName());
-					if ("merge".Equals(trace[i].GetMethodName()))
-					{
-						unicodeSortOrder = false;
-						if (LuceneTestCase.VERBOSE)
-						{
-							System.Console.Out.WriteLine("NOTE: PreFlexRW codec: forcing legacy UTF16 vector term sort order"
-								);
-						}
-						break;
-					}
-				}
-				return unicodeSortOrder;
+			    get
+			    {
+			        // We carefully peek into stack track above us: if
+			        // we are part of a "merge", we must sort by UTF16:
+			        bool unicodeSortOrder = true;
+			        var trace = new Exception().StackTrace;
+			        //.NET Port Stack trace is a string
+			            //System.out.println(trace[i].getClassName());
+			            if (trace.Contains("merge"))
+			            {
+			                unicodeSortOrder = false;
+			                if (LuceneTestCase.VERBOSE)
+			                {
+			                    System.Console.Out.WriteLine("NOTE: PreFlexRW codec: forcing legacy UTF16 vector term sort order"
+			                        );
+			                }
+			                
+			            }
+			        
+			        return unicodeSortOrder;
+			    }
 			}
 		}
 	}

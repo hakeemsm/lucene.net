@@ -267,7 +267,7 @@ namespace Lucene.Net.Util.Fst
             }
         }
 
-        internal void Save(DataOutput output)
+        public void Save(DataOutput output)
         {
             if (startNode == -1)
                 throw new InvalidOperationException("call finish first");

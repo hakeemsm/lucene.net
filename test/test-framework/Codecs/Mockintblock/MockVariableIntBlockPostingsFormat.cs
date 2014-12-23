@@ -1,20 +1,9 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
+using System;
+using Lucene.Net.Index;
+using Lucene.Net.Store;
+using Lucene.Net.Util;
 
-using Org.Apache.Lucene.Codecs;
-using Lucene.Net.Codecs.Blockterms;
-using Lucene.Net.Codecs.Intblock;
-using Lucene.Net.Codecs.Mockintblock;
-using Lucene.Net.Codecs.Sep;
-using Org.Apache.Lucene.Index;
-using Org.Apache.Lucene.Store;
-using Org.Apache.Lucene.Util;
-using Sharpen;
-
-namespace Lucene.Net.Codecs.Mockintblock
+namespace Lucene.Net.Codecs.Mockintblock.TestFramework
 {
 	/// <summary>
 	/// A silly test codec to verify core support for variable
@@ -42,7 +31,7 @@ namespace Lucene.Net.Codecs.Mockintblock
 
 		public override string ToString()
 		{
-			return GetName() + "(baseBlockSize=" + baseBlockSize + ")";
+			return Name + "(baseBlockSize=" + baseBlockSize + ")";
 		}
 
 		/// <summary>
@@ -68,12 +57,12 @@ namespace Lucene.Net.Codecs.Mockintblock
 			{
 				IndexInput @in = dir.OpenInput(fileName, context);
 				int baseBlockSize = @in.ReadInt();
-				return new _VariableIntBlockIndexInput_89(baseBlockSize, @in);
+				return new AnonVariableIntBlockIndexInput(baseBlockSize, @in);
 			}
 
-			private sealed class _VariableIntBlockIndexInput_89 : VariableIntBlockIndexInput
+			private sealed class AnonVariableIntBlockIndexInput : VariableIntBlockIndexInput
 			{
-				public _VariableIntBlockIndexInput_89(int baseBlockSize, IndexInput baseArg1) : base
+				public AnonVariableIntBlockIndexInput(int baseBlockSize, IndexInput baseArg1) : base
 					(baseArg1)
 				{
 					this.baseBlockSize = baseBlockSize;
@@ -82,12 +71,12 @@ namespace Lucene.Net.Codecs.Mockintblock
 				protected override VariableIntBlockIndexInput.BlockReader GetBlockReader(IndexInput
 					 @in, int[] buffer)
 				{
-					return new _BlockReader_93(buffer, @in, baseBlockSize);
+					return new AnonBlockReader(buffer, @in, baseBlockSize);
 				}
 
-				private sealed class _BlockReader_93 : VariableIntBlockIndexInput.BlockReader
+				private sealed class AnonBlockReader : VariableIntBlockIndexInput.BlockReader
 				{
-					public _BlockReader_93(int[] buffer, IndexInput @in, int baseBlockSize)
+					public AnonBlockReader(int[] buffer, IndexInput @in, int baseBlockSize)
 					{
 						this.buffer = buffer;
 						this.@in = @in;
@@ -131,7 +120,7 @@ namespace Lucene.Net.Codecs.Mockintblock
 				try
 				{
 					@out.WriteInt(baseBlockSize);
-					VariableIntBlockIndexOutput ret = new _VariableIntBlockIndexOutput_119(this, @out
+					VariableIntBlockIndexOutput ret = new AnonVariableIntBlockIndexOutput(this, @out
 						, 2 * baseBlockSize);
 					// silly variable block length int encoder: if
 					// first value <= 3, we write N vints at once;
@@ -144,14 +133,14 @@ namespace Lucene.Net.Codecs.Mockintblock
 				{
 					if (!success)
 					{
-						IOUtils.CloseWhileHandlingException(@out);
+						IOUtils.CloseWhileHandlingException((IDisposable)@out);
 					}
 				}
 			}
 
-			private sealed class _VariableIntBlockIndexOutput_119 : VariableIntBlockIndexOutput
+			private sealed class AnonVariableIntBlockIndexOutput : VariableIntBlockIndexOutput
 			{
-				public _VariableIntBlockIndexOutput_119(MockIntFactory _enclosing, IndexOutput baseArg1
+				public AnonVariableIntBlockIndexOutput(MockIntFactory _enclosing, IndexOutput baseArg1
 					, int baseArg2) : base(baseArg1, baseArg2)
 				{
 					this._enclosing = _enclosing;
@@ -191,8 +180,7 @@ namespace Lucene.Net.Codecs.Mockintblock
 		/// <exception cref="System.IO.IOException"></exception>
 		public override FieldsConsumer FieldsConsumer(SegmentWriteState state)
 		{
-			PostingsWriterBase postingsWriter = new SepPostingsWriter(state, new MockVariableIntBlockPostingsFormat.MockIntFactory
-				(baseBlockSize));
+			PostingsWriterBase postingsWriter = new SepPostingsWriter(state, new MockIntFactory(baseBlockSize));
 			bool success = false;
 			TermsIndexWriterBase indexWriter;
 			try

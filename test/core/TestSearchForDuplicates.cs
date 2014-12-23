@@ -65,7 +65,8 @@ namespace Lucene.Net
 		{
 			System.IO.MemoryStream sw = new System.IO.MemoryStream();
 			System.IO.StreamWriter pw = new System.IO.StreamWriter(sw);
-			DoTest(pw, false);
+			int MAX_DOCS = AtLeast(225);
+			DoTest(Random(), pw, false, MAX_DOCS);
 			pw.Close();
 			sw.Close();
 			System.String multiFileOutput = System.Text.ASCIIEncoding.ASCII.GetString(sw.ToArray());
@@ -73,7 +74,7 @@ namespace Lucene.Net
 			
 			sw = new System.IO.MemoryStream();
 			pw = new System.IO.StreamWriter(sw);
-			DoTest(pw, true);
+			DoTest(Random(), pw, true, MAX_DOCS);
 			pw.Close();
 			sw.Close();
 			System.String singleFileOutput = System.Text.ASCIIEncoding.ASCII.GetString(sw.ToArray());
@@ -82,57 +83,63 @@ namespace Lucene.Net
 		}
 		
 		
-		private void  DoTest(System.IO.StreamWriter out_Renamed, bool useCompoundFiles)
+		private void  DoTest(Random random,System.IO.StreamWriter out_Renamed, bool useCompoundFiles, int MAX_DOCS)
 		{
-			Directory directory = new RAMDirectory();
-			Analyzer analyzer = new SimpleAnalyzer();
-			IndexWriter writer = new IndexWriter(directory, analyzer, true, IndexWriter.MaxFieldLength.LIMITED);
-			
-			writer.UseCompoundFile = useCompoundFiles;
-			
-			int MAX_DOCS = 225;
-			
+			Directory directory = NewDirectory();
+			Analyzer analyzer = new MockAnalyzer(random);
+			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer);
+			MergePolicy mp = conf.GetMergePolicy();
+			mp.SetNoCFSRatio(useCompoundFiles ? 1.0 : 0.0);
+			IndexWriter writer = new IndexWriter(directory, conf);
+			if (VERBOSE)
+			{
+				System.Console.Out.WriteLine("TEST: now build index MAX_DOCS=" + MAX_DOCS);
+			}
 			for (int j = 0; j < MAX_DOCS; j++)
 			{
 				Document d = new Document();
-				d.Add(new Field(PRIORITY_FIELD, HIGH_PRIORITY, Field.Store.YES, Field.Index.ANALYZED));
-				d.Add(new Field(ID_FIELD, System.Convert.ToString(j), Field.Store.YES, Field.Index.ANALYZED));
+				d.Add(NewTextField(PRIORITY_FIELD, HIGH_PRIORITY, Field.Store.YES));
+				d.Add(NewTextField(ID_FIELD, Sharpen.Extensions.ToString(j), Field.Store.YES));
 				writer.AddDocument(d);
 			}
 			writer.Close();
 			
 			// try a search without OR
-			Searcher searcher = new IndexSearcher(directory, true);
-			
-			QueryParser parser = new QueryParser(Util.Version.LUCENE_CURRENT, PRIORITY_FIELD, analyzer);
-			
-			Query query = parser.Parse(HIGH_PRIORITY);
-			out_Renamed.WriteLine("Query: " + query.ToString(PRIORITY_FIELD));
-			
+			IndexReader reader = DirectoryReader.Open(directory);
+			IndexSearcher searcher = NewSearcher(reader);
+			Query query = new TermQuery(new Term(PRIORITY_FIELD, HIGH_PRIORITY));
+			@out.WriteLine("Query: " + query.ToString(PRIORITY_FIELD));
+			if (VERBOSE)
+			{
+				System.Console.Out.WriteLine("TEST: search query=" + query);
+			}
+			Sort sort = new Sort(SortField.FIELD_SCORE, new SortField(ID_FIELD, SortField.Type
+				.INT));
 			ScoreDoc[] hits = searcher.Search(query, null, MAX_DOCS).ScoreDocs;
 			PrintHits(out_Renamed, hits, searcher);
 			CheckHits(hits, MAX_DOCS, searcher);
 			
-			searcher.Close();
 			
 			// try a new search with OR
-		    searcher = new IndexSearcher(directory, true);
+			searcher = NewSearcher(reader);
 			hits = null;
-			
-			parser = new QueryParser(Util.Version.LUCENE_CURRENT, PRIORITY_FIELD, analyzer);
-			
-			query = parser.Parse(HIGH_PRIORITY + " OR " + MED_PRIORITY);
+			BooleanQuery booleanQuery = new BooleanQuery();
+			booleanQuery.Add(new TermQuery(new Term(PRIORITY_FIELD, HIGH_PRIORITY)), BooleanClause.Occur
+				.SHOULD);
+			booleanQuery.Add(new TermQuery(new Term(PRIORITY_FIELD, MED_PRIORITY)), BooleanClause.Occur
+				.SHOULD);
 			out_Renamed.WriteLine("Query: " + query.ToString(PRIORITY_FIELD));
 			
-			hits = searcher.Search(query, null, MAX_DOCS).ScoreDocs;
+			hits = searcher.Search(booleanQuery, null, MAX_DOCS, sort).scoreDocs;
 			PrintHits(out_Renamed, hits, searcher);
 			CheckHits(hits, MAX_DOCS, searcher);
 			
-			searcher.Close();
+			reader.Close();
+			directory.Close();
 		}
 		
 		
-		private void  PrintHits(System.IO.StreamWriter out_Renamed, ScoreDoc[] hits, Searcher searcher)
+		private void  PrintHits(System.IO.StreamWriter out_Renamed, ScoreDoc[] hits, IndexSearcher searcher)
 		{
 			out_Renamed.WriteLine(hits.Length + " total results\n");
 			for (int i = 0; i < hits.Length; i++)
@@ -145,7 +152,7 @@ namespace Lucene.Net
 			}
 		}
 		
-		private void  CheckHits(ScoreDoc[] hits, int expectedCount, Searcher searcher)
+		private void  CheckHits(ScoreDoc[] hits, int expectedCount, IndexSearcher searcher)
 		{
 			Assert.AreEqual(expectedCount, hits.Length, "total results");
 			for (int i = 0; i < hits.Length; i++)

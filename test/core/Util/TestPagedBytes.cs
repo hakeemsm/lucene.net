@@ -84,6 +84,68 @@ namespace Lucene.Net.Test.Util
             }
         }
 
+		// Writes random byte/s into PagedBytes via
+		// .getDataOutput(), then verifies with
+		// PagedBytes.getDataInput(): 
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestDataInputOutput2()
+		{
+			Random random = Random();
+			for (int iter = 0; iter < 5 * RANDOM_MULTIPLIER; iter++)
+			{
+				int blockBits = TestUtil.NextInt(random, 1, 20);
+				int blockSize = 1 << blockBits;
+				PagedBytes p = new PagedBytes(blockBits);
+				DataOutput @out = p.GetDataOutput();
+				int numBytes = Random().Next(10000000);
+				byte[] answer = new byte[numBytes];
+				Random().NextBytes(answer);
+				int written = 0;
+				while (written < numBytes)
+				{
+					if (Random().Next(10) == 7)
+					{
+						@out.WriteByte(answer[written++]);
+					}
+					else
+					{
+						int chunk = Math.Min(Random().Next(1000), numBytes - written);
+						@out.WriteBytes(answer, written, chunk);
+						written += chunk;
+					}
+				}
+				PagedBytes.Reader reader = p.Freeze(random.NextBoolean());
+				DataInput @in = p.GetDataInput();
+				byte[] verify = new byte[numBytes];
+				int read = 0;
+				while (read < numBytes)
+				{
+					if (Random().Next(10) == 7)
+					{
+						verify[read++] = @in.ReadByte();
+					}
+					else
+					{
+						int chunk = Math.Min(Random().Next(1000), numBytes - read);
+						@in.ReadBytes(verify, read, chunk);
+						read += chunk;
+					}
+				}
+				NUnit.Framework.Assert.IsTrue(Arrays.Equals(answer, verify));
+				BytesRef slice = new BytesRef();
+				for (int iter2 = 0; iter2 < 100; iter2++)
+				{
+					int pos = random.Next(numBytes - 1);
+					int len = random.Next(Math.Min(blockSize + 1, numBytes - pos));
+					reader.FillSlice(slice, pos, len);
+					for (int byteUpto = 0; byteUpto < len; byteUpto++)
+					{
+						NUnit.Framework.Assert.AreEqual(answer[pos + byteUpto], slice.bytes[slice.offset 
+							+ byteUpto]);
+					}
+				}
+			}
+		}
         [Ignore] // memory hole
         [Test]
         public virtual void TestOverflow()

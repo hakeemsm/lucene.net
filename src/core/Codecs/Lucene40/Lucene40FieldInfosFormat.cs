@@ -25,18 +25,18 @@ namespace Lucene.Net.Codecs.Lucene40
         }
 
         /** Extension of field infos */
-        internal const String FIELD_INFOS_EXTENSION = "fnm";
+        public const String FIELD_INFOS_EXTENSION = "fnm";
 
-        internal const String CODEC_NAME = "Lucene40FieldInfos";
+        public const String CODEC_NAME = "Lucene40FieldInfos";
         internal const int FORMAT_START = 0;
-        internal const int FORMAT_CURRENT = FORMAT_START;
+        public const int FORMAT_CURRENT = FORMAT_START;
 
-        internal const sbyte IS_INDEXED = 0x1;
-        internal const sbyte STORE_TERMVECTOR = 0x2;
-        internal const sbyte STORE_OFFSETS_IN_POSTINGS = 0x4;
-        internal const sbyte OMIT_NORMS = 0x10;
-        internal const sbyte STORE_PAYLOADS = 0x20;
-        internal const sbyte OMIT_TERM_FREQ_AND_POSITIONS = 0x40;
-        internal const sbyte OMIT_POSITIONS = -128;
+        public const sbyte IS_INDEXED = 0x1;
+        public const sbyte STORE_TERMVECTOR = 0x2;
+        public const sbyte STORE_OFFSETS_IN_POSTINGS = 0x4;
+        public const sbyte OMIT_NORMS = 0x10;
+        public const sbyte STORE_PAYLOADS = 0x20;
+        public const sbyte OMIT_TERM_FREQ_AND_POSITIONS = 0x40;
+        public const sbyte OMIT_POSITIONS = -128;
     }
 }

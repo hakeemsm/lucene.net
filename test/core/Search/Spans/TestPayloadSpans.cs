@@ -1,92 +1,70 @@
-/* 
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+/*
+ * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
  * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using System;
+using System.Collections.Generic;
+using System.IO;
+using Lucene.Net.Analysis;
 using Lucene.Net.Analysis.Tokenattributes;
-using Lucene.Net.Support;
-using NUnit.Framework;
-
-using Analyzer = Lucene.Net.Analysis.Analyzer;
-using LowerCaseTokenizer = Lucene.Net.Analysis.LowerCaseTokenizer;
-using TokenFilter = Lucene.Net.Analysis.TokenFilter;
-using TokenStream = Lucene.Net.Analysis.TokenStream;
-using Document = Lucene.Net.Documents.Document;
-using Field = Lucene.Net.Documents.Field;
-using CorruptIndexException = Lucene.Net.Index.CorruptIndexException;
-using IndexReader = Lucene.Net.Index.IndexReader;
-using IndexWriter = Lucene.Net.Index.IndexWriter;
-using Payload = Lucene.Net.Index.Payload;
-using Term = Lucene.Net.Index.Term;
-using LockObtainFailedException = Lucene.Net.Store.LockObtainFailedException;
-using RAMDirectory = Lucene.Net.Store.RAMDirectory;
-using DefaultSimilarity = Lucene.Net.Search.DefaultSimilarity;
-using IndexSearcher = Lucene.Net.Search.IndexSearcher;
-using Similarity = Lucene.Net.Search.Similarity;
-using TermQuery = Lucene.Net.Search.TermQuery;
-using TopDocs = Lucene.Net.Search.TopDocs;
-using PayloadHelper = Lucene.Net.Search.Payloads.PayloadHelper;
-using PayloadSpanUtil = Lucene.Net.Search.Payloads.PayloadSpanUtil;
-using LuceneTestCase = Lucene.Net.Util.LuceneTestCase;
+using Lucene.Net.Document;
+using Lucene.Net.Index;
+using Lucene.Net.Search;
+using Lucene.Net.Search.Payloads;
+using Lucene.Net.Search.Similarities;
+using Lucene.Net.Search.Spans;
+using Lucene.Net.Store;
+using Lucene.Net.Util;
+using Sharpen;
 
 namespace Lucene.Net.Search.Spans
 {
-	
-    [TestFixture]
-	public class TestPayloadSpans:LuceneTestCase
+	public class TestPayloadSpans : LuceneTestCase
 	{
-		private const bool DEBUG = true;
 		private IndexSearcher searcher;
+
 		private Similarity similarity = new DefaultSimilarity();
+
 		protected internal IndexReader indexReader;
-						
-		[SetUp]
-		public override void  SetUp()
+
+		private IndexReader closeIndexReader;
+
+		private Directory directory;
+
+		/// <exception cref="System.Exception"></exception>
+		public override void SetUp()
 		{
 			base.SetUp();
 			PayloadHelper helper = new PayloadHelper();
-			searcher = helper.SetUp(similarity, 1000);
-			indexReader = searcher.IndexReader;
+			searcher = helper.SetUp(Random(), similarity, 1000);
+			indexReader = searcher.GetIndexReader();
 		}
-		
-		[Test]
-		public virtual void  TestSpanTermQuery()
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestSpanTermQuery()
 		{
 			SpanTermQuery stq;
-			Spans spans;
+			Lucene.Net.Search.Spans.Spans spans;
 			stq = new SpanTermQuery(new Term(PayloadHelper.FIELD, "seventy"));
-			spans = stq.GetSpans(indexReader);
-			Assert.IsTrue(spans != null, "spans is null and it shouldn't be");
+			spans = MultiSpansWrapper.Wrap(indexReader.GetContext(), stq);
+			NUnit.Framework.Assert.IsTrue("spans is null and it shouldn't be", spans != null);
 			CheckSpans(spans, 100, 1, 1, 1);
-			
 			stq = new SpanTermQuery(new Term(PayloadHelper.NO_PAYLOAD_FIELD, "seventy"));
-			spans = stq.GetSpans(indexReader);
-			Assert.IsTrue(spans != null, "spans is null and it shouldn't be");
+			spans = MultiSpansWrapper.Wrap(indexReader.GetContext(), stq);
+			NUnit.Framework.Assert.IsTrue("spans is null and it shouldn't be", spans != null);
 			CheckSpans(spans, 100, 0, 0, 0);
 		}
-		
-		[Test]
-		public virtual void  TestSpanFirst()
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestSpanFirst()
 		{
-			
 			SpanQuery match;
 			SpanFirstQuery sfq;
 			match = new SpanTermQuery(new Term(PayloadHelper.FIELD, "one"));
 			sfq = new SpanFirstQuery(match, 2);
-			Spans spans = sfq.GetSpans(indexReader);
+			Lucene.Net.Search.Spans.Spans spans = MultiSpansWrapper.Wrap(indexReader.GetContext
+				(), sfq);
 			CheckSpans(spans, 109, 1, 1, 1);
 			//Test more complicated subclause
 			SpanQuery[] clauses = new SpanQuery[2];
@@ -94,319 +72,297 @@ namespace Lucene.Net.Search.Spans
 			clauses[1] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "hundred"));
 			match = new SpanNearQuery(clauses, 0, true);
 			sfq = new SpanFirstQuery(match, 2);
-			CheckSpans(sfq.GetSpans(indexReader), 100, 2, 1, 1);
-			
+			CheckSpans(MultiSpansWrapper.Wrap(indexReader.GetContext(), sfq), 100, 2, 1, 1);
 			match = new SpanNearQuery(clauses, 0, false);
 			sfq = new SpanFirstQuery(match, 2);
-			CheckSpans(sfq.GetSpans(indexReader), 100, 2, 1, 1);
+			CheckSpans(MultiSpansWrapper.Wrap(indexReader.GetContext(), sfq), 100, 2, 1, 1);
 		}
-		
-		[Test]
-		public virtual void  TestSpanNot()
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestSpanNot()
 		{
 			SpanQuery[] clauses = new SpanQuery[2];
 			clauses[0] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "one"));
 			clauses[1] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "three"));
 			SpanQuery spq = new SpanNearQuery(clauses, 5, true);
-			SpanNotQuery snq = new SpanNotQuery(spq, new SpanTermQuery(new Term(PayloadHelper.FIELD, "two")));
-			CheckSpans(snq.GetSpans(GetSpanNotSearcher().IndexReader), 1, new int[]{2});
-		}
-		
-		public virtual IndexSearcher GetSpanNotSearcher()
-		{
-			RAMDirectory directory = new RAMDirectory();
-			PayloadAnalyzer analyzer = new PayloadAnalyzer(this);
-			IndexWriter writer = new IndexWriter(directory, analyzer, true, IndexWriter.MaxFieldLength.UNLIMITED);
-			writer.SetSimilarity(similarity);
-			
-			Document doc = new Document();
-			doc.Add(new Field(PayloadHelper.FIELD, "one two three one four three", Field.Store.YES, Field.Index.ANALYZED));
+			SpanNotQuery snq = new SpanNotQuery(spq, new SpanTermQuery(new Term(PayloadHelper
+				.FIELD, "two")));
+			Directory directory = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), directory, NewIndexWriterConfig
+				(TEST_VERSION_CURRENT, new TestPayloadSpans.PayloadAnalyzer(this)).SetSimilarity
+				(similarity));
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(NewTextField(PayloadHelper.FIELD, "one two three one four three", Field.Store
+				.YES));
 			writer.AddDocument(doc);
-			
+			IndexReader reader = writer.GetReader();
 			writer.Close();
-			
-			IndexSearcher searcher = new IndexSearcher(directory, true);
-			searcher.Similarity = similarity;
-			return searcher;
+			CheckSpans(MultiSpansWrapper.Wrap(reader.GetContext(), snq), 1, new int[] { 2 });
+			reader.Close();
+			directory.Close();
 		}
-		
-		[Test]
-		public virtual void  TestNestedSpans()
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestNestedSpans()
 		{
 			SpanTermQuery stq;
-			Spans spans;
+			Lucene.Net.Search.Spans.Spans spans;
 			IndexSearcher searcher = GetSearcher();
 			stq = new SpanTermQuery(new Term(PayloadHelper.FIELD, "mark"));
-			spans = stq.GetSpans(searcher.IndexReader);
-			Assert.IsTrue(spans != null, "spans is null and it shouldn't be");
+			spans = MultiSpansWrapper.Wrap(searcher.GetTopReaderContext(), stq);
+			NUnit.Framework.Assert.IsTrue("spans is null and it shouldn't be", spans != null);
 			CheckSpans(spans, 0, null);
-			
-			
 			SpanQuery[] clauses = new SpanQuery[3];
 			clauses[0] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "rr"));
 			clauses[1] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "yy"));
 			clauses[2] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "xx"));
 			SpanNearQuery spanNearQuery = new SpanNearQuery(clauses, 12, false);
-			
-			spans = spanNearQuery.GetSpans(searcher.IndexReader);
-			Assert.IsTrue(spans != null, "spans is null and it shouldn't be");
-			CheckSpans(spans, 2, new int[]{3, 3});
-			
-			
+			spans = MultiSpansWrapper.Wrap(searcher.GetTopReaderContext(), spanNearQuery);
+			NUnit.Framework.Assert.IsTrue("spans is null and it shouldn't be", spans != null);
+			CheckSpans(spans, 2, new int[] { 3, 3 });
 			clauses[0] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "xx"));
 			clauses[1] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "rr"));
 			clauses[2] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "yy"));
-			
 			spanNearQuery = new SpanNearQuery(clauses, 6, true);
-			
-			
-			spans = spanNearQuery.GetSpans(searcher.IndexReader);
-			Assert.IsTrue(spans != null, "spans is null and it shouldn't be");
-			CheckSpans(spans, 1, new int[]{3});
-			
+			spans = MultiSpansWrapper.Wrap(searcher.GetTopReaderContext(), spanNearQuery);
+			NUnit.Framework.Assert.IsTrue("spans is null and it shouldn't be", spans != null);
+			CheckSpans(spans, 1, new int[] { 3 });
 			clauses = new SpanQuery[2];
-			
 			clauses[0] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "xx"));
 			clauses[1] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "rr"));
-			
 			spanNearQuery = new SpanNearQuery(clauses, 6, true);
-			
 			// xx within 6 of rr
-			
 			SpanQuery[] clauses2 = new SpanQuery[2];
-			
 			clauses2[0] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "yy"));
 			clauses2[1] = spanNearQuery;
-			
 			SpanNearQuery nestedSpanNearQuery = new SpanNearQuery(clauses2, 6, false);
-			
 			// yy within 6 of xx within 6 of rr
-			
-			spans = nestedSpanNearQuery.GetSpans(searcher.IndexReader);
-			Assert.IsTrue(spans != null, "spans is null and it shouldn't be");
-			CheckSpans(spans, 2, new int[]{3, 3});
+			spans = MultiSpansWrapper.Wrap(searcher.GetTopReaderContext(), nestedSpanNearQuery
+				);
+			NUnit.Framework.Assert.IsTrue("spans is null and it shouldn't be", spans != null);
+			CheckSpans(spans, 2, new int[] { 3, 3 });
+			closeIndexReader.Close();
+			directory.Close();
 		}
-		
-		[Test]
-		public virtual void  TestFirstClauseWithoutPayload()
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestFirstClauseWithoutPayload()
 		{
-			Spans spans;
+			Lucene.Net.Search.Spans.Spans spans;
 			IndexSearcher searcher = GetSearcher();
-			
 			SpanQuery[] clauses = new SpanQuery[3];
 			clauses[0] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "nopayload"));
 			clauses[1] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "qq"));
 			clauses[2] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "ss"));
-			
 			SpanNearQuery spanNearQuery = new SpanNearQuery(clauses, 6, true);
-			
 			SpanQuery[] clauses2 = new SpanQuery[2];
-			
 			clauses2[0] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "pp"));
 			clauses2[1] = spanNearQuery;
-			
 			SpanNearQuery snq = new SpanNearQuery(clauses2, 6, false);
-			
 			SpanQuery[] clauses3 = new SpanQuery[2];
-			
 			clauses3[0] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "np"));
 			clauses3[1] = snq;
-			
 			SpanNearQuery nestedSpanNearQuery = new SpanNearQuery(clauses3, 6, false);
-			
-			spans = nestedSpanNearQuery.GetSpans(searcher.IndexReader);
-			Assert.IsTrue(spans != null, "spans is null and it shouldn't be");
-			CheckSpans(spans, 1, new int[]{3});
+			spans = MultiSpansWrapper.Wrap(searcher.GetTopReaderContext(), nestedSpanNearQuery
+				);
+			NUnit.Framework.Assert.IsTrue("spans is null and it shouldn't be", spans != null);
+			CheckSpans(spans, 1, new int[] { 3 });
+			closeIndexReader.Close();
+			directory.Close();
 		}
-		
-		[Test]
-		public virtual void  TestHeavilyNestedSpanQuery()
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestHeavilyNestedSpanQuery()
 		{
-			Spans spans;
+			Lucene.Net.Search.Spans.Spans spans;
 			IndexSearcher searcher = GetSearcher();
-			
 			SpanQuery[] clauses = new SpanQuery[3];
 			clauses[0] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "one"));
 			clauses[1] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "two"));
 			clauses[2] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "three"));
-			
 			SpanNearQuery spanNearQuery = new SpanNearQuery(clauses, 5, true);
-			
 			clauses = new SpanQuery[3];
 			clauses[0] = spanNearQuery;
 			clauses[1] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "five"));
 			clauses[2] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "six"));
-			
 			SpanNearQuery spanNearQuery2 = new SpanNearQuery(clauses, 6, true);
-			
 			SpanQuery[] clauses2 = new SpanQuery[2];
 			clauses2[0] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "eleven"));
 			clauses2[1] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "ten"));
 			SpanNearQuery spanNearQuery3 = new SpanNearQuery(clauses2, 2, false);
-			
 			SpanQuery[] clauses3 = new SpanQuery[3];
 			clauses3[0] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "nine"));
 			clauses3[1] = spanNearQuery2;
 			clauses3[2] = spanNearQuery3;
-			
 			SpanNearQuery nestedSpanNearQuery = new SpanNearQuery(clauses3, 6, false);
-			
-			spans = nestedSpanNearQuery.GetSpans(searcher.IndexReader);
-			Assert.IsTrue(spans != null, "spans is null and it shouldn't be");
-			CheckSpans(spans, 2, new int[]{8, 8});
-		}
-		
-		[Test]
-		public virtual void  TestShrinkToAfterShortestMatch()
-		{
-			RAMDirectory directory = new RAMDirectory();
-			IndexWriter writer = new IndexWriter(directory, new TestPayloadAnalyzer(this), IndexWriter.MaxFieldLength.LIMITED);
-			Document doc = new Document();
-			doc.Add(new Field("content", new System.IO.StreamReader( new System.IO.MemoryStream( System.Text.Encoding.ASCII.GetBytes( "a b c d e f g h i j a k")))));
-			writer.AddDocument(doc);
-			writer.Close();
-			
-			IndexSearcher is_Renamed = new IndexSearcher(directory, true);
-			
-			SpanTermQuery stq1 = new SpanTermQuery(new Term("content", "a"));
-			SpanTermQuery stq2 = new SpanTermQuery(new Term("content", "k"));
-			SpanQuery[] sqs = new SpanQuery[]{stq1, stq2};
-			SpanNearQuery snq = new SpanNearQuery(sqs, 1, true);
-			Spans spans = snq.GetSpans(is_Renamed.IndexReader);
-			
-			TopDocs topDocs = is_Renamed.Search(snq, 1);
-			System.Collections.Hashtable payloadSet = new System.Collections.Hashtable();
-			for (int i = 0; i < topDocs.ScoreDocs.Length; i++)
-			{
-				while (spans.Next())
-				{
-					System.Collections.Generic.ICollection<byte[]> payloads = spans.GetPayload();
-					
-					for (System.Collections.IEnumerator it = payloads.GetEnumerator(); it.MoveNext(); )
-					{
-						CollectionsHelper.AddIfNotContains(payloadSet, new System.String(System.Text.UTF8Encoding.UTF8.GetChars((byte[]) it.Current)));
-					}
-				}
-			}
-			Assert.AreEqual(2, payloadSet.Count);
-			Assert.IsTrue(payloadSet.Contains("a:Noise:10"));
-			Assert.IsTrue(payloadSet.Contains("k:Noise:11"));
-		}
-		
-		[Test]
-		public virtual void  TestShrinkToAfterShortestMatch2()
-		{
-			RAMDirectory directory = new RAMDirectory();
-			IndexWriter writer = new IndexWriter(directory, new TestPayloadAnalyzer(this), IndexWriter.MaxFieldLength.LIMITED);
-			Document doc = new Document();
-            doc.Add(new Field("content", new System.IO.StreamReader(new System.IO.MemoryStream(System.Text.Encoding.ASCII.GetBytes("a b a d k f a h i k a k")))));
-			writer.AddDocument(doc);
-			writer.Close();
-			
-			IndexSearcher is_Renamed = new IndexSearcher(directory, true);
-			
-			SpanTermQuery stq1 = new SpanTermQuery(new Term("content", "a"));
-			SpanTermQuery stq2 = new SpanTermQuery(new Term("content", "k"));
-			SpanQuery[] sqs = new SpanQuery[]{stq1, stq2};
-			SpanNearQuery snq = new SpanNearQuery(sqs, 0, true);
-			Spans spans = snq.GetSpans(is_Renamed.IndexReader);
-			
-			TopDocs topDocs = is_Renamed.Search(snq, 1);
-			System.Collections.Hashtable payloadSet = new System.Collections.Hashtable();
-			for (int i = 0; i < topDocs.ScoreDocs.Length; i++)
-			{
-				while (spans.Next())
-				{
-					System.Collections.Generic.ICollection<byte[]> payloads = spans.GetPayload();
-					for (System.Collections.IEnumerator it = payloads.GetEnumerator(); it.MoveNext(); )
-					{
-						CollectionsHelper.AddIfNotContains(payloadSet, new System.String(System.Text.UTF8Encoding.UTF8.GetChars((byte[]) it.Current)));
-					}
-				}
-			}
-			Assert.AreEqual(2, payloadSet.Count);
-			Assert.IsTrue(payloadSet.Contains("a:Noise:10"));
-			Assert.IsTrue(payloadSet.Contains("k:Noise:11"));
+			spans = MultiSpansWrapper.Wrap(searcher.GetTopReaderContext(), nestedSpanNearQuery
+				);
+			NUnit.Framework.Assert.IsTrue("spans is null and it shouldn't be", spans != null);
+			CheckSpans(spans, 2, new int[] { 8, 8 });
+			closeIndexReader.Close();
+			directory.Close();
 		}
 
-        [Test]
-        public virtual void TestShrinkToAfterShortestMatch3()
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestShrinkToAfterShortestMatch()
 		{
-			RAMDirectory directory = new RAMDirectory();
-			IndexWriter writer = new IndexWriter(directory, new TestPayloadAnalyzer(this), IndexWriter.MaxFieldLength.LIMITED);
-			Document doc = new Document();
-            doc.Add(new Field("content", new System.IO.StreamReader(new System.IO.MemoryStream(System.Text.Encoding.ASCII.GetBytes("j k a l f k k p a t a k l k t a")))));
+			Directory directory = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), directory, NewIndexWriterConfig
+				(TEST_VERSION_CURRENT, new TestPayloadSpans.TestPayloadAnalyzer(this)));
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(new TextField("content", new StringReader("a b c d e f g h i j a k")));
 			writer.AddDocument(doc);
+			IndexReader reader = writer.GetReader();
+			IndexSearcher @is = NewSearcher(reader);
 			writer.Close();
-			
-			IndexSearcher is_Renamed = new IndexSearcher(directory, true);
-			
 			SpanTermQuery stq1 = new SpanTermQuery(new Term("content", "a"));
 			SpanTermQuery stq2 = new SpanTermQuery(new Term("content", "k"));
-			SpanQuery[] sqs = new SpanQuery[]{stq1, stq2};
-			SpanNearQuery snq = new SpanNearQuery(sqs, 0, true);
-			Spans spans = snq.GetSpans(is_Renamed.IndexReader);
-			
-			TopDocs topDocs = is_Renamed.Search(snq, 1);
-			System.Collections.Hashtable payloadSet = new System.Collections.Hashtable();
-			for (int i = 0; i < topDocs.ScoreDocs.Length; i++)
+			SpanQuery[] sqs = new SpanQuery[] { stq1, stq2 };
+			SpanNearQuery snq = new SpanNearQuery(sqs, 1, true);
+			Lucene.Net.Search.Spans.Spans spans = MultiSpansWrapper.Wrap(@is.GetTopReaderContext
+				(), snq);
+			TopDocs topDocs = @is.Search(snq, 1);
+			ICollection<string> payloadSet = new HashSet<string>();
+			for (int i = 0; i < topDocs.scoreDocs.Length; i++)
 			{
 				while (spans.Next())
 				{
-					System.Collections.Generic.ICollection<byte[]> payloads = spans.GetPayload();
-					
-					for (System.Collections.IEnumerator it = payloads.GetEnumerator(); it.MoveNext(); )
+					ICollection<byte[]> payloads = spans.GetPayload();
+					foreach (byte[] payload in payloads)
 					{
-						CollectionsHelper.AddIfNotContains(payloadSet, new System.String(System.Text.UTF8Encoding.UTF8.GetChars((byte[]) it.Current)));
+						payloadSet.AddItem(new string(payload, StandardCharsets.UTF_8));
 					}
 				}
 			}
-			Assert.AreEqual(2, payloadSet.Count);
-			if (DEBUG)
+			NUnit.Framework.Assert.AreEqual(2, payloadSet.Count);
+			NUnit.Framework.Assert.IsTrue(payloadSet.Contains("a:Noise:10"));
+			NUnit.Framework.Assert.IsTrue(payloadSet.Contains("k:Noise:11"));
+			reader.Close();
+			directory.Close();
+		}
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestShrinkToAfterShortestMatch2()
+		{
+			Directory directory = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), directory, NewIndexWriterConfig
+				(TEST_VERSION_CURRENT, new TestPayloadSpans.TestPayloadAnalyzer(this)));
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(new TextField("content", new StringReader("a b a d k f a h i k a k")));
+			writer.AddDocument(doc);
+			IndexReader reader = writer.GetReader();
+			IndexSearcher @is = NewSearcher(reader);
+			writer.Close();
+			SpanTermQuery stq1 = new SpanTermQuery(new Term("content", "a"));
+			SpanTermQuery stq2 = new SpanTermQuery(new Term("content", "k"));
+			SpanQuery[] sqs = new SpanQuery[] { stq1, stq2 };
+			SpanNearQuery snq = new SpanNearQuery(sqs, 0, true);
+			Lucene.Net.Search.Spans.Spans spans = MultiSpansWrapper.Wrap(@is.GetTopReaderContext
+				(), snq);
+			TopDocs topDocs = @is.Search(snq, 1);
+			ICollection<string> payloadSet = new HashSet<string>();
+			for (int i = 0; i < topDocs.scoreDocs.Length; i++)
 			{
-				System.Collections.IEnumerator pit = payloadSet.GetEnumerator();
-				while (pit.MoveNext())
+				while (spans.Next())
 				{
-					System.Console.Out.WriteLine("match:" + pit.Current);
+					ICollection<byte[]> payloads = spans.GetPayload();
+					foreach (byte[] payload in payloads)
+					{
+						payloadSet.AddItem(new string(payload, StandardCharsets.UTF_8));
+					}
 				}
 			}
-			Assert.IsTrue(payloadSet.Contains("a:Noise:10"));
-			Assert.IsTrue(payloadSet.Contains("k:Noise:11"));
+			NUnit.Framework.Assert.AreEqual(2, payloadSet.Count);
+			NUnit.Framework.Assert.IsTrue(payloadSet.Contains("a:Noise:10"));
+			NUnit.Framework.Assert.IsTrue(payloadSet.Contains("k:Noise:11"));
+			reader.Close();
+			directory.Close();
 		}
-		
-		[Test]
-		public virtual void  TestPayloadSpanUtil()
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestShrinkToAfterShortestMatch3()
 		{
-			RAMDirectory directory = new RAMDirectory();
-			PayloadAnalyzer analyzer = new PayloadAnalyzer(this);
-			IndexWriter writer = new IndexWriter(directory, analyzer, true, IndexWriter.MaxFieldLength.UNLIMITED);
-			writer.SetSimilarity(similarity);
-			Document doc = new Document();
-			doc.Add(new Field(PayloadHelper.FIELD, "xx rr yy mm  pp", Field.Store.YES, Field.Index.ANALYZED));
+			Directory directory = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), directory, NewIndexWriterConfig
+				(TEST_VERSION_CURRENT, new TestPayloadSpans.TestPayloadAnalyzer(this)));
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(new TextField("content", new StringReader("j k a l f k k p a t a k l k t a"
+				)));
 			writer.AddDocument(doc);
-			
+			IndexReader reader = writer.GetReader();
+			IndexSearcher @is = NewSearcher(reader);
 			writer.Close();
-			
-			IndexSearcher searcher = new IndexSearcher(directory, true);
-			
-			IndexReader reader = searcher.IndexReader;
-			PayloadSpanUtil psu = new PayloadSpanUtil(reader);
-			
-			System.Collections.Generic.ICollection<byte[]> payloads = psu.GetPayloadsForQuery(new TermQuery(new Term(PayloadHelper.FIELD, "rr")));
-			if (DEBUG)
-				System.Console.Out.WriteLine("Num payloads:" + payloads.Count);
-			System.Collections.IEnumerator it = payloads.GetEnumerator();
-			while (it.MoveNext())
+			SpanTermQuery stq1 = new SpanTermQuery(new Term("content", "a"));
+			SpanTermQuery stq2 = new SpanTermQuery(new Term("content", "k"));
+			SpanQuery[] sqs = new SpanQuery[] { stq1, stq2 };
+			SpanNearQuery snq = new SpanNearQuery(sqs, 0, true);
+			Lucene.Net.Search.Spans.Spans spans = MultiSpansWrapper.Wrap(@is.GetTopReaderContext
+				(), snq);
+			TopDocs topDocs = @is.Search(snq, 1);
+			ICollection<string> payloadSet = new HashSet<string>();
+			for (int i = 0; i < topDocs.scoreDocs.Length; i++)
 			{
-				byte[] bytes = (byte[]) it.Current;
-				if (DEBUG)
-					System.Console.Out.WriteLine(new System.String(System.Text.UTF8Encoding.UTF8.GetChars(bytes)));
+				while (spans.Next())
+				{
+					ICollection<byte[]> payloads = spans.GetPayload();
+					foreach (byte[] payload in payloads)
+					{
+						payloadSet.AddItem(new string(payload, StandardCharsets.UTF_8));
+					}
+				}
 			}
+			NUnit.Framework.Assert.AreEqual(2, payloadSet.Count);
+			if (VERBOSE)
+			{
+				foreach (string payload in payloadSet)
+				{
+					System.Console.Out.WriteLine("match:" + payload);
+				}
+			}
+			NUnit.Framework.Assert.IsTrue(payloadSet.Contains("a:Noise:10"));
+			NUnit.Framework.Assert.IsTrue(payloadSet.Contains("k:Noise:11"));
+			reader.Close();
+			directory.Close();
 		}
-		
-		private void  CheckSpans(Spans spans, int expectedNumSpans, int expectedNumPayloads, int expectedPayloadLength, int expectedFirstByte)
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestPayloadSpanUtil()
 		{
-			Assert.IsTrue(spans != null, "spans is null and it shouldn't be");
+			Directory directory = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), directory, NewIndexWriterConfig
+				(TEST_VERSION_CURRENT, new TestPayloadSpans.PayloadAnalyzer(this)).SetSimilarity
+				(similarity));
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(NewTextField(PayloadHelper.FIELD, "xx rr yy mm  pp", Field.Store.YES));
+			writer.AddDocument(doc);
+			IndexReader reader = writer.GetReader();
+			writer.Close();
+			IndexSearcher searcher = NewSearcher(reader);
+			PayloadSpanUtil psu = new PayloadSpanUtil(searcher.GetTopReaderContext());
+			ICollection<byte[]> payloads = psu.GetPayloadsForQuery(new TermQuery(new Term(PayloadHelper
+				.FIELD, "rr")));
+			if (VERBOSE)
+			{
+				System.Console.Out.WriteLine("Num payloads:" + payloads.Count);
+				foreach (byte[] bytes in payloads)
+				{
+					System.Console.Out.WriteLine(new string(bytes, StandardCharsets.UTF_8));
+				}
+			}
+			reader.Close();
+			directory.Close();
+		}
+
+		/// <exception cref="System.IO.IOException"></exception>
+		private void CheckSpans(Lucene.Net.Search.Spans.Spans spans, int expectedNumSpans
+			, int expectedNumPayloads, int expectedPayloadLength, int expectedFirstByte)
+		{
+			NUnit.Framework.Assert.IsTrue("spans is null and it shouldn't be", spans != null);
 			//each position match should have a span associated with it, since there is just one underlying term query, there should
 			//only be one entry in the span
 			int seen = 0;
@@ -415,202 +371,189 @@ namespace Lucene.Net.Search.Spans
 				//if we expect payloads, then isPayloadAvailable should be true
 				if (expectedNumPayloads > 0)
 				{
-					Assert.IsTrue(spans.IsPayloadAvailable() == true, "isPayloadAvailable is not returning the correct value: " + spans.IsPayloadAvailable() + " and it should be: " + (expectedNumPayloads > 0));
+					NUnit.Framework.Assert.IsTrue("isPayloadAvailable is not returning the correct value: "
+						 + spans.IsPayloadAvailable() + " and it should be: " + (expectedNumPayloads > 0
+						), spans.IsPayloadAvailable() == true);
 				}
 				else
 				{
-					Assert.IsTrue(spans.IsPayloadAvailable() == false, "isPayloadAvailable should be false");
+					NUnit.Framework.Assert.IsTrue("isPayloadAvailable should be false", spans.IsPayloadAvailable
+						() == false);
 				}
 				//See payload helper, for the PayloadHelper.FIELD field, there is a single byte payload at every token
 				if (spans.IsPayloadAvailable())
 				{
-					System.Collections.Generic.ICollection<byte[]> payload = spans.GetPayload();
-					Assert.IsTrue(payload.Count == expectedNumPayloads, "payload Size: " + payload.Count + " is not: " + expectedNumPayloads);
-					for (System.Collections.IEnumerator iterator = payload.GetEnumerator(); iterator.MoveNext(); )
+					ICollection<byte[]> payload = spans.GetPayload();
+					NUnit.Framework.Assert.IsTrue("payload Size: " + payload.Count + " is not: " + expectedNumPayloads
+						, payload.Count == expectedNumPayloads);
+					foreach (byte[] thePayload in payload)
 					{
-						byte[] thePayload = (byte[]) iterator.Current;
-						Assert.IsTrue(thePayload.Length == expectedPayloadLength, "payload[0] Size: " + thePayload.Length + " is not: " + expectedPayloadLength);
-						Assert.IsTrue(thePayload[0] == expectedFirstByte, thePayload[0] + " does not equal: " + expectedFirstByte);
+						NUnit.Framework.Assert.IsTrue("payload[0] Size: " + thePayload.Length + " is not: "
+							 + expectedPayloadLength, thePayload.Length == expectedPayloadLength);
+						NUnit.Framework.Assert.IsTrue(thePayload[0] + " does not equal: " + expectedFirstByte
+							, thePayload[0] == expectedFirstByte);
 					}
 				}
 				seen++;
 			}
-			Assert.IsTrue(seen == expectedNumSpans, seen + " does not equal: " + expectedNumSpans);
+			NUnit.Framework.Assert.IsTrue(seen + " does not equal: " + expectedNumSpans, seen
+				 == expectedNumSpans);
 		}
-		
+
+		/// <exception cref="System.Exception"></exception>
 		private IndexSearcher GetSearcher()
 		{
-			RAMDirectory directory = new RAMDirectory();
-			PayloadAnalyzer analyzer = new PayloadAnalyzer(this);
-			System.String[] docs = new System.String[]{"xx rr yy mm  pp", "xx yy mm rr pp", "nopayload qq ss pp np", "one two three four five six seven eight nine ten eleven", "nine one two three four five six seven eight eleven ten"};
-			IndexWriter writer = new IndexWriter(directory, analyzer, true, IndexWriter.MaxFieldLength.UNLIMITED);
-			
-			writer.SetSimilarity(similarity);
-			
-			Document doc = null;
+			directory = NewDirectory();
+			string[] docs = new string[] { "xx rr yy mm  pp", "xx yy mm rr pp", "nopayload qq ss pp np"
+				, "one two three four five six seven eight nine ten eleven", "nine one two three four five six seven eight eleven ten"
+				 };
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), directory, NewIndexWriterConfig
+				(TEST_VERSION_CURRENT, new TestPayloadSpans.PayloadAnalyzer(this)).SetSimilarity
+				(similarity));
+			Lucene.Net.Document.Document doc = null;
 			for (int i = 0; i < docs.Length; i++)
 			{
-				doc = new Document();
-				System.String docText = docs[i];
-				doc.Add(new Field(PayloadHelper.FIELD, docText, Field.Store.YES, Field.Index.ANALYZED));
+				doc = new Lucene.Net.Document.Document();
+				string docText = docs[i];
+				doc.Add(NewTextField(PayloadHelper.FIELD, docText, Field.Store.YES));
 				writer.AddDocument(doc);
 			}
-			
+			closeIndexReader = writer.GetReader();
 			writer.Close();
-			
-			IndexSearcher searcher = new IndexSearcher(directory, true);
+			IndexSearcher searcher = NewSearcher(closeIndexReader);
 			return searcher;
 		}
-		
-		private void  CheckSpans(Spans spans, int numSpans, int[] numPayloads)
+
+		/// <exception cref="System.IO.IOException"></exception>
+		private void CheckSpans(Lucene.Net.Search.Spans.Spans spans, int numSpans, 
+			int[] numPayloads)
 		{
 			int cnt = 0;
-			
 			while (spans.Next() == true)
 			{
-				if (DEBUG)
+				if (VERBOSE)
+				{
 					System.Console.Out.WriteLine("\nSpans Dump --");
+				}
 				if (spans.IsPayloadAvailable())
 				{
-					System.Collections.Generic.ICollection<byte[]> payload = spans.GetPayload();
-					if (DEBUG)
-						System.Console.Out.WriteLine("payloads for span:" + payload.Count);
-					System.Collections.IEnumerator it = payload.GetEnumerator();
-					while (it.MoveNext())
+					ICollection<byte[]> payload = spans.GetPayload();
+					if (VERBOSE)
 					{
-						byte[] bytes = (byte[]) it.Current;
-						if (DEBUG)
-							System.Console.Out.WriteLine("doc:" + spans.Doc() + " s:" + spans.Start() + " e:" + spans.End() + " " + new System.String(System.Text.UTF8Encoding.UTF8.GetChars(bytes)));
+						System.Console.Out.WriteLine("payloads for span:" + payload.Count);
+						foreach (byte[] bytes in payload)
+						{
+							System.Console.Out.WriteLine("doc:" + spans.Doc() + " s:" + spans.Start() + " e:"
+								 + spans.End() + " " + new string(bytes, StandardCharsets.UTF_8));
+						}
 					}
-					
-					Assert.AreEqual(numPayloads[cnt], payload.Count);
+					NUnit.Framework.Assert.AreEqual(numPayloads[cnt], payload.Count);
 				}
 				else
 				{
-					Assert.IsFalse(numPayloads.Length > 0 && numPayloads[cnt] > 0, "Expected spans:" + numPayloads[cnt] + " found: 0");
+					NUnit.Framework.Assert.IsFalse("Expected spans:" + numPayloads[cnt] + " found: 0"
+						, numPayloads.Length > 0 && numPayloads[cnt] > 0);
 				}
 				cnt++;
 			}
-			
-			Assert.AreEqual(numSpans, cnt);
+			NUnit.Framework.Assert.AreEqual(numSpans, cnt);
 		}
-		
-		internal class PayloadAnalyzer:Analyzer
+
+		internal sealed class PayloadAnalyzer : Analyzer
 		{
-			public PayloadAnalyzer(TestPayloadSpans enclosingInstance)
+			protected override Analyzer.TokenStreamComponents CreateComponents(string fieldName
+				, StreamReader reader)
 			{
-				InitBlock(enclosingInstance);
+				Tokenizer result = new MockTokenizer(reader, MockTokenizer.SIMPLE, true);
+				return new Analyzer.TokenStreamComponents(result, new TestPayloadSpans.PayloadFilter
+					(this, result));
 			}
-			private void  InitBlock(TestPayloadSpans enclosingInstance)
+
+			internal PayloadAnalyzer(TestPayloadSpans _enclosing)
 			{
-				this.enclosingInstance = enclosingInstance;
+				this._enclosing = _enclosing;
 			}
-			private TestPayloadSpans enclosingInstance;
-			public TestPayloadSpans Enclosing_Instance
-			{
-				get
-				{
-					return enclosingInstance;
-				}
-				
-			}
-			
-			public override TokenStream TokenStream(System.String fieldName, System.IO.TextReader reader)
-			{
-				TokenStream result = new LowerCaseTokenizer(reader);
-				result = new PayloadFilter(enclosingInstance, result, fieldName);
-				return result;
-			}
+
+			private readonly TestPayloadSpans _enclosing;
 		}
-		
-		internal class PayloadFilter:TokenFilter
+
+		internal sealed class PayloadFilter : TokenFilter
 		{
-			private void  InitBlock(TestPayloadSpans enclosingInstance)
-			{
-				this.enclosingInstance = enclosingInstance;
-			}
-			private TestPayloadSpans enclosingInstance;
-			public TestPayloadSpans Enclosing_Instance
-			{
-				get
-				{
-					return enclosingInstance;
-				}
-				
-			}
-			internal System.String fieldName;
-			internal int numSeen = 0;
-			internal System.Collections.Hashtable entities = new System.Collections.Hashtable();
-			internal System.Collections.Hashtable nopayload = new System.Collections.Hashtable();
+			internal ICollection<string> entities = new HashSet<string>();
+
+			internal ICollection<string> nopayload = new HashSet<string>();
+
 			internal int pos;
-			internal IPayloadAttribute payloadAtt;
-			internal ITermAttribute termAtt;
-			internal IPositionIncrementAttribute posIncrAtt;
-			
-			public PayloadFilter(TestPayloadSpans enclosingInstance, TokenStream input, System.String fieldName):base(input)
+
+			internal PayloadAttribute payloadAtt;
+
+			internal CharTermAttribute termAtt;
+
+			internal PositionIncrementAttribute posIncrAtt;
+
+			protected PayloadFilter(TestPayloadSpans _enclosing, TokenStream input) : base(input
+				)
 			{
-				InitBlock(enclosingInstance);
-				this.fieldName = fieldName;
-				pos = 0;
-				CollectionsHelper.AddIfNotContains(entities, "xx");
-				CollectionsHelper.AddIfNotContains(entities, "one");
-				CollectionsHelper.AddIfNotContains(nopayload, "nopayload");
-				CollectionsHelper.AddIfNotContains(nopayload, "np");
-                termAtt = AddAttribute<ITermAttribute>();
-                posIncrAtt = AddAttribute<IPositionIncrementAttribute>();
-                payloadAtt = AddAttribute<IPayloadAttribute>();
+				this._enclosing = _enclosing;
+				this.pos = 0;
+				this.entities.AddItem("xx");
+				this.entities.AddItem("one");
+				this.nopayload.AddItem("nopayload");
+				this.nopayload.AddItem("np");
+				this.termAtt = this.AddAttribute<CharTermAttribute>();
+				this.posIncrAtt = this.AddAttribute<PositionIncrementAttribute>();
+				this.payloadAtt = this.AddAttribute<PayloadAttribute>();
 			}
-			
+
+			/// <exception cref="System.IO.IOException"></exception>
 			public override bool IncrementToken()
 			{
-				if (input.IncrementToken())
+				if (this.input.IncrementToken())
 				{
-					System.String token = new System.String(termAtt.TermBuffer(), 0, termAtt.TermLength());
-					
-					if (!nopayload.Contains(token))
+					string token = this.termAtt.ToString();
+					if (!this.nopayload.Contains(token))
 					{
-						if (entities.Contains(token))
+						if (this.entities.Contains(token))
 						{
-							payloadAtt.Payload = new Payload(System.Text.UTF8Encoding.UTF8.GetBytes(token + ":Entity:" + pos));
+							this.payloadAtt.SetPayload(new BytesRef(token + ":Entity:" + this.pos));
 						}
 						else
 						{
-							payloadAtt.Payload = new Payload(System.Text.UTF8Encoding.UTF8.GetBytes(token + ":Noise:" + pos));
+							this.payloadAtt.SetPayload(new BytesRef(token + ":Noise:" + this.pos));
 						}
 					}
-					pos += posIncrAtt.PositionIncrement;
+					this.pos += this.posIncrAtt.GetPositionIncrement();
 					return true;
 				}
 				return false;
 			}
+
+			/// <exception cref="System.IO.IOException"></exception>
+			public override void Reset()
+			{
+				base.Reset();
+				this.pos = 0;
+			}
+
+			private readonly TestPayloadSpans _enclosing;
 		}
-		
-		public class TestPayloadAnalyzer:Analyzer
+
+		public sealed class TestPayloadAnalyzer : Analyzer
 		{
-			public TestPayloadAnalyzer(TestPayloadSpans enclosingInstance)
+			protected override Analyzer.TokenStreamComponents CreateComponents(string fieldName
+				, StreamReader reader)
 			{
-				InitBlock(enclosingInstance);
+				Tokenizer result = new MockTokenizer(reader, MockTokenizer.SIMPLE, true);
+				return new Analyzer.TokenStreamComponents(result, new TestPayloadSpans.PayloadFilter
+					(this, result));
 			}
-			private void  InitBlock(TestPayloadSpans enclosingInstance)
+
+			internal TestPayloadAnalyzer(TestPayloadSpans _enclosing)
 			{
-				this.enclosingInstance = enclosingInstance;
+				this._enclosing = _enclosing;
 			}
-			private TestPayloadSpans enclosingInstance;
-			public TestPayloadSpans Enclosing_Instance
-			{
-				get
-				{
-					return enclosingInstance;
-				}
-				
-			}
-			
-			public override TokenStream TokenStream(System.String fieldName, System.IO.TextReader reader)
-			{
-				TokenStream result = new LowerCaseTokenizer(reader);
-				result = new PayloadFilter(enclosingInstance, result, fieldName);
-				return result;
-			}
+
+			private readonly TestPayloadSpans _enclosing;
 		}
 	}
 }

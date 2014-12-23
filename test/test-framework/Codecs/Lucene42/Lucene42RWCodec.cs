@@ -1,15 +1,4 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
-using Org.Apache.Lucene.Codecs;
-using Lucene.Net.Codecs.Lucene42;
-using Org.Apache.Lucene.Util;
-using Sharpen;
-
-namespace Lucene.Net.Codecs.Lucene42
+namespace Lucene.Net.Codecs.Lucene42.TestFramework
 {
 	/// <summary>
 	/// Read-write version of
@@ -20,45 +9,38 @@ namespace Lucene.Net.Codecs.Lucene42
 	{
 		private static readonly DocValuesFormat dv = new Lucene42RWDocValuesFormat();
 
-		private static readonly Lucene.Net.Codecs.NormsFormat norms = new Lucene42NormsFormat
-			();
+		private static readonly NormsFormat norms = new Lucene42NormsFormat();
 
-		private sealed class _Lucene42FieldInfosFormat_37 : Lucene42FieldInfosFormat
+		private sealed class Lucene42FieldInfosFormatInner : Lucene42FieldInfosFormat
 		{
-			public _Lucene42FieldInfosFormat_37()
+		    
+			public override FieldInfosWriter FieldInfosWriter
 			{
-			}
-
-			/// <exception cref="System.IO.IOException"></exception>
-			public override FieldInfosWriter GetFieldInfosWriter()
-			{
-				if (!LuceneTestCase.OLD_FORMAT_IMPERSONATION_IS_ACTIVE)
-				{
-					return base.GetFieldInfosWriter();
-				}
-				else
-				{
-					return new Lucene42FieldInfosWriter();
-				}
+			    get
+			    {
+			        return !LuceneTestCase.OLD_FORMAT_IMPERSONATION_IS_ACTIVE ? 
+                            base.FieldInfosWriter : 
+                            new Lucene42FieldInfosWriter();
+			    }
 			}
 		}
 
 		private readonly Lucene.Net.Codecs.FieldInfosFormat fieldInfosFormat = new 
-			_Lucene42FieldInfosFormat_37();
+			Lucene42FieldInfosFormatInner();
 
 		public override DocValuesFormat GetDocValuesFormatForField(string field)
 		{
 			return dv;
 		}
 
-		public override Lucene.Net.Codecs.NormsFormat NormsFormat()
+		public override NormsFormat NormsFormat
 		{
-			return norms;
+		    get { return norms; }
 		}
 
-		public override Lucene.Net.Codecs.FieldInfosFormat FieldInfosFormat()
+		public override FieldInfosFormat FieldInfosFormat
 		{
-			return fieldInfosFormat;
+		    get { return fieldInfosFormat; }
 		}
 	}
 }

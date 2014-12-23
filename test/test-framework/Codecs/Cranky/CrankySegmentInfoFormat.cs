@@ -1,39 +1,35 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
+using System;
 using System.IO;
-using Org.Apache.Lucene.Codecs;
-using Lucene.Net.Codecs.Cranky;
-using Org.Apache.Lucene.Index;
-using Org.Apache.Lucene.Store;
-using Sharpen;
+using Lucene.Net.Codecs;
+using Lucene.Net.Index;
+using Lucene.Net.Store;
+using Directory = System.IO.Directory;
 
-namespace Lucene.Net.Codecs.Cranky
+namespace Lucene.Net.Codecs.Cranky.TestFramework
 {
 	internal class CrankySegmentInfoFormat : SegmentInfoFormat
 	{
-		internal readonly SegmentInfoFormat delegate_;
+		internal readonly SegmentInfoFormat segFormat;
 
 		internal readonly Random random;
 
-		internal CrankySegmentInfoFormat(SegmentInfoFormat delegate_, Random random)
+		internal CrankySegmentInfoFormat(SegmentInfoFormat del, Random random)
 		{
-			this.delegate_ = delegate_;
+			this.segFormat = del;
 			this.random = random;
 		}
 
-		public override SegmentInfoReader GetSegmentInfoReader()
+		public override SegmentInfoReader SegmentInfoReader
 		{
-			return delegate_.GetSegmentInfoReader();
+		    get { return segFormat.SegmentInfoReader; }
 		}
 
-		public override SegmentInfoWriter GetSegmentInfoWriter()
+		public override SegmentInfoWriter SegmentInfoWriter
 		{
-			return new CrankySegmentInfoFormat.CrankySegmentInfoWriter(delegate_.GetSegmentInfoWriter
-				(), random);
+		    get
+		    {
+		        return new CrankySegmentInfoWriter(segFormat.SegmentInfoWriter, random);
+		    }
 		}
 
 		internal class CrankySegmentInfoWriter : SegmentInfoWriter
@@ -48,8 +44,8 @@ namespace Lucene.Net.Codecs.Cranky
 				this.random = random;
 			}
 
-			/// <exception cref="System.IO.IOException"></exception>
-			public override void Write(Directory dir, SegmentInfo info, FieldInfos fis, IOContext
+			
+			public override void Write(Lucene.Net.Store.Directory dir, SegmentInfo info, FieldInfos fis, IOContext
 				 ioContext)
 			{
 				if (random.Next(100) == 0)

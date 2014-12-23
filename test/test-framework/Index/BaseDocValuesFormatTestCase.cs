@@ -6,6 +6,8 @@
 
 using System;
 using System.Collections.Generic;
+using Lucene.Net.Documents;
+using Lucene.Net.Util;
 using NUnit.Framework;
 using Lucene.Net.TestFramework.Analysis;
 using Lucene.NetCodecs;

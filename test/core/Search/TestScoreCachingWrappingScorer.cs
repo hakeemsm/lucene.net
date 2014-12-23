@@ -34,7 +34,7 @@ namespace Lucene.Net.Search
 			private int idx = 0;
 			private int doc = - 1;
 			
-			public SimpleScorer():base(null)
+			protected SimpleScorer(Weight weight) : base(weight)
 			{
 			}
 			
@@ -47,6 +47,10 @@ namespace Lucene.Net.Search
 			    return idx == scores.Length ? float.NaN : scores[idx++];
 			}
 
+			public override int Freq()
+			{
+				return 1;
+			}
 			public override int DocID()
 			{
 				return doc;
@@ -61,6 +65,10 @@ namespace Lucene.Net.Search
 			{
 				doc = target;
 				return doc < scores.Length?doc:NO_MORE_DOCS;
+			}
+			public override long Cost()
+			{
+				return scores.Length;
 			}
 		}
 		
@@ -91,7 +99,7 @@ namespace Lucene.Net.Search
 				++idx;
 			}
 			
-			public override void  SetNextReader(IndexReader reader, int docBase)
+			public override void SetNextReader(AtomicReaderContext context)
 			{
 			}
 			
@@ -111,9 +119,16 @@ namespace Lucene.Net.Search
         [Test]
 		public virtual void  TestGetScores()
 		{
-			
-			Scorer s = new SimpleScorer();
-			ScoreCachingCollector scc = new ScoreCachingCollector(scores.Length);
+			Directory directory = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), directory);
+			writer.Commit();
+			IndexReader ir = writer.GetReader();
+			writer.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			Weight fake = new TermQuery(new Term("fake", "weight")).CreateWeight(searcher);
+			Scorer s = new TestScoreCachingWrappingScorer.SimpleScorer(fake);
+			TestScoreCachingWrappingScorer.ScoreCachingCollector scc = new TestScoreCachingWrappingScorer.ScoreCachingCollector
+				(scores.Length);
 			scc.SetScorer(s);
 			
 			// We need to iterate on the scorer so that its doc() advances.
@@ -127,6 +142,8 @@ namespace Lucene.Net.Search
 			{
 				Assert.AreEqual(scores[i], scc.mscores[i], 0f);
 			}
+			ir.Close();
+			directory.Close();
 		}
 	}
 }

@@ -1,110 +1,70 @@
-/* 
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+/*
+ * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
  * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using System;
+using System.Collections.Generic;
 using System.IO;
-using Lucene.Net.Documents;
-using Lucene.Net.Support;
-using NUnit.Framework;
-
-using SimpleAnalyzer = Lucene.Net.Analysis.SimpleAnalyzer;
-using FileDocument = Lucene.Net.Demo.FileDocument;
-using Document = Lucene.Net.Documents.Document;
-using Directory = Lucene.Net.Store.Directory;
-using FSDirectory = Lucene.Net.Store.FSDirectory;
-using LuceneTestCase = Lucene.Net.Util.LuceneTestCase;
+using Lucene.Net.Analysis;
+using Lucene.Net.Codecs;
+using Lucene.Net.Document;
+using Lucene.Net.Index;
+using Lucene.Net.Search;
+using Lucene.Net.Store;
+using Lucene.Net.Util;
+using Sharpen;
 
 namespace Lucene.Net.Index
 {
-	
-	
 	/// <summary>JUnit adaptation of an older test case DocTest.</summary>
-	[TestFixture]
-	public class TestDoc:LuceneTestCase
+	/// <remarks>JUnit adaptation of an older test case DocTest.</remarks>
+	public class TestDoc : LuceneTestCase
 	{
-		
-		/// <summary>Main for running test case by itself. </summary>
-		[STAThread]
-		public static void  Main(System.String[] args)
-		{
-			// TestRunner.run(new TestSuite(typeof(TestDoc))); // {{Aroush-2.9}} how is this done in NUnit?
-		}
-		
-		
-		private System.IO.DirectoryInfo workDir;
-		private System.IO.DirectoryInfo indexDir;
-		private System.Collections.ArrayList files;
-		
-		
-		/// <summary>Set the test case. This test case needs
+		private FilePath workDir;
+
+		private FilePath indexDir;
+
+		private List<FilePath> files;
+
+		/// <summary>Set the test case.</summary>
+		/// <remarks>
+		/// Set the test case. This test case needs
 		/// a few text files created in the current working directory.
-		/// </summary>
-		[SetUp]
-		public override void  SetUp()
+		/// </remarks>
+		/// <exception cref="System.Exception"></exception>
+		public override void SetUp()
 		{
 			base.SetUp();
-			workDir = new System.IO.DirectoryInfo(System.IO.Path.Combine(Path.GetTempPath(), "TestDoc"));
-			System.IO.Directory.CreateDirectory(workDir.FullName);
-			
-			indexDir = new System.IO.DirectoryInfo(System.IO.Path.Combine(workDir.FullName, "testIndex"));
-			System.IO.Directory.CreateDirectory(indexDir.FullName);
-			
-			Directory directory = FSDirectory.Open(indexDir);
+			if (VERBOSE)
+			{
+				System.Console.Out.WriteLine("TEST: setUp");
+			}
+			workDir = CreateTempDir("TestDoc");
+			workDir.Mkdirs();
+			indexDir = CreateTempDir("testIndex");
+			indexDir.Mkdirs();
+			Directory directory = NewFSDirectory(indexDir);
 			directory.Close();
-			
-			files = new System.Collections.ArrayList();
-			files.Add(CreateOutput("test.txt", "This is the first test file"));
-			
-			files.Add(CreateOutput("test2.txt", "This is the second test file"));
+			files = new List<FilePath>();
+			files.AddItem(CreateOutput("test.txt", "This is the first test file"));
+			files.AddItem(CreateOutput("test2.txt", "This is the second test file"));
 		}
-		
-		private System.IO.DirectoryInfo CreateOutput(System.String name, System.String text)
+
+		/// <exception cref="System.IO.IOException"></exception>
+		private FilePath CreateOutput(string name, string text)
 		{
-			System.IO.StreamWriter fw = null;
-			System.IO.StreamWriter pw = null;
-			
+			TextWriter fw = null;
+			PrintWriter pw = null;
 			try
 			{
-				System.IO.DirectoryInfo f = new System.IO.DirectoryInfo(System.IO.Path.Combine(workDir.FullName, name));
-				bool tmpBool;
-				if (System.IO.File.Exists(f.FullName))
-					tmpBool = true;
-				else
-					tmpBool = System.IO.Directory.Exists(f.FullName);
-				if (tmpBool)
+				FilePath f = new FilePath(workDir, name);
+				if (f.Exists())
 				{
-					bool tmpBool2;
-					if (System.IO.File.Exists(f.FullName))
-					{
-						System.IO.File.Delete(f.FullName);
-						tmpBool2 = true;
-					}
-					else if (System.IO.Directory.Exists(f.FullName))
-					{
-						System.IO.Directory.Delete(f.FullName);
-						tmpBool2 = true;
-					}
-					else
-						tmpBool2 = false;
-					bool generatedAux = tmpBool2;
+					f.Delete();
 				}
-				
-				fw = new System.IO.StreamWriter(f.FullName, false, System.Text.Encoding.Default);
-				pw = new System.IO.StreamWriter(fw.BaseStream, fw.Encoding);
+				fw = new OutputStreamWriter(new FileOutputStream(f), StandardCharsets.UTF_8);
+				pw = new PrintWriter(fw);
 				pw.WriteLine(text);
 				return f;
 			}
@@ -114,150 +74,172 @@ namespace Lucene.Net.Index
 				{
 					pw.Close();
 				}
+				if (fw != null)
+				{
+					fw.Close();
+				}
 			}
 		}
-		
-		
-		/// <summary>This test executes a number of merges and compares the contents of
+
+		/// <summary>
+		/// This test executes a number of merges and compares the contents of
 		/// the segments created when using compound file or not using one.
-		/// 
+		/// </summary>
+		/// <remarks>
+		/// This test executes a number of merges and compares the contents of
+		/// the segments created when using compound file or not using one.
 		/// TODO: the original test used to print the segment contents to System.out
 		/// for visual validation. To have the same effect, a new method
 		/// checkSegment(String name, ...) should be created that would
-		/// assert various things about the segment.
-		/// </summary>
-		[Test]
-		public virtual void  TestIndexAndMerge()
+		/// //HM:revisit
+		/// //assert various things about the segment.
+		/// </remarks>
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestIndexAndMerge()
 		{
-			System.IO.MemoryStream sw = new System.IO.MemoryStream();
-			System.IO.StreamWriter out_Renamed = new System.IO.StreamWriter(sw);
-			
-			Directory directory = FSDirectory.Open(indexDir);
-			IndexWriter writer = new IndexWriter(directory, new SimpleAnalyzer(), true, IndexWriter.MaxFieldLength.LIMITED);
-			
-			SegmentInfo si1 = IndexDoc(writer, "test.txt");
-			PrintSegment(out_Renamed, si1);
-			
-			SegmentInfo si2 = IndexDoc(writer, "test2.txt");
-			PrintSegment(out_Renamed, si2);
+			StringWriter sw = new StringWriter();
+			PrintWriter @out = new PrintWriter(sw, true);
+			Directory directory = NewFSDirectory(indexDir, null);
+			if (directory is MockDirectoryWrapper)
+			{
+				// We create unreferenced files (we don't even write
+				// a segments file):
+				((MockDirectoryWrapper)directory).SetAssertNoUnrefencedFilesOnClose(false);
+			}
+			IndexWriter writer = new IndexWriter(directory, ((IndexWriterConfig)NewIndexWriterConfig
+				(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetOpenMode(IndexWriterConfig.OpenMode
+				.CREATE).SetMaxBufferedDocs(-1)).SetMergePolicy(NewLogMergePolicy(10)));
+			SegmentCommitInfo si1 = IndexDoc(writer, "test.txt");
+			PrintSegment(@out, si1);
+			SegmentCommitInfo si2 = IndexDoc(writer, "test2.txt");
+			PrintSegment(@out, si2);
 			writer.Close();
-			
-			SegmentInfo siMerge = Merge(si1, si2, "merge", false);
-			PrintSegment(out_Renamed, siMerge);
-			
-			SegmentInfo siMerge2 = Merge(si1, si2, "merge2", false);
-			PrintSegment(out_Renamed, siMerge2);
-			
-			SegmentInfo siMerge3 = Merge(siMerge, siMerge2, "merge3", false);
-			PrintSegment(out_Renamed, siMerge3);
-			
+			SegmentCommitInfo siMerge = Merge(directory, si1, si2, "_merge", false);
+			PrintSegment(@out, siMerge);
+			SegmentCommitInfo siMerge2 = Merge(directory, si1, si2, "_merge2", false);
+			PrintSegment(@out, siMerge2);
+			SegmentCommitInfo siMerge3 = Merge(directory, siMerge, siMerge2, "_merge3", false
+				);
+			PrintSegment(@out, siMerge3);
 			directory.Close();
-			out_Renamed.Close();
+			@out.Close();
 			sw.Close();
-			System.String multiFileOutput = System.Text.ASCIIEncoding.ASCII.GetString(sw.ToArray());
+			string multiFileOutput = sw.ToString();
 			//System.out.println(multiFileOutput);
-			
-			sw = new System.IO.MemoryStream();
-			out_Renamed = new System.IO.StreamWriter(sw);
-			
-			directory = FSDirectory.Open(indexDir);
-			writer = new IndexWriter(directory, new SimpleAnalyzer(), true, IndexWriter.MaxFieldLength.LIMITED);
-			
+			sw = new StringWriter();
+			@out = new PrintWriter(sw, true);
+			directory = NewFSDirectory(indexDir, null);
+			if (directory is MockDirectoryWrapper)
+			{
+				// We create unreferenced files (we don't even write
+				// a segments file):
+				((MockDirectoryWrapper)directory).SetAssertNoUnrefencedFilesOnClose(false);
+			}
+			writer = new IndexWriter(directory, ((IndexWriterConfig)NewIndexWriterConfig(TEST_VERSION_CURRENT
+				, new MockAnalyzer(Random())).SetOpenMode(IndexWriterConfig.OpenMode.CREATE).SetMaxBufferedDocs
+				(-1)).SetMergePolicy(NewLogMergePolicy(10)));
 			si1 = IndexDoc(writer, "test.txt");
-			PrintSegment(out_Renamed, si1);
-			
+			PrintSegment(@out, si1);
 			si2 = IndexDoc(writer, "test2.txt");
-			PrintSegment(out_Renamed, si2);
+			PrintSegment(@out, si2);
 			writer.Close();
-			
-			siMerge = Merge(si1, si2, "merge", true);
-			PrintSegment(out_Renamed, siMerge);
-			
-			siMerge2 = Merge(si1, si2, "merge2", true);
-			PrintSegment(out_Renamed, siMerge2);
-			
-			siMerge3 = Merge(siMerge, siMerge2, "merge3", true);
-			PrintSegment(out_Renamed, siMerge3);
-			
+			siMerge = Merge(directory, si1, si2, "_merge", true);
+			PrintSegment(@out, siMerge);
+			siMerge2 = Merge(directory, si1, si2, "_merge2", true);
+			PrintSegment(@out, siMerge2);
+			siMerge3 = Merge(directory, siMerge, siMerge2, "_merge3", true);
+			PrintSegment(@out, siMerge3);
 			directory.Close();
-			out_Renamed.Close();
+			@out.Close();
 			sw.Close();
-			System.String singleFileOutput = System.Text.ASCIIEncoding.ASCII.GetString(sw.ToArray());
-			
-			Assert.AreEqual(multiFileOutput, singleFileOutput);
+			string singleFileOutput = sw.ToString();
+			NUnit.Framework.Assert.AreEqual(multiFileOutput, singleFileOutput);
 		}
-		
-		private SegmentInfo IndexDoc(IndexWriter writer, System.String fileName)
+
+		/// <exception cref="System.Exception"></exception>
+		private SegmentCommitInfo IndexDoc(IndexWriter writer, string fileName)
 		{
-			System.IO.FileInfo file = new System.IO.FileInfo(System.IO.Path.Combine(workDir.FullName, fileName));
-			Document doc = FileDocument.Document(file);
-            doc.Add(new Field("contents", new System.IO.StreamReader(file.FullName)));
+			FilePath file = new FilePath(workDir, fileName);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			InputStreamReader @is = new InputStreamReader(new FileInputStream(file), StandardCharsets
+				.UTF_8);
+			doc.Add(new TextField("contents", @is));
 			writer.AddDocument(doc);
 			writer.Commit();
+			@is.Close();
 			return writer.NewestSegment();
 		}
-		
-		
-		private SegmentInfo Merge(SegmentInfo si1, SegmentInfo si2, System.String merged, bool useCompoundFile)
+
+		/// <exception cref="System.Exception"></exception>
+		private SegmentCommitInfo Merge(Directory dir, SegmentCommitInfo si1, SegmentCommitInfo
+			 si2, string merged, bool useCompoundFile)
 		{
-            SegmentReader r1 = SegmentReader.Get(true, si1, IndexReader.DEFAULT_TERMS_INDEX_DIVISOR);
-            SegmentReader r2 = SegmentReader.Get(true, si2, IndexReader.DEFAULT_TERMS_INDEX_DIVISOR);
-			
-			SegmentMerger merger = new SegmentMerger(si1.dir, merged);
-			
-			merger.Add(r1);
-			merger.Add(r2);
-			merger.Merge();
-			merger.CloseReaders();
-			
+			IOContext context = NewIOContext(Random());
+			SegmentReader r1 = new SegmentReader(si1, DirectoryReader.DEFAULT_TERMS_INDEX_DIVISOR
+				, context);
+			SegmentReader r2 = new SegmentReader(si2, DirectoryReader.DEFAULT_TERMS_INDEX_DIVISOR
+				, context);
+			Codec codec = Codec.GetDefault();
+			TrackingDirectoryWrapper trackingDir = new TrackingDirectoryWrapper(si1.info.dir);
+			SegmentInfo si = new SegmentInfo(si1.info.dir, Constants.LUCENE_MAIN_VERSION, merged
+				, -1, false, codec, null);
+			SegmentMerger merger = new SegmentMerger(Arrays.AsList<AtomicReader>(r1, r2), si, 
+				InfoStream.GetDefault(), trackingDir, IndexWriterConfig.DEFAULT_TERM_INDEX_INTERVAL
+				, MergeState.CheckAbort.NONE, new FieldInfos.FieldNumbers(), context, true);
+			MergeState mergeState = merger.Merge();
+			r1.Close();
+			r2.Close();
+			SegmentInfo info = new SegmentInfo(si1.info.dir, Constants.LUCENE_MAIN_VERSION, merged
+				, si1.info.GetDocCount() + si2.info.GetDocCount(), false, codec, null);
+			info.SetFiles(new HashSet<string>(trackingDir.GetCreatedFiles()));
 			if (useCompoundFile)
 			{
-				System.Collections.Generic.ICollection<string> filesToDelete = merger.CreateCompoundFile(merged + ".cfs");
-				for (System.Collections.IEnumerator iter = filesToDelete.GetEnumerator(); iter.MoveNext(); )
+				ICollection<string> filesToDelete = IndexWriter.CreateCompoundFile(InfoStream.GetDefault
+					(), dir, MergeState.CheckAbort.NONE, info, NewIOContext(Random()));
+				info.SetUseCompoundFile(true);
+				foreach (string fileToDelete in filesToDelete)
 				{
-					si1.dir.DeleteFile((System.String) iter.Current);
+					si1.info.dir.DeleteFile(fileToDelete);
 				}
 			}
-			
-			return new SegmentInfo(merged, si1.docCount + si2.docCount, si1.dir, useCompoundFile, true);
+			return new SegmentCommitInfo(info, 0, -1L, -1L);
 		}
-		
-		
-		private void  PrintSegment(System.IO.StreamWriter out_Renamed, SegmentInfo si)
+
+		/// <exception cref="System.Exception"></exception>
+		private void PrintSegment(PrintWriter @out, SegmentCommitInfo si)
 		{
-			SegmentReader reader = SegmentReader.Get(true, si, IndexReader.DEFAULT_TERMS_INDEX_DIVISOR);
-			
+			SegmentReader reader = new SegmentReader(si, DirectoryReader.DEFAULT_TERMS_INDEX_DIVISOR
+				, NewIOContext(Random()));
 			for (int i = 0; i < reader.NumDocs(); i++)
 			{
-				out_Renamed.WriteLine(reader.Document(i));
+				@out.WriteLine(reader.Document(i));
 			}
-			
-			TermEnum tis = reader.Terms();
-			while (tis.Next())
+			Fields fields = reader.Fields();
+			foreach (string field in fields)
 			{
-				out_Renamed.Write(tis.Term);
-				out_Renamed.WriteLine(" DF=" + tis.DocFreq());
-				
-				TermPositions positions = reader.TermPositions(tis.Term);
-				try
+				Terms terms = fields.Terms(field);
+				NUnit.Framework.Assert.IsNotNull(terms);
+				TermsEnum tis = terms.Iterator(null);
+				while (tis.Next() != null)
 				{
-					while (positions.Next())
+					@out.Write("  term=" + field + ":" + tis.Term());
+					@out.WriteLine("    DF=" + tis.DocFreq());
+					DocsAndPositionsEnum positions = tis.DocsAndPositions(reader.GetLiveDocs(), null);
+					while (positions.NextDoc() != DocIdSetIterator.NO_MORE_DOCS)
 					{
-						out_Renamed.Write(" doc=" + positions.Doc);
-						out_Renamed.Write(" TF=" + positions.Freq);
-						out_Renamed.Write(" pos=");
-						out_Renamed.Write(positions.NextPosition());
-						for (int j = 1; j < positions.Freq; j++)
-							out_Renamed.Write("," + positions.NextPosition());
-						out_Renamed.WriteLine("");
+						@out.Write(" doc=" + positions.DocID());
+						@out.Write(" TF=" + positions.Freq());
+						@out.Write(" pos=");
+						@out.Write(positions.NextPosition());
+						for (int j = 1; j < positions.Freq(); j++)
+						{
+							@out.Write("," + positions.NextPosition());
+						}
+						@out.WriteLine(string.Empty);
 					}
 				}
-				finally
-				{
-					positions.Close();
-				}
 			}
-			tis.Close();
 			reader.Close();
 		}
 	}

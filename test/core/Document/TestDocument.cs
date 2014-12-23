@@ -29,7 +29,7 @@ namespace Lucene.Net.Documents
 		internal System.String binaryVal2 = "this text will be also stored as a byte array in the index";
 
 	    [Test]
-	    public void testBinaryField()
+		public virtual void TestBinaryField()
 	    {
 	        Document doc = new Document();
 
@@ -83,7 +83,7 @@ namespace Lucene.Net.Documents
 	    /// </summary>
 	    /// <throws>  Exception on error </throws>
 	    [Test]
-	    public void testRemoveForNewDocument()
+		public virtual void TestRemoveForNewDocument()
 	    {
 	        Document doc = makeDocumentWithFields();
 	        assertEquals(8, doc.GetFields().size());
@@ -108,11 +108,13 @@ namespace Lucene.Net.Documents
 	        assertEquals(0, doc.GetFields().size());
 	        doc.RemoveFields("doesnotexists"); // removing non-existing fields is
 	        // siltenlty ignored
+			NUnit.Framework.Assert.AreEqual(2, doc.GetFields().Count);
+			doc.RemoveFields("indexed_not_tokenized");
 	        assertEquals(0, doc.GetFields().size());
 	    }
 
 	    [Test]
-        public void testConstructorExceptions()
+		public virtual void TestConstructorExceptions()
         {
             FieldType ft = new FieldType();
             ft.Stored = true;
@@ -148,7 +150,7 @@ namespace Lucene.Net.Documents
 		/// </summary>
 		/// <throws>  Exception on error </throws>
 		[Test]
-		public virtual void testGetValuesForNewDocument()
+		public virtual void TestGetValuesForNewDocument()
 		{
 			doAssert(makeDocumentWithFields(), false);
 		}
@@ -181,11 +183,42 @@ namespace Lucene.Net.Documents
 //	        dir.close();
 //	    }
 
-	    private Document makeDocumentWithFields()
+		public virtual void TestGetValues()
+		{
+			Lucene.Net.Document.Document doc = MakeDocumentWithFields();
+			NUnit.Framework.Assert.AreEqual(new string[] { "test1", "test2" }, doc.GetValues(
+				"keyword"));
+			NUnit.Framework.Assert.AreEqual(new string[] { "test1", "test2" }, doc.GetValues(
+				"text"));
+			NUnit.Framework.Assert.AreEqual(new string[] { "test1", "test2" }, doc.GetValues(
+				"unindexed"));
+			NUnit.Framework.Assert.AreEqual(new string[0], doc.GetValues("nope"));
+		}
+		public virtual void TestPositionIncrementMultiFields()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
+			writer.AddDocument(MakeDocumentWithFields());
+			IndexReader reader = writer.GetReader();
+			IndexSearcher searcher = NewSearcher(reader);
+			PhraseQuery query = new PhraseQuery();
+			query.Add(new Term("indexed_not_tokenized", "test1"));
+			query.Add(new Term("indexed_not_tokenized", "test2"));
+			ScoreDoc[] hits = searcher.Search(query, null, 1000).scoreDocs;
+			NUnit.Framework.Assert.AreEqual(1, hits.Length);
+			DoAssert(searcher.Doc(hits[0].doc), true);
+			writer.Close();
+			reader.Close();
+			dir.Close();
+		}
+		private Lucene.Net.Document.Document MakeDocumentWithFields()
 		{
             Document doc = new Document();
             FieldType stored = new FieldType();
             stored.Stored = true;
+			FieldType indexedNotTokenized = new FieldType();
+			indexedNotTokenized.SetIndexed(true);
+			indexedNotTokenized.SetTokenized(false);
             doc.Add(new StringField("keyword", "test1", Field.Store.YES));
             doc.Add(new StringField("keyword", "test2", Field.Store.YES));
             doc.Add(new TextField("text", "test1", Field.Store.YES));
@@ -196,10 +229,12 @@ namespace Lucene.Net.Documents
                 .Add(new TextField("unstored", "test1", Field.Store.NO));
             doc
                 .Add(new TextField("unstored", "test2", Field.Store.NO));
+			doc.Add(new Field("indexed_not_tokenized", "test1", indexedNotTokenized));
+			doc.Add(new Field("indexed_not_tokenized", "test2", indexedNotTokenized));
             return doc;
 		}
 
-        private void doAssert(Document doc, bool fromIndex)
+		private void DoAssert(Lucene.Net.Document.Document doc, bool fromIndex)
         {
             IIndexableField[] keywordFieldValues = doc.GetFields("keyword");
             IIndexableField[] textFieldValues = doc.GetFields("text");
@@ -272,5 +307,120 @@ namespace Lucene.Net.Documents
 //	        assertEquals("did not see all IDs", 7, result);
 //	    }
 
+		public virtual void TestInvalidFields()
+		{
+			try
+			{
+				new Field("foo", new MockTokenizer(new StringReader(string.Empty)), StringField.TYPE_STORED
+					);
+				NUnit.Framework.Assert.Fail("did not hit expected exc");
+			}
+			catch (ArgumentException)
+			{
+			}
+		}
+		public virtual void TestTransitionAPI()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter w = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(new Field("stored", "abc", Field.Store.YES, Field.Index.NO));
+			doc.Add(new Field("stored_indexed", "abc xyz", Field.Store.YES, Field.Index.NOT_ANALYZED
+				));
+			doc.Add(new Field("stored_tokenized", "abc xyz", Field.Store.YES, Field.Index.ANALYZED
+				));
+			doc.Add(new Field("indexed", "abc xyz", Field.Store.NO, Field.Index.NOT_ANALYZED)
+				);
+			doc.Add(new Field("tokenized", "abc xyz", Field.Store.NO, Field.Index.ANALYZED));
+			doc.Add(new Field("tokenized_reader", new StringReader("abc xyz")));
+			doc.Add(new Field("tokenized_tokenstream", w.w.GetAnalyzer().TokenStream("tokenized_tokenstream"
+				, new StringReader("abc xyz"))));
+			doc.Add(new Field("binary", new byte[10]));
+			doc.Add(new Field("tv", "abc xyz", Field.Store.NO, Field.Index.ANALYZED, Field.TermVector
+				.YES));
+			doc.Add(new Field("tv_pos", "abc xyz", Field.Store.NO, Field.Index.ANALYZED, Field.TermVector
+				.WITH_POSITIONS));
+			doc.Add(new Field("tv_off", "abc xyz", Field.Store.NO, Field.Index.ANALYZED, Field.TermVector
+				.WITH_OFFSETS));
+			doc.Add(new Field("tv_pos_off", "abc xyz", Field.Store.NO, Field.Index.ANALYZED, 
+				Field.TermVector.WITH_POSITIONS_OFFSETS));
+			w.AddDocument(doc);
+			IndexReader r = w.GetReader();
+			w.Close();
+			doc = r.Document(0);
+			// 4 stored fields
+			NUnit.Framework.Assert.AreEqual(4, doc.GetFields().Count);
+			NUnit.Framework.Assert.AreEqual("abc", doc.Get("stored"));
+			NUnit.Framework.Assert.AreEqual("abc xyz", doc.Get("stored_indexed"));
+			NUnit.Framework.Assert.AreEqual("abc xyz", doc.Get("stored_tokenized"));
+			BytesRef br = doc.GetBinaryValue("binary");
+			NUnit.Framework.Assert.IsNotNull(br);
+			NUnit.Framework.Assert.AreEqual(10, br.length);
+			IndexSearcher s = new IndexSearcher(r);
+			NUnit.Framework.Assert.AreEqual(1, s.Search(new TermQuery(new Term("stored_indexed"
+				, "abc xyz")), 1).totalHits);
+			NUnit.Framework.Assert.AreEqual(1, s.Search(new TermQuery(new Term("stored_tokenized"
+				, "abc")), 1).totalHits);
+			NUnit.Framework.Assert.AreEqual(1, s.Search(new TermQuery(new Term("stored_tokenized"
+				, "xyz")), 1).totalHits);
+			NUnit.Framework.Assert.AreEqual(1, s.Search(new TermQuery(new Term("indexed", "abc xyz"
+				)), 1).totalHits);
+			NUnit.Framework.Assert.AreEqual(1, s.Search(new TermQuery(new Term("tokenized", "abc"
+				)), 1).totalHits);
+			NUnit.Framework.Assert.AreEqual(1, s.Search(new TermQuery(new Term("tokenized", "xyz"
+				)), 1).totalHits);
+			NUnit.Framework.Assert.AreEqual(1, s.Search(new TermQuery(new Term("tokenized_reader"
+				, "abc")), 1).totalHits);
+			NUnit.Framework.Assert.AreEqual(1, s.Search(new TermQuery(new Term("tokenized_reader"
+				, "xyz")), 1).totalHits);
+			NUnit.Framework.Assert.AreEqual(1, s.Search(new TermQuery(new Term("tokenized_tokenstream"
+				, "abc")), 1).totalHits);
+			NUnit.Framework.Assert.AreEqual(1, s.Search(new TermQuery(new Term("tokenized_tokenstream"
+				, "xyz")), 1).totalHits);
+			foreach (string field in new string[] { "tv", "tv_pos", "tv_off", "tv_pos_off" })
+			{
+				Fields tvFields = r.GetTermVectors(0);
+				Terms tvs = tvFields.Terms(field);
+				NUnit.Framework.Assert.IsNotNull(tvs);
+				NUnit.Framework.Assert.AreEqual(2, tvs.Size());
+				TermsEnum tvsEnum = tvs.Iterator(null);
+				NUnit.Framework.Assert.AreEqual(new BytesRef("abc"), tvsEnum.Next());
+				DocsAndPositionsEnum dpEnum = tvsEnum.DocsAndPositions(null, null);
+				if (field.Equals("tv"))
+				{
+					NUnit.Framework.Assert.IsNull(dpEnum);
+				}
+				else
+				{
+					NUnit.Framework.Assert.IsNotNull(dpEnum);
+				}
+				NUnit.Framework.Assert.AreEqual(new BytesRef("xyz"), tvsEnum.Next());
+				NUnit.Framework.Assert.IsNull(tvsEnum.Next());
+			}
+			r.Close();
+			dir.Close();
+		}
+		public virtual void TestNumericFieldAsString()
+		{
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(new IntField("int", 5, Field.Store.YES));
+			NUnit.Framework.Assert.AreEqual("5", doc.Get("int"));
+			NUnit.Framework.Assert.IsNull(doc.Get("somethingElse"));
+			doc.Add(new IntField("int", 4, Field.Store.YES));
+			AssertArrayEquals(new string[] { "5", "4" }, doc.GetValues("int"));
+			Directory dir = NewDirectory();
+			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir);
+			iw.AddDocument(doc);
+			DirectoryReader ir = iw.GetReader();
+			Lucene.Net.Document.Document sdoc = ir.Document(0);
+			NUnit.Framework.Assert.AreEqual("5", sdoc.Get("int"));
+			NUnit.Framework.Assert.IsNull(sdoc.Get("somethingElse"));
+			AssertArrayEquals(new string[] { "5", "4" }, sdoc.GetValues("int"));
+			ir.Close();
+			iw.Close();
+			dir.Close();
+		}
 	}
 }

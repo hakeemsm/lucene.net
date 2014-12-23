@@ -1,20 +1,16 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using Lucene.Net.Codecs.TestFramework;
+using Lucene.Net.Index;
+using Lucene.Net.Store;
+using Lucene.Net.Support;
+using Lucene.Net.Util;
+using Lucene.Net.Util.Packed;
 using Org.Apache.Lucene.Codecs;
 using Lucene.Net.Codecs.Lucene40;
-using Org.Apache.Lucene.Index;
-using Org.Apache.Lucene.Store;
-using Org.Apache.Lucene.Util;
-using Org.Apache.Lucene.Util.Packed;
-using Sharpen;
 
-namespace Lucene.Net.Codecs.Lucene40
+namespace Lucene.Net.Codecs.Lucene40.TestFramework
 {
 	internal class Lucene40DocValuesWriter : DocValuesConsumer
 	{
@@ -38,19 +34,18 @@ namespace Lucene.Net.Codecs.Lucene40
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		public override void AddNumericField(FieldInfo field, Iterable<Number> values)
+		public override void AddNumericField(FieldInfo field, IEnumerable<long> values)
 		{
 			// examine the values to determine best type to use
 			long minValue = long.MaxValue;
 			long maxValue = long.MinValue;
-			foreach (Number n in values)
+			foreach (var n in values)
 			{
 				long v = n == null ? 0 : n;
 				minValue = Math.Min(minValue, v);
 				maxValue = Math.Max(maxValue, v);
 			}
-			string fileName = IndexFileNames.SegmentFileName(state.segmentInfo.name + "_" + Sharpen.Extensions.ToString
-				(field.number), segmentSuffix, "dat");
+            string fileName = IndexFileNames.SegmentFileName(state.segmentInfo.name + "_" + (field.number),segmentSuffix, "dat");
 			IndexOutput data = dir.CreateOutput(fileName, state.context);
 			bool success = false;
 			try
@@ -93,30 +88,26 @@ namespace Lucene.Net.Codecs.Lucene40
 				}
 				else
 				{
-					IOUtils.CloseWhileHandlingException(data);
+					IOUtils.CloseWhileHandlingException((IDisposable)data);
 				}
 			}
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		private void AddBytesField(FieldInfo field, IndexOutput output, Iterable<Number> 
-			values)
+		private void AddBytesField(FieldInfo field, IndexOutput output, IEnumerable<long> values)
 		{
-			field.PutAttribute(legacyKey, Lucene40FieldInfosReader.LegacyDocValuesType.FIXED_INTS_8
-				.ToString());
-			CodecUtil.WriteHeader(output, Lucene40DocValuesFormat.INTS_CODEC_NAME, Lucene40DocValuesFormat
-				.INTS_VERSION_CURRENT);
+			field.PutAttribute(legacyKey, Lucene40FieldInfosReader.LegacyDocValuesType.FIXED_INTS_8.ToString());
+			CodecUtil.WriteHeader(output, Lucene40DocValuesFormat.INTS_CODEC_NAME, Lucene40DocValuesFormat.INTS_VERSION_CURRENT);
 			output.WriteInt(1);
 			// size
-			foreach (Number n in values)
+			foreach (var n in values)
 			{
-				output.WriteByte(n == null ? 0 : n);
+				output.WriteByte((byte) (n == null ? 0 : n));
 			}
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		private void AddShortsField(FieldInfo field, IndexOutput output, Iterable<Number>
-			 values)
+		private void AddShortsField(FieldInfo field, IndexOutput output, IEnumerable<long> values)
 		{
 			field.PutAttribute(legacyKey, Lucene40FieldInfosReader.LegacyDocValuesType.FIXED_INTS_16
 				.ToString());
@@ -124,14 +115,14 @@ namespace Lucene.Net.Codecs.Lucene40
 				.INTS_VERSION_CURRENT);
 			output.WriteInt(2);
 			// size
-			foreach (Number n in values)
+			foreach (var n in values)
 			{
-				output.WriteShort(n == null ? 0 : n);
+				output.WriteShort((short) (n == null ? 0 : n));
 			}
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		private void AddIntsField(FieldInfo field, IndexOutput output, Iterable<Number> values
+		private void AddIntsField(FieldInfo field, IndexOutput output, IEnumerable<long> values
 			)
 		{
 			field.PutAttribute(legacyKey, Lucene40FieldInfosReader.LegacyDocValuesType.FIXED_INTS_32
@@ -140,15 +131,14 @@ namespace Lucene.Net.Codecs.Lucene40
 				.INTS_VERSION_CURRENT);
 			output.WriteInt(4);
 			// size
-			foreach (Number n in values)
+			foreach (var n in values)
 			{
-				output.WriteInt(n == null ? 0 : n);
+				output.WriteLong(n == null ? 0 : n);
 			}
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		private void AddVarIntsField(FieldInfo field, IndexOutput output, Iterable<Number
-			> values, long minValue, long maxValue)
+		private void AddVarIntsField(FieldInfo field, IndexOutput output, IEnumerable<long> values, long minValue, long maxValue)
 		{
 			field.PutAttribute(legacyKey, Lucene40FieldInfosReader.LegacyDocValuesType.VAR_INTS
 				.ToString());
@@ -159,7 +149,7 @@ namespace Lucene.Net.Codecs.Lucene40
 			{
 				// writes longs
 				output.WriteByte(Lucene40DocValuesFormat.VAR_INTS_FIXED_64);
-				foreach (Number n in values)
+				foreach (var n in values)
 				{
 					output.WriteLong(n == null ? 0 : n);
 				}
@@ -171,9 +161,8 @@ namespace Lucene.Net.Codecs.Lucene40
 				output.WriteLong(minValue);
 				output.WriteLong(0 - minValue);
 				// default value (representation of 0)
-				PackedInts.Writer writer = PackedInts.GetWriter(output, state.segmentInfo.GetDocCount
-					(), PackedInts.BitsRequired(delta), PackedInts.DEFAULT);
-				foreach (Number n in values)
+				PackedInts.Writer writer = PackedInts.GetWriter(output, state.segmentInfo.DocCount, PackedInts.BitsRequired(delta), PackedInts.DEFAULT);
+				foreach (var n in values)
 				{
 					long v = n == null ? 0 : n;
 					writer.Add(v - minValue);
@@ -183,7 +172,7 @@ namespace Lucene.Net.Codecs.Lucene40
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		public override void AddBinaryField(FieldInfo field, Iterable<BytesRef> values)
+		public override void AddBinaryField(FieldInfo field, IEnumerable<BytesRef> values)
 		{
 			// examine the values to determine best type to use
 			HashSet<BytesRef> uniqueValues = new HashSet<BytesRef>();
@@ -191,12 +180,13 @@ namespace Lucene.Net.Codecs.Lucene40
 			int maxLength = int.MinValue;
 			foreach (BytesRef b in values)
 			{
-				if (b == null)
+			    var b2 = b;
+				if (b2 == null)
 				{
-					b = new BytesRef();
+					b2 = new BytesRef();
 				}
 				// 4.0 doesnt distinguish
-				if (b.length > Lucene40DocValuesFormat.MAX_BINARY_FIELD_LENGTH)
+				if (b2.length > Lucene40DocValuesFormat.MAX_BINARY_FIELD_LENGTH)
 				{
 					throw new ArgumentException("DocValuesField \"" + field.name + "\" is too large, must be <= "
 						 + Lucene40DocValuesFormat.MAX_BINARY_FIELD_LENGTH);
@@ -205,7 +195,7 @@ namespace Lucene.Net.Codecs.Lucene40
 				maxLength = Math.Max(maxLength, b.length);
 				if (uniqueValues != null)
 				{
-					if (uniqueValues.AddItem(BytesRef.DeepCopyOf(b)))
+					if (uniqueValues.Add(BytesRef.DeepCopyOf(b)))
 					{
 						if (uniqueValues.Count > 256)
 						{
@@ -214,8 +204,8 @@ namespace Lucene.Net.Codecs.Lucene40
 					}
 				}
 			}
-			int maxDoc = state.segmentInfo.GetDocCount();
-			bool fixed = minLength == maxLength;
+			int maxDoc = state.segmentInfo.DocCount;
+			bool fixedLen = (minLength == maxLength);
 			bool dedup = uniqueValues != null && uniqueValues.Count * 2 < maxDoc;
 			if (dedup)
 			{
@@ -223,15 +213,15 @@ namespace Lucene.Net.Codecs.Lucene40
 				bool success = false;
 				IndexOutput data = null;
 				IndexOutput index = null;
-				string dataName = IndexFileNames.SegmentFileName(state.segmentInfo.name + "_" + Sharpen.Extensions.ToString
+				string dataName = IndexFileNames.SegmentFileName(state.segmentInfo.name + "_" + 
 					(field.number), segmentSuffix, "dat");
 				string indexName = IndexFileNames.SegmentFileName(state.segmentInfo.name + "_" + 
-					Sharpen.Extensions.ToString(field.number), segmentSuffix, "idx");
+					field.number, segmentSuffix, "idx");
 				try
 				{
 					data = dir.CreateOutput(dataName, state.context);
 					index = dir.CreateOutput(indexName, state.context);
-					if (fixed)
+					if (fixedLen)
 					{
 						AddFixedDerefBytesField(field, data, index, values, minLength);
 					}
@@ -249,18 +239,17 @@ namespace Lucene.Net.Codecs.Lucene40
 					}
 					else
 					{
-						IOUtils.CloseWhileHandlingException(data, index);
+						IOUtils.CloseWhileHandlingException((IDisposable)data, index);
 					}
 				}
 			}
 			else
 			{
 				// we dont deduplicate, just write values straight
-				if (fixed)
+				if (fixedLen)
 				{
 					// fixed byte[]
-					string fileName = IndexFileNames.SegmentFileName(state.segmentInfo.name + "_" + Sharpen.Extensions.ToString
-						(field.number), segmentSuffix, "dat");
+					string fileName = IndexFileNames.SegmentFileName(state.segmentInfo.name + "_" + (field.number), segmentSuffix, "dat");
 					IndexOutput data = dir.CreateOutput(fileName, state.context);
 					bool success = false;
 					try
@@ -276,7 +265,7 @@ namespace Lucene.Net.Codecs.Lucene40
 						}
 						else
 						{
-							IOUtils.CloseWhileHandlingException(data);
+							IOUtils.CloseWhileHandlingException((IDisposable)data);
 						}
 					}
 				}
@@ -286,10 +275,9 @@ namespace Lucene.Net.Codecs.Lucene40
 					bool success = false;
 					IndexOutput data = null;
 					IndexOutput index = null;
-					string dataName = IndexFileNames.SegmentFileName(state.segmentInfo.name + "_" + Sharpen.Extensions.ToString
-						(field.number), segmentSuffix, "dat");
+					string dataName = IndexFileNames.SegmentFileName(state.segmentInfo.name + "_" + (field.number), segmentSuffix, "dat");
 					string indexName = IndexFileNames.SegmentFileName(state.segmentInfo.name + "_" + 
-						Sharpen.Extensions.ToString(field.number), segmentSuffix, "idx");
+						(field.number), segmentSuffix, "idx");
 					try
 					{
 						data = dir.CreateOutput(dataName, state.context);
@@ -305,7 +293,7 @@ namespace Lucene.Net.Codecs.Lucene40
 						}
 						else
 						{
-							IOUtils.CloseWhileHandlingException(data, index);
+							IOUtils.CloseWhileHandlingException((IDisposable)data, index);
 						}
 					}
 				}
@@ -313,8 +301,7 @@ namespace Lucene.Net.Codecs.Lucene40
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		private void AddFixedStraightBytesField(FieldInfo field, IndexOutput output, Iterable
-			<BytesRef> values, int length)
+		private void AddFixedStraightBytesField(FieldInfo field, IndexOutput output, IEnumerable<BytesRef> values, int length)
 		{
 			field.PutAttribute(legacyKey, Lucene40FieldInfosReader.LegacyDocValuesType.BYTES_FIXED_STRAIGHT
 				.ToString());
@@ -333,7 +320,7 @@ namespace Lucene.Net.Codecs.Lucene40
 		// NOTE: 4.0 file format docs are crazy/wrong here...
 		/// <exception cref="System.IO.IOException"></exception>
 		private void AddVarStraightBytesField(FieldInfo field, IndexOutput data, IndexOutput
-			 index, Iterable<BytesRef> values)
+			 index, IEnumerable<BytesRef> values)
 		{
 			field.PutAttribute(legacyKey, Lucene40FieldInfosReader.LegacyDocValuesType.BYTES_VAR_STRAIGHT
 				.ToString());
@@ -341,7 +328,7 @@ namespace Lucene.Net.Codecs.Lucene40
 				, Lucene40DocValuesFormat.BYTES_VAR_STRAIGHT_VERSION_CURRENT);
 			CodecUtil.WriteHeader(index, Lucene40DocValuesFormat.BYTES_VAR_STRAIGHT_CODEC_NAME_IDX
 				, Lucene40DocValuesFormat.BYTES_VAR_STRAIGHT_VERSION_CURRENT);
-			long startPos = data.GetFilePointer();
+			long startPos = data.FilePointer;
 			foreach (BytesRef v in values)
 			{
 				if (v != null)
@@ -349,9 +336,9 @@ namespace Lucene.Net.Codecs.Lucene40
 					data.WriteBytes(v.bytes, v.offset, v.length);
 				}
 			}
-			long maxAddress = data.GetFilePointer() - startPos;
+			long maxAddress = data.FilePointer - startPos;
 			index.WriteVLong(maxAddress);
-			int maxDoc = state.segmentInfo.GetDocCount();
+			int maxDoc = state.segmentInfo.DocCount;
 			 
 			//assert maxDoc != Integer.MAX_VALUE; // unsupported by the 4.0 impl
 			PackedInts.Writer w = PackedInts.GetWriter(index, maxDoc + 1, PackedInts.BitsRequired
@@ -374,7 +361,7 @@ namespace Lucene.Net.Codecs.Lucene40
 
 		/// <exception cref="System.IO.IOException"></exception>
 		private void AddFixedDerefBytesField(FieldInfo field, IndexOutput data, IndexOutput
-			 index, Iterable<BytesRef> values, int length)
+			 index, IEnumerable<BytesRef> values, int length)
 		{
 			field.PutAttribute(legacyKey, Lucene40FieldInfosReader.LegacyDocValuesType.BYTES_FIXED_DEREF
 				.ToString());
@@ -383,10 +370,10 @@ namespace Lucene.Net.Codecs.Lucene40
 			CodecUtil.WriteHeader(index, Lucene40DocValuesFormat.BYTES_FIXED_DEREF_CODEC_NAME_IDX
 				, Lucene40DocValuesFormat.BYTES_FIXED_DEREF_VERSION_CURRENT);
 			// deduplicate
-			TreeSet<BytesRef> dictionary = new TreeSet<BytesRef>();
+			var dictionary = new IdentityHashSet<BytesRef>();
 			foreach (BytesRef v in values)
 			{
-				dictionary.AddItem(v == null ? new BytesRef() : BytesRef.DeepCopyOf(v));
+				dictionary.Add(v == null ? new BytesRef() : BytesRef.DeepCopyOf(v));
 			}
 			data.WriteInt(length);
 			foreach (BytesRef v_1 in dictionary)
@@ -397,16 +384,17 @@ namespace Lucene.Net.Codecs.Lucene40
 			 
 			//assert valueCount > 0;
 			index.WriteInt(valueCount);
-			int maxDoc = state.segmentInfo.GetDocCount();
+			int maxDoc = state.segmentInfo.DocCount;
 			PackedInts.Writer w = PackedInts.GetWriter(index, maxDoc, PackedInts.BitsRequired
 				(valueCount - 1), PackedInts.DEFAULT);
-			foreach (BytesRef v_2 in values)
+			foreach (BytesRef v2 in values)
 			{
-				if (v_2 == null)
+			    BytesRef val = v2;
+				if (val == null)
 				{
-					v_2 = new BytesRef();
+					val = new BytesRef();
 				}
-				int ord = dictionary.HeadSet(v_2).Count;
+				int ord = dictionary.Count(e => e.length<val.length); //.NET Port. is length the correct value to compare?
 				w.Add(ord);
 			}
 			w.Finish();
@@ -414,7 +402,7 @@ namespace Lucene.Net.Codecs.Lucene40
 
 		/// <exception cref="System.IO.IOException"></exception>
 		private void AddVarDerefBytesField(FieldInfo field, IndexOutput data, IndexOutput
-			 index, Iterable<BytesRef> values)
+			 index, IEnumerable<BytesRef> values)
 		{
 			field.PutAttribute(legacyKey, Lucene40FieldInfosReader.LegacyDocValuesType.BYTES_VAR_DEREF
 				.ToString());
@@ -423,29 +411,29 @@ namespace Lucene.Net.Codecs.Lucene40
 			CodecUtil.WriteHeader(index, Lucene40DocValuesFormat.BYTES_VAR_DEREF_CODEC_NAME_IDX
 				, Lucene40DocValuesFormat.BYTES_VAR_DEREF_VERSION_CURRENT);
 			// deduplicate
-			TreeSet<BytesRef> dictionary = new TreeSet<BytesRef>();
+			var dictionary = new IdentityHashSet<BytesRef>();
 			foreach (BytesRef v in values)
 			{
-				dictionary.AddItem(v == null ? new BytesRef() : BytesRef.DeepCopyOf(v));
+				dictionary.Add(v == null ? new BytesRef() : BytesRef.DeepCopyOf(v));
 			}
-			long startPosition = data.GetFilePointer();
+			long startPosition = data.FilePointer;
 			long currentAddress = 0;
 			Dictionary<BytesRef, long> valueToAddress = new Dictionary<BytesRef, long>();
-			foreach (BytesRef v_1 in dictionary)
+			foreach (BytesRef v2 in dictionary)
 			{
-				currentAddress = data.GetFilePointer() - startPosition;
-				valueToAddress.Put(v_1, currentAddress);
-				WriteVShort(data, v_1.length);
-				data.WriteBytes(v_1.bytes, v_1.offset, v_1.length);
+				currentAddress = data.FilePointer - startPosition;
+				valueToAddress[v2] = currentAddress;
+				WriteVShort(data, v2.length);
+				data.WriteBytes(v2.bytes, v2.offset, v2.length);
 			}
-			long totalBytes = data.GetFilePointer() - startPosition;
+			long totalBytes = data.FilePointer - startPosition;
 			index.WriteLong(totalBytes);
-			int maxDoc = state.segmentInfo.GetDocCount();
+			int maxDoc = state.segmentInfo.DocCount;
 			PackedInts.Writer w = PackedInts.GetWriter(index, maxDoc, PackedInts.BitsRequired
 				(currentAddress), PackedInts.DEFAULT);
-			foreach (BytesRef v_2 in values)
+			foreach (BytesRef v3 in values)
 			{
-				w.Add(valueToAddress.Get(v_2 == null ? new BytesRef() : v_2));
+				w.Add(valueToAddress[v3 ?? new BytesRef()]);
 			}
 			w.Finish();
 		}
@@ -468,8 +456,7 @@ namespace Lucene.Net.Codecs.Lucene40
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		public override void AddSortedField(FieldInfo field, Iterable<BytesRef> values, Iterable
-			<Number> docToOrd)
+		public override void AddSortedField(FieldInfo field, IEnumerable<BytesRef> values, IEnumerable<int> docToOrd)
 		{
 			// examine the values to determine best type to use
 			int minLength = int.MaxValue;
@@ -480,22 +467,12 @@ namespace Lucene.Net.Codecs.Lucene40
 				maxLength = Math.Max(maxLength, b.length);
 			}
 			// but dont use fixed if there are missing values (we are simulating how lucene40 wrote dv...)
-			bool anyMissing = false;
-			foreach (Number n in docToOrd)
-			{
-				if (n == -1)
-				{
-					anyMissing = true;
-					break;
-				}
-			}
-			bool success = false;
+			bool anyMissing = docToOrd.Any(n => n == -1);
+		    bool success = false;
 			IndexOutput data = null;
 			IndexOutput index = null;
-			string dataName = IndexFileNames.SegmentFileName(state.segmentInfo.name + "_" + Sharpen.Extensions.ToString
-				(field.number), segmentSuffix, "dat");
-			string indexName = IndexFileNames.SegmentFileName(state.segmentInfo.name + "_" + 
-				Sharpen.Extensions.ToString(field.number), segmentSuffix, "idx");
+			string dataName = IndexFileNames.SegmentFileName(state.segmentInfo.name + "_" + (field.number), segmentSuffix, "dat");
+			string indexName = IndexFileNames.SegmentFileName(state.segmentInfo.name + "_" + (field.number), segmentSuffix, "idx");
 			try
 			{
 				data = dir.CreateOutput(dataName, state.context);
@@ -540,14 +517,14 @@ namespace Lucene.Net.Codecs.Lucene40
 				}
 				else
 				{
-					IOUtils.CloseWhileHandlingException(data, index);
+					IOUtils.CloseWhileHandlingException((IDisposable)data, index);
 				}
 			}
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
 		private void AddFixedSortedBytesField(FieldInfo field, IndexOutput data, IndexOutput
-			 index, Iterable<BytesRef> values, Iterable<Number> docToOrd, int length)
+			 index, IEnumerable<BytesRef> values, IEnumerable<int> docToOrd, int length)
 		{
 			field.PutAttribute(legacyKey, Lucene40FieldInfosReader.LegacyDocValuesType.BYTES_FIXED_SORTED
 				.ToString());
@@ -563,12 +540,12 @@ namespace Lucene.Net.Codecs.Lucene40
 				valueCount++;
 			}
 			index.WriteInt(valueCount);
-			int maxDoc = state.segmentInfo.GetDocCount();
+			int maxDoc = state.segmentInfo.DocCount;
 			 
 			//assert valueCount > 0;
 			PackedInts.Writer w = PackedInts.GetWriter(index, maxDoc, PackedInts.BitsRequired
 				(valueCount - 1), PackedInts.DEFAULT);
-			foreach (Number n in docToOrd)
+			foreach (var n in docToOrd)
 			{
 				w.Add(n);
 			}
@@ -577,7 +554,7 @@ namespace Lucene.Net.Codecs.Lucene40
 
 		/// <exception cref="System.IO.IOException"></exception>
 		private void AddVarSortedBytesField(FieldInfo field, IndexOutput data, IndexOutput
-			 index, Iterable<BytesRef> values, Iterable<Number> docToOrd)
+			 index, IEnumerable<BytesRef> values, IEnumerable<int> docToOrd)
 		{
 			field.PutAttribute(legacyKey, Lucene40FieldInfosReader.LegacyDocValuesType.BYTES_VAR_SORTED
 				.ToString());
@@ -585,14 +562,14 @@ namespace Lucene.Net.Codecs.Lucene40
 				, Lucene40DocValuesFormat.BYTES_VAR_SORTED_VERSION_CURRENT);
 			CodecUtil.WriteHeader(index, Lucene40DocValuesFormat.BYTES_VAR_SORTED_CODEC_NAME_IDX
 				, Lucene40DocValuesFormat.BYTES_VAR_SORTED_VERSION_CURRENT);
-			long startPos = data.GetFilePointer();
+			long startPos = data.FilePointer;
 			int valueCount = 0;
 			foreach (BytesRef v in values)
 			{
 				data.WriteBytes(v.bytes, v.offset, v.length);
 				valueCount++;
 			}
-			long maxAddress = data.GetFilePointer() - startPos;
+			long maxAddress = data.FilePointer - startPos;
 			index.WriteLong(maxAddress);
 			 
 			//assert valueCount != Integer.MAX_VALUE; // unsupported by the 4.0 impl
@@ -609,12 +586,12 @@ namespace Lucene.Net.Codecs.Lucene40
 			//assert currentPosition == maxAddress;
 			w.Add(currentPosition);
 			w.Finish();
-			int maxDoc = state.segmentInfo.GetDocCount();
+			int maxDoc = state.segmentInfo.DocCount;
 			 
 			//assert valueCount > 0;
 			PackedInts.Writer ords = PackedInts.GetWriter(index, maxDoc, PackedInts.BitsRequired
 				(valueCount - 1), PackedInts.DEFAULT);
-			foreach (Number n in docToOrd)
+			foreach (var n in docToOrd)
 			{
 				ords.Add(n);
 			}
@@ -622,17 +599,17 @@ namespace Lucene.Net.Codecs.Lucene40
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		public override void AddSortedSetField(FieldInfo field, Iterable<BytesRef> values
-			, Iterable<Number> docToOrdCount, Iterable<Number> ords)
+		public override void AddSortedSetField(FieldInfo field, IEnumerable<BytesRef> values
+			, IEnumerable<int> docToOrdCount, IEnumerable<long> ords)
 		{
 			throw new NotSupportedException("Lucene 4.0 does not support SortedSet docvalues"
 				);
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		public override void Close()
+		protected override void Dispose(bool disposing)
 		{
-			dir.Close();
+			dir.Dispose();
 		}
 	}
 }

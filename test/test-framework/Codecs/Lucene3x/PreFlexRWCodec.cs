@@ -1,12 +1,4 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using Lucene.Net.Codecs.Lucene3x;
-using Org.Apache.Lucene.Util;
-using Sharpen;
 
 namespace Lucene.Net.Codecs.Lucene3x
 {
@@ -14,8 +6,7 @@ namespace Lucene.Net.Codecs.Lucene3x
 	/// <lucene.experimental></lucene.experimental>
 	public class PreFlexRWCodec : Lucene3xCodec
 	{
-		private readonly Lucene.Net.Codecs.PostingsFormat postings = new PreFlexRWPostingsFormat
-			();
+		private readonly Lucene.Net.Codecs.PostingsFormat postings = new PreFlexRWPostingsFormat();
 
 		private readonly Lucene3xNormsFormat norms = new PreFlexRWNormsFormat();
 

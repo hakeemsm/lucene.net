@@ -93,69 +93,156 @@
     <Compile Include="Analysis\MockUTF16TermAttributeImpl.cs" />
     <Compile Include="Analysis\TokenStreamToDot.cs" />
     <Compile Include="Analysis\ValidatingTokenFilter.cs" />
-    <Compile Include="Codecs\Asserting\AssertingCodec.cs" />
-    <Compile Include="Codecs\Asserting\AssertingDocValuesFormat.cs" />
-    <Compile Include="Codecs\Asserting\AssertingNormsFormat.cs" />
-    <Compile Include="Codecs\Asserting\AssertingPostingsFormat.cs" />
-    <Compile Include="Codecs\Asserting\AssertingStoredFieldsFormat.cs" />
-    <Compile Include="Codecs\Asserting\AssertingTermVectorsFormat.cs" />
-    <Compile Include="Codecs\Bloom\TestBloomFilteredLucene41Postings.cs" />
-    <Compile Include="Codecs\Cheapbastard\CheapBastardCodec.cs" />
-    <Compile Include="Codecs\Compressing\CompressingCodec.cs" />
-    <Compile Include="Codecs\Compressing\Dummy\DummyCompressingCodec.cs" />
-    <Compile Include="Codecs\Compressing\FastCompressingCodec.cs" />
-    <Compile Include="Codecs\Compressing\FastDecompressionCompressingCodec.cs" />
-    <Compile Include="Codecs\Compressing\HighCompressionCompressingCodec.cs" />
-    <Compile Include="Codecs\Cranky\CrankyCodec.cs" />
-    <Compile Include="Codecs\Cranky\CrankyDocValuesFormat.cs" />
-    <Compile Include="Codecs\Cranky\CrankyFieldInfosFormat.cs" />
-    <Compile Include="Codecs\Cranky\CrankyLiveDocsFormat.cs" />
-    <Compile Include="Codecs\Cranky\CrankyNormsFormat.cs" />
-    <Compile Include="Codecs\Cranky\CrankyPostingsFormat.cs" />
-    <Compile Include="Codecs\Cranky\CrankySegmentInfoFormat.cs" />
-    <Compile Include="Codecs\Cranky\CrankyStoredFieldsFormat.cs" />
-    <Compile Include="Codecs\Cranky\CrankyTermVectorsFormat.cs" />
-    <Compile Include="Codecs\Lucene3x\PreFlexRWCodec.cs" />
-    <Compile Include="Codecs\Lucene3x\PreFlexRWFieldInfosFormat.cs" />
-    <Compile Include="Codecs\Lucene3x\PreFlexRWFieldInfosReader.cs" />
-    <Compile Include="Codecs\Lucene3x\PreFlexRWFieldInfosWriter.cs" />
-    <Compile Include="Codecs\Lucene3x\PreFlexRWFieldsWriter.cs" />
-    <Compile Include="Codecs\Lucene3x\PreFlexRWNormsConsumer.cs" />
-    <Compile Include="Codecs\Lucene3x\PreFlexRWNormsFormat.cs" />
-    <Compile Include="Codecs\Lucene3x\PreFlexRWPostingsFormat.cs" />
-    <Compile Include="Codecs\Lucene3x\PreFlexRWSegmentInfoFormat.cs" />
-    <Compile Include="Codecs\Lucene3x\PreFlexRWSegmentInfoWriter.cs" />
-    <Compile Include="Codecs\Lucene3x\PreFlexRWSkipListWriter.cs" />
-    <Compile Include="Codecs\Lucene3x\PreFlexRWStoredFieldsFormat.cs" />
-    <Compile Include="Codecs\Lucene3x\PreFlexRWStoredFieldsWriter.cs" />
-    <Compile Include="Codecs\Lucene3x\PreFlexRWTermVectorsFormat.cs" />
-    <Compile Include="Codecs\Lucene3x\PreFlexRWTermVectorsWriter.cs" />
-    <Compile Include="Codecs\Lucene3x\TermInfosWriter.cs" />
-    <Compile Include="Codecs\Lucene40\Lucene40DocValuesWriter.cs" />
-    <Compile Include="Codecs\Lucene40\Lucene40FieldInfosWriter.cs" />
-    <Compile Include="Codecs\Lucene40\Lucene40PostingsWriter.cs" />
-    <Compile Include="Codecs\Lucene40\Lucene40RWCodec.cs" />
-    <Compile Include="Codecs\Lucene40\Lucene40RWDocValuesFormat.cs" />
-    <Compile Include="Codecs\Lucene40\Lucene40RWNormsFormat.cs" />
-    <Compile Include="Codecs\Lucene40\Lucene40RWPostingsFormat.cs" />
-    <Compile Include="Codecs\Lucene40\Lucene40SkipListWriter.cs" />
-    <Compile Include="Codecs\Lucene41ords\Lucene41WithOrds.cs" />
-    <Compile Include="Codecs\Lucene41\Lucene41RWCodec.cs" />
-    <Compile Include="Codecs\Lucene42\Lucene42DocValuesConsumer.cs" />
-    <Compile Include="Codecs\Lucene42\Lucene42FieldInfosWriter.cs" />
-    <Compile Include="Codecs\Lucene42\Lucene42RWCodec.cs" />
-    <Compile Include="Codecs\Lucene42\Lucene42RWDocValuesFormat.cs" />
-    <Compile Include="Codecs\Lucene45\Lucene45RWCodec.cs" />
-    <Compile Include="Codecs\MissingOrdRemapper.cs" />
-    <Compile Include="Codecs\Mockintblock\MockFixedIntBlockPostingsFormat.cs" />
-    <Compile Include="Codecs\Mockintblock\MockVariableIntBlockPostingsFormat.cs" />
-    <Compile Include="Codecs\Mockrandom\MockRandomPostingsFormat.cs" />
-    <Compile Include="Codecs\Mocksep\MockSepPostingsFormat.cs" />
-    <Compile Include="Codecs\Mocksep\MockSingleIntFactory.cs" />
-    <Compile Include="Codecs\Mocksep\MockSingleIntIndexInput.cs" />
-    <Compile Include="Codecs\Mocksep\MockSingleIntIndexOutput.cs" />
-    <Compile Include="Codecs\Nestedpulsing\NestedPulsingPostingsFormat.cs" />
-    <Compile Include="Codecs\Ramonly\RAMOnlyPostingsFormat.cs" />
+    <Compile Include="Codecs\Asserting\AssertingCodec.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Asserting\AssertingDocValuesFormat.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Asserting\AssertingNormsFormat.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Asserting\AssertingPostingsFormat.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Asserting\AssertingStoredFieldsFormat.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Asserting\AssertingTermVectorsFormat.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Bloom\TestBloomFilteredLucene41Postings.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Cheapbastard\CheapBastardCodec.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Compressing\CompressingCodec.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Compressing\Dummy\DummyCompressingCodec.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Compressing\FastCompressingCodec.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Compressing\FastDecompressionCompressingCodec.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Compressing\HighCompressionCompressingCodec.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Cranky\CrankyCodec.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Cranky\CrankyDocValuesFormat.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Cranky\CrankyFieldInfosFormat.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Cranky\CrankyLiveDocsFormat.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Cranky\CrankyNormsFormat.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Cranky\CrankyPostingsFormat.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Cranky\CrankySegmentInfoFormat.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Cranky\CrankyStoredFieldsFormat.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Cranky\CrankyTermVectorsFormat.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Lucene3x\PreFlexRWFieldsWriter.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Lucene3x\PreFlexRWSkipListWriter.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Lucene3x\PreFlexRWStoredFieldsFormat.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Lucene3x\PreFlexRWStoredFieldsWriter.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Lucene3x\PreFlexRWTermVectorsFormat.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Lucene3x\PreFlexRWTermVectorsWriter.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Lucene3x\TermInfosWriter.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Lucene40\Lucene40DocValuesWriter.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Lucene40\Lucene40FieldInfosWriter.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Lucene40\Lucene40PostingsWriter.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Lucene40\Lucene40RWCodec.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Lucene40\Lucene40RWDocValuesFormat.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Lucene40\Lucene40RWNormsFormat.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Lucene40\Lucene40RWPostingsFormat.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Lucene40\Lucene40SkipListWriter.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Lucene41ords\Lucene41WithOrds.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Lucene41\Lucene41RWCodec.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Lucene42\Lucene42DocValuesConsumer.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Lucene42\Lucene42FieldInfosWriter.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Lucene42\Lucene42RWCodec.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Lucene42\Lucene42RWDocValuesFormat.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Lucene45\Lucene45RWCodec.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\MissingOrdRemapper.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Mockintblock\MockFixedIntBlockPostingsFormat.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Mockintblock\MockVariableIntBlockPostingsFormat.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Mockrandom\MockRandomPostingsFormat.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Mocksep\MockSepPostingsFormat.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Codecs\Ramonly\RAMOnlyPostingsFormat.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Index\AlcoholicMergePolicy.cs" />
     <Compile Include="Index\AllDeletedFilterReader.cs" />
     <Compile Include="Index\AssertingAtomicReader.cs" />
@@ -165,8 +252,6 @@
     <Compile Include="Index\BaseIndexFileFormatTestCase.cs" />
     <Compile Include="Index\BaseMergePolicyTestCase.cs" />
     <Compile Include="Index\BasePostingsFormatTestCase.cs" />
-    <Compile Include="Index\BaseStoredFieldsFormatTestCase.cs" />
-    <Compile Include="Index\BaseTermVectorsFormatTestCase.cs" />
     <Compile Include="Index\DocHelper.cs" />
     <Compile Include="Index\FieldFilterAtomicReader.cs" />
     <Compile Include="Index\MockIndexInput.cs" />
@@ -236,7 +321,6 @@
     <Compile Include="Util\HelperExtensions.cs" />
     <Compile Include="Util\LineFileDocs.cs" />
     <Compile Include="Util\LuceneJUnit3MethodProvider.cs" />
-    <Compile Include="Util\NullInfoStream.cs" />
     <Compile Include="Util\QuickPatchThreadsFilter.cs" />
     <Compile Include="Util\RemoveUponClose.cs" />
     <Compile Include="Util\Rethrow.cs" />

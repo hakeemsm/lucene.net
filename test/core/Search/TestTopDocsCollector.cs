@@ -66,18 +66,18 @@ namespace Lucene.Net.Search
 					maxScore = pq.Pop().Score;
 				}
 				
-				return new TopDocs(internalTotalHits, results, maxScore);
+				return new TopDocs(totalHits, results, maxScore);
 			}
 			
 			public override void  Collect(int doc)
 			{
-				++internalTotalHits;
+				++totalHits;
 				pq.InsertWithOverflow(new ScoreDoc(doc + base_Renamed, Lucene.Net.Search.TestTopDocsCollector.scores[idx++]));
 			}
 			
-			public override void  SetNextReader(IndexReader reader, int docBase)
+			public override void SetNextReader(AtomicReaderContext context)
 			{
-				base_Renamed = docBase;
+				base_Renamed = context.docBase;
 			}
 			
 			public override void  SetScorer(Scorer scorer)
@@ -97,15 +97,15 @@ namespace Lucene.Net.Search
 		
 		private const float MAX_SCORE = 9.17561f;
 		
-		private Directory dir = new RAMDirectory();
+		private Directory dir;
 		
-		private TopDocsCollector<ScoreDoc> doSearch(int numResults)
+		private IndexReader reader;
+		private TopDocsCollector<ScoreDoc> DoSearch(int numResults)
 		{
 			Query q = new MatchAllDocsQuery();
-			IndexSearcher searcher = new IndexSearcher(dir, true);
+			IndexSearcher searcher = NewSearcher(reader);
             TopDocsCollector<ScoreDoc> tdc = new MyTopsDocCollector(numResults);
 			searcher.Search(q, tdc);
-			searcher.Close();
 			return tdc;
 		}
 		
@@ -116,18 +116,20 @@ namespace Lucene.Net.Search
 			
 			// populate an index with 30 documents, this should be enough for the test.
 			// The documents have no content - the test uses MatchAllDocsQuery().
-            dir = new RAMDirectory();
-			IndexWriter writer = new IndexWriter(dir, new KeywordAnalyzer(), MaxFieldLength.UNLIMITED);
+			dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
 			for (int i = 0; i < 30; i++)
 			{
 				writer.AddDocument(new Document());
 			}
+			reader = writer.GetReader();
 			writer.Close();
 		}
 		
 		[TearDown]
 		public override void  TearDown()
 		{
+			reader.Close();
 			dir.Close();
 			dir = null;
 			base.TearDown();
@@ -137,7 +139,7 @@ namespace Lucene.Net.Search
 		public virtual void  TestInvalidArguments()
 		{
 			int numResults = 5;
-			TopDocsCollector<ScoreDoc> tdc = doSearch(numResults);
+			TopDocsCollector<ScoreDoc> tdc = DoSearch(numResults);
 			
 			// start < 0
 			Assert.AreEqual(0, tdc.TopDocs(- 1).ScoreDocs.Length);

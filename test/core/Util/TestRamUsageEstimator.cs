@@ -23,7 +23,7 @@ namespace Lucene.Net.Util
 {
 
     [TestFixture]
-    public class TestRamUsageEstimator
+	public class TestRamUsageEstimator : LuceneTestCase
     {
 
         [Test]

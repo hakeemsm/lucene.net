@@ -1,86 +1,76 @@
-/* 
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+/*
+ * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
  * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using System;
-
-using NUnit.Framework;
-
-using WhitespaceAnalyzer = Lucene.Net.Analysis.WhitespaceAnalyzer;
-using Document = Lucene.Net.Documents.Document;
-using Field = Lucene.Net.Documents.Field;
-using NumericField = Lucene.Net.Documents.NumericField;
-using IndexWriter = Lucene.Net.Index.IndexWriter;
-using MaxFieldLength = Lucene.Net.Index.IndexWriter.MaxFieldLength;
-using RAMDirectory = Lucene.Net.Store.RAMDirectory;
-using LuceneTestCase = Lucene.Net.Util.LuceneTestCase;
+using System.Globalization;
+using Lucene.Net.Analysis;
+using Lucene.Net.Document;
+using Lucene.Net.Index;
+using Lucene.Net.Search;
+using Lucene.Net.Store;
+using Lucene.Net.Util;
+using Sharpen;
 
 namespace Lucene.Net.Search
 {
-	
-    [TestFixture]
-	public class TestMultiValuedNumericRangeQuery:LuceneTestCase
+	public class TestMultiValuedNumericRangeQuery : LuceneTestCase
 	{
-		
 		/// <summary>Tests NumericRangeQuery on a multi-valued field (multiple numeric values per document).
+		/// 	</summary>
+		/// <remarks>
+		/// Tests NumericRangeQuery on a multi-valued field (multiple numeric values per document).
 		/// This test ensures, that a classical TermRangeQuery returns exactly the same document numbers as
 		/// NumericRangeQuery (see SOLR-1322 for discussion) and the multiple precision terms per numeric value
 		/// do not interfere with multiple numeric values.
-		/// </summary>
-		
-        [Test]
-		public virtual void  TestMultiValuedNRQ()
+		/// </remarks>
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestMultiValuedNRQ()
 		{
-			System.Random rnd = NewRandom();
-			
-			RAMDirectory directory = new RAMDirectory();
-			IndexWriter writer = new IndexWriter(directory, new WhitespaceAnalyzer(), true, MaxFieldLength.UNLIMITED);
-			
-			//DecimalFormat format = new DecimalFormat("00000000000", new System.Globalization.CultureInfo("en-US").NumberFormat);
-			
-			for (int l = 0; l < 5000; l++)
+			Directory directory = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), directory, ((IndexWriterConfig
+				)NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMaxBufferedDocs
+				(TestUtil.NextInt(Random(), 50, 1000))));
+			DecimalFormat format = new DecimalFormat("00000000000", new DecimalFormatSymbols(
+				CultureInfo.ROOT));
+			int num = AtLeast(500);
+			for (int l = 0; l < num; l++)
 			{
-				Document doc = new Document();
-				for (int m = 0, c = rnd.Next(10); m <= c; m++)
+				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					();
+				for (int m = 0; m <= c; m++)
 				{
-					int value_Renamed = rnd.Next(System.Int32.MaxValue);
-                    doc.Add(new Field("asc", value_Renamed.ToString().PadLeft(11, '0'), Field.Store.NO, Field.Index.NOT_ANALYZED));
-					doc.Add(new NumericField("trie", Field.Store.NO, true).SetIntValue(value_Renamed));
+					int value = Random().Next(int.MaxValue);
+					doc.Add(NewStringField("asc", format.Format(value), Field.Store.NO));
+					doc.Add(new IntField("trie", value, Field.Store.NO));
 				}
 				writer.AddDocument(doc);
 			}
+			IndexReader reader = writer.GetReader();
 			writer.Close();
-			
-			Searcher searcher = new IndexSearcher(directory, true);
-			for (int i = 0; i < 50; i++)
+			IndexSearcher searcher = NewSearcher(reader);
+			num = AtLeast(50);
+			for (int i = 0; i < num; i++)
 			{
-				int lower = rnd.Next(System.Int32.MaxValue);
-				int upper = rnd.Next(System.Int32.MaxValue);
+				int lower = Random().Next(int.MaxValue);
+				int upper = Random().Next(int.MaxValue);
 				if (lower > upper)
 				{
-					int a = lower; lower = upper; upper = a;
+					int a = lower;
+					lower = upper;
+					upper = a;
 				}
-				TermRangeQuery cq = new TermRangeQuery("asc", lower.ToString().PadLeft(11, '0'),  upper.ToString().PadLeft(11, '0'), true, true);
-                NumericRangeQuery<int> tq = NumericRangeQuery.NewIntRange("trie", lower, upper, true, true);
+				TermRangeQuery cq = TermRangeQuery.NewStringRange("asc", format.Format(lower), format
+					.Format(upper), true, true);
+				NumericRangeQuery<int> tq = NumericRangeQuery.NewIntRange("trie", lower, upper, true
+					, true);
 				TopDocs trTopDocs = searcher.Search(cq, 1);
 				TopDocs nrTopDocs = searcher.Search(tq, 1);
-				Assert.AreEqual(trTopDocs.TotalHits, nrTopDocs.TotalHits, "Returned count for NumericRangeQuery and TermRangeQuery must be equal");
+				NUnit.Framework.Assert.AreEqual("Returned count for NumericRangeQuery and TermRangeQuery must be equal"
+					, trTopDocs.totalHits, nrTopDocs.totalHits);
 			}
-			searcher.Close();
-			
+			reader.Close();
 			directory.Close();
 		}
 	}

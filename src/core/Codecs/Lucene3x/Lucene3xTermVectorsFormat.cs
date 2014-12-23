@@ -8,7 +8,7 @@ using System.Text;
 namespace Lucene.Net.Codecs.Lucene3x
 {
     [Obsolete]
-    internal class Lucene3xTermVectorsFormat : TermVectorsFormat
+    public class Lucene3xTermVectorsFormat : TermVectorsFormat
     {
         public override TermVectorsReader VectorsReader(Directory directory, SegmentInfo segmentInfo, FieldInfos fieldInfos, IOContext context)
         {

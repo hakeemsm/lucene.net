@@ -51,33 +51,41 @@ namespace Lucene.Net
 		public virtual void  TestDemo_Renamed()
 		{
 			
-			Analyzer analyzer = new StandardAnalyzer(Version.LUCENE_CURRENT);
+			Analyzer analyzer = new MockAnalyzer(Random());
 			
 			// Store the index in memory:
-			Directory directory = new RAMDirectory();
+			Directory directory = NewDirectory();
 			// To store an index on disk, use this instead:
 			//Directory directory = FSDirectory.open("/tmp/testindex");
-			IndexWriter iwriter = new IndexWriter(directory, analyzer, true, new IndexWriter.MaxFieldLength(25000));
+			RandomIndexWriter iwriter = new RandomIndexWriter(Random(), directory, analyzer);
 			Document doc = new Document();
-			System.String text = "This is the text to be indexed.";
-			doc.Add(new Field("fieldname", text, Field.Store.YES, Field.Index.ANALYZED));
+			string longTerm = "longtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongterm";
+			string text = "This is the text to be indexed. " + longTerm;
+			doc.Add(NewTextField("fieldname", text, Field.Store.YES));
 			iwriter.AddDocument(doc);
 			iwriter.Close();
 			
 			// Now search the index:
-			IndexSearcher isearcher = new IndexSearcher(directory, true); // read-only=true
+			IndexReader ireader = DirectoryReader.Open(directory);
+			IndexSearcher isearcher = NewSearcher(ireader);
 			// Parse a simple query that searches for "text":
-			QueryParser parser = new QueryParser(Util.Version.LUCENE_CURRENT, "fieldname", analyzer);
-			Query query = parser.Parse("text");
-			ScoreDoc[] hits = isearcher.Search(query, null, 1000).ScoreDocs;
-			Assert.AreEqual(1, hits.Length);
+			NUnit.Framework.Assert.AreEqual(1, isearcher.Search(new TermQuery(new Term("fieldname"
+				, longTerm)), 1).totalHits);
+			Query query = new TermQuery(new Term("fieldname", "text"));
+			TopDocs hits = isearcher.Search(query, null, 1);
+			NUnit.Framework.Assert.AreEqual(1, hits.totalHits);
 			// Iterate through the results:
-			for (int i = 0; i < hits.Length; i++)
+			for (int i = 0; i < hits.scoreDocs.Length; i++)
 			{
 				Document hitDoc = isearcher.Doc(hits[i].Doc);
 				Assert.AreEqual(hitDoc.Get("fieldname"), "This is the text to be indexed.");
 			}
-			isearcher.Close();
+			PhraseQuery phraseQuery = new PhraseQuery();
+			phraseQuery.Add(new Term("fieldname", "to"));
+			phraseQuery.Add(new Term("fieldname", "be"));
+			NUnit.Framework.Assert.AreEqual(1, isearcher.Search(phraseQuery, null, 1).totalHits
+				);
+			ireader.Close();
 			directory.Close();
 		}
 	}

@@ -1,102 +1,109 @@
-/* 
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+/*
+ * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
  * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using System;
-
-using NUnit.Framework;
-
-using Document = Lucene.Net.Documents.Document;
-using IndexOutput = Lucene.Net.Store.IndexOutput;
-using RAMDirectory = Lucene.Net.Store.RAMDirectory;
-using LuceneTestCase = Lucene.Net.Util.LuceneTestCase;
+using Lucene.Net.Codecs;
+using Lucene.Net.Index;
+using Lucene.Net.Store;
+using Lucene.Net.Util;
+using Sharpen;
 
 namespace Lucene.Net.Index
 {
-	
-	//import org.cnlp.utils.properties.ResourceBundleHelper;
-	
-	[TestFixture]
-	public class TestFieldInfos:LuceneTestCase
+	public class TestFieldInfos : LuceneTestCase
 	{
-		
-		private Document testDoc = new Document();
-		
-		public TestFieldInfos(System.String s):base(s)
-		{
-		}
+		private Lucene.Net.Document.Document testDoc = new Lucene.Net.Document.Document
+			();
 
-        public TestFieldInfos() : base("")
-        {
-        }
-		
-		[SetUp]
-		public override void  SetUp()
+		//import org.cnlp.utils.properties.ResourceBundleHelper;
+		/// <exception cref="System.Exception"></exception>
+		public override void SetUp()
 		{
 			base.SetUp();
 			DocHelper.SetupDoc(testDoc);
 		}
-		
-		[Test]
-		public virtual void  Test()
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual FieldInfos CreateAndWriteFieldInfos(Directory dir, string filename
+			)
 		{
 			//Positive test of FieldInfos
-			Assert.IsTrue(testDoc != null);
-			FieldInfos fieldInfos = new FieldInfos();
-			fieldInfos.Add(testDoc);
-			//Since the complement is stored as well in the fields map
-			Assert.IsTrue(fieldInfos.Size() == DocHelper.all.Count); //this is all b/c we are using the no-arg constructor
-			RAMDirectory dir = new RAMDirectory();
-			System.String name = "testFile";
-			IndexOutput output = dir.CreateOutput(name);
-			Assert.IsTrue(output != null);
-			//Use a RAMOutputStream
-			
-			try
+			NUnit.Framework.Assert.IsTrue(testDoc != null);
+			FieldInfos.Builder builder = new FieldInfos.Builder();
+			foreach (IndexableField field in testDoc)
 			{
-				fieldInfos.Write(output);
-				output.Close();
-				Assert.IsTrue(output.Length > 0);
-				FieldInfos readIn = new FieldInfos(dir, name);
-				Assert.IsTrue(fieldInfos.Size() == readIn.Size());
-				FieldInfo info = readIn.FieldInfo("textField1");
-				Assert.IsTrue(info != null);
-				Assert.IsTrue(info.storeTermVector_ForNUnit == false);
-				Assert.IsTrue(info.omitNorms_ForNUnit == false);
-				
-				info = readIn.FieldInfo("textField2");
-				Assert.IsTrue(info != null);
-				Assert.IsTrue(info.storeTermVector_ForNUnit == true);
-				Assert.IsTrue(info.omitNorms_ForNUnit == false);
-				
-				info = readIn.FieldInfo("textField3");
-				Assert.IsTrue(info != null);
-				Assert.IsTrue(info.storeTermVector_ForNUnit == false);
-				Assert.IsTrue(info.omitNorms_ForNUnit == true);
-				
-				info = readIn.FieldInfo("omitNorms");
-				Assert.IsTrue(info != null);
-				Assert.IsTrue(info.storeTermVector_ForNUnit == false);
-				Assert.IsTrue(info.omitNorms_ForNUnit == true);
-				
-				dir.Close();
+				builder.AddOrUpdate(field.Name(), field.FieldType());
 			}
-			catch (System.IO.IOException)
+			FieldInfos fieldInfos = builder.Finish();
+			//Since the complement is stored as well in the fields map
+			NUnit.Framework.Assert.IsTrue(fieldInfos.Size() == DocHelper.all.Count);
+			//this is all b/c we are using the no-arg constructor
+			IndexOutput output = dir.CreateOutput(filename, NewIOContext(Random()));
+			NUnit.Framework.Assert.IsTrue(output != null);
+			//Use a RAMOutputStream
+			FieldInfosWriter writer = Codec.GetDefault().FieldInfosFormat().GetFieldInfosWriter
+				();
+			writer.Write(dir, filename, string.Empty, fieldInfos, IOContext.DEFAULT);
+			output.Close();
+			return fieldInfos;
+		}
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual FieldInfos ReadFieldInfos(Directory dir, string filename)
+		{
+			FieldInfosReader reader = Codec.GetDefault().FieldInfosFormat().GetFieldInfosReader
+				();
+			return reader.Read(dir, filename, string.Empty, IOContext.DEFAULT);
+		}
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void Test()
+		{
+			string name = "testFile";
+			Directory dir = NewDirectory();
+			FieldInfos fieldInfos = CreateAndWriteFieldInfos(dir, name);
+			FieldInfos readIn = ReadFieldInfos(dir, name);
+			NUnit.Framework.Assert.IsTrue(fieldInfos.Size() == readIn.Size());
+			FieldInfo info = readIn.FieldInfo("textField1");
+			NUnit.Framework.Assert.IsTrue(info != null);
+			NUnit.Framework.Assert.IsTrue(info.HasVectors() == false);
+			NUnit.Framework.Assert.IsTrue(info.OmitsNorms() == false);
+			info = readIn.FieldInfo("textField2");
+			NUnit.Framework.Assert.IsTrue(info != null);
+			NUnit.Framework.Assert.IsTrue(info.OmitsNorms() == false);
+			info = readIn.FieldInfo("textField3");
+			NUnit.Framework.Assert.IsTrue(info != null);
+			NUnit.Framework.Assert.IsTrue(info.HasVectors() == false);
+			NUnit.Framework.Assert.IsTrue(info.OmitsNorms() == true);
+			info = readIn.FieldInfo("omitNorms");
+			NUnit.Framework.Assert.IsTrue(info != null);
+			NUnit.Framework.Assert.IsTrue(info.HasVectors() == false);
+			NUnit.Framework.Assert.IsTrue(info.OmitsNorms() == true);
+			dir.Close();
+		}
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestReadOnly()
+		{
+			string name = "testFile";
+			Directory dir = NewDirectory();
+			FieldInfos fieldInfos = CreateAndWriteFieldInfos(dir, name);
+			FieldInfos readOnly = ReadFieldInfos(dir, name);
+			AssertReadOnly(readOnly, fieldInfos);
+			dir.Close();
+		}
+
+		private void AssertReadOnly(FieldInfos readOnly, FieldInfos modifiable)
+		{
+			NUnit.Framework.Assert.AreEqual(modifiable.Size(), readOnly.Size());
+			// 
+			//HM:revisit 
+			//assert we can iterate
+			foreach (FieldInfo fi in readOnly)
 			{
-				Assert.IsTrue(false);
+				NUnit.Framework.Assert.AreEqual(fi.name, modifiable.FieldInfo(fi.number).name);
 			}
 		}
 	}

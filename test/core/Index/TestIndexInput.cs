@@ -1,93 +1,227 @@
-﻿/* 
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+/*
+ * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
  * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
 using System;
-
-using NUnit.Framework;
-
-using IndexInput = Lucene.Net.Store.IndexInput;
-using LuceneTestCase = Lucene.Net.Util.LuceneTestCase;
+using System.IO;
+using Lucene.Net.Index;
+using Lucene.Net.Store;
+using Lucene.Net.Util;
+using Sharpen;
 
 namespace Lucene.Net.Index
 {
-	
-    [TestFixture]
-	public class TestIndexInput:LuceneTestCase
+	public class TestIndexInput : LuceneTestCase
 	{
-		[Test]
-		public virtual void  TestRead()
+		internal static readonly byte[] READ_TEST_BYTES = new byte[] { unchecked((byte)unchecked(
+			(int)(0x80))), unchecked((int)(0x01)), unchecked((byte)unchecked((int)(0xFF))), 
+			unchecked((int)(0x7F)), unchecked((byte)unchecked((int)(0x80))), unchecked((byte
+			)unchecked((int)(0x80))), unchecked((int)(0x01)), unchecked((byte)unchecked((int
+			)(0x81))), unchecked((byte)unchecked((int)(0x80))), unchecked((int)(0x01)), unchecked(
+			(byte)unchecked((int)(0xFF))), unchecked((byte)unchecked((int)(0xFF))), unchecked(
+			(byte)unchecked((int)(0xFF))), unchecked((byte)unchecked((int)(0xFF))), unchecked(
+			(byte)unchecked((int)(0x07))), unchecked((byte)unchecked((int)(0xFF))), unchecked(
+			(byte)unchecked((int)(0xFF))), unchecked((byte)unchecked((int)(0xFF))), unchecked(
+			(byte)unchecked((int)(0xFF))), unchecked((byte)unchecked((int)(0x0F))), unchecked(
+			(byte)unchecked((int)(0xFF))), unchecked((byte)unchecked((int)(0xFF))), unchecked(
+			(byte)unchecked((int)(0xFF))), unchecked((byte)unchecked((int)(0xFF))), unchecked(
+			(byte)unchecked((int)(0x07))), unchecked((byte)unchecked((int)(0xFF))), unchecked(
+			(byte)unchecked((int)(0xFF))), unchecked((byte)unchecked((int)(0xFF))), unchecked(
+			(byte)unchecked((int)(0xFF))), unchecked((byte)unchecked((int)(0xFF))), unchecked(
+			(byte)unchecked((int)(0xFF))), unchecked((byte)unchecked((int)(0xFF))), unchecked(
+			(byte)unchecked((int)(0xFF))), unchecked((byte)unchecked((int)(0x7F))), unchecked(
+			(int)(0x06)), (byte)('L'), (byte)('u'), (byte)('c'), (byte)('e'), (byte)('n'), (
+			byte)('e'), unchecked((int)(0x02)), unchecked((byte)unchecked((int)(0xC2))), unchecked(
+			(byte)unchecked((int)(0xBF))), unchecked((int)(0x0A)), (byte)('L'), (byte)('u'), 
+			unchecked((byte)unchecked((int)(0xC2))), unchecked((byte)unchecked((int)(0xBF)))
+			, (byte)('c'), (byte)('e'), unchecked((byte)unchecked((int)(0xC2))), unchecked((
+			byte)unchecked((int)(0xBF))), (byte)('n'), (byte)('e'), unchecked((int)(0x03)), 
+			unchecked((byte)unchecked((int)(0xE2))), unchecked((byte)unchecked((int)(0x98)))
+			, unchecked((byte)unchecked((int)(0xA0))), unchecked((int)(0x0C)), (byte)('L'), 
+			(byte)('u'), unchecked((byte)unchecked((int)(0xE2))), unchecked((byte)unchecked(
+			(int)(0x98))), unchecked((byte)unchecked((int)(0xA0))), (byte)('c'), (byte)('e')
+			, unchecked((byte)unchecked((int)(0xE2))), unchecked((byte)unchecked((int)(0x98)
+			)), unchecked((byte)unchecked((int)(0xA0))), (byte)('n'), (byte)('e'), unchecked(
+			(int)(0x04)), unchecked((byte)unchecked((int)(0xF0))), unchecked((byte)unchecked(
+			(int)(0x9D))), unchecked((byte)unchecked((int)(0x84))), unchecked((byte)unchecked(
+			(int)(0x9E))), unchecked((int)(0x08)), unchecked((byte)unchecked((int)(0xF0))), 
+			unchecked((byte)unchecked((int)(0x9D))), unchecked((byte)unchecked((int)(0x84)))
+			, unchecked((byte)unchecked((int)(0x9E))), unchecked((byte)unchecked((int)(0xF0)
+			)), unchecked((byte)unchecked((int)(0x9D))), unchecked((byte)unchecked((int)(0x85
+			))), unchecked((byte)unchecked((int)(0xA0))), unchecked((int)(0x0E)), (byte)('L'
+			), (byte)('u'), unchecked((byte)unchecked((int)(0xF0))), unchecked((byte)unchecked(
+			(int)(0x9D))), unchecked((byte)unchecked((int)(0x84))), unchecked((byte)unchecked(
+			(int)(0x9E))), (byte)('c'), (byte)('e'), unchecked((byte)unchecked((int)(0xF0)))
+			, unchecked((byte)unchecked((int)(0x9D))), unchecked((byte)unchecked((int)(0x85)
+			)), unchecked((byte)unchecked((int)(0xA0))), (byte)('n'), (byte)('e'), unchecked(
+			(int)(0x01)), unchecked((int)(0x00)), unchecked((int)(0x08)), (byte)('L'), (byte
+			)('u'), unchecked((int)(0x00)), (byte)('c'), (byte)('e'), unchecked((int)(0x00))
+			, (byte)('n'), (byte)('e'), unchecked((byte)unchecked((int)(0xFF))), unchecked((
+			byte)unchecked((int)(0xFF))), unchecked((byte)unchecked((int)(0xFF))), unchecked(
+			(byte)unchecked((int)(0xFF))), unchecked((byte)unchecked((int)(0x17))), unchecked(
+			(byte)unchecked((int)(0x01))), unchecked((byte)unchecked((int)(0xFF))), unchecked(
+			(byte)unchecked((int)(0xFF))), unchecked((byte)unchecked((int)(0xFF))), unchecked(
+			(byte)unchecked((int)(0xFF))), unchecked((byte)unchecked((int)(0xFF))), unchecked(
+			(byte)unchecked((int)(0xFF))), unchecked((byte)unchecked((int)(0xFF))), unchecked(
+			(byte)unchecked((int)(0xFF))), unchecked((byte)unchecked((int)(0xFF))), unchecked(
+			(byte)unchecked((int)(0x01))) };
+
+		internal static readonly int COUNT = RANDOM_MULTIPLIER * 65536;
+
+		internal static int[] INTS;
+
+		internal static long[] LONGS;
+
+		internal static byte[] RANDOM_TEST_BYTES;
+
+		// 2-byte UTF-8 (U+00BF "INVERTED QUESTION MARK") 
+		// 3-byte UTF-8 (U+2620 "SKULL AND CROSSBONES") 
+		// surrogate pairs
+		// (U+1D11E "MUSICAL SYMBOL G CLEF")
+		// (U+1D160 "MUSICAL SYMBOL EIGHTH NOTE")
+		// null bytes
+		// tests for Exceptions on invalid values
+		// guard value
+		// guard value
+		/// <exception cref="System.IO.IOException"></exception>
+		[NUnit.Framework.BeforeClass]
+		public static void BeforeClass()
 		{
-			IndexInput is_Renamed = new MockIndexInput(new byte[]{(byte) (0x80), (byte) (0x01), (byte) (0xFF), (byte) (0x7F), (byte) (0x80), (byte) (0x80), (byte) (0x01), (byte) (0x81), (byte) (0x80), (byte) (0x01), (byte) (0x06), (byte) 'L', (byte) 'u', (byte) 'c', (byte) 'e', (byte) 'n', (byte) 'e', (byte) (0x02), (byte) (0xC2), (byte) (0xBF), (byte) (0x0A), (byte) 'L', (byte) 'u', (byte) (0xC2), (byte) (0xBF), (byte) 'c', (byte) 'e', (byte) (0xC2), (byte) (0xBF), (byte) 'n', (byte) 'e', (byte) (0x03), (byte) (0xE2), (byte) (0x98), (byte) (0xA0), (byte) (0x0C), (byte) 'L', (byte) 'u', (byte) (0xE2), (byte) (0x98), (byte) (0xA0), (byte) 'c', (byte) 'e', (byte) (0xE2), (byte) (0x98), (byte) (0xA0), (byte) 'n', (byte) 'e', (byte) (0x04), (byte) (0xF0), (byte) (0x9D), (byte) (0x84), (byte) (0x9E), (byte) (0x08), (byte) (0xF0), (byte) (0x9D), (byte) (0x84), (byte) (0x9E), (byte) (0xF0), (byte) (0x9D), (byte) (0x85), (byte) (0xA0), (byte) (0x0E), (byte) 'L', (byte) 'u', (byte) (0xF0), (byte) (0x9D), (byte) (0x84), (byte) (0x9E), (byte) 'c', (byte) 'e', (byte) (0xF0), (byte) (0x9D), (byte) (0x85), (byte) 
-				(0xA0), (byte) 'n', (byte) 'e', (byte) (0x01), (byte) (0x00), (byte) (0x08), (byte) 'L', (byte) 'u', (byte) (0x00), (byte) 'c', (byte) 'e', (byte) (0x00), (byte) 'n', (byte) 'e'});
-			
-			Assert.AreEqual(128, is_Renamed.ReadVInt());
-			Assert.AreEqual(16383, is_Renamed.ReadVInt());
-			Assert.AreEqual(16384, is_Renamed.ReadVInt());
-			Assert.AreEqual(16385, is_Renamed.ReadVInt());
-			Assert.AreEqual("Lucene", is_Renamed.ReadString());
-			
-			Assert.AreEqual("\u00BF", is_Renamed.ReadString());
-			Assert.AreEqual("Lu\u00BFce\u00BFne", is_Renamed.ReadString());
-			
-			Assert.AreEqual("\u2620", is_Renamed.ReadString());
-			Assert.AreEqual("Lu\u2620ce\u2620ne", is_Renamed.ReadString());
-			
-			Assert.AreEqual("\uD834\uDD1E", is_Renamed.ReadString());
-			Assert.AreEqual("\uD834\uDD1E\uD834\uDD60", is_Renamed.ReadString());
-			Assert.AreEqual("Lu\uD834\uDD1Ece\uD834\uDD60ne", is_Renamed.ReadString());
-			
-			Assert.AreEqual("\u0000", is_Renamed.ReadString());
-			Assert.AreEqual("Lu\u0000ce\u0000ne", is_Renamed.ReadString());
+			Random random = Random();
+			INTS = new int[COUNT];
+			LONGS = new long[COUNT];
+			RANDOM_TEST_BYTES = new byte[COUNT * (5 + 4 + 9 + 8)];
+			ByteArrayDataOutput bdo = new ByteArrayDataOutput(RANDOM_TEST_BYTES);
+			for (int i = 0; i < COUNT; i++)
+			{
+				int i1 = INTS[i] = random.Next();
+				bdo.WriteVInt(i1);
+				bdo.WriteInt(i1);
+				long l1;
+				if (Rarely())
+				{
+					// a long with lots of zeroes at the end
+					l1 = LONGS[i] = TestUtil.NextLong(random, 0, int.MaxValue) << 32;
+				}
+				else
+				{
+					l1 = LONGS[i] = TestUtil.NextLong(random, 0, long.MaxValue);
+				}
+				bdo.WriteVLong(l1);
+				bdo.WriteLong(l1);
+			}
 		}
-		
-		/// <summary> Expert
-		/// 
-		/// </summary>
-		/// <throws>  IOException </throws>
-		[Test]
-		public virtual void  TestSkipChars()
+
+		[NUnit.Framework.AfterClass]
+		public static void AfterClass()
 		{
-			byte[] bytes = new byte[]{(byte) (0x80), (byte) (0x01), (byte) (0xFF), (byte) (0x7F), (byte) (0x80), (byte) (0x80), (byte) (0x01), (byte) (0x81), (byte) (0x80), (byte) (0x01), (byte) (0x06), (byte) 'L', (byte) 'u', (byte) 'c', (byte) 'e', (byte) 'n', (byte) 'e'};
-			System.String utf8Str = "\u0634\u1ea1";
-			byte[] utf8Bytes = System.Text.Encoding.GetEncoding("UTF-8").GetBytes(utf8Str);
-			byte[] theBytes = new byte[bytes.Length + 1 + utf8Bytes.Length];
-			Array.Copy(bytes, 0, theBytes, 0, bytes.Length);
-			theBytes[bytes.Length] = (byte) utf8Str.Length; //Add in the number of chars we are storing, which should fit in a byte for this test 
-			Array.Copy(utf8Bytes, 0, theBytes, bytes.Length + 1, utf8Bytes.Length);
-			IndexInput is_Renamed = new MockIndexInput(theBytes);
-			Assert.AreEqual(128, is_Renamed.ReadVInt());
-			Assert.AreEqual(16383, is_Renamed.ReadVInt());
-			Assert.AreEqual(16384, is_Renamed.ReadVInt());
-			Assert.AreEqual(16385, is_Renamed.ReadVInt());
-			int charsToRead = is_Renamed.ReadVInt(); //number of chars in the Lucene string
-			Assert.IsTrue(0x06 == charsToRead, 0x06 + " does not equal: " + charsToRead);
-			is_Renamed.SkipChars(3);
-			char[] chars = new char[3]; //there should be 6 chars remaining
-			is_Renamed.ReadChars(chars, 0, 3);
-			System.String tmpStr = new System.String(chars);
-			Assert.IsTrue(tmpStr.Equals("ene") == true, tmpStr + " is not equal to " + "ene");
-			//Now read the UTF8 stuff
-			charsToRead = is_Renamed.ReadVInt() - 1; //since we are skipping one
-			is_Renamed.SkipChars(1);
-			Assert.IsTrue(utf8Str.Length - 1 == charsToRead, utf8Str.Length - 1 + " does not equal: " + charsToRead);
-			chars = new char[charsToRead];
-			is_Renamed.ReadChars(chars, 0, charsToRead);
-			tmpStr = new System.String(chars);
-			Assert.IsTrue(tmpStr.Equals(utf8Str.Substring(1)) == true, tmpStr + " is not equal to " + utf8Str.Substring(1));
+			INTS = null;
+			LONGS = null;
+			RANDOM_TEST_BYTES = null;
+		}
+
+		/// <exception cref="System.IO.IOException"></exception>
+		private void CheckReads<_T0>(DataInput @is, Type<_T0> expectedEx) where _T0:Exception
+		{
+			NUnit.Framework.Assert.AreEqual(128, @is.ReadVInt());
+			NUnit.Framework.Assert.AreEqual(16383, @is.ReadVInt());
+			NUnit.Framework.Assert.AreEqual(16384, @is.ReadVInt());
+			NUnit.Framework.Assert.AreEqual(16385, @is.ReadVInt());
+			NUnit.Framework.Assert.AreEqual(int.MaxValue, @is.ReadVInt());
+			NUnit.Framework.Assert.AreEqual(-1, @is.ReadVInt());
+			NUnit.Framework.Assert.AreEqual((long)int.MaxValue, @is.ReadVLong());
+			NUnit.Framework.Assert.AreEqual(long.MaxValue, @is.ReadVLong());
+			NUnit.Framework.Assert.AreEqual("Lucene", @is.ReadString());
+			NUnit.Framework.Assert.AreEqual("\u00BF", @is.ReadString());
+			NUnit.Framework.Assert.AreEqual("Lu\u00BFce\u00BFne", @is.ReadString());
+			NUnit.Framework.Assert.AreEqual("\u2620", @is.ReadString());
+			NUnit.Framework.Assert.AreEqual("Lu\u2620ce\u2620ne", @is.ReadString());
+			NUnit.Framework.Assert.AreEqual("\uD834\uDD1E", @is.ReadString());
+			NUnit.Framework.Assert.AreEqual("\uD834\uDD1E\uD834\uDD60", @is.ReadString());
+			NUnit.Framework.Assert.AreEqual("Lu\uD834\uDD1Ece\uD834\uDD60ne", @is.ReadString(
+				));
+			NUnit.Framework.Assert.AreEqual("\u0000", @is.ReadString());
+			NUnit.Framework.Assert.AreEqual("Lu\u0000ce\u0000ne", @is.ReadString());
+			try
+			{
+				@is.ReadVInt();
+				NUnit.Framework.Assert.Fail("Should throw " + expectedEx.FullName);
+			}
+			catch (Exception e)
+			{
+				NUnit.Framework.Assert.IsTrue(e.Message.StartsWith("Invalid vInt"));
+				NUnit.Framework.Assert.IsTrue(expectedEx.IsInstanceOfType(e));
+			}
+			NUnit.Framework.Assert.AreEqual(1, @is.ReadVInt());
+			// guard value
+			try
+			{
+				@is.ReadVLong();
+				NUnit.Framework.Assert.Fail("Should throw " + expectedEx.FullName);
+			}
+			catch (Exception e)
+			{
+				NUnit.Framework.Assert.IsTrue(e.Message.StartsWith("Invalid vLong"));
+				NUnit.Framework.Assert.IsTrue(expectedEx.IsInstanceOfType(e));
+			}
+			NUnit.Framework.Assert.AreEqual(1L, @is.ReadVLong());
+		}
+
+		// guard value
+		/// <exception cref="System.IO.IOException"></exception>
+		private void CheckRandomReads(DataInput @is)
+		{
+			for (int i = 0; i < COUNT; i++)
+			{
+				NUnit.Framework.Assert.AreEqual(INTS[i], @is.ReadVInt());
+				NUnit.Framework.Assert.AreEqual(INTS[i], @is.ReadInt());
+				NUnit.Framework.Assert.AreEqual(LONGS[i], @is.ReadVLong());
+				NUnit.Framework.Assert.AreEqual(LONGS[i], @is.ReadLong());
+			}
+		}
+
+		// this test only checks BufferedIndexInput because MockIndexInput extends BufferedIndexInput
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestBufferedIndexInputRead()
+		{
+			IndexInput @is = new MockIndexInput(READ_TEST_BYTES);
+			CheckReads(@is, typeof(IOException));
+			@is.Close();
+			@is = new MockIndexInput(RANDOM_TEST_BYTES);
+			CheckRandomReads(@is);
+			@is.Close();
+		}
+
+		// this test checks the raw IndexInput methods as it uses RAMIndexInput which extends IndexInput directly
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestRawIndexInputRead()
+		{
+			Random random = Random();
+			RAMDirectory dir = new RAMDirectory();
+			IndexOutput os = dir.CreateOutput("foo", NewIOContext(random));
+			os.WriteBytes(READ_TEST_BYTES, READ_TEST_BYTES.Length);
+			os.Close();
+			IndexInput @is = dir.OpenInput("foo", NewIOContext(random));
+			CheckReads(@is, typeof(IOException));
+			@is.Close();
+			os = dir.CreateOutput("bar", NewIOContext(random));
+			os.WriteBytes(RANDOM_TEST_BYTES, RANDOM_TEST_BYTES.Length);
+			os.Close();
+			@is = dir.OpenInput("bar", NewIOContext(random));
+			CheckRandomReads(@is);
+			@is.Close();
+			dir.Close();
+		}
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestByteArrayDataInput()
+		{
+			ByteArrayDataInput @is = new ByteArrayDataInput(READ_TEST_BYTES);
+			CheckReads(@is, typeof(RuntimeException));
+			@is = new ByteArrayDataInput(RANDOM_TEST_BYTES);
+			CheckRandomReads(@is);
 		}
 	}
 }

@@ -22,7 +22,7 @@ namespace Lucene.Net.Codecs
 
         public abstract void FinishDoc();
 
-        public TermStats Merge(MergeState mergeState, IndexOptions indexOptions, DocsEnum postings, FixedBitSet visitedDocs)
+        public virtual TermStats Merge(MergeState mergeState, IndexOptions indexOptions, DocsEnum postings, FixedBitSet visitedDocs)
         {
 
             int df = 0;

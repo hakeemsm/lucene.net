@@ -1,74 +1,64 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
+using System;
 using System.Collections.Generic;
 using System.IO;
-using Org.Apache.Lucene.Codecs;
-using Lucene.Net.Codecs.Cranky;
-using Org.Apache.Lucene.Index;
-using Org.Apache.Lucene.Store;
-using Org.Apache.Lucene.Util;
-using Sharpen;
+using Lucene.Net.Index;
+using Lucene.Net.Store;
+using Lucene.Net.Util;
+using Directory = System.IO.Directory;
 
-namespace Lucene.Net.Codecs.Cranky
+namespace Lucene.Net.Codecs.Cranky.TestFramework
 {
 	internal class CrankyTermVectorsFormat : TermVectorsFormat
 	{
-		internal readonly TermVectorsFormat delegate_;
+		internal readonly TermVectorsFormat tvFormat;
 
 		internal readonly Random random;
 
-		internal CrankyTermVectorsFormat(TermVectorsFormat delegate_, Random random)
+		internal CrankyTermVectorsFormat(TermVectorsFormat del, Random random)
 		{
-			this.delegate_ = delegate_;
+			this.tvFormat = del;
 			this.random = random;
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
-		public override TermVectorsReader VectorsReader(Directory directory, SegmentInfo 
-			segmentInfo, FieldInfos fieldInfos, IOContext context)
+		
+		public override TermVectorsReader VectorsReader(Lucene.Net.Store.Directory directory, SegmentInfo segmentInfo, FieldInfos fieldInfos, IOContext context)
 		{
-			return delegate_.VectorsReader(directory, segmentInfo, fieldInfos, context);
+			return tvFormat.VectorsReader(directory, segmentInfo, fieldInfos, context);
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
-		public override TermVectorsWriter VectorsWriter(Directory directory, SegmentInfo 
-			segmentInfo, IOContext context)
+		
+		public override TermVectorsWriter VectorsWriter(Lucene.Net.Store.Directory directory, SegmentInfo segmentInfo, IOContext context)
 		{
 			if (random.Next(100) == 0)
 			{
 				throw new IOException("Fake IOException from TermVectorsFormat.vectorsWriter()");
 			}
-			return new CrankyTermVectorsFormat.CrankyTermVectorsWriter(delegate_.VectorsWriter
+			return new CrankyTermVectorsFormat.CrankyTermVectorsWriter(tvFormat.VectorsWriter
 				(directory, segmentInfo, context), random);
 		}
 
 		internal class CrankyTermVectorsWriter : TermVectorsWriter
 		{
-			internal readonly TermVectorsWriter delegate_;
+			internal readonly TermVectorsWriter tvWriter;
 
 			internal readonly Random random;
 
 			internal CrankyTermVectorsWriter(TermVectorsWriter delegate_, Random random)
 			{
-				this.delegate_ = delegate_;
+				this.tvWriter = delegate_;
 				this.random = random;
 			}
 
 			public override void Abort()
 			{
-				delegate_.Abort();
+				tvWriter.Abort();
 				if (random.Next(100) == 0)
 				{
-					throw new RuntimeException(new IOException("Fake IOException from TermVectorsWriter.abort()"
-						));
+					throw new IOException("Fake IOException from TermVectorsWriter.abort()");
 				}
 			}
 
-			/// <exception cref="System.IO.IOException"></exception>
+			
 			public override int Merge(MergeState mergeState)
 			{
 				if (random.Next(100) == 0)
@@ -78,20 +68,20 @@ namespace Lucene.Net.Codecs.Cranky
 				return base.Merge(mergeState);
 			}
 
-			/// <exception cref="System.IO.IOException"></exception>
+			
 			public override void Finish(FieldInfos fis, int numDocs)
 			{
 				if (random.Next(100) == 0)
 				{
 					throw new IOException("Fake IOException from TermVectorsWriter.finish()");
 				}
-				delegate_.Finish(fis, numDocs);
+				tvWriter.Finish(fis, numDocs);
 			}
 
-			/// <exception cref="System.IO.IOException"></exception>
-			public override void Close()
+
+		    protected override void Dispose(bool disposing)
 			{
-				delegate_.Close();
+				tvWriter.Dispose();
 				if (random.Next(100) == 0)
 				{
 					throw new IOException("Fake IOException from TermVectorsWriter.close()");
@@ -106,7 +96,7 @@ namespace Lucene.Net.Codecs.Cranky
 				{
 					throw new IOException("Fake IOException from TermVectorsWriter.startDocument()");
 				}
-				delegate_.StartDocument(numVectorFields);
+				tvWriter.StartDocument(numVectorFields);
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
@@ -116,7 +106,7 @@ namespace Lucene.Net.Codecs.Cranky
 				{
 					throw new IOException("Fake IOException from TermVectorsWriter.finishDocument()");
 				}
-				delegate_.FinishDocument();
+				tvWriter.FinishDocument();
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
@@ -127,7 +117,7 @@ namespace Lucene.Net.Codecs.Cranky
 				{
 					throw new IOException("Fake IOException from TermVectorsWriter.startField()");
 				}
-				delegate_.StartField(info, numTerms, positions, offsets, payloads);
+				tvWriter.StartField(info, numTerms, positions, offsets, payloads);
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
@@ -137,7 +127,7 @@ namespace Lucene.Net.Codecs.Cranky
 				{
 					throw new IOException("Fake IOException from TermVectorsWriter.finishField()");
 				}
-				delegate_.FinishField();
+				tvWriter.FinishField();
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
@@ -147,7 +137,7 @@ namespace Lucene.Net.Codecs.Cranky
 				{
 					throw new IOException("Fake IOException from TermVectorsWriter.startTerm()");
 				}
-				delegate_.StartTerm(term, freq);
+				tvWriter.StartTerm(term, freq);
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
@@ -157,7 +147,7 @@ namespace Lucene.Net.Codecs.Cranky
 				{
 					throw new IOException("Fake IOException from TermVectorsWriter.finishTerm()");
 				}
-				delegate_.FinishTerm();
+				tvWriter.FinishTerm();
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
@@ -168,7 +158,7 @@ namespace Lucene.Net.Codecs.Cranky
 				{
 					throw new IOException("Fake IOException from TermVectorsWriter.addPosition()");
 				}
-				delegate_.AddPosition(position, startOffset, endOffset, payload);
+				tvWriter.AddPosition(position, startOffset, endOffset, payload);
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
@@ -182,13 +172,16 @@ namespace Lucene.Net.Codecs.Cranky
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
-			public override IComparer<BytesRef> GetComparator()
+			public override IComparer<BytesRef> Comparator
 			{
-				if (random.Next(10000) == 0)
-				{
-					throw new IOException("Fake IOException from TermVectorsWriter.getComparator()");
-				}
-				return delegate_.GetComparator();
+			    get
+			    {
+			        if (random.Next(10000) == 0)
+			        {
+			            throw new IOException("Fake IOException from TermVectorsWriter.getComparator()");
+			        }
+			        return tvWriter.Comparator;
+			    }
 			}
 		}
 	}

@@ -53,7 +53,7 @@ namespace Lucene.Net.Codecs
             }
         }
 
-        protected internal virtual void ResetSkip()
+        public virtual void ResetSkip()
         {
             if (skipBuffer == null)
             {

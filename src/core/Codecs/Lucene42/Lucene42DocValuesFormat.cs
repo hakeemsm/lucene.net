@@ -1,23 +1,24 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Lucene.Net.Index;
 using Lucene.Net.Util.Packed;
 
 namespace Lucene.Net.Codecs.Lucene42
 {
-    public sealed class Lucene42DocValuesFormat : DocValuesFormat
+    public class Lucene42DocValuesFormat : DocValuesFormat
     {
-        public Lucene42DocValuesFormat()
-            : base("Lucene42")
+		public const int MAX_BINARY_FIELD_LENGTH = (1 << 15) - 2;
+        protected internal readonly float acceptableOverheadRatio;
+		public Lucene42DocValuesFormat() : this(PackedInts.DEFAULT)
+		{
+		}
+		public Lucene42DocValuesFormat(float acceptableOverheadRatio) : base("Lucene42")
         {
+			this.acceptableOverheadRatio = acceptableOverheadRatio;
         }
 
         public override DocValuesConsumer FieldsConsumer(SegmentWriteState state)
         {
-            // note: we choose DEFAULT here (its reasonably fast, and for small bpv has tiny waste)
-            return new Lucene42DocValuesConsumer(state, DATA_CODEC, DATA_EXTENSION, METADATA_CODEC, METADATA_EXTENSION, PackedInts.DEFAULT);
+			throw new NotSupportedException("this codec can only be used for reading");
         }
 
         public override DocValuesProducer FieldsProducer(SegmentReadState state)
@@ -25,9 +26,9 @@ namespace Lucene.Net.Codecs.Lucene42
             return new Lucene42DocValuesProducer(state, DATA_CODEC, DATA_EXTENSION, METADATA_CODEC, METADATA_EXTENSION);
         }
 
-        private const string DATA_CODEC = "Lucene42DocValuesData";
-        private const string DATA_EXTENSION = "dvd";
-        private const string METADATA_CODEC = "Lucene42DocValuesMetadata";
-        private const string METADATA_EXTENSION = "dvm";
+        protected const string DATA_CODEC = "Lucene42DocValuesData";
+        protected const string DATA_EXTENSION = "dvd";
+        protected const string METADATA_CODEC = "Lucene42DocValuesMetadata";
+        protected const string METADATA_EXTENSION = "dvm";
     }
 }

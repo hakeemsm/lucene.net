@@ -1,188 +1,102 @@
-/* 
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+/*
+ * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
  * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using System;
-
-using NUnit.Framework;
-
-using SimpleAnalyzer = Lucene.Net.Analysis.SimpleAnalyzer;
-using Document = Lucene.Net.Documents.Document;
-using Field = Lucene.Net.Documents.Field;
-using Index = Lucene.Net.Documents.Field.Index;
-using Store = Lucene.Net.Documents.Field.Store;
-using RAMDirectory = Lucene.Net.Store.RAMDirectory;
-using LuceneTestCase = Lucene.Net.Util.LuceneTestCase;
+using Lucene.Net.Analysis;
+using Lucene.Net.Document;
+using Lucene.Net.Index;
+using Lucene.Net.Search;
+using Lucene.Net.Store;
+using Lucene.Net.Util;
+using Sharpen;
 
 namespace Lucene.Net.Index
 {
-	
-    [TestFixture]
-	public class TestParallelTermEnum:LuceneTestCase
+	public class TestParallelTermEnum : LuceneTestCase
 	{
-		private IndexReader ir1;
-		private IndexReader ir2;
-		
-		[SetUp]
-		public override void  SetUp()
+		private AtomicReader ir1;
+
+		private AtomicReader ir2;
+
+		private Directory rd1;
+
+		private Directory rd2;
+
+		/// <exception cref="System.Exception"></exception>
+		public override void SetUp()
 		{
 			base.SetUp();
-			Document doc;
-			
-			RAMDirectory rd1 = new RAMDirectory();
-			IndexWriter iw1 = new IndexWriter(rd1, new SimpleAnalyzer(), true, IndexWriter.MaxFieldLength.LIMITED);
-			
-			doc = new Document();
-			doc.Add(new Field("field1", "the quick brown fox jumps", Field.Store.YES, Field.Index.ANALYZED));
-			doc.Add(new Field("field2", "the quick brown fox jumps", Field.Store.YES, Field.Index.ANALYZED));
-			doc.Add(new Field("field4", "", Field.Store.NO, Field.Index.ANALYZED));
+			Lucene.Net.Document.Document doc;
+			rd1 = NewDirectory();
+			IndexWriter iw1 = new IndexWriter(rd1, NewIndexWriterConfig(TEST_VERSION_CURRENT, 
+				new MockAnalyzer(Random())));
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewTextField("field1", "the quick brown fox jumps", Field.Store.YES));
+			doc.Add(NewTextField("field2", "the quick brown fox jumps", Field.Store.YES));
 			iw1.AddDocument(doc);
-			
 			iw1.Close();
-			RAMDirectory rd2 = new RAMDirectory();
-			IndexWriter iw2 = new IndexWriter(rd2, new SimpleAnalyzer(), true, IndexWriter.MaxFieldLength.LIMITED);
-			
-			doc = new Document();
-			doc.Add(new Field("field0", "", Field.Store.NO, Field.Index.ANALYZED));
-			doc.Add(new Field("field1", "the fox jumps over the lazy dog", Field.Store.YES, Field.Index.ANALYZED));
-			doc.Add(new Field("field3", "the fox jumps over the lazy dog", Field.Store.YES, Field.Index.ANALYZED));
+			rd2 = NewDirectory();
+			IndexWriter iw2 = new IndexWriter(rd2, NewIndexWriterConfig(TEST_VERSION_CURRENT, 
+				new MockAnalyzer(Random())));
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewTextField("field1", "the fox jumps over the lazy dog", Field.Store.YES
+				));
+			doc.Add(NewTextField("field3", "the fox jumps over the lazy dog", Field.Store.YES
+				));
 			iw2.AddDocument(doc);
-			
 			iw2.Close();
-			
-			this.ir1 = IndexReader.Open(rd1, true);
-		    this.ir2 = IndexReader.Open(rd2, true);
+			this.ir1 = SlowCompositeReaderWrapper.Wrap(DirectoryReader.Open(rd1));
+			this.ir2 = SlowCompositeReaderWrapper.Wrap(DirectoryReader.Open(rd2));
 		}
-		
-		[TearDown]
-		public override void  TearDown()
+
+		/// <exception cref="System.Exception"></exception>
+		public override void TearDown()
 		{
-			base.TearDown();
-			
 			ir1.Close();
 			ir2.Close();
+			rd1.Close();
+			rd2.Close();
+			base.TearDown();
 		}
-		
-		[Test]
-		public virtual void  Test1()
+
+		/// <exception cref="System.IO.IOException"></exception>
+		private void CheckTerms(Terms terms, Bits liveDocs, params string[] termsList)
 		{
-			ParallelReader pr = new ParallelReader();
-			pr.Add(ir1);
-			pr.Add(ir2);
-			
-			TermDocs td = pr.TermDocs();
-			
-			TermEnum te = pr.Terms();
-			Assert.IsTrue(te.Next());
-			Assert.AreEqual("field1:brown", te.Term.ToString());
-			td.Seek(te.Term);
-			Assert.IsTrue(td.Next());
-			Assert.AreEqual(0, td.Doc);
-			Assert.IsFalse(td.Next());
-			Assert.IsTrue(te.Next());
-			Assert.AreEqual("field1:fox", te.Term.ToString());
-			td.Seek(te.Term);
-			Assert.IsTrue(td.Next());
-			Assert.AreEqual(0, td.Doc);
-			Assert.IsFalse(td.Next());
-			Assert.IsTrue(te.Next());
-			Assert.AreEqual("field1:jumps", te.Term.ToString());
-			td.Seek(te.Term);
-			Assert.IsTrue(td.Next());
-			Assert.AreEqual(0, td.Doc);
-			Assert.IsFalse(td.Next());
-			Assert.IsTrue(te.Next());
-			Assert.AreEqual("field1:quick", te.Term.ToString());
-			td.Seek(te.Term);
-			Assert.IsTrue(td.Next());
-			Assert.AreEqual(0, td.Doc);
-			Assert.IsFalse(td.Next());
-			Assert.IsTrue(te.Next());
-			Assert.AreEqual("field1:the", te.Term.ToString());
-			td.Seek(te.Term);
-			Assert.IsTrue(td.Next());
-			Assert.AreEqual(0, td.Doc);
-			Assert.IsFalse(td.Next());
-			Assert.IsTrue(te.Next());
-			Assert.AreEqual("field2:brown", te.Term.ToString());
-			td.Seek(te.Term);
-			Assert.IsTrue(td.Next());
-			Assert.AreEqual(0, td.Doc);
-			Assert.IsFalse(td.Next());
-			Assert.IsTrue(te.Next());
-			Assert.AreEqual("field2:fox", te.Term.ToString());
-			td.Seek(te.Term);
-			Assert.IsTrue(td.Next());
-			Assert.AreEqual(0, td.Doc);
-			Assert.IsFalse(td.Next());
-			Assert.IsTrue(te.Next());
-			Assert.AreEqual("field2:jumps", te.Term.ToString());
-			td.Seek(te.Term);
-			Assert.IsTrue(td.Next());
-			Assert.AreEqual(0, td.Doc);
-			Assert.IsFalse(td.Next());
-			Assert.IsTrue(te.Next());
-			Assert.AreEqual("field2:quick", te.Term.ToString());
-			td.Seek(te.Term);
-			Assert.IsTrue(td.Next());
-			Assert.AreEqual(0, td.Doc);
-			Assert.IsFalse(td.Next());
-			Assert.IsTrue(te.Next());
-			Assert.AreEqual("field2:the", te.Term.ToString());
-			td.Seek(te.Term);
-			Assert.IsTrue(td.Next());
-			Assert.AreEqual(0, td.Doc);
-			Assert.IsFalse(td.Next());
-			Assert.IsTrue(te.Next());
-			Assert.AreEqual("field3:dog", te.Term.ToString());
-			td.Seek(te.Term);
-			Assert.IsTrue(td.Next());
-			Assert.AreEqual(0, td.Doc);
-			Assert.IsFalse(td.Next());
-			Assert.IsTrue(te.Next());
-			Assert.AreEqual("field3:fox", te.Term.ToString());
-			td.Seek(te.Term);
-			Assert.IsTrue(td.Next());
-			Assert.AreEqual(0, td.Doc);
-			Assert.IsFalse(td.Next());
-			Assert.IsTrue(te.Next());
-			Assert.AreEqual("field3:jumps", te.Term.ToString());
-			td.Seek(te.Term);
-			Assert.IsTrue(td.Next());
-			Assert.AreEqual(0, td.Doc);
-			Assert.IsFalse(td.Next());
-			Assert.IsTrue(te.Next());
-			Assert.AreEqual("field3:lazy", te.Term.ToString());
-			td.Seek(te.Term);
-			Assert.IsTrue(td.Next());
-			Assert.AreEqual(0, td.Doc);
-			Assert.IsFalse(td.Next());
-			Assert.IsTrue(te.Next());
-			Assert.AreEqual("field3:over", te.Term.ToString());
-			td.Seek(te.Term);
-			Assert.IsTrue(td.Next());
-			Assert.AreEqual(0, td.Doc);
-			Assert.IsFalse(td.Next());
-			Assert.IsTrue(te.Next());
-			Assert.AreEqual("field3:the", te.Term.ToString());
-			td.Seek(te.Term);
-			Assert.IsTrue(td.Next());
-			Assert.AreEqual(0, td.Doc);
-			Assert.IsFalse(td.Next());
-			Assert.IsFalse(te.Next());
+			NUnit.Framework.Assert.IsNotNull(terms);
+			TermsEnum te = terms.Iterator(null);
+			foreach (string t in termsList)
+			{
+				BytesRef b = te.Next();
+				NUnit.Framework.Assert.IsNotNull(b);
+				NUnit.Framework.Assert.AreEqual(t, b.Utf8ToString());
+				DocsEnum td = TestUtil.Docs(Random(), te, liveDocs, null, DocsEnum.FLAG_NONE);
+				NUnit.Framework.Assert.IsTrue(td.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
+				NUnit.Framework.Assert.AreEqual(0, td.DocID());
+				NUnit.Framework.Assert.AreEqual(td.NextDoc(), DocIdSetIterator.NO_MORE_DOCS);
+			}
+			NUnit.Framework.Assert.IsNull(te.Next());
+		}
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void Test1()
+		{
+			ParallelAtomicReader pr = new ParallelAtomicReader(ir1, ir2);
+			Bits liveDocs = pr.GetLiveDocs();
+			Fields fields = pr.Fields();
+			Iterator<string> fe = fields.Iterator();
+			string f = fe.Next();
+			NUnit.Framework.Assert.AreEqual("field1", f);
+			CheckTerms(fields.Terms(f), liveDocs, "brown", "fox", "jumps", "quick", "the");
+			f = fe.Next();
+			NUnit.Framework.Assert.AreEqual("field2", f);
+			CheckTerms(fields.Terms(f), liveDocs, "brown", "fox", "jumps", "quick", "the");
+			f = fe.Next();
+			NUnit.Framework.Assert.AreEqual("field3", f);
+			CheckTerms(fields.Terms(f), liveDocs, "dog", "fox", "jumps", "lazy", "over", "the"
+				);
+			NUnit.Framework.Assert.IsFalse(fe.HasNext());
 		}
 	}
 }

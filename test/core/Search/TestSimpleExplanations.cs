@@ -50,12 +50,14 @@ namespace Lucene.Net.Search
 		[Test]
 		public virtual void  TestT1()
 		{
-			Qtest("w1", new int[]{0, 1, 2, 3});
+			Qtest(new TermQuery(new Term(FIELD, "w1")), new int[] { 0, 1, 2, 3 });
 		}
 		[Test]
 		public virtual void  TestT2()
 		{
-			Qtest("w1^1000", new int[]{0, 1, 2, 3});
+			TermQuery termQuery = new TermQuery(new Term(FIELD, "w1"));
+			termQuery.SetBoost(100);
+			Qtest(termQuery, new int[] { 0, 1, 2, 3 });
 		}
 		
 		/* MatchAllDocs */
@@ -78,37 +80,63 @@ namespace Lucene.Net.Search
 		[Test]
 		public virtual void  TestP1()
 		{
-			Qtest("\"w1 w2\"", new int[]{0});
+			PhraseQuery phraseQuery = new PhraseQuery();
+			phraseQuery.Add(new Term(FIELD, "w1"));
+			phraseQuery.Add(new Term(FIELD, "w2"));
+			Qtest(phraseQuery, new int[] { 0 });
 		}
 		[Test]
 		public virtual void  TestP2()
 		{
-			Qtest("\"w1 w3\"", new int[]{1, 3});
+			PhraseQuery phraseQuery = new PhraseQuery();
+			phraseQuery.Add(new Term(FIELD, "w1"));
+			phraseQuery.Add(new Term(FIELD, "w3"));
+			Qtest(phraseQuery, new int[] { 1, 3 });
 		}
 		[Test]
 		public virtual void  TestP3()
 		{
-			Qtest("\"w1 w2\"~1", new int[]{0, 1, 2});
+			PhraseQuery phraseQuery = new PhraseQuery();
+			phraseQuery.SetSlop(1);
+			phraseQuery.Add(new Term(FIELD, "w1"));
+			phraseQuery.Add(new Term(FIELD, "w2"));
+			Qtest(phraseQuery, new int[] { 0, 1, 2 });
 		}
 		[Test]
 		public virtual void  TestP4()
 		{
-			Qtest("\"w2 w3\"~1", new int[]{0, 1, 2, 3});
+			PhraseQuery phraseQuery = new PhraseQuery();
+			phraseQuery.SetSlop(1);
+			phraseQuery.Add(new Term(FIELD, "w2"));
+			phraseQuery.Add(new Term(FIELD, "w3"));
+			Qtest(phraseQuery, new int[] { 0, 1, 2, 3 });
 		}
 		[Test]
 		public virtual void  TestP5()
 		{
-			Qtest("\"w3 w2\"~1", new int[]{1, 3});
+			PhraseQuery phraseQuery = new PhraseQuery();
+			phraseQuery.SetSlop(1);
+			phraseQuery.Add(new Term(FIELD, "w3"));
+			phraseQuery.Add(new Term(FIELD, "w2"));
+			Qtest(phraseQuery, new int[] { 1, 3 });
 		}
 		[Test]
 		public virtual void  TestP6()
 		{
-			Qtest("\"w3 w2\"~2", new int[]{0, 1, 3});
+			PhraseQuery phraseQuery = new PhraseQuery();
+			phraseQuery.SetSlop(2);
+			phraseQuery.Add(new Term(FIELD, "w3"));
+			phraseQuery.Add(new Term(FIELD, "w2"));
+			Qtest(phraseQuery, new int[] { 0, 1, 3 });
 		}
         [Test]
         public virtual void TestP7()
 		{
-			Qtest("\"w3 w2\"~3", new int[]{0, 1, 2, 3});
+			PhraseQuery phraseQuery = new PhraseQuery();
+			phraseQuery.SetSlop(3);
+			phraseQuery.Add(new Term(FIELD, "w3"));
+			phraseQuery.Add(new Term(FIELD, "w2"));
+			Qtest(phraseQuery, new int[] { 0, 1, 2, 3 });
 		}
 		
 		/* some simple filtered query tests */
@@ -116,27 +144,34 @@ namespace Lucene.Net.Search
 		[Test]
 		public virtual void  TestFQ1()
 		{
-			Qtest(new FilteredQuery(qp.Parse("w1"), new ItemizedFilter(new int[]{0, 1, 2, 3})), new int[]{0, 1, 2, 3});
+			Qtest(new FilteredQuery(new TermQuery(new Term(FIELD, "w1")), new TestExplanations.ItemizedFilter
+				(new int[] { 0, 1, 2, 3 })), new int[] { 0, 1, 2, 3 });
 		}
 		[Test]
 		public virtual void  TestFQ2()
 		{
-			Qtest(new FilteredQuery(qp.Parse("w1"), new ItemizedFilter(new int[]{0, 2, 3})), new int[]{0, 2, 3});
+			Qtest(new FilteredQuery(new TermQuery(new Term(FIELD, "w1")), new TestExplanations.ItemizedFilter
+				(new int[] { 0, 2, 3 })), new int[] { 0, 2, 3 });
 		}
 		[Test]
 		public virtual void  TestFQ3()
 		{
-			Qtest(new FilteredQuery(qp.Parse("xx"), new ItemizedFilter(new int[]{1, 3})), new int[]{3});
+			Qtest(new FilteredQuery(new TermQuery(new Term(FIELD, "xx")), new TestExplanations.ItemizedFilter
+				(new int[] { 1, 3 })), new int[] { 3 });
 		}
 		[Test]
 		public virtual void  TestFQ4()
 		{
-			Qtest(new FilteredQuery(qp.Parse("xx^1000"), new ItemizedFilter(new int[]{1, 3})), new int[]{3});
+			TermQuery termQuery = new TermQuery(new Term(FIELD, "xx"));
+			termQuery.SetBoost(1000);
+			Qtest(new FilteredQuery(termQuery, new TestExplanations.ItemizedFilter(new int[] 
+				{ 1, 3 })), new int[] { 3 });
 		}
 		[Test]
 		public virtual void  TestFQ6()
 		{
-			Query q = new FilteredQuery(qp.Parse("xx"), new ItemizedFilter(new int[]{1, 3}));
+			Query q = new FilteredQuery(new TermQuery(new Term(FIELD, "xx")), new TestExplanations.ItemizedFilter
+				(new int[] { 1, 3 }));
 			q.Boost = 1000;
 			Qtest(q, new int[]{3});
 		}
@@ -169,72 +204,103 @@ namespace Lucene.Net.Search
         public virtual void TestDMQ1()
 		{
 			DisjunctionMaxQuery q = new DisjunctionMaxQuery(0.0f);
-			q.Add(qp.Parse("w1"));
-			q.Add(qp.Parse("w5"));
+			q.Add(new TermQuery(new Term(FIELD, "w1")));
+			q.Add(new TermQuery(new Term(FIELD, "w5")));
 			Qtest(q, new int[]{0, 1, 2, 3});
 		}
 		[Test]
 		public virtual void  TestDMQ2()
 		{
 			DisjunctionMaxQuery q = new DisjunctionMaxQuery(0.5f);
-			q.Add(qp.Parse("w1"));
-			q.Add(qp.Parse("w5"));
+			q.Add(new TermQuery(new Term(FIELD, "w1")));
+			q.Add(new TermQuery(new Term(FIELD, "w5")));
 			Qtest(q, new int[]{0, 1, 2, 3});
 		}
 		[Test]
 		public virtual void  TestDMQ3()
 		{
 			DisjunctionMaxQuery q = new DisjunctionMaxQuery(0.5f);
-			q.Add(qp.Parse("QQ"));
-			q.Add(qp.Parse("w5"));
+			q.Add(new TermQuery(new Term(FIELD, "QQ")));
+			q.Add(new TermQuery(new Term(FIELD, "w5")));
 			Qtest(q, new int[]{0});
 		}
 		[Test]
 		public virtual void  TestDMQ4()
 		{
 			DisjunctionMaxQuery q = new DisjunctionMaxQuery(0.5f);
-			q.Add(qp.Parse("QQ"));
-			q.Add(qp.Parse("xx"));
+			q.Add(new TermQuery(new Term(FIELD, "QQ")));
+			q.Add(new TermQuery(new Term(FIELD, "xx")));
 			Qtest(q, new int[]{2, 3});
 		}
 		[Test]
 		public virtual void  TestDMQ5()
 		{
 			DisjunctionMaxQuery q = new DisjunctionMaxQuery(0.5f);
-			q.Add(qp.Parse("yy -QQ"));
-			q.Add(qp.Parse("xx"));
+			BooleanQuery booleanQuery = new BooleanQuery();
+			booleanQuery.Add(new TermQuery(new Term(FIELD, "yy")), BooleanClause.Occur.SHOULD
+				);
+			booleanQuery.Add(new TermQuery(new Term(FIELD, "QQ")), BooleanClause.Occur.MUST_NOT
+				);
+			q.Add(booleanQuery);
+			q.Add(new TermQuery(new Term(FIELD, "xx")));
 			Qtest(q, new int[]{2, 3});
 		}
         [Test]
         public virtual void TestDMQ6()
 		{
 			DisjunctionMaxQuery q = new DisjunctionMaxQuery(0.5f);
-			q.Add(qp.Parse("-yy w3"));
-			q.Add(qp.Parse("xx"));
+			BooleanQuery booleanQuery = new BooleanQuery();
+			booleanQuery.Add(new TermQuery(new Term(FIELD, "yy")), BooleanClause.Occur.MUST_NOT
+				);
+			booleanQuery.Add(new TermQuery(new Term(FIELD, "w3")), BooleanClause.Occur.SHOULD
+				);
+			q.Add(booleanQuery);
+			q.Add(new TermQuery(new Term(FIELD, "xx")));
 			Qtest(q, new int[]{0, 1, 2, 3});
 		}
 		[Test]
 		public virtual void  TestDMQ7()
 		{
 			DisjunctionMaxQuery q = new DisjunctionMaxQuery(0.5f);
-			q.Add(qp.Parse("-yy w3"));
-			q.Add(qp.Parse("w2"));
+			BooleanQuery booleanQuery = new BooleanQuery();
+			booleanQuery.Add(new TermQuery(new Term(FIELD, "yy")), BooleanClause.Occur.MUST_NOT
+				);
+			booleanQuery.Add(new TermQuery(new Term(FIELD, "w3")), BooleanClause.Occur.SHOULD
+				);
+			q.Add(booleanQuery);
+			q.Add(new TermQuery(new Term(FIELD, "w2")));
 			Qtest(q, new int[]{0, 1, 2, 3});
 		}
 		[Test]
 		public virtual void  TestDMQ8()
 		{
 			DisjunctionMaxQuery q = new DisjunctionMaxQuery(0.5f);
-			q.Add(qp.Parse("yy w5^100"));
-			q.Add(qp.Parse("xx^100000"));
+			BooleanQuery booleanQuery = new BooleanQuery();
+			booleanQuery.Add(new TermQuery(new Term(FIELD, "yy")), BooleanClause.Occur.SHOULD
+				);
+			TermQuery boostedQuery = new TermQuery(new Term(FIELD, "w5"));
+			boostedQuery.SetBoost(100);
+			booleanQuery.Add(boostedQuery, BooleanClause.Occur.SHOULD);
+			q.Add(booleanQuery);
+			TermQuery xxBoostedQuery = new TermQuery(new Term(FIELD, "xx"));
+			xxBoostedQuery.SetBoost(100000);
+			q.Add(xxBoostedQuery);
 			Qtest(q, new int[]{0, 2, 3});
 		}
 		[Test]
 		public virtual void  TestDMQ9()
 		{
 			DisjunctionMaxQuery q = new DisjunctionMaxQuery(0.5f);
-			q.Add(qp.Parse("yy w5^100"));
-			q.Add(qp.Parse("xx^0"));
+			BooleanQuery booleanQuery = new BooleanQuery();
+			booleanQuery.Add(new TermQuery(new Term(FIELD, "yy")), BooleanClause.Occur.SHOULD
+				);
+			TermQuery boostedQuery = new TermQuery(new Term(FIELD, "w5"));
+			boostedQuery.SetBoost(100);
+			booleanQuery.Add(boostedQuery, BooleanClause.Occur.SHOULD);
+			q.Add(booleanQuery);
+			TermQuery xxBoostedQuery = new TermQuery(new Term(FIELD, "xx"));
+			xxBoostedQuery.SetBoost(0);
+			q.Add(xxBoostedQuery);
 			Qtest(q, new int[]{0, 2, 3});
 		}
 		
@@ -296,94 +362,193 @@ namespace Lucene.Net.Search
 		[Test]
 		public virtual void  TestBQ1()
 		{
-			Qtest("+w1 +w2", new int[]{0, 1, 2, 3});
+			BooleanQuery query = new BooleanQuery();
+			query.Add(new TermQuery(new Term(FIELD, "w1")), BooleanClause.Occur.MUST);
+			query.Add(new TermQuery(new Term(FIELD, "w2")), BooleanClause.Occur.MUST);
+			Qtest(query, new int[] { 0, 1, 2, 3 });
 		}
 		[Test]
 		public virtual void  TestBQ2()
 		{
-			Qtest("+yy +w3", new int[]{2, 3});
+			BooleanQuery query = new BooleanQuery();
+			query.Add(new TermQuery(new Term(FIELD, "yy")), BooleanClause.Occur.MUST);
+			query.Add(new TermQuery(new Term(FIELD, "w3")), BooleanClause.Occur.MUST);
+			Qtest(query, new int[] { 2, 3 });
 		}
 		[Test]
 		public virtual void  TestBQ3()
 		{
-			Qtest("yy +w3", new int[]{0, 1, 2, 3});
+			BooleanQuery query = new BooleanQuery();
+			query.Add(new TermQuery(new Term(FIELD, "yy")), BooleanClause.Occur.SHOULD);
+			query.Add(new TermQuery(new Term(FIELD, "w3")), BooleanClause.Occur.MUST);
+			Qtest(query, new int[] { 0, 1, 2, 3 });
 		}
 		[Test]
 		public virtual void  TestBQ4()
 		{
-			Qtest("w1 (-xx w2)", new int[]{0, 1, 2, 3});
+			BooleanQuery outerQuery = new BooleanQuery();
+			outerQuery.Add(new TermQuery(new Term(FIELD, "w1")), BooleanClause.Occur.SHOULD);
+			BooleanQuery innerQuery = new BooleanQuery();
+			innerQuery.Add(new TermQuery(new Term(FIELD, "xx")), BooleanClause.Occur.MUST_NOT
+				);
+			innerQuery.Add(new TermQuery(new Term(FIELD, "w2")), BooleanClause.Occur.SHOULD);
+			outerQuery.Add(innerQuery, BooleanClause.Occur.SHOULD);
+			Qtest(outerQuery, new int[] { 0, 1, 2, 3 });
 		}
 		[Test]
 		public virtual void  TestBQ5()
 		{
-			Qtest("w1 (+qq w2)", new int[]{0, 1, 2, 3});
+			BooleanQuery outerQuery = new BooleanQuery();
+			outerQuery.Add(new TermQuery(new Term(FIELD, "w1")), BooleanClause.Occur.SHOULD);
+			BooleanQuery innerQuery = new BooleanQuery();
+			innerQuery.Add(new TermQuery(new Term(FIELD, "qq")), BooleanClause.Occur.MUST);
+			innerQuery.Add(new TermQuery(new Term(FIELD, "w2")), BooleanClause.Occur.SHOULD);
+			outerQuery.Add(innerQuery, BooleanClause.Occur.SHOULD);
+			Qtest(outerQuery, new int[] { 0, 1, 2, 3 });
 		}
 		[Test]
 		public virtual void  TestBQ6()
 		{
-			Qtest("w1 -(-qq w5)", new int[]{1, 2, 3});
+			BooleanQuery outerQuery = new BooleanQuery();
+			outerQuery.Add(new TermQuery(new Term(FIELD, "w1")), BooleanClause.Occur.SHOULD);
+			BooleanQuery innerQuery = new BooleanQuery();
+			innerQuery.Add(new TermQuery(new Term(FIELD, "qq")), BooleanClause.Occur.MUST_NOT
+				);
+			innerQuery.Add(new TermQuery(new Term(FIELD, "w5")), BooleanClause.Occur.SHOULD);
+			outerQuery.Add(innerQuery, BooleanClause.Occur.MUST_NOT);
+			Qtest(outerQuery, new int[] { 1, 2, 3 });
 		}
 		[Test]
 		public virtual void  TestBQ7()
 		{
-			Qtest("+w1 +(qq (xx -w2) (+w3 +w4))", new int[]{0});
+			BooleanQuery outerQuery = new BooleanQuery();
+			outerQuery.Add(new TermQuery(new Term(FIELD, "w1")), BooleanClause.Occur.MUST);
+			BooleanQuery innerQuery = new BooleanQuery();
+			innerQuery.Add(new TermQuery(new Term(FIELD, "qq")), BooleanClause.Occur.SHOULD);
+			BooleanQuery childLeft = new BooleanQuery();
+			childLeft.Add(new TermQuery(new Term(FIELD, "xx")), BooleanClause.Occur.SHOULD);
+			childLeft.Add(new TermQuery(new Term(FIELD, "w2")), BooleanClause.Occur.MUST_NOT);
+			innerQuery.Add(childLeft, BooleanClause.Occur.SHOULD);
+			BooleanQuery childRight = new BooleanQuery();
+			childRight.Add(new TermQuery(new Term(FIELD, "w3")), BooleanClause.Occur.MUST);
+			childRight.Add(new TermQuery(new Term(FIELD, "w4")), BooleanClause.Occur.MUST);
+			innerQuery.Add(childRight, BooleanClause.Occur.SHOULD);
+			outerQuery.Add(innerQuery, BooleanClause.Occur.MUST);
+			Qtest(outerQuery, new int[] { 0 });
 		}
 		[Test]
 		public virtual void  TestBQ8()
 		{
-			Qtest("+w1 (qq (xx -w2) (+w3 +w4))", new int[]{0, 1, 2, 3});
+			BooleanQuery outerQuery = new BooleanQuery();
+			outerQuery.Add(new TermQuery(new Term(FIELD, "w1")), BooleanClause.Occur.MUST);
+			BooleanQuery innerQuery = new BooleanQuery();
+			innerQuery.Add(new TermQuery(new Term(FIELD, "qq")), BooleanClause.Occur.SHOULD);
+			BooleanQuery childLeft = new BooleanQuery();
+			childLeft.Add(new TermQuery(new Term(FIELD, "xx")), BooleanClause.Occur.SHOULD);
+			childLeft.Add(new TermQuery(new Term(FIELD, "w2")), BooleanClause.Occur.MUST_NOT);
+			innerQuery.Add(childLeft, BooleanClause.Occur.SHOULD);
+			BooleanQuery childRight = new BooleanQuery();
+			childRight.Add(new TermQuery(new Term(FIELD, "w3")), BooleanClause.Occur.MUST);
+			childRight.Add(new TermQuery(new Term(FIELD, "w4")), BooleanClause.Occur.MUST);
+			innerQuery.Add(childRight, BooleanClause.Occur.SHOULD);
+			outerQuery.Add(innerQuery, BooleanClause.Occur.SHOULD);
+			Qtest(outerQuery, new int[] { 0, 1, 2, 3 });
 		}
 		[Test]
 		public virtual void  TestBQ9()
 		{
-			Qtest("+w1 (qq (-xx w2) -(+w3 +w4))", new int[]{0, 1, 2, 3});
+			BooleanQuery outerQuery = new BooleanQuery();
+			outerQuery.Add(new TermQuery(new Term(FIELD, "w1")), BooleanClause.Occur.MUST);
+			BooleanQuery innerQuery = new BooleanQuery();
+			innerQuery.Add(new TermQuery(new Term(FIELD, "qq")), BooleanClause.Occur.SHOULD);
+			BooleanQuery childLeft = new BooleanQuery();
+			childLeft.Add(new TermQuery(new Term(FIELD, "xx")), BooleanClause.Occur.MUST_NOT);
+			childLeft.Add(new TermQuery(new Term(FIELD, "w2")), BooleanClause.Occur.SHOULD);
+			innerQuery.Add(childLeft, BooleanClause.Occur.SHOULD);
+			BooleanQuery childRight = new BooleanQuery();
+			childRight.Add(new TermQuery(new Term(FIELD, "w3")), BooleanClause.Occur.MUST);
+			childRight.Add(new TermQuery(new Term(FIELD, "w4")), BooleanClause.Occur.MUST);
+			innerQuery.Add(childRight, BooleanClause.Occur.MUST_NOT);
+			outerQuery.Add(innerQuery, BooleanClause.Occur.SHOULD);
+			Qtest(outerQuery, new int[] { 0, 1, 2, 3 });
 		}
 		[Test]
 		public virtual void  TestBQ10()
 		{
-			Qtest("+w1 +(qq (-xx w2) -(+w3 +w4))", new int[]{1});
+			BooleanQuery outerQuery = new BooleanQuery();
+			outerQuery.Add(new TermQuery(new Term(FIELD, "w1")), BooleanClause.Occur.MUST);
+			BooleanQuery innerQuery = new BooleanQuery();
+			innerQuery.Add(new TermQuery(new Term(FIELD, "qq")), BooleanClause.Occur.SHOULD);
+			BooleanQuery childLeft = new BooleanQuery();
+			childLeft.Add(new TermQuery(new Term(FIELD, "xx")), BooleanClause.Occur.MUST_NOT);
+			childLeft.Add(new TermQuery(new Term(FIELD, "w2")), BooleanClause.Occur.SHOULD);
+			innerQuery.Add(childLeft, BooleanClause.Occur.SHOULD);
+			BooleanQuery childRight = new BooleanQuery();
+			childRight.Add(new TermQuery(new Term(FIELD, "w3")), BooleanClause.Occur.MUST);
+			childRight.Add(new TermQuery(new Term(FIELD, "w4")), BooleanClause.Occur.MUST);
+			innerQuery.Add(childRight, BooleanClause.Occur.MUST_NOT);
+			outerQuery.Add(innerQuery, BooleanClause.Occur.MUST);
+			Qtest(outerQuery, new int[] { 1 });
 		}
 		[Test]
 		public virtual void  TestBQ11()
 		{
-			Qtest("w1 w2^1000.0", new int[]{0, 1, 2, 3});
+			BooleanQuery query = new BooleanQuery();
+			query.Add(new TermQuery(new Term(FIELD, "w1")), BooleanClause.Occur.SHOULD);
+			TermQuery boostedQuery = new TermQuery(new Term(FIELD, "w1"));
+			boostedQuery.SetBoost(1000);
+			query.Add(boostedQuery, BooleanClause.Occur.SHOULD);
+			Qtest(query, new int[] { 0, 1, 2, 3 });
 		}
 		[Test]
 		public virtual void  TestBQ14()
 		{
 			BooleanQuery q = new BooleanQuery(true);
-			q.Add(qp.Parse("QQQQQ"), Occur.SHOULD);
-			q.Add(qp.Parse("w1"), Occur.SHOULD);
+			q.Add(new TermQuery(new Term(FIELD, "QQQQQ")), BooleanClause.Occur.SHOULD);
+			q.Add(new TermQuery(new Term(FIELD, "w1")), BooleanClause.Occur.SHOULD);
 			Qtest(q, new int[]{0, 1, 2, 3});
 		}
 		[Test]
 		public virtual void  TestBQ15()
 		{
 			BooleanQuery q = new BooleanQuery(true);
-			q.Add(qp.Parse("QQQQQ"), Occur.MUST_NOT);
-			q.Add(qp.Parse("w1"), Occur.SHOULD);
+			q.Add(new TermQuery(new Term(FIELD, "QQQQQ")), BooleanClause.Occur.MUST_NOT);
+			q.Add(new TermQuery(new Term(FIELD, "w1")), BooleanClause.Occur.SHOULD);
 			Qtest(q, new int[]{0, 1, 2, 3});
 		}
 		[Test]
 		public virtual void  TestBQ16()
 		{
 			BooleanQuery q = new BooleanQuery(true);
-			q.Add(qp.Parse("QQQQQ"), Occur.SHOULD);
-			q.Add(qp.Parse("w1 -xx"), Occur.SHOULD);
+			q.Add(new TermQuery(new Term(FIELD, "QQQQQ")), BooleanClause.Occur.SHOULD);
+			BooleanQuery booleanQuery = new BooleanQuery();
+			booleanQuery.Add(new TermQuery(new Term(FIELD, "w1")), BooleanClause.Occur.SHOULD
+				);
+			booleanQuery.Add(new TermQuery(new Term(FIELD, "xx")), BooleanClause.Occur.MUST_NOT
+				);
+			q.Add(booleanQuery, BooleanClause.Occur.SHOULD);
 			Qtest(q, new int[]{0, 1});
 		}
         [Test]
         public virtual void TestBQ17()
 		{
 			BooleanQuery q = new BooleanQuery(true);
-			q.Add(qp.Parse("w2"), Occur.SHOULD);
-			q.Add(qp.Parse("w1 -xx"), Occur.SHOULD);
+			q.Add(new TermQuery(new Term(FIELD, "w2")), BooleanClause.Occur.SHOULD);
+			BooleanQuery booleanQuery = new BooleanQuery();
+			booleanQuery.Add(new TermQuery(new Term(FIELD, "w1")), BooleanClause.Occur.SHOULD
+				);
+			booleanQuery.Add(new TermQuery(new Term(FIELD, "xx")), BooleanClause.Occur.MUST_NOT
+				);
+			q.Add(booleanQuery, BooleanClause.Occur.SHOULD);
 			Qtest(q, new int[]{0, 1, 2, 3});
 		}
 		[Test]
 		public virtual void  TestBQ19()
 		{
-			Qtest("-yy w3", new int[]{0, 1});
+			BooleanQuery query = new BooleanQuery();
+			query.Add(new TermQuery(new Term(FIELD, "yy")), BooleanClause.Occur.MUST_NOT);
+			query.Add(new TermQuery(new Term(FIELD, "w3")), BooleanClause.Occur.SHOULD);
+			Qtest(query, new int[] { 0, 1 });
 		}
 		
 		[Test]
@@ -391,16 +556,248 @@ namespace Lucene.Net.Search
 		{
 			BooleanQuery q = new BooleanQuery();
 			q.MinimumNumberShouldMatch = 2;
-			q.Add(qp.Parse("QQQQQ"), Occur.SHOULD);
-			q.Add(qp.Parse("yy"), Occur.SHOULD);
-			q.Add(qp.Parse("zz"), Occur.SHOULD);
-			q.Add(qp.Parse("w5"), Occur.SHOULD);
-			q.Add(qp.Parse("w4"), Occur.SHOULD);
+			q.Add(new TermQuery(new Term(FIELD, "QQQQQ")), BooleanClause.Occur.SHOULD);
+			q.Add(new TermQuery(new Term(FIELD, "yy")), BooleanClause.Occur.SHOULD);
+			q.Add(new TermQuery(new Term(FIELD, "zz")), BooleanClause.Occur.SHOULD);
+			q.Add(new TermQuery(new Term(FIELD, "w5")), BooleanClause.Occur.SHOULD);
+			q.Add(new TermQuery(new Term(FIELD, "w4")), BooleanClause.Occur.SHOULD);
 			
 			Qtest(q, new int[]{0, 3});
 		}
 		
+		public virtual void TestMultiFieldBQ1()
+		{
+			BooleanQuery query = new BooleanQuery();
+			query.Add(new TermQuery(new Term(FIELD, "w1")), BooleanClause.Occur.MUST);
+			query.Add(new TermQuery(new Term(ALTFIELD, "w2")), BooleanClause.Occur.MUST);
+			Qtest(query, new int[] { 0, 1, 2, 3 });
+		}
 		
+		public virtual void TestMultiFieldBQ2()
+		{
+			BooleanQuery query = new BooleanQuery();
+			query.Add(new TermQuery(new Term(FIELD, "yy")), BooleanClause.Occur.MUST);
+			query.Add(new TermQuery(new Term(ALTFIELD, "w3")), BooleanClause.Occur.MUST);
+			Qtest(query, new int[] { 2, 3 });
+		}
+		public virtual void TestMultiFieldBQ3()
+		{
+			BooleanQuery query = new BooleanQuery();
+			query.Add(new TermQuery(new Term(FIELD, "yy")), BooleanClause.Occur.SHOULD);
+			query.Add(new TermQuery(new Term(ALTFIELD, "w3")), BooleanClause.Occur.MUST);
+			Qtest(query, new int[] { 0, 1, 2, 3 });
+		}
+		public virtual void TestMultiFieldBQ4()
+		{
+			BooleanQuery outerQuery = new BooleanQuery();
+			outerQuery.Add(new TermQuery(new Term(FIELD, "w1")), BooleanClause.Occur.SHOULD);
+			BooleanQuery innerQuery = new BooleanQuery();
+			innerQuery.Add(new TermQuery(new Term(FIELD, "xx")), BooleanClause.Occur.MUST_NOT
+				);
+			innerQuery.Add(new TermQuery(new Term(ALTFIELD, "w2")), BooleanClause.Occur.SHOULD
+				);
+			outerQuery.Add(innerQuery, BooleanClause.Occur.SHOULD);
+			Qtest(outerQuery, new int[] { 0, 1, 2, 3 });
+		}
+		public virtual void TestMultiFieldBQ5()
+		{
+			BooleanQuery outerQuery = new BooleanQuery();
+			outerQuery.Add(new TermQuery(new Term(FIELD, "w1")), BooleanClause.Occur.SHOULD);
+			BooleanQuery innerQuery = new BooleanQuery();
+			innerQuery.Add(new TermQuery(new Term(ALTFIELD, "qq")), BooleanClause.Occur.MUST);
+			innerQuery.Add(new TermQuery(new Term(ALTFIELD, "w2")), BooleanClause.Occur.SHOULD
+				);
+			outerQuery.Add(innerQuery, BooleanClause.Occur.SHOULD);
+			Qtest(outerQuery, new int[] { 0, 1, 2, 3 });
+		}
+		public virtual void TestMultiFieldBQ6()
+		{
+			BooleanQuery outerQuery = new BooleanQuery();
+			outerQuery.Add(new TermQuery(new Term(FIELD, "w1")), BooleanClause.Occur.SHOULD);
+			BooleanQuery innerQuery = new BooleanQuery();
+			innerQuery.Add(new TermQuery(new Term(ALTFIELD, "qq")), BooleanClause.Occur.MUST_NOT
+				);
+			innerQuery.Add(new TermQuery(new Term(ALTFIELD, "w5")), BooleanClause.Occur.SHOULD
+				);
+			outerQuery.Add(innerQuery, BooleanClause.Occur.MUST_NOT);
+			Qtest(outerQuery, new int[] { 1, 2, 3 });
+		}
+		public virtual void TestMultiFieldBQ7()
+		{
+			BooleanQuery outerQuery = new BooleanQuery();
+			outerQuery.Add(new TermQuery(new Term(FIELD, "w1")), BooleanClause.Occur.MUST);
+			BooleanQuery innerQuery = new BooleanQuery();
+			innerQuery.Add(new TermQuery(new Term(ALTFIELD, "qq")), BooleanClause.Occur.SHOULD
+				);
+			BooleanQuery childLeft = new BooleanQuery();
+			childLeft.Add(new TermQuery(new Term(ALTFIELD, "xx")), BooleanClause.Occur.SHOULD
+				);
+			childLeft.Add(new TermQuery(new Term(ALTFIELD, "w2")), BooleanClause.Occur.MUST_NOT
+				);
+			innerQuery.Add(childLeft, BooleanClause.Occur.SHOULD);
+			BooleanQuery childRight = new BooleanQuery();
+			childRight.Add(new TermQuery(new Term(ALTFIELD, "w3")), BooleanClause.Occur.MUST);
+			childRight.Add(new TermQuery(new Term(ALTFIELD, "w4")), BooleanClause.Occur.MUST);
+			innerQuery.Add(childRight, BooleanClause.Occur.SHOULD);
+			outerQuery.Add(innerQuery, BooleanClause.Occur.MUST);
+			Qtest(outerQuery, new int[] { 0 });
+		}
+		public virtual void TestMultiFieldBQ8()
+		{
+			BooleanQuery outerQuery = new BooleanQuery();
+			outerQuery.Add(new TermQuery(new Term(ALTFIELD, "w1")), BooleanClause.Occur.MUST);
+			BooleanQuery innerQuery = new BooleanQuery();
+			innerQuery.Add(new TermQuery(new Term(FIELD, "qq")), BooleanClause.Occur.SHOULD);
+			BooleanQuery childLeft = new BooleanQuery();
+			childLeft.Add(new TermQuery(new Term(ALTFIELD, "xx")), BooleanClause.Occur.SHOULD
+				);
+			childLeft.Add(new TermQuery(new Term(FIELD, "w2")), BooleanClause.Occur.MUST_NOT);
+			innerQuery.Add(childLeft, BooleanClause.Occur.SHOULD);
+			BooleanQuery childRight = new BooleanQuery();
+			childRight.Add(new TermQuery(new Term(ALTFIELD, "w3")), BooleanClause.Occur.MUST);
+			childRight.Add(new TermQuery(new Term(FIELD, "w4")), BooleanClause.Occur.MUST);
+			innerQuery.Add(childRight, BooleanClause.Occur.SHOULD);
+			outerQuery.Add(innerQuery, BooleanClause.Occur.SHOULD);
+			Qtest(outerQuery, new int[] { 0, 1, 2, 3 });
+		}
+		public virtual void TestMultiFieldBQ9()
+		{
+			BooleanQuery outerQuery = new BooleanQuery();
+			outerQuery.Add(new TermQuery(new Term(FIELD, "w1")), BooleanClause.Occur.MUST);
+			BooleanQuery innerQuery = new BooleanQuery();
+			innerQuery.Add(new TermQuery(new Term(ALTFIELD, "qq")), BooleanClause.Occur.SHOULD
+				);
+			BooleanQuery childLeft = new BooleanQuery();
+			childLeft.Add(new TermQuery(new Term(FIELD, "xx")), BooleanClause.Occur.MUST_NOT);
+			childLeft.Add(new TermQuery(new Term(FIELD, "w2")), BooleanClause.Occur.SHOULD);
+			innerQuery.Add(childLeft, BooleanClause.Occur.SHOULD);
+			BooleanQuery childRight = new BooleanQuery();
+			childRight.Add(new TermQuery(new Term(ALTFIELD, "w3")), BooleanClause.Occur.MUST);
+			childRight.Add(new TermQuery(new Term(FIELD, "w4")), BooleanClause.Occur.MUST);
+			innerQuery.Add(childRight, BooleanClause.Occur.MUST_NOT);
+			outerQuery.Add(innerQuery, BooleanClause.Occur.SHOULD);
+			Qtest(outerQuery, new int[] { 0, 1, 2, 3 });
+		}
+		public virtual void TestMultiFieldBQ10()
+		{
+			BooleanQuery outerQuery = new BooleanQuery();
+			outerQuery.Add(new TermQuery(new Term(FIELD, "w1")), BooleanClause.Occur.MUST);
+			BooleanQuery innerQuery = new BooleanQuery();
+			innerQuery.Add(new TermQuery(new Term(ALTFIELD, "qq")), BooleanClause.Occur.SHOULD
+				);
+			BooleanQuery childLeft = new BooleanQuery();
+			childLeft.Add(new TermQuery(new Term(FIELD, "xx")), BooleanClause.Occur.MUST_NOT);
+			childLeft.Add(new TermQuery(new Term(ALTFIELD, "w2")), BooleanClause.Occur.SHOULD
+				);
+			innerQuery.Add(childLeft, BooleanClause.Occur.SHOULD);
+			BooleanQuery childRight = new BooleanQuery();
+			childRight.Add(new TermQuery(new Term(ALTFIELD, "w3")), BooleanClause.Occur.MUST);
+			childRight.Add(new TermQuery(new Term(FIELD, "w4")), BooleanClause.Occur.MUST);
+			innerQuery.Add(childRight, BooleanClause.Occur.MUST_NOT);
+			outerQuery.Add(innerQuery, BooleanClause.Occur.MUST);
+			Qtest(outerQuery, new int[] { 1 });
+		}
+		public virtual void TestMultiFieldBQofPQ1()
+		{
+			BooleanQuery query = new BooleanQuery();
+			PhraseQuery leftChild = new PhraseQuery();
+			leftChild.Add(new Term(FIELD, "w1"));
+			leftChild.Add(new Term(FIELD, "w2"));
+			query.Add(leftChild, BooleanClause.Occur.SHOULD);
+			PhraseQuery rightChild = new PhraseQuery();
+			rightChild.Add(new Term(ALTFIELD, "w1"));
+			rightChild.Add(new Term(ALTFIELD, "w2"));
+			query.Add(rightChild, BooleanClause.Occur.SHOULD);
+			Qtest(query, new int[] { 0 });
+		}
+		public virtual void TestMultiFieldBQofPQ2()
+		{
+			BooleanQuery query = new BooleanQuery();
+			PhraseQuery leftChild = new PhraseQuery();
+			leftChild.Add(new Term(FIELD, "w1"));
+			leftChild.Add(new Term(FIELD, "w3"));
+			query.Add(leftChild, BooleanClause.Occur.SHOULD);
+			PhraseQuery rightChild = new PhraseQuery();
+			rightChild.Add(new Term(ALTFIELD, "w1"));
+			rightChild.Add(new Term(ALTFIELD, "w3"));
+			query.Add(rightChild, BooleanClause.Occur.SHOULD);
+			Qtest(query, new int[] { 1, 3 });
+		}
+		public virtual void TestMultiFieldBQofPQ3()
+		{
+			BooleanQuery query = new BooleanQuery();
+			PhraseQuery leftChild = new PhraseQuery();
+			leftChild.SetSlop(1);
+			leftChild.Add(new Term(FIELD, "w1"));
+			leftChild.Add(new Term(FIELD, "w2"));
+			query.Add(leftChild, BooleanClause.Occur.SHOULD);
+			PhraseQuery rightChild = new PhraseQuery();
+			rightChild.SetSlop(1);
+			rightChild.Add(new Term(ALTFIELD, "w1"));
+			rightChild.Add(new Term(ALTFIELD, "w2"));
+			query.Add(rightChild, BooleanClause.Occur.SHOULD);
+			Qtest(query, new int[] { 0, 1, 2 });
+		}
+		public virtual void TestMultiFieldBQofPQ4()
+		{
+			BooleanQuery query = new BooleanQuery();
+			PhraseQuery leftChild = new PhraseQuery();
+			leftChild.SetSlop(1);
+			leftChild.Add(new Term(FIELD, "w2"));
+			leftChild.Add(new Term(FIELD, "w3"));
+			query.Add(leftChild, BooleanClause.Occur.SHOULD);
+			PhraseQuery rightChild = new PhraseQuery();
+			rightChild.SetSlop(1);
+			rightChild.Add(new Term(ALTFIELD, "w2"));
+			rightChild.Add(new Term(ALTFIELD, "w3"));
+			query.Add(rightChild, BooleanClause.Occur.SHOULD);
+			Qtest(query, new int[] { 0, 1, 2, 3 });
+		}
+		public virtual void TestMultiFieldBQofPQ5()
+		{
+			BooleanQuery query = new BooleanQuery();
+			PhraseQuery leftChild = new PhraseQuery();
+			leftChild.SetSlop(1);
+			leftChild.Add(new Term(FIELD, "w3"));
+			leftChild.Add(new Term(FIELD, "w2"));
+			query.Add(leftChild, BooleanClause.Occur.SHOULD);
+			PhraseQuery rightChild = new PhraseQuery();
+			rightChild.SetSlop(1);
+			rightChild.Add(new Term(ALTFIELD, "w3"));
+			rightChild.Add(new Term(ALTFIELD, "w2"));
+			query.Add(rightChild, BooleanClause.Occur.SHOULD);
+			Qtest(query, new int[] { 1, 3 });
+		}
+		public virtual void TestMultiFieldBQofPQ6()
+		{
+			BooleanQuery query = new BooleanQuery();
+			PhraseQuery leftChild = new PhraseQuery();
+			leftChild.SetSlop(2);
+			leftChild.Add(new Term(FIELD, "w3"));
+			leftChild.Add(new Term(FIELD, "w2"));
+			query.Add(leftChild, BooleanClause.Occur.SHOULD);
+			PhraseQuery rightChild = new PhraseQuery();
+			rightChild.SetSlop(2);
+			rightChild.Add(new Term(ALTFIELD, "w3"));
+			rightChild.Add(new Term(ALTFIELD, "w2"));
+			query.Add(rightChild, BooleanClause.Occur.SHOULD);
+			Qtest(query, new int[] { 0, 1, 3 });
+		}
+		public virtual void TestMultiFieldBQofPQ7()
+		{
+			BooleanQuery query = new BooleanQuery();
+			PhraseQuery leftChild = new PhraseQuery();
+			leftChild.SetSlop(3);
+			leftChild.Add(new Term(FIELD, "w3"));
+			leftChild.Add(new Term(FIELD, "w2"));
+			query.Add(leftChild, BooleanClause.Occur.SHOULD);
+			PhraseQuery rightChild = new PhraseQuery();
+			rightChild.SetSlop(1);
+			rightChild.Add(new Term(ALTFIELD, "w3"));
+			rightChild.Add(new Term(ALTFIELD, "w2"));
+			query.Add(rightChild, BooleanClause.Occur.SHOULD);
+			Qtest(query, new int[] { 0, 1, 2, 3 });
+		}
 		[Test]
 		public virtual void  TestTermQueryMultiSearcherExplain()
 		{

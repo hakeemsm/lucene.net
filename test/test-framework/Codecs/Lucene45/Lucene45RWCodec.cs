@@ -1,16 +1,7 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
-using Org.Apache.Lucene.Codecs;
 using Lucene.Net.Codecs.Lucene42;
-using Lucene.Net.Codecs.Lucene45;
-using Org.Apache.Lucene.Util;
-using Sharpen;
+using Lucene.Net.Codecs.Lucene42.TestFramework;
 
-namespace Lucene.Net.Codecs.Lucene45
+namespace Lucene.Net.Codecs.Lucene45.TestFramework
 {
 	/// <summary>
 	/// Read-write version of
@@ -19,32 +10,23 @@ namespace Lucene.Net.Codecs.Lucene45
 	/// </summary>
 	public class Lucene45RWCodec : Lucene45Codec
 	{
-		private sealed class _Lucene42FieldInfosFormat_34 : Lucene42FieldInfosFormat
+		private sealed class AnonLucene42FieldInfosFormat : Lucene42FieldInfosFormat
 		{
-			public _Lucene42FieldInfosFormat_34()
+		    /// <exception cref="System.IO.IOException"></exception>
+			public override FieldInfosWriter FieldInfosWriter
 			{
-			}
-
-			/// <exception cref="System.IO.IOException"></exception>
-			public override FieldInfosWriter GetFieldInfosWriter()
-			{
-				if (!LuceneTestCase.OLD_FORMAT_IMPERSONATION_IS_ACTIVE)
-				{
-					return base.GetFieldInfosWriter();
-				}
-				else
-				{
-					return new Lucene42FieldInfosWriter();
-				}
+		        get
+		        {
+		            return !LuceneTestCase.OLD_FORMAT_IMPERSONATION_IS_ACTIVE ? base.FieldInfosWriter : new Lucene42FieldInfosWriter();
+		        }
 			}
 		}
 
-		private readonly Lucene.Net.Codecs.FieldInfosFormat fieldInfosFormat = new 
-			_Lucene42FieldInfosFormat_34();
+		private readonly FieldInfosFormat fieldInfosFormat = new AnonLucene42FieldInfosFormat();
 
-		public override Lucene.Net.Codecs.FieldInfosFormat FieldInfosFormat()
+		public override FieldInfosFormat FieldInfosFormat
 		{
-			return fieldInfosFormat;
+		    get { return fieldInfosFormat; }
 		}
 	}
 }

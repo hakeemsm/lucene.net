@@ -10,7 +10,7 @@ using System.Text;
 namespace Lucene.Net.Codecs.Lucene40
 {
     [Obsolete]
-    internal class Lucene40FieldInfosReader : FieldInfosReader
+    public class Lucene40FieldInfosReader : FieldInfosReader
     {
         public Lucene40FieldInfosReader()
         {
@@ -113,25 +113,25 @@ namespace Lucene.Net.Codecs.Lucene40
             }
         }
 
-        internal static readonly String LEGACY_DV_TYPE_KEY = typeof(Lucene40FieldInfosReader).Name + ".dvtype";
-        internal static readonly String LEGACY_NORM_TYPE_KEY = typeof(Lucene40FieldInfosReader).Name + ".normtype";
+        public static readonly String LEGACY_DV_TYPE_KEY = typeof(Lucene40FieldInfosReader).Name + ".dvtype";
+        public static readonly String LEGACY_NORM_TYPE_KEY = typeof(Lucene40FieldInfosReader).Name + ".normtype";
 
-        internal class LegacyDocValuesType
+        public class LegacyDocValuesType
         {
             internal static readonly LegacyDocValuesType NONE = new LegacyDocValuesType("NONE", null);
-            internal static readonly LegacyDocValuesType VAR_INTS = new LegacyDocValuesType("VAR_INTS", FieldInfo.DocValuesType.NUMERIC);
+            public static readonly LegacyDocValuesType VAR_INTS = new LegacyDocValuesType("VAR_INTS", FieldInfo.DocValuesType.NUMERIC);
             internal static readonly LegacyDocValuesType FLOAT_32 = new LegacyDocValuesType("FLOAT_32", FieldInfo.DocValuesType.NUMERIC);
             internal static readonly LegacyDocValuesType FLOAT_64 = new LegacyDocValuesType("FLOAT_64", FieldInfo.DocValuesType.NUMERIC);
-            internal static readonly LegacyDocValuesType BYTES_FIXED_STRAIGHT = new LegacyDocValuesType("BYTES_FIXED_STRAIGHT", FieldInfo.DocValuesType.BINARY);
-            internal static readonly LegacyDocValuesType BYTES_FIXED_DEREF = new LegacyDocValuesType("BYTES_FIXED_DEREF", FieldInfo.DocValuesType.BINARY);
-            internal static readonly LegacyDocValuesType BYTES_VAR_STRAIGHT = new LegacyDocValuesType("BYTES_VAR_STRAIGHT", FieldInfo.DocValuesType.BINARY);
-            internal static readonly LegacyDocValuesType BYTES_VAR_DEREF = new LegacyDocValuesType("BYTES_VAR_DEREF", FieldInfo.DocValuesType.BINARY);
-            internal static readonly LegacyDocValuesType FIXED_INTS_16 = new LegacyDocValuesType("FIXED_INTS_16", FieldInfo.DocValuesType.NUMERIC);
-            internal static readonly LegacyDocValuesType FIXED_INTS_32 = new LegacyDocValuesType("FIXED_INTS_32", FieldInfo.DocValuesType.NUMERIC);
+            public static readonly LegacyDocValuesType BYTES_FIXED_STRAIGHT = new LegacyDocValuesType("BYTES_FIXED_STRAIGHT", FieldInfo.DocValuesType.BINARY);
+            public static readonly LegacyDocValuesType BYTES_FIXED_DEREF = new LegacyDocValuesType("BYTES_FIXED_DEREF", FieldInfo.DocValuesType.BINARY);
+            public static readonly LegacyDocValuesType BYTES_VAR_STRAIGHT = new LegacyDocValuesType("BYTES_VAR_STRAIGHT", FieldInfo.DocValuesType.BINARY);
+            public static readonly LegacyDocValuesType BYTES_VAR_DEREF = new LegacyDocValuesType("BYTES_VAR_DEREF", FieldInfo.DocValuesType.BINARY);
+            public static readonly LegacyDocValuesType FIXED_INTS_16 = new LegacyDocValuesType("FIXED_INTS_16", FieldInfo.DocValuesType.NUMERIC);
+            public static readonly LegacyDocValuesType FIXED_INTS_32 = new LegacyDocValuesType("FIXED_INTS_32", FieldInfo.DocValuesType.NUMERIC);
             internal static readonly LegacyDocValuesType FIXED_INTS_64 = new LegacyDocValuesType("FIXED_INTS_64", FieldInfo.DocValuesType.NUMERIC);
-            internal static readonly LegacyDocValuesType FIXED_INTS_8 = new LegacyDocValuesType("FIXED_INTS_8", FieldInfo.DocValuesType.NUMERIC);
-            internal static readonly LegacyDocValuesType BYTES_FIXED_SORTED = new LegacyDocValuesType("BYTES_FIXED_SORTED", FieldInfo.DocValuesType.SORTED);
-            internal static readonly LegacyDocValuesType BYTES_VAR_SORTED = new LegacyDocValuesType("BYTES_VAR_SORTED", FieldInfo.DocValuesType.SORTED);
+            public static readonly LegacyDocValuesType FIXED_INTS_8 = new LegacyDocValuesType("FIXED_INTS_8", FieldInfo.DocValuesType.NUMERIC);
+            public static readonly LegacyDocValuesType BYTES_FIXED_SORTED = new LegacyDocValuesType("BYTES_FIXED_SORTED", FieldInfo.DocValuesType.SORTED);
+            public static readonly LegacyDocValuesType BYTES_VAR_SORTED = new LegacyDocValuesType("BYTES_VAR_SORTED", FieldInfo.DocValuesType.SORTED);
 
             private static readonly LegacyDocValuesType[] values = new[] {
                 NONE,

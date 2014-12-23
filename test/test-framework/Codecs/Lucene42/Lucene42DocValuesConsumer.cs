@@ -1,22 +1,17 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using Org.Apache.Lucene.Codecs;
+using System.Linq;
+using Lucene.Net.Codecs.TestFramework;
+using Lucene.Net.Index;
+using Lucene.Net.Store;
 using Lucene.Net.Codecs.Lucene42;
-using Org.Apache.Lucene.Index;
-using Org.Apache.Lucene.Store;
-using Org.Apache.Lucene.Util;
-using Org.Apache.Lucene.Util.Fst;
-using Org.Apache.Lucene.Util.Packed;
-using Sharpen;
+using Lucene.Net.Util;
+using Lucene.Net.Util.Fst;
+using Lucene.Net.Util.Packed;
 
-namespace Lucene.Net.Codecs.Lucene42
+namespace Lucene.Net.Codecs.Lucene42.TestFramework.TestFramework
 {
 	/// <summary>
 	/// Writer for
@@ -38,7 +33,7 @@ namespace Lucene.Net.Codecs.Lucene42
 			)
 		{
 			this.acceptableOverheadRatio = acceptableOverheadRatio;
-			maxDoc = state.segmentInfo.GetDocCount();
+			maxDoc = state.segmentInfo.DocCount;
 			bool success = false;
 			try
 			{
@@ -59,34 +54,34 @@ namespace Lucene.Net.Codecs.Lucene42
 			{
 				if (!success)
 				{
-					IOUtils.CloseWhileHandlingException(this);
+					IOUtils.CloseWhileHandlingException((IDisposable)this);
 				}
 			}
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		public override void AddNumericField(FieldInfo field, Iterable<Number> values)
+		public override void AddNumericField(FieldInfo field, IEnumerable<long> values)
 		{
 			AddNumericField(field, values, true);
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		internal virtual void AddNumericField(FieldInfo field, Iterable<Number> values, bool
-			 optimizeStorage)
+		internal virtual void AddNumericField(FieldInfo field, IEnumerable<long> values, bool optimizeStorage)
 		{
 			meta.WriteVInt(field.number);
 			meta.WriteByte(Lucene42DocValuesProducer.NUMBER);
-			meta.WriteLong(data.GetFilePointer());
+			meta.WriteLong(data.FilePointer);
 			long minValue = long.MaxValue;
 			long maxValue = long.MinValue;
 			long gcd = 0;
 			// TODO: more efficient?
 			HashSet<long> uniqueValues = null;
-			if (optimizeStorage)
+		    var longList = values as IList<long> ?? values.ToList();
+		    if (optimizeStorage)
 			{
 				uniqueValues = new HashSet<long>();
 				long count = 0;
-				foreach (Number nv in values)
+				foreach (var nv in longList)
 				{
 					// TODO: support this as MemoryDVFormat (and be smart about missing maybe)
 					long v = nv == null ? 0 : nv;
@@ -112,7 +107,7 @@ namespace Lucene.Net.Codecs.Lucene42
 					maxValue = Math.Max(maxValue, v);
 					if (uniqueValues != null)
 					{
-						if (uniqueValues.AddItem(v))
+						if (uniqueValues.Add(v))
 						{
 							if (uniqueValues.Count > 256)
 							{
@@ -135,32 +130,31 @@ namespace Lucene.Net.Codecs.Lucene42
 				{
 					meta.WriteByte(Lucene42DocValuesProducer.UNCOMPRESSED);
 					// uncompressed
-					foreach (Number nv in values)
+					foreach (var nv in longList)
 					{
-						data.WriteByte(nv == null ? 0 : unchecked((byte)nv));
+						data.WriteLong(nv == null ? 0 : ((byte)nv));
 					}
 				}
 				else
 				{
 					meta.WriteByte(Lucene42DocValuesProducer.TABLE_COMPRESSED);
 					// table-compressed
-					long[] decode = Sharpen.Collections.ToArray(uniqueValues, new long[uniqueValues.Count
-						]);
+                    long[] decode = uniqueValues.ToArray();
 					Dictionary<long, int> encode = new Dictionary<long, int>();
 					data.WriteVInt(decode.Length);
 					for (int i = 0; i < decode.Length; i++)
 					{
 						data.WriteLong(decode[i]);
-						encode.Put(decode[i], i);
+						encode[decode[i]] = i;
 					}
 					meta.WriteVInt(PackedInts.VERSION_CURRENT);
 					data.WriteVInt(formatAndBits.format.GetId());
 					data.WriteVInt(formatAndBits.bitsPerValue);
 					PackedInts.Writer writer = PackedInts.GetWriterNoHeader(data, formatAndBits.format
 						, maxDoc, formatAndBits.bitsPerValue, PackedInts.DEFAULT_BUFFER_SIZE);
-					foreach (Number nv in values)
+					foreach (var nv in longList)
 					{
-						writer.Add(encode.Get(nv == null ? 0 : nv));
+						writer.Add(encode[nv == null ? 0 : nv]);
 					}
 					writer.Finish();
 				}
@@ -176,7 +170,7 @@ namespace Lucene.Net.Codecs.Lucene42
 					data.WriteVInt(Lucene42DocValuesProducer.BLOCK_SIZE);
 					BlockPackedWriter writer = new BlockPackedWriter(data, Lucene42DocValuesProducer.
 						BLOCK_SIZE);
-					foreach (Number nv in values)
+					foreach (var nv in longList)
 					{
 						long value = nv == null ? 0 : nv;
 						writer.Add((value - minValue) / gcd);
@@ -191,7 +185,7 @@ namespace Lucene.Net.Codecs.Lucene42
 					data.WriteVInt(Lucene42DocValuesProducer.BLOCK_SIZE);
 					BlockPackedWriter writer = new BlockPackedWriter(data, Lucene42DocValuesProducer.
 						BLOCK_SIZE);
-					foreach (Number nv in values)
+					foreach (var nv in longList)
 					{
 						writer.Add(nv == null ? 0 : nv);
 					}
@@ -200,8 +194,8 @@ namespace Lucene.Net.Codecs.Lucene42
 			}
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
-		public override void Close()
+
+	    protected override void Dispose(bool disposing)
 		{
 			bool success = false;
 			try
@@ -221,20 +215,20 @@ namespace Lucene.Net.Codecs.Lucene42
 				}
 				else
 				{
-					IOUtils.CloseWhileHandlingException(data, meta);
+					IOUtils.CloseWhileHandlingException((IDisposable)data, meta);
 				}
 			}
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		public override void AddBinaryField(FieldInfo field, Iterable<BytesRef> values)
+		public override void AddBinaryField(FieldInfo field, IEnumerable<BytesRef> values)
 		{
 			// write the byte[] data
 			meta.WriteVInt(field.number);
 			meta.WriteByte(Lucene42DocValuesProducer.BYTES);
 			int minLength = int.MaxValue;
 			int maxLength = int.MinValue;
-			long startFP = data.GetFilePointer();
+			long startFP = data.FilePointer;
 			foreach (BytesRef v in values)
 			{
 				int length = v == null ? 0 : v.length;
@@ -251,7 +245,7 @@ namespace Lucene.Net.Codecs.Lucene42
 				}
 			}
 			meta.WriteLong(startFP);
-			meta.WriteLong(data.GetFilePointer() - startFP);
+			meta.WriteLong(data.FilePointer - startFP);
 			meta.WriteVInt(minLength);
 			meta.WriteVInt(maxLength);
 			// if minLength == maxLength, its a fixed-length byte[], we are done (the addresses are implicit)
@@ -276,18 +270,18 @@ namespace Lucene.Net.Codecs.Lucene42
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		private void WriteFST(FieldInfo field, Iterable<BytesRef> values)
+		private void WriteFST(FieldInfo field, IEnumerable<BytesRef> values)
 		{
 			meta.WriteVInt(field.number);
 			meta.WriteByte(Lucene42DocValuesProducer.FST);
-			meta.WriteLong(data.GetFilePointer());
+			meta.WriteLong(data.FilePointer);
 			PositiveIntOutputs outputs = PositiveIntOutputs.GetSingleton();
 			Builder<long> builder = new Builder<long>(FST.INPUT_TYPE.BYTE1, outputs);
 			IntsRef scratch = new IntsRef();
 			long ord = 0;
 			foreach (BytesRef v in values)
 			{
-				builder.Add(Org.Apache.Lucene.Util.Fst.Util.ToIntsRef(v, scratch), ord);
+				builder.Add(Lucene.Net.Util.Fst.Util.ToIntsRef(v, scratch), ord);
 				ord++;
 			}
 			FST<long> fst = builder.Finish();
@@ -299,29 +293,16 @@ namespace Lucene.Net.Codecs.Lucene42
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		public override void AddSortedField(FieldInfo field, Iterable<BytesRef> values, Iterable
-			<Number> docToOrd)
+		public override void AddSortedField(FieldInfo field, IEnumerable<BytesRef> values, IEnumerable
+			<int> docToOrd)
 		{
 			// three cases for simulating the old writer:
 			// 1. no missing
 			// 2. missing (and empty string in use): remap ord=-1 -> ord=0
 			// 3. missing (and empty string not in use): remap all ords +1, insert empty string into values
-			bool anyMissing = false;
-			foreach (Number n in docToOrd)
-			{
-				if (n == -1)
-				{
-					anyMissing = true;
-					break;
-				}
-			}
-			bool hasEmptyString = false;
-			foreach (BytesRef b in values)
-			{
-				hasEmptyString = b.length == 0;
-				break;
-			}
-			if (!anyMissing)
+			bool anyMissing = docToOrd.Any(n => n == -1);
+		    bool hasEmptyString = values.Select(b => b.length == 0).FirstOrDefault();
+		    if (!anyMissing)
 			{
 			}
 			else
@@ -345,103 +326,122 @@ namespace Lucene.Net.Codecs.Lucene42
 
 		// note: this might not be the most efficient... but its fairly simple
 		/// <exception cref="System.IO.IOException"></exception>
-		public override void AddSortedSetField(FieldInfo field, Iterable<BytesRef> values
-			, Iterable<Number> docToOrdCount, Iterable<Number> ords)
+		public override void AddSortedSetField(FieldInfo field, IEnumerable<BytesRef> values
+			, IEnumerable<int> docToOrdCount, IEnumerable<long> ords)
 		{
 			// write the ordinals as a binary field
-			AddBinaryField(field, new _Iterable_312(docToOrdCount, ords));
+			
+            AddBinaryField(field, new AnonBytesRefEnumerable(docToOrdCount, ords));
 			// write the values as FST
 			WriteFST(field, values);
 		}
 
-		private sealed class _Iterable_312 : Iterable<BytesRef>
+	    
+
+	    private sealed class AnonBytesRefEnumerable : IEnumerable<BytesRef>
 		{
-			public _Iterable_312(Iterable<Number> docToOrdCount, Iterable<Number> ords)
+			public AnonBytesRefEnumerable(IEnumerable<int> docToOrdCount, IEnumerable<long> ords)
 			{
 				this.docToOrdCount = docToOrdCount;
 				this.ords = ords;
 			}
 
-			public override Iterator<BytesRef> Iterator()
+			public IEnumerator<BytesRef> GetEnumerator()
 			{
-				return new Lucene42DocValuesConsumer.SortedSetIterator(docToOrdCount.Iterator(), 
-					ords.Iterator());
+				return new SortedSetIterator(docToOrdCount.GetEnumerator(), ords.GetEnumerator());
 			}
 
-			private readonly Iterable<Number> docToOrdCount;
+			private readonly IEnumerable<int> docToOrdCount;
 
-			private readonly Iterable<Number> ords;
+			private readonly IEnumerable<long> ords;
+	        IEnumerator IEnumerable.GetEnumerator()
+	        {
+	            return GetEnumerator();
+	        }
 		}
 
-		internal class SortedSetIterator : Iterator<BytesRef>
+		internal class SortedSetIterator : IEnumerator<BytesRef>
 		{
-			internal byte[] buffer = new byte[10];
+			internal sbyte[] buffer = new sbyte[10];
 
 			internal ByteArrayDataOutput @out = new ByteArrayDataOutput();
 
 			internal BytesRef @ref = new BytesRef();
 
-			internal readonly Iterator<Number> counts;
+			internal readonly IEnumerator<int> counts;
 
-			internal readonly Iterator<Number> ords;
+			internal readonly IEnumerator<long> ords;
 
-			internal SortedSetIterator(Iterator<Number> counts, Iterator<Number> ords)
+			internal SortedSetIterator(IEnumerator<int> counts, IEnumerator<long> ords)
 			{
 				// per-document vint-encoded byte[]
 				this.counts = counts;
 				this.ords = ords;
 			}
 
-			public override bool HasNext()
+			public bool MoveNext()
 			{
-				return counts.HasNext();
+				return counts.MoveNext();
 			}
 
-			public override BytesRef Next()
+		    public void Reset()
+		    {
+		        throw new NotImplementedException();
+		    }
+
+		    object IEnumerator.Current
+		    {
+		        get { return Current; }
+		    }
+
+		    public BytesRef Current
 			{
-				if (!HasNext())
-				{
-					throw new NoSuchElementException();
-				}
-				int count = counts.Next();
-				int maxSize = count * 9;
-				// worst case
-				if (maxSize > buffer.Length)
-				{
-					buffer = ArrayUtil.Grow(buffer, maxSize);
-				}
-				try
-				{
-					EncodeValues(count);
-				}
-				catch (IOException bogus)
-				{
-					throw new RuntimeException(bogus);
-				}
-				@ref.bytes = buffer;
-				@ref.offset = 0;
-				@ref.length = @out.GetPosition();
-				return @ref;
+			    get
+			    {
+			        if (!MoveNext())
+			        {
+			            throw new ArgumentOutOfRangeException();
+			        }
+			        int count = counts.Current;
+			        int maxSize = count*9;
+			        // worst case
+			        if (maxSize > buffer.Length)
+			        {
+			            buffer = ArrayUtil.Grow(buffer, maxSize);
+			        }
+			        EncodeValues(count);
+			        @ref.bytes = buffer;
+			        @ref.offset = 0;
+			        @ref.length = @out.Position;
+			        return @ref;
+			    }
 			}
 
 			// encodes count values to buffer
 			/// <exception cref="System.IO.IOException"></exception>
 			private void EncodeValues(int count)
 			{
-				@out.Reset(buffer);
+			    var bytes = Array.ConvertAll(buffer, Convert.ToByte);
+			    @out.Reset(bytes);
 				long lastOrd = 0;
 				for (int i = 0; i < count; i++)
 				{
-					long ord = ords.Next();
+					long ord = ords.Current;
 					@out.WriteVLong(ord - lastOrd);
 					lastOrd = ord;
 				}
 			}
 
-			public override void Remove()
+			public void Remove()
 			{
 				throw new NotSupportedException();
 			}
+
+		    public void Dispose()
+		    {
+		        ords.Dispose();
+                counts.Dispose();
+		    }
 		}
 	}
 }

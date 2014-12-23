@@ -177,8 +177,8 @@ namespace Lucene.Net.Util.Packed
 
         public class FormatAndBits
         {
-            internal readonly Format format;
-            internal readonly int bitsPerValue;
+            public readonly Format format;
+            public readonly int bitsPerValue;
 
             public FormatAndBits(Format format, int bitsPerValue)
             {

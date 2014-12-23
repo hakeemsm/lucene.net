@@ -35,7 +35,7 @@ namespace Lucene.Net.Test.Util.Automaton
         [Test]
         public void TestNoWastedStates()
         {
-            AutomatonTestUtil.assertNoDetachedStates(new LevenshteinAutomata("abc", false).ToAutomaton(1));
+            AutomatonTestUtil.AssertNoDetachedStates(new LevenshteinAutomata("abc", false).ToAutomaton(1));
         }
 
         /** 

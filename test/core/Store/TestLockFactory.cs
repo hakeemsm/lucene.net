@@ -44,15 +44,15 @@ namespace Lucene.Net.Store
 		[Test]
 		public virtual void  TestCustomLockFactory()
 		{
-			Directory dir = new RAMDirectory();
+			Directory dir = new MockDirectoryWrapper(Random(), new RAMDirectory());
 			MockLockFactory lf = new MockLockFactory(this);
 			dir.SetLockFactory(lf);
 			
 			// Lock prefix should have been set:
 			Assert.IsTrue(lf.lockPrefixSet, "lock prefix was not set by the RAMDirectory");
 			
-			IndexWriter writer = new IndexWriter(dir, new WhitespaceAnalyzer(), true, IndexWriter.MaxFieldLength.LIMITED);
-			
+			IndexWriter writer = new IndexWriter(dir, new IndexWriterConfig(TEST_VERSION_CURRENT
+				, new MockAnalyzer(Random())));
 			// add 100 documents (so that commit lock is used)
 			for (int i = 0; i < 100; i++)
 			{
@@ -63,7 +63,7 @@ namespace Lucene.Net.Store
 			Assert.AreEqual(1, lf.locksCreated.Count, "# of unique locks created (after instantiating IndexWriter)");
 			Assert.IsTrue(lf.makeLockCount >= 1, "# calls to makeLock is 0 (after instantiating IndexWriter)");
 			
-			for (System.Collections.IEnumerator e = lf.locksCreated.Keys.GetEnumerator(); e.MoveNext(); )
+			foreach (string lockName in lf.locksCreated.Keys)
 			{
 				System.String lockName = (System.String) e.Current;
 				MockLockFactory.MockLock lock_Renamed = (MockLockFactory.MockLock) lf.locksCreated[lockName];
@@ -79,19 +79,21 @@ namespace Lucene.Net.Store
 		[Test]
 		public virtual void  TestRAMDirectoryNoLocking()
 		{
-			Directory dir = new RAMDirectory();
-			dir.SetLockFactory(NoLockFactory.Instance);
-			
+			MockDirectoryWrapper dir = new MockDirectoryWrapper(Random(), new RAMDirectory());
+			dir.SetLockFactory(NoLockFactory.GetNoLockFactory());
+			dir.SetWrapLockFactory(false);
 			Assert.IsTrue(typeof(NoLockFactory).IsInstanceOfType(dir.LockFactory), "RAMDirectory.setLockFactory did not take");
 			
-			IndexWriter writer = new IndexWriter(dir, new WhitespaceAnalyzer(), true, IndexWriter.MaxFieldLength.LIMITED);
-			
+			IndexWriter writer = new IndexWriter(dir, new IndexWriterConfig(TEST_VERSION_CURRENT
+				, new MockAnalyzer(Random())));
+			writer.Commit();
 			// Create a 2nd IndexWriter.  This is normally not allowed but it should run through since we're not
 			// using any locks:
 			IndexWriter writer2 = null;
 			try
 			{
-				writer2 = new IndexWriter(dir, new WhitespaceAnalyzer(), false, IndexWriter.MaxFieldLength.LIMITED);
+				writer2 = new IndexWriter(dir, new IndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
+					(Random())).SetOpenMode(IndexWriterConfig.OpenMode.APPEND));
 			}
 			catch (System.Exception e)
 			{
@@ -115,8 +117,8 @@ namespace Lucene.Net.Store
 			
 			Assert.IsTrue(typeof(SingleInstanceLockFactory).IsInstanceOfType(dir.LockFactory), "RAMDirectory did not use correct LockFactory: got " + dir.LockFactory);
 			
-			IndexWriter writer = new IndexWriter(dir, new WhitespaceAnalyzer(), true, IndexWriter.MaxFieldLength.LIMITED);
-			
+			IndexWriter writer = new IndexWriter(dir, new IndexWriterConfig(TEST_VERSION_CURRENT
+				, new MockAnalyzer(Random())));
 			// Create a 2nd IndexWriter.  This should fail:
 			IndexWriter writer2 = null;
 
@@ -142,6 +144,7 @@ namespace Lucene.Net.Store
 		// IndexWriters over & over in 2 threads and making sure
 		// no unexpected exceptions are raised:
 		[Test]
+		[LuceneTestCase.Nightly]
 		public virtual void  TestStressLocks()
 		{
 			_testStressLocks(null, _TestUtil.GetTempDir("index.TestLockFactory6"));
@@ -152,6 +155,7 @@ namespace Lucene.Net.Store
 		// no unexpected exceptions are raised, but use
 		// NativeFSLockFactory:
 		[Test]
+		[LuceneTestCase.Nightly]
 		public virtual void  TestStressLocksNativeFSLockFactory()
 		{
 			System.IO.DirectoryInfo dir = _TestUtil.GetTempDir("index.TestLockFactory7");
@@ -160,15 +164,18 @@ namespace Lucene.Net.Store
 		
 		public virtual void  _testStressLocks(LockFactory lockFactory, System.IO.DirectoryInfo indexDir)
 		{
-			FSDirectory fs1 = FSDirectory.Open(new System.IO.DirectoryInfo(indexDir.FullName), lockFactory);
+			Directory dir = NewFSDirectory(indexDir, lockFactory);
 			
 			// First create a 1 doc index:
-			IndexWriter w = new IndexWriter(fs1, new WhitespaceAnalyzer(), true, IndexWriter.MaxFieldLength.LIMITED);
+			IndexWriter w = new IndexWriter(dir, new IndexWriterConfig(TEST_VERSION_CURRENT, 
+				new MockAnalyzer(Random())).SetOpenMode(IndexWriterConfig.OpenMode.CREATE));
 			AddDoc(w);
 			w.Close();
 			
-			WriterThread writer = new WriterThread(this, 100, fs1);
-			SearcherThread searcher = new SearcherThread(this, 100, fs1);
+			TestLockFactory.WriterThread writer = new TestLockFactory.WriterThread(this, 100, 
+				dir);
+			TestLockFactory.SearcherThread searcher = new TestLockFactory.SearcherThread(this
+				, 100, dir);
 			writer.Start();
 			searcher.Start();
 			
@@ -180,6 +187,7 @@ namespace Lucene.Net.Store
 			Assert.IsTrue(!writer.hitException, "IndexWriter hit unexpected exceptions");
 			Assert.IsTrue(!searcher.hitException, "IndexSearcher hit unexpected exceptions");
 			
+			dir.Close();
 			// Cleanup
 			_TestUtil.RmDir(indexDir);
 		}
@@ -197,20 +205,34 @@ namespace Lucene.Net.Store
 			
 			Assert.IsTrue(l.Obtain(), "failed to obtain lock");
 			Assert.IsTrue(!l2.Obtain(), "succeeded in obtaining lock twice");
-			l.Release();
+			l.Close();
 			
 			Assert.IsTrue(l2.Obtain(), "failed to obtain 2nd lock after first one was freed");
-			l2.Release();
+			l2.Close();
 			
 			// Make sure we can obtain first one again, test isLocked():
 			Assert.IsTrue(l.Obtain(), "failed to obtain lock");
 			Assert.IsTrue(l.IsLocked());
 			Assert.IsTrue(l2.IsLocked());
-			l.Release();
+			l.Close();
 			Assert.IsFalse(l.IsLocked());
 			Assert.IsFalse(l2.IsLocked());
 		}
 		
+		public virtual void TestNativeFSLockFactoryLockExists()
+		{
+			FilePath tempDir = CreateTempDir(LuceneTestCase.GetTestClass().Name);
+			FilePath lockFile = new FilePath(tempDir, "test.lock");
+			lockFile.CreateNewFile();
+			Lock l = new NativeFSLockFactory(tempDir).MakeLock("test.lock");
+			NUnit.Framework.Assert.IsTrue("failed to obtain lock", l.Obtain());
+			l.Close();
+			NUnit.Framework.Assert.IsFalse("failed to release lock", l.IsLocked());
+			if (lockFile.Exists())
+			{
+				lockFile.Delete();
+			}
+		}
 		// Verify: NativeFSLockFactory assigns null as lockPrefix if the lockDir is inside directory
 		[Test]
 		public virtual void  TestNativeFSLockFactoryPrefix()
@@ -218,9 +240,9 @@ namespace Lucene.Net.Store
 			
 			System.IO.DirectoryInfo fdir1 = _TestUtil.GetTempDir("TestLockFactory.8");
 			System.IO.DirectoryInfo fdir2 = _TestUtil.GetTempDir("TestLockFactory.8.Lockdir");
-			Directory dir1 = FSDirectory.Open(new System.IO.DirectoryInfo(fdir1.FullName), new NativeFSLockFactory(fdir1));
+			Directory dir1 = NewFSDirectory(new System.IO.DirectoryInfo(fdir1.FullName), new NativeFSLockFactory(fdir1));
 			// same directory, but locks are stored somewhere else. The prefix of the lock factory should != null
-			Directory dir2 = FSDirectory.Open(new System.IO.DirectoryInfo(fdir1.FullName), new NativeFSLockFactory(fdir2));
+			Directory dir2 = NewFSDirectory(new System.IO.DirectoryInfo(fdir1.FullName), new NativeFSLockFactory(fdir2));
 			
 			System.String prefix1 = dir1.LockFactory.LockPrefix;
 			Assert.IsNull(prefix1, "Lock prefix for lockDir same as directory should be null");
@@ -228,6 +250,8 @@ namespace Lucene.Net.Store
 			System.String prefix2 = dir2.LockFactory.LockPrefix;
 			Assert.IsNotNull(prefix2, "Lock prefix for lockDir outside of directory should be not null");
 			
+			dir1.Close();
+			dir2.Close();
 			_TestUtil.RmDir(fdir1);
 			_TestUtil.RmDir(fdir2);
 		}
@@ -240,12 +264,20 @@ namespace Lucene.Net.Store
 			
 			// Make sure we get null prefix:
 			System.IO.DirectoryInfo dirName = _TestUtil.GetTempDir("TestLockFactory.10");
-			Directory dir = FSDirectory.Open(dirName);
+			Directory dir = new SimpleFSDirectory(dirName);
 			
 			System.String prefix = dir.LockFactory.LockPrefix;
 			
 			Assert.IsTrue(null == prefix, "Default lock prefix should be null");
-			
+			dir.Close();
+			dir = new MMapDirectory(dirName);
+			NUnit.Framework.Assert.IsNull("Default lock prefix should be null", dir.GetLockFactory
+				().GetLockPrefix());
+			dir.Close();
+			dir = new NIOFSDirectory(dirName);
+			NUnit.Framework.Assert.IsNull("Default lock prefix should be null", dir.GetLockFactory
+				().GetLockPrefix());
+			dir.Close();
 			_TestUtil.RmDir(dirName);
 		}
 		

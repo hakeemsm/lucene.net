@@ -1,162 +1,129 @@
 /*
- *
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- *
-*/
+ * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
+ * 
+ * If this is an open source Java library, include the proper license and copyright attributions here!
+ */
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
 using Lucene.Net.Util;
-using NUnit.Framework;
+using Sharpen;
 
 namespace Lucene.Net.Index
 {
-    public class TestIndexCommit : LuceneTestCase
-    {
-        private Directory dir;
+	public class TestIndexCommit : LuceneTestCase
+	{
+		/// <exception cref="System.Exception"></exception>
+		[NUnit.Framework.Test]
+		public virtual void TestEqualsHashCode()
+		{
+			// LUCENE-2417: equals and hashCode() impl was inconsistent
+			Directory dir = NewDirectory();
+			IndexCommit ic1 = new _IndexCommit_34(dir);
+			IndexCommit ic2 = new _IndexCommit_45(dir);
+			NUnit.Framework.Assert.AreEqual(ic1, ic2);
+			NUnit.Framework.Assert.AreEqual("hash codes are not equals", ic1.GetHashCode(), ic2
+				.GetHashCode());
+			dir.Close();
+		}
 
-        private class IndexCommitFirst : IndexCommit
-        {
-            private readonly Directory _dir;
+		private sealed class _IndexCommit_34 : IndexCommit
+		{
+			public _IndexCommit_34(Directory dir)
+			{
+				this.dir = dir;
+			}
 
-            public IndexCommitFirst(Directory dir)
-            {
-                _dir = dir;
-            }
+			public override string GetSegmentsFileName()
+			{
+				return "a";
+			}
 
-            public override string SegmentsFileName
-            {
-                get { return "a"; }
-            }
+			public override Directory GetDirectory()
+			{
+				return dir;
+			}
 
-            public override ICollection<string> FileNames
-            {
-                get { return null; }
-            }
+			public override ICollection<string> GetFileNames()
+			{
+				return null;
+			}
 
-            public override void Delete()
-            { }
+			public override void Delete()
+			{
+			}
 
-            public override bool IsDeleted
-            {
-                get { return false; }
-            }
+			public override long GetGeneration()
+			{
+				return 0;
+			}
 
-            public override bool IsOptimized
-            {
-                get { return false; }
-            }
+			public override IDictionary<string, string> GetUserData()
+			{
+				return null;
+			}
 
-            public override long Version
-            {
-                get { return 12; }
-            }
+			public override bool IsDeleted()
+			{
+				return false;
+			}
 
-            public override long Generation
-            {
-                get { return 0; }
-            }
+			public override int GetSegmentCount()
+			{
+				return 2;
+			}
 
-            public override IDictionary<string, string> UserData
-            {
-                get { return null; }
-            }
+			private readonly Directory dir;
+		}
 
-            public override Directory Directory
-            {
-                get { return _dir; }
-            }
+		private sealed class _IndexCommit_45 : IndexCommit
+		{
+			public _IndexCommit_45(Directory dir)
+			{
+				this.dir = dir;
+			}
 
-            public override long Timestamp
-            {
-                get { return 1; }
-            }
-        }
-        private class IndexCommitSecond : IndexCommit
-        {
-            private readonly Directory _dir;
+			public override string GetSegmentsFileName()
+			{
+				return "b";
+			}
 
-            public IndexCommitSecond(Directory dir)
-            {
-                _dir = dir;
-            }
+			public override Directory GetDirectory()
+			{
+				return dir;
+			}
 
-            public override string SegmentsFileName
-            {
-                get { return "b"; }
-            }
+			public override ICollection<string> GetFileNames()
+			{
+				return null;
+			}
 
-            public override ICollection<string> FileNames
-            {
-                get { return null; }
-            }
+			public override void Delete()
+			{
+			}
 
-            public override void Delete()
-            { }
+			public override long GetGeneration()
+			{
+				return 0;
+			}
 
-            public override bool IsDeleted
-            {
-                get { return false; }
-            }
+			public override IDictionary<string, string> GetUserData()
+			{
+				return null;
+			}
 
-            public override bool IsOptimized
-            {
-                get { return false; }
-            }
+			public override bool IsDeleted()
+			{
+				return false;
+			}
 
-            public override long Version
-            {
-                get { return 12; }
-            }
+			public override int GetSegmentCount()
+			{
+				return 2;
+			}
 
-            public override long Generation
-            {
-                get { return 0; }
-            }
-
-            public override IDictionary<string, string> UserData
-            {
-                get { return null; }
-            }
-
-            public override Directory Directory
-            {
-                get { return _dir; }
-            }
-
-            public override long Timestamp
-            {
-                get { return 1; }
-            }
-        }
-
-        [Test]
-        public void TestEqualsHashCode()
-        {
-            dir = new RAMDirectory();
-            var ic1 = new IndexCommitFirst(dir);
-            var ic2 = new IndexCommitSecond(dir);
-            Assert.AreEqual(ic1, ic2);
-            Assert.AreEqual(ic1.GetHashCode(), ic2.GetHashCode(), "Hash codes are not equals");
-        }
-    }
+			private readonly Directory dir;
+		}
+	}
 }

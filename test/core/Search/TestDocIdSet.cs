@@ -1,224 +1,215 @@
-/* 
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+/*
+ * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
  * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using System;
-using Lucene.Net.Support;
-using NUnit.Framework;
-
-using WhitespaceAnalyzer = Lucene.Net.Analysis.WhitespaceAnalyzer;
-using Document = Lucene.Net.Documents.Document;
-using Field = Lucene.Net.Documents.Field;
-using Index = Lucene.Net.Documents.Field.Index;
-using Store = Lucene.Net.Documents.Field.Store;
-using IndexReader = Lucene.Net.Index.IndexReader;
-using IndexWriter = Lucene.Net.Index.IndexWriter;
-using MaxFieldLength = Lucene.Net.Index.IndexWriter.MaxFieldLength;
-using Directory = Lucene.Net.Store.Directory;
-using RAMDirectory = Lucene.Net.Store.RAMDirectory;
-using LuceneTestCase = Lucene.Net.Util.LuceneTestCase;
-using _TestUtil = Lucene.Net.Util._TestUtil;
+using Lucene.Net.Document;
+using Lucene.Net.Index;
+using Lucene.Net.Search;
+using Lucene.Net.Store;
+using Lucene.Net.Util;
+using Sharpen;
 
 namespace Lucene.Net.Search
 {
-	
-    [TestFixture]
-	public class TestDocIdSet:LuceneTestCase
+	public class TestDocIdSet : LuceneTestCase
 	{
-		private class AnonymousClassDocIdSet_Renamed_Class:DocIdSet
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestFilteredDocIdSet()
 		{
-			public AnonymousClassDocIdSet_Renamed_Class(int maxdoc, TestDocIdSet enclosingInstance)
+			int maxdoc = 10;
+			DocIdSet innerSet = new _DocIdSet_39(maxdoc);
+			DocIdSet filteredSet = new _FilteredDocIdSet_72(innerSet);
+			//validate only even docids
+			DocIdSetIterator iter = filteredSet.Iterator();
+			AList<int> list = new AList<int>();
+			int doc = iter.Advance(3);
+			if (doc != DocIdSetIterator.NO_MORE_DOCS)
 			{
-				InitBlock(maxdoc, enclosingInstance);
-			}
-			private class AnonymousClassDocIdSetIterator:DocIdSetIterator
-			{
-				public AnonymousClassDocIdSetIterator(int maxdoc, AnonymousClassDocIdSet_Renamed_Class enclosingInstance)
+				list.AddItem(Sharpen.Extensions.ValueOf(doc));
+				while ((doc = iter.NextDoc()) != DocIdSetIterator.NO_MORE_DOCS)
 				{
-					InitBlock(maxdoc, enclosingInstance);
-				}
-				private void  InitBlock(int maxdoc, AnonymousClassDocIdSet_Renamed_Class enclosingInstance)
-				{
-					this.maxdoc = maxdoc;
-					this.enclosingInstance = enclosingInstance;
-				}
-				private int maxdoc;
-				private AnonymousClassDocIdSet_Renamed_Class enclosingInstance;
-				public AnonymousClassDocIdSet_Renamed_Class Enclosing_Instance
-				{
-					get
-					{
-						return enclosingInstance;
-					}
-					
-				}
-				
-				internal int docid = - 1;
-				
-				public override int DocID()
-				{
-					return docid;
-				}
-				
-				//@Override
-				public override int NextDoc()
-				{
-					docid++;
-					return docid < maxdoc?docid:(docid = NO_MORE_DOCS);
-				}
-				
-				//@Override
-				public override int Advance(int target)
-				{
-					while (NextDoc() < target)
-					{
-					}
-					return docid;
+					list.AddItem(Sharpen.Extensions.ValueOf(doc));
 				}
 			}
-			private void  InitBlock(int maxdoc, TestDocIdSet enclosingInstance)
+			int[] docs = new int[list.Count];
+			int c = 0;
+			Iterator<int> intIter = list.Iterator();
+			while (intIter.HasNext())
+			{
+				docs[c++] = intIter.Next();
+			}
+			int[] answer = new int[] { 4, 6, 8 };
+			bool same = Arrays.Equals(answer, docs);
+			if (!same)
+			{
+				System.Console.Out.WriteLine("answer: " + Arrays.ToString(answer));
+				System.Console.Out.WriteLine("gotten: " + Arrays.ToString(docs));
+				NUnit.Framework.Assert.Fail();
+			}
+		}
+
+		private sealed class _DocIdSet_39 : DocIdSet
+		{
+			public _DocIdSet_39(int maxdoc)
 			{
 				this.maxdoc = maxdoc;
-				this.enclosingInstance = enclosingInstance;
 			}
-			private int maxdoc;
-			private TestDocIdSet enclosingInstance;
-			public TestDocIdSet Enclosing_Instance
-			{
-				get
-				{
-					return enclosingInstance;
-				}
-				
-			}
-			
+
 			public override DocIdSetIterator Iterator()
 			{
-				return new AnonymousClassDocIdSetIterator(maxdoc, this);
+				return new _DocIdSetIterator_43(maxdoc);
+			}
+
+			private sealed class _DocIdSetIterator_43 : DocIdSetIterator
+			{
+				public _DocIdSetIterator_43(int maxdoc)
+				{
+					this.maxdoc = maxdoc;
+					this.docid = -1;
+				}
+
+				internal int docid;
+
+				public override int DocID()
+				{
+					return this.docid;
+				}
+
+				public override int NextDoc()
+				{
+					this.docid++;
+					return this.docid < maxdoc ? this.docid : (this.docid = DocIdSetIterator.NO_MORE_DOCS
+						);
+				}
+
+				/// <exception cref="System.IO.IOException"></exception>
+				public override int Advance(int target)
+				{
+					return this.SlowAdvance(target);
+				}
+
+				public override long Cost()
+				{
+					return 1;
+				}
+
+				private readonly int maxdoc;
+			}
+
+			private readonly int maxdoc;
+		}
+
+		private sealed class _FilteredDocIdSet_72 : FilteredDocIdSet
+		{
+			public _FilteredDocIdSet_72(DocIdSet baseArg1) : base(baseArg1)
+			{
+			}
+
+			protected override bool Match(int docid)
+			{
+				return docid % 2 == 0;
 			}
 		}
-		private class AnonymousClassFilteredDocIdSet:FilteredDocIdSet
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestNullDocIdSet()
 		{
-			private void  InitBlock(TestDocIdSet enclosingInstance)
-			{
-				this.enclosingInstance = enclosingInstance;
-			}
-			private TestDocIdSet enclosingInstance;
-			public TestDocIdSet Enclosing_Instance
-			{
-				get
-				{
-					return enclosingInstance;
-				}
-				
-			}
-			internal AnonymousClassFilteredDocIdSet(TestDocIdSet enclosingInstance, Lucene.Net.Search.DocIdSet Param1):base(Param1)
-			{
-				InitBlock(enclosingInstance);
-			}
-			// @Override
-			public /*protected internal*/ override bool Match(int docid)
-			{
-				return docid % 2 == 0; //validate only even docids
-			}
+			// Tests that if a Filter produces a null DocIdSet, which is given to
+			// IndexSearcher, everything works fine. This came up in LUCENE-1754.
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(NewStringField("c", "val", Field.Store.NO));
+			writer.AddDocument(doc);
+			IndexReader reader = writer.GetReader();
+			writer.Close();
+			// First verify the document is searchable.
+			IndexSearcher searcher = NewSearcher(reader);
+			//HM:revisit 
+			//assert.assertEquals(1, searcher.search(new MatchAllDocsQuery(), 10).totalHits);
+			// Now search w/ a Filter which returns a null DocIdSet
+			Filter f = new _Filter_122();
+			//HM:revisit 
+			//assert.assertEquals(0, searcher.search(new MatchAllDocsQuery(), f, 10).totalHits);
+			reader.Close();
+			dir.Close();
 		}
-		[Serializable]
-		private class AnonymousClassFilter:Filter
+
+		private sealed class _Filter_122 : Filter
 		{
-			public AnonymousClassFilter(TestDocIdSet enclosingInstance)
+			public _Filter_122()
 			{
-				InitBlock(enclosingInstance);
 			}
-			private void  InitBlock(TestDocIdSet enclosingInstance)
-			{
-				this.enclosingInstance = enclosingInstance;
-			}
-			private TestDocIdSet enclosingInstance;
-			public TestDocIdSet Enclosing_Instance
-			{
-				get
-				{
-					return enclosingInstance;
-				}
-				
-			}
-			public override DocIdSet GetDocIdSet(IndexReader reader)
+
+			public override DocIdSet GetDocIdSet(AtomicReaderContext context, Bits acceptDocs
+				)
 			{
 				return null;
 			}
 		}
-        [Test]
-		public virtual void  TestFilteredDocIdSet()
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestNullIteratorFilteredDocIdSet()
 		{
-			int maxdoc = 10;
-			DocIdSet innerSet = new AnonymousClassDocIdSet_Renamed_Class(maxdoc, this);
-			
-			
-			DocIdSet filteredSet = new AnonymousClassFilteredDocIdSet(this, innerSet);
-			
-			DocIdSetIterator iter = filteredSet.Iterator();
-			System.Collections.ArrayList list = new System.Collections.ArrayList();
-			int doc = iter.Advance(3);
-			if (doc != DocIdSetIterator.NO_MORE_DOCS)
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(NewStringField("c", "val", Field.Store.NO));
+			writer.AddDocument(doc);
+			IndexReader reader = writer.GetReader();
+			writer.Close();
+			// First verify the document is searchable.
+			IndexSearcher searcher = NewSearcher(reader);
+			//HM:revisit 
+			//assert.assertEquals(1, searcher.search(new MatchAllDocsQuery(), 10).totalHits);
+			// Now search w/ a Filter which returns a null DocIdSet
+			Filter f = new _Filter_152();
+			//HM:revisit 
+			//assert.assertEquals(0, searcher.search(new MatchAllDocsQuery(), f, 10).totalHits);
+			reader.Close();
+			dir.Close();
+		}
+
+		private sealed class _Filter_152 : Filter
+		{
+			public _Filter_152()
 			{
-				list.Add((System.Int32) doc);
-				while ((doc = iter.NextDoc()) != DocIdSetIterator.NO_MORE_DOCS)
+			}
+
+			public override DocIdSet GetDocIdSet(AtomicReaderContext context, Bits acceptDocs
+				)
+			{
+				DocIdSet innerNullIteratorSet = new _DocIdSet_155();
+				return new _FilteredDocIdSet_161(innerNullIteratorSet);
+			}
+
+			private sealed class _DocIdSet_155 : DocIdSet
+			{
+				public _DocIdSet_155()
 				{
-					list.Add((System.Int32) doc);
+				}
+
+				public override DocIdSetIterator Iterator()
+				{
+					return null;
 				}
 			}
-			
-			int[] docs = new int[list.Count];
-			int c = 0;
-			System.Collections.IEnumerator intIter = list.GetEnumerator();
-			while (intIter.MoveNext())
+
+			private sealed class _FilteredDocIdSet_161 : FilteredDocIdSet
 			{
-				docs[c++] = ((System.Int32) intIter.Current);
+				public _FilteredDocIdSet_161(DocIdSet baseArg1) : base(baseArg1)
+				{
+				}
+
+				protected override bool Match(int docid)
+				{
+					return true;
+				}
 			}
-			int[] answer = new int[]{4, 6, 8};
-			bool same = CollectionsHelper.Equals(answer, docs);
-			if (!same)
-			{
-				System.Console.Out.WriteLine("answer: " + _TestUtil.ArrayToString(answer));
-				System.Console.Out.WriteLine("gotten: " + _TestUtil.ArrayToString(docs));
-				Assert.Fail();
-			}
-		}
-		
-        [Test]
-		public virtual void  TestNullDocIdSet()
-		{
-			// Tests that if a Filter produces a null DocIdSet, which is given to
-			// IndexSearcher, everything works fine. This came up in LUCENE-1754.
-			Directory dir = new RAMDirectory();
-			IndexWriter writer = new IndexWriter(dir, new WhitespaceAnalyzer(), MaxFieldLength.UNLIMITED);
-			Document doc = new Document();
-			doc.Add(new Field("c", "val", Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
-			writer.AddDocument(doc);
-			writer.Close();
-			
-			// First verify the document is searchable.
-			IndexSearcher searcher = new IndexSearcher(dir, true);
-			Assert.AreEqual(1, searcher.Search(new MatchAllDocsQuery(), 10).TotalHits);
-			
-			// Now search w/ a Filter which returns a null DocIdSet
-			Filter f = new AnonymousClassFilter(this);
-			
-			Assert.AreEqual(0, searcher.Search(new MatchAllDocsQuery(), f, 10).TotalHits);
-			searcher.Close();
 		}
 	}
 }

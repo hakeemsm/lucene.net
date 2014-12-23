@@ -9,7 +9,7 @@ namespace Lucene.Net.Test.Util
     [TestFixture]
     public class TestIdentityHashSet : LuceneTestCase
     {
-        public void testCheck()
+		public virtual void TestCheck()
         {
             var rnd = new Random();
             ISet<object> jdk = Collections.NewSetFromMap(

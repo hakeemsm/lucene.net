@@ -1,16 +1,8 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
-using Org.Apache.Lucene.Codecs;
+using Lucene.Net.Index;
+using Lucene.Net.Store;
 using Lucene.Net.Codecs.Lucene3x;
-using Org.Apache.Lucene.Index;
-using Org.Apache.Lucene.Store;
-using Sharpen;
 
-namespace Lucene.Net.Codecs.Lucene3x
+namespace Lucene.Net.Codecs.Lucene3x.TestFramework
 {
 	internal class PreFlexRWStoredFieldsFormat : Lucene3xStoredFieldsFormat
 	{

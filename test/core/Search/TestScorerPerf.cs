@@ -70,19 +70,23 @@ namespace Lucene.Net.Search
 		internal System.Random r;
 		internal bool validate = true; // set to false when doing performance testing
 		
-		internal System.Collections.BitArray[] sets;
+		internal BitSet[] sets;
 		internal Term[] terms;
 		internal IndexSearcher s;
 		
+		internal IndexReader r;
+		internal Directory d;
 		public virtual void  CreateDummySearcher()
 		{
 			// Create a dummy index with nothing in it.
 			// This could possibly fail if Lucene starts checking for docid ranges...
-			RAMDirectory rd = new RAMDirectory();
-			IndexWriter iw = new IndexWriter(rd, new WhitespaceAnalyzer(), true, IndexWriter.MaxFieldLength.LIMITED);
+			d = NewDirectory();
+			IndexWriter iw = new IndexWriter(d, NewIndexWriterConfig(TEST_VERSION_CURRENT, new 
+				MockAnalyzer(Random())));
 			iw.AddDocument(new Document());
 			iw.Close();
-			s = new IndexSearcher(rd);
+			r = DirectoryReader.Open(d);
+			s = NewSearcher(r);
 		}
 		
 		public virtual void  CreateRandomTerms(int nDocs, int nTerms, double power, Directory dir)
@@ -95,22 +99,22 @@ namespace Lucene.Net.Search
 				freq[i] = (int) System.Math.Ceiling(System.Math.Pow(f, power));
 				terms[i] = new Term("f", System.Convert.ToString((char) ('A' + i)));
 			}
-			
-			IndexWriter iw = new IndexWriter(dir, new WhitespaceAnalyzer(), true, IndexWriter.MaxFieldLength.LIMITED);
+			IndexWriter iw = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, 
+				new MockAnalyzer(Random())).SetOpenMode(IndexWriterConfig.OpenMode.CREATE));
 			for (int i = 0; i < nDocs; i++)
 			{
 				Document d = new Document();
 				for (int j = 0; j < nTerms; j++)
 				{
-					if (r.Next(freq[j]) == 0)
+					if (Random().Next(freq[j]) == 0)
 					{
-						d.Add(new Field("f", terms[j].Text, Field.Store.NO, Field.Index.NOT_ANALYZED));
+						d.Add(NewStringField("f", terms[j].Text(), Field.Store.NO));
 						//System.out.println(d);
 					}
 				}
 				iw.AddDocument(d);
 			}
-			iw.Optimize();
+			iw.ForceMerge(1);
 			iw.Close();
 		}
 		
@@ -160,9 +164,9 @@ namespace Lucene.Net.Search
 				return sum;
 			}
 			
-			public override void  SetNextReader(IndexReader reader, int base_Renamed)
+			public override void SetNextReader(AtomicReaderContext context)
 			{
-				docBase = base_Renamed;
+				docBase = context.docBase;
 			}
 
 		    public override bool AcceptsDocsOutOfOrder
@@ -270,7 +274,10 @@ namespace Lucene.Net.Search
 					Assert.AreEqual(BitSetSupport.Cardinality(result), hc.GetCount());
 				// System.out.println(hc.getCount());
 			}
-			System.Console.Out.WriteLine("Average number of matches=" + (nMatches / iter));
+			if (VERBOSE)
+			{
+				System.Console.Out.WriteLine("Average number of matches=" + (nMatches / iter));
+			}
 			return ret;
 		}
 		
@@ -304,8 +311,10 @@ namespace Lucene.Net.Search
 				nMatches += hc.GetCount();
 				ret += hc.GetSum();
 			}
-			System.Console.Out.WriteLine("Average number of matches=" + (nMatches / iter));
-			
+			if (VERBOSE)
+			{
+				System.Console.Out.WriteLine("Average number of matches=" + (nMatches / iter));
+			}
 			return ret;
 		}
 		
@@ -347,7 +356,10 @@ namespace Lucene.Net.Search
 				nMatches += hc.GetCount();
 				ret += hc.GetSum();
 			}
-			System.Console.Out.WriteLine("Average number of matches=" + (nMatches / iter));
+			if (VERBOSE)
+			{
+				System.Console.Out.WriteLine("Average number of matches=" + (nMatches / iter));
+			}
 			return ret;
 		}
 		
@@ -383,10 +395,12 @@ namespace Lucene.Net.Search
 			r = NewRandom();
 			CreateDummySearcher();
 			validate = true;
-			sets = RandBitSets(1000, 10);
-			DoConjunctions(10000, 5);
-			DoNestedConjunctions(10000, 3, 3);
+			sets = RandBitSets(AtLeast(1000), AtLeast(10));
+			DoConjunctions(AtLeast(10000), AtLeast(5));
+			DoNestedConjunctions(AtLeast(10000), AtLeast(3), AtLeast(3));
 			s.Close();
+			r.Close();
+			d.Close();
 		}
 
         // <summary> 

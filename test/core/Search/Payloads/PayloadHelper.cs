@@ -1,165 +1,153 @@
-/* 
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+/*
+ * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
  * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using System;
-using Lucene.Net.Analysis.Tokenattributes;
-using NUnit.Framework;
-
+using System.IO;
 using Lucene.Net.Analysis;
-using Document = Lucene.Net.Documents.Document;
-using Field = Lucene.Net.Documents.Field;
-using IndexWriter = Lucene.Net.Index.IndexWriter;
-using Payload = Lucene.Net.Index.Payload;
-using RAMDirectory = Lucene.Net.Store.RAMDirectory;
-using IndexSearcher = Lucene.Net.Search.IndexSearcher;
-using Similarity = Lucene.Net.Search.Similarity;
-using English = Lucene.Net.Util.English;
+using Lucene.Net.Analysis.Tokenattributes;
+using Lucene.Net.Document;
+using Lucene.Net.Index;
+using Lucene.Net.Search;
+using Lucene.Net.Search.Payloads;
+using Lucene.Net.Search.Similarities;
+using Lucene.Net.Store;
+using Lucene.Net.Util;
+using Sharpen;
 
 namespace Lucene.Net.Search.Payloads
 {
-	
-	/// <summary> 
-	/// 
-	/// 
-	/// </summary>
 	public class PayloadHelper
 	{
-		
-		private byte[] payloadField = new byte[]{1};
-		private byte[] payloadMultiField1 = new byte[]{2};
-		private byte[] payloadMultiField2 = new byte[]{4};
-		public const System.String NO_PAYLOAD_FIELD = "noPayloadField";
-		public const System.String MULTI_FIELD = "multiField";
-		public const System.String FIELD = "field";
-		
-		public class PayloadAnalyzer:Analyzer
+		private byte[] payloadField = new byte[] { 1 };
+
+		private byte[] payloadMultiField1 = new byte[] { 2 };
+
+		private byte[] payloadMultiField2 = new byte[] { 4 };
+
+		public static readonly string NO_PAYLOAD_FIELD = "noPayloadField";
+
+		public static readonly string MULTI_FIELD = "multiField";
+
+		public static readonly string FIELD = "field";
+
+		public IndexReader reader;
+
+		public sealed class PayloadAnalyzer : Analyzer
 		{
-			public PayloadAnalyzer(PayloadHelper enclosingInstance)
+			public PayloadAnalyzer(PayloadHelper _enclosing) : base(Analyzer.PER_FIELD_REUSE_STRATEGY
+				)
 			{
-				InitBlock(enclosingInstance);
+				this._enclosing = _enclosing;
 			}
-			private void  InitBlock(PayloadHelper enclosingInstance)
+
+			protected override Analyzer.TokenStreamComponents CreateComponents(string fieldName
+				, StreamReader reader)
 			{
-				this.enclosingInstance = enclosingInstance;
+				Tokenizer result = new MockTokenizer(reader, MockTokenizer.SIMPLE, true);
+				return new Analyzer.TokenStreamComponents(result, new PayloadHelper.PayloadFilter
+					(this, result, fieldName));
 			}
-			private PayloadHelper enclosingInstance;
-			public PayloadHelper Enclosing_Instance
-			{
-				get
-				{
-					return enclosingInstance;
-				}
-				
-			}
-			
-			
-			
-			public override TokenStream TokenStream(System.String fieldName, System.IO.TextReader reader)
-			{
-				TokenStream result = new LowerCaseTokenizer(reader);
-				result = new PayloadFilter(enclosingInstance, result, fieldName);
-				return result;
-			}
+
+			private readonly PayloadHelper _enclosing;
 		}
-		
-		public class PayloadFilter:TokenFilter
+
+		public sealed class PayloadFilter : TokenFilter
 		{
-			private void  InitBlock(PayloadHelper enclosingInstance)
+			private readonly string fieldName;
+
+			private int numSeen = 0;
+
+			private readonly PayloadAttribute payloadAtt;
+
+			public PayloadFilter(PayloadHelper _enclosing, TokenStream input, string fieldName
+				) : base(input)
 			{
-				this.enclosingInstance = enclosingInstance;
-			}
-			private PayloadHelper enclosingInstance;
-			public PayloadHelper Enclosing_Instance
-			{
-				get
-				{
-					return enclosingInstance;
-				}
-				
-			}
-			internal System.String fieldName;
-			internal int numSeen = 0;
-			internal IPayloadAttribute payloadAtt;
-			
-			public PayloadFilter(PayloadHelper enclosingInstance, TokenStream input, System.String fieldName):base(input)
-			{
-				InitBlock(enclosingInstance);
+				this._enclosing = _enclosing;
 				this.fieldName = fieldName;
-                payloadAtt = AddAttribute<IPayloadAttribute>();
+				this.payloadAtt = this.AddAttribute<PayloadAttribute>();
 			}
-			
+
+			/// <exception cref="System.IO.IOException"></exception>
 			public override bool IncrementToken()
 			{
-				
-				if (input.IncrementToken())
+				if (this.input.IncrementToken())
 				{
-					if (fieldName.Equals(Lucene.Net.Search.Payloads.PayloadHelper.FIELD))
+					if (this.fieldName.Equals(PayloadHelper.FIELD))
 					{
-						payloadAtt.Payload = new Payload(Enclosing_Instance.payloadField);
+						this.payloadAtt.SetPayload(new BytesRef(this._enclosing.payloadField));
 					}
-					else if (fieldName.Equals(Lucene.Net.Search.Payloads.PayloadHelper.MULTI_FIELD))
+					else
 					{
-						if (numSeen % 2 == 0)
+						if (this.fieldName.Equals(PayloadHelper.MULTI_FIELD))
 						{
-							payloadAtt.Payload = new Payload(Enclosing_Instance.payloadMultiField1);
+							if (this.numSeen % 2 == 0)
+							{
+								this.payloadAtt.SetPayload(new BytesRef(this._enclosing.payloadMultiField1));
+							}
+							else
+							{
+								this.payloadAtt.SetPayload(new BytesRef(this._enclosing.payloadMultiField2));
+							}
+							this.numSeen++;
 						}
-						else
-						{
-							payloadAtt.Payload = new Payload(Enclosing_Instance.payloadMultiField2);
-						}
-						numSeen++;
 					}
 					return true;
 				}
 				return false;
 			}
+
+			/// <exception cref="System.IO.IOException"></exception>
+			public override void Reset()
+			{
+				base.Reset();
+				this.numSeen = 0;
+			}
+
+			private readonly PayloadHelper _enclosing;
 		}
-		
-		/// <summary> Sets up a RAMDirectory, and adds documents (using English.intToEnglish()) with two fields: field and multiField
+
+		/// <summary>
+		/// Sets up a RAMDirectory, and adds documents (using English.intToEnglish()) with two fields: field and multiField
 		/// and analyzes them using the PayloadAnalyzer
 		/// </summary>
-		/// <param name="similarity">The Similarity class to use in the Searcher
-		/// </param>
-		/// <param name="numDocs">The num docs to add
-		/// </param>
-		/// <returns> An IndexSearcher
-		/// </returns>
-		/// <throws>  IOException </throws>
-		public virtual IndexSearcher SetUp(Similarity similarity, int numDocs)
+		/// <param name="similarity">The Similarity class to use in the Searcher</param>
+		/// <param name="numDocs">The num docs to add</param>
+		/// <returns>An IndexSearcher</returns>
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual IndexSearcher SetUp(Random random, Similarity similarity, int numDocs
+			)
 		{
-			RAMDirectory directory = new RAMDirectory();
-			PayloadAnalyzer analyzer = new PayloadAnalyzer(this);
-			IndexWriter writer = new IndexWriter(directory, analyzer, true, IndexWriter.MaxFieldLength.UNLIMITED);
-			writer.SetSimilarity(similarity);
-			//writer.infoStream = System.out;
+			// TODO: randomize
+			Directory directory = new MockDirectoryWrapper(random, new RAMDirectory());
+			PayloadHelper.PayloadAnalyzer analyzer = new PayloadHelper.PayloadAnalyzer(this);
+			// TODO randomize this
+			IndexWriter writer = new IndexWriter(directory, new IndexWriterConfig(LuceneTestCase
+				.TEST_VERSION_CURRENT, analyzer).SetSimilarity(similarity));
+			// writer.infoStream = System.out;
 			for (int i = 0; i < numDocs; i++)
 			{
-				Document doc = new Document();
-				doc.Add(new Field(FIELD, English.IntToEnglish(i), Field.Store.YES, Field.Index.ANALYZED));
-				doc.Add(new Field(MULTI_FIELD, English.IntToEnglish(i) + "  " + English.IntToEnglish(i), Field.Store.YES, Field.Index.ANALYZED));
-				doc.Add(new Field(NO_PAYLOAD_FIELD, English.IntToEnglish(i), Field.Store.YES, Field.Index.ANALYZED));
+				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					();
+				doc.Add(new TextField(FIELD, English.IntToEnglish(i), Field.Store.YES));
+				doc.Add(new TextField(MULTI_FIELD, English.IntToEnglish(i) + "  " + English.IntToEnglish
+					(i), Field.Store.YES));
+				doc.Add(new TextField(NO_PAYLOAD_FIELD, English.IntToEnglish(i), Field.Store.YES)
+					);
 				writer.AddDocument(doc);
 			}
-			//writer.optimize();
+			reader = DirectoryReader.Open(writer, true);
 			writer.Close();
-			
-			IndexSearcher searcher = new IndexSearcher(directory, true);
-			searcher.Similarity = similarity;
+			IndexSearcher searcher = LuceneTestCase.NewSearcher(reader);
+			searcher.SetSimilarity(similarity);
 			return searcher;
+		}
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TearDown()
+		{
+			reader.Close();
 		}
 	}
 }

@@ -1,539 +1,470 @@
-/* 
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+/*
+ * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
  * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
 using System;
+using System.IO;
+using Lucene.Net.Analysis;
 using Lucene.Net.Analysis.Tokenattributes;
-using NUnit.Framework;
-
-using Analyzer = Lucene.Net.Analysis.Analyzer;
-using TokenStream = Lucene.Net.Analysis.TokenStream;
-using Document = Lucene.Net.Documents.Document;
-using Field = Lucene.Net.Documents.Field;
-using MockRAMDirectory = Lucene.Net.Store.MockRAMDirectory;
-using LuceneTestCase = Lucene.Net.Util.LuceneTestCase;
+using Lucene.Net.Codecs;
+using Lucene.Net.Document;
+using Lucene.Net.Index;
+using Lucene.Net.Search;
+using Lucene.Net.Store;
+using Lucene.Net.Util;
+using Sharpen;
 
 namespace Lucene.Net.Index
 {
-	
-    [TestFixture]
-	public class TestTermVectorsReader:LuceneTestCase
+	public class TestTermVectorsReader : LuceneTestCase
 	{
-		private void  InitBlock()
-		{
-			positions = new int[testTerms.Length][];
-			offsets = new TermVectorOffsetInfo[testTerms.Length][];
-			tokens = new TestToken[testTerms.Length * TERM_FREQ];
-		}
-		//Must be lexicographically sorted, will do in setup, versus trying to maintain here
-		private System.String[] testFields = new System.String[]{"f1", "f2", "f3", "f4"};
-		private bool[] testFieldsStorePos = new bool[]{true, false, true, false};
-		private bool[] testFieldsStoreOff = new bool[]{true, false, false, true};
-		private System.String[] testTerms = new System.String[]{"this", "is", "a", "test"};
-		private int[][] positions;
-		private TermVectorOffsetInfo[][] offsets;
-		private MockRAMDirectory dir = new MockRAMDirectory();
-		private System.String seg;
-		private FieldInfos fieldInfos = new FieldInfos();
+		private string[] testFields = new string[] { "f1", "f2", "f3", "f4" };
+
+		private bool[] testFieldsStorePos = new bool[] { true, false, true, false };
+
+		private bool[] testFieldsStoreOff = new bool[] { true, false, false, true };
+
+		private string[] testTerms = new string[] { "this", "is", "a", "test" };
+
+		private int[][] positions = new int[testTerms.Length][];
+
+		private Directory dir;
+
+		private SegmentCommitInfo seg;
+
+		private FieldInfos fieldInfos = new FieldInfos(new FieldInfo[0]);
+
 		private static int TERM_FREQ = 3;
-		
-		public TestTermVectorsReader(System.String s):base(s)
+
+		private class TestToken : Comparable<TestTermVectorsReader.TestToken>
 		{
-			InitBlock();
-		}
-        public TestTermVectorsReader()
-            : base()
-        {
-            InitBlock();
-        }
-		
-		internal class TestToken : System.IComparable<TestToken>
-		{
-			public TestToken(TestTermVectorsReader enclosingInstance)
-			{
-				InitBlock(enclosingInstance);
-			}
-			private void  InitBlock(TestTermVectorsReader enclosingInstance)
-			{
-				this.enclosingInstance = enclosingInstance;
-			}
-			private TestTermVectorsReader enclosingInstance;
-			public TestTermVectorsReader Enclosing_Instance
-			{
-				get
-				{
-					return enclosingInstance;
-				}
-				
-			}
-			internal System.String text;
+			internal string text;
+
 			internal int pos;
+
 			internal int startOffset;
+
 			internal int endOffset;
-			public virtual int CompareTo(TestToken other)
+
+			//Must be lexicographically sorted, will do in setup, versus trying to maintain here
+			public virtual int CompareTo(TestTermVectorsReader.TestToken other)
 			{
-				return pos - other.pos;
+				return this.pos - other.pos;
 			}
+
+			internal TestToken(TestTermVectorsReader _enclosing)
+			{
+				this._enclosing = _enclosing;
+			}
+
+			private readonly TestTermVectorsReader _enclosing;
 		}
-		
-		internal TestToken[] tokens;
-		
-		[SetUp]
-		public override void  SetUp()
+
+		internal TestTermVectorsReader.TestToken[] tokens = new TestTermVectorsReader.TestToken
+			[testTerms.Length * TERM_FREQ];
+
+		/// <exception cref="System.Exception"></exception>
+		public override void SetUp()
 		{
 			base.SetUp();
-			/*
-			for (int i = 0; i < testFields.length; i++) {
-			fieldInfos.add(testFields[i], true, true, testFieldsStorePos[i], testFieldsStoreOff[i]);
-			}
-			*/
-			
-			System.Array.Sort(testTerms);
+			Arrays.Sort(testTerms);
 			int tokenUpto = 0;
 			for (int i = 0; i < testTerms.Length; i++)
 			{
 				positions[i] = new int[TERM_FREQ];
-				offsets[i] = new TermVectorOffsetInfo[TERM_FREQ];
 				// first position must be 0
 				for (int j = 0; j < TERM_FREQ; j++)
 				{
 					// positions are always sorted in increasing order
-					positions[i][j] = (int) (j * 10 + (new System.Random().NextDouble()) * 10);
-					// offsets are always sorted in increasing order
-					offsets[i][j] = new TermVectorOffsetInfo(j * 10, j * 10 + testTerms[i].Length);
-					TestToken token = tokens[tokenUpto++] = new TestToken(this);
+					positions[i][j] = (int)(j * 10 + Math.Random() * 10);
+					TestTermVectorsReader.TestToken token = tokens[tokenUpto++] = new TestTermVectorsReader.TestToken
+						(this);
 					token.text = testTerms[i];
 					token.pos = positions[i][j];
-					token.startOffset = offsets[i][j].StartOffset;
-					token.endOffset = offsets[i][j].EndOffset;
+					token.startOffset = j * 10;
+					token.endOffset = j * 10 + testTerms[i].Length;
 				}
 			}
-			System.Array.Sort(tokens);
-			
-			IndexWriter writer = new IndexWriter(dir, new MyAnalyzer(this), true, IndexWriter.MaxFieldLength.LIMITED);
-			writer.UseCompoundFile = false;
-			Document doc = new Document();
-			for (int i = 0; i < testFields.Length; i++)
+			Arrays.Sort(tokens);
+			dir = NewDirectory();
+			IndexWriter writer = new IndexWriter(dir, ((IndexWriterConfig)((IndexWriterConfig
+				)NewIndexWriterConfig(TEST_VERSION_CURRENT, new TestTermVectorsReader.MyAnalyzer
+				(this)).SetMaxBufferedDocs(-1)).SetMergePolicy(NewLogMergePolicy(false, 10)).SetUseCompoundFile
+				(false)));
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			for (int i_1 = 0; i_1 < testFields.Length; i_1++)
 			{
-				Field.TermVector tv;
-				if (testFieldsStorePos[i] && testFieldsStoreOff[i])
-					tv = Field.TermVector.WITH_POSITIONS_OFFSETS;
-				else if (testFieldsStorePos[i] && !testFieldsStoreOff[i])
-					tv = Field.TermVector.WITH_POSITIONS;
-				else if (!testFieldsStorePos[i] && testFieldsStoreOff[i])
-					tv = Field.TermVector.WITH_OFFSETS;
-				else
-					tv = Field.TermVector.YES;
-				doc.Add(new Field(testFields[i], "", Field.Store.NO, Field.Index.ANALYZED, tv));
-			}
-			
-			//Create 5 documents for testing, they all have the same
-			//terms
-			for (int j = 0; j < 5; j++)
-				writer.AddDocument(doc);
-			writer.Commit();
-			seg = writer.NewestSegment().name;
-			writer.Close();
-			
-			fieldInfos = new FieldInfos(dir, seg + "." + IndexFileNames.FIELD_INFOS_EXTENSION);
-		}
-		
-		private class MyTokenStream:TokenStream
-		{
-			private void  InitBlock(TestTermVectorsReader enclosingInstance)
-			{
-				this.enclosingInstance = enclosingInstance;
-			}
-			private TestTermVectorsReader enclosingInstance;
-			public TestTermVectorsReader Enclosing_Instance
-			{
-				get
+				FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
+				if (testFieldsStorePos[i_1] && testFieldsStoreOff[i_1])
 				{
-					return enclosingInstance;
+					customType.SetStoreTermVectors(true);
+					customType.SetStoreTermVectorPositions(true);
+					customType.SetStoreTermVectorOffsets(true);
 				}
-				
-			}
-			internal int tokenUpto;
-			
-			internal ITermAttribute termAtt;
-			internal IPositionIncrementAttribute posIncrAtt;
-			internal IOffsetAttribute offsetAtt;
-			
-			public MyTokenStream(TestTermVectorsReader enclosingInstance)
-			{
-				InitBlock(enclosingInstance);
-				termAtt =  AddAttribute<ITermAttribute>();
-				posIncrAtt =  AddAttribute<IPositionIncrementAttribute>();
-				offsetAtt =  AddAttribute<IOffsetAttribute>();
-			}
-			
-			public override bool IncrementToken()
-			{
-				if (tokenUpto >= Enclosing_Instance.tokens.Length)
-					return false;
 				else
 				{
-					TestToken testToken = Enclosing_Instance.tokens[tokenUpto++];
-                    ClearAttributes();
-					termAtt.SetTermBuffer(testToken.text);
-					offsetAtt.SetOffset(testToken.startOffset, testToken.endOffset);
-					if (tokenUpto > 1)
+					if (testFieldsStorePos[i_1] && !testFieldsStoreOff[i_1])
 					{
-						posIncrAtt.PositionIncrement = testToken.pos - Enclosing_Instance.tokens[tokenUpto - 2].pos;
+						customType.SetStoreTermVectors(true);
+						customType.SetStoreTermVectorPositions(true);
 					}
 					else
 					{
-						posIncrAtt.PositionIncrement = testToken.pos + 1;
+						if (!testFieldsStorePos[i_1] && testFieldsStoreOff[i_1])
+						{
+							customType.SetStoreTermVectors(true);
+							customType.SetStoreTermVectorOffsets(true);
+						}
+						else
+						{
+							customType.SetStoreTermVectors(true);
+						}
+					}
+				}
+				doc.Add(new Field(testFields[i_1], string.Empty, customType));
+			}
+			//Create 5 documents for testing, they all have the same
+			//terms
+			for (int j_1 = 0; j_1 < 5; j_1++)
+			{
+				writer.AddDocument(doc);
+			}
+			writer.Commit();
+			seg = writer.NewestSegment();
+			writer.Close();
+			fieldInfos = SegmentReader.ReadFieldInfos(seg);
+		}
+
+		/// <exception cref="System.Exception"></exception>
+		public override void TearDown()
+		{
+			dir.Close();
+			base.TearDown();
+		}
+
+		private class MyTokenizer : Tokenizer
+		{
+			private int tokenUpto;
+
+			private readonly CharTermAttribute termAtt;
+
+			private readonly PositionIncrementAttribute posIncrAtt;
+
+			private readonly OffsetAttribute offsetAtt;
+
+			protected MyTokenizer(TestTermVectorsReader _enclosing, StreamReader reader) : base
+				(reader)
+			{
+				this._enclosing = _enclosing;
+				this.termAtt = this.AddAttribute<CharTermAttribute>();
+				this.posIncrAtt = this.AddAttribute<PositionIncrementAttribute>();
+				this.offsetAtt = this.AddAttribute<OffsetAttribute>();
+			}
+
+			public override bool IncrementToken()
+			{
+				if (this.tokenUpto >= this._enclosing.tokens.Length)
+				{
+					return false;
+				}
+				else
+				{
+					TestTermVectorsReader.TestToken testToken = this._enclosing.tokens[this.tokenUpto
+						++];
+					this.ClearAttributes();
+					this.termAtt.Append(testToken.text);
+					this.offsetAtt.SetOffset(testToken.startOffset, testToken.endOffset);
+					if (this.tokenUpto > 1)
+					{
+						this.posIncrAtt.SetPositionIncrement(testToken.pos - this._enclosing.tokens[this.
+							tokenUpto - 2].pos);
+					}
+					else
+					{
+						this.posIncrAtt.SetPositionIncrement(testToken.pos + 1);
 					}
 					return true;
 				}
 			}
 
-		    protected override void Dispose(bool disposing)
-		    {
-		        // do nothing
-		    }
+			/// <exception cref="System.IO.IOException"></exception>
+			public override void Reset()
+			{
+				base.Reset();
+				this.tokenUpto = 0;
+			}
+
+			private readonly TestTermVectorsReader _enclosing;
 		}
-		
-		private class MyAnalyzer:Analyzer
+
+		private class MyAnalyzer : Analyzer
 		{
-			public MyAnalyzer(TestTermVectorsReader enclosingInstance)
+			protected override Analyzer.TokenStreamComponents CreateComponents(string fieldName
+				, StreamReader reader)
 			{
-				InitBlock(enclosingInstance);
+				return new Analyzer.TokenStreamComponents(new TestTermVectorsReader.MyTokenizer(this
+					, reader));
 			}
-			private void  InitBlock(TestTermVectorsReader enclosingInstance)
+
+			internal MyAnalyzer(TestTermVectorsReader _enclosing)
 			{
-				this.enclosingInstance = enclosingInstance;
+				this._enclosing = _enclosing;
 			}
-			private TestTermVectorsReader enclosingInstance;
-			public TestTermVectorsReader Enclosing_Instance
-			{
-				get
-				{
-					return enclosingInstance;
-				}
-				
-			}
-			public override TokenStream TokenStream(System.String fieldName, System.IO.TextReader reader)
-			{
-				return new MyTokenStream(enclosingInstance);
-			}
+
+			private readonly TestTermVectorsReader _enclosing;
 		}
-		
-		[Test]
-		public virtual void  Test()
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void Test()
 		{
 			//Check to see the files were created properly in setup
-			Assert.IsTrue(dir.FileExists(seg + "." + IndexFileNames.VECTORS_DOCUMENTS_EXTENSION));
-			Assert.IsTrue(dir.FileExists(seg + "." + IndexFileNames.VECTORS_INDEX_EXTENSION));
+			DirectoryReader reader = DirectoryReader.Open(dir);
+			foreach (AtomicReaderContext ctx in reader.Leaves())
+			{
+				SegmentReader sr = (SegmentReader)((AtomicReader)ctx.Reader());
+				NUnit.Framework.Assert.IsTrue(sr.GetFieldInfos().HasVectors());
+			}
+			reader.Close();
 		}
-		
-		[Test]
-		public virtual void  TestReader()
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestReader()
 		{
-			TermVectorsReader reader = new TermVectorsReader(dir, seg, fieldInfos);
-			Assert.IsTrue(reader != null);
+			TermVectorsReader reader = Codec.GetDefault().TermVectorsFormat().VectorsReader(dir
+				, seg.info, fieldInfos, NewIOContext(Random()));
 			for (int j = 0; j < 5; j++)
 			{
-				ITermFreqVector vector = reader.Get(j, testFields[0]);
-				Assert.IsTrue(vector != null);
-				System.String[] terms = vector.GetTerms();
-				Assert.IsTrue(terms != null);
-				Assert.IsTrue(terms.Length == testTerms.Length);
-				for (int i = 0; i < terms.Length; i++)
+				Terms vector = reader.Get(j).Terms(testFields[0]);
+				NUnit.Framework.Assert.IsNotNull(vector);
+				NUnit.Framework.Assert.AreEqual(testTerms.Length, vector.Size());
+				TermsEnum termsEnum = vector.Iterator(null);
+				for (int i = 0; i < testTerms.Length; i++)
 				{
-					System.String term = terms[i];
+					BytesRef text = termsEnum.Next();
+					NUnit.Framework.Assert.IsNotNull(text);
+					string term = text.Utf8ToString();
 					//System.out.println("Term: " + term);
-					Assert.IsTrue(term.Equals(testTerms[i]));
+					NUnit.Framework.Assert.AreEqual(testTerms[i], term);
 				}
+				NUnit.Framework.Assert.IsNull(termsEnum.Next());
 			}
+			reader.Close();
 		}
-		
-		[Test]
-		public virtual void  TestPositionReader()
-		{
-			TermVectorsReader reader = new TermVectorsReader(dir, seg, fieldInfos);
-			Assert.IsTrue(reader != null);
-			TermPositionVector vector;
-			System.String[] terms;
-			vector = (TermPositionVector) reader.Get(0, testFields[0]);
-			Assert.IsTrue(vector != null);
-			terms = vector.GetTerms();
-			Assert.IsTrue(terms != null);
-			Assert.IsTrue(terms.Length == testTerms.Length);
-			for (int i = 0; i < terms.Length; i++)
-			{
-				System.String term = terms[i];
-				//System.out.println("Term: " + term);
-				Assert.IsTrue(term.Equals(testTerms[i]));
-				int[] positions = vector.GetTermPositions(i);
-				Assert.IsTrue(positions != null);
-				Assert.IsTrue(positions.Length == this.positions[i].Length);
-				for (int j = 0; j < positions.Length; j++)
-				{
-					int position = positions[j];
-					Assert.IsTrue(position == this.positions[i][j]);
-				}
-				TermVectorOffsetInfo[] offset = vector.GetOffsets(i);
-				Assert.IsTrue(offset != null);
-				Assert.IsTrue(offset.Length == this.offsets[i].Length);
-				for (int j = 0; j < offset.Length; j++)
-				{
-					TermVectorOffsetInfo termVectorOffsetInfo = offset[j];
-					Assert.IsTrue(termVectorOffsetInfo.Equals(offsets[i][j]));
-				}
-			}
-			
-			ITermFreqVector freqVector = reader.Get(0, testFields[1]); //no pos, no offset
-			Assert.IsTrue(freqVector != null);
-			Assert.IsTrue(freqVector is TermPositionVector == false);
-			terms = freqVector.GetTerms();
-			Assert.IsTrue(terms != null);
-			Assert.IsTrue(terms.Length == testTerms.Length);
-			for (int i = 0; i < terms.Length; i++)
-			{
-				System.String term = terms[i];
-				//System.out.println("Term: " + term);
-				Assert.IsTrue(term.Equals(testTerms[i]));
-			}
-		}
-		
-		[Test]
-		public virtual void  TestOffsetReader()
-		{
-			TermVectorsReader reader = new TermVectorsReader(dir, seg, fieldInfos);
-			Assert.IsTrue(reader != null);
-			TermPositionVector vector = (TermPositionVector) reader.Get(0, testFields[0]);
-			Assert.IsTrue(vector != null);
-			System.String[] terms = vector.GetTerms();
-			Assert.IsTrue(terms != null);
-			Assert.IsTrue(terms.Length == testTerms.Length);
-			for (int i = 0; i < terms.Length; i++)
-			{
-				System.String term = terms[i];
-				//System.out.println("Term: " + term);
-				Assert.IsTrue(term.Equals(testTerms[i]));
-				int[] positions = vector.GetTermPositions(i);
-				Assert.IsTrue(positions != null);
-				Assert.IsTrue(positions.Length == this.positions[i].Length);
-				for (int j = 0; j < positions.Length; j++)
-				{
-					int position = positions[j];
-					Assert.IsTrue(position == this.positions[i][j]);
-				}
-				TermVectorOffsetInfo[] offset = vector.GetOffsets(i);
-				Assert.IsTrue(offset != null);
-				Assert.IsTrue(offset.Length == this.offsets[i].Length);
-				for (int j = 0; j < offset.Length; j++)
-				{
-					TermVectorOffsetInfo termVectorOffsetInfo = offset[j];
-					Assert.IsTrue(termVectorOffsetInfo.Equals(offsets[i][j]));
-				}
-			}
-		}
-		
-		[Test]
-		public virtual void  TestMapper()
-		{
-			TermVectorsReader reader = new TermVectorsReader(dir, seg, fieldInfos);
-			Assert.IsTrue(reader != null);
-			SortedTermVectorMapper mapper = new SortedTermVectorMapper(new TermVectorEntryFreqSortedComparator());
-			reader.Get(0, mapper);
-			var set_Renamed = mapper.TermVectorEntrySet;
-			Assert.IsTrue(set_Renamed != null, "set is null and it shouldn't be");
-			//three fields, 4 terms, all terms are the same
-			Assert.IsTrue(set_Renamed.Count == 4, "set Size: " + set_Renamed.Count + " is not: " + 4);
-			//Check offsets and positions
-			for (System.Collections.IEnumerator iterator = set_Renamed.GetEnumerator(); iterator.MoveNext(); )
-			{
-				TermVectorEntry tve = (TermVectorEntry) iterator.Current;
-				Assert.IsTrue(tve != null, "tve is null and it shouldn't be");
-				Assert.IsTrue(tve.GetOffsets() != null, "tve.getOffsets() is null and it shouldn't be");
-				Assert.IsTrue(tve.GetPositions() != null, "tve.getPositions() is null and it shouldn't be");
-			}
-			
-			mapper = new SortedTermVectorMapper(new TermVectorEntryFreqSortedComparator());
-			reader.Get(1, mapper);
-			set_Renamed = mapper.TermVectorEntrySet;
-			Assert.IsTrue(set_Renamed != null, "set is null and it shouldn't be");
-			//three fields, 4 terms, all terms are the same
-			Assert.IsTrue(set_Renamed.Count == 4, "set Size: " + set_Renamed.Count + " is not: " + 4);
-			//Should have offsets and positions b/c we are munging all the fields together
-			for (System.Collections.IEnumerator iterator = set_Renamed.GetEnumerator(); iterator.MoveNext(); )
-			{
-				TermVectorEntry tve = (TermVectorEntry) iterator.Current;
-				Assert.IsTrue(tve != null, "tve is null and it shouldn't be");
-				Assert.IsTrue(tve.GetOffsets() != null, "tve.getOffsets() is null and it shouldn't be");
-				Assert.IsTrue(tve.GetPositions() != null, "tve.getPositions() is null and it shouldn't be");
-			}
-			
-			
-			FieldSortedTermVectorMapper fsMapper = new FieldSortedTermVectorMapper(new TermVectorEntryFreqSortedComparator());
-			reader.Get(0, fsMapper);
-			var map = fsMapper.FieldToTerms;
-			Assert.IsTrue(map.Count == testFields.Length, "map Size: " + map.Count + " is not: " + testFields.Length);
-			for (var iterator = map.GetEnumerator(); iterator.MoveNext(); )
-			{
-				var entry = iterator.Current;
-				var sortedSet = entry.Value;
-				Assert.IsTrue(sortedSet.Count == 4, "sortedSet Size: " + sortedSet.Count + " is not: " + 4);
-				for (var inner = sortedSet.GetEnumerator(); inner.MoveNext(); )
-				{
-					TermVectorEntry tve = inner.Current;
-					Assert.IsTrue(tve != null, "tve is null and it shouldn't be");
-					//Check offsets and positions.
-					Assert.IsTrue(tve != null, "tve is null and it shouldn't be");
-					System.String field = tve.Field;
-					if (field.Equals(testFields[0]))
-					{
-						//should have offsets
-						
-						Assert.IsTrue(tve.GetOffsets() != null, "tve.getOffsets() is null and it shouldn't be");
-						Assert.IsTrue(tve.GetPositions() != null, "tve.getPositions() is null and it shouldn't be");
-					}
-					else if (field.Equals(testFields[1]))
-					{
-						//should not have offsets
-						
-						Assert.IsTrue(tve.GetOffsets() == null, "tve.getOffsets() is not null and it shouldn't be");
-						Assert.IsTrue(tve.GetPositions() == null, "tve.getPositions() is not null and it shouldn't be");
-					}
-				}
-			}
-			//Try mapper that ignores offs and positions
-			fsMapper = new FieldSortedTermVectorMapper(true, true, new TermVectorEntryFreqSortedComparator());
-			reader.Get(0, fsMapper);
-			map = fsMapper.FieldToTerms;
-			Assert.IsTrue(map.Count == testFields.Length, "map Size: " + map.Count + " is not: " + testFields.Length);
-			for (var iterator = map.GetEnumerator(); iterator.MoveNext(); )
-			{
-				var entry = iterator.Current;
-				var sortedSet = entry.Value;
-				Assert.IsTrue(sortedSet.Count == 4, "sortedSet Size: " + sortedSet.Count + " is not: " + 4);
-				for (var inner = sortedSet.GetEnumerator(); inner.MoveNext(); )
-				{
-					TermVectorEntry tve = inner.Current;
-					Assert.IsTrue(tve != null, "tve is null and it shouldn't be");
-					//Check offsets and positions.
-					Assert.IsTrue(tve != null, "tve is null and it shouldn't be");
-					System.String field = tve.Field;
-					if (field.Equals(testFields[0]))
-					{
-						//should have offsets
-						
-						Assert.IsTrue(tve.GetOffsets() == null, "tve.getOffsets() is null and it shouldn't be");
-						Assert.IsTrue(tve.GetPositions() == null, "tve.getPositions() is null and it shouldn't be");
-					}
-					else if (field.Equals(testFields[1]))
-					{
-						//should not have offsets
-						
-						Assert.IsTrue(tve.GetOffsets() == null, "tve.getOffsets() is not null and it shouldn't be");
-						Assert.IsTrue(tve.GetPositions() == null, "tve.getPositions() is not null and it shouldn't be");
-					}
-				}
-			}
-			
-			// test setDocumentNumber()
-		    IndexReader ir = IndexReader.Open(dir, true);
-			DocNumAwareMapper docNumAwareMapper = new DocNumAwareMapper();
-			Assert.AreEqual(- 1, docNumAwareMapper.GetDocumentNumber());
-			
-			ir.GetTermFreqVector(0, docNumAwareMapper);
-			Assert.AreEqual(0, docNumAwareMapper.GetDocumentNumber());
-            docNumAwareMapper.SetDocumentNumber(-1);
-			
-			ir.GetTermFreqVector(1, docNumAwareMapper);
-			Assert.AreEqual(1, docNumAwareMapper.GetDocumentNumber());
-            docNumAwareMapper.SetDocumentNumber(-1);
-			
-			ir.GetTermFreqVector(0, "f1", docNumAwareMapper);
-			Assert.AreEqual(0, docNumAwareMapper.GetDocumentNumber());
-		    docNumAwareMapper.SetDocumentNumber(-1);
-			
-			ir.GetTermFreqVector(1, "f2", docNumAwareMapper);
-			Assert.AreEqual(1, docNumAwareMapper.GetDocumentNumber());
-		    docNumAwareMapper.SetDocumentNumber(-1);
-			
-			ir.GetTermFreqVector(0, "f1", docNumAwareMapper);
-			Assert.AreEqual(0, docNumAwareMapper.GetDocumentNumber());
-			
-			ir.Close();
-		}
-		
-		
-		/// <summary> Make sure exceptions and bad params are handled appropriately</summary>
-		[Test]
-		public virtual void  TestBadParams()
-		{
-			var reader = new TermVectorsReader(dir, seg, fieldInfos);
-			Assert.IsTrue(reader != null);
-			//Bad document number, good field number
-            Assert.Throws<System.IO.IOException>(() => reader.Get(50, testFields[0]));
 
-			reader = new TermVectorsReader(dir, seg, fieldInfos);
-			Assert.IsTrue(reader != null);
-			//Bad document number, no field
-			Assert.Throws<System.IO.IOException>(() => reader.Get(50));
-
-			reader = new TermVectorsReader(dir, seg, fieldInfos);
-			Assert.IsTrue(reader != null);
-		    Assert.DoesNotThrow(() =>
-		                            {
-		                                //good document number, bad field number
-		                                ITermFreqVector vector = reader.Get(0, "f50");
-		                                Assert.IsTrue(vector == null);
-		                            });
-		}
-		
-		
-		public class DocNumAwareMapper:TermVectorMapper
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestDocsEnum()
 		{
-			
-			public DocNumAwareMapper()
+			TermVectorsReader reader = Codec.GetDefault().TermVectorsFormat().VectorsReader(dir
+				, seg.info, fieldInfos, NewIOContext(Random()));
+			for (int j = 0; j < 5; j++)
 			{
-			}
-			
-			private int documentNumber = - 1;
-			
-			public override void  SetExpectations(System.String field, int numTerms, bool storeOffsets, bool storePositions)
-			{
-				if (documentNumber == - 1)
+				Terms vector = reader.Get(j).Terms(testFields[0]);
+				NUnit.Framework.Assert.IsNotNull(vector);
+				NUnit.Framework.Assert.AreEqual(testTerms.Length, vector.Size());
+				TermsEnum termsEnum = vector.Iterator(null);
+				DocsEnum docsEnum = null;
+				for (int i = 0; i < testTerms.Length; i++)
 				{
-					throw new System.SystemException("Documentnumber should be set at this point!");
+					BytesRef text = termsEnum.Next();
+					NUnit.Framework.Assert.IsNotNull(text);
+					string term = text.Utf8ToString();
+					//System.out.println("Term: " + term);
+					NUnit.Framework.Assert.AreEqual(testTerms[i], term);
+					docsEnum = TestUtil.Docs(Random(), termsEnum, null, docsEnum, DocsEnum.FLAG_NONE);
+					NUnit.Framework.Assert.IsNotNull(docsEnum);
+					int doc = docsEnum.DocID();
+					NUnit.Framework.Assert.AreEqual(-1, doc);
+					NUnit.Framework.Assert.IsTrue(docsEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS
+						);
+					NUnit.Framework.Assert.AreEqual(DocIdSetIterator.NO_MORE_DOCS, docsEnum.NextDoc()
+						);
 				}
+				NUnit.Framework.Assert.IsNull(termsEnum.Next());
 			}
-			
-			public override void  Map(System.String term, int frequency, TermVectorOffsetInfo[] offsets, int[] positions)
-			{
-				if (documentNumber == - 1)
-				{
-					throw new System.SystemException("Documentnumber should be set at this point!");
-				}
-			}
-			
-			public virtual int GetDocumentNumber()
-			{
-				return documentNumber;
-			}
+			reader.Close();
+		}
 
-		    public override void SetDocumentNumber(int documentNumber)
-		    {
-		        this.documentNumber = documentNumber;
-		    }
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestPositionReader()
+		{
+			TermVectorsReader reader = Codec.GetDefault().TermVectorsFormat().VectorsReader(dir
+				, seg.info, fieldInfos, NewIOContext(Random()));
+			BytesRef[] terms;
+			Terms vector = reader.Get(0).Terms(testFields[0]);
+			NUnit.Framework.Assert.IsNotNull(vector);
+			NUnit.Framework.Assert.AreEqual(testTerms.Length, vector.Size());
+			TermsEnum termsEnum = vector.Iterator(null);
+			DocsAndPositionsEnum dpEnum = null;
+			for (int i = 0; i < testTerms.Length; i++)
+			{
+				BytesRef text = termsEnum.Next();
+				NUnit.Framework.Assert.IsNotNull(text);
+				string term = text.Utf8ToString();
+				//System.out.println("Term: " + term);
+				NUnit.Framework.Assert.AreEqual(testTerms[i], term);
+				dpEnum = termsEnum.DocsAndPositions(null, dpEnum);
+				NUnit.Framework.Assert.IsNotNull(dpEnum);
+				int doc = dpEnum.DocID();
+				NUnit.Framework.Assert.AreEqual(-1, doc);
+				NUnit.Framework.Assert.IsTrue(dpEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
+				NUnit.Framework.Assert.AreEqual(dpEnum.Freq(), positions[i].Length);
+				for (int j = 0; j < positions[i].Length; j++)
+				{
+					NUnit.Framework.Assert.AreEqual(positions[i][j], dpEnum.NextPosition());
+				}
+				NUnit.Framework.Assert.AreEqual(DocIdSetIterator.NO_MORE_DOCS, dpEnum.NextDoc());
+				dpEnum = termsEnum.DocsAndPositions(null, dpEnum);
+				doc = dpEnum.DocID();
+				NUnit.Framework.Assert.AreEqual(-1, doc);
+				NUnit.Framework.Assert.IsTrue(dpEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
+				NUnit.Framework.Assert.IsNotNull(dpEnum);
+				NUnit.Framework.Assert.AreEqual(dpEnum.Freq(), positions[i].Length);
+				for (int j_1 = 0; j_1 < positions[i].Length; j_1++)
+				{
+					NUnit.Framework.Assert.AreEqual(positions[i][j_1], dpEnum.NextPosition());
+					NUnit.Framework.Assert.AreEqual(j_1 * 10, dpEnum.StartOffset());
+					NUnit.Framework.Assert.AreEqual(j_1 * 10 + testTerms[i].Length, dpEnum.EndOffset(
+						));
+				}
+				NUnit.Framework.Assert.AreEqual(DocIdSetIterator.NO_MORE_DOCS, dpEnum.NextDoc());
+			}
+			Terms freqVector = reader.Get(0).Terms(testFields[1]);
+			//no pos, no offset
+			NUnit.Framework.Assert.IsNotNull(freqVector);
+			NUnit.Framework.Assert.AreEqual(testTerms.Length, freqVector.Size());
+			termsEnum = freqVector.Iterator(null);
+			NUnit.Framework.Assert.IsNotNull(termsEnum);
+			for (int i_1 = 0; i_1 < testTerms.Length; i_1++)
+			{
+				BytesRef text = termsEnum.Next();
+				NUnit.Framework.Assert.IsNotNull(text);
+				string term = text.Utf8ToString();
+				//System.out.println("Term: " + term);
+				NUnit.Framework.Assert.AreEqual(testTerms[i_1], term);
+				NUnit.Framework.Assert.IsNotNull(termsEnum.Docs(null, null));
+				NUnit.Framework.Assert.IsNull(termsEnum.DocsAndPositions(null, null));
+			}
+			// no pos
+			reader.Close();
+		}
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestOffsetReader()
+		{
+			TermVectorsReader reader = Codec.GetDefault().TermVectorsFormat().VectorsReader(dir
+				, seg.info, fieldInfos, NewIOContext(Random()));
+			Terms vector = reader.Get(0).Terms(testFields[0]);
+			NUnit.Framework.Assert.IsNotNull(vector);
+			TermsEnum termsEnum = vector.Iterator(null);
+			NUnit.Framework.Assert.IsNotNull(termsEnum);
+			NUnit.Framework.Assert.AreEqual(testTerms.Length, vector.Size());
+			DocsAndPositionsEnum dpEnum = null;
+			for (int i = 0; i < testTerms.Length; i++)
+			{
+				BytesRef text = termsEnum.Next();
+				NUnit.Framework.Assert.IsNotNull(text);
+				string term = text.Utf8ToString();
+				NUnit.Framework.Assert.AreEqual(testTerms[i], term);
+				dpEnum = termsEnum.DocsAndPositions(null, dpEnum);
+				NUnit.Framework.Assert.IsNotNull(dpEnum);
+				NUnit.Framework.Assert.IsTrue(dpEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
+				NUnit.Framework.Assert.AreEqual(dpEnum.Freq(), positions[i].Length);
+				for (int j = 0; j < positions[i].Length; j++)
+				{
+					NUnit.Framework.Assert.AreEqual(positions[i][j], dpEnum.NextPosition());
+				}
+				NUnit.Framework.Assert.AreEqual(DocIdSetIterator.NO_MORE_DOCS, dpEnum.NextDoc());
+				dpEnum = termsEnum.DocsAndPositions(null, dpEnum);
+				NUnit.Framework.Assert.IsTrue(dpEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
+				NUnit.Framework.Assert.IsNotNull(dpEnum);
+				NUnit.Framework.Assert.AreEqual(dpEnum.Freq(), positions[i].Length);
+				for (int j_1 = 0; j_1 < positions[i].Length; j_1++)
+				{
+					NUnit.Framework.Assert.AreEqual(positions[i][j_1], dpEnum.NextPosition());
+					NUnit.Framework.Assert.AreEqual(j_1 * 10, dpEnum.StartOffset());
+					NUnit.Framework.Assert.AreEqual(j_1 * 10 + testTerms[i].Length, dpEnum.EndOffset(
+						));
+				}
+				NUnit.Framework.Assert.AreEqual(DocIdSetIterator.NO_MORE_DOCS, dpEnum.NextDoc());
+			}
+			reader.Close();
+		}
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestIllegalIndexableField()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter w = new RandomIndexWriter(Random(), dir);
+			FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
+			ft.SetStoreTermVectors(true);
+			ft.SetStoreTermVectorPayloads(true);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(new Field("field", "value", ft));
+			try
+			{
+				w.AddDocument(doc);
+				NUnit.Framework.Assert.Fail("did not hit exception");
+			}
+			catch (ArgumentException iae)
+			{
+				// Expected
+				NUnit.Framework.Assert.AreEqual("cannot index term vector payloads without term vector positions (field=\"field\")"
+					, iae.Message);
+			}
+			ft = new FieldType(TextField.TYPE_NOT_STORED);
+			ft.SetStoreTermVectors(false);
+			ft.SetStoreTermVectorOffsets(true);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(new Field("field", "value", ft));
+			try
+			{
+				w.AddDocument(doc);
+				NUnit.Framework.Assert.Fail("did not hit exception");
+			}
+			catch (ArgumentException iae)
+			{
+				// Expected
+				NUnit.Framework.Assert.AreEqual("cannot index term vector offsets when term vectors are not indexed (field=\"field\")"
+					, iae.Message);
+			}
+			ft = new FieldType(TextField.TYPE_NOT_STORED);
+			ft.SetStoreTermVectors(false);
+			ft.SetStoreTermVectorPositions(true);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(new Field("field", "value", ft));
+			try
+			{
+				w.AddDocument(doc);
+				NUnit.Framework.Assert.Fail("did not hit exception");
+			}
+			catch (ArgumentException iae)
+			{
+				// Expected
+				NUnit.Framework.Assert.AreEqual("cannot index term vector positions when term vectors are not indexed (field=\"field\")"
+					, iae.Message);
+			}
+			ft = new FieldType(TextField.TYPE_NOT_STORED);
+			ft.SetStoreTermVectors(false);
+			ft.SetStoreTermVectorPayloads(true);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(new Field("field", "value", ft));
+			try
+			{
+				w.AddDocument(doc);
+				NUnit.Framework.Assert.Fail("did not hit exception");
+			}
+			catch (ArgumentException iae)
+			{
+				// Expected
+				NUnit.Framework.Assert.AreEqual("cannot index term vector payloads when term vectors are not indexed (field=\"field\")"
+					, iae.Message);
+			}
+			w.Close();
+			dir.Close();
 		}
 	}
 }

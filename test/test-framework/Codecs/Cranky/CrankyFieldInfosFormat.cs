@@ -1,69 +1,63 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
+using System;
 using System.IO;
-using Org.Apache.Lucene.Codecs;
-using Lucene.Net.Codecs.Cranky;
-using Org.Apache.Lucene.Index;
-using Org.Apache.Lucene.Store;
-using Sharpen;
+using Lucene.Net.Index;
+using Lucene.Net.Store;
+using Directory = System.IO.Directory;
 
-namespace Lucene.Net.Codecs.Cranky
+namespace Lucene.Net.Codecs.Cranky.TestFramework
 {
 	internal class CrankyFieldInfosFormat : FieldInfosFormat
 	{
-		internal readonly FieldInfosFormat delegate_;
+		internal readonly FieldInfosFormat fiFormat;
 
 		internal readonly Random random;
 
 		internal CrankyFieldInfosFormat(FieldInfosFormat delegate_, Random random)
 		{
-			this.delegate_ = delegate_;
+			this.fiFormat = delegate_;
 			this.random = random;
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
-		public override FieldInfosReader GetFieldInfosReader()
+		
+		public override FieldInfosReader FieldInfosReader
 		{
-			return delegate_.GetFieldInfosReader();
+		    get { return fiFormat.FieldInfosReader; }
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
-		public override FieldInfosWriter GetFieldInfosWriter()
+		
+		public override FieldInfosWriter FieldInfosWriter
 		{
-			if (random.Next(100) == 0)
-			{
-				throw new IOException("Fake IOException from FieldInfosFormat.getFieldInfosWriter()"
-					);
-			}
-			return new CrankyFieldInfosFormat.CrankyFieldInfosWriter(delegate_.GetFieldInfosWriter
-				(), random);
+		    get
+		    {
+		        if (random.Next(100) == 0)
+		        {
+		            throw new IOException("Fake IOException from FieldInfosFormat.getFieldInfosWriter()");
+		        }
+		        return new CrankyFieldInfosWriter(fiFormat.FieldInfosWriter, random);
+		    }
 		}
 
 		internal class CrankyFieldInfosWriter : FieldInfosWriter
 		{
-			internal readonly FieldInfosWriter delegate_;
+			internal readonly FieldInfosWriter fiWriter;
 
 			internal readonly Random random;
 
-			internal CrankyFieldInfosWriter(FieldInfosWriter delegate_, Random random)
+			internal CrankyFieldInfosWriter(FieldInfosWriter fiwInput, Random random)
 			{
-				this.delegate_ = delegate_;
+				this.fiWriter = fiwInput;
 				this.random = random;
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
-			public override void Write(Directory directory, string segmentName, string segmentSuffix
+			public override void Write(Lucene.Net.Store.Directory directory, string segmentName, string segmentSuffix
 				, FieldInfos infos, IOContext context)
 			{
 				if (random.Next(100) == 0)
 				{
 					throw new IOException("Fake IOException from FieldInfosWriter.write()");
 				}
-				delegate_.Write(directory, segmentName, segmentSuffix, infos, context);
+				fiWriter.Write(directory, segmentName, segmentSuffix, infos, context);
 			}
 		}
 	}

@@ -1,82 +1,72 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
+using System;
 using System.IO;
-using Org.Apache.Lucene.Codecs;
-using Lucene.Net.Codecs.Cranky;
-using Org.Apache.Lucene.Index;
-using Org.Apache.Lucene.Store;
-using Sharpen;
+using Lucene.Net.Index;
+using Lucene.Net.Store;
+using Directory = System.IO.Directory;
 
-namespace Lucene.Net.Codecs.Cranky
+namespace Lucene.Net.Codecs.Cranky.TestFramework
 {
 	internal class CrankyStoredFieldsFormat : StoredFieldsFormat
 	{
-		internal readonly StoredFieldsFormat delegate_;
+		internal readonly StoredFieldsFormat storedFlds;
 
 		internal readonly Random random;
 
-		internal CrankyStoredFieldsFormat(StoredFieldsFormat delegate_, Random random)
+		internal CrankyStoredFieldsFormat(StoredFieldsFormat del, Random random)
 		{
-			this.delegate_ = delegate_;
+			this.storedFlds = del;
 			this.random = random;
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
-		public override StoredFieldsReader FieldsReader(Directory directory, SegmentInfo 
+		
+		public override StoredFieldsReader FieldsReader(Lucene.Net.Store.Directory directory, SegmentInfo 
 			si, FieldInfos fn, IOContext context)
 		{
-			return delegate_.FieldsReader(directory, si, fn, context);
+			return storedFlds.FieldsReader(directory, si, fn, context);
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
-		public override StoredFieldsWriter FieldsWriter(Directory directory, SegmentInfo 
-			si, IOContext context)
+		
+		public override StoredFieldsWriter FieldsWriter(Lucene.Net.Store.Directory directory, SegmentInfo si, IOContext context)
 		{
 			if (random.Next(100) == 0)
 			{
 				throw new IOException("Fake IOException from StoredFieldsFormat.fieldsWriter()");
 			}
-			return new CrankyStoredFieldsFormat.CrankyStoredFieldsWriter(delegate_.FieldsWriter
-				(directory, si, context), random);
+			return new CrankyStoredFieldsWriter(storedFlds.FieldsWriter(directory, si, context), random);
 		}
 
 		internal class CrankyStoredFieldsWriter : StoredFieldsWriter
 		{
-			internal readonly StoredFieldsWriter delegate_;
+			internal readonly StoredFieldsWriter sfWriter;
 
 			internal readonly Random random;
 
 			internal CrankyStoredFieldsWriter(StoredFieldsWriter delegate_, Random random)
 			{
-				this.delegate_ = delegate_;
+				this.sfWriter = delegate_;
 				this.random = random;
 			}
 
 			public override void Abort()
 			{
-				delegate_.Abort();
+				sfWriter.Abort();
 				if (random.Next(100) == 0)
 				{
-					throw new RuntimeException(new IOException("Fake IOException from StoredFieldsWriter.abort()"
-						));
+					throw new IOException("Fake IOException from StoredFieldsWriter.abort()");
 				}
 			}
 
-			/// <exception cref="System.IO.IOException"></exception>
+			
 			public override void Finish(FieldInfos fis, int numDocs)
 			{
 				if (random.Next(100) == 0)
 				{
 					throw new IOException("Fake IOException from StoredFieldsWriter.finish()");
 				}
-				delegate_.Finish(fis, numDocs);
+				sfWriter.Finish(fis, numDocs);
 			}
 
-			/// <exception cref="System.IO.IOException"></exception>
+			
 			public override int Merge(MergeState mergeState)
 			{
 				if (random.Next(100) == 0)
@@ -86,10 +76,10 @@ namespace Lucene.Net.Codecs.Cranky
 				return base.Merge(mergeState);
 			}
 
-			/// <exception cref="System.IO.IOException"></exception>
-			public override void Close()
+
+		    protected override void Dispose(bool disposing)
 			{
-				delegate_.Close();
+				sfWriter.Dispose();
 				if (random.Next(1000) == 0)
 				{
 					throw new IOException("Fake IOException from StoredFieldsWriter.close()");
@@ -97,14 +87,14 @@ namespace Lucene.Net.Codecs.Cranky
 			}
 
 			// per doc/field methods: lower probability since they are invoked so many times.
-			/// <exception cref="System.IO.IOException"></exception>
+			
 			public override void StartDocument(int numFields)
 			{
 				if (random.Next(10000) == 0)
 				{
 					throw new IOException("Fake IOException from StoredFieldsWriter.startDocument()");
 				}
-				delegate_.StartDocument(numFields);
+				sfWriter.StartDocument(numFields);
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
@@ -115,17 +105,17 @@ namespace Lucene.Net.Codecs.Cranky
 					throw new IOException("Fake IOException from StoredFieldsWriter.finishDocument()"
 						);
 				}
-				delegate_.FinishDocument();
+				sfWriter.FinishDocument();
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
-			public override void WriteField(FieldInfo info, IndexableField field)
+			public override void WriteField(FieldInfo info, IIndexableField field)
 			{
 				if (random.Next(10000) == 0)
 				{
 					throw new IOException("Fake IOException from StoredFieldsWriter.writeField()");
 				}
-				delegate_.WriteField(info, field);
+				sfWriter.WriteField(info, field);
 			}
 		}
 	}

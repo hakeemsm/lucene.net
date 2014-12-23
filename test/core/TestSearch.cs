@@ -36,10 +36,50 @@ namespace Lucene.Net
 	{
 		
 		/// <summary>Main for running test case by itself. </summary>
-		[STAThread]
-		public static void  Main(System.String[] args)
+		public virtual void TestNegativeQueryBoost()
 		{
-			// TestRunner.run(new TestSuite(typeof(TestSearch))); // {{Aroush-2.9}} how is this done in NUnit?
+			Query q = new TermQuery(new Term("foo", "bar"));
+			q.SetBoost(-42f);
+			NUnit.Framework.Assert.AreEqual(-42f, q.GetBoost(), 0.0f);
+			Directory directory = NewDirectory();
+			try
+			{
+				Analyzer analyzer = new MockAnalyzer(Random());
+				IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer);
+				IndexWriter writer = new IndexWriter(directory, conf);
+				try
+				{
+					Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+					d.Add(NewTextField("foo", "bar", Field.Store.YES));
+					writer.AddDocument(d);
+				}
+				finally
+				{
+					writer.Close();
+				}
+				IndexReader reader = DirectoryReader.Open(directory);
+				try
+				{
+					IndexSearcher searcher = NewSearcher(reader);
+					ScoreDoc[] hits = searcher.Search(q, null, 1000).scoreDocs;
+					NUnit.Framework.Assert.AreEqual(1, hits.Length);
+					NUnit.Framework.Assert.IsTrue("score is not negative: " + hits[0].score, hits[0].
+						score < 0);
+					Explanation explain = searcher.Explain(q, hits[0].doc);
+					NUnit.Framework.Assert.AreEqual("score doesn't match explanation", hits[0].score, 
+						explain.GetValue(), 0.001f);
+					NUnit.Framework.Assert.IsTrue("explain doesn't think doc is a match", explain.IsMatch
+						());
+				}
+				finally
+				{
+					reader.Close();
+				}
+			}
+			finally
+			{
+				directory.Close();
+			}
 		}
 		
 		/// <summary>This test performs a number of searches. It also compares output
@@ -75,31 +115,28 @@ namespace Lucene.Net
 		
 		private void  DoTestSearch(System.IO.StreamWriter out_Renamed, bool useCompoundFile)
 		{
-			Directory directory = new RAMDirectory();
-			Analyzer analyzer = new SimpleAnalyzer();
-			IndexWriter writer = new IndexWriter(directory, analyzer, true, IndexWriter.MaxFieldLength.LIMITED);
-			
-			writer.UseCompoundFile = useCompoundFile;
-			
+			Directory directory = NewDirectory();
+			Analyzer analyzer = new MockAnalyzer(random);
+			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer);
+			MergePolicy mp = conf.GetMergePolicy();
+			mp.SetNoCFSRatio(useCompoundFile ? 1.0 : 0.0);
+			IndexWriter writer = new IndexWriter(directory, conf);
 			System.String[] docs = new System.String[]{"a b c d e", "a b c d e a b c d e", "a b c d e f g h i j", "a c e", "e c a", "a c e a c e", "a c e a b c"};
 			for (int j = 0; j < docs.Length; j++)
 			{
 				Document d = new Document();
-				d.Add(new Field("contents", docs[j], Field.Store.YES, Field.Index.ANALYZED));
+				d.Add(NewTextField("contents", docs[j], Field.Store.YES));
+				d.Add(NewStringField("id", string.Empty + j, Field.Store.NO));
 				writer.AddDocument(d);
 			}
 			writer.Close();
-
-		    Searcher searcher = new IndexSearcher(directory, true);
-			
-			System.String[] queries = new System.String[]{"a b", "\"a b\"", "\"a b c\"", "a c", "\"a c\"", "\"a c e\""};
+			IndexReader reader = DirectoryReader.Open(directory);
+			IndexSearcher searcher = NewSearcher(reader);
 			ScoreDoc[] hits = null;
-			
-			QueryParser parser = new QueryParser(Util.Version.LUCENE_CURRENT, "contents", analyzer);
-			parser.PhraseSlop = 4;
-			for (int j = 0; j < queries.Length; j++)
+			Sort sort = new Sort(SortField.FIELD_SCORE, new SortField("id", SortField.Type.INT
+				));
+			foreach (Query query in BuildQueries())
 			{
-				Query query = parser.Parse(queries[j]);
 				out_Renamed.WriteLine("Query: " + query.ToString("contents"));
 				
 				//DateFilter filter =
@@ -107,7 +144,7 @@ namespace Lucene.Net
 				//DateFilter filter = DateFilter.Before("modified", Time(1997,00,01));
 				//System.out.println(filter);
 				
-				hits = searcher.Search(query, null, 1000).ScoreDocs;
+				hits = searcher.Search(query, null, 1000, sort).scoreDocs;
 				
 				out_Renamed.WriteLine(hits.Length + " total results");
 				for (int i = 0; i < hits.Length && i < 10; i++)
@@ -116,9 +153,44 @@ namespace Lucene.Net
 					out_Renamed.WriteLine(i + " " + hits[i].Score + " " + d.Get("contents"));
 				}
 			}
-			searcher.Close();
+			reader.Close();
+			directory.Close();
 		}
-		
+		private IList<Query> BuildQueries()
+		{
+			IList<Query> queries = new AList<Query>();
+			BooleanQuery booleanAB = new BooleanQuery();
+			booleanAB.Add(new TermQuery(new Term("contents", "a")), BooleanClause.Occur.SHOULD
+				);
+			booleanAB.Add(new TermQuery(new Term("contents", "b")), BooleanClause.Occur.SHOULD
+				);
+			queries.AddItem(booleanAB);
+			PhraseQuery phraseAB = new PhraseQuery();
+			phraseAB.Add(new Term("contents", "a"));
+			phraseAB.Add(new Term("contents", "b"));
+			queries.AddItem(phraseAB);
+			PhraseQuery phraseABC = new PhraseQuery();
+			phraseABC.Add(new Term("contents", "a"));
+			phraseABC.Add(new Term("contents", "b"));
+			phraseABC.Add(new Term("contents", "c"));
+			queries.AddItem(phraseABC);
+			BooleanQuery booleanAC = new BooleanQuery();
+			booleanAC.Add(new TermQuery(new Term("contents", "a")), BooleanClause.Occur.SHOULD
+				);
+			booleanAC.Add(new TermQuery(new Term("contents", "c")), BooleanClause.Occur.SHOULD
+				);
+			queries.AddItem(booleanAC);
+			PhraseQuery phraseAC = new PhraseQuery();
+			phraseAC.Add(new Term("contents", "a"));
+			phraseAC.Add(new Term("contents", "c"));
+			queries.AddItem(phraseAC);
+			PhraseQuery phraseACE = new PhraseQuery();
+			phraseACE.Add(new Term("contents", "a"));
+			phraseACE.Add(new Term("contents", "c"));
+			phraseACE.Add(new Term("contents", "e"));
+			queries.AddItem(phraseACE);
+			return queries;
+		}
 		internal static long Time(int year, int month, int day)
 		{
 			System.DateTime calendar = new System.DateTime(year, month, day, 0, 0, 0, 0, new System.Globalization.GregorianCalendar());

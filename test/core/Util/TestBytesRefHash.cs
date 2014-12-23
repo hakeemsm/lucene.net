@@ -1,187 +1,436 @@
-﻿using System;
+/*
+ * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
+ * 
+ * If this is an open source Java library, include the proper license and copyright attributions here!
+ */
+
 using System.Collections.Generic;
-using Lucene.Net.Support;
 using Lucene.Net.Util;
-using NUnit.Framework;
-using System.Linq;
+using Sharpen;
 
-namespace Lucene.Net.Test.Util
+namespace Lucene.Net.Util
 {
-    [TestFixture]
-    public class TestBytesRefHash : LuceneTestCase
-    {
-        private IList<int> CreateRandomList(int maxSize)
-        {
-            var rnd = new Random();
-            var a = new int[rnd.Next(maxSize) + 1];
-            for (var i = 0; i < a.Length; i++)
-            {
-                a[i] = rnd.Next(a.Length);
-            }
-            return a.ToList();
-        }
+	public class TestBytesRefHash : LuceneTestCase
+	{
+		internal BytesRefHash hash;
 
-        [Test]
-        public void TestQuickSort()
-        {
-            for (int i = 0, c = AtLeast(500); i < c; i++)
-            {
-                var list1 = CreateRandomList(2000);
-                var list2 = new List<int>(list1);
-                CollectionUtil.QuickSort(list1);
-                Collections.Sort(list2);
-                assertEquals(list2, list1);
+		internal ByteBlockPool pool;
 
-                list1 = CreateRandomList(2000);
-                list2 = new List<int>(list1);
-                CollectionUtil.QuickSort(list1, Collections.ReverseOrder());
-                Collections.Sort(list2, Collections.ReverseOrder());
-                assertEquals(list2, list1);
-                // reverse back, so we can test that completely backwards sorted array (worst case) is working:
-                CollectionUtil.QuickSort(list1);
-                Collections.Sort(list2);
-                assertEquals(list2, list1);
-            }
-        }
+		/// <exception cref="System.Exception"></exception>
+		[NUnit.Framework.SetUp]
+		public override void SetUp()
+		{
+			base.SetUp();
+			pool = NewPool();
+			hash = NewHash(pool);
+		}
 
-        [Test]
-        public void TestMergeSort()
-        {
-            for (int i = 0, c = AtLeast(500); i < c; i++)
-            {
-                var list1 = CreateRandomList(2000);
-                var list2 = new List<int>(list1);
-                CollectionUtil.MergeSort(list1);
-                Collections.Sort(list2);
-                assertEquals(list2, list1);
+		private ByteBlockPool NewPool()
+		{
+			return Random().NextBoolean() && pool != null ? pool : new ByteBlockPool(new RecyclingByteBlockAllocator
+				(ByteBlockPool.BYTE_BLOCK_SIZE, Random().Next(25)));
+		}
 
-                list1 = CreateRandomList(2000);
-                list2 = new List<int>(list1);
-                CollectionUtil.MergeSort(list1, Collections.ReverseOrder());
-                Collections.Sort(list2, Collections.ReverseOrder());
-                assertEquals(list2, list1);
-                // reverse back, so we can test that completely backwards sorted array (worst case) is working:
-                CollectionUtil.MergeSort(list1);
-                Collections.Sort(list2);
-                assertEquals(list2, list1);
-            }
-        }
+		private BytesRefHash NewHash(ByteBlockPool blockPool)
+		{
+			int initSize = 2 << 1 + Random().Next(5);
+			return Random().NextBoolean() ? new BytesRefHash(blockPool) : new BytesRefHash(blockPool
+				, initSize, new BytesRefHash.DirectBytesStartArray(initSize));
+		}
 
-        [Test]
-        public void TestTimSort()
-        {
-            for (int i = 0, c = AtLeast(500); i < c; i++)
-            {
-                var list1 = CreateRandomList(2000);
-                var list2 = new List<int>(list1);
-                CollectionUtil.TimSort(list1);
-                Collections.Sort(list2);
-                assertEquals(list2, list1);
+		/// <summary>
+		/// Test method for
+		/// <see cref="BytesRefHash.Size()">BytesRefHash.Size()</see>
+		/// .
+		/// </summary>
+		[NUnit.Framework.Test]
+		public virtual void TestSize()
+		{
+			BytesRef @ref = new BytesRef();
+			int num = AtLeast(2);
+			for (int j = 0; j < num; j++)
+			{
+				int mod = 1 + Random().Next(39);
+				for (int i = 0; i < 797; i++)
+				{
+					string str;
+					do
+					{
+						str = TestUtil.RandomRealisticUnicodeString(Random(), 1000);
+					}
+					while (str.Length == 0);
+					@ref.CopyChars(str);
+					int count = hash.Size();
+					int key = hash.Add(@ref);
+					if (key < 0)
+					{
+						NUnit.Framework.Assert.AreEqual(hash.Size(), count);
+					}
+					else
+					{
+						NUnit.Framework.Assert.AreEqual(hash.Size(), count + 1);
+					}
+					if (i % mod == 0)
+					{
+						hash.Clear();
+						NUnit.Framework.Assert.AreEqual(0, hash.Size());
+						hash.Reinit();
+					}
+				}
+			}
+		}
 
-                list1 = CreateRandomList(2000);
-                list2 = new List<int>(list1);
-                CollectionUtil.TimSort(list1, Collections.ReverseOrder());
-                Collections.Sort(list2, Collections.ReverseOrder());
-                assertEquals(list2, list1);
-                // reverse back, so we can test that completely backwards sorted array (worst case) is working:
-                CollectionUtil.TimSort(list1);
-                Collections.Sort(list2);
-                assertEquals(list2, list1);
-            }
-        }
+		/// <summary>
+		/// Test method for
+		/// <see cref="BytesRefHash.Get(int, BytesRef)">BytesRefHash.Get(int, BytesRef)</see>
+		/// .
+		/// </summary>
+		[NUnit.Framework.Test]
+		public virtual void TestGet()
+		{
+			BytesRef @ref = new BytesRef();
+			BytesRef scratch = new BytesRef();
+			int num = AtLeast(2);
+			for (int j = 0; j < num; j++)
+			{
+				IDictionary<string, int> strings = new Dictionary<string, int>();
+				int uniqueCount = 0;
+				for (int i = 0; i < 797; i++)
+				{
+					string str;
+					do
+					{
+						str = TestUtil.RandomRealisticUnicodeString(Random(), 1000);
+					}
+					while (str.Length == 0);
+					@ref.CopyChars(str);
+					int count = hash.Size();
+					int key = hash.Add(@ref);
+					if (key >= 0)
+					{
+						NUnit.Framework.Assert.IsNull(strings.Put(str, Sharpen.Extensions.ValueOf(key)));
+						NUnit.Framework.Assert.AreEqual(uniqueCount, key);
+						uniqueCount++;
+						NUnit.Framework.Assert.AreEqual(hash.Size(), count + 1);
+					}
+					else
+					{
+						NUnit.Framework.Assert.IsTrue((-key) - 1 < count);
+						NUnit.Framework.Assert.AreEqual(hash.Size(), count);
+					}
+				}
+				foreach (KeyValuePair<string, int> entry in strings.EntrySet())
+				{
+					@ref.CopyChars(entry.Key);
+					NUnit.Framework.Assert.AreEqual(@ref, hash.Get(entry.Value, scratch));
+				}
+				hash.Clear();
+				NUnit.Framework.Assert.AreEqual(0, hash.Size());
+				hash.Reinit();
+			}
+		}
 
-        [Test]
-        public void TestInsertionSort()
-        {
-            for (int i = 0, c = AtLeast(500); i < c; i++)
-            {
-                var list1 = CreateRandomList(30);
-                var list2 = new List<int>(list1);
-                CollectionUtil.InsertionSort(list1);
-                Collections.Sort(list2);
-                assertEquals(list2, list1);
+		/// <summary>
+		/// Test method for
+		/// <see cref="BytesRefHash.Compact()">BytesRefHash.Compact()</see>
+		/// .
+		/// </summary>
+		[NUnit.Framework.Test]
+		public virtual void TestCompact()
+		{
+			BytesRef @ref = new BytesRef();
+			int num = AtLeast(2);
+			for (int j = 0; j < num; j++)
+			{
+				int numEntries = 0;
+				int size = 797;
+				BitSet bits = new BitSet(size);
+				for (int i = 0; i < size; i++)
+				{
+					string str;
+					do
+					{
+						str = TestUtil.RandomRealisticUnicodeString(Random(), 1000);
+					}
+					while (str.Length == 0);
+					@ref.CopyChars(str);
+					int key = hash.Add(@ref);
+					if (key < 0)
+					{
+						NUnit.Framework.Assert.IsTrue(bits.Get((-key) - 1));
+					}
+					else
+					{
+						NUnit.Framework.Assert.IsFalse(bits.Get(key));
+						bits.Set(key);
+						numEntries++;
+					}
+				}
+				NUnit.Framework.Assert.AreEqual(hash.Size(), bits.Cardinality());
+				NUnit.Framework.Assert.AreEqual(numEntries, bits.Cardinality());
+				NUnit.Framework.Assert.AreEqual(numEntries, hash.Size());
+				int[] compact = hash.Compact();
+				NUnit.Framework.Assert.IsTrue(numEntries < compact.Length);
+				for (int i_1 = 0; i_1 < numEntries; i_1++)
+				{
+					bits.Set(compact[i_1], false);
+				}
+				NUnit.Framework.Assert.AreEqual(0, bits.Cardinality());
+				hash.Clear();
+				NUnit.Framework.Assert.AreEqual(0, hash.Size());
+				hash.Reinit();
+			}
+		}
 
-                list1 = CreateRandomList(30);
-                list2 = new List<int>(list1);
-                CollectionUtil.InsertionSort(list1, Collections.ReverseOrder());
-                Collections.Sort(list2, Collections.ReverseOrder());
-                assertEquals(list2, list1);
-                // reverse back, so we can test that completely backwards sorted array (worst case) is working:
-                CollectionUtil.InsertionSort(list1);
-                Collections.Sort(list2);
-                assertEquals(list2, list1);
-            }
-        }
+		/// <summary>
+		/// Test method for
+		/// <see cref="BytesRefHash.Sort(System.Collections.Generic.IComparer{T})">BytesRefHash.Sort(System.Collections.Generic.IComparer&lt;T&gt;)
+		/// 	</see>
+		/// .
+		/// </summary>
+		[NUnit.Framework.Test]
+		public virtual void TestSort()
+		{
+			BytesRef @ref = new BytesRef();
+			int num = AtLeast(2);
+			for (int j = 0; j < num; j++)
+			{
+				ICollection<string> strings = new TreeSet<string>();
+				for (int i = 0; i < 797; i++)
+				{
+					string str;
+					do
+					{
+						str = TestUtil.RandomRealisticUnicodeString(Random(), 1000);
+					}
+					while (str.Length == 0);
+					@ref.CopyChars(str);
+					hash.Add(@ref);
+					strings.AddItem(str);
+				}
+				// We use the UTF-16 comparator here, because we need to be able to
+				// compare to native String.compareTo() [UTF-16]:
+				int[] sort = hash.Sort(BytesRef.GetUTF8SortedAsUTF16Comparator());
+				NUnit.Framework.Assert.IsTrue(strings.Count < sort.Length);
+				int i_1 = 0;
+				BytesRef scratch = new BytesRef();
+				foreach (string @string in strings)
+				{
+					@ref.CopyChars(@string);
+					NUnit.Framework.Assert.AreEqual(@ref, hash.Get(sort[i_1++], scratch));
+				}
+				hash.Clear();
+				NUnit.Framework.Assert.AreEqual(0, hash.Size());
+				hash.Reinit();
+			}
+		}
 
-        [Test]
-        public void TestBinarySort()
-        {
-            for (int i = 0, c = AtLeast(500); i < c; i++)
-            {
-                var list1 = CreateRandomList(30);
-                var list2 = new List<int>(list1);
-                CollectionUtil.BinarySort(list1);
-                Collections.Sort(list2);
-                assertEquals(list2, list1);
+		/// <summary>
+		/// Test method for
+		/// <see cref="BytesRefHash.Add(BytesRef)">BytesRefHash.Add(BytesRef)</see>
+		/// .
+		/// </summary>
+		[NUnit.Framework.Test]
+		public virtual void TestAdd()
+		{
+			BytesRef @ref = new BytesRef();
+			BytesRef scratch = new BytesRef();
+			int num = AtLeast(2);
+			for (int j = 0; j < num; j++)
+			{
+				ICollection<string> strings = new HashSet<string>();
+				int uniqueCount = 0;
+				for (int i = 0; i < 797; i++)
+				{
+					string str;
+					do
+					{
+						str = TestUtil.RandomRealisticUnicodeString(Random(), 1000);
+					}
+					while (str.Length == 0);
+					@ref.CopyChars(str);
+					int count = hash.Size();
+					int key = hash.Add(@ref);
+					if (key >= 0)
+					{
+						NUnit.Framework.Assert.IsTrue(strings.AddItem(str));
+						NUnit.Framework.Assert.AreEqual(uniqueCount, key);
+						NUnit.Framework.Assert.AreEqual(hash.Size(), count + 1);
+						uniqueCount++;
+					}
+					else
+					{
+						NUnit.Framework.Assert.IsFalse(strings.AddItem(str));
+						NUnit.Framework.Assert.IsTrue((-key) - 1 < count);
+						NUnit.Framework.Assert.AreEqual(str, hash.Get((-key) - 1, scratch).Utf8ToString()
+							);
+						NUnit.Framework.Assert.AreEqual(count, hash.Size());
+					}
+				}
+				AssertAllIn(strings, hash);
+				hash.Clear();
+				NUnit.Framework.Assert.AreEqual(0, hash.Size());
+				hash.Reinit();
+			}
+		}
 
-                list1 = CreateRandomList(30);
-                list2 = new List<int>(list1);
-                CollectionUtil.BinarySort(list1, Collections.ReverseOrder());
-                Collections.Sort(list2, Collections.ReverseOrder());
-                assertEquals(list2, list1);
-                // reverse back, so we can test that completely backwards sorted array (worst case) is working:
-                CollectionUtil.BinarySort(list1);
-                Collections.Sort(list2);
-                assertEquals(list2, list1);
-            }
-        }
+		/// <exception cref="System.Exception"></exception>
+		[NUnit.Framework.Test]
+		public virtual void TestFind()
+		{
+			BytesRef @ref = new BytesRef();
+			BytesRef scratch = new BytesRef();
+			int num = AtLeast(2);
+			for (int j = 0; j < num; j++)
+			{
+				ICollection<string> strings = new HashSet<string>();
+				int uniqueCount = 0;
+				for (int i = 0; i < 797; i++)
+				{
+					string str;
+					do
+					{
+						str = TestUtil.RandomRealisticUnicodeString(Random(), 1000);
+					}
+					while (str.Length == 0);
+					@ref.CopyChars(str);
+					int count = hash.Size();
+					int key = hash.Find(@ref);
+					//hash.add(ref);
+					if (key >= 0)
+					{
+						// string found in hash
+						NUnit.Framework.Assert.IsFalse(strings.AddItem(str));
+						NUnit.Framework.Assert.IsTrue(key < count);
+						NUnit.Framework.Assert.AreEqual(str, hash.Get(key, scratch).Utf8ToString());
+						NUnit.Framework.Assert.AreEqual(count, hash.Size());
+					}
+					else
+					{
+						key = hash.Add(@ref);
+						NUnit.Framework.Assert.IsTrue(strings.AddItem(str));
+						NUnit.Framework.Assert.AreEqual(uniqueCount, key);
+						NUnit.Framework.Assert.AreEqual(hash.Size(), count + 1);
+						uniqueCount++;
+					}
+				}
+				AssertAllIn(strings, hash);
+				hash.Clear();
+				NUnit.Framework.Assert.AreEqual(0, hash.Size());
+				hash.Reinit();
+			}
+		}
 
-        [Test]
-        public void TestEmptyListSort()
-        {
-            // should produce no exceptions
-            IList<int> list = new int[0].ToList(); // LUCENE-2989
-            CollectionUtil.QuickSort(list);
-            CollectionUtil.MergeSort(list);
-            CollectionUtil.TimSort(list);
-            CollectionUtil.InsertionSort(list);
-            CollectionUtil.BinarySort(list);
-            CollectionUtil.QuickSort(list, Collections.ReverseOrder());
-            CollectionUtil.MergeSort(list, Collections.ReverseOrder());
-            CollectionUtil.TimSort(list, Collections.ReverseOrder());
-            CollectionUtil.InsertionSort(list, Collections.ReverseOrder());
-            CollectionUtil.BinarySort(list, Collections.ReverseOrder());
+		public virtual void TestLargeValue()
+		{
+			int[] sizes = new int[] { Random().Next(5), ByteBlockPool.BYTE_BLOCK_SIZE - 33 + 
+				Random().Next(31), ByteBlockPool.BYTE_BLOCK_SIZE - 1 + Random().Next(37) };
+			BytesRef @ref = new BytesRef();
+			for (int i = 0; i < sizes.Length; i++)
+			{
+				@ref.bytes = new byte[sizes[i]];
+				@ref.offset = 0;
+				@ref.length = sizes[i];
+				try
+				{
+					NUnit.Framework.Assert.AreEqual(i, hash.Add(@ref));
+				}
+				catch (BytesRefHash.MaxBytesLengthExceededException e)
+				{
+					if (i < sizes.Length - 1)
+					{
+						NUnit.Framework.Assert.Fail("unexpected exception at size: " + sizes[i]);
+					}
+					throw;
+				}
+			}
+		}
 
-            // check that empty non-random access lists pass sorting without ex (as sorting is not needed)
-            list = new LinkedList<int>();
-            CollectionUtil.QuickSort(list);
-            CollectionUtil.MergeSort(list);
-            CollectionUtil.TimSort(list);
-            CollectionUtil.InsertionSort(list);
-            CollectionUtil.BinarySort(list);
-            CollectionUtil.QuickSort(list, Collections.ReverseOrder());
-            CollectionUtil.MergeSort(list, Collections.ReverseOrder());
-            CollectionUtil.TimSort(list, Collections.ReverseOrder());
-            CollectionUtil.InsertionSort(list, Collections.ReverseOrder());
-            CollectionUtil.BinarySort(list, Collections.ReverseOrder());
-        }
+		/// <summary>
+		/// Test method for
+		/// <see cref="BytesRefHash.AddByPoolOffset(int)">BytesRefHash.AddByPoolOffset(int)</see>
+		/// .
+		/// </summary>
+		[NUnit.Framework.Test]
+		public virtual void TestAddByPoolOffset()
+		{
+			BytesRef @ref = new BytesRef();
+			BytesRef scratch = new BytesRef();
+			BytesRefHash offsetHash = NewHash(pool);
+			int num = AtLeast(2);
+			for (int j = 0; j < num; j++)
+			{
+				ICollection<string> strings = new HashSet<string>();
+				int uniqueCount = 0;
+				for (int i = 0; i < 797; i++)
+				{
+					string str;
+					do
+					{
+						str = TestUtil.RandomRealisticUnicodeString(Random(), 1000);
+					}
+					while (str.Length == 0);
+					@ref.CopyChars(str);
+					int count = hash.Size();
+					int key = hash.Add(@ref);
+					if (key >= 0)
+					{
+						NUnit.Framework.Assert.IsTrue(strings.AddItem(str));
+						NUnit.Framework.Assert.AreEqual(uniqueCount, key);
+						NUnit.Framework.Assert.AreEqual(hash.Size(), count + 1);
+						int offsetKey = offsetHash.AddByPoolOffset(hash.ByteStart(key));
+						NUnit.Framework.Assert.AreEqual(uniqueCount, offsetKey);
+						NUnit.Framework.Assert.AreEqual(offsetHash.Size(), count + 1);
+						uniqueCount++;
+					}
+					else
+					{
+						NUnit.Framework.Assert.IsFalse(strings.AddItem(str));
+						NUnit.Framework.Assert.IsTrue((-key) - 1 < count);
+						NUnit.Framework.Assert.AreEqual(str, hash.Get((-key) - 1, scratch).Utf8ToString()
+							);
+						NUnit.Framework.Assert.AreEqual(count, hash.Size());
+						int offsetKey = offsetHash.AddByPoolOffset(hash.ByteStart((-key) - 1));
+						NUnit.Framework.Assert.IsTrue((-offsetKey) - 1 < count);
+						NUnit.Framework.Assert.AreEqual(str, hash.Get((-offsetKey) - 1, scratch).Utf8ToString
+							());
+						NUnit.Framework.Assert.AreEqual(count, hash.Size());
+					}
+				}
+				AssertAllIn(strings, hash);
+				foreach (string @string in strings)
+				{
+					@ref.CopyChars(@string);
+					int key = hash.Add(@ref);
+					BytesRef bytesRef = offsetHash.Get((-key) - 1, scratch);
+					NUnit.Framework.Assert.AreEqual(@ref, bytesRef);
+				}
+				hash.Clear();
+				NUnit.Framework.Assert.AreEqual(0, hash.Size());
+				offsetHash.Clear();
+				NUnit.Framework.Assert.AreEqual(0, offsetHash.Size());
+				hash.Reinit();
+				// init for the next round
+				offsetHash.Reinit();
+			}
+		}
 
-        [Test]
-        public void TestOneElementListSort()
-        {
-            // check that one-element non-random access lists pass sorting without ex (as sorting is not needed)
-            IList<int> list = new LinkedList<int>();
-            list.Add(1);
-            CollectionUtil.QuickSort(list);
-            CollectionUtil.MergeSort(list);
-            CollectionUtil.TimSort(list);
-            CollectionUtil.InsertionSort(list);
-            CollectionUtil.BinarySort(list);
-            CollectionUtil.QuickSort(list, Collections.ReverseOrder());
-            CollectionUtil.MergeSort(list, Collections.ReverseOrder());
-            CollectionUtil.TimSort(list, Collections.ReverseOrder());
-            CollectionUtil.InsertionSort(list, Collections.ReverseOrder());
-            CollectionUtil.BinarySort(list, Collections.ReverseOrder());
-        }
-    }
+		private void AssertAllIn(ICollection<string> strings, BytesRefHash hash)
+		{
+			BytesRef @ref = new BytesRef();
+			BytesRef scratch = new BytesRef();
+			int count = hash.Size();
+			foreach (string @string in strings)
+			{
+				@ref.CopyChars(@string);
+				int key = hash.Add(@ref);
+				// add again to check duplicates
+				NUnit.Framework.Assert.AreEqual(@string, hash.Get((-key) - 1, scratch).Utf8ToString
+					());
+				NUnit.Framework.Assert.AreEqual(count, hash.Size());
+				NUnit.Framework.Assert.IsTrue("key: " + key + " count: " + count + " string: " + 
+					@string, key < count);
+			}
+		}
+	}
 }

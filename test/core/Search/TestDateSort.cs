@@ -44,13 +44,14 @@ namespace Lucene.Net.Search
 		
 		private static Directory directory;
 		
+		private IndexReader reader;
 		[SetUp]
 		public override void  SetUp()
 		{
 			base.SetUp();
 			// Create an index writer.
-			directory = new RAMDirectory();
-			IndexWriter writer = new IndexWriter(directory, new WhitespaceAnalyzer(), true, IndexWriter.MaxFieldLength.LIMITED);
+			directory = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), directory);
 			
 			// oldest doc:
 			// Add the first document.  text = "Document 1"  dateTime = Oct 10 03:25:22 EDT 2007
@@ -65,20 +66,24 @@ namespace Lucene.Net.Search
 			// Add the fifth document.  text = "Document 5"  dateTime = Oct 12 13:25:43 EDT 2007
 			writer.AddDocument(CreateDocument("Document 5", 1192209943000L));
 			
-			writer.Optimize();
+			reader = writer.GetReader();
 			writer.Close();
 		}
 		
+		public override void TearDown()
+		{
+			reader.Close();
+			directory.Close();
+			base.TearDown();
+		}
 		[Test]
 		public virtual void  TestReverseDateSort()
 		{
-			IndexSearcher searcher = new IndexSearcher(directory, true);
+			IndexSearcher searcher = NewSearcher(reader);
 			
-			Sort sort = new Sort(new SortField(DATE_TIME_FIELD, SortField.STRING, true));
+			Sort sort = new Sort(new SortField(DATE_TIME_FIELD, SortField.Type.STRING, true));
 			
-			QueryParser queryParser = new QueryParser(Util.Version.LUCENE_CURRENT, TEXT_FIELD, new WhitespaceAnalyzer());
-			Query query = queryParser.Parse("Document");
-			
+			Query query = new TermQuery(new Term(TEXT_FIELD, "document"));
 			// Execute the search and process the search results.
 			System.String[] actualOrder = new System.String[5];
 			ScoreDoc[] hits = searcher.Search(query, null, 1000, sort).ScoreDocs;
@@ -88,7 +93,6 @@ namespace Lucene.Net.Search
 				System.String text = document.Get(TEXT_FIELD);
 				actualOrder[i] = text;
 			}
-			searcher.Close();
 			
 			// Set up the expected order (i.e. Document 5, 4, 3, 2, 1).
 			System.String[] expectedOrder = new System.String[5];
@@ -106,12 +110,13 @@ namespace Lucene.Net.Search
 			Document document = new Document();
 			
 			// Add the text field.
-			Field textField = new Field(TEXT_FIELD, text, Field.Store.YES, Field.Index.ANALYZED);
+			Field textField = NewTextField(TEXT_FIELD, text, Field.Store.YES);
 			document.Add(textField);
 			
 			// Add the date/time field.
 			System.String dateTimeString = DateTools.TimeToString(time, DateTools.Resolution.SECOND);
-			Field dateTimeField = new Field(DATE_TIME_FIELD, dateTimeString, Field.Store.YES, Field.Index.NOT_ANALYZED);
+			Field dateTimeField = NewStringField(DATE_TIME_FIELD, dateTimeString, Field.Store
+				.YES);
 			document.Add(dateTimeField);
 			
 			return document;

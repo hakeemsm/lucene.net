@@ -1,19 +1,10 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using System.Collections.Generic;
-using Org.Apache.Lucene.Codecs;
-using Lucene.Net.Codecs.Lucene3x;
-using Org.Apache.Lucene.Index;
-using Org.Apache.Lucene.Store;
-using Org.Apache.Lucene.Util;
-using Sharpen;
+using Lucene.Net.Index;
+using Lucene.Net.Store;
+using Lucene.Net.Util;
 
-namespace Lucene.Net.Codecs.Lucene3x
+namespace Lucene.Net.Codecs.Lucene3x.TestFramework
 {
 	internal sealed class PreFlexRWTermVectorsWriter : TermVectorsWriter
 	{
@@ -57,19 +48,19 @@ namespace Lucene.Net.Codecs.Lucene3x
 			}
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		
 		public override void StartDocument(int numVectorFields)
 		{
 			lastFieldName = null;
 			this.numVectorFields = numVectorFields;
-			tvx.WriteLong(tvd.GetFilePointer());
-			tvx.WriteLong(tvf.GetFilePointer());
+			tvx.WriteLong(tvd.FilePointer);
+			tvx.WriteLong(tvf.FilePointer);
 			tvd.WriteVInt(numVectorFields);
 			fieldCount = 0;
 			fps = ArrayUtil.Grow(fps, numVectorFields);
 		}
 
-		private long fps = new long[10];
+		private long[] fps = new long[10];
 
 		private int fieldCount = 0;
 
@@ -95,7 +86,7 @@ namespace Lucene.Net.Codecs.Lucene3x
 			this.positions = positions;
 			this.offsets = offsets;
 			lastTerm.length = 0;
-			fps[fieldCount++] = tvf.GetFilePointer();
+			fps[fieldCount++] = tvf.FilePointer;
 			tvd.WriteVInt(info.number);
 			tvf.WriteVInt(numTerms);
 			byte bits = unchecked((int)(0x0));
@@ -123,9 +114,9 @@ namespace Lucene.Net.Codecs.Lucene3x
 
 		private readonly BytesRef lastTerm = new BytesRef(10);
 
-		private int offsetStartBuffer = new int[10];
+		private int[] offsetStartBuffer = new int[10];
 
-		private int offsetEndBuffer = new int[10];
+		private int[] offsetEndBuffer = new int[10];
 
 		private int offsetIndex = 0;
 
@@ -228,23 +219,22 @@ namespace Lucene.Net.Codecs.Lucene3x
 		/// <exception cref="System.IO.IOException"></exception>
 		public override void Finish(FieldInfos fis, int numDocs)
 		{
-			if (4 + ((long)numDocs) * 16 != tvx.GetFilePointer())
+			if (4 + ((long)numDocs) * 16 != tvx.FilePointer)
 			{
 				// This is most likely a bug in Sun JRE 1.6.0_04/_05;
 				// we detect that the bug has struck, here, and
 				// throw an exception to prevent the corruption from
 				// entering the index.  See LUCENE-1282 for
 				// details.
-				throw new RuntimeException("tvx size mismatch: mergedDocs is " + numDocs + " but tvx size is "
-					 + tvx.GetFilePointer() + " file=" + tvx.ToString() + "; now aborting this merge to prevent index corruption"
+				throw new SystemException("tvx size mismatch: mergedDocs is " + numDocs + " but tvx size is "
+					 + tvx.FilePointer + " file=" + tvx.ToString() + "; now aborting this merge to prevent index corruption"
 					);
 			}
 		}
 
 		/// <summary>Close all streams.</summary>
-		/// <remarks>Close all streams.</remarks>
-		/// <exception cref="System.IO.IOException"></exception>
-		public override void Close()
+		
+		protected override void Dispose(bool disposing)
 		{
 			// make an effort to close all streams we can but remember and re-throw
 			// the first exception encountered in this process
@@ -252,10 +242,10 @@ namespace Lucene.Net.Codecs.Lucene3x
 			tvx = tvd = tvf = null;
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
-		public override IComparer<BytesRef> GetComparator()
+		
+		public override IComparer<BytesRef> Comparator
 		{
-			return BytesRef.GetUTF8SortedAsUTF16Comparator();
+		    get { return BytesRef.UTF8SortedAsUnicodeComparer; }
 		}
 	}
 }

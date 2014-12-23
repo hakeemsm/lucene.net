@@ -1,16 +1,6 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
+using Lucene.Net.Index;
 
-using Org.Apache.Lucene.Codecs;
-using Lucene.Net.Codecs.Lucene40;
-using Org.Apache.Lucene.Index;
-using Org.Apache.Lucene.Util;
-using Sharpen;
-
-namespace Lucene.Net.Codecs.Lucene40
+namespace Lucene.Net.Codecs.Lucene40.TestFramework
 {
 	/// <summary>
 	/// Read-write version of
@@ -20,8 +10,7 @@ namespace Lucene.Net.Codecs.Lucene40
 	public class Lucene40RWPostingsFormat : Lucene40PostingsFormat
 	{
 		/// <exception cref="System.IO.IOException"></exception>
-		public override Lucene.Net.Codecs.FieldsConsumer FieldsConsumer(SegmentWriteState
-			 state)
+		public override FieldsConsumer FieldsConsumer(SegmentWriteState state)
 		{
 			if (!LuceneTestCase.OLD_FORMAT_IMPERSONATION_IS_ACTIVE)
 			{
@@ -46,7 +35,7 @@ namespace Lucene.Net.Codecs.Lucene40
 				{
 					if (!success)
 					{
-						docs.Close();
+						docs.Dispose();
 					}
 				}
 			}

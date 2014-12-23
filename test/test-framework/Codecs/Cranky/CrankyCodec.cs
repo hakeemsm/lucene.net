@@ -1,14 +1,6 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
+using System;
 
-using Org.Apache.Lucene.Codecs;
-using Lucene.Net.Codecs.Cranky;
-using Sharpen;
-
-namespace Lucene.Net.Codecs.Cranky
+namespace Lucene.Net.Codecs.Cranky.TestFramework
 {
 	/// <summary>Codec for testing that throws random IOExceptions</summary>
 	public class CrankyCodec : FilterCodec
@@ -20,17 +12,16 @@ namespace Lucene.Net.Codecs.Cranky
 		/// Wrap the provided codec with crankiness.
 		/// Try passing Asserting for the most fun.
 		/// </remarks>
-		public CrankyCodec(Codec delegate_, Random random) : base(delegate_.GetName(), delegate_
-			)
+		public CrankyCodec(Codec del, Random random) : base(del.Name, del)
 		{
 			// we impersonate the passed-in codec, so we don't need to be in SPI,
 			// and so we dont change file formats
 			this.random = random;
 		}
 
-		public override Lucene.Net.Codecs.DocValuesFormat DocValuesFormat()
+		public override DocValuesFormat DocValuesFormat
 		{
-			return new CrankyDocValuesFormat(delegate_.DocValuesFormat(), random);
+		    get { return new CrankyDocValuesFormat(delegated.DocValuesFormat, random); }
 		}
 
 		public override Lucene.Net.Codecs.FieldInfosFormat FieldInfosFormat()

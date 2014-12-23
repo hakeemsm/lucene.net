@@ -46,14 +46,12 @@ namespace Lucene.Net.Search
         public virtual void TestOutOfOrderCollection()
         {
 
-            Directory dir = new RAMDirectory();
-            IndexWriter writer = new IndexWriter(dir, null, MaxFieldLength.UNLIMITED);
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
             for (int i = 0; i < 10; i++)
             {
                 writer.AddDocument(new Document());
             }
-            writer.Commit();
-            writer.Close();
 
             bool[] inOrder = new bool[] {false, true};
             System.String[] actualTSDCClass = new System.String[]
@@ -66,7 +64,8 @@ namespace Lucene.Net.Search
             // Set minNrShouldMatch to 1 so that BQ will not optimize rewrite to return
             // the clause instead of BQ.
             bq.MinimumNumberShouldMatch = 1;
-            IndexSearcher searcher = new IndexSearcher(dir, true);
+			IndexReader reader = writer.GetReader();
+			IndexSearcher searcher = NewSearcher(reader);
             for (int i = 0; i < inOrder.Length; i++)
             {
                 TopDocsCollector<ScoreDoc> tdc = TopScoreDocCollector.Create(3, inOrder[i]);
@@ -81,6 +80,9 @@ namespace Lucene.Net.Search
                     Assert.AreEqual(j, sd[j].Doc, "expected doc Id " + j + " found " + sd[j].Doc);
                 }
             }
+			writer.Close();
+			reader.Close();
+			dir.Close();
         }
 	}
 }

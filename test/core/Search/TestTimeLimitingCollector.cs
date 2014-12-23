@@ -1,415 +1,429 @@
-/* 
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+/*
+ * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
  * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
 using System;
-using Lucene.Net.Support;
-using NUnit.Framework;
-
-using WhitespaceAnalyzer = Lucene.Net.Analysis.WhitespaceAnalyzer;
-using Document = Lucene.Net.Documents.Document;
-using Field = Lucene.Net.Documents.Field;
-using IndexReader = Lucene.Net.Index.IndexReader;
-using IndexWriter = Lucene.Net.Index.IndexWriter;
-using MaxFieldLength = Lucene.Net.Index.IndexWriter.MaxFieldLength;
-using QueryParser = Lucene.Net.QueryParsers.QueryParser;
-using Directory = Lucene.Net.Store.Directory;
-using RAMDirectory = Lucene.Net.Store.RAMDirectory;
-using TimeExceededException = Lucene.Net.Search.TimeLimitingCollector.TimeExceededException;
-using LuceneTestCase = Lucene.Net.Util.LuceneTestCase;
+using Lucene.Net.Analysis;
+using Lucene.Net.Document;
+using Lucene.Net.Index;
+using Lucene.Net.Search;
+using Lucene.Net.Store;
+using Lucene.Net.Util;
+using Sharpen;
 
 namespace Lucene.Net.Search
 {
-	
-	/// <summary> Tests the {@link TimeLimitingCollector}.  This test checks (1) search
+	/// <summary>
+	/// Tests the
+	/// <see cref="TimeLimitingCollector">TimeLimitingCollector</see>
+	/// .  This test checks (1) search
 	/// correctness (regardless of timeout), (2) expected timeout behavior,
 	/// and (3) a sanity test with multiple searching threads.
 	/// </summary>
-    [TestFixture]
-	public class TestTimeLimitingCollector:LuceneTestCase
+	public class TestTimeLimitingCollector : LuceneTestCase
 	{
-		private class AnonymousClassThread:ThreadClass
-		{
-			public AnonymousClassThread(bool withTimeout, System.Collections.BitArray success, int num, TestTimeLimitingCollector enclosingInstance)
-			{
-				InitBlock(withTimeout, success, num, enclosingInstance);
-			}
-			private void  InitBlock(bool withTimeout, System.Collections.BitArray success, int num, TestTimeLimitingCollector enclosingInstance)
-			{
-				this.withTimeout = withTimeout;
-				this.success = success;
-				this.num = num;
-				this.enclosingInstance = enclosingInstance;
-			}
-			private bool withTimeout;
-			private System.Collections.BitArray success;
-			private int num;
-			private TestTimeLimitingCollector enclosingInstance;
-			public TestTimeLimitingCollector Enclosing_Instance
-			{
-				get
-				{
-					return enclosingInstance;
-				}
-				
-			}
-			override public void  Run()
-			{
-				if (withTimeout)
-				{
-					Enclosing_Instance.DoTestTimeout(true, true);
-				}
-				else
-				{
-					Enclosing_Instance.DoTestSearch();
-				}
-				lock (success.SyncRoot)
-				{
-					success.Set(num, true);
-				}
-			}
-		}
-		private const int SLOW_DOWN = 47;
-		private static readonly long TIME_ALLOWED = 17 * SLOW_DOWN; // so searches can find about 17 docs.
-		
+		private const int SLOW_DOWN = 3;
+
+		private const long TIME_ALLOWED = 17 * SLOW_DOWN;
+
+		private const double MULTI_THREAD_SLACK = 7;
+
+		private const int N_DOCS = 3000;
+
+		private const int N_THREADS = 50;
+
+		private IndexSearcher searcher;
+
+		private Directory directory;
+
+		private IndexReader reader;
+
+		private readonly string FIELD_NAME = "body";
+
+		private Query query;
+
+		private Counter counter;
+
+		private TimeLimitingCollector.TimerThread counterThread;
+
+		// so searches can find about 17 docs.
 		// max time allowed is relaxed for multithreading tests. 
 		// the multithread case fails when setting this to 1 (no slack) and launching many threads (>2000).  
 		// but this is not a real failure, just noise.
-		private const double MULTI_THREAD_SLACK = 7;
-		
-		private const int N_DOCS = 3000;
-		private const int N_THREADS = 50;
-		
-		private Searcher searcher;
-		private System.String FIELD_NAME = "body";
-		private Query query;
-		
-		/*public TestTimeLimitingCollector(System.String name):base(name)
-		{
-		}*/
-		
-		/// <summary> initializes searcher with a document set</summary>
-		[SetUp]
-		public override void  SetUp()
+		/// <summary>initializes searcher with a document set</summary>
+		/// <exception cref="System.Exception"></exception>
+		public override void SetUp()
 		{
 			base.SetUp();
-			System.String[] docText = new System.String[]{"docThatNeverMatchesSoWeCanRequireLastDocCollectedToBeGreaterThanZero", "one blah three", "one foo three multiOne", "one foobar three multiThree", "blueberry pancakes", "blueberry pie", "blueberry strudel", "blueberry pizza"};
-			Directory directory = new RAMDirectory();
-			IndexWriter iw = new IndexWriter(directory, new WhitespaceAnalyzer(), true, MaxFieldLength.UNLIMITED);
-			
+			counter = Counter.NewCounter(true);
+			counterThread = new TimeLimitingCollector.TimerThread(counter);
+			counterThread.Start();
+			string[] docText = new string[] { "docThatNeverMatchesSoWeCanRequireLastDocCollectedToBeGreaterThanZero"
+				, "one blah three", "one foo three multiOne", "one foobar three multiThree", "blueberry pancakes"
+				, "blueberry pie", "blueberry strudel", "blueberry pizza" };
+			directory = NewDirectory();
+			RandomIndexWriter iw = new RandomIndexWriter(Random(), directory, NewIndexWriterConfig
+				(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMergePolicy(NewLogMergePolicy
+				()));
 			for (int i = 0; i < N_DOCS; i++)
 			{
 				Add(docText[i % docText.Length], iw);
 			}
+			reader = iw.GetReader();
 			iw.Close();
-		    searcher = new IndexSearcher(directory, true);
-			
-			System.String qtxt = "one";
-            // start from 1, so that the 0th doc never matches
-			for (int i = 0; i < docText.Length; i++)
+			searcher = NewSearcher(reader);
+			BooleanQuery booleanQuery = new BooleanQuery();
+			booleanQuery.Add(new TermQuery(new Term(FIELD_NAME, "one")), BooleanClause.Occur.
+				SHOULD);
+			// start from 1, so that the 0th doc never matches
+			for (int i_1 = 1; i_1 < docText.Length; i_1++)
 			{
-				qtxt += (' ' + docText[i]); // large query so that search will be longer
+				string[] docTextParts = docText[i_1].Split("\\s+");
+				foreach (string docTextPart in docTextParts)
+				{
+					// large query so that search will be longer
+					booleanQuery.Add(new TermQuery(new Term(FIELD_NAME, docTextPart)), BooleanClause.Occur
+						.SHOULD);
+				}
 			}
-			QueryParser queryParser = new QueryParser(Util.Version.LUCENE_CURRENT, FIELD_NAME, new WhitespaceAnalyzer());
-			query = queryParser.Parse(qtxt);
-			
+			query = booleanQuery;
 			// warm the searcher
 			searcher.Search(query, null, 1000);
 		}
-		
-		[TearDown]
-		public override void  TearDown()
+
+		/// <exception cref="System.Exception"></exception>
+		public override void TearDown()
 		{
-			searcher.Close();
+			reader.Close();
+			directory.Close();
+			counterThread.StopTimer();
+			counterThread.Join();
 			base.TearDown();
 		}
-		
-		private void  Add(System.String value_Renamed, IndexWriter iw)
+
+		/// <exception cref="System.IO.IOException"></exception>
+		private void Add(string value, RandomIndexWriter iw)
 		{
-			Document d = new Document();
-			d.Add(new Field(FIELD_NAME, value_Renamed, Field.Store.NO, Field.Index.ANALYZED));
+			Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+			d.Add(NewTextField(FIELD_NAME, value, Field.Store.NO));
 			iw.AddDocument(d);
 		}
-		
-		private void  Search(Collector collector)
+
+		/// <exception cref="System.Exception"></exception>
+		private void Search(Collector collector)
 		{
 			searcher.Search(query, collector);
 		}
-		
-		/// <summary> test search correctness with no timeout</summary>
-        [Test]
-		public virtual void  TestSearch()
+
+		/// <summary>test search correctness with no timeout</summary>
+		public virtual void TestSearch()
 		{
 			DoTestSearch();
 		}
-		
-		private void  DoTestSearch()
+
+		private void DoTestSearch()
 		{
 			int totalResults = 0;
 			int totalTLCResults = 0;
 			try
 			{
-				MyHitCollector myHc = new MyHitCollector(this);
+				TestTimeLimitingCollector.MyHitCollector myHc = new TestTimeLimitingCollector.MyHitCollector
+					(this);
 				Search(myHc);
 				totalResults = myHc.HitCount();
-				
-				myHc = new MyHitCollector(this);
+				myHc = new TestTimeLimitingCollector.MyHitCollector(this);
 				long oneHour = 3600000;
 				Collector tlCollector = CreateTimedCollector(myHc, oneHour, false);
 				Search(tlCollector);
 				totalTLCResults = myHc.HitCount();
 			}
-			catch (System.Exception e)
+			catch (Exception e)
 			{
-				System.Console.Error.WriteLine(e.StackTrace);
-				Assert.IsTrue(false, "Unexpected exception: " + e); //==fail
+				Sharpen.Runtime.PrintStackTrace(e);
+				NUnit.Framework.Assert.IsTrue("Unexpected exception: " + e, false);
 			}
-			Assert.AreEqual(totalResults, totalTLCResults, "Wrong number of results!");
+			//==fail
+			NUnit.Framework.Assert.AreEqual("Wrong number of results!", totalResults, totalTLCResults
+				);
 		}
-		
-		private Collector CreateTimedCollector(MyHitCollector hc, long timeAllowed, bool greedy)
+
+		private Collector CreateTimedCollector(TestTimeLimitingCollector.MyHitCollector hc
+			, long timeAllowed, bool greedy)
 		{
-			TimeLimitingCollector res = new TimeLimitingCollector(hc, timeAllowed);
-			res.IsGreedy = greedy; // set to true to make sure at least one doc is collected.
+			TimeLimitingCollector res = new TimeLimitingCollector(hc, counter, timeAllowed);
+			res.SetGreedy(greedy);
+			// set to true to make sure at least one doc is collected.
 			return res;
 		}
-		
-		/// <summary> Test that timeout is obtained, and soon enough!</summary>
-        [Test]
-		public virtual void  TestTimeoutGreedy()
+
+		/// <summary>Test that timeout is obtained, and soon enough!</summary>
+		public virtual void TestTimeoutGreedy()
 		{
 			DoTestTimeout(false, true);
 		}
-		
-		/// <summary> Test that timeout is obtained, and soon enough!</summary>
-        [Test]
-		public virtual void  TestTimeoutNotGreedy()
+
+		/// <summary>Test that timeout is obtained, and soon enough!</summary>
+		public virtual void TestTimeoutNotGreedy()
 		{
 			DoTestTimeout(false, false);
 		}
-		
-		private void  DoTestTimeout(bool multiThreaded, bool greedy)
+
+		private void DoTestTimeout(bool multiThreaded, bool greedy)
 		{
 			// setup
-			MyHitCollector myHc = new MyHitCollector(this);
+			TestTimeLimitingCollector.MyHitCollector myHc = new TestTimeLimitingCollector.MyHitCollector
+				(this);
 			myHc.SetSlowDown(SLOW_DOWN);
 			Collector tlCollector = CreateTimedCollector(myHc, TIME_ALLOWED, greedy);
-			
 			// search
-			TimeExceededException timoutException = null;
+			TimeLimitingCollector.TimeExceededException timoutException = null;
 			try
 			{
 				Search(tlCollector);
 			}
-			catch (TimeExceededException x)
+			catch (TimeLimitingCollector.TimeExceededException x)
 			{
 				timoutException = x;
 			}
-			catch (System.Exception e)
+			catch (Exception e)
 			{
-				Assert.IsTrue(false, "Unexpected exception: " + e); //==fail
+				NUnit.Framework.Assert.IsTrue("Unexpected exception: " + e, false);
 			}
-			
+			//==fail
 			// must get exception
-			Assert.IsNotNull(timoutException, "Timeout expected!");
-			
+			NUnit.Framework.Assert.IsNotNull("Timeout expected!", timoutException);
 			// greediness affect last doc collected
-			int exceptionDoc = timoutException.LastDocCollected;
+			int exceptionDoc = timoutException.GetLastDocCollected();
 			int lastCollected = myHc.GetLastDocCollected();
-			Assert.IsTrue(exceptionDoc > 0, "doc collected at timeout must be > 0!");
+			NUnit.Framework.Assert.IsTrue("doc collected at timeout must be > 0!", exceptionDoc
+				 > 0);
 			if (greedy)
 			{
-				Assert.IsTrue(exceptionDoc == lastCollected, "greedy=" + greedy + " exceptionDoc=" + exceptionDoc + " != lastCollected=" + lastCollected);
-				Assert.IsTrue(myHc.HitCount() > 0, "greedy, but no hits found!");
+				NUnit.Framework.Assert.IsTrue("greedy=" + greedy + " exceptionDoc=" + exceptionDoc
+					 + " != lastCollected=" + lastCollected, exceptionDoc == lastCollected);
+				NUnit.Framework.Assert.IsTrue("greedy, but no hits found!", myHc.HitCount() > 0);
 			}
 			else
 			{
-				Assert.IsTrue(exceptionDoc > lastCollected, "greedy=" + greedy + " exceptionDoc=" + exceptionDoc + " not > lastCollected=" + lastCollected);
+				NUnit.Framework.Assert.IsTrue("greedy=" + greedy + " exceptionDoc=" + exceptionDoc
+					 + " not > lastCollected=" + lastCollected, exceptionDoc > lastCollected);
 			}
-			
 			// verify that elapsed time at exception is within valid limits
-			Assert.AreEqual(timoutException.TimeAllowed, TIME_ALLOWED);
+			NUnit.Framework.Assert.AreEqual(timoutException.GetTimeAllowed(), TIME_ALLOWED);
 			// a) Not too early
-			Assert.IsTrue(timoutException.TimeElapsed > TIME_ALLOWED - TimeLimitingCollector.Resolution, "elapsed=" + timoutException.TimeElapsed + " <= (allowed-resolution)=" + (TIME_ALLOWED - TimeLimitingCollector.Resolution));
+			NUnit.Framework.Assert.IsTrue("elapsed=" + timoutException.GetTimeElapsed() + " <= (allowed-resolution)="
+				 + (TIME_ALLOWED - counterThread.GetResolution()), timoutException.GetTimeElapsed
+				() > TIME_ALLOWED - counterThread.GetResolution());
 			// b) Not too late.
 			//    This part is problematic in a busy test system, so we just print a warning.
 			//    We already verified that a timeout occurred, we just can't be picky about how long it took.
-			if (timoutException.TimeElapsed > MaxTime(multiThreaded))
+			if (timoutException.GetTimeElapsed() > MaxTime(multiThreaded))
 			{
-				System.Console.Out.WriteLine("Informative: timeout exceeded (no action required: most probably just " + " because the test machine is slower than usual):  " + "lastDoc=" + exceptionDoc + " ,&& allowed=" + timoutException.TimeAllowed + " ,&& elapsed=" + timoutException.TimeElapsed + " >= " + MaxTimeStr(multiThreaded));
+				System.Console.Out.WriteLine("Informative: timeout exceeded (no action required: most probably just "
+					 + " because the test machine is slower than usual):  " + "lastDoc=" + exceptionDoc
+					 + " ,&& allowed=" + timoutException.GetTimeAllowed() + " ,&& elapsed=" + timoutException
+					.GetTimeElapsed() + " >= " + MaxTimeStr(multiThreaded));
 			}
 		}
-		
+
 		private long MaxTime(bool multiThreaded)
 		{
-			long res = 2 * TimeLimitingCollector.Resolution + TIME_ALLOWED + SLOW_DOWN; // some slack for less noise in this test
+			long res = 2 * counterThread.GetResolution() + TIME_ALLOWED + SLOW_DOWN;
+			// some slack for less noise in this test
 			if (multiThreaded)
 			{
-				res = (long) (res * MULTI_THREAD_SLACK); // larger slack  
+				res *= MULTI_THREAD_SLACK;
 			}
+			// larger slack  
 			return res;
 		}
-		
-		private System.String MaxTimeStr(bool multiThreaded)
+
+		private string MaxTimeStr(bool multiThreaded)
 		{
-			System.String s = "( " + "2*resolution +  TIME_ALLOWED + SLOW_DOWN = " + "2*" + TimeLimitingCollector.Resolution + " + " + TIME_ALLOWED + " + " + SLOW_DOWN + ")";
+			string s = "( " + "2*resolution +  TIME_ALLOWED + SLOW_DOWN = " + "2*" + counterThread
+				.GetResolution() + " + " + TIME_ALLOWED + " + " + SLOW_DOWN + ")";
 			if (multiThreaded)
 			{
 				s = MULTI_THREAD_SLACK + " * " + s;
 			}
 			return MaxTime(multiThreaded) + " = " + s;
 		}
-		
-		/// <summary> Test timeout behavior when resolution is modified. </summary>
-        [Test]
-		public virtual void  TestModifyResolution()
+
+		/// <summary>Test timeout behavior when resolution is modified.</summary>
+		/// <remarks>Test timeout behavior when resolution is modified.</remarks>
+		public virtual void TestModifyResolution()
 		{
 			try
 			{
 				// increase and test
-				uint resolution = 20 * TimeLimitingCollector.DEFAULT_RESOLUTION; //400
-				TimeLimitingCollector.Resolution = resolution;
-				Assert.AreEqual(resolution, TimeLimitingCollector.Resolution);
+				long resolution = 20 * TimeLimitingCollector.TimerThread.DEFAULT_RESOLUTION;
+				//400
+				counterThread.SetResolution(resolution);
+				NUnit.Framework.Assert.AreEqual(resolution, counterThread.GetResolution());
 				DoTestTimeout(false, true);
 				// decrease much and test
 				resolution = 5;
-                TimeLimitingCollector.Resolution = resolution;
-				Assert.AreEqual(resolution, TimeLimitingCollector.Resolution);
+				counterThread.SetResolution(resolution);
+				NUnit.Framework.Assert.AreEqual(resolution, counterThread.GetResolution());
 				DoTestTimeout(false, true);
 				// return to default and test
-				resolution = TimeLimitingCollector.DEFAULT_RESOLUTION;
-                TimeLimitingCollector.Resolution = resolution;
-				Assert.AreEqual(resolution, TimeLimitingCollector.Resolution);
+				resolution = TimeLimitingCollector.TimerThread.DEFAULT_RESOLUTION;
+				counterThread.SetResolution(resolution);
+				NUnit.Framework.Assert.AreEqual(resolution, counterThread.GetResolution());
 				DoTestTimeout(false, true);
 			}
 			finally
 			{
-                TimeLimitingCollector.Resolution = TimeLimitingCollector.DEFAULT_RESOLUTION;
+				counterThread.SetResolution(TimeLimitingCollector.TimerThread.DEFAULT_RESOLUTION);
 			}
 		}
-		
-		/// <summary> Test correctness with multiple searching threads.</summary>
-        [Test]
-		public virtual void  TestSearchMultiThreaded()
+
+		/// <summary>Test correctness with multiple searching threads.</summary>
+		/// <remarks>Test correctness with multiple searching threads.</remarks>
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestSearchMultiThreaded()
 		{
 			DoTestMultiThreads(false);
 		}
-		
-		/// <summary> Test correctness with multiple searching threads.</summary>
-        [Test]
-		public virtual void  TestTimeoutMultiThreaded()
+
+		/// <summary>Test correctness with multiple searching threads.</summary>
+		/// <remarks>Test correctness with multiple searching threads.</remarks>
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestTimeoutMultiThreaded()
 		{
 			DoTestMultiThreads(true);
 		}
-		
-		private void  DoTestMultiThreads(bool withTimeout)
+
+		/// <exception cref="System.Exception"></exception>
+		private void DoTestMultiThreads(bool withTimeout)
 		{
-			ThreadClass[] threadArray = new ThreadClass[N_THREADS];
-			System.Collections.BitArray success = new System.Collections.BitArray((N_THREADS % 64 == 0?N_THREADS / 64:N_THREADS / 64 + 1) * 64);
+			Sharpen.Thread[] threadArray = new Sharpen.Thread[N_THREADS];
+			BitSet success = new BitSet(N_THREADS);
 			for (int i = 0; i < threadArray.Length; ++i)
 			{
 				int num = i;
-				threadArray[num] = new AnonymousClassThread(withTimeout, success, num, this);
+				threadArray[num] = new _Thread_286(this, withTimeout, success, num);
 			}
-			for (int i = 0; i < threadArray.Length; ++i)
+			for (int i_1 = 0; i_1 < threadArray.Length; ++i_1)
 			{
-				threadArray[i].Start();
+				threadArray[i_1].Start();
 			}
-			for (int i = 0; i < threadArray.Length; ++i)
+			for (int i_2 = 0; i_2 < threadArray.Length; ++i_2)
 			{
-				threadArray[i].Join();
+				threadArray[i_2].Join();
 			}
-			Assert.AreEqual(N_THREADS, BitSetSupport.Cardinality(success), "some threads failed!");
+			NUnit.Framework.Assert.AreEqual("some threads failed!", N_THREADS, success.Cardinality
+				());
 		}
-		
-		// counting collector that can slow down at collect().
-		private class MyHitCollector:Collector
+
+		private sealed class _Thread_286 : Sharpen.Thread
 		{
-			public MyHitCollector(TestTimeLimitingCollector enclosingInstance)
+			public _Thread_286(TestTimeLimitingCollector _enclosing, bool withTimeout, BitSet
+				 success, int num)
 			{
-				InitBlock(enclosingInstance);
+				this._enclosing = _enclosing;
+				this.withTimeout = withTimeout;
+				this.success = success;
+				this.num = num;
 			}
-			private void  InitBlock(TestTimeLimitingCollector enclosingInstance)
+
+			public override void Run()
 			{
-				this.enclosingInstance = enclosingInstance;
-			}
-			private TestTimeLimitingCollector enclosingInstance;
-			public TestTimeLimitingCollector Enclosing_Instance
-			{
-				get
+				if (withTimeout)
 				{
-					return enclosingInstance;
+					this._enclosing.DoTestTimeout(true, true);
 				}
-				
+				else
+				{
+					this._enclosing.DoTestSearch();
+				}
+				lock (success)
+				{
+					success.Set(num);
+				}
 			}
-			private System.Collections.BitArray bits = new System.Collections.BitArray(64);
+
+			private readonly TestTimeLimitingCollector _enclosing;
+
+			private readonly bool withTimeout;
+
+			private readonly BitSet success;
+
+			private readonly int num;
+		}
+
+		private class MyHitCollector : Collector
+		{
+			private readonly BitSet bits = new BitSet();
+
 			private int slowdown = 0;
-			private int lastDocCollected = - 1;
+
+			private int lastDocCollected = -1;
+
 			private int docBase = 0;
-			
-			/// <summary> amount of time to wait on each collect to simulate a long iteration</summary>
-			public virtual void  SetSlowDown(int milliseconds)
+
+			// counting collector that can slow down at collect().
+			/// <summary>amount of time to wait on each collect to simulate a long iteration</summary>
+			public virtual void SetSlowDown(int milliseconds)
 			{
-				slowdown = milliseconds;
+				this.slowdown = milliseconds;
 			}
-			
+
 			public virtual int HitCount()
 			{
-				return BitSetSupport.Cardinality(bits);
+				return this.bits.Cardinality();
 			}
-			
+
 			public virtual int GetLastDocCollected()
 			{
-				return lastDocCollected;
+				return this.lastDocCollected;
 			}
-			
-			public override void  SetScorer(Scorer scorer)
+
+			/// <exception cref="System.IO.IOException"></exception>
+			public override void SetScorer(Scorer scorer)
 			{
-				// scorer is not needed
 			}
-			
-			public override void  Collect(int doc)
+
+			// scorer is not needed
+			/// <exception cref="System.IO.IOException"></exception>
+			public override void Collect(int doc)
 			{
-				int docId = doc + docBase;
-				if (slowdown > 0)
+				int docId = doc + this.docBase;
+				if (this.slowdown > 0)
 				{
 					try
 					{
-						System.Threading.Thread.Sleep(new System.TimeSpan((System.Int64) 10000 * slowdown));
+						Sharpen.Thread.Sleep(this.slowdown);
 					}
-					catch (System.Threading.ThreadInterruptedException ie)
+					catch (Exception ie)
 					{
-					    throw;
+						throw new ThreadInterruptedException(ie);
 					}
 				}
-				System.Diagnostics.Debug.Assert(docId >= 0, "base=" + docBase + " doc=" + doc);
-                bits.Length = Math.Max(bits.Length, docId + 1);
-				bits.Set(docId, true);
-				lastDocCollected = docId;
-			}
-			
-			public override void  SetNextReader(IndexReader reader, int base_Renamed)
-			{
-				docBase = base_Renamed;
+				//HM:revisit 
+				//assert docId >= 0: " base=" + docBase + " doc=" + doc;
+				this.bits.Set(docId);
+				this.lastDocCollected = docId;
 			}
 
-		    public override bool AcceptsDocsOutOfOrder
-		    {
-		        get { return false; }
-		    }
+			public override void SetNextReader(AtomicReaderContext context)
+			{
+				this.docBase = context.docBase;
+			}
+
+			public override bool AcceptsDocsOutOfOrder()
+			{
+				return false;
+			}
+
+			internal MyHitCollector(TestTimeLimitingCollector _enclosing)
+			{
+				this._enclosing = _enclosing;
+			}
+
+			private readonly TestTimeLimitingCollector _enclosing;
 		}
 	}
 }

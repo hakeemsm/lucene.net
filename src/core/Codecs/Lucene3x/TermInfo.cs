@@ -6,7 +6,7 @@ using System.Text;
 namespace Lucene.Net.Codecs.Lucene3x
 {
     [Obsolete]
-    internal class TermInfo
+    public class TermInfo
     {
         /** The number of documents which contain the term. */
         public int docFreq = 0;

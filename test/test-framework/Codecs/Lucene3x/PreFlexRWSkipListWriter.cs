@@ -1,14 +1,7 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
+using Lucene.Net.Store;
+using Lucene.Net.Support;
 
-using Org.Apache.Lucene.Codecs;
-using Org.Apache.Lucene.Store;
-using Sharpen;
-
-namespace Lucene.Net.Codecs.Lucene3x
+namespace Lucene.Net.Codecs.Lucene3x.TestFramework
 {
 	/// <summary>PreFlexRW skiplist implementation.</summary>
 	/// <remarks>PreFlexRW skiplist implementation.</remarks>
@@ -56,23 +49,23 @@ namespace Lucene.Net.Codecs.Lucene3x
 			this.curDoc = doc;
 			this.curStorePayloads = storePayloads;
 			this.curPayloadLength = payloadLength;
-			this.curFreqPointer = freqOutput.GetFilePointer();
+			this.curFreqPointer = freqOutput.FilePointer;
 			if (proxOutput != null)
 			{
-				this.curProxPointer = proxOutput.GetFilePointer();
+				this.curProxPointer = proxOutput.FilePointer;
 			}
 		}
 
-		protected override void ResetSkip()
+	    public override void ResetSkip()
 		{
 			base.ResetSkip();
 			Arrays.Fill(lastSkipDoc, 0);
 			Arrays.Fill(lastSkipPayloadLength, -1);
 			// we don't have to write the first length in the skip list
-			Arrays.Fill(lastSkipFreqPointer, freqOutput.GetFilePointer());
+			Arrays.Fill(lastSkipFreqPointer, freqOutput.FilePointer);
 			if (proxOutput != null)
 			{
-				Arrays.Fill(lastSkipProxPointer, proxOutput.GetFilePointer());
+				Arrays.Fill(lastSkipProxPointer, proxOutput.FilePointer);
 			}
 		}
 

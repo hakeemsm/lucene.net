@@ -20,7 +20,46 @@ namespace Lucene.Net.Test.Util
             }
             return a.ToList();
         }
-
+		public virtual void TestIntroSort()
+		{
+			for (int i = 0; i < c; i++)
+			{
+				IList<int> list1 = CreateRandomList(2000);
+				IList<int> list2 = new AList<int>(list1);
+				CollectionUtil.IntroSort(list1);
+				list2.Sort();
+				NUnit.Framework.Assert.AreEqual(list2, list1);
+				list1 = CreateRandomList(2000);
+				list2 = new AList<int>(list1);
+				CollectionUtil.IntroSort(list1, Sharpen.Collections.ReverseOrder());
+				list2.Sort(Sharpen.Collections.ReverseOrder());
+				NUnit.Framework.Assert.AreEqual(list2, list1);
+				// reverse back, so we can test that completely backwards sorted array (worst case) is working:
+				CollectionUtil.IntroSort(list1);
+				list2.Sort();
+				NUnit.Framework.Assert.AreEqual(list2, list1);
+			}
+		}
+		public virtual void TestTimSort()
+		{
+			for (int i = 0; i < c; i++)
+			{
+				IList<int> list1 = CreateRandomList(2000);
+				IList<int> list2 = new AList<int>(list1);
+				CollectionUtil.TimSort(list1);
+				list2.Sort();
+				NUnit.Framework.Assert.AreEqual(list2, list1);
+				list1 = CreateRandomList(2000);
+				list2 = new AList<int>(list1);
+				CollectionUtil.TimSort(list1, Sharpen.Collections.ReverseOrder());
+				list2.Sort(Sharpen.Collections.ReverseOrder());
+				NUnit.Framework.Assert.AreEqual(list2, list1);
+				// reverse back, so we can test that completely backwards sorted array (worst case) is working:
+				CollectionUtil.TimSort(list1);
+				list2.Sort();
+				NUnit.Framework.Assert.AreEqual(list2, list1);
+			}
+		}
         [Test]
         public void TestQuickSort()
         {
@@ -139,48 +178,30 @@ namespace Lucene.Net.Test.Util
         public void TestEmptyListSort()
         {
             // should produce no exceptions
-            List<int> list = new List<int>(); // LUCENE-2989
-            CollectionUtil.QuickSort(list);
-            CollectionUtil.MergeSort(list);
-            CollectionUtil.TimSort(list);
-            CollectionUtil.InsertionSort(list);
-            CollectionUtil.BinarySort(list);
-            CollectionUtil.QuickSort(list, Collections.ReverseOrder());
-            CollectionUtil.MergeSort(list, Collections.ReverseOrder());
-            CollectionUtil.TimSort(list, Collections.ReverseOrder());
-            CollectionUtil.InsertionSort(list, Collections.ReverseOrder());
-            CollectionUtil.BinarySort(list, Collections.ReverseOrder());
-
-            // check that empty non-new Random access lists pass sorting without ex (as sorting is not needed)
-            list = new LinkedList<int>();
-            CollectionUtil.QuickSort(list);
-            CollectionUtil.MergeSort(list);
-            CollectionUtil.TimSort(list);
-            CollectionUtil.InsertionSort(list);
-            CollectionUtil.BinarySort(list);
-            CollectionUtil.QuickSort(list, Collections.ReverseOrder());
-            CollectionUtil.MergeSort(list, Collections.ReverseOrder());
-            CollectionUtil.TimSort(list, Collections.ReverseOrder());
-            CollectionUtil.InsertionSort(list, Collections.ReverseOrder());
-            CollectionUtil.BinarySort(list, Collections.ReverseOrder());
+			IList<int> list = Arrays.AsList(new int[0]);
+			// LUCENE-2989
+			CollectionUtil.IntroSort(list);
+			CollectionUtil.TimSort(list);
+			CollectionUtil.IntroSort(list, Sharpen.Collections.ReverseOrder());
+			CollectionUtil.TimSort(list, Sharpen.Collections.ReverseOrder());
+			// check that empty non-random access lists pass sorting without ex (as sorting is not needed)
+			list = new List<int>();
+			CollectionUtil.IntroSort(list);
+			CollectionUtil.TimSort(list);
+			CollectionUtil.IntroSort(list, Sharpen.Collections.ReverseOrder());
+			CollectionUtil.TimSort(list, Sharpen.Collections.ReverseOrder());
         }
 
         [Test]
         public void TestOneElementListSort()
         {
-            // check that one-element non-new Random access lists pass sorting without ex (as sorting is not needed)
-            List<int> list = new LinkedList<int>();
-            list.Add(1);
-            CollectionUtil.QuickSort(list);
-            CollectionUtil.MergeSort(list);
-            CollectionUtil.TimSort(list);
-            CollectionUtil.InsertionSort(list);
-            CollectionUtil.BinarySort(list);
-            CollectionUtil.QuickSort(list, Collections.ReverseOrder());
-            CollectionUtil.MergeSort(list, Collections.ReverseOrder());
-            CollectionUtil.TimSort(list, Collections.ReverseOrder());
-            CollectionUtil.InsertionSort(list, Collections.ReverseOrder());
-            CollectionUtil.BinarySort(list, Collections.ReverseOrder());
+			// check that one-element non-random access lists pass sorting without ex (as sorting is not needed)
+			IList<int> list = new List<int>();
+			list.AddItem(1);
+			CollectionUtil.IntroSort(list);
+			CollectionUtil.TimSort(list);
+			CollectionUtil.IntroSort(list, Sharpen.Collections.ReverseOrder());
+			CollectionUtil.TimSort(list, Sharpen.Collections.ReverseOrder());
         }
     }
 }

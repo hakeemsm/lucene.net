@@ -10,7 +10,7 @@ using System.Text;
 namespace Lucene.Net.Codecs.Lucene3x
 {
     [Obsolete]
-    internal class Lucene3xTermVectorsReader : TermVectorsReader
+    public class Lucene3xTermVectorsReader : TermVectorsReader
     {
         // NOTE: if you make a new format, it must be larger than
         // the current format

@@ -1,410 +1,298 @@
-/* 
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+/*
+ * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
  * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
-using Lucene.Net.Analysis.Tokenattributes;
-using Lucene.Net.Support;
+using System.Text;
 using NUnit.Framework;
-
-using Analyzer = Lucene.Net.Analysis.Analyzer;
-using TokenFilter = Lucene.Net.Analysis.TokenFilter;
-using TokenStream = Lucene.Net.Analysis.TokenStream;
-using WhitespaceAnalyzer = Lucene.Net.Analysis.WhitespaceAnalyzer;
-using WhitespaceTokenizer = Lucene.Net.Analysis.WhitespaceTokenizer;
-using Document = Lucene.Net.Documents.Document;
-using Field = Lucene.Net.Documents.Field;
-using Directory = Lucene.Net.Store.Directory;
-using FSDirectory = Lucene.Net.Store.FSDirectory;
-using RAMDirectory = Lucene.Net.Store.RAMDirectory;
-using UnicodeUtil = Lucene.Net.Util.UnicodeUtil;
-using LuceneTestCase = Lucene.Net.Util.LuceneTestCase;
-using _TestUtil = Lucene.Net.Util._TestUtil;
+using Lucene.Net.Analysis;
+using Lucene.Net.Analysis.Tokenattributes;
+using Lucene.Net.Document;
+using Lucene.Net.Index;
+using Lucene.Net.Search;
+using Lucene.Net.Store;
+using Lucene.Net.Util;
+using Sharpen;
 
 namespace Lucene.Net.Index
 {
-	
-	
-    [TestFixture]
-	public class TestPayloads:LuceneTestCase
+	public class TestPayloads : LuceneTestCase
 	{
-		private class AnonymousClassThread:ThreadClass
+		// Simple tests to test the payloads
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestPayload()
 		{
-			public AnonymousClassThread(int numDocs, System.String field, Lucene.Net.Index.TestPayloads.ByteArrayPool pool, Lucene.Net.Index.IndexWriter writer, TestPayloads enclosingInstance)
+			BytesRef payload = new BytesRef("This is a test!");
+			NUnit.Framework.Assert.AreEqual("Wrong payload length.", "This is a test!".Length
+				, payload.length);
+			BytesRef clone = payload.Clone();
+			NUnit.Framework.Assert.AreEqual(payload.length, clone.length);
+			for (int i = 0; i < payload.length; i++)
 			{
-				InitBlock(numDocs, field, pool, writer, enclosingInstance);
-			}
-			private void  InitBlock(int numDocs, System.String field, Lucene.Net.Index.TestPayloads.ByteArrayPool pool, Lucene.Net.Index.IndexWriter writer, TestPayloads enclosingInstance)
-			{
-				this.numDocs = numDocs;
-				this.field = field;
-				this.pool = pool;
-				this.writer = writer;
-				this.enclosingInstance = enclosingInstance;
-			}
-			private int numDocs;
-			private System.String field;
-			private Lucene.Net.Index.TestPayloads.ByteArrayPool pool;
-			private Lucene.Net.Index.IndexWriter writer;
-			private TestPayloads enclosingInstance;
-			public TestPayloads Enclosing_Instance
-			{
-				get
-				{
-					return enclosingInstance;
-				}
-				
-			}
-			override public void  Run()
-			{
-				try
-				{
-					for (int j = 0; j < numDocs; j++)
-					{
-						Document d = new Document();
-						d.Add(new Field(field, new PoolingPayloadTokenStream(enclosingInstance, pool)));
-						writer.AddDocument(d);
-					}
-				}
-				catch (System.Exception e)
-				{
-					System.Console.Error.WriteLine(e.StackTrace);
-					Assert.Fail(e.ToString());
-				}
+				NUnit.Framework.Assert.AreEqual(payload.bytes[i + payload.offset], clone.bytes[i 
+					+ clone.offset]);
 			}
 		}
-		
-		// Simple tests to test the Payload class
-		[Test]
-		public virtual void  TestPayload()
-		{
-			rnd = NewRandom();
-			byte[] testData = System.Text.UTF8Encoding.UTF8.GetBytes("This is a test!");
-			Payload payload = new Payload(testData);
-			Assert.AreEqual(testData.Length, payload.Length, "Wrong payload length.");
-			
-			// test copyTo()
-			byte[] target = new byte[testData.Length - 1];
-            
-            Assert.Throws<IndexOutOfRangeException>(() => payload.CopyTo(target, 0), "Expected exception not thrown");
-			
-			target = new byte[testData.Length + 3];
-			payload.CopyTo(target, 3);
-			
-			for (int i = 0; i < testData.Length; i++)
-			{
-				Assert.AreEqual(testData[i], target[i + 3]);
-			}
-			
-			
-			// test toByteArray()
-			target = payload.ToByteArray();
-			AssertByteArrayEquals(testData, target);
-			
-			// test byteAt()
-			for (int i = 0; i < testData.Length; i++)
-			{
-				Assert.AreEqual(payload.ByteAt(i), testData[i]);
-			}
-			
-            Assert.Throws<IndexOutOfRangeException>(() => payload.ByteAt(testData.Length + 1), "Expected exception not thrown");
-			
-			Payload clone = (Payload) payload.Clone();
-			Assert.AreEqual(payload.Length, clone.Length);
-			for (int i = 0; i < payload.Length; i++)
-			{
-				Assert.AreEqual(payload.ByteAt(i), clone.ByteAt(i));
-			}
-		}
-		
+
 		// Tests whether the DocumentWriter and SegmentMerger correctly enable the
 		// payload bit in the FieldInfo
-		[Test]
-		public virtual void  TestPayloadFieldBit()
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestPayloadFieldBit()
 		{
-			rnd = NewRandom();
-			Directory ram = new RAMDirectory();
-			PayloadAnalyzer analyzer = new PayloadAnalyzer();
-			IndexWriter writer = new IndexWriter(ram, analyzer, true, IndexWriter.MaxFieldLength.LIMITED);
-			Document d = new Document();
+			Directory ram = NewDirectory();
+			TestPayloads.PayloadAnalyzer analyzer = new TestPayloads.PayloadAnalyzer();
+			IndexWriter writer = new IndexWriter(ram, NewIndexWriterConfig(TEST_VERSION_CURRENT
+				, analyzer));
+			Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
 			// this field won't have any payloads
-			d.Add(new Field("f1", "This field has no payloads", Field.Store.NO, Field.Index.ANALYZED));
+			d.Add(NewTextField("f1", "This field has no payloads", Field.Store.NO));
 			// this field will have payloads in all docs, however not for all term positions,
 			// so this field is used to check if the DocumentWriter correctly enables the payloads bit
 			// even if only some term positions have payloads
-			d.Add(new Field("f2", "This field has payloads in all docs", Field.Store.NO, Field.Index.ANALYZED));
-			d.Add(new Field("f2", "This field has payloads in all docs", Field.Store.NO, Field.Index.ANALYZED));
+			d.Add(NewTextField("f2", "This field has payloads in all docs", Field.Store.NO));
+			d.Add(NewTextField("f2", "This field has payloads in all docs NO PAYLOAD", Field.Store
+				.NO));
 			// this field is used to verify if the SegmentMerger enables payloads for a field if it has payloads 
 			// enabled in only some documents
-			d.Add(new Field("f3", "This field has payloads in some docs", Field.Store.NO, Field.Index.ANALYZED));
+			d.Add(NewTextField("f3", "This field has payloads in some docs", Field.Store.NO));
 			// only add payload data for field f2
-			analyzer.SetPayloadData("f2", 1, System.Text.UTF8Encoding.UTF8.GetBytes("somedata"), 0, 1);
+			analyzer.SetPayloadData("f2", Sharpen.Runtime.GetBytesForString("somedata", StandardCharsets
+				.UTF_8), 0, 1);
 			writer.AddDocument(d);
 			// flush
 			writer.Close();
-			
-			SegmentReader reader = SegmentReader.GetOnlySegmentReader(ram);
-			FieldInfos fi = reader.FieldInfos();
-			Assert.IsFalse(fi.FieldInfo("f1").storePayloads_ForNUnit, "Payload field bit should not be set.");
-			Assert.IsTrue(fi.FieldInfo("f2").storePayloads_ForNUnit, "Payload field bit should be set.");
-			Assert.IsFalse(fi.FieldInfo("f3").storePayloads_ForNUnit, "Payload field bit should not be set.");
+			SegmentReader reader = GetOnlySegmentReader(DirectoryReader.Open(ram));
+			FieldInfos fi = reader.GetFieldInfos();
+			NUnit.Framework.Assert.IsFalse("Payload field bit should not be set.", fi.FieldInfo
+				("f1").HasPayloads());
+			NUnit.Framework.Assert.IsTrue("Payload field bit should be set.", fi.FieldInfo("f2"
+				).HasPayloads());
+			NUnit.Framework.Assert.IsFalse("Payload field bit should not be set.", fi.FieldInfo
+				("f3").HasPayloads());
 			reader.Close();
-			
 			// now we add another document which has payloads for field f3 and verify if the SegmentMerger
 			// enabled payloads for that field
-			writer = new IndexWriter(ram, analyzer, true, IndexWriter.MaxFieldLength.LIMITED);
-			d = new Document();
-			d.Add(new Field("f1", "This field has no payloads", Field.Store.NO, Field.Index.ANALYZED));
-			d.Add(new Field("f2", "This field has payloads in all docs", Field.Store.NO, Field.Index.ANALYZED));
-			d.Add(new Field("f2", "This field has payloads in all docs", Field.Store.NO, Field.Index.ANALYZED));
-			d.Add(new Field("f3", "This field has payloads in some docs", Field.Store.NO, Field.Index.ANALYZED));
+			analyzer = new TestPayloads.PayloadAnalyzer();
+			// Clear payload state for each field
+			writer = new IndexWriter(ram, NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer
+				).SetOpenMode(IndexWriterConfig.OpenMode.CREATE));
+			d = new Lucene.Net.Document.Document();
+			d.Add(NewTextField("f1", "This field has no payloads", Field.Store.NO));
+			d.Add(NewTextField("f2", "This field has payloads in all docs", Field.Store.NO));
+			d.Add(NewTextField("f2", "This field has payloads in all docs", Field.Store.NO));
+			d.Add(NewTextField("f3", "This field has payloads in some docs", Field.Store.NO));
 			// add payload data for field f2 and f3
-			analyzer.SetPayloadData("f2", System.Text.UTF8Encoding.UTF8.GetBytes("somedata"), 0, 1);
-			analyzer.SetPayloadData("f3", System.Text.UTF8Encoding.UTF8.GetBytes("somedata"), 0, 3);
+			analyzer.SetPayloadData("f2", Sharpen.Runtime.GetBytesForString("somedata", StandardCharsets
+				.UTF_8), 0, 1);
+			analyzer.SetPayloadData("f3", Sharpen.Runtime.GetBytesForString("somedata", StandardCharsets
+				.UTF_8), 0, 3);
 			writer.AddDocument(d);
 			// force merge
-			writer.Optimize();
+			writer.ForceMerge(1);
 			// flush
 			writer.Close();
-			
-			reader = SegmentReader.GetOnlySegmentReader(ram);
-			fi = reader.FieldInfos();
-			Assert.IsFalse(fi.FieldInfo("f1").storePayloads_ForNUnit, "Payload field bit should not be set.");
-			Assert.IsTrue(fi.FieldInfo("f2").storePayloads_ForNUnit, "Payload field bit should be set.");
-			Assert.IsTrue(fi.FieldInfo("f3").storePayloads_ForNUnit, "Payload field bit should be set.");
+			reader = GetOnlySegmentReader(DirectoryReader.Open(ram));
+			fi = reader.GetFieldInfos();
+			NUnit.Framework.Assert.IsFalse("Payload field bit should not be set.", fi.FieldInfo
+				("f1").HasPayloads());
+			NUnit.Framework.Assert.IsTrue("Payload field bit should be set.", fi.FieldInfo("f2"
+				).HasPayloads());
+			NUnit.Framework.Assert.IsTrue("Payload field bit should be set.", fi.FieldInfo("f3"
+				).HasPayloads());
 			reader.Close();
+			ram.Close();
 		}
-		
+
 		// Tests if payloads are correctly stored and loaded using both RamDirectory and FSDirectory
-		[Test]
-		public virtual void  TestPayloadsEncoding()
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestPayloadsEncoding()
 		{
-			rnd = NewRandom();
-			// first perform the test using a RAMDirectory
-			Directory dir = new RAMDirectory();
+			Directory dir = NewDirectory();
 			PerformTest(dir);
-			
-			// now use a FSDirectory and repeat same test
-			System.IO.DirectoryInfo dirName = _TestUtil.GetTempDir("test_payloads");
-			dir = FSDirectory.Open(dirName);
-			PerformTest(dir);
-			_TestUtil.RmDir(dirName);
+			dir.Close();
 		}
-		
+
 		// builds an index with payloads in the given Directory and performs
 		// different tests to verify the payload encoding
-		private void  PerformTest(Directory dir)
+		/// <exception cref="System.Exception"></exception>
+		private void PerformTest(Directory dir)
 		{
-			PayloadAnalyzer analyzer = new PayloadAnalyzer();
-			IndexWriter writer = new IndexWriter(dir, analyzer, true, IndexWriter.MaxFieldLength.LIMITED);
-			
+			TestPayloads.PayloadAnalyzer analyzer = new TestPayloads.PayloadAnalyzer();
+			IndexWriter writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT
+				, analyzer).SetOpenMode(IndexWriterConfig.OpenMode.CREATE).SetMergePolicy(NewLogMergePolicy
+				()));
 			// should be in sync with value in TermInfosWriter
 			int skipInterval = 16;
-			
 			int numTerms = 5;
-			System.String fieldName = "f1";
-			
+			string fieldName = "f1";
 			int numDocs = skipInterval + 1;
 			// create content for the test documents with just a few terms
 			Term[] terms = GenerateTerms(fieldName, numTerms);
-			System.Text.StringBuilder sb = new System.Text.StringBuilder();
+			StringBuilder sb = new StringBuilder();
 			for (int i = 0; i < terms.Length; i++)
 			{
-				sb.Append(terms[i].Text);
+				sb.Append(terms[i].Text());
 				sb.Append(" ");
 			}
-			System.String content = sb.ToString();
-			
-			
-			int payloadDataLength = numTerms * numDocs * 2 + numTerms * numDocs * (numDocs - 1) / 2;
+			string content = sb.ToString();
+			int payloadDataLength = numTerms * numDocs * 2 + numTerms * numDocs * (numDocs - 
+				1) / 2;
 			byte[] payloadData = GenerateRandomData(payloadDataLength);
-			
-			Document d = new Document();
-			d.Add(new Field(fieldName, content, Field.Store.NO, Field.Index.ANALYZED));
+			Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+			d.Add(NewTextField(fieldName, content, Field.Store.NO));
 			// add the same document multiple times to have the same payload lengths for all
 			// occurrences within two consecutive skip intervals
 			int offset = 0;
-			for (int i = 0; i < 2 * numDocs; i++)
+			for (int i_1 = 0; i_1 < 2 * numDocs; i_1++)
 			{
-				analyzer.SetPayloadData(fieldName, payloadData, offset, 1);
+				analyzer = new TestPayloads.PayloadAnalyzer(fieldName, payloadData, offset, 1);
 				offset += numTerms;
-				writer.AddDocument(d);
+				writer.AddDocument(d, analyzer);
 			}
-			
 			// make sure we create more than one segment to test merging
 			writer.Commit();
-			
 			// now we make sure to have different payload lengths next at the next skip point        
-			for (int i = 0; i < numDocs; i++)
+			for (int i_2 = 0; i_2 < numDocs; i_2++)
 			{
-				analyzer.SetPayloadData(fieldName, payloadData, offset, i);
-				offset += i * numTerms;
-				writer.AddDocument(d);
+				analyzer = new TestPayloads.PayloadAnalyzer(fieldName, payloadData, offset, i_2);
+				offset += i_2 * numTerms;
+				writer.AddDocument(d, analyzer);
 			}
-			
-			writer.Optimize();
+			writer.ForceMerge(1);
 			// flush
 			writer.Close();
-			
-			
-			/*
-			* Verify the index
-			* first we test if all payloads are stored correctly
-			*/
-		    IndexReader reader = IndexReader.Open(dir, true);
-			
+			IndexReader reader = DirectoryReader.Open(dir);
 			byte[] verifyPayloadData = new byte[payloadDataLength];
 			offset = 0;
-			TermPositions[] tps = new TermPositions[numTerms];
-			for (int i = 0; i < numTerms; i++)
+			DocsAndPositionsEnum[] tps = new DocsAndPositionsEnum[numTerms];
+			for (int i_3 = 0; i_3 < numTerms; i_3++)
 			{
-				tps[i] = reader.TermPositions(terms[i]);
+				tps[i_3] = MultiFields.GetTermPositionsEnum(reader, MultiFields.GetLiveDocs(reader
+					), terms[i_3].Field(), new BytesRef(terms[i_3].Text()));
 			}
-			
-			while (tps[0].Next())
+			while (tps[0].NextDoc() != DocIdSetIterator.NO_MORE_DOCS)
 			{
-				for (int i = 1; i < numTerms; i++)
+				for (int i_4 = 1; i_4 < numTerms; i_4++)
 				{
-					tps[i].Next();
+					tps[i_4].NextDoc();
 				}
-				int freq = tps[0].Freq;
-				
-				for (int i = 0; i < freq; i++)
+				int freq = tps[0].Freq();
+				for (int i_5 = 0; i_5 < freq; i_5++)
 				{
 					for (int j = 0; j < numTerms; j++)
 					{
 						tps[j].NextPosition();
-						tps[j].GetPayload(verifyPayloadData, offset);
-						offset += tps[j].PayloadLength;
+						BytesRef br = tps[j].GetPayload();
+						if (br != null)
+						{
+							System.Array.Copy(br.bytes, br.offset, verifyPayloadData, offset, br.length);
+							offset += br.length;
+						}
 					}
 				}
 			}
-			
-			for (int i = 0; i < numTerms; i++)
-			{
-				tps[i].Close();
-			}
-			
 			AssertByteArrayEquals(payloadData, verifyPayloadData);
-			
-			/*
-			*  test lazy skipping
-			*/
-			TermPositions tp = reader.TermPositions(terms[0]);
-			tp.Next();
+			DocsAndPositionsEnum tp = MultiFields.GetTermPositionsEnum(reader, MultiFields.GetLiveDocs
+				(reader), terms[0].Field(), new BytesRef(terms[0].Text()));
+			tp.NextDoc();
 			tp.NextPosition();
+			// NOTE: prior rev of this test was failing to first
+			// call next here:
+			tp.NextDoc();
 			// now we don't read this payload
 			tp.NextPosition();
-			Assert.AreEqual(1, tp.PayloadLength, "Wrong payload length.");
-			byte[] payload = tp.GetPayload(null, 0);
-			Assert.AreEqual(payload[0], payloadData[numTerms]);
+			BytesRef payload = tp.GetPayload();
+			NUnit.Framework.Assert.AreEqual("Wrong payload length.", 1, payload.length);
+			NUnit.Framework.Assert.AreEqual(payload.bytes[payload.offset], payloadData[numTerms
+				]);
+			tp.NextDoc();
 			tp.NextPosition();
-			
 			// we don't read this payload and skip to a different document
-			tp.SkipTo(5);
+			tp.Advance(5);
 			tp.NextPosition();
-			Assert.AreEqual(1, tp.PayloadLength, "Wrong payload length.");
-			payload = tp.GetPayload(null, 0);
-			Assert.AreEqual(payload[0], payloadData[5 * numTerms]);
-			
-			
-			/*
-			* Test different lengths at skip points
-			*/
-			tp.Seek(terms[1]);
-			tp.Next();
+			payload = tp.GetPayload();
+			NUnit.Framework.Assert.AreEqual("Wrong payload length.", 1, payload.length);
+			NUnit.Framework.Assert.AreEqual(payload.bytes[payload.offset], payloadData[5 * numTerms
+				]);
+			tp = MultiFields.GetTermPositionsEnum(reader, MultiFields.GetLiveDocs(reader), terms
+				[1].Field(), new BytesRef(terms[1].Text()));
+			tp.NextDoc();
 			tp.NextPosition();
-			Assert.AreEqual(1, tp.PayloadLength, "Wrong payload length.");
-			tp.SkipTo(skipInterval - 1);
+			NUnit.Framework.Assert.AreEqual("Wrong payload length.", 1, tp.GetPayload().length
+				);
+			tp.Advance(skipInterval - 1);
 			tp.NextPosition();
-			Assert.AreEqual(1, tp.PayloadLength, "Wrong payload length.");
-			tp.SkipTo(2 * skipInterval - 1);
+			NUnit.Framework.Assert.AreEqual("Wrong payload length.", 1, tp.GetPayload().length
+				);
+			tp.Advance(2 * skipInterval - 1);
 			tp.NextPosition();
-			Assert.AreEqual(1, tp.PayloadLength, "Wrong payload length.");
-			tp.SkipTo(3 * skipInterval - 1);
+			NUnit.Framework.Assert.AreEqual("Wrong payload length.", 1, tp.GetPayload().length
+				);
+			tp.Advance(3 * skipInterval - 1);
 			tp.NextPosition();
-			Assert.AreEqual(3 * skipInterval - 2 * numDocs - 1, tp.PayloadLength, "Wrong payload length.");
-			
-			/*
-			* Test multiple call of getPayload()
-			*/
-			tp.GetPayload(null, 0);
-
-			// it is forbidden to call getPayload() more than once
-			// without calling nextPosition()
-            Assert.Throws<IOException>(() => tp.GetPayload(null, 0), "Expected exception not thrown");
-			
+			NUnit.Framework.Assert.AreEqual("Wrong payload length.", 3 * skipInterval - 2 * numDocs
+				 - 1, tp.GetPayload().length);
 			reader.Close();
-			
 			// test long payload
-			analyzer = new PayloadAnalyzer();
-			writer = new IndexWriter(dir, analyzer, true, IndexWriter.MaxFieldLength.LIMITED);
-			System.String singleTerm = "lucene";
-			
-			d = new Document();
-			d.Add(new Field(fieldName, singleTerm, Field.Store.NO, Field.Index.ANALYZED));
+			analyzer = new TestPayloads.PayloadAnalyzer();
+			writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer
+				).SetOpenMode(IndexWriterConfig.OpenMode.CREATE));
+			string singleTerm = "lucene";
+			d = new Lucene.Net.Document.Document();
+			d.Add(NewTextField(fieldName, singleTerm, Field.Store.NO));
 			// add a payload whose length is greater than the buffer size of BufferedIndexOutput
 			payloadData = GenerateRandomData(2000);
 			analyzer.SetPayloadData(fieldName, payloadData, 100, 1500);
 			writer.AddDocument(d);
-			
-			
-			writer.Optimize();
+			writer.ForceMerge(1);
 			// flush
 			writer.Close();
-
-		    reader = IndexReader.Open(dir, true);
-			tp = reader.TermPositions(new Term(fieldName, singleTerm));
-			tp.Next();
+			reader = DirectoryReader.Open(dir);
+			tp = MultiFields.GetTermPositionsEnum(reader, MultiFields.GetLiveDocs(reader), fieldName
+				, new BytesRef(singleTerm));
+			tp.NextDoc();
 			tp.NextPosition();
-			
-			verifyPayloadData = new byte[tp.PayloadLength];
-			tp.GetPayload(verifyPayloadData, 0);
+			BytesRef br_1 = tp.GetPayload();
+			verifyPayloadData = new byte[br_1.length];
 			byte[] portion = new byte[1500];
-			Array.Copy(payloadData, 100, portion, 0, 1500);
-			
-			AssertByteArrayEquals(portion, verifyPayloadData);
+			System.Array.Copy(payloadData, 100, portion, 0, 1500);
+			AssertByteArrayEquals(portion, br_1.bytes, br_1.offset, br_1.length);
 			reader.Close();
 		}
-		
-		private System.Random rnd;
-		
-		private void  GenerateRandomData(byte[] data)
+
+		internal static readonly Encoding utf8 = StandardCharsets.UTF_8;
+
+		private void GenerateRandomData(byte[] data)
 		{
-			rnd.NextBytes(data);
+			// this test needs the random data to be valid unicode
+			string s = TestUtil.RandomFixedByteLengthUnicodeString(Random(), data.Length);
+			byte[] b = Sharpen.Runtime.GetBytesForString(s, utf8);
+			//HM:revisit 
+			//assert b.length == data.length;
+			System.Array.Copy(b, 0, data, 0, b.Length);
 		}
-		
+
 		private byte[] GenerateRandomData(int n)
 		{
 			byte[] data = new byte[n];
 			GenerateRandomData(data);
 			return data;
 		}
-		
-		private Term[] GenerateTerms(System.String fieldName, int n)
+
+		private Term[] GenerateTerms(string fieldName, int n)
 		{
-			int maxDigits = (int) (System.Math.Log(n) / System.Math.Log(10));
+			int maxDigits = (int)(Math.Log(n) / Math.Log(10));
 			Term[] terms = new Term[n];
-			System.Text.StringBuilder sb = new System.Text.StringBuilder();
+			StringBuilder sb = new StringBuilder();
 			for (int i = 0; i < n; i++)
 			{
 				sb.Length = 0;
 				sb.Append("t");
-				int zeros = maxDigits - (int) (System.Math.Log(i) / System.Math.Log(10));
+				int zeros = maxDigits - (int)(Math.Log(i) / Math.Log(10));
 				for (int j = 0; j < zeros; j++)
 				{
 					sb.Append("0");
@@ -414,262 +302,314 @@ namespace Lucene.Net.Index
 			}
 			return terms;
 		}
-		
-		
-		internal virtual void  AssertByteArrayEquals(byte[] b1, byte[] b2)
+
+		internal virtual void AssertByteArrayEquals(byte[] b1, byte[] b2)
 		{
-            Assert.AreEqual(b1.Length, b2.Length, "Byte arrays have different lengths: " + b1.Length + ", " + b2.Length);
-			
+			if (b1.Length != b2.Length)
+			{
+				NUnit.Framework.Assert.Fail("Byte arrays have different lengths: " + b1.Length + 
+					", " + b2.Length);
+			}
 			for (int i = 0; i < b1.Length; i++)
 			{
-                Assert.AreEqual(b1[i], b2[i], "Byte arrays different at index " + i + ": " + b1[i] + ", " + b2[i]);
+				if (b1[i] != b2[i])
+				{
+					NUnit.Framework.Assert.Fail("Byte arrays different at index " + i + ": " + b1[i] 
+						+ ", " + b2[i]);
+				}
 			}
 		}
-		
-		
-		/// <summary> This Analyzer uses an WhitespaceTokenizer and PayloadFilter.</summary>
-		private class PayloadAnalyzer:Analyzer
+
+		internal virtual void AssertByteArrayEquals(byte[] b1, byte[] b2, int b2offset, int
+			 b2length)
 		{
-			internal System.Collections.IDictionary fieldToData = new System.Collections.Hashtable();
-			
-			internal virtual void  SetPayloadData(System.String field, byte[] data, int offset, int length)
+			if (b1.Length != b2length)
 			{
-				fieldToData[field] = new PayloadData(0, data, offset, length);
+				NUnit.Framework.Assert.Fail("Byte arrays have different lengths: " + b1.Length + 
+					", " + b2length);
 			}
-			
-			internal virtual void  SetPayloadData(System.String field, int numFieldInstancesToSkip, byte[] data, int offset, int length)
+			for (int i = 0; i < b1.Length; i++)
 			{
-				fieldToData[field] = new PayloadData(numFieldInstancesToSkip, data, offset, length);
-			}
-			
-			public override TokenStream TokenStream(System.String fieldName, System.IO.TextReader reader)
-			{
-				PayloadData payload = (PayloadData) fieldToData[fieldName];
-				TokenStream ts = new WhitespaceTokenizer(reader);
-				if (payload != null)
+				if (b1[i] != b2[b2offset + i])
 				{
-					if (payload.numFieldInstancesToSkip == 0)
-					{
-						ts = new PayloadFilter(ts, payload.data, payload.offset, payload.length);
-					}
-					else
-					{
-						payload.numFieldInstancesToSkip--;
-					}
+					NUnit.Framework.Assert.Fail("Byte arrays different at index " + i + ": " + b1[i] 
+						+ ", " + b2[b2offset + i]);
 				}
-				return ts;
 			}
-			
+		}
+
+		/// <summary>This Analyzer uses an WhitespaceTokenizer and PayloadFilter.</summary>
+		/// <remarks>This Analyzer uses an WhitespaceTokenizer and PayloadFilter.</remarks>
+		private class PayloadAnalyzer : Analyzer
+		{
+			internal IDictionary<string, TestPayloads.PayloadAnalyzer.PayloadData> fieldToData
+				 = new Dictionary<string, TestPayloads.PayloadAnalyzer.PayloadData>();
+
+			public PayloadAnalyzer() : base(PER_FIELD_REUSE_STRATEGY)
+			{
+			}
+
+			public PayloadAnalyzer(string field, byte[] data, int offset, int length) : base(
+				PER_FIELD_REUSE_STRATEGY)
+			{
+				SetPayloadData(field, data, offset, length);
+			}
+
+			internal virtual void SetPayloadData(string field, byte[] data, int offset, int length
+				)
+			{
+				fieldToData.Put(field, new TestPayloads.PayloadAnalyzer.PayloadData(data, offset, 
+					length));
+			}
+
+			protected override Analyzer.TokenStreamComponents CreateComponents(string fieldName
+				, StreamReader reader)
+			{
+				TestPayloads.PayloadAnalyzer.PayloadData payload = fieldToData.Get(fieldName);
+				Tokenizer ts = new MockTokenizer(reader, MockTokenizer.WHITESPACE, false);
+				TokenStream tokenStream = (payload != null) ? new TestPayloads.PayloadFilter(ts, 
+					payload.data, payload.offset, payload.length) : ts;
+				return new Analyzer.TokenStreamComponents(ts, tokenStream);
+			}
+
 			private class PayloadData
 			{
 				internal byte[] data;
+
 				internal int offset;
+
 				internal int length;
-				internal int numFieldInstancesToSkip;
-				
-				internal PayloadData(int skip, byte[] data, int offset, int length)
+
+				internal PayloadData(byte[] data, int offset, int length)
 				{
-					numFieldInstancesToSkip = skip;
 					this.data = data;
 					this.offset = offset;
 					this.length = length;
 				}
 			}
 		}
-		
-		
-		/// <summary> This Filter adds payloads to the tokens.</summary>
-		private class PayloadFilter:TokenFilter
+
+		/// <summary>This Filter adds payloads to the tokens.</summary>
+		/// <remarks>This Filter adds payloads to the tokens.</remarks>
+		private class PayloadFilter : TokenFilter
 		{
 			private byte[] data;
+
 			private int length;
+
 			private int offset;
-			internal Payload payload = new Payload();
-			internal IPayloadAttribute payloadAtt;
-			
-			public PayloadFilter(TokenStream in_Renamed, byte[] data, int offset, int length):base(in_Renamed)
+
+			private int startOffset;
+
+			internal PayloadAttribute payloadAtt;
+
+			internal CharTermAttribute termAttribute;
+
+			public PayloadFilter(TokenStream @in, byte[] data, int offset, int length) : base
+				(@in)
 			{
 				this.data = data;
 				this.length = length;
 				this.offset = offset;
-				payloadAtt =  AddAttribute<IPayloadAttribute>();
+				this.startOffset = offset;
+				payloadAtt = AddAttribute<PayloadAttribute>();
+				termAttribute = AddAttribute<CharTermAttribute>();
 			}
-			
+
+			/// <exception cref="System.IO.IOException"></exception>
 			public override bool IncrementToken()
 			{
 				bool hasNext = input.IncrementToken();
-				if (hasNext)
+				if (!hasNext)
 				{
-					if (offset + length <= data.Length)
-					{
-						Payload p = null;
-						if (p == null)
-						{
-							p = new Payload();
-							payloadAtt.Payload = p;
-						}
-						p.SetData(data, offset, length);
-						offset += length;
-					}
-					else
-					{
-						payloadAtt.Payload = null;
-					}
-				}
-				
-				return hasNext;
-			}
-		}
-		
-		[Test]
-		public virtual void  TestThreadSafety()
-		{
-			rnd = NewRandom();
-			int numThreads = 5;
-			int numDocs = 50;
-			ByteArrayPool pool = new ByteArrayPool(numThreads, 5);
-			
-			Directory dir = new RAMDirectory();
-			IndexWriter writer = new IndexWriter(dir, new WhitespaceAnalyzer(), IndexWriter.MaxFieldLength.LIMITED);
-			System.String field = "test";
-			
-			ThreadClass[] ingesters = new ThreadClass[numThreads];
-			for (int i = 0; i < numThreads; i++)
-			{
-				ingesters[i] = new AnonymousClassThread(numDocs, field, pool, writer, this);
-				ingesters[i].Start();
-			}
-			
-			for (int i = 0; i < numThreads; i++)
-			{
-				ingesters[i].Join();
-			}
-			writer.Close();
-		    IndexReader reader = IndexReader.Open(dir, true);
-			TermEnum terms = reader.Terms();
-			while (terms.Next())
-			{
-				TermPositions tp = reader.TermPositions(terms.Term);
-				while (tp.Next())
-				{
-					int freq = tp.Freq;
-					for (int i = 0; i < freq; i++)
-					{
-						tp.NextPosition();
-						Assert.AreEqual(pool.BytesToString(tp.GetPayload(new byte[5], 0)), terms.Term.Text);
-					}
-				}
-				tp.Close();
-			}
-			terms.Close();
-			reader.Close();
-			
-			Assert.AreEqual(pool.Size(), numThreads);
-		}
-		
-		private class PoolingPayloadTokenStream:TokenStream
-		{
-			private void  InitBlock(TestPayloads enclosingInstance)
-			{
-				this.enclosingInstance = enclosingInstance;
-			}
-			private TestPayloads enclosingInstance;
-			public TestPayloads Enclosing_Instance
-			{
-				get
-				{
-					return enclosingInstance;
-				}
-				
-			}
-			private byte[] payload;
-			private bool first;
-			private ByteArrayPool pool;
-			private System.String term;
-			
-			internal ITermAttribute termAtt;
-			internal IPayloadAttribute payloadAtt;
-			
-			internal PoolingPayloadTokenStream(TestPayloads enclosingInstance, ByteArrayPool pool)
-			{
-				InitBlock(enclosingInstance);
-				this.pool = pool;
-				payload = pool.Get();
-				Enclosing_Instance.GenerateRandomData(payload);
-				term = pool.BytesToString(payload);
-				first = true;
-				payloadAtt =  AddAttribute<IPayloadAttribute>();
-				termAtt =  AddAttribute<ITermAttribute>();
-			}
-			
-			public override bool IncrementToken()
-			{
-				if (!first)
 					return false;
-				first = false;
-                ClearAttributes();
-				termAtt.SetTermBuffer(term);
-				payloadAtt.Payload = new Payload(payload);
+				}
+				// Some values of the same field are to have payloads and others not
+				if (offset + length <= data.Length && !termAttribute.ToString().EndsWith("NO PAYLOAD"
+					))
+				{
+					BytesRef p = new BytesRef(data, offset, length);
+					payloadAtt.SetPayload(p);
+					offset += length;
+				}
+				else
+				{
+					payloadAtt.SetPayload(null);
+				}
 				return true;
 			}
 
-            protected override void Dispose(bool disposing)
-            {
-                pool.Release(payload);
-            }
+			/// <exception cref="System.IO.IOException"></exception>
+			public override void Reset()
+			{
+				base.Reset();
+				this.offset = startOffset;
+			}
 		}
-		
-		internal class ByteArrayPool
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestThreadSafety()
 		{
-			private System.Collections.IList pool;
-			
+			int numThreads = 5;
+			int numDocs = AtLeast(50);
+			TestPayloads.ByteArrayPool pool = new TestPayloads.ByteArrayPool(numThreads, 5);
+			Directory dir = NewDirectory();
+			IndexWriter writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT
+				, new MockAnalyzer(Random())));
+			string field = "test";
+			Sharpen.Thread[] ingesters = new Sharpen.Thread[numThreads];
+			for (int i = 0; i < numThreads; i++)
+			{
+				ingesters[i] = new _Thread_464(numDocs, field, pool, writer);
+				ingesters[i].Start();
+			}
+			for (int i_1 = 0; i_1 < numThreads; i_1++)
+			{
+				ingesters[i_1].Join();
+			}
+			writer.Close();
+			IndexReader reader = DirectoryReader.Open(dir);
+			TermsEnum terms = MultiFields.GetFields(reader).Terms(field).Iterator(null);
+			Bits liveDocs = MultiFields.GetLiveDocs(reader);
+			DocsAndPositionsEnum tp = null;
+			while (terms.Next() != null)
+			{
+				string termText = terms.Term().Utf8ToString();
+				tp = terms.DocsAndPositions(liveDocs, tp);
+				while (tp.NextDoc() != DocIdSetIterator.NO_MORE_DOCS)
+				{
+					int freq = tp.Freq();
+					for (int i_2 = 0; i_2 < freq; i_2++)
+					{
+						tp.NextPosition();
+						BytesRef payload = tp.GetPayload();
+						NUnit.Framework.Assert.AreEqual(termText, payload.Utf8ToString());
+					}
+				}
+			}
+			reader.Close();
+			dir.Close();
+			NUnit.Framework.Assert.AreEqual(pool.Size(), numThreads);
+		}
+
+		private sealed class _Thread_464 : Sharpen.Thread
+		{
+			public _Thread_464(int numDocs, string field, TestPayloads.ByteArrayPool pool, IndexWriter
+				 writer)
+			{
+				this.numDocs = numDocs;
+				this.field = field;
+				this.pool = pool;
+				this.writer = writer;
+			}
+
+			public override void Run()
+			{
+				try
+				{
+					for (int j = 0; j < numDocs; j++)
+					{
+						Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+						d.Add(new TextField(field, new TestPayloads.PoolingPayloadTokenStream(this, pool)
+							));
+						writer.AddDocument(d);
+					}
+				}
+				catch (Exception e)
+				{
+					Sharpen.Runtime.PrintStackTrace(e);
+					NUnit.Framework.Assert.Fail(e.ToString());
+				}
+			}
+
+			private readonly int numDocs;
+
+			private readonly string field;
+
+			private readonly TestPayloads.ByteArrayPool pool;
+
+			private readonly IndexWriter writer;
+		}
+
+		private class PoolingPayloadTokenStream : TokenStream
+		{
+			private byte[] payload;
+
+			private bool first;
+
+			private TestPayloads.ByteArrayPool pool;
+
+			private string term;
+
+			internal CharTermAttribute termAtt;
+
+			internal PayloadAttribute payloadAtt;
+
+			internal PoolingPayloadTokenStream(TestPayloads _enclosing, TestPayloads.ByteArrayPool
+				 pool)
+			{
+				this._enclosing = _enclosing;
+				this.pool = pool;
+				this.payload = pool.Get();
+				this._enclosing.GenerateRandomData(this.payload);
+				this.term = new string(this.payload, 0, this.payload.Length, TestPayloads.utf8);
+				this.first = true;
+				this.payloadAtt = this.AddAttribute<PayloadAttribute>();
+				this.termAtt = this.AddAttribute<CharTermAttribute>();
+			}
+
+			/// <exception cref="System.IO.IOException"></exception>
+			public override bool IncrementToken()
+			{
+				if (!this.first)
+				{
+					return false;
+				}
+				this.first = false;
+				this.ClearAttributes();
+				this.termAtt.Append(this.term);
+				this.payloadAtt.SetPayload(new BytesRef(this.payload));
+				return true;
+			}
+
+			/// <exception cref="System.IO.IOException"></exception>
+			public override void Close()
+			{
+				this.pool.Release(this.payload);
+			}
+
+			private readonly TestPayloads _enclosing;
+		}
+
+		private class ByteArrayPool
+		{
+			private IList<byte[]> pool;
+
 			internal ByteArrayPool(int capacity, int size)
 			{
-				pool = new System.Collections.ArrayList();
+				pool = new AList<byte[]>();
 				for (int i = 0; i < capacity; i++)
 				{
-					pool.Add(new byte[size]);
+					pool.AddItem(new byte[size]);
 				}
 			}
-			
-			private UnicodeUtil.UTF8Result utf8Result = new UnicodeUtil.UTF8Result();
-			
-			internal virtual System.String BytesToString(byte[] bytes)
-			{
-				lock (this)
-				{
-                    System.String s = System.Text.Encoding.Default.GetString(bytes);
-					UnicodeUtil.UTF16toUTF8(s, 0, s.Length, utf8Result);
-					try
-					{
-                        return System.Text.Encoding.UTF8.GetString(utf8Result.result, 0, utf8Result.length);
-					}
-					catch (System.IO.IOException uee)
-					{
-						return null;
-					}
-				}
-			}
-			
+
 			internal virtual byte[] Get()
 			{
 				lock (this)
 				{
-					System.Object tempObject;
-					tempObject = pool[0];
-					pool.RemoveAt(0);
-					return (byte[]) tempObject;
+					return pool.Remove(0);
 				}
 			}
-			
-			internal virtual void  Release(byte[] b)
+
+			internal virtual void Release(byte[] b)
 			{
 				lock (this)
 				{
-					pool.Add(b);
+					pool.AddItem(b);
 				}
 			}
-			
+
 			internal virtual int Size()
 			{
 				lock (this)
@@ -677,6 +617,106 @@ namespace Lucene.Net.Index
 					return pool.Count;
 				}
 			}
+		}
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestAcrossFields()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir, new MockAnalyzer(
+				Random(), MockTokenizer.WHITESPACE, true));
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(new TextField("hasMaybepayload", "here we go", Field.Store.YES));
+			writer.AddDocument(doc);
+			writer.Close();
+			writer = new RandomIndexWriter(Random(), dir, new MockAnalyzer(Random(), MockTokenizer
+				.WHITESPACE, true));
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(new TextField("hasMaybepayload2", "here we go", Field.Store.YES));
+			writer.AddDocument(doc);
+			writer.AddDocument(doc);
+			writer.ForceMerge(1);
+			writer.Close();
+			dir.Close();
+		}
+
+		/// <summary>some docs have payload att, some not</summary>
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestMixupDocs()
+		{
+			Directory dir = NewDirectory();
+			IndexWriterConfig iwc = NewIndexWriterConfig(TEST_VERSION_CURRENT, null);
+			iwc.SetMergePolicy(NewLogMergePolicy());
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir, iwc);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			Field field = new TextField("field", string.Empty, Field.Store.NO);
+			TokenStream ts = new MockTokenizer(new StringReader("here we go"), MockTokenizer.
+				WHITESPACE, true);
+			NUnit.Framework.Assert.IsFalse(ts.HasAttribute(typeof(PayloadAttribute)));
+			field.SetTokenStream(ts);
+			doc.Add(field);
+			writer.AddDocument(doc);
+			Token withPayload = new Token("withPayload", 0, 11);
+			withPayload.SetPayload(new BytesRef("test"));
+			ts = new CannedTokenStream(withPayload);
+			NUnit.Framework.Assert.IsTrue(ts.HasAttribute(typeof(PayloadAttribute)));
+			field.SetTokenStream(ts);
+			writer.AddDocument(doc);
+			ts = new MockTokenizer(new StringReader("another"), MockTokenizer.WHITESPACE, true
+				);
+			NUnit.Framework.Assert.IsFalse(ts.HasAttribute(typeof(PayloadAttribute)));
+			field.SetTokenStream(ts);
+			writer.AddDocument(doc);
+			DirectoryReader reader = writer.GetReader();
+			AtomicReader sr = SlowCompositeReaderWrapper.Wrap(reader);
+			DocsAndPositionsEnum de = sr.TermPositionsEnum(new Term("field", "withPayload"));
+			de.NextDoc();
+			de.NextPosition();
+			NUnit.Framework.Assert.AreEqual(new BytesRef("test"), de.GetPayload());
+			writer.Close();
+			reader.Close();
+			dir.Close();
+		}
+
+		/// <summary>some field instances have payload att, some not</summary>
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestMixupMultiValued()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			Field field = new TextField("field", string.Empty, Field.Store.NO);
+			TokenStream ts = new MockTokenizer(new StringReader("here we go"), MockTokenizer.
+				WHITESPACE, true);
+			NUnit.Framework.Assert.IsFalse(ts.HasAttribute(typeof(PayloadAttribute)));
+			field.SetTokenStream(ts);
+			doc.Add(field);
+			Field field2 = new TextField("field", string.Empty, Field.Store.NO);
+			Token withPayload = new Token("withPayload", 0, 11);
+			withPayload.SetPayload(new BytesRef("test"));
+			ts = new CannedTokenStream(withPayload);
+			NUnit.Framework.Assert.IsTrue(ts.HasAttribute(typeof(PayloadAttribute)));
+			field2.SetTokenStream(ts);
+			doc.Add(field2);
+			Field field3 = new TextField("field", string.Empty, Field.Store.NO);
+			ts = new MockTokenizer(new StringReader("nopayload"), MockTokenizer.WHITESPACE, true
+				);
+			NUnit.Framework.Assert.IsFalse(ts.HasAttribute(typeof(PayloadAttribute)));
+			field3.SetTokenStream(ts);
+			doc.Add(field3);
+			writer.AddDocument(doc);
+			DirectoryReader reader = writer.GetReader();
+			SegmentReader sr = GetOnlySegmentReader(reader);
+			DocsAndPositionsEnum de = sr.TermPositionsEnum(new Term("field", "withPayload"));
+			de.NextDoc();
+			de.NextPosition();
+			NUnit.Framework.Assert.AreEqual(new BytesRef("test"), de.GetPayload());
+			writer.Close();
+			reader.Close();
+			dir.Close();
 		}
 	}
 }

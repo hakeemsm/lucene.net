@@ -54,15 +54,22 @@ namespace Lucene.Net.Search
 	{
 		protected internal IndexSearcher searcher;
 		
+		protected internal static IndexReader reader;
+		protected internal static Directory directory;
 		public const System.String KEY = "KEY";
 		public const System.String FIELD = "field";
 		public static readonly QueryParser qp = new QueryParser(Util.Version.LUCENE_CURRENT, FIELD, new WhitespaceAnalyzer());
+		public static readonly string ALTFIELD = "alt";
 		
 		[TearDown]
 		public override void  TearDown()
 		{
 			searcher.Close();
             searcher = null;
+			reader.Close();
+			reader = null;
+			directory.Close();
+			directory = null;
             GC.Collect();
 			base.TearDown();
 		}
@@ -71,17 +78,23 @@ namespace Lucene.Net.Search
 		public override void  SetUp()
 		{
 			base.SetUp();
-			RAMDirectory directory = new RAMDirectory();
-			IndexWriter writer = new IndexWriter(directory, new WhitespaceAnalyzer(), true, IndexWriter.MaxFieldLength.LIMITED);
+			directory = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), directory, NewIndexWriterConfig
+				(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMergePolicy(NewLogMergePolicy
+				()));
 			for (int i = 0; i < docFields.Length; i++)
 			{
 				Document doc = new Document();
-				doc.Add(new Field(KEY, "" + i, Field.Store.NO, Field.Index.NOT_ANALYZED));
-				doc.Add(new Field(FIELD, docFields[i], Field.Store.NO, Field.Index.ANALYZED));
+				doc.Add(NewStringField(KEY, string.Empty + i, Field.Store.NO));
+				Field f = NewTextField(FIELD, docFields[i], Field.Store.NO);
+				f.SetBoost(i);
+				doc.Add(f);
+				doc.Add(NewTextField(ALTFIELD, docFields[i], Field.Store.NO));
 				writer.AddDocument(doc);
 			}
+			reader = writer.GetReader();
 			writer.Close();
-		    searcher = new IndexSearcher(directory, true);
+			searcher = NewSearcher(reader);
 		}
 		
 		protected internal System.String[] docFields = new System.String[]{"w1 w2 w3 w4 w5", "w1 w3 w2 w3 zz", "w1 xx w2 yy w3", "w1 w3 xx w2 yy w3 zz"};
@@ -100,7 +113,7 @@ namespace Lucene.Net.Search
 		/// <summary>check the expDocNrs first, then check the query (and the explanations) </summary>
 		public virtual void  Qtest(Query q, int[] expDocNrs)
 		{
-			CheckHits.CheckHitCollector(q, FIELD, searcher, expDocNrs);
+			CheckHits.CheckHitCollector(Random(), q, FIELD, searcher, expDocNrs);
 		}
 		
 		/// <summary> Tests a query using qtest after wrapping it with both optB and reqB</summary>

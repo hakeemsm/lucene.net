@@ -1,1276 +1,1837 @@
-/* 
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+/*
+ * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
  * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
 using System;
-
-using NUnit.Framework;
-
-using SimpleAnalyzer = Lucene.Net.Analysis.SimpleAnalyzer;
-using Document = Lucene.Net.Documents.Document;
-using Field = Lucene.Net.Documents.Field;
-using CorruptIndexException = Lucene.Net.Index.CorruptIndexException;
-using IndexReader = Lucene.Net.Index.IndexReader;
-using IndexWriter = Lucene.Net.Index.IndexWriter;
-using Term = Lucene.Net.Index.Term;
-using ParseException = Lucene.Net.QueryParsers.ParseException;
-using LockObtainFailedException = Lucene.Net.Store.LockObtainFailedException;
-using RAMDirectory = Lucene.Net.Store.RAMDirectory;
-using DocIdBitSet = Lucene.Net.Util.DocIdBitSet;
-using Occur = Lucene.Net.Search.Occur;
-using LuceneTestCase = Lucene.Net.Util.LuceneTestCase;
+using System.Collections.Generic;
+using System.Text;
+using Lucene.Net.Analysis;
+using Lucene.Net.Document;
+using Lucene.Net.Index;
+using Lucene.Net.Search;
+using Lucene.Net.Store;
+using Lucene.Net.Util;
+using Sharpen;
 
 namespace Lucene.Net.Search
 {
-	
-	/// <summary> Unit tests for sorting code.
-	/// <p/>Created: Feb 17, 2004 4:55:10 PM
-	/// </summary>
-	
-	[Serializable]
-    [TestFixture]
-	public class TestSort:LuceneTestCase
+	public class TestSort : LuceneTestCase
 	{
-		[Serializable]
-		private class AnonymousClassIntParser : Lucene.Net.Search.IntParser
+		/// <summary>Tests sorting on type string</summary>
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestString()
 		{
-			public AnonymousClassIntParser(TestSort enclosingInstance)
-			{
-				InitBlock(enclosingInstance);
-			}
-			private void  InitBlock(TestSort enclosingInstance)
-			{
-				this.enclosingInstance = enclosingInstance;
-			}
-			private TestSort enclosingInstance;
-			public TestSort Enclosing_Instance
-			{
-				get
-				{
-					return enclosingInstance;
-				}
-				
-			}
-			public int ParseInt(System.String val)
-			{
-				return (val[0] - 'A') * 123456;
-			}
-		}
-		[Serializable]
-		private class AnonymousClassFloatParser : Lucene.Net.Search.FloatParser
-		{
-			public AnonymousClassFloatParser(TestSort enclosingInstance)
-			{
-				InitBlock(enclosingInstance);
-			}
-			private void  InitBlock(TestSort enclosingInstance)
-			{
-				this.enclosingInstance = enclosingInstance;
-			}
-			private TestSort enclosingInstance;
-			public TestSort Enclosing_Instance
-			{
-				get
-				{
-					return enclosingInstance;
-				}
-				
-			}
-			public float ParseFloat(System.String val)
-			{
-				return (float) System.Math.Sqrt(val[0]);
-			}
-		}
-		[Serializable]
-		private class AnonymousClassLongParser : Lucene.Net.Search.LongParser
-		{
-			public AnonymousClassLongParser(TestSort enclosingInstance)
-			{
-				InitBlock(enclosingInstance);
-			}
-			private void  InitBlock(TestSort enclosingInstance)
-			{
-				this.enclosingInstance = enclosingInstance;
-			}
-			private TestSort enclosingInstance;
-			public TestSort Enclosing_Instance
-			{
-				get
-				{
-					return enclosingInstance;
-				}
-				
-			}
-			public long ParseLong(System.String val)
-			{
-				return (val[0] - 'A') * 1234567890L;
-			}
-		}
-		[Serializable]
-		private class AnonymousClassDoubleParser : Lucene.Net.Search.DoubleParser
-		{
-			public AnonymousClassDoubleParser(TestSort enclosingInstance)
-			{
-				InitBlock(enclosingInstance);
-			}
-			private void  InitBlock(TestSort enclosingInstance)
-			{
-				this.enclosingInstance = enclosingInstance;
-			}
-			private TestSort enclosingInstance;
-			public TestSort Enclosing_Instance
-			{
-				get
-				{
-					return enclosingInstance;
-				}
-				
-			}
-			public double ParseDouble(System.String val)
-			{
-				return System.Math.Pow(val[0], (val[0] - 'A'));
-			}
-		}
-		[Serializable]
-		private class AnonymousClassByteParser : Lucene.Net.Search.ByteParser
-		{
-			public AnonymousClassByteParser(TestSort enclosingInstance)
-			{
-				InitBlock(enclosingInstance);
-			}
-			private void  InitBlock(TestSort enclosingInstance)
-			{
-				this.enclosingInstance = enclosingInstance;
-			}
-			private TestSort enclosingInstance;
-			public TestSort Enclosing_Instance
-			{
-				get
-				{
-					return enclosingInstance;
-				}
-				
-			}
-			public sbyte ParseByte(System.String val)
-			{
-				return (sbyte) (val[0] - 'A');
-			}
-		}
-		[Serializable]
-		private class AnonymousClassShortParser : Lucene.Net.Search.ShortParser
-		{
-			public AnonymousClassShortParser(TestSort enclosingInstance)
-			{
-				InitBlock(enclosingInstance);
-			}
-			private void  InitBlock(TestSort enclosingInstance)
-			{
-				this.enclosingInstance = enclosingInstance;
-			}
-			private TestSort enclosingInstance;
-			public TestSort Enclosing_Instance
-			{
-				get
-				{
-					return enclosingInstance;
-				}
-				
-			}
-			public short ParseShort(System.String val)
-			{
-				return (short) (val[0] - 'A');
-			}
-		}
-		[Serializable]
-		private class AnonymousClassFilter:Filter
-		{
-			public AnonymousClassFilter(Lucene.Net.Search.TopDocs docs1, TestSort enclosingInstance)
-			{
-				InitBlock(docs1, enclosingInstance);
-			}
-			private void  InitBlock(Lucene.Net.Search.TopDocs docs1, TestSort enclosingInstance)
-			{
-				this.docs1 = docs1;
-				this.enclosingInstance = enclosingInstance;
-			}
-			private Lucene.Net.Search.TopDocs docs1;
-			private TestSort enclosingInstance;
-			public TestSort Enclosing_Instance
-			{
-				get
-				{
-					return enclosingInstance;
-				}
-				
-			}
-			public override DocIdSet GetDocIdSet(IndexReader reader)
-			{
-				System.Collections.BitArray bs = new System.Collections.BitArray((reader.MaxDoc % 64 == 0?reader.MaxDoc / 64:reader.MaxDoc / 64 + 1) * 64);
-                for (int i = 0; i < reader.MaxDoc; i++) bs.Set(i, true);
-				bs.Set(docs1.ScoreDocs[0].Doc, true);
-				return new DocIdBitSet(bs);
-			}
-		}
-		
-		private const int NUM_STRINGS = 6000;
-		private Searcher full;
-		private Searcher searchX;
-		private Searcher searchY;
-		private Query queryX;
-		private Query queryY;
-		private Query queryA;
-		private Query queryE;
-		private Query queryF;
-		private Query queryG;
-		private Sort sort;
-		
-		
-		/*public TestSort(System.String name):base(name)
-		{
-		}*/
-		
-		/*public static Test Suite()
-		{
-			return new TestSuite(typeof(TestSort));
-		}*/
-		
-		
-		// document data:
-		// the tracer field is used to determine which document was hit
-		// the contents field is used to search and sort by relevance
-		// the int field to sort by int
-		// the float field to sort by float
-		// the string field to sort by string
-		// the i18n field includes accented characters for testing locale-specific sorting
-        private System.String[][] data = new System.String[][] { 
-          //              tracer contents         int            float            string   custom   i18n               long                       double,                           'short',                    byte,                   'custom parser encoding'
-          new string[]{   "A",   "x a",           "5",           "4f",            "c",     "A-3",   "p\u00EAche",      "10",                      "-4.0",                           "3",                        "126",                      "J"},//A, x
-        //{{See: LUCENENET-364}} Intentional diversion from Java (3.4028235E38 changed to 3.402823E38)
-          new string[]{   "B",   "y a",           "5",           "3.402823E38",   "i",     "B-10",  "HAT",             "1000000000",              "40.0",                           "24",                       "1",                        "I"},//B, y
-        //new string[]{   "B",   "y a",           "5",           "3.4028235E38",  "i",     "B-10",  "HAT",             "1000000000",              "40.0",                           "24",                       "1",                        "I"},//B, y
-          new string[]{   "C",   "x a b c",       "2147483647",  "1.0",           "j",     "A-2",   "p\u00E9ch\u00E9", "99999999",                "40.00002343",                    "125",                      "15",                       "H"},//C, x
-          new string[]{   "D",   "y a b c",       "-1",          "0.0f",          "a",     "C-0",   "HUT",             long.MaxValue.ToString(),  double.MinValue.ToString("E16"),  short.MinValue.ToString(),  sbyte.MinValue.ToString(),   "G"},//D, y
-          new string[]{   "E",   "x a b c d",     "5",           "2f",            "h",     "B-8",   "peach",           long.MinValue.ToString(),  double.MaxValue.ToString("E16"),  short.MaxValue.ToString(),  sbyte.MaxValue.ToString(),   "F"},//E,x
-          new string[]{   "F",   "y a b c d",     "2",           "3.14159f",      "g",     "B-1",   "H\u00C5T",        "-44",                     "343.034435444",                  "-3",                       "0",                        "E"},//F,y
-          new string[]{   "G",   "x a b c d",     "3",           "-1.0",          "f",     "C-100", "sin",             "323254543543",            "4.043544",                       "5",                        "100",                      "D"},//G,x
-          new string[]{   "H",   "y a b c d",     "0",           "1.4E-45",       "e",     "C-88",  "H\u00D8T",        "1023423423005",           "4.043545",                       "10",                       "-50",                      "C"},//H,y
-          new string[]{   "I",   "x a b c d e f", "-2147483648", "1.0e+0",        "d",     "A-10",  "s\u00EDn",        "332422459999",            "4.043546",                       "-340",                     "51",                       "B"},//I,x
-          new string[]{   "J",   "y a b c d e f", "4",           ".5",            "b",     "C-7",   "HOT",             "34334543543",             "4.0000220343",                   "300",                      "2",                        "A"},//J,y
-          new string[]{   "W",   "g",             "1",           null,            null,    null,    null,              null,                      null,                             null,                       null,                       null},
-          new string[]{   "X",   "g",             "1",           "0.1",           null,    null,    null,              null,                      null,                             null,                       null,                       null},
-          new string[]{   "Y",   "g",             "1",           "0.2",           null,    null,    null,              null,                      null,                             null,                       null,                       null},
-          new string[]{   "Z",   "f g",           null,          null,            null,    null,    null,              null,                      null,                             null,                       null,                       null}
-        };
-		
-		
-		// create an index of all the documents, or just the x, or just the y documents
-		private Searcher GetIndex(bool even, bool odd)
-		{
-			RAMDirectory indexStore = new RAMDirectory();
-			IndexWriter writer = new IndexWriter(indexStore, new SimpleAnalyzer(), true, IndexWriter.MaxFieldLength.LIMITED);
-			writer.SetMaxBufferedDocs(2);
-			writer.MergeFactor = 1000;
-			for (int i = 0; i < data.Length; ++i)
-			{
-				if (((i % 2) == 0 && even) || ((i % 2) == 1 && odd))
-				{
-					Document doc = new Document();
-					doc.Add(new Field("tracer", data[i][0], Field.Store.YES, Field.Index.NO));
-					doc.Add(new Field("contents", data[i][1], Field.Store.NO, Field.Index.ANALYZED));
-					if (data[i][2] != null)
-						doc.Add(new Field("int", data[i][2], Field.Store.NO, Field.Index.NOT_ANALYZED));
-					if (data[i][3] != null)
-						doc.Add(new Field("float", data[i][3], Field.Store.NO, Field.Index.NOT_ANALYZED));
-					if (data[i][4] != null)
-						doc.Add(new Field("string", data[i][4], Field.Store.NO, Field.Index.NOT_ANALYZED));
-					if (data[i][5] != null)
-						doc.Add(new Field("custom", data[i][5], Field.Store.NO, Field.Index.NOT_ANALYZED));
-					if (data[i][6] != null)
-						doc.Add(new Field("i18n", data[i][6], Field.Store.NO, Field.Index.NOT_ANALYZED));
-					if (data[i][7] != null)
-						doc.Add(new Field("long", data[i][7], Field.Store.NO, Field.Index.NOT_ANALYZED));
-					if (data[i][8] != null)
-						doc.Add(new Field("double", data[i][8], Field.Store.NO, Field.Index.NOT_ANALYZED));
-					if (data[i][9] != null)
-						doc.Add(new Field("short", data[i][9], Field.Store.NO, Field.Index.NOT_ANALYZED));
-					if (data[i][10] != null)
-						doc.Add(new Field("byte", data[i][10], Field.Store.NO, Field.Index.NOT_ANALYZED));
-					if (data[i][11] != null)
-						doc.Add(new Field("parser", data[i][11], Field.Store.NO, Field.Index.NOT_ANALYZED));
-					doc.Boost = 2; // produce some scores above 1.0
-					writer.AddDocument(doc);
-				}
-			}
-			//writer.optimize ();
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(NewStringField("value", "foo", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "bar", Field.Store.YES));
+			writer.AddDocument(doc);
+			IndexReader ir = writer.GetReader();
 			writer.Close();
-			IndexSearcher s = new IndexSearcher(indexStore, true);
-			s.SetDefaultFieldSortScoring(true, true);
-			return s;
+			IndexSearcher searcher = NewSearcher(ir);
+			Sort sort = new Sort(new SortField("value", SortField.Type.STRING));
+			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
+			NUnit.Framework.Assert.AreEqual(2, td.totalHits);
+			// 'bar' comes before 'foo'
+			NUnit.Framework.Assert.AreEqual("bar", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+				));
+			NUnit.Framework.Assert.AreEqual("foo", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+				));
+			ir.Close();
+			dir.Close();
 		}
-		
-		private Searcher GetFullIndex()
+
+		/// <summary>Tests sorting on type string with a missing value</summary>
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestStringMissing()
 		{
-			return GetIndex(true, true);
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "foo", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "bar", Field.Store.YES));
+			writer.AddDocument(doc);
+			IndexReader ir = writer.GetReader();
+			writer.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			Sort sort = new Sort(new SortField("value", SortField.Type.STRING));
+			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
+			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			// null comes first
+			NUnit.Framework.Assert.IsNull(searcher.Doc(td.scoreDocs[0].doc).Get("value"));
+			NUnit.Framework.Assert.AreEqual("bar", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+				));
+			NUnit.Framework.Assert.AreEqual("foo", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+				));
+			ir.Close();
+			dir.Close();
 		}
-		
-		private IndexSearcher GetFullStrings()
+
+		/// <summary>Tests reverse sorting on type string</summary>
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestStringReverse()
 		{
-			RAMDirectory indexStore = new RAMDirectory();
-			IndexWriter writer = new IndexWriter(indexStore, new SimpleAnalyzer(), true, IndexWriter.MaxFieldLength.LIMITED);
-			writer.SetMaxBufferedDocs(4);
-			writer.MergeFactor = 97;
-			for (int i = 0; i < NUM_STRINGS; i++)
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(NewStringField("value", "bar", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "foo", Field.Store.YES));
+			writer.AddDocument(doc);
+			IndexReader ir = writer.GetReader();
+			writer.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			Sort sort = new Sort(new SortField("value", SortField.Type.STRING, true));
+			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
+			NUnit.Framework.Assert.AreEqual(2, td.totalHits);
+			// 'foo' comes after 'bar' in reverse order
+			NUnit.Framework.Assert.AreEqual("foo", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+				));
+			NUnit.Framework.Assert.AreEqual("bar", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+				));
+			ir.Close();
+			dir.Close();
+		}
+
+		/// <summary>Tests sorting on type string_val</summary>
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestStringVal()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(NewStringField("value", "foo", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "bar", Field.Store.YES));
+			writer.AddDocument(doc);
+			IndexReader ir = writer.GetReader();
+			writer.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			Sort sort = new Sort(new SortField("value", SortField.Type.STRING_VAL));
+			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
+			NUnit.Framework.Assert.AreEqual(2, td.totalHits);
+			// 'bar' comes before 'foo'
+			NUnit.Framework.Assert.AreEqual("bar", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+				));
+			NUnit.Framework.Assert.AreEqual("foo", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+				));
+			ir.Close();
+			dir.Close();
+		}
+
+		/// <summary>Tests sorting on type string_val with a missing value</summary>
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestStringValMissing()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "foo", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "bar", Field.Store.YES));
+			writer.AddDocument(doc);
+			IndexReader ir = writer.GetReader();
+			writer.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			Sort sort = new Sort(new SortField("value", SortField.Type.STRING_VAL));
+			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
+			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			// null comes first
+			NUnit.Framework.Assert.IsNull(searcher.Doc(td.scoreDocs[0].doc).Get("value"));
+			NUnit.Framework.Assert.AreEqual("bar", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+				));
+			NUnit.Framework.Assert.AreEqual("foo", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+				));
+			ir.Close();
+			dir.Close();
+		}
+
+		/// <summary>
+		/// Tests sorting on type string with a missing
+		/// value sorted first
+		/// </summary>
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestStringMissingSortedFirst()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "foo", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "bar", Field.Store.YES));
+			writer.AddDocument(doc);
+			IndexReader ir = writer.GetReader();
+			writer.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			SortField sf = new SortField("value", SortField.Type.STRING);
+			Sort sort = new Sort(sf);
+			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
+			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			// null comes first
+			NUnit.Framework.Assert.IsNull(searcher.Doc(td.scoreDocs[0].doc).Get("value"));
+			NUnit.Framework.Assert.AreEqual("bar", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+				));
+			NUnit.Framework.Assert.AreEqual("foo", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+				));
+			ir.Close();
+			dir.Close();
+		}
+
+		/// <summary>
+		/// Tests reverse sorting on type string with a missing
+		/// value sorted first
+		/// </summary>
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestStringMissingSortedFirstReverse()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "foo", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "bar", Field.Store.YES));
+			writer.AddDocument(doc);
+			IndexReader ir = writer.GetReader();
+			writer.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			SortField sf = new SortField("value", SortField.Type.STRING, true);
+			Sort sort = new Sort(sf);
+			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
+			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			NUnit.Framework.Assert.AreEqual("foo", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+				));
+			NUnit.Framework.Assert.AreEqual("bar", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+				));
+			// null comes last
+			NUnit.Framework.Assert.IsNull(searcher.Doc(td.scoreDocs[2].doc).Get("value"));
+			ir.Close();
+			dir.Close();
+		}
+
+		/// <summary>
+		/// Tests sorting on type string with a missing
+		/// value sorted last
+		/// </summary>
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestStringValMissingSortedLast()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "foo", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "bar", Field.Store.YES));
+			writer.AddDocument(doc);
+			IndexReader ir = writer.GetReader();
+			writer.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			SortField sf = new SortField("value", SortField.Type.STRING);
+			sf.SetMissingValue(SortField.STRING_LAST);
+			Sort sort = new Sort(sf);
+			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
+			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			NUnit.Framework.Assert.AreEqual("bar", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+				));
+			NUnit.Framework.Assert.AreEqual("foo", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+				));
+			// null comes last
+			NUnit.Framework.Assert.IsNull(searcher.Doc(td.scoreDocs[2].doc).Get("value"));
+			ir.Close();
+			dir.Close();
+		}
+
+		/// <summary>
+		/// Tests reverse sorting on type string with a missing
+		/// value sorted last
+		/// </summary>
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestStringValMissingSortedLastReverse()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "foo", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "bar", Field.Store.YES));
+			writer.AddDocument(doc);
+			IndexReader ir = writer.GetReader();
+			writer.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			SortField sf = new SortField("value", SortField.Type.STRING, true);
+			sf.SetMissingValue(SortField.STRING_LAST);
+			Sort sort = new Sort(sf);
+			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
+			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			// null comes first
+			NUnit.Framework.Assert.IsNull(searcher.Doc(td.scoreDocs[0].doc).Get("value"));
+			NUnit.Framework.Assert.AreEqual("foo", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+				));
+			NUnit.Framework.Assert.AreEqual("bar", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+				));
+			ir.Close();
+			dir.Close();
+		}
+
+		/// <summary>Tests reverse sorting on type string_val</summary>
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestStringValReverse()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(NewStringField("value", "bar", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "foo", Field.Store.YES));
+			writer.AddDocument(doc);
+			IndexReader ir = writer.GetReader();
+			writer.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			Sort sort = new Sort(new SortField("value", SortField.Type.STRING_VAL, true));
+			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
+			NUnit.Framework.Assert.AreEqual(2, td.totalHits);
+			// 'foo' comes after 'bar' in reverse order
+			NUnit.Framework.Assert.AreEqual("foo", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+				));
+			NUnit.Framework.Assert.AreEqual("bar", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+				));
+			ir.Close();
+			dir.Close();
+		}
+
+		/// <summary>Tests sorting on internal docid order</summary>
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestFieldDoc()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(NewStringField("value", "foo", Field.Store.NO));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "bar", Field.Store.NO));
+			writer.AddDocument(doc);
+			IndexReader ir = writer.GetReader();
+			writer.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			Sort sort = new Sort(SortField.FIELD_DOC);
+			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
+			NUnit.Framework.Assert.AreEqual(2, td.totalHits);
+			// docid 0, then docid 1
+			NUnit.Framework.Assert.AreEqual(0, td.scoreDocs[0].doc);
+			NUnit.Framework.Assert.AreEqual(1, td.scoreDocs[1].doc);
+			ir.Close();
+			dir.Close();
+		}
+
+		/// <summary>Tests sorting on reverse internal docid order</summary>
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestFieldDocReverse()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(NewStringField("value", "foo", Field.Store.NO));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "bar", Field.Store.NO));
+			writer.AddDocument(doc);
+			IndexReader ir = writer.GetReader();
+			writer.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			Sort sort = new Sort(new SortField(null, SortField.Type.DOC, true));
+			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
+			NUnit.Framework.Assert.AreEqual(2, td.totalHits);
+			// docid 1, then docid 0
+			NUnit.Framework.Assert.AreEqual(1, td.scoreDocs[0].doc);
+			NUnit.Framework.Assert.AreEqual(0, td.scoreDocs[1].doc);
+			ir.Close();
+			dir.Close();
+		}
+
+		/// <summary>Tests default sort (by score)</summary>
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestFieldScore()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(NewTextField("value", "foo bar bar bar bar", Field.Store.NO));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewTextField("value", "foo foo foo foo foo", Field.Store.NO));
+			writer.AddDocument(doc);
+			IndexReader ir = writer.GetReader();
+			writer.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			Sort sort = new Sort();
+			TopDocs actual = searcher.Search(new TermQuery(new Term("value", "foo")), 10, sort
+				);
+			NUnit.Framework.Assert.AreEqual(2, actual.totalHits);
+			TopDocs expected = searcher.Search(new TermQuery(new Term("value", "foo")), 10);
+			// the two topdocs should be the same
+			NUnit.Framework.Assert.AreEqual(expected.totalHits, actual.totalHits);
+			for (int i = 0; i < actual.scoreDocs.Length; i++)
 			{
-				Document doc = new Document();
-				System.String num = GetRandomCharString(GetRandomNumber(2, 8), 48, 52);
-				doc.Add(new Field("tracer", num, Field.Store.YES, Field.Index.NO));
-				//doc.add (new Field ("contents", Integer.toString(i), Field.Store.NO, Field.Index.ANALYZED));
-				doc.Add(new Field("string", num, Field.Store.NO, Field.Index.NOT_ANALYZED));
-				System.String num2 = GetRandomCharString(GetRandomNumber(1, 4), 48, 50);
-				doc.Add(new Field("string2", num2, Field.Store.NO, Field.Index.NOT_ANALYZED));
-				doc.Add(new Field("tracer2", num2, Field.Store.YES, Field.Index.NO));
-				doc.Boost = 2; // produce some scores above 1.0
-				writer.SetMaxBufferedDocs(GetRandomNumber(2, 12));
+				NUnit.Framework.Assert.AreEqual(actual.scoreDocs[i].doc, expected.scoreDocs[i].doc
+					);
+			}
+			ir.Close();
+			dir.Close();
+		}
+
+		/// <summary>Tests default sort (by score) in reverse</summary>
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestFieldScoreReverse()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(NewTextField("value", "foo bar bar bar bar", Field.Store.NO));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewTextField("value", "foo foo foo foo foo", Field.Store.NO));
+			writer.AddDocument(doc);
+			IndexReader ir = writer.GetReader();
+			writer.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			Sort sort = new Sort(new SortField(null, SortField.Type.SCORE, true));
+			TopDocs actual = searcher.Search(new TermQuery(new Term("value", "foo")), 10, sort
+				);
+			NUnit.Framework.Assert.AreEqual(2, actual.totalHits);
+			TopDocs expected = searcher.Search(new TermQuery(new Term("value", "foo")), 10);
+			// the two topdocs should be the reverse of each other
+			NUnit.Framework.Assert.AreEqual(expected.totalHits, actual.totalHits);
+			NUnit.Framework.Assert.AreEqual(actual.scoreDocs[0].doc, expected.scoreDocs[1].doc
+				);
+			NUnit.Framework.Assert.AreEqual(actual.scoreDocs[1].doc, expected.scoreDocs[0].doc
+				);
+			ir.Close();
+			dir.Close();
+		}
+
+		/// <summary>Tests sorting on type byte</summary>
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestByte()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(NewStringField("value", "23", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "-1", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "4", Field.Store.YES));
+			writer.AddDocument(doc);
+			IndexReader ir = writer.GetReader();
+			writer.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			Sort sort = new Sort(new SortField("value", SortField.Type.BYTE));
+			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
+			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			// numeric order
+			NUnit.Framework.Assert.AreEqual("-1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+				));
+			NUnit.Framework.Assert.AreEqual("4", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+				));
+			NUnit.Framework.Assert.AreEqual("23", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+				));
+			ir.Close();
+			dir.Close();
+		}
+
+		/// <summary>Tests sorting on type byte with a missing value</summary>
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestByteMissing()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "-1", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "4", Field.Store.YES));
+			writer.AddDocument(doc);
+			IndexReader ir = writer.GetReader();
+			writer.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			Sort sort = new Sort(new SortField("value", SortField.Type.BYTE));
+			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
+			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			// null value is treated as a 0
+			NUnit.Framework.Assert.AreEqual("-1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+				));
+			NUnit.Framework.Assert.IsNull(searcher.Doc(td.scoreDocs[1].doc).Get("value"));
+			NUnit.Framework.Assert.AreEqual("4", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+				));
+			ir.Close();
+			dir.Close();
+		}
+
+		/// <summary>Tests sorting on type byte, specifying the missing value should be treated as Byte.MAX_VALUE
+		/// 	</summary>
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestByteMissingLast()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "-1", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "4", Field.Store.YES));
+			writer.AddDocument(doc);
+			IndexReader ir = writer.GetReader();
+			writer.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			SortField sortField = new SortField("value", SortField.Type.BYTE);
+			sortField.SetMissingValue(byte.MaxValue);
+			Sort sort = new Sort(sortField);
+			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
+			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			// null value is treated Byte.MAX_VALUE
+			NUnit.Framework.Assert.AreEqual("-1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+				));
+			NUnit.Framework.Assert.AreEqual("4", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+				));
+			NUnit.Framework.Assert.IsNull(searcher.Doc(td.scoreDocs[2].doc).Get("value"));
+			ir.Close();
+			dir.Close();
+		}
+
+		/// <summary>Tests sorting on type byte in reverse</summary>
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestByteReverse()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(NewStringField("value", "23", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "-1", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "4", Field.Store.YES));
+			writer.AddDocument(doc);
+			IndexReader ir = writer.GetReader();
+			writer.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			Sort sort = new Sort(new SortField("value", SortField.Type.BYTE, true));
+			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
+			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			// reverse numeric order
+			NUnit.Framework.Assert.AreEqual("23", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+				));
+			NUnit.Framework.Assert.AreEqual("4", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+				));
+			NUnit.Framework.Assert.AreEqual("-1", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+				));
+			ir.Close();
+			dir.Close();
+		}
+
+		/// <summary>Tests sorting on type short</summary>
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestShort()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(NewStringField("value", "300", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "-1", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "4", Field.Store.YES));
+			writer.AddDocument(doc);
+			IndexReader ir = writer.GetReader();
+			writer.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			Sort sort = new Sort(new SortField("value", SortField.Type.SHORT));
+			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
+			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			// numeric order
+			NUnit.Framework.Assert.AreEqual("-1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+				));
+			NUnit.Framework.Assert.AreEqual("4", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+				));
+			NUnit.Framework.Assert.AreEqual("300", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+				));
+			ir.Close();
+			dir.Close();
+		}
+
+		/// <summary>Tests sorting on type short with a missing value</summary>
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestShortMissing()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "-1", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "4", Field.Store.YES));
+			writer.AddDocument(doc);
+			IndexReader ir = writer.GetReader();
+			writer.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			Sort sort = new Sort(new SortField("value", SortField.Type.SHORT));
+			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
+			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			// null is treated as a 0
+			NUnit.Framework.Assert.AreEqual("-1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+				));
+			NUnit.Framework.Assert.IsNull(searcher.Doc(td.scoreDocs[1].doc).Get("value"));
+			NUnit.Framework.Assert.AreEqual("4", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+				));
+			ir.Close();
+			dir.Close();
+		}
+
+		/// <summary>Tests sorting on type short, specifying the missing value should be treated as Short.MAX_VALUE
+		/// 	</summary>
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestShortMissingLast()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "-1", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "4", Field.Store.YES));
+			writer.AddDocument(doc);
+			IndexReader ir = writer.GetReader();
+			writer.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			SortField sortField = new SortField("value", SortField.Type.SHORT);
+			sortField.SetMissingValue(short.MaxValue);
+			Sort sort = new Sort(sortField);
+			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
+			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			// null is treated as Short.MAX_VALUE
+			NUnit.Framework.Assert.AreEqual("-1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+				));
+			NUnit.Framework.Assert.AreEqual("4", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+				));
+			NUnit.Framework.Assert.IsNull(searcher.Doc(td.scoreDocs[2].doc).Get("value"));
+			ir.Close();
+			dir.Close();
+		}
+
+		/// <summary>Tests sorting on type short in reverse</summary>
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestShortReverse()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(NewStringField("value", "300", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "-1", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "4", Field.Store.YES));
+			writer.AddDocument(doc);
+			IndexReader ir = writer.GetReader();
+			writer.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			Sort sort = new Sort(new SortField("value", SortField.Type.SHORT, true));
+			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
+			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			// reverse numeric order
+			NUnit.Framework.Assert.AreEqual("300", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+				));
+			NUnit.Framework.Assert.AreEqual("4", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+				));
+			NUnit.Framework.Assert.AreEqual("-1", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+				));
+			ir.Close();
+			dir.Close();
+		}
+
+		/// <summary>Tests sorting on type int</summary>
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestInt()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(NewStringField("value", "300000", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "-1", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "4", Field.Store.YES));
+			writer.AddDocument(doc);
+			IndexReader ir = writer.GetReader();
+			writer.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			Sort sort = new Sort(new SortField("value", SortField.Type.INT));
+			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
+			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			// numeric order
+			NUnit.Framework.Assert.AreEqual("-1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+				));
+			NUnit.Framework.Assert.AreEqual("4", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+				));
+			NUnit.Framework.Assert.AreEqual("300000", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+				));
+			ir.Close();
+			dir.Close();
+		}
+
+		/// <summary>Tests sorting on type int with a missing value</summary>
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestIntMissing()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "-1", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "4", Field.Store.YES));
+			writer.AddDocument(doc);
+			IndexReader ir = writer.GetReader();
+			writer.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			Sort sort = new Sort(new SortField("value", SortField.Type.INT));
+			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
+			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			// null is treated as a 0
+			NUnit.Framework.Assert.AreEqual("-1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+				));
+			NUnit.Framework.Assert.IsNull(searcher.Doc(td.scoreDocs[1].doc).Get("value"));
+			NUnit.Framework.Assert.AreEqual("4", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+				));
+			ir.Close();
+			dir.Close();
+		}
+
+		/// <summary>Tests sorting on type int, specifying the missing value should be treated as Integer.MAX_VALUE
+		/// 	</summary>
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestIntMissingLast()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "-1", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "4", Field.Store.YES));
+			writer.AddDocument(doc);
+			IndexReader ir = writer.GetReader();
+			writer.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			SortField sortField = new SortField("value", SortField.Type.INT);
+			sortField.SetMissingValue(int.MaxValue);
+			Sort sort = new Sort(sortField);
+			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
+			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			// null is treated as a Integer.MAX_VALUE
+			NUnit.Framework.Assert.AreEqual("-1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+				));
+			NUnit.Framework.Assert.AreEqual("4", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+				));
+			NUnit.Framework.Assert.IsNull(searcher.Doc(td.scoreDocs[2].doc).Get("value"));
+			ir.Close();
+			dir.Close();
+		}
+
+		/// <summary>Tests sorting on type int in reverse</summary>
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestIntReverse()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(NewStringField("value", "300000", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "-1", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "4", Field.Store.YES));
+			writer.AddDocument(doc);
+			IndexReader ir = writer.GetReader();
+			writer.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			Sort sort = new Sort(new SortField("value", SortField.Type.INT, true));
+			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
+			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			// reverse numeric order
+			NUnit.Framework.Assert.AreEqual("300000", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+				));
+			NUnit.Framework.Assert.AreEqual("4", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+				));
+			NUnit.Framework.Assert.AreEqual("-1", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+				));
+			ir.Close();
+			dir.Close();
+		}
+
+		/// <summary>Tests sorting on type long</summary>
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestLong()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(NewStringField("value", "3000000000", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "-1", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "4", Field.Store.YES));
+			writer.AddDocument(doc);
+			IndexReader ir = writer.GetReader();
+			writer.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			Sort sort = new Sort(new SortField("value", SortField.Type.LONG));
+			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
+			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			// numeric order
+			NUnit.Framework.Assert.AreEqual("-1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+				));
+			NUnit.Framework.Assert.AreEqual("4", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+				));
+			NUnit.Framework.Assert.AreEqual("3000000000", searcher.Doc(td.scoreDocs[2].doc).Get
+				("value"));
+			ir.Close();
+			dir.Close();
+		}
+
+		/// <summary>Tests sorting on type long with a missing value</summary>
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestLongMissing()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "-1", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "4", Field.Store.YES));
+			writer.AddDocument(doc);
+			IndexReader ir = writer.GetReader();
+			writer.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			Sort sort = new Sort(new SortField("value", SortField.Type.LONG));
+			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
+			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			// null is treated as 0
+			NUnit.Framework.Assert.AreEqual("-1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+				));
+			NUnit.Framework.Assert.IsNull(searcher.Doc(td.scoreDocs[1].doc).Get("value"));
+			NUnit.Framework.Assert.AreEqual("4", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+				));
+			ir.Close();
+			dir.Close();
+		}
+
+		/// <summary>Tests sorting on type long, specifying the missing value should be treated as Long.MAX_VALUE
+		/// 	</summary>
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestLongMissingLast()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "-1", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "4", Field.Store.YES));
+			writer.AddDocument(doc);
+			IndexReader ir = writer.GetReader();
+			writer.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			SortField sortField = new SortField("value", SortField.Type.LONG);
+			sortField.SetMissingValue(long.MaxValue);
+			Sort sort = new Sort(sortField);
+			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
+			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			// null is treated as Long.MAX_VALUE
+			NUnit.Framework.Assert.AreEqual("-1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+				));
+			NUnit.Framework.Assert.AreEqual("4", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+				));
+			NUnit.Framework.Assert.IsNull(searcher.Doc(td.scoreDocs[2].doc).Get("value"));
+			ir.Close();
+			dir.Close();
+		}
+
+		/// <summary>Tests sorting on type long in reverse</summary>
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestLongReverse()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(NewStringField("value", "3000000000", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "-1", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "4", Field.Store.YES));
+			writer.AddDocument(doc);
+			IndexReader ir = writer.GetReader();
+			writer.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			Sort sort = new Sort(new SortField("value", SortField.Type.LONG, true));
+			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
+			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			// reverse numeric order
+			NUnit.Framework.Assert.AreEqual("3000000000", searcher.Doc(td.scoreDocs[0].doc).Get
+				("value"));
+			NUnit.Framework.Assert.AreEqual("4", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+				));
+			NUnit.Framework.Assert.AreEqual("-1", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+				));
+			ir.Close();
+			dir.Close();
+		}
+
+		/// <summary>Tests sorting on type float</summary>
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestFloat()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(NewStringField("value", "30.1", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "-1.3", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "4.2", Field.Store.YES));
+			writer.AddDocument(doc);
+			IndexReader ir = writer.GetReader();
+			writer.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			Sort sort = new Sort(new SortField("value", SortField.Type.FLOAT));
+			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
+			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			// numeric order
+			NUnit.Framework.Assert.AreEqual("-1.3", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+				));
+			NUnit.Framework.Assert.AreEqual("4.2", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+				));
+			NUnit.Framework.Assert.AreEqual("30.1", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+				));
+			ir.Close();
+			dir.Close();
+		}
+
+		/// <summary>Tests sorting on type float with a missing value</summary>
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestFloatMissing()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "-1.3", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "4.2", Field.Store.YES));
+			writer.AddDocument(doc);
+			IndexReader ir = writer.GetReader();
+			writer.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			Sort sort = new Sort(new SortField("value", SortField.Type.FLOAT));
+			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
+			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			// null is treated as 0
+			NUnit.Framework.Assert.AreEqual("-1.3", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+				));
+			NUnit.Framework.Assert.IsNull(searcher.Doc(td.scoreDocs[1].doc).Get("value"));
+			NUnit.Framework.Assert.AreEqual("4.2", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+				));
+			ir.Close();
+			dir.Close();
+		}
+
+		/// <summary>Tests sorting on type float, specifying the missing value should be treated as Float.MAX_VALUE
+		/// 	</summary>
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestFloatMissingLast()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "-1.3", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "4.2", Field.Store.YES));
+			writer.AddDocument(doc);
+			IndexReader ir = writer.GetReader();
+			writer.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			SortField sortField = new SortField("value", SortField.Type.FLOAT);
+			sortField.SetMissingValue(float.MaxValue);
+			Sort sort = new Sort(sortField);
+			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
+			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			// null is treated as Float.MAX_VALUE
+			NUnit.Framework.Assert.AreEqual("-1.3", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+				));
+			NUnit.Framework.Assert.AreEqual("4.2", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+				));
+			NUnit.Framework.Assert.IsNull(searcher.Doc(td.scoreDocs[2].doc).Get("value"));
+			ir.Close();
+			dir.Close();
+		}
+
+		/// <summary>Tests sorting on type float in reverse</summary>
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestFloatReverse()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(NewStringField("value", "30.1", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "-1.3", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "4.2", Field.Store.YES));
+			writer.AddDocument(doc);
+			IndexReader ir = writer.GetReader();
+			writer.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			Sort sort = new Sort(new SortField("value", SortField.Type.FLOAT, true));
+			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
+			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			// reverse numeric order
+			NUnit.Framework.Assert.AreEqual("30.1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+				));
+			NUnit.Framework.Assert.AreEqual("4.2", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+				));
+			NUnit.Framework.Assert.AreEqual("-1.3", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+				));
+			ir.Close();
+			dir.Close();
+		}
+
+		/// <summary>Tests sorting on type double</summary>
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestDouble()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(NewStringField("value", "30.1", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "-1.3", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "4.2333333333333", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "4.2333333333332", Field.Store.YES));
+			writer.AddDocument(doc);
+			IndexReader ir = writer.GetReader();
+			writer.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			Sort sort = new Sort(new SortField("value", SortField.Type.DOUBLE));
+			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
+			NUnit.Framework.Assert.AreEqual(4, td.totalHits);
+			// numeric order
+			NUnit.Framework.Assert.AreEqual("-1.3", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+				));
+			NUnit.Framework.Assert.AreEqual("4.2333333333332", searcher.Doc(td.scoreDocs[1].doc
+				).Get("value"));
+			NUnit.Framework.Assert.AreEqual("4.2333333333333", searcher.Doc(td.scoreDocs[2].doc
+				).Get("value"));
+			NUnit.Framework.Assert.AreEqual("30.1", searcher.Doc(td.scoreDocs[3].doc).Get("value"
+				));
+			ir.Close();
+			dir.Close();
+		}
+
+		/// <summary>Tests sorting on type double with +/- zero</summary>
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestDoubleSignedZero()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(NewStringField("value", "+0", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "-0", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			IndexReader ir = writer.GetReader();
+			writer.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			Sort sort = new Sort(new SortField("value", SortField.Type.DOUBLE));
+			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
+			NUnit.Framework.Assert.AreEqual(2, td.totalHits);
+			// numeric order
+			NUnit.Framework.Assert.AreEqual("-0", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+				));
+			NUnit.Framework.Assert.AreEqual("+0", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+				));
+			ir.Close();
+			dir.Close();
+		}
+
+		/// <summary>Tests sorting on type double with a missing value</summary>
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestDoubleMissing()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "-1.3", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "4.2333333333333", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "4.2333333333332", Field.Store.YES));
+			writer.AddDocument(doc);
+			IndexReader ir = writer.GetReader();
+			writer.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			Sort sort = new Sort(new SortField("value", SortField.Type.DOUBLE));
+			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
+			NUnit.Framework.Assert.AreEqual(4, td.totalHits);
+			// null treated as a 0
+			NUnit.Framework.Assert.AreEqual("-1.3", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+				));
+			NUnit.Framework.Assert.IsNull(searcher.Doc(td.scoreDocs[1].doc).Get("value"));
+			NUnit.Framework.Assert.AreEqual("4.2333333333332", searcher.Doc(td.scoreDocs[2].doc
+				).Get("value"));
+			NUnit.Framework.Assert.AreEqual("4.2333333333333", searcher.Doc(td.scoreDocs[3].doc
+				).Get("value"));
+			ir.Close();
+			dir.Close();
+		}
+
+		/// <summary>Tests sorting on type double, specifying the missing value should be treated as Double.MAX_VALUE
+		/// 	</summary>
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestDoubleMissingLast()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "-1.3", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "4.2333333333333", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "4.2333333333332", Field.Store.YES));
+			writer.AddDocument(doc);
+			IndexReader ir = writer.GetReader();
+			writer.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			SortField sortField = new SortField("value", SortField.Type.DOUBLE);
+			sortField.SetMissingValue(double.MaxValue);
+			Sort sort = new Sort(sortField);
+			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
+			NUnit.Framework.Assert.AreEqual(4, td.totalHits);
+			// null treated as Double.MAX_VALUE
+			NUnit.Framework.Assert.AreEqual("-1.3", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+				));
+			NUnit.Framework.Assert.AreEqual("4.2333333333332", searcher.Doc(td.scoreDocs[1].doc
+				).Get("value"));
+			NUnit.Framework.Assert.AreEqual("4.2333333333333", searcher.Doc(td.scoreDocs[2].doc
+				).Get("value"));
+			NUnit.Framework.Assert.IsNull(searcher.Doc(td.scoreDocs[3].doc).Get("value"));
+			ir.Close();
+			dir.Close();
+		}
+
+		/// <summary>Tests sorting on type double in reverse</summary>
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestDoubleReverse()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(NewStringField("value", "30.1", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "-1.3", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "4.2333333333333", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "4.2333333333332", Field.Store.YES));
+			writer.AddDocument(doc);
+			IndexReader ir = writer.GetReader();
+			writer.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			Sort sort = new Sort(new SortField("value", SortField.Type.DOUBLE, true));
+			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
+			NUnit.Framework.Assert.AreEqual(4, td.totalHits);
+			// numeric order
+			NUnit.Framework.Assert.AreEqual("30.1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+				));
+			NUnit.Framework.Assert.AreEqual("4.2333333333333", searcher.Doc(td.scoreDocs[1].doc
+				).Get("value"));
+			NUnit.Framework.Assert.AreEqual("4.2333333333332", searcher.Doc(td.scoreDocs[2].doc
+				).Get("value"));
+			NUnit.Framework.Assert.AreEqual("-1.3", searcher.Doc(td.scoreDocs[3].doc).Get("value"
+				));
+			ir.Close();
+			dir.Close();
+		}
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestEmptyStringVsNullStringSort()
+		{
+			Directory dir = NewDirectory();
+			IndexWriter w = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new 
+				MockAnalyzer(Random())));
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(NewStringField("f", string.Empty, Field.Store.NO));
+			doc.Add(NewStringField("t", "1", Field.Store.NO));
+			w.AddDocument(doc);
+			w.Commit();
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("t", "1", Field.Store.NO));
+			w.AddDocument(doc);
+			IndexReader r = DirectoryReader.Open(w, true);
+			w.Close();
+			IndexSearcher s = NewSearcher(r);
+			TopDocs hits = s.Search(new TermQuery(new Term("t", "1")), null, 10, new Sort(new 
+				SortField("f", SortField.Type.STRING)));
+			NUnit.Framework.Assert.AreEqual(2, hits.totalHits);
+			// null sorts first
+			NUnit.Framework.Assert.AreEqual(1, hits.scoreDocs[0].doc);
+			NUnit.Framework.Assert.AreEqual(0, hits.scoreDocs[1].doc);
+			r.Close();
+			dir.Close();
+		}
+
+		/// <summary>test that we don't throw exception on multi-valued field (LUCENE-2142)</summary>
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestMultiValuedField()
+		{
+			Directory indexStore = NewDirectory();
+			IndexWriter writer = new IndexWriter(indexStore, NewIndexWriterConfig(TEST_VERSION_CURRENT
+				, new MockAnalyzer(Random())));
+			for (int i = 0; i < 5; i++)
+			{
+				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					();
+				doc.Add(new StringField("string", "a" + i, Field.Store.NO));
+				doc.Add(new StringField("string", "b" + i, Field.Store.NO));
 				writer.AddDocument(doc);
 			}
-			//writer.optimize ();
-			//System.out.println(writer.getSegmentCount());
+			writer.ForceMerge(1);
+			// enforce one segment to have a higher unique term count in all cases
 			writer.Close();
-			return new IndexSearcher(indexStore, true);
+			Sort sort = new Sort(new SortField("string", SortField.Type.STRING), SortField.FIELD_DOC
+				);
+			// this should not throw AIOOBE or RuntimeEx
+			IndexReader reader = DirectoryReader.Open(indexStore);
+			IndexSearcher searcher = NewSearcher(reader);
+			searcher.Search(new MatchAllDocsQuery(), null, 500, sort);
+			reader.Close();
+			indexStore.Close();
 		}
-		
-		public virtual System.String GetRandomNumberString(int num, int low, int high)
-		{
-			System.Text.StringBuilder sb = new System.Text.StringBuilder();
-			for (int i = 0; i < num; i++)
-			{
-				sb.Append(GetRandomNumber(low, high));
-			}
-			return sb.ToString();
-		}
-		
-		public virtual System.String GetRandomCharString(int num)
-		{
-			return GetRandomCharString(num, 48, 122);
-		}
-		
-		public virtual System.String GetRandomCharString(int num, int start, int end)
-		{
-			System.Text.StringBuilder sb = new System.Text.StringBuilder();
-			for (int i = 0; i < num; i++)
-			{
-				sb.Append((char) GetRandomNumber(start, end));
-			}
-			return sb.ToString();
-		}
-		
-		internal System.Random r;
-		
-		public virtual int GetRandomNumber(int low, int high)
-		{
-			
-			int randInt = (System.Math.Abs(r.Next()) % (high - low)) + low;
-			
-			return randInt;
-		}
-		
-		private Searcher GetXIndex()
-		{
-			return GetIndex(true, false);
-		}
-		
-		private Searcher GetYIndex()
-		{
-			return GetIndex(false, true);
-		}
-		
-		private Searcher GetEmptyIndex()
-		{
-			return GetIndex(false, false);
-		}
-		
-		[SetUp]
-		public override void  SetUp()
-		{
-			base.SetUp();
-			full = GetFullIndex();
-			searchX = GetXIndex();
-			searchY = GetYIndex();
-			queryX = new TermQuery(new Term("contents", "x"));
-			queryY = new TermQuery(new Term("contents", "y"));
-			queryA = new TermQuery(new Term("contents", "a"));
-			queryE = new TermQuery(new Term("contents", "e"));
-			queryF = new TermQuery(new Term("contents", "f"));
-			queryG = new TermQuery(new Term("contents", "g"));
-			sort = new Sort();
-		}
-		
-		// test the sorts by score and document number
-		[Test]
-		public virtual void  TestBuiltInSorts()
-		{
-			sort = new Sort();
-			AssertMatches(full, queryX, sort, "ACEGI");
-			AssertMatches(full, queryY, sort, "BDFHJ");
-			
-			sort.SetSort(SortField.FIELD_DOC);
-			AssertMatches(full, queryX, sort, "ACEGI");
-			AssertMatches(full, queryY, sort, "BDFHJ");
-		}
-		
-		// test sorts where the type of field is specified
-		[Test]
-		public virtual void  TestTypedSort()
-		{
-		    sort.SetSort(new SortField("int", SortField.INT), SortField.FIELD_DOC);
-            AssertMatches(full, queryX, sort, "IGAEC");
-            AssertMatches(full, queryY, sort, "DHFJB");
 
-		    sort.SetSort(new SortField("float", SortField.FLOAT), SortField.FIELD_DOC);
-            AssertMatches(full, queryX, sort, "GCIEA");
-            AssertMatches(full, queryY, sort, "DHJFB");
-
-		    sort.SetSort(new SortField("long", SortField.LONG), SortField.FIELD_DOC);
-            AssertMatches(full, queryX, sort, "EACGI");
-            AssertMatches(full, queryY, sort, "FBJHD");
-
-		    sort.SetSort(new SortField("double", SortField.DOUBLE), SortField.FIELD_DOC);
-            AssertMatches(full, queryX, sort, "AGICE");
-            AssertMatches(full, queryY, sort, "DJHBF");
-			
-			sort.SetSort(new SortField("byte", SortField.BYTE), SortField.FIELD_DOC);
-			AssertMatches(full, queryX, sort, "CIGAE");
-			AssertMatches(full, queryY, sort, "DHFBJ");
-			
-			sort.SetSort(new SortField("short", SortField.SHORT), SortField.FIELD_DOC);
-			AssertMatches(full, queryX, sort, "IAGCE");
-			AssertMatches(full, queryY, sort, "DFHBJ");
-			
-			sort.SetSort(new SortField("string", SortField.STRING), SortField.FIELD_DOC);
-			AssertMatches(full, queryX, sort, "AIGEC");
-			AssertMatches(full, queryY, sort, "DJHFB");
-		}
-		
-		/// <summary> Test String sorting: small queue to many matches, multi field sort, reverse sort</summary>
-		[Test]
-		public virtual void  TestStringSort()
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestMaxScore()
 		{
-			r = NewRandom();
-			ScoreDoc[] result = null;
-			IndexSearcher searcher = GetFullStrings();
-		    sort.SetSort(new SortField("string", SortField.STRING), new SortField("string2", SortField.STRING, true),
-		                 SortField.FIELD_DOC);
-			
-			result = searcher.Search(new MatchAllDocsQuery(), null, 500, sort).ScoreDocs;
-			
-			System.Text.StringBuilder buff = new System.Text.StringBuilder();
-			int n = result.Length;
-			System.String last = null;
-			System.String lastSub = null;
-			int lastDocId = 0;
-			bool fail = false;
-			for (int x = 0; x < n; ++x)
+			Directory d = NewDirectory();
+			// Not RIW because we need exactly 2 segs:
+			IndexWriter w = new IndexWriter(d, new IndexWriterConfig(TEST_VERSION_CURRENT, new 
+				MockAnalyzer(Random())));
+			int id = 0;
+			for (int seg = 0; seg < 2; seg++)
 			{
-				Document doc2 = searcher.Doc(result[x].Doc);
-				System.String[] v = doc2.GetValues("tracer");
-				System.String[] v2 = doc2.GetValues("tracer2");
-				for (int j = 0; j < v.Length; ++j)
+				for (int docIDX = 0; docIDX < 10; docIDX++)
 				{
-					if (last != null)
+					Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+						();
+					doc.Add(NewStringField("id", string.Empty + docIDX, Field.Store.YES));
+					StringBuilder sb = new StringBuilder();
+					for (int i = 0; i < id; i++)
 					{
-						int cmp = String.CompareOrdinal(v[j], last);
-						if (!(cmp >= 0))
-						{
-							// ensure first field is in order
-							fail = true;
-							System.Console.Out.WriteLine("fail:" + v[j] + " < " + last);
-						}
-						if (cmp == 0)
-						{
-							// ensure second field is in reverse order
-							cmp = String.CompareOrdinal(v2[j], lastSub);
-							if (cmp > 0)
-							{
-								fail = true;
-								System.Console.Out.WriteLine("rev field fail:" + v2[j] + " > " + lastSub);
-							}
-							else if (cmp == 0)
-							{
-								// ensure docid is in order
-								if (result[x].Doc < lastDocId)
-								{
-									fail = true;
-									System.Console.Out.WriteLine("doc fail:" + result[x].Doc + " > " + lastDocId);
-								}
-							}
-						}
+						sb.Append(' ');
+						sb.Append("text");
 					}
-					last = v[j];
-					lastSub = v2[j];
-					lastDocId = result[x].Doc;
-					buff.Append(v[j] + "(" + v2[j] + ")(" + result[x].Doc + ") ");
+					doc.Add(NewTextField("body", sb.ToString(), Field.Store.NO));
+					w.AddDocument(doc);
+					id++;
 				}
+				w.Commit();
 			}
-			if (fail)
-			{
-				System.Console.Out.WriteLine("topn field1(field2)(docID):" + buff);
-			}
-			Assert.IsFalse(fail, "Found sort results out of order");
-		}
-		
-		/// <summary> test sorts where the type of field is specified and a custom field parser 
-		/// is used, that uses a simple char encoding. The sorted string contains a 
-		/// character beginning from 'A' that is mapped to a numeric value using some 
-		/// "funny" algorithm to be different for each data type.
-		/// </summary>
-		[Test]
-		public virtual void  TestCustomFieldParserSort()
-		{
-			// since tests explicilty uses different parsers on the same fieldname
-			// we explicitly check/purge the FieldCache between each assertMatch
-			FieldCache fc = Lucene.Net.Search.FieldCache_Fields.DEFAULT;
-			
-			
-			sort.SetSort(new SortField("parser", new AnonymousClassIntParser(this)), SortField.FIELD_DOC);
-			AssertMatches(full, queryA, sort, "JIHGFEDCBA");
-            AssertSaneFieldCaches(Lucene.Net.TestCase.GetName() + " IntParser"); 
-			fc.PurgeAllCaches();
-			
-			sort.SetSort(new SortField("parser", new AnonymousClassFloatParser(this)), SortField.FIELD_DOC);
-			AssertMatches(full, queryA, sort, "JIHGFEDCBA");
-            AssertSaneFieldCaches(Lucene.Net.TestCase.GetName() + " FloatParser"); 
-			fc.PurgeAllCaches();
-			
-			sort.SetSort(new SortField("parser", new AnonymousClassLongParser(this)), SortField.FIELD_DOC);
-			AssertMatches(full, queryA, sort, "JIHGFEDCBA");
-            AssertSaneFieldCaches(Lucene.Net.TestCase.GetName() + " LongParser"); 
-			fc.PurgeAllCaches();
-			
-			sort.SetSort(new SortField("parser", new AnonymousClassDoubleParser(this)), SortField.FIELD_DOC);
-			AssertMatches(full, queryA, sort, "JIHGFEDCBA");
-            AssertSaneFieldCaches(Lucene.Net.TestCase.GetName() + " DoubleParser"); 
-			fc.PurgeAllCaches();
-			
-			sort.SetSort(new SortField("parser", new AnonymousClassByteParser(this)), SortField.FIELD_DOC);
-			AssertMatches(full, queryA, sort, "JIHGFEDCBA");
-            AssertSaneFieldCaches(Lucene.Net.TestCase.GetName() + " ByteParser"); 
-			fc.PurgeAllCaches();
-			
-			sort.SetSort(new SortField("parser", new AnonymousClassShortParser(this)), SortField.FIELD_DOC);
-			AssertMatches(full, queryA, sort, "JIHGFEDCBA");
-            AssertSaneFieldCaches(Lucene.Net.TestCase.GetName() + " ShortParser"); 
-			fc.PurgeAllCaches();
-		}
-		
-		// test sorts when there's nothing in the index
-		[Test]
-		public virtual void  TestEmptyIndex()
-		{
-			Searcher empty = GetEmptyIndex();
-			
-			sort = new Sort();
-			AssertMatches(empty, queryX, sort, "");
-			
-			sort.SetSort(SortField.FIELD_DOC);
-			AssertMatches(empty, queryX, sort, "");
-			
-			sort.SetSort(new SortField("int", SortField.INT), SortField.FIELD_DOC);
-			AssertMatches(empty, queryX, sort, "");
-			
-			sort.SetSort(new SortField("string", SortField.STRING, true), SortField.FIELD_DOC);
-			AssertMatches(empty, queryX, sort, "");
-			
-			sort.SetSort(new SortField("float", SortField.FLOAT), new SortField("string", SortField.STRING));
-			AssertMatches(empty, queryX, sort, "");
-		}
-		
-		internal class MyFieldComparator:FieldComparator
-		{
-			[Serializable]
-			private class AnonymousClassIntParser1 : Lucene.Net.Search.IntParser
-			{
-				public AnonymousClassIntParser1(MyFieldComparator enclosingInstance)
-				{
-					InitBlock(enclosingInstance);
-				}
-				private void  InitBlock(MyFieldComparator enclosingInstance)
-				{
-					this.enclosingInstance = enclosingInstance;
-				}
-				private MyFieldComparator enclosingInstance;
-				public MyFieldComparator Enclosing_Instance
-				{
-					get
-					{
-						return enclosingInstance;
-					}
-					
-				}
-				public int ParseInt(System.String val)
-				{
-					return (val[0] - 'A') * 123456;
-				}
-			}
-			internal int[] docValues;
-			internal int[] slotValues;
-			internal int bottomValue;
-			
-			internal MyFieldComparator(int numHits)
-			{
-				slotValues = new int[numHits];
-			}
-			
-			public override void  Copy(int slot, int doc)
-			{
-				slotValues[slot] = docValues[doc];
-			}
-			
-			public override int Compare(int slot1, int slot2)
-			{
-				return slotValues[slot1] - slotValues[slot2];
-			}
-			
-			public override int CompareBottom(int doc)
-			{
-				return bottomValue - docValues[doc];
-			}
-			
-			public override void  SetBottom(int bottom)
-			{
-				bottomValue = slotValues[bottom];
-			}
-			
-			public override void  SetNextReader(IndexReader reader, int docBase)
-			{
-				docValues = Lucene.Net.Search.FieldCache_Fields.DEFAULT.GetInts(reader, "parser", new AnonymousClassIntParser1(this));
-			}
-
-		    public override IComparable this[int slot]
-		    {
-		        get { return (System.Int32) slotValues[slot]; }
-		    }
-		}
-		
-		[Serializable]
-		internal class MyFieldComparatorSource:FieldComparatorSource
-		{
-			public override FieldComparator NewComparator(System.String fieldname, int numHits, int sortPos, bool reversed)
-			{
-				return new MyFieldComparator(numHits);
-			}
-		}
-		
-		// Test sorting w/ custom FieldComparator
-		[Test]
-		public virtual void  TestNewCustomFieldParserSort()
-		{
-			sort.SetSort(new SortField("parser", new MyFieldComparatorSource()));
-			AssertMatches(full, queryA, sort, "JIHGFEDCBA");
+			IndexReader r = DirectoryReader.Open(w, true);
+			w.Close();
+			Query q = new TermQuery(new Term("body", "text"));
+			IndexSearcher s = NewSearcher(r);
+			float maxScore = s.Search(q, 10).GetMaxScore();
+			NUnit.Framework.Assert.AreEqual(maxScore, s.Search(q, null, 3, Sort.INDEXORDER, Random
+				().NextBoolean(), true).GetMaxScore(), 0.0);
+			NUnit.Framework.Assert.AreEqual(maxScore, s.Search(q, null, 3, Sort.RELEVANCE, Random
+				().NextBoolean(), true).GetMaxScore(), 0.0);
+			NUnit.Framework.Assert.AreEqual(maxScore, s.Search(q, null, 3, new Sort(new SortField
+				[] { new SortField("id", SortField.Type.INT, false) }), Random().NextBoolean(), 
+				true).GetMaxScore(), 0.0);
+			NUnit.Framework.Assert.AreEqual(maxScore, s.Search(q, null, 3, new Sort(new SortField
+				[] { new SortField("id", SortField.Type.INT, true) }), Random().NextBoolean(), true
+				).GetMaxScore(), 0.0);
+			r.Close();
+			d.Close();
 		}
 
-		// test sorts in reverse
-		[Test]
-		public virtual void  TestReverseSort()
+		/// <summary>test sorts when there's nothing in the index</summary>
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestEmptyIndex()
 		{
-			sort.SetSort(new SortField(null, SortField.SCORE, true), SortField.FIELD_DOC);
-			AssertMatches(full, queryX, sort, "IEGCA");
-			AssertMatches(full, queryY, sort, "JFHDB");
-			
-			sort.SetSort(new SortField(null, SortField.DOC, true));
-			AssertMatches(full, queryX, sort, "IGECA");
-			AssertMatches(full, queryY, sort, "JHFDB");
-			
-			sort.SetSort(new SortField("int", SortField.INT, true));
-			AssertMatches(full, queryX, sort, "CAEGI");
-			AssertMatches(full, queryY, sort, "BJFHD");
-			
-			sort.SetSort(new SortField("float", SortField.FLOAT, true));
-			AssertMatches(full, queryX, sort, "AECIG");
-			AssertMatches(full, queryY, sort, "BFJHD");
-			
-			sort.SetSort(new SortField("string", SortField.STRING, true));
-			AssertMatches(full, queryX, sort, "CEGIA");
-			AssertMatches(full, queryY, sort, "BFHJD");
-		}
-		
-		// test sorting when the sort field is empty (undefined) for some of the documents
-		[Test]
-		public virtual void  TestEmptyFieldSort()
-		{
-			sort.SetSort(new SortField("string", SortField.STRING));
-			AssertMatches(full, queryF, sort, "ZJI");
-			
-			sort.SetSort(new SortField("string", SortField.STRING, true));
-			AssertMatches(full, queryF, sort, "IJZ");
-			
-			sort.SetSort(new SortField("i18n", new System.Globalization.CultureInfo("en")));
-			AssertMatches(full, queryF, sort, "ZJI");
-			
-			sort.SetSort(new SortField("i18n", new System.Globalization.CultureInfo("en"), true));
-			AssertMatches(full, queryF, sort, "IJZ");
-			
-			sort.SetSort(new SortField("int", SortField.INT));
-			AssertMatches(full, queryF, sort, "IZJ");
-			
-			sort.SetSort(new SortField("int", SortField.INT, true));
-			AssertMatches(full, queryF, sort, "JZI");
-			
-			sort.SetSort(new SortField("float", SortField.FLOAT));
-			AssertMatches(full, queryF, sort, "ZJI");
-			
-			// using a nonexisting field as first sort key shouldn't make a difference:
-		    sort.SetSort(new SortField("nosuchfield", SortField.STRING),
-		                 new SortField("float", SortField.FLOAT));
-			AssertMatches(full, queryF, sort, "ZJI");
-			
-			sort.SetSort(new SortField("float", SortField.FLOAT, true));
-			AssertMatches(full, queryF, sort, "IJZ");
-			
-			// When a field is null for both documents, the next SortField should be used.
-			// Works for
-		    sort.SetSort(new SortField("int", SortField.INT), new SortField("string", SortField.STRING),
-		                 new SortField("float", SortField.FLOAT));
-			AssertMatches(full, queryG, sort, "ZWXY");
-			
-			// Reverse the last criterium to make sure the test didn't pass by chance
-		    sort.SetSort(new SortField("int", SortField.INT), new SortField("string", SortField.STRING),
-		                 new SortField("float", SortField.FLOAT, true));
-			AssertMatches(full, queryG, sort, "ZYXW");
-			
-			// Do the same for a MultiSearcher
-			Searcher multiSearcher = new MultiSearcher(new Searchable[]{full});
-
-            sort.SetSort(new SortField("int", SortField.INT), new SortField("string", SortField.STRING), new SortField("float", SortField.FLOAT));
-			AssertMatches(multiSearcher, queryG, sort, "ZWXY");
-
-            sort.SetSort(new SortField("int", SortField.INT), new SortField("string", SortField.STRING), new SortField("float", SortField.FLOAT, true));
-			AssertMatches(multiSearcher, queryG, sort, "ZYXW");
-			// Don't close the multiSearcher. it would close the full searcher too!
-			
-#if !NET35
-			// Do the same for a ParallelMultiSearcher
-			Searcher parallelSearcher = new ParallelMultiSearcher(new Searchable[]{full});
-
-            sort.SetSort(new SortField("int", SortField.INT), new SortField("string", SortField.STRING), new SortField("float", SortField.FLOAT));
-			AssertMatches(parallelSearcher, queryG, sort, "ZWXY");
-
-            sort.SetSort(new SortField("int", SortField.INT), new SortField("string", SortField.STRING), new SortField("float", SortField.FLOAT, true));
-			AssertMatches(parallelSearcher, queryG, sort, "ZYXW");
-			// Don't close the parallelSearcher. it would close the full searcher too!
-#endif
-		}
-		
-		// test sorts using a series of fields
-		[Test]
-		public virtual void  TestSortCombos()
-		{
-			sort.SetSort(new SortField("int", SortField.INT), new SortField("float", SortField.FLOAT));
-			AssertMatches(full, queryX, sort, "IGEAC");
-			
-			sort.SetSort(new SortField[]{new SortField("int", SortField.INT, true), new SortField(null, SortField.DOC, true)});
-			AssertMatches(full, queryX, sort, "CEAGI");
-			
-			sort.SetSort(new SortField("float", SortField.FLOAT), new SortField("string", SortField.STRING));
-			AssertMatches(full, queryX, sort, "GICEA");
-		}
-		
-		// test using a Locale for sorting strings
-		[Test]
-		public virtual void  TestLocaleSort()
-		{
-			sort.SetSort(new SortField("string", new System.Globalization.CultureInfo("en-US")));
-			AssertMatches(full, queryX, sort, "AIGEC");
-			AssertMatches(full, queryY, sort, "DJHFB");
-			
-			sort.SetSort(new SortField("string", new System.Globalization.CultureInfo("en-US"), true));
-			AssertMatches(full, queryX, sort, "CEGIA");
-			AssertMatches(full, queryY, sort, "BFHJD");
-		}
-		
-		// test using various international locales with accented characters
-		// (which sort differently depending on locale)
-		[Test]
-		public virtual void  TestInternationalSort()
-		{
-			sort.SetSort(new SortField("i18n", new System.Globalization.CultureInfo("en-US")));
-			AssertMatches(full, queryY, sort, "BFJHD");
-			
-			sort.SetSort(new SortField("i18n", new System.Globalization.CultureInfo("sv-se")));
-			AssertMatches(full, queryY, sort, "BJDFH");
-			
-			sort.SetSort(new SortField("i18n", new System.Globalization.CultureInfo("da-dk")));
-			AssertMatches(full, queryY, sort, "BJDHF");
-			
-			sort.SetSort(new SortField("i18n", new System.Globalization.CultureInfo("en-US")));
-			AssertMatches(full, queryX, sort, "ECAGI");
-			
-			sort.SetSort(new SortField("i18n", new System.Globalization.CultureInfo("fr-FR")));
-			AssertMatches(full, queryX, sort, "EACGI");
-		}
-		
-		// Test the MultiSearcher's ability to preserve locale-sensitive ordering
-		// by wrapping it around a single searcher
-		[Test]
-		public virtual void  TestInternationalMultiSearcherSort()
-		{
-			Searcher multiSearcher = new MultiSearcher(new Searchable[]{full});
-			
-			sort.SetSort(new SortField("i18n", new System.Globalization.CultureInfo("sv" + "-" + "se")));
-			AssertMatches(multiSearcher, queryY, sort, "BJDFH");
-			
-			sort.SetSort(new SortField("i18n", new System.Globalization.CultureInfo("en-US")));
-			AssertMatches(multiSearcher, queryY, sort, "BFJHD");
-			
-			sort.SetSort(new SortField("i18n", new System.Globalization.CultureInfo("da" + "-" + "dk")));
-			AssertMatches(multiSearcher, queryY, sort, "BJDHF");
-		}
-		
-		// test a variety of sorts using more than one searcher
-		[Test]
-		public virtual void  TestMultiSort()
-		{
-			MultiSearcher searcher = new MultiSearcher(new Searchable[]{searchX, searchY});
-			RunMultiSorts(searcher, false);
-		}
-		
-#if !NET35
-
-#if GALLIO
-        [Ignore]
-        // TODO: Find out why this fails in nunit and gallio in release.  Seems to be a race condition
-#endif
-		// test a variety of sorts using a parallel multisearcher
-		[Test]
-		public virtual void  TestParallelMultiSort()
-		{
-			Searcher searcher = new ParallelMultiSearcher(new Searchable[]{searchX, searchY});
-			RunMultiSorts(searcher, false);
-		}
-#endif
-		
-		// test that the relevancy scores are the same even if
-		// hits are sorted
-		[Test]
-		public virtual void  TestNormalizedScores()
-		{
-			
-			// capture relevancy scores
-			System.Collections.Hashtable scoresX = GetScores(full.Search(queryX, null, 1000).ScoreDocs, full);
-			System.Collections.Hashtable scoresY = GetScores(full.Search(queryY, null, 1000).ScoreDocs, full);
-			System.Collections.Hashtable scoresA = GetScores(full.Search(queryA, null, 1000).ScoreDocs, full);
-			
-			// we'll test searching locally, remote and multi
-			
-			MultiSearcher multi = new MultiSearcher(new Searchable[]{searchX, searchY});
-			
-			// change sorting and make sure relevancy stays the same
-			
-			sort = new Sort();
-			AssertSameValues(scoresX, GetScores(full.Search(queryX, null, 1000, sort).ScoreDocs, full));
-			AssertSameValues(scoresX, GetScores(multi.Search(queryX, null, 1000, sort).ScoreDocs, multi));
-			AssertSameValues(scoresY, GetScores(full.Search(queryY, null, 1000, sort).ScoreDocs, full));
-			AssertSameValues(scoresY, GetScores(multi.Search(queryY, null, 1000, sort).ScoreDocs, multi));
-			AssertSameValues(scoresA, GetScores(full.Search(queryA, null, 1000, sort).ScoreDocs, full));
-			AssertSameValues(scoresA, GetScores(multi.Search(queryA, null, 1000, sort).ScoreDocs, multi));
-			
-			sort.SetSort(SortField.FIELD_DOC);
-			AssertSameValues(scoresX, GetScores(full.Search(queryX, null, 1000, sort).ScoreDocs, full));
-			AssertSameValues(scoresX, GetScores(multi.Search(queryX, null, 1000, sort).ScoreDocs, multi));
-			AssertSameValues(scoresY, GetScores(full.Search(queryY, null, 1000, sort).ScoreDocs, full));
-			AssertSameValues(scoresY, GetScores(multi.Search(queryY, null, 1000, sort).ScoreDocs, multi));
-			AssertSameValues(scoresA, GetScores(full.Search(queryA, null, 1000, sort).ScoreDocs, full));
-			AssertSameValues(scoresA, GetScores(multi.Search(queryA, null, 1000, sort).ScoreDocs, multi));
-			
-			sort.SetSort(new SortField("int", SortField.INT));
-			AssertSameValues(scoresX, GetScores(full.Search(queryX, null, 1000, sort).ScoreDocs, full));
-			AssertSameValues(scoresX, GetScores(multi.Search(queryX, null, 1000, sort).ScoreDocs, multi));
-			AssertSameValues(scoresY, GetScores(full.Search(queryY, null, 1000, sort).ScoreDocs, full));
-			AssertSameValues(scoresY, GetScores(multi.Search(queryY, null, 1000, sort).ScoreDocs, multi));
-			AssertSameValues(scoresA, GetScores(full.Search(queryA, null, 1000, sort).ScoreDocs, full));
-			AssertSameValues(scoresA, GetScores(multi.Search(queryA, null, 1000, sort).ScoreDocs, multi));
-			
-			sort.SetSort(new SortField("float", SortField.FLOAT));
-			AssertSameValues(scoresX, GetScores(full.Search(queryX, null, 1000, sort).ScoreDocs, full));
-			AssertSameValues(scoresX, GetScores(multi.Search(queryX, null, 1000, sort).ScoreDocs, multi));
-			AssertSameValues(scoresY, GetScores(full.Search(queryY, null, 1000, sort).ScoreDocs, full));
-			AssertSameValues(scoresY, GetScores(multi.Search(queryY, null, 1000, sort).ScoreDocs, multi));
-			AssertSameValues(scoresA, GetScores(full.Search(queryA, null, 1000, sort).ScoreDocs, full));
-			AssertSameValues(scoresA, GetScores(multi.Search(queryA, null, 1000, sort).ScoreDocs, multi));
-			
-			sort.SetSort(new SortField("string", SortField.STRING));
-			AssertSameValues(scoresX, GetScores(full.Search(queryX, null, 1000, sort).ScoreDocs, full));
-			AssertSameValues(scoresX, GetScores(multi.Search(queryX, null, 1000, sort).ScoreDocs, multi));
-			AssertSameValues(scoresY, GetScores(full.Search(queryY, null, 1000, sort).ScoreDocs, full));
-			AssertSameValues(scoresY, GetScores(multi.Search(queryY, null, 1000, sort).ScoreDocs, multi));
-			AssertSameValues(scoresA, GetScores(full.Search(queryA, null, 1000, sort).ScoreDocs, full));
-			AssertSameValues(scoresA, GetScores(multi.Search(queryA, null, 1000, sort).ScoreDocs, multi));
-			
-			sort.SetSort(new SortField("int", SortField.INT), new SortField("float", SortField.FLOAT));
-			AssertSameValues(scoresX, GetScores(full.Search(queryX, null, 1000, sort).ScoreDocs, full));
-			AssertSameValues(scoresX, GetScores(multi.Search(queryX, null, 1000, sort).ScoreDocs, multi));
-			AssertSameValues(scoresY, GetScores(full.Search(queryY, null, 1000, sort).ScoreDocs, full));
-			AssertSameValues(scoresY, GetScores(multi.Search(queryY, null, 1000, sort).ScoreDocs, multi));
-			AssertSameValues(scoresA, GetScores(full.Search(queryA, null, 1000, sort).ScoreDocs, full));
-			AssertSameValues(scoresA, GetScores(multi.Search(queryA, null, 1000, sort).ScoreDocs, multi));
-			
-			sort.SetSort(new SortField("int", SortField.INT, true), new SortField(null, SortField.DOC, true));
-			AssertSameValues(scoresX, GetScores(full.Search(queryX, null, 1000, sort).ScoreDocs, full));
-			AssertSameValues(scoresX, GetScores(multi.Search(queryX, null, 1000, sort).ScoreDocs, multi));
-			AssertSameValues(scoresY, GetScores(full.Search(queryY, null, 1000, sort).ScoreDocs, full));
-			AssertSameValues(scoresY, GetScores(multi.Search(queryY, null, 1000, sort).ScoreDocs, multi));
-			AssertSameValues(scoresA, GetScores(full.Search(queryA, null, 1000, sort).ScoreDocs, full));
-			AssertSameValues(scoresA, GetScores(multi.Search(queryA, null, 1000, sort).ScoreDocs, multi));
-			
-			sort.SetSort(new SortField("int", SortField.INT), new SortField("string", SortField.STRING));
-			AssertSameValues(scoresX, GetScores(full.Search(queryX, null, 1000, sort).ScoreDocs, full));
-			AssertSameValues(scoresX, GetScores(multi.Search(queryX, null, 1000, sort).ScoreDocs, multi));
-			AssertSameValues(scoresY, GetScores(full.Search(queryY, null, 1000, sort).ScoreDocs, full));
-			AssertSameValues(scoresY, GetScores(multi.Search(queryY, null, 1000, sort).ScoreDocs, multi));
-			AssertSameValues(scoresA, GetScores(full.Search(queryA, null, 1000, sort).ScoreDocs, full));
-			AssertSameValues(scoresA, GetScores(multi.Search(queryA, null, 1000, sort).ScoreDocs, multi));
-		}
-		
-		[Test]
-		public virtual void  TestTopDocsScores()
-		{
-			
-			// There was previously a bug in FieldSortedHitQueue.maxscore when only a single
-			// doc was added.  That is what the following tests for.
+			IndexSearcher empty = NewSearcher(new MultiReader());
+			Query query = new TermQuery(new Term("contents", "foo"));
 			Sort sort = new Sort();
-			int nDocs = 10;
-			
-			// try to pick a query that will result in an unnormalized
-			// score greater than 1 to test for correct normalization
-			TopDocs docs1 = full.Search(queryE, null, nDocs, sort);
-			
-			// a filter that only allows through the first hit
-			Filter filt = new AnonymousClassFilter(docs1, this);
-			
-			TopDocs docs2 = full.Search(queryE, filt, nDocs, sort);
-			
-			Assert.AreEqual(docs1.ScoreDocs[0].Score, docs2.ScoreDocs[0].Score, 1e-6);
-		}
-		
-		[Test]
-		public virtual void  TestSortWithoutFillFields()
-		{
-			
-			// There was previously a bug in TopFieldCollector when fillFields was set
-			// to false - the same doc and score was set in ScoreDoc[] array. This test
-			// asserts that if fillFields is false, the documents are set properly. It
-			// does not use Searcher's default search methods (with Sort) since all set
-			// fillFields to true.
-			Sort[] sort = new Sort[]{new Sort(SortField.FIELD_DOC), new Sort()};
-			for (int i = 0; i < sort.Length; i++)
-			{
-				Query q = new MatchAllDocsQuery();
-                TopFieldCollector tdc = TopFieldCollector.Create(sort[i], 10, false, false, false, true);
-				
-				full.Search(q, tdc);
-				
-				ScoreDoc[] sd = tdc.TopDocs().ScoreDocs;
-				for (int j = 1; j < sd.Length; j++)
-				{
-					Assert.IsTrue(sd[j].Doc != sd[j - 1].Doc);
-				}
-			}
-		}
-		
-		[Test]
-		public virtual void  TestSortWithoutScoreTracking()
-		{
-			
-			// Two Sort criteria to instantiate the multi/single comparators.
-			Sort[] sort = new Sort[]{new Sort(SortField.FIELD_DOC), new Sort()};
-			for (int i = 0; i < sort.Length; i++)
-			{
-				Query q = new MatchAllDocsQuery();
-                TopFieldCollector tdc = TopFieldCollector.Create(sort[i], 10, true, false, false, true);
-				
-				full.Search(q, tdc);
-				
-				TopDocs td = tdc.TopDocs();
-				ScoreDoc[] sd = td.ScoreDocs;
-				for (int j = 0; j < sd.Length; j++)
-				{
-					Assert.IsTrue(System.Single.IsNaN(sd[j].Score));
-				}
-                Assert.IsTrue(System.Single.IsNaN(td.MaxScore));
-			}
-		}
-		
-		[Test]
-		public virtual void  TestSortWithScoreNoMaxScoreTracking()
-		{
-			
-			// Two Sort criteria to instantiate the multi/single comparators.
-			Sort[] sort = new Sort[]{new Sort(SortField.FIELD_DOC), new Sort()};
-			for (int i = 0; i < sort.Length; i++)
-			{
-				Query q = new MatchAllDocsQuery();
-                TopDocsCollector<FieldValueHitQueue.Entry> tdc = TopFieldCollector.Create(sort[i], 10, true, true, false, true);
-				
-				full.Search(q, tdc);
-				
-				TopDocs td = tdc.TopDocs();
-				ScoreDoc[] sd = td.ScoreDocs;
-				for (int j = 0; j < sd.Length; j++)
-				{
-					Assert.IsTrue(!System.Single.IsNaN(sd[j].Score));
-				}
-                Assert.IsTrue(System.Single.IsNaN(td.MaxScore));
-			}
-		}
-		
-		[Test]
-		public virtual void  TestSortWithScoreAndMaxScoreTracking()
-		{
-			
-			// Two Sort criteria to instantiate the multi/single comparators.
-			Sort[] sort = new Sort[]{new Sort(SortField.FIELD_DOC), new Sort()};
-			for (int i = 0; i < sort.Length; i++)
-			{
-				Query q = new MatchAllDocsQuery();
-                TopFieldCollector tdc = TopFieldCollector.Create(sort[i], 10, true, true, true, true);
-				
-				full.Search(q, tdc);
-				
-				TopDocs td = tdc.TopDocs();
-				ScoreDoc[] sd = td.ScoreDocs;
-				for (int j = 0; j < sd.Length; j++)
-				{
-					Assert.IsTrue(!System.Single.IsNaN(sd[j].Score));
-				}
-                Assert.IsTrue(!System.Single.IsNaN(td.MaxScore));
-			}
-		}
-		
-		[Test]
-		public virtual void  TestOutOfOrderDocsScoringSort()
-		{
-			
-			// Two Sort criteria to instantiate the multi/single comparators.
-			Sort[] sort = new Sort[]{new Sort(SortField.FIELD_DOC), new Sort()};
-			bool[][] tfcOptions = new bool[][]{new bool[]{false, false, false}, new bool[]{false, false, true}, new bool[]{false, true, false}, new bool[]{false, true, true}, new bool[]{true, false, false}, new bool[]{true, false, true}, new bool[]{true, true, false}, new bool[]{true, true, true}};
-		    System.String[] actualTFCClasses = new System.String[]
-		                                           {
-		                                               "OutOfOrderOneComparatorNonScoringCollector",
-		                                               "OutOfOrderOneComparatorScoringMaxScoreCollector",
-		                                               "OutOfOrderOneComparatorScoringNoMaxScoreCollector",
-		                                               "OutOfOrderOneComparatorScoringMaxScoreCollector",
-		                                               "OutOfOrderOneComparatorNonScoringCollector",
-		                                               "OutOfOrderOneComparatorScoringMaxScoreCollector",
-		                                               "OutOfOrderOneComparatorScoringNoMaxScoreCollector",
-		                                               "OutOfOrderOneComparatorScoringMaxScoreCollector"
-		                                           };
-			
-			BooleanQuery bq = new BooleanQuery();
-			// Add a Query with SHOULD, since bw.scorer() returns BooleanScorer2
-			// which delegates to BS if there are no mandatory clauses.
-			bq.Add(new MatchAllDocsQuery(), Occur.SHOULD);
-			// Set minNrShouldMatch to 1 so that BQ will not optimize rewrite to return
-			// the clause instead of BQ.
-			bq.MinimumNumberShouldMatch = 1;
-
-            for (int i = 0; i < sort.Length; i++)
-            {
-                for (int j = 0; j < tfcOptions.Length; j++)
-                {
-                    TopFieldCollector tdc = TopFieldCollector.Create(sort[i], 10, tfcOptions[j][0], tfcOptions[j][1],
-                                                                     tfcOptions[j][2], false);
-
-                    Assert.IsTrue(tdc.GetType().FullName.EndsWith("+" + actualTFCClasses[j]));
-
-                    full.Search(bq, tdc);
-
-                    TopDocs td = tdc.TopDocs();
-                    ScoreDoc[] sd = td.ScoreDocs;
-                    Assert.AreEqual(10, sd.Length);
-                }
-            }
-		}
-		
-		[Test]
-		public virtual void  TestSortWithScoreAndMaxScoreTrackingNoResults()
-		{
-			
-			// Two Sort criteria to instantiate the multi/single comparators.
-			Sort[] sort = new Sort[]{new Sort(SortField.FIELD_DOC), new Sort()};
-			for (int i = 0; i < sort.Length; i++)
-			{
-                TopFieldCollector tdc = TopFieldCollector.Create(sort[i], 10, true, true, true, true);
-				TopDocs td = tdc.TopDocs();
-				Assert.AreEqual(0, td.TotalHits);
-                Assert.IsTrue(System.Single.IsNaN(td.MaxScore));
-			}
-		}
-		
-		// runs a variety of sorts useful for multisearchers
-		private void  RunMultiSorts(Searcher multi, bool isFull)
-		{
+			TopDocs td = empty.Search(query, null, 10, sort, true, true);
+			NUnit.Framework.Assert.AreEqual(0, td.totalHits);
 			sort.SetSort(SortField.FIELD_DOC);
-			System.String expected = isFull?"ABCDEFGHIJ":"ACEGIBDFHJ";
-			AssertMatches(multi, queryA, sort, expected);
-			
-			sort.SetSort(new SortField("int", SortField.INT));
-			expected = isFull?"IDHFGJABEC":"IDHFGJAEBC";
-			AssertMatches(multi, queryA, sort, expected);
-			
-			sort.SetSort(new SortField("int", SortField.INT), SortField.FIELD_DOC);
-			expected = isFull?"IDHFGJABEC":"IDHFGJAEBC";
-			AssertMatches(multi, queryA, sort, expected);
-			
-			sort.SetSort(new SortField("int", SortField.INT));
-			expected = isFull?"IDHFGJABEC":"IDHFGJAEBC";
-			AssertMatches(multi, queryA, sort, expected);
-			
-			sort.SetSort(new SortField("float", SortField.FLOAT), SortField.FIELD_DOC);
-			AssertMatches(multi, queryA, sort, "GDHJCIEFAB");
-			
-			sort.SetSort(new SortField("float", SortField.FLOAT));
-			AssertMatches(multi, queryA, sort, "GDHJCIEFAB");
-			
-			sort.SetSort(new SortField("string", SortField.STRING));
-			AssertMatches(multi, queryA, sort, "DJAIHGFEBC");
-			
-			sort.SetSort(new SortField("int", SortField.INT, true));
-			expected = isFull?"CABEJGFHDI":"CAEBJGFHDI";
-			AssertMatches(multi, queryA, sort, expected);
-			
-			sort.SetSort(new SortField("float", SortField.FLOAT, true));
-			AssertMatches(multi, queryA, sort, "BAFECIJHDG");
-			
-			sort.SetSort(new SortField("string", SortField.STRING, true));
-			AssertMatches(multi, queryA, sort, "CBEFGHIAJD");
-			
-			sort.SetSort(new SortField("int", SortField.INT), new SortField("float", SortField.FLOAT));
-			AssertMatches(multi, queryA, sort, "IDHFGJEABC");
-			
-			sort.SetSort(new SortField("float", SortField.FLOAT), new SortField("string", SortField.STRING));
-			AssertMatches(multi, queryA, sort, "GDHJICEFAB");
-			
-			sort.SetSort(new SortField("int", SortField.INT));
-			AssertMatches(multi, queryF, sort, "IZJ");
-			
-			sort.SetSort(new SortField("int", SortField.INT, true));
-			AssertMatches(multi, queryF, sort, "JZI");
-			
-			sort.SetSort(new SortField("float", SortField.FLOAT));
-			AssertMatches(multi, queryF, sort, "ZJI");
-			
-			sort.SetSort(new SortField("string", SortField.STRING));
-			AssertMatches(multi, queryF, sort, "ZJI");
-			
-			sort.SetSort(new SortField("string", SortField.STRING, true));
-			AssertMatches(multi, queryF, sort, "IJZ");
-			
-			// up to this point, all of the searches should have "sane" 
-			// FieldCache behavior, and should have reused hte cache in several cases
-            AssertSaneFieldCaches(Lucene.Net.TestCase.GetName() + " various"); 
-			// next we'll check Locale based (String[]) for 'string', so purge first
-			Lucene.Net.Search.FieldCache_Fields.DEFAULT.PurgeAllCaches();
-			
-			sort.SetSort(new SortField("string", new System.Globalization.CultureInfo("en-US")));
-			AssertMatches(multi, queryA, sort, "DJAIHGFEBC");
-			
-			sort.SetSort(new SortField("string", new System.Globalization.CultureInfo("en-US"), true));
-			AssertMatches(multi, queryA, sort, "CBEFGHIAJD");
-			
-			sort.SetSort(new SortField("string", new System.Globalization.CultureInfo("en-GB")));
-			AssertMatches(multi, queryA, sort, "DJAIHGFEBC");
+			td = empty.Search(query, null, 10, sort, true, true);
+			NUnit.Framework.Assert.AreEqual(0, td.totalHits);
+			sort.SetSort(new SortField("int", SortField.Type.INT), SortField.FIELD_DOC);
+			td = empty.Search(query, null, 10, sort, true, true);
+			NUnit.Framework.Assert.AreEqual(0, td.totalHits);
+			sort.SetSort(new SortField("string", SortField.Type.STRING, true), SortField.FIELD_DOC
+				);
+			td = empty.Search(query, null, 10, sort, true, true);
+			NUnit.Framework.Assert.AreEqual(0, td.totalHits);
+			sort.SetSort(new SortField("string_val", SortField.Type.STRING_VAL, true), SortField
+				.FIELD_DOC);
+			td = empty.Search(query, null, 10, sort, true, true);
+			NUnit.Framework.Assert.AreEqual(0, td.totalHits);
+			sort.SetSort(new SortField("float", SortField.Type.FLOAT), new SortField("string"
+				, SortField.Type.STRING));
+			td = empty.Search(query, null, 10, sort, true, true);
+			NUnit.Framework.Assert.AreEqual(0, td.totalHits);
+		}
 
-            AssertSaneFieldCaches(Lucene.Net.TestCase.GetName() + " Locale.US + Locale.UK"); 
-			Lucene.Net.Search.FieldCache_Fields.DEFAULT.PurgeAllCaches();
-		}
-		
-		// make sure the documents returned by the search match the expected list
-		private void  AssertMatches(Searcher searcher, Query query, Sort sort, System.String expectedResult)
+		/// <summary>test sorts for a custom int parser that uses a simple char encoding</summary>
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestCustomIntParser()
 		{
-			//ScoreDoc[] result = searcher.search (query, null, 1000, sort).scoreDocs;
-			TopDocs hits = searcher.Search(query, null, expectedResult.Length, sort);
-			ScoreDoc[] result = hits.ScoreDocs;
-			Assert.AreEqual(hits.TotalHits, expectedResult.Length);
-			System.Text.StringBuilder buff = new System.Text.StringBuilder(10);
-			int n = result.Length;
-			for (int i = 0; i < n; ++i)
+			IList<string> letters = Arrays.AsList(new string[] { "A", "B", "C", "D", "E", "F"
+				, "G", "H", "I", "J" });
+			Sharpen.Collections.Shuffle(letters, Random());
+			Directory dir = NewDirectory();
+			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir);
+			foreach (string letter in letters)
 			{
-				Document doc = searcher.Doc(result[i].Doc);
-				System.String[] v = doc.GetValues("tracer");
-				for (int j = 0; j < v.Length; ++j)
-				{
-					buff.Append(v[j]);
-				}
+				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					();
+				doc.Add(NewStringField("parser", letter, Field.Store.YES));
+				iw.AddDocument(doc);
 			}
-			Assert.AreEqual(expectedResult, buff.ToString());
-		}
-		
-		private System.Collections.Hashtable GetScores(ScoreDoc[] hits, Searcher searcher)
-		{
-			System.Collections.Hashtable scoreMap = new System.Collections.Hashtable();
-			int n = hits.Length;
-			for (int i = 0; i < n; ++i)
+			IndexReader ir = iw.GetReader();
+			iw.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			Sort sort = new Sort(new SortField("parser", new _IntParser_1354()), SortField.FIELD_DOC
+				);
+			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
+			// results should be in alphabetical order
+			NUnit.Framework.Assert.AreEqual(10, td.totalHits);
+			letters.Sort();
+			for (int i = 0; i < letters.Count; i++)
 			{
-				Document doc = searcher.Doc(hits[i].Doc);
-				System.String[] v = doc.GetValues("tracer");
-				Assert.AreEqual(v.Length, 1);
-				scoreMap[v[0]] = (float) hits[i].Score;
+				NUnit.Framework.Assert.AreEqual(letters[i], searcher.Doc(td.scoreDocs[i].doc).Get
+					("parser"));
 			}
-			return scoreMap;
+			ir.Close();
+			dir.Close();
 		}
-		
-		// make sure all the values in the maps match
-		private void  AssertSameValues(System.Collections.Hashtable m1, System.Collections.Hashtable m2)
+
+		private sealed class _IntParser_1354 : FieldCache.IntParser
 		{
-			int n = m1.Count;
-			int m = m2.Count;
-			Assert.AreEqual(n, m);
-			System.Collections.IEnumerator iter = m1.Keys.GetEnumerator();
-			while (iter.MoveNext())
+			public _IntParser_1354()
 			{
-				System.Object key = iter.Current;
-				System.Object o1 = m1[key];
-				System.Object o2 = m2[key];
-				if (o1 is System.Single)
-				{
-					Assert.AreEqual((float) ((System.Single) o1), (float) ((System.Single) o2), 1e-6);
-				}
-				else
-				{
-					Assert.AreEqual(m1[key], m2[key]);
-				}
+			}
+
+			public int ParseInt(BytesRef term)
+			{
+				return (term.bytes[term.offset] - 'A') * 123456;
+			}
+
+			/// <exception cref="System.IO.IOException"></exception>
+			public TermsEnum TermsEnum(Terms terms)
+			{
+				return terms.Iterator(null);
 			}
 		}
 
-        [Test]
-        public void TestLUCENE2142()
-        {
-            RAMDirectory indexStore = new RAMDirectory();
-            IndexWriter writer = new IndexWriter(indexStore, new SimpleAnalyzer(), true, IndexWriter.MaxFieldLength.LIMITED);
-            for (int i = 0; i < 5; i++)
-            {
-                Document doc = new Document();
-                doc.Add(new Field("string", "a" + i, Field.Store.NO, Field.Index.NOT_ANALYZED));
-                doc.Add(new Field("string", "b" + i, Field.Store.NO, Field.Index.NOT_ANALYZED));
-                writer.AddDocument(doc);
-            }
-            writer.Optimize(); // enforce one segment to have a higher unique term count in all cases
-            writer.Close();
-            sort.SetSort(new SortField("string", SortField.STRING),SortField.FIELD_DOC);
-            // this should not throw AIOOBE or RuntimeEx
-            new IndexSearcher(indexStore, true).Search(new MatchAllDocsQuery(), null, 500, sort);
-        }
+		/// <summary>test sorts for a custom byte parser that uses a simple char encoding</summary>
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestCustomByteParser()
+		{
+			IList<string> letters = Arrays.AsList(new string[] { "A", "B", "C", "D", "E", "F"
+				, "G", "H", "I", "J" });
+			Sharpen.Collections.Shuffle(letters, Random());
+			Directory dir = NewDirectory();
+			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir);
+			foreach (string letter in letters)
+			{
+				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					();
+				doc.Add(NewStringField("parser", letter, Field.Store.YES));
+				iw.AddDocument(doc);
+			}
+			IndexReader ir = iw.GetReader();
+			iw.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			Sort sort = new Sort(new SortField("parser", new _ByteParser_1398()), SortField.FIELD_DOC
+				);
+			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
+			// results should be in alphabetical order
+			NUnit.Framework.Assert.AreEqual(10, td.totalHits);
+			letters.Sort();
+			for (int i = 0; i < letters.Count; i++)
+			{
+				NUnit.Framework.Assert.AreEqual(letters[i], searcher.Doc(td.scoreDocs[i].doc).Get
+					("parser"));
+			}
+			ir.Close();
+			dir.Close();
+		}
+
+		private sealed class _ByteParser_1398 : FieldCache.ByteParser
+		{
+			public _ByteParser_1398()
+			{
+			}
+
+			public byte ParseByte(BytesRef term)
+			{
+				return unchecked((byte)(term.bytes[term.offset] - 'A'));
+			}
+
+			/// <exception cref="System.IO.IOException"></exception>
+			public TermsEnum TermsEnum(Terms terms)
+			{
+				return terms.Iterator(null);
+			}
+		}
+
+		/// <summary>test sorts for a custom short parser that uses a simple char encoding</summary>
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestCustomShortParser()
+		{
+			IList<string> letters = Arrays.AsList(new string[] { "A", "B", "C", "D", "E", "F"
+				, "G", "H", "I", "J" });
+			Sharpen.Collections.Shuffle(letters, Random());
+			Directory dir = NewDirectory();
+			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir);
+			foreach (string letter in letters)
+			{
+				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					();
+				doc.Add(NewStringField("parser", letter, Field.Store.YES));
+				iw.AddDocument(doc);
+			}
+			IndexReader ir = iw.GetReader();
+			iw.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			Sort sort = new Sort(new SortField("parser", new _ShortParser_1442()), SortField.
+				FIELD_DOC);
+			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
+			// results should be in alphabetical order
+			NUnit.Framework.Assert.AreEqual(10, td.totalHits);
+			letters.Sort();
+			for (int i = 0; i < letters.Count; i++)
+			{
+				NUnit.Framework.Assert.AreEqual(letters[i], searcher.Doc(td.scoreDocs[i].doc).Get
+					("parser"));
+			}
+			ir.Close();
+			dir.Close();
+		}
+
+		private sealed class _ShortParser_1442 : FieldCache.ShortParser
+		{
+			public _ShortParser_1442()
+			{
+			}
+
+			public short ParseShort(BytesRef term)
+			{
+				return (short)(term.bytes[term.offset] - 'A');
+			}
+
+			/// <exception cref="System.IO.IOException"></exception>
+			public TermsEnum TermsEnum(Terms terms)
+			{
+				return terms.Iterator(null);
+			}
+		}
+
+		/// <summary>test sorts for a custom long parser that uses a simple char encoding</summary>
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestCustomLongParser()
+		{
+			IList<string> letters = Arrays.AsList(new string[] { "A", "B", "C", "D", "E", "F"
+				, "G", "H", "I", "J" });
+			Sharpen.Collections.Shuffle(letters, Random());
+			Directory dir = NewDirectory();
+			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir);
+			foreach (string letter in letters)
+			{
+				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					();
+				doc.Add(NewStringField("parser", letter, Field.Store.YES));
+				iw.AddDocument(doc);
+			}
+			IndexReader ir = iw.GetReader();
+			iw.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			Sort sort = new Sort(new SortField("parser", new _LongParser_1486()), SortField.FIELD_DOC
+				);
+			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
+			// results should be in alphabetical order
+			NUnit.Framework.Assert.AreEqual(10, td.totalHits);
+			letters.Sort();
+			for (int i = 0; i < letters.Count; i++)
+			{
+				NUnit.Framework.Assert.AreEqual(letters[i], searcher.Doc(td.scoreDocs[i].doc).Get
+					("parser"));
+			}
+			ir.Close();
+			dir.Close();
+		}
+
+		private sealed class _LongParser_1486 : FieldCache.LongParser
+		{
+			public _LongParser_1486()
+			{
+			}
+
+			public long ParseLong(BytesRef term)
+			{
+				return (term.bytes[term.offset] - 'A') * 1234567890L;
+			}
+
+			/// <exception cref="System.IO.IOException"></exception>
+			public TermsEnum TermsEnum(Terms terms)
+			{
+				return terms.Iterator(null);
+			}
+		}
+
+		/// <summary>test sorts for a custom float parser that uses a simple char encoding</summary>
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestCustomFloatParser()
+		{
+			IList<string> letters = Arrays.AsList(new string[] { "A", "B", "C", "D", "E", "F"
+				, "G", "H", "I", "J" });
+			Sharpen.Collections.Shuffle(letters, Random());
+			Directory dir = NewDirectory();
+			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir);
+			foreach (string letter in letters)
+			{
+				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					();
+				doc.Add(NewStringField("parser", letter, Field.Store.YES));
+				iw.AddDocument(doc);
+			}
+			IndexReader ir = iw.GetReader();
+			iw.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			Sort sort = new Sort(new SortField("parser", new _FloatParser_1530()), SortField.
+				FIELD_DOC);
+			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
+			// results should be in alphabetical order
+			NUnit.Framework.Assert.AreEqual(10, td.totalHits);
+			letters.Sort();
+			for (int i = 0; i < letters.Count; i++)
+			{
+				NUnit.Framework.Assert.AreEqual(letters[i], searcher.Doc(td.scoreDocs[i].doc).Get
+					("parser"));
+			}
+			ir.Close();
+			dir.Close();
+		}
+
+		private sealed class _FloatParser_1530 : FieldCache.FloatParser
+		{
+			public _FloatParser_1530()
+			{
+			}
+
+			public float ParseFloat(BytesRef term)
+			{
+				return (float)Math.Sqrt(term.bytes[term.offset]);
+			}
+
+			/// <exception cref="System.IO.IOException"></exception>
+			public TermsEnum TermsEnum(Terms terms)
+			{
+				return terms.Iterator(null);
+			}
+		}
+
+		/// <summary>test sorts for a custom double parser that uses a simple char encoding</summary>
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestCustomDoubleParser()
+		{
+			IList<string> letters = Arrays.AsList(new string[] { "A", "B", "C", "D", "E", "F"
+				, "G", "H", "I", "J" });
+			Sharpen.Collections.Shuffle(letters, Random());
+			Directory dir = NewDirectory();
+			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir);
+			foreach (string letter in letters)
+			{
+				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					();
+				doc.Add(NewStringField("parser", letter, Field.Store.YES));
+				iw.AddDocument(doc);
+			}
+			IndexReader ir = iw.GetReader();
+			iw.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			Sort sort = new Sort(new SortField("parser", new _DoubleParser_1574()), SortField
+				.FIELD_DOC);
+			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
+			// results should be in alphabetical order
+			NUnit.Framework.Assert.AreEqual(10, td.totalHits);
+			letters.Sort();
+			for (int i = 0; i < letters.Count; i++)
+			{
+				NUnit.Framework.Assert.AreEqual(letters[i], searcher.Doc(td.scoreDocs[i].doc).Get
+					("parser"));
+			}
+			ir.Close();
+			dir.Close();
+		}
+
+		private sealed class _DoubleParser_1574 : FieldCache.DoubleParser
+		{
+			public _DoubleParser_1574()
+			{
+			}
+
+			public double ParseDouble(BytesRef term)
+			{
+				return Math.Pow(term.bytes[term.offset], (term.bytes[term.offset] - 'A'));
+			}
+
+			/// <exception cref="System.IO.IOException"></exception>
+			public TermsEnum TermsEnum(Terms terms)
+			{
+				return terms.Iterator(null);
+			}
+		}
+
+		/// <summary>Tests sorting a single document</summary>
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestSortOneDocument()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(NewStringField("value", "foo", Field.Store.YES));
+			writer.AddDocument(doc);
+			IndexReader ir = writer.GetReader();
+			writer.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			Sort sort = new Sort(new SortField("value", SortField.Type.STRING));
+			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
+			NUnit.Framework.Assert.AreEqual(1, td.totalHits);
+			NUnit.Framework.Assert.AreEqual("foo", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+				));
+			ir.Close();
+			dir.Close();
+		}
+
+		/// <summary>Tests sorting a single document with scores</summary>
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestSortOneDocumentWithScores()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(NewStringField("value", "foo", Field.Store.YES));
+			writer.AddDocument(doc);
+			IndexReader ir = writer.GetReader();
+			writer.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			Sort sort = new Sort(new SortField("value", SortField.Type.STRING));
+			TopDocs expected = searcher.Search(new TermQuery(new Term("value", "foo")), 10);
+			NUnit.Framework.Assert.AreEqual(1, expected.totalHits);
+			TopDocs actual = searcher.Search(new TermQuery(new Term("value", "foo")), null, 10
+				, sort, true, true);
+			NUnit.Framework.Assert.AreEqual(expected.totalHits, actual.totalHits);
+			NUnit.Framework.Assert.AreEqual(expected.scoreDocs[0].score, actual.scoreDocs[0].
+				score, 0F);
+			ir.Close();
+			dir.Close();
+		}
+
+		/// <summary>Tests sorting with two fields</summary>
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestSortTwoFields()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(NewStringField("tievalue", "tied", Field.Store.NO));
+			doc.Add(NewStringField("value", "foo", Field.Store.YES));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("tievalue", "tied", Field.Store.NO));
+			doc.Add(NewStringField("value", "bar", Field.Store.YES));
+			writer.AddDocument(doc);
+			IndexReader ir = writer.GetReader();
+			writer.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			// tievalue, then value
+			Sort sort = new Sort(new SortField("tievalue", SortField.Type.STRING), new SortField
+				("value", SortField.Type.STRING));
+			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
+			NUnit.Framework.Assert.AreEqual(2, td.totalHits);
+			// 'bar' comes before 'foo'
+			NUnit.Framework.Assert.AreEqual("bar", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+				));
+			NUnit.Framework.Assert.AreEqual("foo", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+				));
+			ir.Close();
+			dir.Close();
+		}
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestScore()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(NewStringField("value", "bar", Field.Store.NO));
+			writer.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewStringField("value", "foo", Field.Store.NO));
+			writer.AddDocument(doc);
+			IndexReader ir = writer.GetReader();
+			writer.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			Sort sort = new Sort(SortField.FIELD_SCORE);
+			BooleanQuery bq = new BooleanQuery();
+			bq.Add(new TermQuery(new Term("value", "foo")), BooleanClause.Occur.SHOULD);
+			bq.Add(new MatchAllDocsQuery(), BooleanClause.Occur.SHOULD);
+			TopDocs td = searcher.Search(bq, 10, sort);
+			NUnit.Framework.Assert.AreEqual(2, td.totalHits);
+			NUnit.Framework.Assert.AreEqual(1, td.scoreDocs[0].doc);
+			NUnit.Framework.Assert.AreEqual(0, td.scoreDocs[1].doc);
+			ir.Close();
+			dir.Close();
+		}
 	}
 }

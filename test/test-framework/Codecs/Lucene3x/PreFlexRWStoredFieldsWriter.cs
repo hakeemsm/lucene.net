@@ -1,18 +1,11 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
-using Org.Apache.Lucene.Codecs;
+using Lucene.Net.Index;
+using Lucene.Net.Store;
 using Lucene.Net.Codecs.Lucene3x;
-using Org.Apache.Lucene.Index;
-using Org.Apache.Lucene.Store;
-using Org.Apache.Lucene.Util;
-using Sharpen;
+using Lucene.Net.Support;
+using Lucene.Net.Util;
 
-namespace Lucene.Net.Codecs.Lucene3x
+namespace Lucene.Net.Codecs.Lucene3x.TestFramework
 {
 	/// <lucene.experimental></lucene.experimental>
 	internal sealed class PreFlexRWStoredFieldsWriter : StoredFieldsWriter
@@ -60,12 +53,12 @@ namespace Lucene.Net.Codecs.Lucene3x
 		/// <exception cref="System.IO.IOException"></exception>
 		public override void StartDocument(int numStoredFields)
 		{
-			indexStream.WriteLong(fieldsStream.GetFilePointer());
+			indexStream.WriteLong(fieldsStream.FilePointer);
 			fieldsStream.WriteVInt(numStoredFields);
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		public override void Close()
+		protected override void Dispose(bool disposing)
 		{
 			try
 			{
@@ -81,7 +74,7 @@ namespace Lucene.Net.Codecs.Lucene3x
 		{
 			try
 			{
-				Close();
+				Dispose();
 			}
 			catch
 			{
@@ -91,8 +84,8 @@ namespace Lucene.Net.Codecs.Lucene3x
 				(segment, string.Empty, Lucene3xStoredFieldsReader.FIELDS_INDEX_EXTENSION));
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
-		public override void WriteField(FieldInfo info, IndexableField field)
+		
+		public override void WriteField(FieldInfo info, IIndexableField field)
 		{
 			fieldsStream.WriteVInt(info.number);
 			int bits = 0;
@@ -102,7 +95,7 @@ namespace Lucene.Net.Codecs.Lucene3x
 			// this way we don't bake into indexer all these
 			// specific encodings for different fields?  and apps
 			// can customize...
-			Number number = field.NumericValue();
+			var number = field.NumericValue;
 			if (number != null)
 			{
 				if (number is byte || number is short || number is int)
@@ -139,7 +132,7 @@ namespace Lucene.Net.Codecs.Lucene3x
 			}
 			else
 			{
-				bytes = field.BinaryValue();
+				bytes = field.BinaryValue;
 				if (bytes != null)
 				{
 					bits |= Lucene3xStoredFieldsReader.FIELD_IS_BINARY;
@@ -147,10 +140,10 @@ namespace Lucene.Net.Codecs.Lucene3x
 				}
 				else
 				{
-					@string = field.StringValue();
+					@string = field.StringValue;
 					if (@string == null)
 					{
-						throw new ArgumentException("field " + field.Name() + " is stored but does not have binaryValue, stringValue nor numericValue"
+						throw new ArgumentException("field " + field.Name + " is stored but does not have binaryValue, stringValue nor numericValue"
 							);
 					}
 				}
@@ -165,31 +158,31 @@ namespace Lucene.Net.Codecs.Lucene3x
 			{
 				if (@string != null)
 				{
-					fieldsStream.WriteString(field.StringValue());
+					fieldsStream.WriteString(field.StringValue);
 				}
 				else
 				{
 					if (number is byte || number is short || number is int)
 					{
-						fieldsStream.WriteInt(number);
+						fieldsStream.WriteInt((int) number);
 					}
 					else
 					{
 						if (number is long)
 						{
-							fieldsStream.WriteLong(number);
+							fieldsStream.WriteLong((long) number);
 						}
 						else
 						{
 							if (number is float)
 							{
-								fieldsStream.WriteInt(Sharpen.Runtime.FloatToIntBits(number));
+								fieldsStream.WriteInt(((float)number).FloatToIntBits());
 							}
 							else
 							{
 								if (number is double)
 								{
-									fieldsStream.WriteLong(double.DoubleToLongBits(number));
+									fieldsStream.WriteLong(((double)number).DoubleToLongBits());
 								}
 							}
 						}
@@ -203,15 +196,15 @@ namespace Lucene.Net.Codecs.Lucene3x
 		/// <exception cref="System.IO.IOException"></exception>
 		public override void Finish(FieldInfos fis, int numDocs)
 		{
-			if (4 + ((long)numDocs) * 8 != indexStream.GetFilePointer())
+			if (4 + ((long)numDocs) * 8 != indexStream.FilePointer)
 			{
 				// This is most likely a bug in Sun JRE 1.6.0_04/_05;
 				// we detect that the bug has struck, here, and
 				// throw an exception to prevent the corruption from
 				// entering the index.  See LUCENE-1282 for
 				// details.
-				throw new RuntimeException("fdx size mismatch: docCount is " + numDocs + " but fdx file size is "
-					 + indexStream.GetFilePointer() + " file=" + indexStream.ToString() + "; now aborting this merge to prevent index corruption"
+				throw new SystemException("fdx size mismatch: docCount is " + numDocs + " but fdx file size is "
+					 + indexStream.FilePointer + " file=" + indexStream.ToString() + "; now aborting this merge to prevent index corruption"
 					);
 			}
 		}

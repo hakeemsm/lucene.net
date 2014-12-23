@@ -1,195 +1,201 @@
-/* 
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+/*
+ * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
  * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using System;
-
-using NUnit.Framework;
-
-using WhitespaceAnalyzer = Lucene.Net.Analysis.WhitespaceAnalyzer;
-using Document = Lucene.Net.Documents.Document;
-using Field = Lucene.Net.Documents.Field;
-using IndexWriter = Lucene.Net.Index.IndexWriter;
-using Term = Lucene.Net.Index.Term;
-using QueryParser = Lucene.Net.QueryParsers.QueryParser;
-using RAMDirectory = Lucene.Net.Store.RAMDirectory;
-using CheckHits = Lucene.Net.Search.CheckHits;
-using Explanation = Lucene.Net.Search.Explanation;
-using IndexSearcher = Lucene.Net.Search.IndexSearcher;
-using Scorer = Lucene.Net.Search.Scorer;
-using Weight = Lucene.Net.Search.Weight;
-using LuceneTestCase = Lucene.Net.Util.LuceneTestCase;
+using Lucene.Net.Analysis;
+using Lucene.Net.Document;
+using Lucene.Net.Index;
+using Lucene.Net.Search;
+using Lucene.Net.Search.Spans;
+using Lucene.Net.Store;
+using Lucene.Net.Util;
+using Sharpen;
 
 namespace Lucene.Net.Search.Spans
 {
-	
-    [TestFixture]
-	public class TestNearSpansOrdered:LuceneTestCase
+	public class TestNearSpansOrdered : LuceneTestCase
 	{
 		protected internal IndexSearcher searcher;
-		
-		public const System.String FIELD = "field";
-		public static readonly QueryParser qp = new QueryParser(Util.Version.LUCENE_CURRENT, FIELD, new WhitespaceAnalyzer());
-		
-		[TearDown]
-		public override void  TearDown()
+
+		protected internal Directory directory;
+
+		protected internal IndexReader reader;
+
+		public static readonly string FIELD = "field";
+
+		/// <exception cref="System.Exception"></exception>
+		public override void TearDown()
 		{
+			reader.Close();
+			directory.Close();
 			base.TearDown();
-			searcher.Close();
 		}
-		
-		[SetUp]
-		public override void  SetUp()
+
+		/// <exception cref="System.Exception"></exception>
+		public override void SetUp()
 		{
 			base.SetUp();
-			RAMDirectory directory = new RAMDirectory();
-			IndexWriter writer = new IndexWriter(directory, new WhitespaceAnalyzer(), true, IndexWriter.MaxFieldLength.LIMITED);
+			directory = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), directory, NewIndexWriterConfig
+				(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMergePolicy(NewLogMergePolicy
+				()));
 			for (int i = 0; i < docFields.Length; i++)
 			{
-				Document doc = new Document();
-				doc.Add(new Field(FIELD, docFields[i], Field.Store.NO, Field.Index.ANALYZED));
+				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					();
+				doc.Add(NewTextField(FIELD, docFields[i], Field.Store.NO));
 				writer.AddDocument(doc);
 			}
+			reader = writer.GetReader();
 			writer.Close();
-			searcher = new IndexSearcher(directory, true);
+			searcher = NewSearcher(reader);
 		}
-		
-		protected internal System.String[] docFields = new System.String[]{"w1 w2 w3 w4 w5", "w1 w3 w2 w3 zz", "w1 xx w2 yy w3", "w1 w3 xx w2 yy w3 zz"};
-		
-		protected internal virtual SpanNearQuery MakeQuery(System.String s1, System.String s2, System.String s3, int slop, bool inOrder)
+
+		protected internal string[] docFields = new string[] { "w1 w2 w3 w4 w5", "w1 w3 w2 w3 zz"
+			, "w1 xx w2 yy w3", "w1 w3 xx w2 yy w3 zz" };
+
+		protected internal virtual SpanNearQuery MakeQuery(string s1, string s2, string s3
+			, int slop, bool inOrder)
 		{
-			return new SpanNearQuery(new SpanQuery[]{new SpanTermQuery(new Term(FIELD, s1)), new SpanTermQuery(new Term(FIELD, s2)), new SpanTermQuery(new Term(FIELD, s3))}, slop, inOrder);
+			return new SpanNearQuery(new SpanQuery[] { new SpanTermQuery(new Term(FIELD, s1))
+				, new SpanTermQuery(new Term(FIELD, s2)), new SpanTermQuery(new Term(FIELD, s3))
+				 }, slop, inOrder);
 		}
+
 		protected internal virtual SpanNearQuery MakeQuery()
 		{
 			return MakeQuery("w1", "w2", "w3", 1, true);
 		}
-		
-		[Test]
-		public virtual void  TestSpanNearQuery()
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestSpanNearQuery()
 		{
 			SpanNearQuery q = MakeQuery();
-			CheckHits.CheckHits_Renamed_Method(q, FIELD, searcher, new int[]{0, 1});
+			CheckHits.CheckHits(Random(), q, FIELD, searcher, new int[] { 0, 1 });
 		}
-		
-		public virtual System.String S(Spans span)
+
+		public virtual string S(Lucene.Net.Search.Spans.Spans span)
 		{
 			return S(span.Doc(), span.Start(), span.End());
 		}
-		public virtual System.String S(int doc, int start, int end)
+
+		public virtual string S(int doc, int start, int end)
 		{
 			return "s(" + doc + "," + start + "," + end + ")";
 		}
-		
-		[Test]
-		public virtual void  TestNearSpansNext()
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestNearSpansNext()
 		{
 			SpanNearQuery q = MakeQuery();
-			Spans span = q.GetSpans(searcher.IndexReader);
-			Assert.AreEqual(true, span.Next());
-			Assert.AreEqual(S(0, 0, 3), S(span));
-			Assert.AreEqual(true, span.Next());
-			Assert.AreEqual(S(1, 0, 4), S(span));
-			Assert.AreEqual(false, span.Next());
+			Lucene.Net.Search.Spans.Spans span = MultiSpansWrapper.Wrap(searcher.GetTopReaderContext
+				(), q);
+			NUnit.Framework.Assert.AreEqual(true, span.Next());
+			NUnit.Framework.Assert.AreEqual(S(0, 0, 3), S(span));
+			NUnit.Framework.Assert.AreEqual(true, span.Next());
+			NUnit.Framework.Assert.AreEqual(S(1, 0, 4), S(span));
+			NUnit.Framework.Assert.AreEqual(false, span.Next());
 		}
-		
-		/// <summary> test does not imply that skipTo(doc+1) should work exactly the
+
+		/// <summary>
+		/// test does not imply that skipTo(doc+1) should work exactly the
 		/// same as next -- it's only applicable in this case since we know doc
 		/// does not contain more than one span
 		/// </summary>
-		[Test]
-		public virtual void  TestNearSpansSkipToLikeNext()
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestNearSpansSkipToLikeNext()
 		{
 			SpanNearQuery q = MakeQuery();
-			Spans span = q.GetSpans(searcher.IndexReader);
-			Assert.AreEqual(true, span.SkipTo(0));
-			Assert.AreEqual(S(0, 0, 3), S(span));
-			Assert.AreEqual(true, span.SkipTo(1));
-			Assert.AreEqual(S(1, 0, 4), S(span));
-			Assert.AreEqual(false, span.SkipTo(2));
+			Lucene.Net.Search.Spans.Spans span = MultiSpansWrapper.Wrap(searcher.GetTopReaderContext
+				(), q);
+			NUnit.Framework.Assert.AreEqual(true, span.SkipTo(0));
+			NUnit.Framework.Assert.AreEqual(S(0, 0, 3), S(span));
+			NUnit.Framework.Assert.AreEqual(true, span.SkipTo(1));
+			NUnit.Framework.Assert.AreEqual(S(1, 0, 4), S(span));
+			NUnit.Framework.Assert.AreEqual(false, span.SkipTo(2));
 		}
-		
-		[Test]
-		public virtual void  TestNearSpansNextThenSkipTo()
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestNearSpansNextThenSkipTo()
 		{
 			SpanNearQuery q = MakeQuery();
-			Spans span = q.GetSpans(searcher.IndexReader);
-			Assert.AreEqual(true, span.Next());
-			Assert.AreEqual(S(0, 0, 3), S(span));
-			Assert.AreEqual(true, span.SkipTo(1));
-			Assert.AreEqual(S(1, 0, 4), S(span));
-			Assert.AreEqual(false, span.Next());
+			Lucene.Net.Search.Spans.Spans span = MultiSpansWrapper.Wrap(searcher.GetTopReaderContext
+				(), q);
+			NUnit.Framework.Assert.AreEqual(true, span.Next());
+			NUnit.Framework.Assert.AreEqual(S(0, 0, 3), S(span));
+			NUnit.Framework.Assert.AreEqual(true, span.SkipTo(1));
+			NUnit.Framework.Assert.AreEqual(S(1, 0, 4), S(span));
+			NUnit.Framework.Assert.AreEqual(false, span.Next());
 		}
-		
-		[Test]
-		public virtual void  TestNearSpansNextThenSkipPast()
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestNearSpansNextThenSkipPast()
 		{
 			SpanNearQuery q = MakeQuery();
-			Spans span = q.GetSpans(searcher.IndexReader);
-			Assert.AreEqual(true, span.Next());
-			Assert.AreEqual(S(0, 0, 3), S(span));
-			Assert.AreEqual(false, span.SkipTo(2));
+			Lucene.Net.Search.Spans.Spans span = MultiSpansWrapper.Wrap(searcher.GetTopReaderContext
+				(), q);
+			NUnit.Framework.Assert.AreEqual(true, span.Next());
+			NUnit.Framework.Assert.AreEqual(S(0, 0, 3), S(span));
+			NUnit.Framework.Assert.AreEqual(false, span.SkipTo(2));
 		}
-		
-		[Test]
-		public virtual void  TestNearSpansSkipPast()
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestNearSpansSkipPast()
 		{
 			SpanNearQuery q = MakeQuery();
-			Spans span = q.GetSpans(searcher.IndexReader);
-			Assert.AreEqual(false, span.SkipTo(2));
+			Lucene.Net.Search.Spans.Spans span = MultiSpansWrapper.Wrap(searcher.GetTopReaderContext
+				(), q);
+			NUnit.Framework.Assert.AreEqual(false, span.SkipTo(2));
 		}
-		
-		[Test]
-		public virtual void  TestNearSpansSkipTo0()
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestNearSpansSkipTo0()
 		{
 			SpanNearQuery q = MakeQuery();
-			Spans span = q.GetSpans(searcher.IndexReader);
-			Assert.AreEqual(true, span.SkipTo(0));
-			Assert.AreEqual(S(0, 0, 3), S(span));
+			Lucene.Net.Search.Spans.Spans span = MultiSpansWrapper.Wrap(searcher.GetTopReaderContext
+				(), q);
+			NUnit.Framework.Assert.AreEqual(true, span.SkipTo(0));
+			NUnit.Framework.Assert.AreEqual(S(0, 0, 3), S(span));
 		}
-		
-		[Test]
-		public virtual void  TestNearSpansSkipTo1()
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestNearSpansSkipTo1()
 		{
 			SpanNearQuery q = MakeQuery();
-			Spans span = q.GetSpans(searcher.IndexReader);
-			Assert.AreEqual(true, span.SkipTo(1));
-			Assert.AreEqual(S(1, 0, 4), S(span));
+			Lucene.Net.Search.Spans.Spans span = MultiSpansWrapper.Wrap(searcher.GetTopReaderContext
+				(), q);
+			NUnit.Framework.Assert.AreEqual(true, span.SkipTo(1));
+			NUnit.Framework.Assert.AreEqual(S(1, 0, 4), S(span));
 		}
-		
-		/// <summary> not a direct test of NearSpans, but a demonstration of how/when
+
+		/// <summary>
+		/// not a direct test of NearSpans, but a demonstration of how/when
 		/// this causes problems
 		/// </summary>
-		[Test]
-		public virtual void  TestSpanNearScorerSkipTo1()
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestSpanNearScorerSkipTo1()
 		{
 			SpanNearQuery q = MakeQuery();
-			Weight w = q.Weight(searcher);
-			Scorer s = w.Scorer(searcher.IndexReader, true, false);
-			Assert.AreEqual(1, s.Advance(1));
+			Weight w = searcher.CreateNormalizedWeight(q);
+			IndexReaderContext topReaderContext = searcher.GetTopReaderContext();
+			AtomicReaderContext leave = topReaderContext.Leaves()[0];
+			Scorer s = w.Scorer(leave, ((AtomicReader)leave.Reader()).GetLiveDocs());
+			NUnit.Framework.Assert.AreEqual(1, s.Advance(1));
 		}
-		/// <summary> not a direct test of NearSpans, but a demonstration of how/when
+
+		/// <summary>
+		/// not a direct test of NearSpans, but a demonstration of how/when
 		/// this causes problems
 		/// </summary>
-		[Test]
-		public virtual void  TestSpanNearScorerExplain()
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestSpanNearScorerExplain()
 		{
 			SpanNearQuery q = MakeQuery();
-		    Explanation e = q.Weight(searcher).Explain(searcher.IndexReader, 1);
-		    Assert.IsTrue(0.0f < e.Value, "Scorer explanation value for doc#1 isn't positive: " + e.ToString());
+			Explanation e = searcher.Explain(q, 1);
+			NUnit.Framework.Assert.IsTrue("Scorer explanation value for doc#1 isn't positive: "
+				 + e.ToString(), 0.0f < e.GetValue());
 		}
 	}
 }

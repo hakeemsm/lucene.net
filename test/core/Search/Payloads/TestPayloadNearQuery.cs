@@ -1,347 +1,388 @@
-/* 
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+/*
+ * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
  * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using System;
-using System.Collections.Generic;
-using Lucene.Net.Analysis.Tokenattributes;
+using System.IO;
 using NUnit.Framework;
-
-using Analyzer = Lucene.Net.Analysis.Analyzer;
-using LowerCaseTokenizer = Lucene.Net.Analysis.LowerCaseTokenizer;
-using Token = Lucene.Net.Analysis.Token;
-using TokenFilter = Lucene.Net.Analysis.TokenFilter;
-using TokenStream = Lucene.Net.Analysis.TokenStream;
-using Document = Lucene.Net.Documents.Document;
-using Field = Lucene.Net.Documents.Field;
-using IndexWriter = Lucene.Net.Index.IndexWriter;
-using Payload = Lucene.Net.Index.Payload;
-using Term = Lucene.Net.Index.Term;
-using DefaultSimilarity = Lucene.Net.Search.DefaultSimilarity;
-using IndexSearcher = Lucene.Net.Search.IndexSearcher;
-using QueryUtils = Lucene.Net.Search.QueryUtils;
-using ScoreDoc = Lucene.Net.Search.ScoreDoc;
-using Searcher = Lucene.Net.Search.Searcher;
-using TopDocs = Lucene.Net.Search.TopDocs;
-using SpanQuery = Lucene.Net.Search.Spans.SpanQuery;
-using RAMDirectory = Lucene.Net.Store.RAMDirectory;
-using SpanNearQuery = Lucene.Net.Search.Spans.SpanNearQuery;
-using English = Lucene.Net.Util.English;
-using LuceneTestCase = Lucene.Net.Util.LuceneTestCase;
+using Lucene.Net.Analysis;
+using Lucene.Net.Analysis.Tokenattributes;
+using Lucene.Net.Document;
+using Lucene.Net.Index;
+using Lucene.Net.Search;
+using Lucene.Net.Search.Payloads;
+using Lucene.Net.Search.Similarities;
+using Lucene.Net.Search.Spans;
+using Lucene.Net.Store;
+using Lucene.Net.Util;
+using Sharpen;
 
 namespace Lucene.Net.Search.Payloads
 {
-	
-	
-    [TestFixture]
-	public class TestPayloadNearQuery:LuceneTestCase
+	public class TestPayloadNearQuery : LuceneTestCase
 	{
-		private void  InitBlock()
+		private static IndexSearcher searcher;
+
+		private static IndexReader reader;
+
+		private static Directory directory;
+
+		private static TestPayloadNearQuery.BoostingSimilarity similarity = new TestPayloadNearQuery.BoostingSimilarity
+			();
+
+		private static byte[] payload2 = new byte[] { 2 };
+
+		private static byte[] payload4 = new byte[] { 4 };
+
+		private class PayloadAnalyzer : Analyzer
 		{
-			similarity = new BoostingSimilarity();
-		}
-		private IndexSearcher searcher;
-		private BoostingSimilarity similarity;
-		private byte[] payload2 = new byte[]{2};
-		private byte[] payload4 = new byte[]{4};
-		
-		public TestPayloadNearQuery():base()
-		{
-			InitBlock();
-		}
-		
-		private class PayloadAnalyzer:Analyzer
-		{
-			public PayloadAnalyzer(TestPayloadNearQuery enclosingInstance)
+			protected override Analyzer.TokenStreamComponents CreateComponents(string fieldName
+				, StreamReader reader)
 			{
-				InitBlock(enclosingInstance);
-			}
-			private void  InitBlock(TestPayloadNearQuery enclosingInstance)
-			{
-				this.enclosingInstance = enclosingInstance;
-			}
-			private TestPayloadNearQuery enclosingInstance;
-			public TestPayloadNearQuery Enclosing_Instance
-			{
-				get
-				{
-					return enclosingInstance;
-				}
-				
-			}
-			public override TokenStream TokenStream(System.String fieldName, System.IO.TextReader reader)
-			{
-				TokenStream result = new LowerCaseTokenizer(reader);
-				result = new PayloadFilter(enclosingInstance, result, fieldName);
-				return result;
+				Tokenizer result = new MockTokenizer(reader, MockTokenizer.SIMPLE, true);
+				return new Analyzer.TokenStreamComponents(result, new TestPayloadNearQuery.PayloadFilter
+					(result, fieldName));
 			}
 		}
-		
-		private class PayloadFilter:TokenFilter
+
+		private class PayloadFilter : TokenFilter
 		{
-			private void  InitBlock(TestPayloadNearQuery enclosingInstance)
+			private readonly string fieldName;
+
+			private int numSeen = 0;
+
+			private readonly PayloadAttribute payAtt;
+
+			public PayloadFilter(TokenStream input, string fieldName) : base(input)
 			{
-				this.enclosingInstance = enclosingInstance;
-			}
-			private TestPayloadNearQuery enclosingInstance;
-			public TestPayloadNearQuery Enclosing_Instance
-			{
-				get
-				{
-					return enclosingInstance;
-				}
-				
-			}
-			internal System.String fieldName;
-			internal int numSeen = 0;
-			protected internal IPayloadAttribute payAtt;
-			
-			public PayloadFilter(TestPayloadNearQuery enclosingInstance, TokenStream input, System.String fieldName):base(input)
-			{
-				InitBlock(enclosingInstance);
 				this.fieldName = fieldName;
-                payAtt = AddAttribute<IPayloadAttribute>();
+				payAtt = AddAttribute<PayloadAttribute>();
 			}
-			
+
+			/// <exception cref="System.IO.IOException"></exception>
 			public override bool IncrementToken()
 			{
 				bool result = false;
-				if (input.IncrementToken() == true)
+				if (input.IncrementToken())
 				{
 					if (numSeen % 2 == 0)
 					{
-						payAtt.Payload = new Payload(Enclosing_Instance.payload2);
+						payAtt.SetPayload(new BytesRef(payload2));
 					}
 					else
 					{
-						payAtt.Payload = new Payload(Enclosing_Instance.payload4);
+						payAtt.SetPayload(new BytesRef(payload4));
 					}
 					numSeen++;
 					result = true;
 				}
 				return result;
 			}
+
+			/// <exception cref="System.IO.IOException"></exception>
+			public override void Reset()
+			{
+				base.Reset();
+				this.numSeen = 0;
+			}
 		}
-		
-		private PayloadNearQuery NewPhraseQuery(System.String fieldName, System.String phrase, bool inOrder)
+
+		private PayloadNearQuery NewPhraseQuery(string fieldName, string phrase, bool inOrder
+			, PayloadFunction function)
 		{
-			int n;
-			System.String[] words = System.Text.RegularExpressions.Regex.Split(phrase, "[\\s]+");
+			string[] words = phrase.Split("[\\s]+");
 			SpanQuery[] clauses = new SpanQuery[words.Length];
 			for (int i = 0; i < clauses.Length; i++)
 			{
-				clauses[i] = new PayloadTermQuery(new Term(fieldName, words[i]), new AveragePayloadFunction());
+				clauses[i] = new SpanTermQuery(new Term(fieldName, words[i]));
 			}
-			return new PayloadNearQuery(clauses, 0, inOrder);
+			return new PayloadNearQuery(clauses, 0, inOrder, function);
 		}
-		
-		[SetUp]
-		public override void  SetUp()
+
+		/// <exception cref="System.Exception"></exception>
+		[BeforeClass]
+		public static void BeforeClass()
 		{
-			base.SetUp();
-			RAMDirectory directory = new RAMDirectory();
-			PayloadAnalyzer analyzer = new PayloadAnalyzer(this);
-			IndexWriter writer = new IndexWriter(directory, analyzer, true, IndexWriter.MaxFieldLength.LIMITED);
-			writer.SetSimilarity(similarity);
+			directory = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), directory, NewIndexWriterConfig
+				(TEST_VERSION_CURRENT, new TestPayloadNearQuery.PayloadAnalyzer()).SetSimilarity
+				(similarity));
 			//writer.infoStream = System.out;
 			for (int i = 0; i < 1000; i++)
 			{
-				Document doc = new Document();
-				doc.Add(new Field("field", English.IntToEnglish(i), Field.Store.YES, Field.Index.ANALYZED));
-				System.String txt = English.IntToEnglish(i) + ' ' + English.IntToEnglish(i + 1);
-				doc.Add(new Field("field2", txt, Field.Store.YES, Field.Index.ANALYZED));
+				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					();
+				doc.Add(NewTextField("field", English.IntToEnglish(i), Field.Store.YES));
+				string txt = English.IntToEnglish(i) + ' ' + English.IntToEnglish(i + 1);
+				doc.Add(NewTextField("field2", txt, Field.Store.YES));
 				writer.AddDocument(doc);
 			}
-			writer.Optimize();
+			reader = writer.GetReader();
 			writer.Close();
-			
-			searcher = new IndexSearcher(directory, true);
-			searcher.Similarity = similarity;
+			searcher = NewSearcher(reader);
+			searcher.SetSimilarity(similarity);
 		}
-		
-        [Test]
-		public virtual void  Test()
+
+		/// <exception cref="System.Exception"></exception>
+		[AfterClass]
+		public static void AfterClass()
+		{
+			searcher = null;
+			reader.Close();
+			reader = null;
+			directory.Close();
+			directory = null;
+		}
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void Test()
 		{
 			PayloadNearQuery query;
 			TopDocs hits;
-			
-			query = NewPhraseQuery("field", "twenty two", true);
+			query = NewPhraseQuery("field", "twenty two", true, new AveragePayloadFunction());
 			QueryUtils.Check(query);
-			
 			// all 10 hits should have score = 3 because adjacent terms have payloads of 2,4
 			// and all the similarity factors are set to 1
 			hits = searcher.Search(query, null, 100);
-			Assert.IsTrue(hits != null, "hits is null and it shouldn't be");
-			Assert.IsTrue(hits.TotalHits == 10, "should be 10 hits");
-			for (int j = 0; j < hits.ScoreDocs.Length; j++)
+			NUnit.Framework.Assert.IsTrue("hits is null and it shouldn't be", hits != null);
+			NUnit.Framework.Assert.IsTrue("should be 10 hits", hits.totalHits == 10);
+			for (int j = 0; j < hits.scoreDocs.Length; j++)
 			{
-				ScoreDoc doc = hits.ScoreDocs[j];
-				Assert.IsTrue(doc.Score == 3, doc.Score + " does not equal: " + 3);
+				ScoreDoc doc = hits.scoreDocs[j];
+				NUnit.Framework.Assert.IsTrue(doc.score + " does not equal: " + 3, doc.score == 3
+					);
 			}
 			for (int i = 1; i < 10; i++)
 			{
-				query = NewPhraseQuery("field", English.IntToEnglish(i) + " hundred", true);
+				query = NewPhraseQuery("field", English.IntToEnglish(i) + " hundred", true, new AveragePayloadFunction
+					());
+				if (VERBOSE)
+				{
+					System.Console.Out.WriteLine("TEST: run query=" + query);
+				}
 				// all should have score = 3 because adjacent terms have payloads of 2,4
 				// and all the similarity factors are set to 1
 				hits = searcher.Search(query, null, 100);
-				Assert.IsTrue(hits != null, "hits is null and it shouldn't be");
-				Assert.IsTrue(hits.TotalHits == 100, "should be 100 hits");
-				for (int j = 0; j < hits.ScoreDocs.Length; j++)
+				NUnit.Framework.Assert.IsTrue("hits is null and it shouldn't be", hits != null);
+				NUnit.Framework.Assert.AreEqual("should be 100 hits", 100, hits.totalHits);
+				for (int j_1 = 0; j_1 < hits.scoreDocs.Length; j_1++)
 				{
-					ScoreDoc doc = hits.ScoreDocs[j];
-					//				System.out.println("Doc: " + doc.toString());
-					//				System.out.println("Explain: " + searcher.explain(query, doc.doc));
-					Assert.IsTrue(doc.Score == 3, doc.Score + " does not equal: " + 3);
+					ScoreDoc doc = hits.scoreDocs[j_1];
+					//        System.out.println("Doc: " + doc.toString());
+					//        System.out.println("Explain: " + searcher.explain(query, doc.doc));
+					NUnit.Framework.Assert.IsTrue(doc.score + " does not equal: " + 3, doc.score == 3
+						);
 				}
 			}
 		}
-		
-        [Test]
-		public virtual void  TestPayloadNear()
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestPayloadNear()
 		{
-			SpanNearQuery q1, q2;
+			SpanNearQuery q1;
+			SpanNearQuery q2;
 			PayloadNearQuery query;
-			TopDocs hits;
-			// SpanNearQuery(clauses, 10000, false)
-            q1 = SpanNearQuery_Renamed("field2", "twenty two");
-            q2 = SpanNearQuery_Renamed("field2", "twenty three");
+			//SpanNearQuery(clauses, 10000, false)
+			q1 = SpanNearQuery("field2", "twenty two");
+			q2 = SpanNearQuery("field2", "twenty three");
 			SpanQuery[] clauses = new SpanQuery[2];
 			clauses[0] = q1;
 			clauses[1] = q2;
 			query = new PayloadNearQuery(clauses, 10, false);
-			// System.out.println(query.toString());
-			Assert.AreEqual(12, searcher.Search(query, null, 100).TotalHits);
-			/*
-			* System.out.println(hits.totalHits); for (int j = 0; j <
-			* hits.scoreDocs.length; j++) { ScoreDoc doc = hits.scoreDocs[j];
-			* System.out.println("doc: "+doc.doc+", score: "+doc.score); }
-			*/
+			//System.out.println(query.toString());
+			NUnit.Framework.Assert.AreEqual(12, searcher.Search(query, null, 100).totalHits);
 		}
-		
-		private SpanNearQuery SpanNearQuery_Renamed(System.String fieldName, System.String words)
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestAverageFunction()
 		{
-			System.String[] wordList = System.Text.RegularExpressions.Regex.Split(words, "[\\s]+");
+			PayloadNearQuery query;
+			TopDocs hits;
+			query = NewPhraseQuery("field", "twenty two", true, new AveragePayloadFunction());
+			QueryUtils.Check(query);
+			// all 10 hits should have score = 3 because adjacent terms have payloads of 2,4
+			// and all the similarity factors are set to 1
+			hits = searcher.Search(query, null, 100);
+			NUnit.Framework.Assert.IsTrue("hits is null and it shouldn't be", hits != null);
+			NUnit.Framework.Assert.IsTrue("should be 10 hits", hits.totalHits == 10);
+			for (int j = 0; j < hits.scoreDocs.Length; j++)
+			{
+				ScoreDoc doc = hits.scoreDocs[j];
+				NUnit.Framework.Assert.IsTrue(doc.score + " does not equal: " + 3, doc.score == 3
+					);
+				Explanation explain = searcher.Explain(query, hits.scoreDocs[j].doc);
+				string exp = explain.ToString();
+				NUnit.Framework.Assert.IsTrue(exp, exp.IndexOf("AveragePayloadFunction") > -1);
+				NUnit.Framework.Assert.IsTrue(hits.scoreDocs[j].score + " explain value does not equal: "
+					 + 3, explain.GetValue() == 3f);
+			}
+		}
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestMaxFunction()
+		{
+			PayloadNearQuery query;
+			TopDocs hits;
+			query = NewPhraseQuery("field", "twenty two", true, new MaxPayloadFunction());
+			QueryUtils.Check(query);
+			// all 10 hits should have score = 4 (max payload value)
+			hits = searcher.Search(query, null, 100);
+			NUnit.Framework.Assert.IsTrue("hits is null and it shouldn't be", hits != null);
+			NUnit.Framework.Assert.IsTrue("should be 10 hits", hits.totalHits == 10);
+			for (int j = 0; j < hits.scoreDocs.Length; j++)
+			{
+				ScoreDoc doc = hits.scoreDocs[j];
+				NUnit.Framework.Assert.IsTrue(doc.score + " does not equal: " + 4, doc.score == 4
+					);
+				Explanation explain = searcher.Explain(query, hits.scoreDocs[j].doc);
+				string exp = explain.ToString();
+				NUnit.Framework.Assert.IsTrue(exp, exp.IndexOf("MaxPayloadFunction") > -1);
+				NUnit.Framework.Assert.IsTrue(hits.scoreDocs[j].score + " explain value does not equal: "
+					 + 4, explain.GetValue() == 4f);
+			}
+		}
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestMinFunction()
+		{
+			PayloadNearQuery query;
+			TopDocs hits;
+			query = NewPhraseQuery("field", "twenty two", true, new MinPayloadFunction());
+			QueryUtils.Check(query);
+			// all 10 hits should have score = 2 (min payload value)
+			hits = searcher.Search(query, null, 100);
+			NUnit.Framework.Assert.IsTrue("hits is null and it shouldn't be", hits != null);
+			NUnit.Framework.Assert.IsTrue("should be 10 hits", hits.totalHits == 10);
+			for (int j = 0; j < hits.scoreDocs.Length; j++)
+			{
+				ScoreDoc doc = hits.scoreDocs[j];
+				NUnit.Framework.Assert.IsTrue(doc.score + " does not equal: " + 2, doc.score == 2
+					);
+				Explanation explain = searcher.Explain(query, hits.scoreDocs[j].doc);
+				string exp = explain.ToString();
+				NUnit.Framework.Assert.IsTrue(exp, exp.IndexOf("MinPayloadFunction") > -1);
+				NUnit.Framework.Assert.IsTrue(hits.scoreDocs[j].score + " explain value does not equal: "
+					 + 2, explain.GetValue() == 2f);
+			}
+		}
+
+		private SpanQuery[] GetClauses()
+		{
+			SpanNearQuery q1;
+			SpanNearQuery q2;
+			q1 = SpanNearQuery("field2", "twenty two");
+			q2 = SpanNearQuery("field2", "twenty three");
+			SpanQuery[] clauses = new SpanQuery[2];
+			clauses[0] = q1;
+			clauses[1] = q2;
+			return clauses;
+		}
+
+		private SpanNearQuery SpanNearQuery(string fieldName, string words)
+		{
+			string[] wordList = words.Split("[\\s]+");
 			SpanQuery[] clauses = new SpanQuery[wordList.Length];
 			for (int i = 0; i < clauses.Length; i++)
 			{
-				clauses[i] = new PayloadTermQuery(new Term(fieldName, wordList[i]), new AveragePayloadFunction());
+				clauses[i] = new PayloadTermQuery(new Term(fieldName, wordList[i]), new AveragePayloadFunction
+					());
 			}
 			return new SpanNearQuery(clauses, 10000, false);
 		}
-		
-        [Test]
-		public virtual void  TestLongerSpan()
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestLongerSpan()
 		{
 			PayloadNearQuery query;
 			TopDocs hits;
-			query = NewPhraseQuery("field", "nine hundred ninety nine", true);
+			query = NewPhraseQuery("field", "nine hundred ninety nine", true, new AveragePayloadFunction
+				());
 			hits = searcher.Search(query, null, 100);
-			ScoreDoc doc = hits.ScoreDocs[0];
-			//		System.out.println("Doc: " + doc.toString());
-			//		System.out.println("Explain: " + searcher.explain(query, doc.doc));
-			Assert.IsTrue(hits != null, "hits is null and it shouldn't be");
-			Assert.IsTrue(hits.TotalHits == 1, "there should only be one hit");
+			NUnit.Framework.Assert.IsTrue("hits is null and it shouldn't be", hits != null);
+			ScoreDoc doc = hits.scoreDocs[0];
+			//    System.out.println("Doc: " + doc.toString());
+			//    System.out.println("Explain: " + searcher.explain(query, doc.doc));
+			NUnit.Framework.Assert.IsTrue("there should only be one hit", hits.totalHits == 1
+				);
 			// should have score = 3 because adjacent terms have payloads of 2,4
-			Assert.IsTrue(doc.Score == 3, doc.Score + " does not equal: " + 3);
+			NUnit.Framework.Assert.IsTrue(doc.score + " does not equal: " + 3, doc.score == 3
+				);
 		}
-		
-        [Test]
-		public virtual void  TestComplexNested()
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestComplexNested()
 		{
 			PayloadNearQuery query;
 			TopDocs hits;
-			
 			// combine ordered and unordered spans with some nesting to make sure all payloads are counted
-			
-			SpanQuery q1 = NewPhraseQuery("field", "nine hundred", true);
-			SpanQuery q2 = NewPhraseQuery("field", "ninety nine", true);
-			SpanQuery q3 = NewPhraseQuery("field", "nine ninety", false);
-			SpanQuery q4 = NewPhraseQuery("field", "hundred nine", false);
-			SpanQuery[] clauses = new SpanQuery[]{new PayloadNearQuery(new SpanQuery[]{q1, q2}, 0, true), new PayloadNearQuery(new SpanQuery[]{q3, q4}, 0, false)};
+			SpanQuery q1 = NewPhraseQuery("field", "nine hundred", true, new AveragePayloadFunction
+				());
+			SpanQuery q2 = NewPhraseQuery("field", "ninety nine", true, new AveragePayloadFunction
+				());
+			SpanQuery q3 = NewPhraseQuery("field", "nine ninety", false, new AveragePayloadFunction
+				());
+			SpanQuery q4 = NewPhraseQuery("field", "hundred nine", false, new AveragePayloadFunction
+				());
+			SpanQuery[] clauses = new SpanQuery[] { new PayloadNearQuery(new SpanQuery[] { q1
+				, q2 }, 0, true), new PayloadNearQuery(new SpanQuery[] { q3, q4 }, 0, false) };
 			query = new PayloadNearQuery(clauses, 0, false);
 			hits = searcher.Search(query, null, 100);
-			Assert.IsTrue(hits != null, "hits is null and it shouldn't be");
+			NUnit.Framework.Assert.IsTrue("hits is null and it shouldn't be", hits != null);
 			// should be only 1 hit - doc 999
-			Assert.IsTrue(hits.ScoreDocs.Length == 1, "should only be one hit");
+			NUnit.Framework.Assert.IsTrue("should only be one hit", hits.scoreDocs.Length == 
+				1);
 			// the score should be 3 - the average of all the underlying payloads
-			ScoreDoc doc = hits.ScoreDocs[0];
-			//		System.out.println("Doc: " + doc.toString());
-			//		System.out.println("Explain: " + searcher.explain(query, doc.doc));
-			Assert.IsTrue(doc.Score == 3, doc.Score + " does not equal: " + 3);
+			ScoreDoc doc = hits.scoreDocs[0];
+			//    System.out.println("Doc: " + doc.toString());
+			//    System.out.println("Explain: " + searcher.explain(query, doc.doc));
+			NUnit.Framework.Assert.IsTrue(doc.score + " does not equal: " + 3, doc.score == 3
+				);
 		}
-		// must be static for weight serialization tests 
-		[Serializable]
-		internal class BoostingSimilarity:DefaultSimilarity
+
+		internal class BoostingSimilarity : DefaultSimilarity
 		{
-			public override float ScorePayload(int docId, System.String fieldName, int start, int end, byte[] payload, int offset, int length)
+			public override float QueryNorm(float sumOfSquaredWeights)
+			{
+				return 1.0f;
+			}
+
+			public override float Coord(int overlap, int maxOverlap)
+			{
+				return 1.0f;
+			}
+
+			public override float ScorePayload(int docId, int start, int end, BytesRef payload
+				)
 			{
 				//we know it is size 4 here, so ignore the offset/length
-				return payload[0];
+				return payload.bytes[payload.offset];
 			}
+
 			//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 			//Make everything else 1 so we see the effect of the payload
 			//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-			public override float LengthNorm(System.String fieldName, int numTerms)
+			public override float LengthNorm(FieldInvertState state)
 			{
-			    return 1.0f;
+				return state.GetBoost();
 			}
-			
-			public override float QueryNorm(float sumOfSquaredWeights)
-			{
-                return 1.0f;
-			}
-			
+
 			public override float SloppyFreq(int distance)
 			{
-                return 1.0f;
+				return 1.0f;
 			}
-			
-			public override float Coord(int overlap, int maxOverlap)
-			{
-                return 1.0f;
-			}
+
 			public override float Tf(float freq)
 			{
-                return 1.0f;
+				return 1.0f;
 			}
+
 			// idf used for phrase queries
-			public override Explanation.IDFExplanation IdfExplain(ICollection<Term> terms, Searcher searcher)
+			public override Explanation IdfExplain(CollectionStatistics collectionStats, TermStatistics
+				[] termStats)
 			{
-			    return new InjectableIDFExplanation
-			               {
-			                   ExplainFunc = () => "Inexplicable",
-                               GetIdfFunc = () => 1.0f
-			               };
+				return new Explanation(1.0f, "Inexplicable");
 			}
-
-            private class InjectableIDFExplanation : Explanation.IDFExplanation
-            {
-                public Func<float> GetIdfFunc { get; set; }
-                public Func<string> ExplainFunc { get; set; }
-
-                public override float Idf
-                {
-                    get { return GetIdfFunc.Invoke(); }
-                }
-
-                public override string Explain()
-                {
-                    return ExplainFunc.Invoke();
-                }
-            }
 		}
 	}
 }

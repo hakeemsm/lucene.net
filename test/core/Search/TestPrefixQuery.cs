@@ -39,26 +39,33 @@ namespace Lucene.Net.Search
 		[Test]
 		public virtual void  TestPrefixQuery_Renamed()
 		{
-			RAMDirectory directory = new RAMDirectory();
+			Directory directory = NewDirectory();
 			
 			System.String[] categories = new System.String[]{"/Computers", "/Computers/Mac", "/Computers/Windows"};
-			IndexWriter writer = new IndexWriter(directory, new WhitespaceAnalyzer(), true, IndexWriter.MaxFieldLength.LIMITED);
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), directory);
 			for (int i = 0; i < categories.Length; i++)
 			{
 				Document doc = new Document();
-				doc.Add(new Field("category", categories[i], Field.Store.YES, Field.Index.NOT_ANALYZED));
+				doc.Add(NewStringField("category", categories[i], Field.Store.YES));
 				writer.AddDocument(doc);
 			}
-			writer.Close();
-			
+			IndexReader reader = writer.GetReader();
 			PrefixQuery query = new PrefixQuery(new Term("category", "/Computers"));
-		    IndexSearcher searcher = new IndexSearcher(directory, true);
+			IndexSearcher searcher = NewSearcher(reader);
 			ScoreDoc[] hits = searcher.Search(query, null, 1000).ScoreDocs;
 			Assert.AreEqual(3, hits.Length, "All documents in /Computers category and below");
 			
 			query = new PrefixQuery(new Term("category", "/Computers/Mac"));
 			hits = searcher.Search(query, null, 1000).ScoreDocs;
 			Assert.AreEqual(1, hits.Length, "One in /Computers/Mac");
+			query = new PrefixQuery(new Term("category", string.Empty));
+			Terms terms = MultiFields.GetTerms(searcher.GetIndexReader(), "category");
+			NUnit.Framework.Assert.IsFalse(query.GetTermsEnum(terms) is PrefixTermsEnum);
+			hits = searcher.Search(query, null, 1000).scoreDocs;
+			NUnit.Framework.Assert.AreEqual("everything", 3, hits.Length);
+			writer.Close();
+			reader.Close();
+			directory.Close();
 		}
 	}
 }

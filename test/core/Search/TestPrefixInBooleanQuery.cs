@@ -44,46 +44,51 @@ namespace Lucene.Net.Search
 	{
 		
 		private const System.String FIELD = "name";
-		private RAMDirectory directory = new RAMDirectory();
+		private static Directory directory;
 
+		private static IndexReader reader;
+		private static IndexSearcher searcher;
 		[SetUp]
 		public override void  SetUp()
 		{
 			base.SetUp();
-			
-			IndexWriter writer = new IndexWriter(directory, new WhitespaceAnalyzer(), true, IndexWriter.MaxFieldLength.LIMITED);
-			
+			directory = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), directory);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			Field field = NewStringField(FIELD, "meaninglessnames", Field.Store.NO);
+			doc.Add(field);
 			for (int i = 0; i < 5137; ++i)
 			{
-				Document doc = new Document();
-				doc.Add(new Field(FIELD, "meaninglessnames", Field.Store.YES, Field.Index.NOT_ANALYZED));
 				writer.AddDocument(doc);
 			}
-			{
-				Document doc = new Document();
-				doc.Add(new Field(FIELD, "tangfulin", Field.Store.YES, Field.Index.NOT_ANALYZED));
+			field.SetStringValue("tangfulin");
 				writer.AddDocument(doc);
-			}
+			field.SetStringValue("meaninglessnames");
 			
 			for (int i = 5138; i < 11377; ++i)
 			{
-				Document doc = new Document();
-				doc.Add(new Field(FIELD, "meaninglessnames", Field.Store.YES, Field.Index.NOT_ANALYZED));
 				writer.AddDocument(doc);
 			}
-			{
-				Document doc = new Document();
-				doc.Add(new Field(FIELD, "tangfulin", Field.Store.YES, Field.Index.NOT_ANALYZED));
-				writer.AddDocument(doc);
-			}
-			
+			field.SetStringValue("tangfulin");
+			writer.AddDocument(doc);
+			reader = writer.GetReader();
+			searcher = NewSearcher(reader);
 			writer.Close();
 		}
 		
+		[NUnit.Framework.AfterClass]
+		public static void AfterClass()
+		{
+			searcher = null;
+			reader.Close();
+			reader = null;
+			directory.Close();
+			directory = null;
+		}
 		[Test]
 		public virtual void  TestPrefixQuery()
 		{
-			IndexSearcher indexSearcher = new IndexSearcher(directory, true);
 			Query query = new PrefixQuery(new Term(FIELD, "tang"));
 			Assert.AreEqual(2, indexSearcher.Search(query, null, 1000).TotalHits, "Number of matched documents");
 		}
@@ -91,7 +96,6 @@ namespace Lucene.Net.Search
 		[Test]
 		public virtual void  TestTermQuery()
 		{
-			IndexSearcher indexSearcher = new IndexSearcher(directory, true);
 			Query query = new TermQuery(new Term(FIELD, "tangfulin"));
 			Assert.AreEqual(2, indexSearcher.Search(query, null, 1000).TotalHits, "Number of matched documents");
 		}
@@ -99,7 +103,6 @@ namespace Lucene.Net.Search
 		[Test]
 		public virtual void  TestTermBooleanQuery()
 		{
-			IndexSearcher indexSearcher = new IndexSearcher(directory, true);
 			BooleanQuery query = new BooleanQuery();
 			query.Add(new TermQuery(new Term(FIELD, "tangfulin")), Occur.SHOULD);
 			query.Add(new TermQuery(new Term(FIELD, "notexistnames")), Occur.SHOULD);
@@ -109,7 +112,6 @@ namespace Lucene.Net.Search
 		[Test]
 		public virtual void  TestPrefixBooleanQuery()
 		{
-			IndexSearcher indexSearcher = new IndexSearcher(directory, true);
 			BooleanQuery query = new BooleanQuery();
 			query.Add(new PrefixQuery(new Term(FIELD, "tang")), Occur.SHOULD);
 			query.Add(new TermQuery(new Term(FIELD, "notexistnames")), Occur.SHOULD);

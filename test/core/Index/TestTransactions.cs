@@ -1,177 +1,158 @@
-/* 
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+/*
+ * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
  * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
 using System;
-using Lucene.Net.Support;
-using NUnit.Framework;
-
+using System.IO;
 using Lucene.Net.Analysis;
-using Lucene.Net.Documents;
+using Lucene.Net.Document;
+using Lucene.Net.Index;
 using Lucene.Net.Store;
 using Lucene.Net.Util;
-using English = Lucene.Net.Util.English;
-using LuceneTestCase = Lucene.Net.Util.LuceneTestCase;
+using Sharpen;
 
 namespace Lucene.Net.Index
 {
-	
-    [TestFixture]
-	public class TestTransactions:LuceneTestCase
+	public class TestTransactions : LuceneTestCase
 	{
-		private System.Random RANDOM;
 		private static volatile bool doFail;
-		
-		private class RandomFailure:MockRAMDirectory.Failure
+
+		private class RandomFailure : MockDirectoryWrapper.Failure
 		{
-			public RandomFailure(TestTransactions enclosingInstance)
+			/// <exception cref="System.IO.IOException"></exception>
+			public override void Eval(MockDirectoryWrapper dir)
 			{
-				InitBlock(enclosingInstance);
-			}
-			private void  InitBlock(TestTransactions enclosingInstance)
-			{
-				this.enclosingInstance = enclosingInstance;
-			}
-			private TestTransactions enclosingInstance;
-			public TestTransactions Enclosing_Instance
-			{
-				get
+				if (TestTransactions.doFail && LuceneTestCase.Random().Next() % 10 <= 3)
 				{
-					return enclosingInstance;
+					throw new IOException("now failing randomly but on purpose");
 				}
-				
 			}
-			public override void  Eval(MockRAMDirectory dir)
+
+			internal RandomFailure(TestTransactions _enclosing)
 			{
-				if (TestTransactions.doFail && Enclosing_Instance.RANDOM.Next() % 10 <= 3)
-					throw new System.IO.IOException("now failing randomly but on purpose");
+				this._enclosing = _enclosing;
 			}
+
+			private readonly TestTransactions _enclosing;
 		}
-		
-		abstract public class TimedThread:ThreadClass
+
+		private abstract class TimedThread : Sharpen.Thread
 		{
-			internal bool failed;
-			private static int RUN_TIME_SEC = 6;
-			private TimedThread[] allThreads;
-			
-			abstract public void  DoWork();
-			
-			internal TimedThread(TimedThread[] threads)
+			internal volatile bool failed;
+
+			private static float RUN_TIME_MSEC = AtLeast(500);
+
+			private TestTransactions.TimedThread[] allThreads;
+
+			/// <exception cref="System.Exception"></exception>
+			public abstract void DoWork();
+
+			internal TimedThread(TestTransactions.TimedThread[] threads)
 			{
 				this.allThreads = threads;
 			}
-			
-			override public void  Run()
+
+			public override void Run()
 			{
-				long stopTime = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) + 1000 * RUN_TIME_SEC;
-				
+				long stopTime = Runtime.CurrentTimeMillis() + (long)(RUN_TIME_MSEC);
 				try
 				{
-					while ((DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) < stopTime && !AnyErrors())
+					do
+					{
+						if (AnyErrors())
+						{
+							break;
+						}
 						DoWork();
+					}
+					while (Runtime.CurrentTimeMillis() < stopTime);
 				}
-				catch (System.Exception e)
+				catch (Exception e)
 				{
-					System.Console.Out.WriteLine(ThreadClass.Current() + ": exc");
-					System.Console.Out.WriteLine(e.StackTrace);
+					System.Console.Out.WriteLine(Sharpen.Thread.CurrentThread() + ": exc");
+					Sharpen.Runtime.PrintStackTrace(e, System.Console.Out);
 					failed = true;
 				}
 			}
-			
+
 			private bool AnyErrors()
 			{
 				for (int i = 0; i < allThreads.Length; i++)
+				{
 					if (allThreads[i] != null && allThreads[i].failed)
+					{
 						return true;
+					}
+				}
 				return false;
 			}
 		}
-		
-		private class IndexerThread:TimedThread
+
+		private class IndexerThread : TestTransactions.TimedThread
 		{
-			private void  InitBlock(TestTransactions enclosingInstance)
-			{
-				this.enclosingInstance = enclosingInstance;
-			}
-			private TestTransactions enclosingInstance;
-			public TestTransactions Enclosing_Instance
-			{
-				get
-				{
-					return enclosingInstance;
-				}
-				
-			}
 			internal Directory dir1;
+
 			internal Directory dir2;
-			internal System.Object lock_Renamed;
+
+			internal object Lock;
+
 			internal int nextID;
-			
-			public IndexerThread(TestTransactions enclosingInstance, System.Object lock_Renamed, Directory dir1, Directory dir2, TimedThread[] threads):base(threads)
+
+			public IndexerThread(TestTransactions _enclosing, object Lock, Directory dir1, Directory
+				 dir2, TestTransactions.TimedThread[] threads) : base(threads)
 			{
-				InitBlock(enclosingInstance);
-				this.lock_Renamed = lock_Renamed;
+				this._enclosing = _enclosing;
+				this.Lock = Lock;
 				this.dir1 = dir1;
 				this.dir2 = dir2;
 			}
-			
-			public override void  DoWork()
+
+			/// <exception cref="System.Exception"></exception>
+			public override void DoWork()
 			{
-				
-				IndexWriter writer1 = new IndexWriter(dir1, new WhitespaceAnalyzer(), IndexWriter.MaxFieldLength.LIMITED);
-				writer1.SetMaxBufferedDocs(3);
-				writer1.MergeFactor = 2;
-				((ConcurrentMergeScheduler) writer1.MergeScheduler).SetSuppressExceptions();
-				
-				IndexWriter writer2 = new IndexWriter(dir2, new WhitespaceAnalyzer(), IndexWriter.MaxFieldLength.LIMITED);
+				IndexWriter writer1 = new IndexWriter(this.dir1, ((IndexWriterConfig)LuceneTestCase
+					.NewIndexWriterConfig(LuceneTestCase.TEST_VERSION_CURRENT, new MockAnalyzer(LuceneTestCase
+					.Random())).SetMaxBufferedDocs(3)).SetMergeScheduler(new ConcurrentMergeScheduler
+					()).SetMergePolicy(LuceneTestCase.NewLogMergePolicy(2)));
+				((ConcurrentMergeScheduler)writer1.GetConfig().GetMergeScheduler()).SetSuppressExceptions
+					();
 				// Intentionally use different params so flush/merge
 				// happen @ different times
-				writer2.SetMaxBufferedDocs(2);
-				writer2.MergeFactor = 3;
-				((ConcurrentMergeScheduler) writer2.MergeScheduler).SetSuppressExceptions();
-				
-				Update(writer1);
-				Update(writer2);
-				
+				IndexWriter writer2 = new IndexWriter(this.dir2, ((IndexWriterConfig)LuceneTestCase
+					.NewIndexWriterConfig(LuceneTestCase.TEST_VERSION_CURRENT, new MockAnalyzer(LuceneTestCase
+					.Random())).SetMaxBufferedDocs(2)).SetMergeScheduler(new ConcurrentMergeScheduler
+					()).SetMergePolicy(LuceneTestCase.NewLogMergePolicy(3)));
+				((ConcurrentMergeScheduler)writer2.GetConfig().GetMergeScheduler()).SetSuppressExceptions
+					();
+				this.Update(writer1);
+				this.Update(writer2);
 				TestTransactions.doFail = true;
 				try
 				{
-					lock (lock_Renamed)
+					lock (this.Lock)
 					{
 						try
 						{
 							writer1.PrepareCommit();
 						}
-						catch (System.Exception t)
+						catch
 						{
 							writer1.Rollback();
 							writer2.Rollback();
-							return ;
+							return;
 						}
 						try
 						{
 							writer2.PrepareCommit();
 						}
-						catch (System.Exception t)
+						catch
 						{
 							writer1.Rollback();
 							writer2.Rollback();
-							return ;
+							return;
 						}
-						
 						writer1.Commit();
 						writer2.Commit();
 					}
@@ -180,108 +161,152 @@ namespace Lucene.Net.Index
 				{
 					TestTransactions.doFail = false;
 				}
-				
 				writer1.Close();
 				writer2.Close();
 			}
-			
-			public virtual void  Update(IndexWriter writer)
+
+			/// <exception cref="System.IO.IOException"></exception>
+			public virtual void Update(IndexWriter writer)
 			{
 				// Add 10 docs:
+				FieldType customType = new FieldType(StringField.TYPE_NOT_STORED);
+				customType.SetStoreTermVectors(true);
 				for (int j = 0; j < 10; j++)
 				{
-					Document d = new Document();
-					int n = Enclosing_Instance.RANDOM.Next();
-					d.Add(new Field("id", System.Convert.ToString(nextID++), Field.Store.YES, Field.Index.NOT_ANALYZED));
-					d.Add(new Field("contents", English.IntToEnglish(n), Field.Store.NO, Field.Index.ANALYZED));
+					Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+					int n = LuceneTestCase.Random().Next();
+					d.Add(LuceneTestCase.NewField("id", Sharpen.Extensions.ToString(this.nextID++), customType
+						));
+					d.Add(LuceneTestCase.NewTextField("contents", English.IntToEnglish(n), Field.Store
+						.NO));
 					writer.AddDocument(d);
 				}
-				
 				// Delete 5 docs:
-				int deleteID = nextID - 1;
-				for (int j = 0; j < 5; j++)
+				int deleteID = this.nextID - 1;
+				for (int j_1 = 0; j_1 < 5; j_1++)
 				{
-					writer.DeleteDocuments(new Term("id", "" + deleteID));
+					writer.DeleteDocuments(new Term("id", string.Empty + deleteID));
 					deleteID -= 2;
 				}
 			}
+
+			private readonly TestTransactions _enclosing;
 		}
-		
-		private class SearcherThread:TimedThread
+
+		private class SearcherThread : TestTransactions.TimedThread
 		{
 			internal Directory dir1;
+
 			internal Directory dir2;
-			internal System.Object lock_Renamed;
-			
-			public SearcherThread(System.Object lock_Renamed, Directory dir1, Directory dir2, TimedThread[] threads):base(threads)
+
+			internal object Lock;
+
+			public SearcherThread(object Lock, Directory dir1, Directory dir2, TestTransactions.TimedThread
+				[] threads) : base(threads)
 			{
-				this.lock_Renamed = lock_Renamed;
+				this.Lock = Lock;
 				this.dir1 = dir1;
 				this.dir2 = dir2;
 			}
-			
-			public override void  DoWork()
+
+			/// <exception cref="System.Exception"></exception>
+			public override void DoWork()
 			{
-				IndexReader r1, r2;
-				lock (lock_Renamed)
+				IndexReader r1 = null;
+				IndexReader r2 = null;
+				lock (Lock)
 				{
-					r1 = IndexReader.Open(dir1, true);
-				    r2 = IndexReader.Open(dir2, true);
+					try
+					{
+						r1 = DirectoryReader.Open(dir1);
+						r2 = DirectoryReader.Open(dir2);
+					}
+					catch (IOException e)
+					{
+						if (!e.Message.Contains("on purpose"))
+						{
+							throw;
+						}
+						if (r1 != null)
+						{
+							r1.Close();
+						}
+						if (r2 != null)
+						{
+							r2.Close();
+						}
+						return;
+					}
 				}
 				if (r1.NumDocs() != r2.NumDocs())
-					throw new System.SystemException("doc counts differ: r1=" + r1.NumDocs() + " r2=" + r2.NumDocs());
+				{
+					throw new RuntimeException("doc counts differ: r1=" + r1.NumDocs() + " r2=" + r2.
+						NumDocs());
+				}
 				r1.Close();
 				r2.Close();
 			}
 		}
-		
-		public virtual void  InitIndex(Directory dir)
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void InitIndex(Directory dir)
 		{
-			IndexWriter writer = new IndexWriter(dir, new WhitespaceAnalyzer(), IndexWriter.MaxFieldLength.LIMITED);
+			IndexWriter writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT
+				, new MockAnalyzer(Random())));
 			for (int j = 0; j < 7; j++)
 			{
-				Document d = new Document();
-				int n = RANDOM.Next();
-				d.Add(new Field("contents", English.IntToEnglish(n), Field.Store.NO, Field.Index.ANALYZED));
+				Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+				int n = Random().Next();
+				d.Add(NewTextField("contents", English.IntToEnglish(n), Field.Store.NO));
 				writer.AddDocument(d);
 			}
 			writer.Close();
 		}
-		
-		[Test]
-		public virtual void  TestTransactions_Rename()
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestTransactions()
 		{
-			RANDOM = NewRandom();
-			MockRAMDirectory dir1 = new MockRAMDirectory();
-			MockRAMDirectory dir2 = new MockRAMDirectory();
+			// we cant use non-ramdir on windows, because this test needs to double-write.
+			MockDirectoryWrapper dir1 = new MockDirectoryWrapper(Random(), new RAMDirectory()
+				);
+			MockDirectoryWrapper dir2 = new MockDirectoryWrapper(Random(), new RAMDirectory()
+				);
 			dir1.SetPreventDoubleWrite(false);
 			dir2.SetPreventDoubleWrite(false);
-			dir1.FailOn(new RandomFailure(this));
-			dir2.FailOn(new RandomFailure(this));
-			
+			dir1.FailOn(new TestTransactions.RandomFailure(this));
+			dir2.FailOn(new TestTransactions.RandomFailure(this));
+			dir1.SetFailOnOpenInput(false);
+			dir2.SetFailOnOpenInput(false);
+			// We throw exceptions in deleteFile, which creates
+			// leftover files:
+			dir1.SetAssertNoUnrefencedFilesOnClose(false);
+			dir2.SetAssertNoUnrefencedFilesOnClose(false);
 			InitIndex(dir1);
 			InitIndex(dir2);
-			
-			TimedThread[] threads = new TimedThread[3];
+			TestTransactions.TimedThread[] threads = new TestTransactions.TimedThread[3];
 			int numThread = 0;
-			
-			IndexerThread indexerThread = new IndexerThread(this, this, dir1, dir2, threads);
+			TestTransactions.IndexerThread indexerThread = new TestTransactions.IndexerThread
+				(this, this, dir1, dir2, threads);
 			threads[numThread++] = indexerThread;
 			indexerThread.Start();
-			
-			SearcherThread searcherThread1 = new SearcherThread(this, dir1, dir2, threads);
+			TestTransactions.SearcherThread searcherThread1 = new TestTransactions.SearcherThread
+				(this, dir1, dir2, threads);
 			threads[numThread++] = searcherThread1;
 			searcherThread1.Start();
-			
-			SearcherThread searcherThread2 = new SearcherThread(this, dir1, dir2, threads);
+			TestTransactions.SearcherThread searcherThread2 = new TestTransactions.SearcherThread
+				(this, dir1, dir2, threads);
 			threads[numThread++] = searcherThread2;
 			searcherThread2.Start();
-			
 			for (int i = 0; i < numThread; i++)
+			{
 				threads[i].Join();
-			
-			for (int i = 0; i < numThread; i++)
-				Assert.IsTrue(!((TimedThread) threads[i]).failed);
+			}
+			for (int i_1 = 0; i_1 < numThread; i_1++)
+			{
+				NUnit.Framework.Assert.IsTrue(!threads[i_1].failed);
+			}
+			dir1.Close();
+			dir2.Close();
 		}
 	}
 }

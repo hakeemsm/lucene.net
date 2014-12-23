@@ -1097,8 +1097,7 @@ namespace Lucene.Net.TestFramework.Util
 
 		/// <summary>Checks some basic behaviour of an AttributeImpl</summary>
 		/// <param name="reflectedValues">contains a map with "AttributeClass#key" as values</param>
-		public static void AssertAttributeReflection<T>(Lucene.Net.Util.Attribute att, IDictionary<string
-			, T> reflectedValues)
+		public static void AssertAttributeReflection<T>(Net.Util.Attribute att, IDictionary<string, T> reflectedValues)
 		{
 			IDictionary<string, object> map = new Dictionary<string, object>();
 			att.ReflectWith(new AnonymousAttributeReflectorImpl(map));

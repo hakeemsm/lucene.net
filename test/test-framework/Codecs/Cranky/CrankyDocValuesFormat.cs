@@ -1,30 +1,22 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
+using System;
+using System.Collections.Generic;
 using System.IO;
-using Org.Apache.Lucene.Codecs;
-using Lucene.Net.Codecs.Cranky;
-using Org.Apache.Lucene.Index;
-using Org.Apache.Lucene.Util;
-using Sharpen;
+using Lucene.Net.Index;
+using Lucene.Net.Util;
 
-namespace Lucene.Net.Codecs.Cranky
+namespace Lucene.Net.Codecs.Cranky.TestFramework
 {
 	internal class CrankyDocValuesFormat : DocValuesFormat
 	{
-		internal readonly DocValuesFormat delegate_;
+		internal readonly DocValuesFormat docValueFormat;
 
 		internal readonly Random random;
 
-		internal CrankyDocValuesFormat(DocValuesFormat delegate_, Random random) : base(delegate_
-			.GetName())
+		internal CrankyDocValuesFormat(DocValuesFormat dvFormat, Random random) : base(dvFormat.Name)
 		{
 			// we impersonate the passed-in codec, so we don't need to be in SPI,
 			// and so we dont change file formats
-			this.delegate_ = delegate_;
+			this.docValueFormat = dvFormat;
 			this.random = random;
 		}
 
@@ -35,80 +27,75 @@ namespace Lucene.Net.Codecs.Cranky
 			{
 				throw new IOException("Fake IOException from DocValuesFormat.fieldsConsumer()");
 			}
-			return new CrankyDocValuesFormat.CrankyDocValuesConsumer(delegate_.FieldsConsumer
-				(state), random);
+			return new CrankyDocValuesConsumer(docValueFormat.FieldsConsumer(state), random);
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		
 		public override DocValuesProducer FieldsProducer(SegmentReadState state)
 		{
-			return delegate_.FieldsProducer(state);
+			return docValueFormat.FieldsProducer(state);
 		}
 
 		internal class CrankyDocValuesConsumer : DocValuesConsumer
 		{
-			internal readonly DocValuesConsumer delegate_;
+			internal readonly DocValuesConsumer dvConsumer;
 
 			internal readonly Random random;
 
 			internal CrankyDocValuesConsumer(DocValuesConsumer delegate_, Random random)
 			{
-				this.delegate_ = delegate_;
+				this.dvConsumer = delegate_;
 				this.random = random;
 			}
 
-			/// <exception cref="System.IO.IOException"></exception>
-			public override void Close()
+			
+			protected override void Dispose(bool disposing)
 			{
-				delegate_.Close();
+				dvConsumer.Dispose();
 				if (random.Next(100) == 0)
 				{
 					throw new IOException("Fake IOException from DocValuesConsumer.close()");
 				}
 			}
 
-			/// <exception cref="System.IO.IOException"></exception>
-			public override void AddNumericField(FieldInfo field, Iterable<Number> values)
+			
+			public override void AddNumericField(FieldInfo field, IEnumerable<long> values)
 			{
 				if (random.Next(100) == 0)
 				{
-					throw new IOException("Fake IOException from DocValuesConsumer.addNumericField()"
-						);
+					throw new IOException("Fake IOException from DocValuesConsumer.addNumericField()");
 				}
-				delegate_.AddNumericField(field, values);
+				dvConsumer.AddNumericField(field, values);
 			}
 
-			/// <exception cref="System.IO.IOException"></exception>
-			public override void AddBinaryField(FieldInfo field, Iterable<BytesRef> values)
+			
+			public override void AddBinaryField(FieldInfo field, IEnumerable<BytesRef> values)
 			{
 				if (random.Next(100) == 0)
 				{
 					throw new IOException("Fake IOException from DocValuesConsumer.addBinaryField()");
 				}
-				delegate_.AddBinaryField(field, values);
+				dvConsumer.AddBinaryField(field, values);
 			}
 
-			/// <exception cref="System.IO.IOException"></exception>
-			public override void AddSortedField(FieldInfo field, Iterable<BytesRef> values, Iterable
-				<Number> docToOrd)
+			
+			public override void AddSortedField(FieldInfo field, IEnumerable<BytesRef> values, IEnumerable<int> docToOrd)
 			{
 				if (random.Next(100) == 0)
 				{
 					throw new IOException("Fake IOException from DocValuesConsumer.addSortedField()");
 				}
-				delegate_.AddSortedField(field, values, docToOrd);
+				dvConsumer.AddSortedField(field, values, docToOrd);
 			}
 
-			/// <exception cref="System.IO.IOException"></exception>
-			public override void AddSortedSetField(FieldInfo field, Iterable<BytesRef> values
-				, Iterable<Number> docToOrdCount, Iterable<Number> ords)
+			
+			public override void AddSortedSetField(FieldInfo field, IEnumerable<BytesRef> values, IEnumerable<int> docToOrdCount, IEnumerable<long> ords)
 			{
 				if (random.Next(100) == 0)
 				{
-					throw new IOException("Fake IOException from DocValuesConsumer.addSortedSetField()"
-						);
+					throw new IOException("Fake IOException from DocValuesConsumer.addSortedSetField()");
 				}
-				delegate_.AddSortedSetField(field, values, docToOrdCount, ords);
+				dvConsumer.AddSortedSetField(field, values, docToOrdCount, ords);
 			}
 		}
 	}

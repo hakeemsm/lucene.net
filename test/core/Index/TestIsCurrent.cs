@@ -1,120 +1,98 @@
-﻿/* 
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+/*
+ * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
  * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using System;
-
+using Lucene.Net.Document;
 using Lucene.Net.Index;
-using Lucene.Net.Analysis;
-using Lucene.Net.Documents;
 using Lucene.Net.Store;
 using Lucene.Net.Util;
-
-using NUnit.Framework;
+using Sharpen;
 
 namespace Lucene.Net.Index
 {
-    [TestFixture]
-    public class TestIsCurrent : LuceneTestCase
-    {
+	public class TestIsCurrent : LuceneTestCase
+	{
+		private RandomIndexWriter writer;
 
-        private IndexWriter writer;
+		private Directory directory;
 
-        private Directory directory;
+		/// <exception cref="System.Exception"></exception>
+		public override void SetUp()
+		{
+			base.SetUp();
+			// initialize directory
+			directory = NewDirectory();
+			writer = new RandomIndexWriter(Random(), directory);
+			// write document
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(NewTextField("UUID", "1", Field.Store.YES));
+			writer.AddDocument(doc);
+			writer.Commit();
+		}
 
-        private Random rand;
+		/// <exception cref="System.Exception"></exception>
+		public override void TearDown()
+		{
+			base.TearDown();
+			writer.Close();
+			directory.Close();
+		}
 
-        [SetUp]
-        public override void SetUp()
-        {
-            base.SetUp();
+		/// <summary>Failing testcase showing the trouble</summary>
+		/// <exception cref="System.IO.IOException"></exception>
+		[NUnit.Framework.Test]
+		public virtual void TestDeleteByTermIsCurrent()
+		{
+			// get reader
+			DirectoryReader reader = writer.GetReader();
+			// 
+			//HM:revisit 
+			//assert index has a document and reader is up2date 
+			NUnit.Framework.Assert.AreEqual("One document should be in the index", 1, writer.
+				NumDocs());
+			NUnit.Framework.Assert.IsTrue("One document added, reader should be current", reader
+				.IsCurrent());
+			// remove document
+			Term idTerm = new Term("UUID", "1");
+			writer.DeleteDocuments(idTerm);
+			writer.Commit();
+			// 
+			//HM:revisit 
+			//assert document has been deleted (index changed), reader is stale
+			NUnit.Framework.Assert.AreEqual("Document should be removed", 0, writer.NumDocs()
+				);
+			NUnit.Framework.Assert.IsFalse("Reader should be stale", reader.IsCurrent());
+			reader.Close();
+		}
 
-            // initialize directory
-            directory = new MockRAMDirectory();
-            writer = new IndexWriter(directory, new WhitespaceAnalyzer(), IndexWriter.MaxFieldLength.LIMITED);
-
-            // write document
-            Document doc = new Document();
-            doc.Add(new Field("UUID", "1", Field.Store.YES, Field.Index.ANALYZED));
-            writer.AddDocument(doc);
-            writer.Commit();
-        }
-
-        [TearDown]
-        public override void TearDown()
-        {
-            base.TearDown();
-            writer.Close();
-            directory.Close();
-        }
-
-        /*
-         * Failing testcase showing the trouble
-         * 
-         * @throws IOException
-         */
-        [Test]
-        public void TestDeleteByTermIsCurrent()
-        {
-
-            // get reader
-            IndexReader reader = writer.GetReader();
-
-            // assert index has a document and reader is up2date 
-            Assert.AreEqual(1, writer.NumDocs(), "One document should be in the index");
-            Assert.IsTrue(reader.IsCurrent(), "Document added, reader should be stale ");
-
-            // remove document
-            Term idTerm = new Term("UUID", "1");
-            writer.DeleteDocuments(idTerm);
-            writer.Commit();
-
-            // assert document has been deleted (index changed), reader is stale
-            Assert.AreEqual(0, writer.NumDocs(), "Document should be removed");
-            Assert.IsFalse(reader.IsCurrent(), "Reader should be stale");
-
-            reader.Close();
-        }
-
-        /*
-         * Testcase for example to show that writer.deleteAll() is working as expected
-         * 
-         * @throws IOException
-         */
-        [Test]
-        public void TestDeleteAllIsCurrent()
-        {
-
-            // get reader
-            IndexReader reader = writer.GetReader();
-
-            // assert index has a document and reader is up2date 
-            Assert.AreEqual(1, writer.NumDocs(), "One document should be in the index");
-            Assert.IsTrue(reader.IsCurrent(), "Document added, reader should be stale ");
-
-            // remove all documents
-            writer.DeleteAll();
-            writer.Commit();
-
-            // assert document has been deleted (index changed), reader is stale
-            Assert.AreEqual(0, writer.NumDocs(), "Document should be removed");
-            Assert.IsFalse(reader.IsCurrent(), "Reader should be stale");
-
-            reader.Close();
-        }
-    }
-
+		/// <summary>Testcase for example to show that writer.deleteAll() is working as expected
+		/// 	</summary>
+		/// <exception cref="System.IO.IOException"></exception>
+		[NUnit.Framework.Test]
+		public virtual void TestDeleteAllIsCurrent()
+		{
+			// get reader
+			DirectoryReader reader = writer.GetReader();
+			// 
+			//HM:revisit 
+			//assert index has a document and reader is up2date 
+			NUnit.Framework.Assert.AreEqual("One document should be in the index", 1, writer.
+				NumDocs());
+			NUnit.Framework.Assert.IsTrue("Document added, reader should be stale ", reader.IsCurrent
+				());
+			// remove all documents
+			writer.DeleteAll();
+			writer.Commit();
+			// 
+			//HM:revisit 
+			//assert document has been deleted (index changed), reader is stale
+			NUnit.Framework.Assert.AreEqual("Document should be removed", 0, writer.NumDocs()
+				);
+			NUnit.Framework.Assert.IsFalse("Reader should be stale", reader.IsCurrent());
+			reader.Close();
+		}
+	}
 }

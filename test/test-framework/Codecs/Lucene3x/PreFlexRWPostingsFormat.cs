@@ -1,15 +1,7 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using Lucene.Net.Codecs.Lucene3x;
-using Org.Apache.Lucene.Index;
-using Org.Apache.Lucene.Store;
-using Org.Apache.Lucene.Util;
-using Sharpen;
+using Lucene.Net.Index;
+using Lucene.Net.Store;
 
 namespace Lucene.Net.Codecs.Lucene3x
 {
@@ -31,8 +23,7 @@ namespace Lucene.Net.Codecs.Lucene3x
 		// NOTE: we impersonate the PreFlex codec so that it can
 		// read the segments we write!
 		/// <exception cref="System.IO.IOException"></exception>
-		public override Lucene.Net.Codecs.FieldsConsumer FieldsConsumer(SegmentWriteState
-			 state)
+		public override FieldsConsumer FieldsConsumer(SegmentWriteState state)
 		{
 			return new PreFlexRWFieldsWriter(state);
 		}

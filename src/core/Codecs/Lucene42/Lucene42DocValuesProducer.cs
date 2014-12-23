@@ -12,7 +12,7 @@ using System.Text;
 
 namespace Lucene.Net.Codecs.Lucene42
 {
-    internal class Lucene42DocValuesProducer : DocValuesProducer
+    public class Lucene42DocValuesProducer : DocValuesProducer
     {
         // metadata maps (just file pointers and minimal stuff)
         private readonly IDictionary<int, NumericEntry> numerics;
@@ -32,25 +32,25 @@ namespace Lucene.Net.Codecs.Lucene42
 
         private long ramBytesUsed;
 
-        internal const byte NUMBER = 0;
+        public const byte NUMBER = 0;
 
-        internal const byte BYTES = 1;
+        public const byte BYTES = 1;
 
-        internal const byte FST = 2;
+        public const byte FST = 2;
 
-        internal const int BLOCK_SIZE = 4096;
+        public const int BLOCK_SIZE = 4096;
 
-        internal const sbyte DELTA_COMPRESSED = 0;
+        public const sbyte DELTA_COMPRESSED = 0;
 
-        internal const sbyte TABLE_COMPRESSED = 1;
+        public const sbyte TABLE_COMPRESSED = 1;
 
-        internal const sbyte UNCOMPRESSED = 2;
+        public const sbyte UNCOMPRESSED = 2;
 
-        internal const sbyte GCD_COMPRESSED = 3;
+        public const sbyte GCD_COMPRESSED = 3;
 
         internal const int VERSION_START = 0;
 
-        internal const int VERSION_GCD_COMPRESSION = 1;
+        public const int VERSION_GCD_COMPRESSION = 1;
 
         internal const int VERSION_CHECKSUM = 2;
 

@@ -18,7 +18,7 @@
 using NUnit.Framework;
 using Attribute = Lucene.Net.Util.Attribute;
 
-namespace Lucene.Net.Analysis.Tokenattributes
+namespace Lucene.Net.Test.Analysis.TokenAttributes
 {
 	
     [TestFixture]

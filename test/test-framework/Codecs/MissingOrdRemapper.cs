@@ -1,15 +1,8 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
-using Org.Apache.Lucene.Codecs;
-using Org.Apache.Lucene.Util;
-using Sharpen;
+using System.Collections.Generic;
+using Lucene.Net.Util;
 
-namespace Org.Apache.Lucene.Codecs
+namespace Lucene.Net.Codecs.TestFramework
 {
 	/// <summary>
 	/// a utility class to write missing values for SORTED as if they were the empty string
@@ -18,7 +11,7 @@ namespace Org.Apache.Lucene.Codecs
 	public class MissingOrdRemapper
 	{
 		/// <summary>insert an empty byte[] to the front of this iterable</summary>
-		public static Iterable<BytesRef> InsertEmptyValue(Iterable<BytesRef> iterable)
+		public static IEnumerable<BytesRef> InsertEmptyValue(IEnumerable<BytesRef> iterable)
 		{
 			return new _Iterable_32(iterable);
 		}
@@ -79,7 +72,7 @@ namespace Org.Apache.Lucene.Codecs
 
 		/// <summary>remaps ord -1 to ord 0 on this iterable.</summary>
 		/// <remarks>remaps ord -1 to ord 0 on this iterable.</remarks>
-		public static Iterable<Number> MapMissingToOrd0(Iterable<Number> iterable)
+		public static IEnumerable<int> MapMissingToOrd0(IEnumerable<int> iterable)
 		{
 			return new _Iterable_65(iterable);
 		}
@@ -136,7 +129,7 @@ namespace Org.Apache.Lucene.Codecs
 		}
 
 		/// <summary>remaps every ord+1 on this iterable</summary>
-		public static Iterable<Number> MapAllOrds(Iterable<Number> iterable)
+		public static IEnumerable<int> MapAllOrds(IEnumerable<int> iterable)
 		{
 			return new _Iterable_97(iterable);
 		}

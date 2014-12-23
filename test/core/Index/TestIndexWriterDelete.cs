@@ -1,77 +1,882 @@
-/* 
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+/*
+ * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
  * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
 using System;
-using Lucene.Net.Support;
+using System.Collections.Generic;
+using System.IO;
+using System.Text;
 using NUnit.Framework;
-
-using WhitespaceAnalyzer = Lucene.Net.Analysis.WhitespaceAnalyzer;
-using Document = Lucene.Net.Documents.Document;
-using Field = Lucene.Net.Documents.Field;
-using Directory = Lucene.Net.Store.Directory;
-using MockRAMDirectory = Lucene.Net.Store.MockRAMDirectory;
-using IndexSearcher = Lucene.Net.Search.IndexSearcher;
-using ScoreDoc = Lucene.Net.Search.ScoreDoc;
-using TermQuery = Lucene.Net.Search.TermQuery;
-using LuceneTestCase = Lucene.Net.Util.LuceneTestCase;
+using Lucene.Net.Analysis;
+using Lucene.Net.Document;
+using Lucene.Net.Index;
+using Lucene.Net.Search;
+using Lucene.Net.Store;
+using Lucene.Net.Util;
+using Sharpen;
 
 namespace Lucene.Net.Index
 {
-	
-    [TestFixture]
-	public class TestIndexWriterDelete:LuceneTestCase
+	public class TestIndexWriterDelete : LuceneTestCase
 	{
-		private class AnonymousClassFailure:MockRAMDirectory.Failure
+		// test the simple case
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestSimpleCase()
 		{
-			public AnonymousClassFailure(TestIndexWriterDelete enclosingInstance)
+			string[] keywords = new string[] { "1", "2" };
+			string[] unindexed = new string[] { "Netherlands", "Italy" };
+			string[] unstored = new string[] { "Amsterdam has lots of bridges", "Venice has lots of canals"
+				 };
+			string[] text = new string[] { "Amsterdam", "Venice" };
+			Directory dir = NewDirectory();
+			IndexWriter modifier = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig
+				(TEST_VERSION_CURRENT, new MockAnalyzer(Random(), MockTokenizer.WHITESPACE, false
+				)).SetMaxBufferedDeleteTerms(1)));
+			FieldType custom1 = new FieldType();
+			custom1.SetStored(true);
+			for (int i = 0; i < keywords.Length; i++)
 			{
-				InitBlock(enclosingInstance);
+				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					();
+				doc.Add(NewStringField("id", keywords[i], Field.Store.YES));
+				doc.Add(NewField("country", unindexed[i], custom1));
+				doc.Add(NewTextField("contents", unstored[i], Field.Store.NO));
+				doc.Add(NewTextField("city", text[i], Field.Store.YES));
+				modifier.AddDocument(doc);
 			}
-			private void  InitBlock(TestIndexWriterDelete enclosingInstance)
+			modifier.ForceMerge(1);
+			modifier.Commit();
+			Term term = new Term("city", "Amsterdam");
+			int hitCount = GetHitCount(dir, term);
+			NUnit.Framework.Assert.AreEqual(1, hitCount);
+			if (VERBOSE)
 			{
-				this.enclosingInstance = enclosingInstance;
+				System.Console.Out.WriteLine("\nTEST: now delete by term=" + term);
 			}
-			private TestIndexWriterDelete enclosingInstance;
-			public TestIndexWriterDelete Enclosing_Instance
+			modifier.DeleteDocuments(term);
+			modifier.Commit();
+			if (VERBOSE)
 			{
-				get
+				System.Console.Out.WriteLine("\nTEST: now getHitCount");
+			}
+			hitCount = GetHitCount(dir, term);
+			NUnit.Framework.Assert.AreEqual(0, hitCount);
+			modifier.Close();
+			dir.Close();
+		}
+
+		// test when delete terms only apply to disk segments
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestNonRAMDelete()
+		{
+			Directory dir = NewDirectory();
+			IndexWriter modifier = new IndexWriter(dir, ((IndexWriterConfig)((IndexWriterConfig
+				)NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(Random(), MockTokenizer
+				.WHITESPACE, false)).SetMaxBufferedDocs(2)).SetMaxBufferedDeleteTerms(2)));
+			int id = 0;
+			int value = 100;
+			for (int i = 0; i < 7; i++)
+			{
+				AddDoc(modifier, ++id, value);
+			}
+			modifier.Commit();
+			NUnit.Framework.Assert.AreEqual(0, modifier.GetNumBufferedDocuments());
+			NUnit.Framework.Assert.IsTrue(0 < modifier.GetSegmentCount());
+			modifier.Commit();
+			IndexReader reader = DirectoryReader.Open(dir);
+			NUnit.Framework.Assert.AreEqual(7, reader.NumDocs());
+			reader.Close();
+			modifier.DeleteDocuments(new Term("value", value.ToString()));
+			modifier.Commit();
+			reader = DirectoryReader.Open(dir);
+			NUnit.Framework.Assert.AreEqual(0, reader.NumDocs());
+			reader.Close();
+			modifier.Close();
+			dir.Close();
+		}
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestMaxBufferedDeletes()
+		{
+			Directory dir = NewDirectory();
+			IndexWriter writer = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig
+				(TEST_VERSION_CURRENT, new MockAnalyzer(Random(), MockTokenizer.WHITESPACE, false
+				)).SetMaxBufferedDeleteTerms(1)));
+			writer.AddDocument(new Lucene.Net.Document.Document());
+			writer.DeleteDocuments(new Term("foobar", "1"));
+			writer.DeleteDocuments(new Term("foobar", "1"));
+			writer.DeleteDocuments(new Term("foobar", "1"));
+			NUnit.Framework.Assert.AreEqual(3, writer.GetFlushDeletesCount());
+			writer.Close();
+			dir.Close();
+		}
+
+		// test when delete terms only apply to ram segments
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestRAMDeletes()
+		{
+			for (int t = 0; t < 2; t++)
+			{
+				if (VERBOSE)
 				{
-					return enclosingInstance;
+					System.Console.Out.WriteLine("TEST: t=" + t);
 				}
-				
+				Directory dir = NewDirectory();
+				IndexWriter modifier = new IndexWriter(dir, ((IndexWriterConfig)((IndexWriterConfig
+					)NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(Random(), MockTokenizer
+					.WHITESPACE, false)).SetMaxBufferedDocs(4)).SetMaxBufferedDeleteTerms(4)));
+				int id = 0;
+				int value = 100;
+				AddDoc(modifier, ++id, value);
+				if (0 == t)
+				{
+					modifier.DeleteDocuments(new Term("value", value.ToString()));
+				}
+				else
+				{
+					modifier.DeleteDocuments(new TermQuery(new Term("value", value.ToString())));
+				}
+				AddDoc(modifier, ++id, value);
+				if (0 == t)
+				{
+					modifier.DeleteDocuments(new Term("value", value.ToString()));
+					NUnit.Framework.Assert.AreEqual(2, modifier.GetNumBufferedDeleteTerms());
+					NUnit.Framework.Assert.AreEqual(1, modifier.GetBufferedDeleteTermsSize());
+				}
+				else
+				{
+					modifier.DeleteDocuments(new TermQuery(new Term("value", value.ToString())));
+				}
+				AddDoc(modifier, ++id, value);
+				NUnit.Framework.Assert.AreEqual(0, modifier.GetSegmentCount());
+				modifier.Commit();
+				IndexReader reader = DirectoryReader.Open(dir);
+				NUnit.Framework.Assert.AreEqual(1, reader.NumDocs());
+				int hitCount = GetHitCount(dir, new Term("id", id.ToString()));
+				NUnit.Framework.Assert.AreEqual(1, hitCount);
+				reader.Close();
+				modifier.Close();
+				dir.Close();
 			}
-			internal bool sawMaybe = false;
-			internal bool failed = false;
-			public override MockRAMDirectory.Failure Reset()
+		}
+
+		// test when delete terms apply to both disk and ram segments
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestBothDeletes()
+		{
+			Directory dir = NewDirectory();
+			IndexWriter modifier = new IndexWriter(dir, ((IndexWriterConfig)((IndexWriterConfig
+				)NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(Random(), MockTokenizer
+				.WHITESPACE, false)).SetMaxBufferedDocs(100)).SetMaxBufferedDeleteTerms(100)));
+			int id = 0;
+			int value = 100;
+			for (int i = 0; i < 5; i++)
 			{
-				sawMaybe = false;
-				failed = false;
+				AddDoc(modifier, ++id, value);
+			}
+			value = 200;
+			for (int i_1 = 0; i_1 < 5; i_1++)
+			{
+				AddDoc(modifier, ++id, value);
+			}
+			modifier.Commit();
+			for (int i_2 = 0; i_2 < 5; i_2++)
+			{
+				AddDoc(modifier, ++id, value);
+			}
+			modifier.DeleteDocuments(new Term("value", value.ToString()));
+			modifier.Commit();
+			IndexReader reader = DirectoryReader.Open(dir);
+			NUnit.Framework.Assert.AreEqual(5, reader.NumDocs());
+			modifier.Close();
+			reader.Close();
+			dir.Close();
+		}
+
+		// test that batched delete terms are flushed together
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestBatchDeletes()
+		{
+			Directory dir = NewDirectory();
+			IndexWriter modifier = new IndexWriter(dir, ((IndexWriterConfig)((IndexWriterConfig
+				)NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(Random(), MockTokenizer
+				.WHITESPACE, false)).SetMaxBufferedDocs(2)).SetMaxBufferedDeleteTerms(2)));
+			int id = 0;
+			int value = 100;
+			for (int i = 0; i < 7; i++)
+			{
+				AddDoc(modifier, ++id, value);
+			}
+			modifier.Commit();
+			IndexReader reader = DirectoryReader.Open(dir);
+			NUnit.Framework.Assert.AreEqual(7, reader.NumDocs());
+			reader.Close();
+			id = 0;
+			modifier.DeleteDocuments(new Term("id", (++id).ToString()));
+			modifier.DeleteDocuments(new Term("id", (++id).ToString()));
+			modifier.Commit();
+			reader = DirectoryReader.Open(dir);
+			NUnit.Framework.Assert.AreEqual(5, reader.NumDocs());
+			reader.Close();
+			Term[] terms = new Term[3];
+			for (int i_1 = 0; i_1 < terms.Length; i_1++)
+			{
+				terms[i_1] = new Term("id", (++id).ToString());
+			}
+			modifier.DeleteDocuments(terms);
+			modifier.Commit();
+			reader = DirectoryReader.Open(dir);
+			NUnit.Framework.Assert.AreEqual(2, reader.NumDocs());
+			reader.Close();
+			modifier.Close();
+			dir.Close();
+		}
+
+		// test deleteAll()
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestDeleteAll()
+		{
+			Directory dir = NewDirectory();
+			IndexWriter modifier = new IndexWriter(dir, ((IndexWriterConfig)((IndexWriterConfig
+				)NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(Random(), MockTokenizer
+				.WHITESPACE, false)).SetMaxBufferedDocs(2)).SetMaxBufferedDeleteTerms(2)));
+			int id = 0;
+			int value = 100;
+			for (int i = 0; i < 7; i++)
+			{
+				AddDoc(modifier, ++id, value);
+			}
+			modifier.Commit();
+			IndexReader reader = DirectoryReader.Open(dir);
+			NUnit.Framework.Assert.AreEqual(7, reader.NumDocs());
+			reader.Close();
+			// Add 1 doc (so we will have something buffered)
+			AddDoc(modifier, 99, value);
+			// Delete all
+			modifier.DeleteAll();
+			// Delete all shouldn't be on disk yet
+			reader = DirectoryReader.Open(dir);
+			NUnit.Framework.Assert.AreEqual(7, reader.NumDocs());
+			reader.Close();
+			// Add a doc and update a doc (after the deleteAll, before the commit)
+			AddDoc(modifier, 101, value);
+			UpdateDoc(modifier, 102, value);
+			// commit the delete all
+			modifier.Commit();
+			// Validate there are no docs left
+			reader = DirectoryReader.Open(dir);
+			NUnit.Framework.Assert.AreEqual(2, reader.NumDocs());
+			reader.Close();
+			modifier.Close();
+			dir.Close();
+		}
+
+		/// <exception cref="System.IO.IOException"></exception>
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestDeleteAllNoDeadLock()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter modifier = new RandomIndexWriter(Random(), dir);
+			int numThreads = AtLeast(2);
+			Sharpen.Thread[] threads = new Sharpen.Thread[numThreads];
+			CountDownLatch latch = new CountDownLatch(1);
+			CountDownLatch doneLatch = new CountDownLatch(numThreads);
+			for (int i = 0; i < numThreads; i++)
+			{
+				int offset = i;
+				threads[i] = new _Thread_322(offset, latch, modifier, doneLatch);
+				threads[i].Start();
+			}
+			latch.CountDown();
+			while (!doneLatch.Await(1, TimeUnit.MILLISECONDS))
+			{
+				modifier.DeleteAll();
+				if (VERBOSE)
+				{
+					System.Console.Out.WriteLine("del all");
+				}
+			}
+			modifier.DeleteAll();
+			foreach (Sharpen.Thread thread in threads)
+			{
+				thread.Join();
+			}
+			modifier.Close();
+			DirectoryReader reader = DirectoryReader.Open(dir);
+			NUnit.Framework.Assert.AreEqual(reader.MaxDoc(), 0);
+			NUnit.Framework.Assert.AreEqual(reader.NumDocs(), 0);
+			NUnit.Framework.Assert.AreEqual(reader.NumDeletedDocs(), 0);
+			reader.Close();
+			dir.Close();
+		}
+
+		private sealed class _Thread_322 : Sharpen.Thread
+		{
+			public _Thread_322(int offset, CountDownLatch latch, RandomIndexWriter modifier, 
+				CountDownLatch doneLatch)
+			{
+				this.offset = offset;
+				this.latch = latch;
+				this.modifier = modifier;
+				this.doneLatch = doneLatch;
+			}
+
+			public override void Run()
+			{
+				int id = offset * 1000;
+				int value = 100;
+				try
+				{
+					latch.Await();
+					for (int j = 0; j < 1000; j++)
+					{
+						Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+							();
+						doc.Add(LuceneTestCase.NewTextField("content", "aaa", Field.Store.NO));
+						doc.Add(LuceneTestCase.NewStringField("id", (id++).ToString(), Field.Store.YES));
+						doc.Add(LuceneTestCase.NewStringField("value", value.ToString(), Field.Store.NO));
+						if (LuceneTestCase.DefaultCodecSupportsDocValues())
+						{
+							doc.Add(new NumericDocValuesField("dv", value));
+						}
+						modifier.AddDocument(doc);
+						if (LuceneTestCase.VERBOSE)
+						{
+							System.Console.Out.WriteLine("\tThread[" + offset + "]: add doc: " + id);
+						}
+					}
+				}
+				catch (Exception e)
+				{
+					throw new RuntimeException(e);
+				}
+				finally
+				{
+					doneLatch.CountDown();
+					if (LuceneTestCase.VERBOSE)
+					{
+						System.Console.Out.WriteLine("\tThread[" + offset + "]: done indexing");
+					}
+				}
+			}
+
+			private readonly int offset;
+
+			private readonly CountDownLatch latch;
+
+			private readonly RandomIndexWriter modifier;
+
+			private readonly CountDownLatch doneLatch;
+		}
+
+		// test rollback of deleteAll()
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestDeleteAllRollback()
+		{
+			Directory dir = NewDirectory();
+			IndexWriter modifier = new IndexWriter(dir, ((IndexWriterConfig)((IndexWriterConfig
+				)NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(Random(), MockTokenizer
+				.WHITESPACE, false)).SetMaxBufferedDocs(2)).SetMaxBufferedDeleteTerms(2)));
+			int id = 0;
+			int value = 100;
+			for (int i = 0; i < 7; i++)
+			{
+				AddDoc(modifier, ++id, value);
+			}
+			modifier.Commit();
+			AddDoc(modifier, ++id, value);
+			IndexReader reader = DirectoryReader.Open(dir);
+			NUnit.Framework.Assert.AreEqual(7, reader.NumDocs());
+			reader.Close();
+			// Delete all
+			modifier.DeleteAll();
+			// Roll it back
+			modifier.Rollback();
+			modifier.Close();
+			// Validate that the docs are still there
+			reader = DirectoryReader.Open(dir);
+			NUnit.Framework.Assert.AreEqual(7, reader.NumDocs());
+			reader.Close();
+			dir.Close();
+		}
+
+		// test deleteAll() w/ near real-time reader
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestDeleteAllNRT()
+		{
+			Directory dir = NewDirectory();
+			IndexWriter modifier = new IndexWriter(dir, ((IndexWriterConfig)((IndexWriterConfig
+				)NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(Random(), MockTokenizer
+				.WHITESPACE, false)).SetMaxBufferedDocs(2)).SetMaxBufferedDeleteTerms(2)));
+			int id = 0;
+			int value = 100;
+			for (int i = 0; i < 7; i++)
+			{
+				AddDoc(modifier, ++id, value);
+			}
+			modifier.Commit();
+			IndexReader reader = modifier.GetReader();
+			NUnit.Framework.Assert.AreEqual(7, reader.NumDocs());
+			reader.Close();
+			AddDoc(modifier, ++id, value);
+			AddDoc(modifier, ++id, value);
+			// Delete all
+			modifier.DeleteAll();
+			reader = modifier.GetReader();
+			NUnit.Framework.Assert.AreEqual(0, reader.NumDocs());
+			reader.Close();
+			// Roll it back
+			modifier.Rollback();
+			modifier.Close();
+			// Validate that the docs are still there
+			reader = DirectoryReader.Open(dir);
+			NUnit.Framework.Assert.AreEqual(7, reader.NumDocs());
+			reader.Close();
+			dir.Close();
+		}
+
+		/// <exception cref="System.IO.IOException"></exception>
+		private void UpdateDoc(IndexWriter modifier, int id, int value)
+		{
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(NewTextField("content", "aaa", Field.Store.NO));
+			doc.Add(NewStringField("id", id.ToString(), Field.Store.YES));
+			doc.Add(NewStringField("value", value.ToString(), Field.Store.NO));
+			if (DefaultCodecSupportsDocValues())
+			{
+				doc.Add(new NumericDocValuesField("dv", value));
+			}
+			modifier.UpdateDocument(new Term("id", id.ToString()), doc);
+		}
+
+		/// <exception cref="System.IO.IOException"></exception>
+		private void AddDoc(IndexWriter modifier, int id, int value)
+		{
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(NewTextField("content", "aaa", Field.Store.NO));
+			doc.Add(NewStringField("id", id.ToString(), Field.Store.YES));
+			doc.Add(NewStringField("value", value.ToString(), Field.Store.NO));
+			if (DefaultCodecSupportsDocValues())
+			{
+				doc.Add(new NumericDocValuesField("dv", value));
+			}
+			modifier.AddDocument(doc);
+		}
+
+		/// <exception cref="System.IO.IOException"></exception>
+		private int GetHitCount(Directory dir, Term term)
+		{
+			IndexReader reader = DirectoryReader.Open(dir);
+			IndexSearcher searcher = NewSearcher(reader);
+			int hitCount = searcher.Search(new TermQuery(term), null, 1000).totalHits;
+			reader.Close();
+			return hitCount;
+		}
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestDeletesOnDiskFull()
+		{
+			DoTestOperationsOnDiskFull(false);
+		}
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestUpdatesOnDiskFull()
+		{
+			DoTestOperationsOnDiskFull(true);
+		}
+
+		/// <summary>
+		/// Make sure if modifier tries to commit but hits disk full that modifier
+		/// remains consistent and usable.
+		/// </summary>
+		/// <remarks>
+		/// Make sure if modifier tries to commit but hits disk full that modifier
+		/// remains consistent and usable. Similar to TestIndexReader.testDiskFull().
+		/// </remarks>
+		/// <exception cref="System.IO.IOException"></exception>
+		private void DoTestOperationsOnDiskFull(bool updates)
+		{
+			Term searchTerm = new Term("content", "aaa");
+			int START_COUNT = 157;
+			int END_COUNT = 144;
+			// First build up a starting index:
+			MockDirectoryWrapper startDir = NewMockDirectory();
+			// TODO: find the resource leak that only occurs sometimes here.
+			startDir.SetNoDeleteOpenFile(false);
+			IndexWriter writer = new IndexWriter(startDir, NewIndexWriterConfig(TEST_VERSION_CURRENT
+				, new MockAnalyzer(Random(), MockTokenizer.WHITESPACE, false)));
+			for (int i = 0; i < 157; i++)
+			{
+				Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+				d.Add(NewStringField("id", Sharpen.Extensions.ToString(i), Field.Store.YES));
+				d.Add(NewTextField("content", "aaa " + i, Field.Store.NO));
+				if (DefaultCodecSupportsDocValues())
+				{
+					d.Add(new NumericDocValuesField("dv", i));
+				}
+				writer.AddDocument(d);
+			}
+			writer.Close();
+			long diskUsage = startDir.SizeInBytes();
+			long diskFree = diskUsage + 10;
+			IOException err = null;
+			bool done = false;
+			// Iterate w/ ever increasing free disk space:
+			while (!done)
+			{
+				if (VERBOSE)
+				{
+					System.Console.Out.WriteLine("TEST: cycle");
+				}
+				MockDirectoryWrapper dir = new MockDirectoryWrapper(Random(), new RAMDirectory(startDir
+					, NewIOContext(Random())));
+				dir.SetPreventDoubleWrite(false);
+				dir.SetAllowRandomFileNotFoundException(false);
+				IndexWriter modifier = new IndexWriter(dir, ((IndexWriterConfig)((IndexWriterConfig
+					)NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(Random(), MockTokenizer
+					.WHITESPACE, false)).SetMaxBufferedDocs(1000)).SetMaxBufferedDeleteTerms(1000)).
+					SetMergeScheduler(new ConcurrentMergeScheduler()));
+				((ConcurrentMergeScheduler)modifier.GetConfig().GetMergeScheduler()).SetSuppressExceptions
+					();
+				// For each disk size, first try to commit against
+				// dir that will hit random IOExceptions & disk
+				// full; after, give it infinite disk space & turn
+				// off random IOExceptions & retry w/ same reader:
+				bool success = false;
+				for (int x = 0; x < 2; x++)
+				{
+					if (VERBOSE)
+					{
+						System.Console.Out.WriteLine("TEST: x=" + x);
+					}
+					double rate = 0.1;
+					double diskRatio = ((double)diskFree) / diskUsage;
+					long thisDiskFree;
+					string testName;
+					if (0 == x)
+					{
+						thisDiskFree = diskFree;
+						if (diskRatio >= 2.0)
+						{
+							rate /= 2;
+						}
+						if (diskRatio >= 4.0)
+						{
+							rate /= 2;
+						}
+						if (diskRatio >= 6.0)
+						{
+							rate = 0.0;
+						}
+						if (VERBOSE)
+						{
+							System.Console.Out.WriteLine("\ncycle: " + diskFree + " bytes");
+						}
+						testName = "disk full during reader.close() @ " + thisDiskFree + " bytes";
+						dir.SetRandomIOExceptionRateOnOpen(Random().NextDouble() * 0.01);
+					}
+					else
+					{
+						thisDiskFree = 0;
+						rate = 0.0;
+						if (VERBOSE)
+						{
+							System.Console.Out.WriteLine("\ncycle: same writer: unlimited disk space");
+						}
+						testName = "reader re-use after disk full";
+						dir.SetRandomIOExceptionRateOnOpen(0.0);
+					}
+					dir.SetMaxSizeInBytes(thisDiskFree);
+					dir.SetRandomIOExceptionRate(rate);
+					try
+					{
+						if (0 == x)
+						{
+							int docId = 12;
+							for (int i_1 = 0; i_1 < 13; i_1++)
+							{
+								if (updates)
+								{
+									Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+									d.Add(NewStringField("id", Sharpen.Extensions.ToString(i_1), Field.Store.YES));
+									d.Add(NewTextField("content", "bbb " + i_1, Field.Store.NO));
+									if (DefaultCodecSupportsDocValues())
+									{
+										d.Add(new NumericDocValuesField("dv", i_1));
+									}
+									modifier.UpdateDocument(new Term("id", Sharpen.Extensions.ToString(docId)), d);
+								}
+								else
+								{
+									// deletes
+									modifier.DeleteDocuments(new Term("id", Sharpen.Extensions.ToString(docId)));
+								}
+								// modifier.setNorm(docId, "contents", (float)2.0);
+								docId += 12;
+							}
+						}
+						modifier.Close();
+						success = true;
+						if (0 == x)
+						{
+							done = true;
+						}
+					}
+					catch (IOException e)
+					{
+						if (VERBOSE)
+						{
+							System.Console.Out.WriteLine("  hit IOException: " + e);
+							Sharpen.Runtime.PrintStackTrace(e, System.Console.Out);
+						}
+						err = e;
+						if (1 == x)
+						{
+							Sharpen.Runtime.PrintStackTrace(e);
+							NUnit.Framework.Assert.Fail(testName + " hit IOException after disk space was freed up"
+								);
+						}
+					}
+					// prevent throwing a random exception here!!
+					double randomIOExceptionRate = dir.GetRandomIOExceptionRate();
+					long maxSizeInBytes = dir.GetMaxSizeInBytes();
+					dir.SetRandomIOExceptionRate(0.0);
+					dir.SetRandomIOExceptionRateOnOpen(0.0);
+					dir.SetMaxSizeInBytes(0);
+					if (!success)
+					{
+						// Must force the close else the writer can have
+						// open files which cause exc in MockRAMDir.close
+						if (VERBOSE)
+						{
+							System.Console.Out.WriteLine("TEST: now rollback");
+						}
+						modifier.Rollback();
+					}
+					// If the close() succeeded, make sure there are
+					// no unreferenced files.
+					if (success)
+					{
+						TestUtil.CheckIndex(dir);
+						TestIndexWriter.AssertNoUnreferencedFiles(dir, "after writer.close");
+					}
+					dir.SetRandomIOExceptionRate(randomIOExceptionRate);
+					dir.SetMaxSizeInBytes(maxSizeInBytes);
+					// Finally, verify index is not corrupt, and, if
+					// we succeeded, we see all docs changed, and if
+					// we failed, we see either all docs or no docs
+					// changed (transactional semantics):
+					IndexReader newReader = null;
+					try
+					{
+						newReader = DirectoryReader.Open(dir);
+					}
+					catch (IOException e)
+					{
+						Sharpen.Runtime.PrintStackTrace(e);
+						NUnit.Framework.Assert.Fail(testName + ":exception when creating IndexReader after disk full during close: "
+							 + e);
+					}
+					IndexSearcher searcher = NewSearcher(newReader);
+					ScoreDoc[] hits = null;
+					try
+					{
+						hits = searcher.Search(new TermQuery(searchTerm), null, 1000).scoreDocs;
+					}
+					catch (IOException e)
+					{
+						Sharpen.Runtime.PrintStackTrace(e);
+						NUnit.Framework.Assert.Fail(testName + ": exception when searching: " + e);
+					}
+					int result2 = hits.Length;
+					if (success)
+					{
+						if (x == 0 && result2 != END_COUNT)
+						{
+							NUnit.Framework.Assert.Fail(testName + ": method did not throw exception but hits.length for search on term 'aaa' is "
+								 + result2 + " instead of expected " + END_COUNT);
+						}
+						else
+						{
+							if (x == 1 && result2 != START_COUNT && result2 != END_COUNT)
+							{
+								// It's possible that the first exception was
+								// "recoverable" wrt pending deletes, in which
+								// case the pending deletes are retained and
+								// then re-flushing (with plenty of disk
+								// space) will succeed in flushing the
+								// deletes:
+								NUnit.Framework.Assert.Fail(testName + ": method did not throw exception but hits.length for search on term 'aaa' is "
+									 + result2 + " instead of expected " + START_COUNT + " or " + END_COUNT);
+							}
+						}
+					}
+					else
+					{
+						// On hitting exception we still may have added
+						// all docs:
+						if (result2 != START_COUNT && result2 != END_COUNT)
+						{
+							Sharpen.Runtime.PrintStackTrace(err);
+							NUnit.Framework.Assert.Fail(testName + ": method did throw exception but hits.length for search on term 'aaa' is "
+								 + result2 + " instead of expected " + START_COUNT + " or " + END_COUNT);
+						}
+					}
+					newReader.Close();
+					if (result2 == END_COUNT)
+					{
+						break;
+					}
+				}
+				dir.Close();
+				modifier.Close();
+				// Try again with 10 more bytes of free space:
+				diskFree += 10;
+			}
+			startDir.Close();
+		}
+
+		// This test tests that buffered deletes are cleared when
+		// an Exception is hit during flush.
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestErrorAfterApplyDeletes()
+		{
+			MockDirectoryWrapper.Failure failure = new _Failure_722();
+			// don't fail during merging
+			// Only fail once we are no longer in applyDeletes
+			// create a couple of files
+			string[] keywords = new string[] { "1", "2" };
+			string[] unindexed = new string[] { "Netherlands", "Italy" };
+			string[] unstored = new string[] { "Amsterdam has lots of bridges", "Venice has lots of canals"
+				 };
+			string[] text = new string[] { "Amsterdam", "Venice" };
+			MockDirectoryWrapper dir = NewMockDirectory();
+			IndexWriter modifier = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig
+				(TEST_VERSION_CURRENT, new MockAnalyzer(Random(), MockTokenizer.WHITESPACE, false
+				)).SetMaxBufferedDeleteTerms(2)).SetReaderPooling(false).SetMergePolicy(NewLogMergePolicy
+				()));
+			MergePolicy lmp = modifier.GetConfig().GetMergePolicy();
+			lmp.SetNoCFSRatio(1.0);
+			dir.FailOn(failure.Reset());
+			FieldType custom1 = new FieldType();
+			custom1.SetStored(true);
+			for (int i = 0; i < keywords.Length; i++)
+			{
+				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					();
+				doc.Add(NewStringField("id", keywords[i], Field.Store.YES));
+				doc.Add(NewField("country", unindexed[i], custom1));
+				doc.Add(NewTextField("contents", unstored[i], Field.Store.NO));
+				doc.Add(NewTextField("city", text[i], Field.Store.YES));
+				modifier.AddDocument(doc);
+			}
+			// flush (and commit if ac)
+			if (VERBOSE)
+			{
+				System.Console.Out.WriteLine("TEST: now full merge");
+			}
+			modifier.ForceMerge(1);
+			if (VERBOSE)
+			{
+				System.Console.Out.WriteLine("TEST: now commit");
+			}
+			modifier.Commit();
+			// one of the two files hits
+			Term term = new Term("city", "Amsterdam");
+			int hitCount = GetHitCount(dir, term);
+			NUnit.Framework.Assert.AreEqual(1, hitCount);
+			// open the writer again (closed above)
+			// delete the doc
+			// max buf del terms is two, so this is buffered
+			if (VERBOSE)
+			{
+				System.Console.Out.WriteLine("TEST: delete term=" + term);
+			}
+			modifier.DeleteDocuments(term);
+			// add a doc (needed for the !ac case; see below)
+			// doc remains buffered
+			if (VERBOSE)
+			{
+				System.Console.Out.WriteLine("TEST: add empty doc");
+			}
+			Lucene.Net.Document.Document doc_1 = new Lucene.Net.Document.Document
+				();
+			modifier.AddDocument(doc_1);
+			// commit the changes, the buffered deletes, and the new doc
+			// The failure object will fail on the first write after the del
+			// file gets created when processing the buffered delete
+			// in the ac case, this will be when writing the new segments
+			// files so we really don't need the new doc, but it's harmless
+			// a new segments file won't be created but in this
+			// case, creation of the cfs file happens next so we
+			// need the doc (to test that it's okay that we don't
+			// lose deletes if failing while creating the cfs file)
+			bool failed = false;
+			try
+			{
+				if (VERBOSE)
+				{
+					System.Console.Out.WriteLine("TEST: now commit for failure");
+				}
+				modifier.Commit();
+			}
+			catch (IOException)
+			{
+				// expected
+				failed = true;
+			}
+			NUnit.Framework.Assert.IsTrue(failed);
+			// The commit above failed, so we need to retry it (which will
+			// succeed, because the failure is a one-shot)
+			modifier.Commit();
+			hitCount = GetHitCount(dir, term);
+			// Make sure the delete was successfully flushed:
+			NUnit.Framework.Assert.AreEqual(0, hitCount);
+			modifier.Close();
+			dir.Close();
+		}
+
+		private sealed class _Failure_722 : MockDirectoryWrapper.Failure
+		{
+			public _Failure_722()
+			{
+				this.sawMaybe = false;
+				this.failed = false;
+			}
+
+			internal bool sawMaybe;
+
+			internal bool failed;
+
+			internal Sharpen.Thread thread;
+
+			public override MockDirectoryWrapper.Failure Reset()
+			{
+				this.thread = Sharpen.Thread.CurrentThread();
+				this.sawMaybe = false;
+				this.failed = false;
 				return this;
 			}
-			public override void  Eval(MockRAMDirectory dir)
+
+			/// <exception cref="System.IO.IOException"></exception>
+			public override void Eval(MockDirectoryWrapper dir)
 			{
-				if (sawMaybe && !failed)
+				if (Sharpen.Thread.CurrentThread() != this.thread)
+				{
+					return;
+				}
+				if (this.sawMaybe && !this.failed)
 				{
 					bool seen = false;
-					System.Diagnostics.StackTrace trace = new System.Diagnostics.StackTrace();
-					for (int i = 0; i < trace.FrameCount; i++)
+					StackTraceElement[] trace = new Exception().GetStackTrace();
+					for (int i = 0; i < trace.Length; i++)
 					{
-						System.Diagnostics.StackFrame sf = trace.GetFrame(i);
-						if ("ApplyDeletes".Equals(sf.GetMethod().Name))
+						if ("applyDeletesAndUpdates".Equals(trace[i].GetMethodName()) || "slowFileExists"
+							.Equals(trace[i].GetMethodName()))
 						{
 							seen = true;
 							break;
@@ -79,836 +884,489 @@ namespace Lucene.Net.Index
 					}
 					if (!seen)
 					{
-						// Only fail once we are no longer in applyDeletes
-						failed = true;
-						throw new System.IO.IOException("fail after applyDeletes");
+						this.failed = true;
+						if (LuceneTestCase.VERBOSE)
+						{
+							System.Console.Out.WriteLine("TEST: mock failure: now fail");
+							Sharpen.Runtime.PrintStackTrace(new Exception(), System.Console.Out);
+						}
+						throw new IOException("fail after applyDeletes");
 					}
 				}
-				if (!failed)
+				if (!this.failed)
 				{
-					System.Diagnostics.StackTrace trace = new System.Diagnostics.StackTrace();
-					for (int i = 0; i < trace.FrameCount; i++)
+					StackTraceElement[] trace = new Exception().GetStackTrace();
+					for (int i = 0; i < trace.Length; i++)
 					{
-						System.Diagnostics.StackFrame sf = trace.GetFrame(i);
-						if ("ApplyDeletes".Equals(sf.GetMethod().Name))
+						if ("applyDeletesAndUpdates".Equals(trace[i].GetMethodName()))
 						{
-							sawMaybe = true;
+							if (LuceneTestCase.VERBOSE)
+							{
+								System.Console.Out.WriteLine("TEST: mock failure: saw applyDeletes");
+								Sharpen.Runtime.PrintStackTrace(new Exception(), System.Console.Out);
+							}
+							this.sawMaybe = true;
 							break;
 						}
 					}
 				}
 			}
 		}
-		private class AnonymousClassFailure1:MockRAMDirectory.Failure
+
+		// This test tests that the files created by the docs writer before
+		// a segment is written are cleaned up if there's an i/o error
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestErrorInDocsWriterAdd()
 		{
-			public AnonymousClassFailure1(TestIndexWriterDelete enclosingInstance)
+			MockDirectoryWrapper.Failure failure = new _Failure_884();
+			// create a couple of files
+			string[] keywords = new string[] { "1", "2" };
+			string[] unindexed = new string[] { "Netherlands", "Italy" };
+			string[] unstored = new string[] { "Amsterdam has lots of bridges", "Venice has lots of canals"
+				 };
+			string[] text = new string[] { "Amsterdam", "Venice" };
+			MockDirectoryWrapper dir = NewMockDirectory();
+			IndexWriter modifier = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT
+				, new MockAnalyzer(Random(), MockTokenizer.WHITESPACE, false)));
+			modifier.Commit();
+			dir.FailOn(failure.Reset());
+			FieldType custom1 = new FieldType();
+			custom1.SetStored(true);
+			for (int i = 0; i < keywords.Length; i++)
 			{
-				InitBlock(enclosingInstance);
-			}
-			private void  InitBlock(TestIndexWriterDelete enclosingInstance)
-			{
-				this.enclosingInstance = enclosingInstance;
-			}
-			private TestIndexWriterDelete enclosingInstance;
-			public TestIndexWriterDelete Enclosing_Instance
-			{
-				get
+				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					();
+				doc.Add(NewStringField("id", keywords[i], Field.Store.YES));
+				doc.Add(NewField("country", unindexed[i], custom1));
+				doc.Add(NewTextField("contents", unstored[i], Field.Store.NO));
+				doc.Add(NewTextField("city", text[i], Field.Store.YES));
+				try
 				{
-					return enclosingInstance;
+					modifier.AddDocument(doc);
 				}
-				
+				catch (IOException io)
+				{
+					if (VERBOSE)
+					{
+						System.Console.Out.WriteLine("TEST: got expected exc:");
+						Sharpen.Runtime.PrintStackTrace(io, System.Console.Out);
+					}
+					break;
+				}
 			}
-			internal bool failed = false;
-			public override MockRAMDirectory.Failure Reset()
+			modifier.Close();
+			TestIndexWriter.AssertNoUnreferencedFiles(dir, "docsWriter.abort() failed to delete unreferenced files"
+				);
+			dir.Close();
+		}
+
+		private sealed class _Failure_884 : MockDirectoryWrapper.Failure
+		{
+			public _Failure_884()
 			{
-				failed = false;
+				this.failed = false;
+			}
+
+			internal bool failed;
+
+			public override MockDirectoryWrapper.Failure Reset()
+			{
+				this.failed = false;
 				return this;
 			}
-			public override void  Eval(MockRAMDirectory dir)
+
+			/// <exception cref="System.IO.IOException"></exception>
+			public override void Eval(MockDirectoryWrapper dir)
 			{
-				if (!failed)
+				if (!this.failed)
 				{
-					failed = true;
-					throw new System.IO.IOException("fail in add doc");
+					this.failed = true;
+					throw new IOException("fail in add doc");
 				}
 			}
 		}
-		
-		// test the simple case
-        [Test]
-        public virtual void TestSimpleCase()
-        {
-            System.String[] keywords = new System.String[] {"1", "2"};
-            System.String[] unindexed = new System.String[] {"Netherlands", "Italy"};
-            System.String[] unstored = new System.String[]
-                                           {"Amsterdam has lots of bridges", "Venice has lots of canals"};
-            System.String[] text = new System.String[] {"Amsterdam", "Venice"};
 
-            Directory dir = new MockRAMDirectory();
-            IndexWriter modifier = new IndexWriter(dir,  new WhitespaceAnalyzer(), true, IndexWriter.MaxFieldLength.UNLIMITED);
-            modifier.UseCompoundFile = true;
-            modifier.SetMaxBufferedDeleteTerms(1);
-
-            for (int i = 0; i < keywords.Length; i++)
-            {
-                Document doc = new Document();
-                doc.Add(new Field("id", keywords[i], Field.Store.YES, Field.Index.NOT_ANALYZED));
-                doc.Add(new Field("country", unindexed[i], Field.Store.YES, Field.Index.NO));
-                doc.Add(new Field("contents", unstored[i], Field.Store.NO, Field.Index.ANALYZED));
-                doc.Add(new Field("city", text[i], Field.Store.YES, Field.Index.ANALYZED));
-                modifier.AddDocument(doc);
-            }
-            modifier.Optimize();
-            modifier.Commit();
-
-            Term term = new Term("city", "Amsterdam");
-            int hitCount = GetHitCount(dir, term);
-            Assert.AreEqual(1, hitCount);
-            modifier.DeleteDocuments(term);
-            modifier.Commit();
-            hitCount = GetHitCount(dir, term);
-            Assert.AreEqual(0, hitCount);
-
-            modifier.Close();
-            dir.Close();
-        }
-
-        // test when delete terms only apply to disk segments
-        [Test]
-        public virtual void TestNonRAMDelete()
-        {
-            Directory dir = new MockRAMDirectory();
-            IndexWriter modifier = new IndexWriter(dir, new WhitespaceAnalyzer(), true,
-                                                   IndexWriter.MaxFieldLength.UNLIMITED);
-            modifier.SetMaxBufferedDocs(2);
-            modifier.SetMaxBufferedDeleteTerms(2);
-
-            int id = 0;
-            int value_Renamed = 100;
-
-            for (int i = 0; i < 7; i++)
-            {
-                AddDoc(modifier, ++id, value_Renamed);
-            }
-            modifier.Commit();
-
-            Assert.AreEqual(0, modifier.GetNumBufferedDocuments());
-            Assert.IsTrue(0 < modifier.GetSegmentCount());
-
-            modifier.Commit();
-
-            IndexReader reader = IndexReader.Open(dir, true);
-            Assert.AreEqual(7, reader.NumDocs());
-            reader.Close();
-
-            modifier.DeleteDocuments(new Term("value", System.Convert.ToString(value_Renamed)));
-
-            modifier.Commit();
-
-            reader = IndexReader.Open(dir, true);
-            Assert.AreEqual(0, reader.NumDocs());
-            reader.Close();
-            modifier.Close();
-            dir.Close();
-        }
-
-        [Test]
-        public virtual void TestMaxBufferedDeletes()
-        {
-            Directory dir = new MockRAMDirectory();
-            IndexWriter writer = new IndexWriter(dir, new WhitespaceAnalyzer(), true,
-                                                 IndexWriter.MaxFieldLength.UNLIMITED);
-            writer.SetMaxBufferedDeleteTerms(1);
-            writer.DeleteDocuments(new Term("foobar", "1"));
-            writer.DeleteDocuments(new Term("foobar", "1"));
-            writer.DeleteDocuments(new Term("foobar", "1"));
-            Assert.AreEqual(3, writer.GetFlushDeletesCount());
-            writer.Close();
-            dir.Close();
-        }
-
-        // test when delete terms only apply to ram segments
-		[Test]
-		public virtual void  TestRAMDeletes()
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestDeleteNullQuery()
 		{
-            for (int t = 0; t < 2; t++)
-            {
-                Directory dir = new MockRAMDirectory();
-                IndexWriter modifier = new IndexWriter(dir, new WhitespaceAnalyzer(), true, IndexWriter.MaxFieldLength.UNLIMITED);
-                modifier.SetMaxBufferedDocs(4);
-                modifier.SetMaxBufferedDeleteTerms(4);
-
-                int id = 0;
-                int value_Renamed = 100;
-
-                AddDoc(modifier, ++id, value_Renamed);
-                if (0 == t)
-                    modifier.DeleteDocuments(new Term("value", System.Convert.ToString(value_Renamed)));
-                else
-                    modifier.DeleteDocuments(new TermQuery(new Term("value", System.Convert.ToString(value_Renamed))));
-                AddDoc(modifier, ++id, value_Renamed);
-                if (0 == t)
-                {
-                    modifier.DeleteDocuments(new Term("value", System.Convert.ToString(value_Renamed)));
-                    Assert.AreEqual(2, modifier.GetNumBufferedDeleteTerms());
-                    Assert.AreEqual(1, modifier.GetBufferedDeleteTermsSize());
-                }
-                else
-                    modifier.DeleteDocuments(new TermQuery(new Term("value", System.Convert.ToString(value_Renamed))));
-
-                AddDoc(modifier, ++id, value_Renamed);
-                Assert.AreEqual(0, modifier.GetSegmentCount());
-                modifier.Commit();
-
-                modifier.Commit();
-
-                IndexReader reader = IndexReader.Open(dir, true);
-                Assert.AreEqual(1, reader.NumDocs());
-
-                int hitCount = GetHitCount(dir, new Term("id", System.Convert.ToString(id)));
-                Assert.AreEqual(1, hitCount);
-                reader.Close();
-                modifier.Close();
-                dir.Close();
-            }
-		}
-		
-		// test when delete terms apply to both disk and ram segments
-        [Test]
-        public virtual void TestBothDeletes()
-        {
-            Directory dir = new MockRAMDirectory();
-            IndexWriter modifier = new IndexWriter(dir, new WhitespaceAnalyzer(), true, IndexWriter.MaxFieldLength.UNLIMITED);
-            modifier.SetMaxBufferedDocs(100);
-            modifier.SetMaxBufferedDeleteTerms(100);
-
-            int id = 0;
-            int value_Renamed = 100;
-
-            for (int i = 0; i < 5; i++)
-            {
-                AddDoc(modifier, ++id, value_Renamed);
-            }
-
-            value_Renamed = 200;
-            for (int i = 0; i < 5; i++)
-            {
-                AddDoc(modifier, ++id, value_Renamed);
-            }
-            modifier.Commit();
-
-            for (int i = 0; i < 5; i++)
-            {
-                AddDoc(modifier, ++id, value_Renamed);
-            }
-            modifier.DeleteDocuments(new Term("value", System.Convert.ToString(value_Renamed)));
-
-            modifier.Commit();
-
-            IndexReader reader = IndexReader.Open(dir, true);
-            Assert.AreEqual(5, reader.NumDocs());
-            modifier.Close();
-        }
-
-        // test that batched delete terms are flushed together
-        [Test]
-        public virtual void TestBatchDeletes()
-        {
-            Directory dir = new MockRAMDirectory();
-            IndexWriter modifier = new IndexWriter(dir, new WhitespaceAnalyzer(), true,
-                                                   IndexWriter.MaxFieldLength.UNLIMITED);
-            modifier.SetMaxBufferedDocs(2);
-            modifier.SetMaxBufferedDeleteTerms(2);
-
-            int id = 0;
-            int value_Renamed = 100;
-
-            for (int i = 0; i < 7; i++)
-            {
-                AddDoc(modifier, ++id, value_Renamed);
-            }
-            modifier.Commit();
-
-            IndexReader reader = IndexReader.Open(dir, true);
-            Assert.AreEqual(7, reader.NumDocs());
-            reader.Close();
-
-            id = 0;
-            modifier.DeleteDocuments(new Term("id", System.Convert.ToString(++id)));
-            modifier.DeleteDocuments(new Term("id", System.Convert.ToString(++id)));
-
-            modifier.Commit();
-
-            reader = IndexReader.Open(dir, true);
-            Assert.AreEqual(5, reader.NumDocs());
-            reader.Close();
-
-            Term[] terms = new Term[3];
-            for (int i = 0; i < terms.Length; i++)
-            {
-                terms[i] = new Term("id", System.Convert.ToString(++id));
-            }
-            modifier.DeleteDocuments(terms);
-            modifier.Commit();
-            reader = IndexReader.Open(dir, true);
-            Assert.AreEqual(2, reader.NumDocs());
-            reader.Close();
-
-            modifier.Close();
-            dir.Close();
-        }
-
-        // test deleteAll()
-		[Test]
-		public virtual void  TestDeleteAll()
-		{
-		    Directory dir = new MockRAMDirectory();
-            IndexWriter modifier = new IndexWriter(dir, new WhitespaceAnalyzer(), true, IndexWriter.MaxFieldLength.UNLIMITED);
-		    modifier.SetMaxBufferedDocs(2);
-		    modifier.SetMaxBufferedDeleteTerms(2);
-
-		    int id = 0;
-		    int value_Renamed = 100;
-
-		    for (int i = 0; i < 7; i++)
-		    {
-		        AddDoc(modifier, ++id, value_Renamed);
-		    }
-		    modifier.Commit();
-
-		    IndexReader reader = IndexReader.Open(dir, true);
-		    Assert.AreEqual(7, reader.NumDocs());
-		    reader.Close();
-
-		    // Add 1 doc (so we will have something buffered)
-		    AddDoc(modifier, 99, value_Renamed);
-
-		    // Delete all
-		    modifier.DeleteAll();
-
-		    // Delete all shouldn't be on disk yet
-		    reader = IndexReader.Open(dir, true);
-		    Assert.AreEqual(7, reader.NumDocs());
-		    reader.Close();
-
-		    // Add a doc and update a doc (after the deleteAll, before the commit)
-		    AddDoc(modifier, 101, value_Renamed);
-		    UpdateDoc(modifier, 102, value_Renamed);
-
-		    // commit the delete all
-		    modifier.Commit();
-
-		    // Validate there are no docs left
-		    reader = IndexReader.Open(dir, true);
-		    Assert.AreEqual(2, reader.NumDocs());
-		    reader.Close();
-
-		    modifier.Close();
-		    dir.Close();
-		}
-
-        // test rollback of deleteAll()
-		[Test]
-		public virtual void  TestDeleteAllRollback()
-		{
-			Directory dir = new MockRAMDirectory();
-            IndexWriter modifier = new IndexWriter(dir, new WhitespaceAnalyzer(), true, IndexWriter.MaxFieldLength.UNLIMITED);
-			modifier.SetMaxBufferedDocs(2);
-			modifier.SetMaxBufferedDeleteTerms(2);
-			
-			int id = 0;
-			int value_Renamed = 100;
-			
-			for (int i = 0; i < 7; i++)
+			Directory dir = NewDirectory();
+			IndexWriter modifier = new IndexWriter(dir, new IndexWriterConfig(TEST_VERSION_CURRENT
+				, new MockAnalyzer(Random(), MockTokenizer.WHITESPACE, false)));
+			for (int i = 0; i < 5; i++)
 			{
-				AddDoc(modifier, ++id, value_Renamed);
+				AddDoc(modifier, i, 2 * i);
 			}
+			modifier.DeleteDocuments(new TermQuery(new Term("nada", "nada")));
 			modifier.Commit();
-			
-			AddDoc(modifier, ++id, value_Renamed);
-
-		    IndexReader reader = IndexReader.Open(dir, true);
-			Assert.AreEqual(7, reader.NumDocs());
-			reader.Close();
-			
-			// Delete all
-			modifier.DeleteAll();
-			
-			// Roll it back
-			modifier.Rollback();
+			NUnit.Framework.Assert.AreEqual(5, modifier.NumDocs());
 			modifier.Close();
-			
-			// Validate that the docs are still there
-		    reader = IndexReader.Open(dir, true);
-			Assert.AreEqual(7, reader.NumDocs());
-			reader.Close();
-			
 			dir.Close();
 		}
-		
-		
-		// test deleteAll() w/ near real-time reader
-		[Test]
-		public virtual void  TestDeleteAllNRT()
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestDeleteAllSlowly()
 		{
-			Directory dir = new MockRAMDirectory();
-            IndexWriter modifier = new IndexWriter(dir, new WhitespaceAnalyzer(), true, IndexWriter.MaxFieldLength.UNLIMITED);
-			modifier.SetMaxBufferedDocs(2);
-			modifier.SetMaxBufferedDeleteTerms(2);
-			
-			int id = 0;
-			int value_Renamed = 100;
-			
-			for (int i = 0; i < 7; i++)
+			Directory dir = NewDirectory();
+			RandomIndexWriter w = new RandomIndexWriter(Random(), dir);
+			int NUM_DOCS = AtLeast(1000);
+			IList<int> ids = new AList<int>(NUM_DOCS);
+			for (int id = 0; id < NUM_DOCS; id++)
 			{
-				AddDoc(modifier, ++id, value_Renamed);
+				ids.AddItem(id);
 			}
-			modifier.Commit();
-			
-			IndexReader reader = modifier.GetReader();
-			Assert.AreEqual(7, reader.NumDocs());
-			reader.Close();
-			
-			AddDoc(modifier, ++id, value_Renamed);
-			AddDoc(modifier, ++id, value_Renamed);
-			
-			// Delete all
-			modifier.DeleteAll();
-			
-			reader = modifier.GetReader();
-			Assert.AreEqual(0, reader.NumDocs());
-			reader.Close();
-			
-			
-			// Roll it back
-			modifier.Rollback();
-			modifier.Close();
-			
-			// Validate that the docs are still there
-		    reader = IndexReader.Open(dir, true);
-			Assert.AreEqual(7, reader.NumDocs());
-			reader.Close();
-			
-			dir.Close();
-		}
-		
-		
-		private void  UpdateDoc(IndexWriter modifier, int id, int value_Renamed)
-		{
-			Document doc = new Document();
-			doc.Add(new Field("content", "aaa", Field.Store.NO, Field.Index.ANALYZED));
-			doc.Add(new Field("id", System.Convert.ToString(id), Field.Store.YES, Field.Index.NOT_ANALYZED));
-			doc.Add(new Field("value", System.Convert.ToString(value_Renamed), Field.Store.NO, Field.Index.NOT_ANALYZED));
-			modifier.UpdateDocument(new Term("id", System.Convert.ToString(id)), doc);
-		}
-		
-		
-		private void  AddDoc(IndexWriter modifier, int id, int value_Renamed)
-		{
-			Document doc = new Document();
-			doc.Add(new Field("content", "aaa", Field.Store.NO, Field.Index.ANALYZED));
-			doc.Add(new Field("id", System.Convert.ToString(id), Field.Store.YES, Field.Index.NOT_ANALYZED));
-			doc.Add(new Field("value", System.Convert.ToString(value_Renamed), Field.Store.NO, Field.Index.NOT_ANALYZED));
-			modifier.AddDocument(doc);
-		}
-		
-		private int GetHitCount(Directory dir, Term term)
-		{
-		    IndexSearcher searcher = new IndexSearcher(dir, true);
-			int hitCount = searcher.Search(new TermQuery(term), null, 1000).TotalHits;
-			searcher.Close();
-			return hitCount;
-		}
-		
-		[Test]
-		public virtual void  TestDeletesOnDiskFull()
-		{
-			TestOperationsOnDiskFull(false);
-		}
-		
-		[Test]
-		public virtual void  TestUpdatesOnDiskFull()
-		{
-			TestOperationsOnDiskFull(true);
-		}
-		
-		/// <summary> Make sure if modifier tries to commit but hits disk full that modifier
-		/// remains consistent and usable. Similar to TestIndexReader.testDiskFull().
-		/// </summary>
-        private void TestOperationsOnDiskFull(bool updates)
-		{
-
-		    bool debug = false;
-		    Term searchTerm = new Term("content", "aaa");
-		    int START_COUNT = 157;
-		    int END_COUNT = 144;
-
-		    // First build up a starting index:
-		    MockRAMDirectory startDir = new MockRAMDirectory();
-            IndexWriter writer = new IndexWriter(startDir, new WhitespaceAnalyzer(), true, IndexWriter.MaxFieldLength.UNLIMITED);
-		    for (int i = 0; i < 157; i++)
-		    {
-		        Document d = new Document();
-		        d.Add(new Field("id", System.Convert.ToString(i), Field.Store.YES, Field.Index.NOT_ANALYZED));
-		        d.Add(new Field("content", "aaa " + i, Field.Store.NO, Field.Index.ANALYZED));
-		        writer.AddDocument(d);
-		    }
-		    writer.Close();
-
-		    long diskUsage = startDir.SizeInBytes();
-		    long diskFree = diskUsage + 10;
-
-		    System.IO.IOException err = null;
-
-		    bool done = false;
-
-		    // Iterate w/ ever increasing free disk space:
-		    while (!done)
-		    {
-		        MockRAMDirectory dir = new MockRAMDirectory(startDir);
-		        dir.SetPreventDoubleWrite(false);
-                IndexWriter modifier = new IndexWriter(dir, new WhitespaceAnalyzer(), IndexWriter.MaxFieldLength.UNLIMITED);
-
-		        modifier.SetMaxBufferedDocs(1000); // use flush or close
-		        modifier.SetMaxBufferedDeleteTerms(1000); // use flush or close
-
-		        // For each disk size, first try to commit against
-		        // dir that will hit random IOExceptions & disk
-		        // full; after, give it infinite disk space & turn
-		        // off random IOExceptions & retry w/ same reader:
-		        bool success = false;
-
-		        for (int x = 0; x < 2; x++)
-		        {
-
-		            double rate = 0.1;
-		            double diskRatio = ((double) diskFree)/diskUsage;
-		            long thisDiskFree;
-		            System.String testName;
-
-		            if (0 == x)
-		            {
-		                thisDiskFree = diskFree;
-		                if (diskRatio >= 2.0)
-		                {
-		                    rate /= 2;
-		                }
-		                if (diskRatio >= 4.0)
-		                {
-		                    rate /= 2;
-		                }
-		                if (diskRatio >= 6.0)
-		                {
-		                    rate = 0.0;
-		                }
-		                if (debug)
-		                {
-		                    System.Console.Out.WriteLine("\ncycle: " + diskFree + " bytes");
-		                }
-		                testName = "disk full during reader.close() @ " + thisDiskFree + " bytes";
-		            }
-		            else
-		            {
-		                thisDiskFree = 0;
-		                rate = 0.0;
-		                if (debug)
-		                {
-		                    System.Console.Out.WriteLine("\ncycle: same writer: unlimited disk space");
-		                }
-		                testName = "reader re-use after disk full";
-		            }
-
-		            dir.SetMaxSizeInBytes(thisDiskFree);
-		            dir.SetRandomIOExceptionRate(rate, diskFree);
-
-		            try
-		            {
-		                if (0 == x)
-		                {
-		                    int docId = 12;
-		                    for (int i = 0; i < 13; i++)
-		                    {
-		                        if (updates)
-		                        {
-		                            Document d = new Document();
-		                            d.Add(new Field("id", System.Convert.ToString(i), Field.Store.YES,
-		                                            Field.Index.NOT_ANALYZED));
-		                            d.Add(new Field("content", "bbb " + i, Field.Store.NO, Field.Index.ANALYZED));
-		                            modifier.UpdateDocument(new Term("id", System.Convert.ToString(docId)), d);
-		                        }
-		                        else
-		                        {
-		                            // deletes
-		                            modifier.DeleteDocuments(new Term("id", System.Convert.ToString(docId)));
-		                            // modifier.setNorm(docId, "contents", (float)2.0);
-		                        }
-		                        docId += 12;
-		                    }
-		                }
-		                modifier.Close();
-		                success = true;
-		                if (0 == x)
-		                {
-		                    done = true;
-		                }
-		            }
-		            catch (System.IO.IOException e)
-		            {
-		                if (debug)
-		                {
-		                    System.Console.Out.WriteLine("  hit IOException: " + e);
-		                    System.Console.Out.WriteLine(e.StackTrace);
-		                }
-		                err = e;
-		                if (1 == x)
-		                {
-		                    System.Console.Error.WriteLine(e.StackTrace);
-		                    Assert.Fail(testName + " hit IOException after disk space was freed up");
-		                }
-		            }
-
-		            // If the close() succeeded, make sure there are
-		            // no unreferenced files.
-		            if (success)
-		            {
-		                Lucene.Net.Util._TestUtil.CheckIndex(dir);
-		                TestIndexWriter.AssertNoUnreferencedFiles(dir, "after writer.close");
-		            }
-
-		            // Finally, verify index is not corrupt, and, if
-		            // we succeeded, we see all docs changed, and if
-		            // we failed, we see either all docs or no docs
-		            // changed (transactional semantics):
-		            IndexReader newReader = null;
-		            try
-		            {
-		                newReader = IndexReader.Open(dir, true);
-		            }
-		            catch (System.IO.IOException e)
-		            {
-		                System.Console.Error.WriteLine(e.StackTrace);
-		                Assert.Fail(testName + ":exception when creating IndexReader after disk full during close: " + e);
-		            }
-
-		            IndexSearcher searcher = new IndexSearcher(newReader);
-		            ScoreDoc[] hits = null;
-		            try
-		            {
-		                hits = searcher.Search(new TermQuery(searchTerm), null, 1000).ScoreDocs;
-		            }
-		            catch (System.IO.IOException e)
-		            {
-		                System.Console.Error.WriteLine(e.StackTrace);
-		                Assert.Fail(testName + ": exception when searching: " + e);
-		            }
-		            int result2 = hits.Length;
-		            if (success)
-		            {
-		                if (x == 0 && result2 != END_COUNT)
-		                {
-		                    Assert.Fail(testName +
-		                                ": method did not throw exception but hits.length for search on term 'aaa' is " +
-		                                result2 + " instead of expected " + END_COUNT);
-		                }
-		                else if (x == 1 && result2 != START_COUNT && result2 != END_COUNT)
-		                {
-		                    // It's possible that the first exception was
-		                    // "recoverable" wrt pending deletes, in which
-		                    // case the pending deletes are retained and
-		                    // then re-flushing (with plenty of disk
-		                    // space) will succeed in flushing the
-		                    // deletes:
-		                    Assert.Fail(testName +
-		                                ": method did not throw exception but hits.length for search on term 'aaa' is " +
-		                                result2 + " instead of expected " + START_COUNT + " or " + END_COUNT);
-		                }
-		            }
-		            else
-		            {
-		                // On hitting exception we still may have added
-		                // all docs:
-		                if (result2 != START_COUNT && result2 != END_COUNT)
-		                {
-		                    System.Console.Error.WriteLine(err.StackTrace);
-		                    Assert.Fail(testName + ": method did throw exception but hits.length for search on term 'aaa' is " +
-		                                result2 + " instead of expected " + START_COUNT + " or " + END_COUNT);
-		                }
-		            }
-
-		            searcher.Close();
-		            newReader.Close();
-
-		            if (result2 == END_COUNT)
-		            {
-		                break;
-		            }
-		        }
-
-		        dir.Close();
-
-		        // Try again with 10 more bytes of free space:
-		        diskFree += 10;
-		    }
-		}
-
-        // This test tests that buffered deletes are cleared when
-		// an Exception is hit during flush.
-        [Test]
-        public virtual void TestErrorAfterApplyDeletes()
-        {
-            MockRAMDirectory.Failure failure = new AnonymousClassFailure(this);
-
-            // create a couple of files
-
-            System.String[] keywords = new System.String[] {"1", "2"};
-            System.String[] unindexed = new System.String[] {"Netherlands", "Italy"};
-            System.String[] unstored = new System.String[]
-                                           {"Amsterdam has lots of bridges", "Venice has lots of canals"};
-            System.String[] text = new System.String[] {"Amsterdam", "Venice"};
-
-            MockRAMDirectory dir = new MockRAMDirectory();
-            IndexWriter modifier = new IndexWriter(dir, new WhitespaceAnalyzer(), true, IndexWriter.MaxFieldLength.UNLIMITED);
-            modifier.UseCompoundFile = true;
-            modifier.SetMaxBufferedDeleteTerms(2);
-
-            dir.FailOn(failure.Reset());
-
-            for (int i = 0; i < keywords.Length; i++)
-            {
-                Document doc = new Document();
-                doc.Add(new Field("id", keywords[i], Field.Store.YES, Field.Index.NOT_ANALYZED));
-                doc.Add(new Field("country", unindexed[i], Field.Store.YES, Field.Index.NO));
-                doc.Add(new Field("contents", unstored[i], Field.Store.NO, Field.Index.ANALYZED));
-                doc.Add(new Field("city", text[i], Field.Store.YES, Field.Index.ANALYZED));
-                modifier.AddDocument(doc);
-            }
-            // flush (and commit if ac)
-
-            modifier.Optimize();
-            modifier.Commit();
-
-            // one of the two files hits
-
-            Term term = new Term("city", "Amsterdam");
-            int hitCount = GetHitCount(dir, term);
-            Assert.AreEqual(1, hitCount);
-
-            // open the writer again (closed above)
-
-            // delete the doc
-            // max buf del terms is two, so this is buffered
-
-            modifier.DeleteDocuments(term);
-
-            // add a doc (needed for the !ac case; see below)
-            // doc remains buffered
-
-            Document doc2 = new Document();
-            modifier.AddDocument(doc2);
-
-            // commit the changes, the buffered deletes, and the new doc
-
-            // The failure object will fail on the first write after the del
-            // file gets created when processing the buffered delete
-
-            // in the ac case, this will be when writing the new segments
-            // files so we really don't need the new doc, but it's harmless
-
-            // in the !ac case, a new segments file won't be created but in
-            // this case, creation of the cfs file happens next so we need
-            // the doc (to test that it's okay that we don't lose deletes if
-            // failing while creating the cfs file)
-
-            bool failed = false;
-            try
-            {
-                modifier.Commit();
-            }
-            catch (System.IO.IOException ioe)
-            {
-                failed = true;
-            }
-
-            Assert.IsTrue(failed);
-
-            // The commit above failed, so we need to retry it (which will
-            // succeed, because the failure is a one-shot)
-
-            modifier.Commit();
-
-            hitCount = GetHitCount(dir, term);
-
-            // Make sure the delete was successfully flushed:
-            Assert.AreEqual(0, hitCount);
-
-            modifier.Close();
-            dir.Close();
-        }
-
-        // This test tests that the files created by the docs writer before
-		// a segment is written are cleaned up if there's an i/o error
-
-        [Test]
-        public virtual void TestErrorInDocsWriterAdd()
-        {
-
-            MockRAMDirectory.Failure failure = new AnonymousClassFailure1(this);
-
-            // create a couple of files
-
-            System.String[] keywords = new System.String[] {"1", "2"};
-            System.String[] unindexed = new System.String[] {"Netherlands", "Italy"};
-            System.String[] unstored = new System.String[]
-                                           {"Amsterdam has lots of bridges", "Venice has lots of canals"};
-            System.String[] text = new System.String[] {"Amsterdam", "Venice"};
-
-            MockRAMDirectory dir = new MockRAMDirectory();
-            IndexWriter modifier = new IndexWriter(dir, new WhitespaceAnalyzer(), true, IndexWriter.MaxFieldLength.UNLIMITED);
-
-            dir.FailOn(failure.Reset());
-
-            for (int i = 0; i < keywords.Length; i++)
-            {
-                Document doc = new Document();
-                doc.Add(new Field("id", keywords[i], Field.Store.YES, Field.Index.NOT_ANALYZED));
-                doc.Add(new Field("country", unindexed[i], Field.Store.YES, Field.Index.NO));
-                doc.Add(new Field("contents", unstored[i], Field.Store.NO, Field.Index.ANALYZED));
-                doc.Add(new Field("city", text[i], Field.Store.YES, Field.Index.ANALYZED));
-                try
-                {
-                    modifier.AddDocument(doc);
-                }
-                catch (System.IO.IOException io)
-                {
-                    break;
-                }
-            }
-
-            System.String[] startFiles = dir.ListAll();
-            SegmentInfos infos = new SegmentInfos();
-            infos.Read(dir);
-            new IndexFileDeleter(dir, new KeepOnlyLastCommitDeletionPolicy(), infos, null, null, null);
-            System.String[] endFiles = dir.ListAll();
-
-            Assert.IsTrue(CollectionsHelper.CompareStringArrays(startFiles, endFiles),
-                          "docswriter abort() failed to delete unreferenced files:\n  before delete:\n    " +
-                          ArrayToString(startFiles) + "\n  after delete:\n    " + ArrayToString(endFiles));
-
-            modifier.Close();
-        }
-
-        private System.String ArrayToString(System.String[] l)
-		{
-			System.String s = "";
-			for (int i = 0; i < l.Length; i++)
+			Sharpen.Collections.Shuffle(ids, Random());
+			foreach (int id_1 in ids)
 			{
-				if (i > 0)
+				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					();
+				doc.Add(NewStringField("id", string.Empty + id_1, Field.Store.NO));
+				w.AddDocument(doc);
+			}
+			Sharpen.Collections.Shuffle(ids, Random());
+			int upto = 0;
+			while (upto < ids.Count)
+			{
+				int left = ids.Count - upto;
+				int inc = Math.Min(left, TestUtil.NextInt(Random(), 1, 20));
+				int limit = upto + inc;
+				while (upto < limit)
 				{
-					s += "\n    ";
+					w.DeleteDocuments(new Term("id", string.Empty + ids[upto++]));
 				}
-				s += l[i];
+				IndexReader r = w.GetReader();
+				NUnit.Framework.Assert.AreEqual(NUM_DOCS - upto, r.NumDocs());
+				r.Close();
 			}
-			return s;
+			w.Close();
+			dir.Close();
+		}
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestIndexingThenDeleting()
+		{
+			// TODO: move this test to its own class and just @SuppressCodecs?
+			// TODO: is it enough to just use newFSDirectory?
+			string fieldFormat = TestUtil.GetPostingsFormat("field");
+			AssumeFalse("This test cannot run with Memory codec", fieldFormat.Equals("Memory"
+				));
+			AssumeFalse("This test cannot run with SimpleText codec", fieldFormat.Equals("SimpleText"
+				));
+			AssumeFalse("This test cannot run with Direct codec", fieldFormat.Equals("Direct"
+				));
+			Random r = Random();
+			Directory dir = NewDirectory();
+			// note this test explicitly disables payloads
+			Analyzer analyzer = new _Analyzer_994();
+			IndexWriter w = new IndexWriter(dir, ((IndexWriterConfig)((IndexWriterConfig)((IndexWriterConfig
+				)NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer).SetRAMBufferSizeMB(1.0)).SetMaxBufferedDocs
+				(IndexWriterConfig.DISABLE_AUTO_FLUSH)).SetMaxBufferedDeleteTerms(IndexWriterConfig
+				.DISABLE_AUTO_FLUSH)));
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(NewTextField("field", "go 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20"
+				, Field.Store.NO));
+			int num = AtLeast(3);
+			for (int iter = 0; iter < num; iter++)
+			{
+				int count = 0;
+				bool doIndexing = r.NextBoolean();
+				if (VERBOSE)
+				{
+					System.Console.Out.WriteLine("TEST: iter doIndexing=" + doIndexing);
+				}
+				if (doIndexing)
+				{
+					// Add docs until a flush is triggered
+					int startFlushCount = w.GetFlushCount();
+					while (w.GetFlushCount() == startFlushCount)
+					{
+						w.AddDocument(doc);
+						count++;
+					}
+				}
+				else
+				{
+					// Delete docs until a flush is triggered
+					int startFlushCount = w.GetFlushCount();
+					while (w.GetFlushCount() == startFlushCount)
+					{
+						w.DeleteDocuments(new Term("foo", string.Empty + count));
+						count++;
+					}
+				}
+				NUnit.Framework.Assert.IsTrue("flush happened too quickly during " + (doIndexing ? 
+					"indexing" : "deleting") + " count=" + count, count > 2500);
+			}
+			w.Close();
+			dir.Close();
+		}
+
+		private sealed class _Analyzer_994 : Analyzer
+		{
+			public _Analyzer_994()
+			{
+			}
+
+			protected override Analyzer.TokenStreamComponents CreateComponents(string fieldName
+				, StreamReader reader)
+			{
+				return new Analyzer.TokenStreamComponents(new MockTokenizer(reader, MockTokenizer
+					.WHITESPACE, true));
+			}
+		}
+
+		// LUCENE-3340: make sure deletes that we don't apply
+		// during flush (ie are just pushed into the stream) are
+		// in fact later flushed due to their RAM usage:
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestFlushPushedDeletesByRAM()
+		{
+			Directory dir = NewDirectory();
+			// Cannot use RandomIndexWriter because we don't want to
+			// ever call commit() for this test:
+			// note: tiny rambuffer used, as with a 1MB buffer the test is too slow (flush @ 128,999)
+			IndexWriter w = new IndexWriter(dir, ((IndexWriterConfig)((IndexWriterConfig)NewIndexWriterConfig
+				(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetRAMBufferSizeMB(0.1f)).SetMaxBufferedDocs
+				(1000)).SetMergePolicy(NoMergePolicy.NO_COMPOUND_FILES).SetReaderPooling(false));
+			int count = 0;
+			while (true)
+			{
+				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					();
+				doc.Add(new StringField("id", count + string.Empty, Field.Store.NO));
+				Term delTerm;
+				if (count == 1010)
+				{
+					// This is the only delete that applies
+					delTerm = new Term("id", string.Empty + 0);
+				}
+				else
+				{
+					// These get buffered, taking up RAM, but delete
+					// nothing when applied:
+					delTerm = new Term("id", "x" + count);
+				}
+				w.UpdateDocument(delTerm, doc);
+				// Eventually segment 0 should get a del docs:
+				// TODO: fix this test
+				if (SlowFileExists(dir, "_0_1.del") || SlowFileExists(dir, "_0_1.liv"))
+				{
+					if (VERBOSE)
+					{
+						System.Console.Out.WriteLine("TEST: deletes created @ count=" + count);
+					}
+					break;
+				}
+				count++;
+				// Today we applyDeletes @ count=21553; even if we make
+				// sizable improvements to RAM efficiency of buffered
+				// del term we're unlikely to go over 100K:
+				if (count > 100000)
+				{
+					NUnit.Framework.Assert.Fail("delete's were not applied");
+				}
+			}
+			w.Close();
+			dir.Close();
+		}
+
+		// LUCENE-3340: make sure deletes that we don't apply
+		// during flush (ie are just pushed into the stream) are
+		// in fact later flushed due to their RAM usage:
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestFlushPushedDeletesByCount()
+		{
+			Directory dir = NewDirectory();
+			// Cannot use RandomIndexWriter because we don't want to
+			// ever call commit() for this test:
+			int flushAtDelCount = AtLeast(1020);
+			IndexWriter w = new IndexWriter(dir, ((IndexWriterConfig)((IndexWriterConfig)((IndexWriterConfig
+				)NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMaxBufferedDeleteTerms
+				(flushAtDelCount)).SetMaxBufferedDocs(1000)).SetRAMBufferSizeMB(IndexWriterConfig
+				.DISABLE_AUTO_FLUSH)).SetMergePolicy(NoMergePolicy.NO_COMPOUND_FILES).SetReaderPooling
+				(false));
+			int count = 0;
+			while (true)
+			{
+				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					();
+				doc.Add(new StringField("id", count + string.Empty, Field.Store.NO));
+				Term delTerm;
+				if (count == 1010)
+				{
+					// This is the only delete that applies
+					delTerm = new Term("id", string.Empty + 0);
+				}
+				else
+				{
+					// These get buffered, taking up RAM, but delete
+					// nothing when applied:
+					delTerm = new Term("id", "x" + count);
+				}
+				w.UpdateDocument(delTerm, doc);
+				// Eventually segment 0 should get a del docs:
+				// TODO: fix this test
+				if (SlowFileExists(dir, "_0_1.del") || SlowFileExists(dir, "_0_1.liv"))
+				{
+					break;
+				}
+				count++;
+				if (count > flushAtDelCount)
+				{
+					NUnit.Framework.Assert.Fail("delete's were not applied at count=" + flushAtDelCount
+						);
+				}
+			}
+			w.Close();
+			dir.Close();
+		}
+
+		// Make sure buffered (pushed) deletes don't use up so
+		// much RAM that it forces long tail of tiny segments:
+		/// <exception cref="System.Exception"></exception>
+		[LuceneTestCase.Nightly]
+		public virtual void TestApplyDeletesOnFlush()
+		{
+			Directory dir = NewDirectory();
+			// Cannot use RandomIndexWriter because we don't want to
+			// ever call commit() for this test:
+			AtomicInteger docsInSegment = new AtomicInteger();
+			AtomicBoolean closing = new AtomicBoolean();
+			AtomicBoolean sawAfterFlush = new AtomicBoolean();
+			IndexWriter w = new _IndexWriter_1129(docsInSegment, closing, sawAfterFlush, dir, 
+				((IndexWriterConfig)((IndexWriterConfig)NewIndexWriterConfig(TEST_VERSION_CURRENT
+				, new MockAnalyzer(Random())).SetRAMBufferSizeMB(0.5)).SetMaxBufferedDocs(-1)).SetMergePolicy
+				(NoMergePolicy.NO_COMPOUND_FILES).SetReaderPooling(false));
+			int id = 0;
+			while (true)
+			{
+				StringBuilder sb = new StringBuilder();
+				for (int termIDX = 0; termIDX < 100; termIDX++)
+				{
+					sb.Append(' ').Append(TestUtil.RandomRealisticUnicodeString(Random()));
+				}
+				if (id == 500)
+				{
+					w.DeleteDocuments(new Term("id", "0"));
+				}
+				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					();
+				doc.Add(NewStringField("id", string.Empty + id, Field.Store.NO));
+				doc.Add(NewTextField("body", sb.ToString(), Field.Store.NO));
+				w.UpdateDocument(new Term("id", string.Empty + id), doc);
+				docsInSegment.IncrementAndGet();
+				// TODO: fix this test
+				if (SlowFileExists(dir, "_0_1.del") || SlowFileExists(dir, "_0_1.liv"))
+				{
+					if (VERBOSE)
+					{
+						System.Console.Out.WriteLine("TEST: deletes created @ id=" + id);
+					}
+					break;
+				}
+				id++;
+			}
+			closing.Set(true);
+			NUnit.Framework.Assert.IsTrue(sawAfterFlush.Get());
+			w.Close();
+			dir.Close();
+		}
+
+		private sealed class _IndexWriter_1129 : IndexWriter
+		{
+			public _IndexWriter_1129(AtomicInteger docsInSegment, AtomicBoolean closing, AtomicBoolean
+				 sawAfterFlush, Directory baseArg1, IndexWriterConfig baseArg2) : base(baseArg1, 
+				baseArg2)
+			{
+				this.docsInSegment = docsInSegment;
+				this.closing = closing;
+				this.sawAfterFlush = sawAfterFlush;
+			}
+
+			protected override void DoAfterFlush()
+			{
+				NUnit.Framework.Assert.IsTrue("only " + docsInSegment.Get() + " in segment", closing
+					.Get() || docsInSegment.Get() >= 7);
+				docsInSegment.Set(0);
+				sawAfterFlush.Set(true);
+			}
+
+			private readonly AtomicInteger docsInSegment;
+
+			private readonly AtomicBoolean closing;
+
+			private readonly AtomicBoolean sawAfterFlush;
+		}
+
+		// LUCENE-4455
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestDeletesCheckIndexOutput()
+		{
+			Directory dir = NewDirectory();
+			IndexWriterConfig iwc = new IndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
+				(Random()));
+			iwc.SetMaxBufferedDocs(2);
+			IndexWriter w = new IndexWriter(dir, iwc.Clone());
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(NewField("field", "0", StringField.TYPE_NOT_STORED));
+			w.AddDocument(doc);
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewField("field", "1", StringField.TYPE_NOT_STORED));
+			w.AddDocument(doc);
+			w.Commit();
+			NUnit.Framework.Assert.AreEqual(1, w.GetSegmentCount());
+			w.DeleteDocuments(new Term("field", "0"));
+			w.Commit();
+			NUnit.Framework.Assert.AreEqual(1, w.GetSegmentCount());
+			w.Close();
+			ByteArrayOutputStream bos = new ByteArrayOutputStream(1024);
+			CheckIndex checker = new CheckIndex(dir);
+			checker.SetInfoStream(new TextWriter(bos, false, IOUtils.UTF_8), false);
+			CheckIndex.Status indexStatus = checker.CheckIndex(null);
+			NUnit.Framework.Assert.IsTrue(indexStatus.clean);
+			string s = bos.ToString(IOUtils.UTF_8);
+			// Segment should have deletions:
+			NUnit.Framework.Assert.IsTrue(s.Contains("has deletions"));
+			w = new IndexWriter(dir, iwc.Clone());
+			w.ForceMerge(1);
+			w.Close();
+			bos = new ByteArrayOutputStream(1024);
+			checker.SetInfoStream(new TextWriter(bos, false, IOUtils.UTF_8), false);
+			indexStatus = checker.CheckIndex(null);
+			NUnit.Framework.Assert.IsTrue(indexStatus.clean);
+			s = bos.ToString(IOUtils.UTF_8);
+			NUnit.Framework.Assert.IsFalse(s.Contains("has deletions"));
+			dir.Close();
+		}
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestTryDeleteDocument()
+		{
+			Directory d = NewDirectory();
+			IndexWriterConfig iwc = new IndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
+				(Random()));
+			IndexWriter w = new IndexWriter(d, iwc);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			w.AddDocument(doc);
+			w.AddDocument(doc);
+			w.AddDocument(doc);
+			w.Close();
+			iwc = new IndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(Random()));
+			iwc.SetOpenMode(IndexWriterConfig.OpenMode.APPEND);
+			w = new IndexWriter(d, iwc);
+			IndexReader r = DirectoryReader.Open(w, false);
+			NUnit.Framework.Assert.IsTrue(w.TryDeleteDocument(r, 1));
+			NUnit.Framework.Assert.IsTrue(w.TryDeleteDocument(((AtomicReader)r.Leaves()[0].Reader
+				()), 0));
+			r.Close();
+			w.Close();
+			r = DirectoryReader.Open(d);
+			NUnit.Framework.Assert.AreEqual(2, r.NumDeletedDocs());
+			NUnit.Framework.Assert.IsNotNull(MultiFields.GetLiveDocs(r));
+			r.Close();
+			d.Close();
 		}
 	}
 }

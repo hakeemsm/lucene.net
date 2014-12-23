@@ -1,19 +1,11 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using System.Collections.Generic;
-using Org.Apache.Lucene.Codecs;
+using Lucene.Net.Index;
+using Lucene.Net.Store;
 using Lucene.Net.Codecs.Lucene3x;
-using Org.Apache.Lucene.Index;
-using Org.Apache.Lucene.Store;
-using Org.Apache.Lucene.Util;
-using Sharpen;
+using Lucene.Net.Util;
 
-namespace Lucene.Net.Codecs.Lucene3x
+namespace Lucene.Net.Codecs.Lucene3x.TestFramework
 {
 	internal class PreFlexRWFieldsWriter : FieldsConsumer
 	{
@@ -38,20 +30,20 @@ namespace Lucene.Net.Codecs.Lucene3x
 				string freqFile = IndexFileNames.SegmentFileName(state.segmentInfo.name, string.Empty
 					, Lucene3xPostingsFormat.FREQ_EXTENSION);
 				freqOut = state.directory.CreateOutput(freqFile, state.context);
-				totalNumDocs = state.segmentInfo.GetDocCount();
+				totalNumDocs = state.segmentInfo.DocCount;
 				success = true;
 			}
 			finally
 			{
 				if (!success)
 				{
-					IOUtils.CloseWhileHandlingException(termsOut);
+					IOUtils.CloseWhileHandlingException((IDisposable)termsOut);
 				}
 			}
 			success = false;
 			try
 			{
-				if (state.fieldInfos.HasProx())
+				if (state.fieldInfos.HasProx)
 				{
 					string proxFile = IndexFileNames.SegmentFileName(state.segmentInfo.name, string.Empty
 						, Lucene3xPostingsFormat.PROX_EXTENSION);
@@ -67,7 +59,7 @@ namespace Lucene.Net.Codecs.Lucene3x
 			{
 				if (!success)
 				{
-					IOUtils.CloseWhileHandlingException(termsOut, freqOut);
+					IOUtils.CloseWhileHandlingException((IDisposable)termsOut, freqOut);
 				}
 			}
 			skipListWriter = new PreFlexRWSkipListWriter(termsOut.skipInterval, termsOut.maxSkipLevels
@@ -80,17 +72,17 @@ namespace Lucene.Net.Codecs.Lucene3x
 		{
 			 
 			//assert field.number != -1;
-			if (field.GetIndexOptions().CompareTo(FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS
+			if (field.IndexOptionsValue.GetValueOrDefault().CompareTo(FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS
 				) >= 0)
 			{
 				throw new NotSupportedException("this codec cannot index offsets");
 			}
 			//System.out.println("w field=" + field.name + " storePayload=" + field.storePayloads + " number=" + field.number);
-			return new PreFlexRWFieldsWriter.PreFlexTermsWriter(this, field);
+			return new PreFlexTermsWriter(this, field);
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		public override void Close()
+		protected override void Dispose(bool disposing)
 		{
 			IOUtils.Close(termsOut, freqOut, proxOut);
 		}
@@ -105,16 +97,15 @@ namespace Lucene.Net.Codecs.Lucene3x
 
 			private readonly TermInfo termInfo = new TermInfo();
 
-			private readonly PreFlexRWFieldsWriter.PreFlexTermsWriter.PostingsWriter postingsWriter;
+			private readonly PostingsWriter postingsWriter;
 
 			public PreFlexTermsWriter(PreFlexRWFieldsWriter _enclosing, FieldInfo fieldInfo)
 			{
 				this._enclosing = _enclosing;
-				postingsWriter = new PreFlexRWFieldsWriter.PreFlexTermsWriter.PostingsWriter(this
-					);
+				postingsWriter = new PostingsWriter(this);
 				this.fieldInfo = fieldInfo;
-				this.omitTF = fieldInfo.GetIndexOptions() == FieldInfo.IndexOptions.DOCS_ONLY;
-				this.storePayloads = fieldInfo.HasPayloads();
+				this.omitTF = fieldInfo.IndexOptionsValue.GetValueOrDefault() == FieldInfo.IndexOptions.DOCS_ONLY;
+				this.storePayloads = fieldInfo.HasPayloads;
 			}
 
 			private class PostingsWriter : PostingsConsumer
@@ -127,7 +118,7 @@ namespace Lucene.Net.Codecs.Lucene3x
 
 				private int df;
 
-				public virtual PreFlexRWFieldsWriter.PreFlexTermsWriter.PostingsWriter Reset()
+				public virtual PostingsWriter Reset()
 				{
 					this.df = 0;
 					this.lastDocID = 0;
@@ -135,7 +126,7 @@ namespace Lucene.Net.Codecs.Lucene3x
 					return this;
 				}
 
-				/// <exception cref="System.IO.IOException"></exception>
+				
 				public override void StartDoc(int docID, int termDocFreq)
 				{
 					//System.out.println("    w doc=" + docID);
@@ -231,10 +222,10 @@ namespace Lucene.Net.Codecs.Lucene3x
 			{
 				//System.out.println("  w term=" + text.utf8ToString());
 				this._enclosing.skipListWriter.ResetSkip();
-				this.termInfo.freqPointer = this._enclosing.freqOut.GetFilePointer();
+				this.termInfo.freqPointer = this._enclosing.freqOut.FilePointer;
 				if (this._enclosing.proxOut != null)
 				{
-					this.termInfo.proxPointer = this._enclosing.proxOut.GetFilePointer();
+					this.termInfo.proxPointer = this._enclosing.proxOut.FilePointer;
 				}
 				return this.postingsWriter.Reset();
 			}
@@ -260,9 +251,9 @@ namespace Lucene.Net.Codecs.Lucene3x
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
-			public override IComparer<BytesRef> GetComparator()
+			public override IComparer<BytesRef> Comparator
 			{
-				return BytesRef.GetUTF8SortedAsUTF16Comparator();
+			    get { return BytesRef.UTF8SortedAsUnicodeComparer; }
 			}
 
 			private readonly PreFlexRWFieldsWriter _enclosing;

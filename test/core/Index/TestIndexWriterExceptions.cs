@@ -1,300 +1,2576 @@
-/* 
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+/*
+ * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
  * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
 using System;
-using Lucene.Net.Support;
+using System.Collections.Generic;
+using System.IO;
 using NUnit.Framework;
-
-using Analyzer = Lucene.Net.Analysis.Analyzer;
-using WhitespaceAnalyzer = Lucene.Net.Analysis.WhitespaceAnalyzer;
-using Document = Lucene.Net.Documents.Document;
-using TermVector = Lucene.Net.Documents.Field.TermVector;
-using Field = Lucene.Net.Documents.Field;
-using Directory = Lucene.Net.Store.Directory;
-using MockRAMDirectory = Lucene.Net.Store.MockRAMDirectory;
-using LuceneTestCase = Lucene.Net.Util.LuceneTestCase;
-using _TestUtil = Lucene.Net.Util._TestUtil;
+using Lucene.Net.Analysis;
+using Lucene.Net.Document;
+using Lucene.Net.Index;
+using Lucene.Net.Search;
+using Lucene.Net.Store;
+using Lucene.Net.Util;
+using Sharpen;
 
 namespace Lucene.Net.Index
 {
-	
-    [TestFixture]
-	public class TestIndexWriterExceptions:LuceneTestCase
+	public class TestIndexWriterExceptions : LuceneTestCase
 	{
-        Random random;
-		private const bool DEBUG = false;
-
-        static TermVector[] tvSettings = new TermVector[] { 
-            TermVector.NO, TermVector.YES, TermVector.WITH_OFFSETS, 
-            TermVector.WITH_POSITIONS, TermVector.WITH_POSITIONS_OFFSETS 
-        };
-
-        private TermVector RandomTVSetting(Random random)
-        {
-            return tvSettings[random.Next(tvSettings.Length)];
-        }
-		
-		private class IndexerThread:ThreadClass
+		private class DocCopyIterator : Iterable<Lucene.Net.Document.Document>
 		{
-			private void  InitBlock(TestIndexWriterExceptions enclosingInstance)
+			private readonly Lucene.Net.Document.Document doc;
+
+			private readonly int count;
+
+			private static readonly FieldType custom1 = new FieldType(TextField.TYPE_NOT_STORED
+				);
+
+			private static readonly FieldType custom2 = new FieldType();
+
+			private static readonly FieldType custom3 = new FieldType();
+
+			private static readonly FieldType custom4 = new FieldType(StringField.TYPE_NOT_STORED
+				);
+
+			private static readonly FieldType custom5 = new FieldType(TextField.TYPE_STORED);
+
+			static DocCopyIterator()
 			{
-				this.enclosingInstance = enclosingInstance;
+				custom1.SetStoreTermVectors(true);
+				custom1.SetStoreTermVectorPositions(true);
+				custom1.SetStoreTermVectorOffsets(true);
+				custom2.SetStored(true);
+				custom2.SetIndexed(true);
+				custom3.SetStored(true);
+				custom4.SetStoreTermVectors(true);
+				custom4.SetStoreTermVectorPositions(true);
+				custom4.SetStoreTermVectorOffsets(true);
+				custom5.SetStoreTermVectors(true);
+				custom5.SetStoreTermVectorPositions(true);
+				custom5.SetStoreTermVectorOffsets(true);
 			}
-			private TestIndexWriterExceptions enclosingInstance;
-			public TestIndexWriterExceptions Enclosing_Instance
+
+			public DocCopyIterator(Lucene.Net.Document.Document doc, int count)
 			{
-				get
+				this.count = count;
+				this.doc = doc;
+			}
+
+			public override Sharpen.Iterator<Lucene.Net.Document.Document> Iterator()
+			{
+				return new _Iterator_108(this);
+			}
+
+			private sealed class _Iterator_108 : Sharpen.Iterator<Lucene.Net.Document.Document
+				>
+			{
+				public _Iterator_108(DocCopyIterator _enclosing)
 				{
-					return enclosingInstance;
+					this._enclosing = _enclosing;
 				}
-				
+
+				internal int upto;
+
+				public override bool HasNext()
+				{
+					return this.upto < this._enclosing.count;
+				}
+
+				public override Lucene.Net.Document.Document Next()
+				{
+					this.upto++;
+					return this._enclosing.doc;
+				}
+
+				public override void Remove()
+				{
+					throw new NotSupportedException();
+				}
+
+				private readonly DocCopyIterator _enclosing;
 			}
-			
+		}
+
+		private class IndexerThread : Sharpen.Thread
+		{
 			internal IndexWriter writer;
-			
-			internal System.Random r = new System.Random((System.Int32) 47);
-			internal System.Exception failure;
-			
-			public IndexerThread(TestIndexWriterExceptions enclosingInstance, int i, IndexWriter writer)
+
+			internal readonly Random r = new Random(LuceneTestCase.Random().NextLong());
+
+			internal volatile Exception failure;
+
+			public IndexerThread(TestIndexWriterExceptions _enclosing, int i, IndexWriter writer
+				)
 			{
-				InitBlock(enclosingInstance);
-				Name = "Indexer " + i;
+				this._enclosing = _enclosing;
+				this.SetName("Indexer " + i);
 				this.writer = writer;
 			}
-			
-			override public void  Run()
+
+			public override void Run()
 			{
-				
-				Document doc = new Document();
-
-                doc.Add(new Field("content1", "aaa bbb ccc ddd", Field.Store.YES, Field.Index.ANALYZED, enclosingInstance.RandomTVSetting(enclosingInstance.random)));
-                doc.Add(new Field("content6", "aaa bbb ccc ddd", Field.Store.NO, Field.Index.ANALYZED, enclosingInstance.RandomTVSetting(enclosingInstance.random)));
-                doc.Add(new Field("content2", "aaa bbb ccc ddd", Field.Store.YES, Field.Index.NOT_ANALYZED, enclosingInstance.RandomTVSetting(enclosingInstance.random)));
-				doc.Add(new Field("content3", "aaa bbb ccc ddd", Field.Store.YES, Field.Index.NO));
-
-                doc.Add(new Field("content4", "aaa bbb ccc ddd", Field.Store.NO, Field.Index.ANALYZED, enclosingInstance.RandomTVSetting(enclosingInstance.random)));
-                doc.Add(new Field("content5", "aaa bbb ccc ddd", Field.Store.NO, Field.Index.NOT_ANALYZED, enclosingInstance.RandomTVSetting(enclosingInstance.random)));
-
-                doc.Add(new Field("content7", "aaa bbb ccc ddd", Field.Store.NO, Field.Index.NOT_ANALYZED, enclosingInstance.RandomTVSetting(enclosingInstance.random)));
-
-                Field idField = new Field("id", "", Field.Store.YES, Field.Index.NOT_ANALYZED, enclosingInstance.RandomTVSetting(enclosingInstance.random));
-				doc.Add(idField);
-				
-				long stopTime = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) + 3000;
-				
-				while ((DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) < stopTime)
+				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					();
+				doc.Add(LuceneTestCase.NewTextField(this.r, "content1", "aaa bbb ccc ddd", Field.Store
+					.YES));
+				doc.Add(LuceneTestCase.NewField(this.r, "content6", "aaa bbb ccc ddd", TestIndexWriterExceptions.DocCopyIterator
+					.custom1));
+				doc.Add(LuceneTestCase.NewField(this.r, "content2", "aaa bbb ccc ddd", TestIndexWriterExceptions.DocCopyIterator
+					.custom2));
+				doc.Add(LuceneTestCase.NewField(this.r, "content3", "aaa bbb ccc ddd", TestIndexWriterExceptions.DocCopyIterator
+					.custom3));
+				doc.Add(LuceneTestCase.NewTextField(this.r, "content4", "aaa bbb ccc ddd", Field.Store
+					.NO));
+				doc.Add(LuceneTestCase.NewStringField(this.r, "content5", "aaa bbb ccc ddd", Field.Store
+					.NO));
+				if (LuceneTestCase.DefaultCodecSupportsDocValues())
 				{
-					System.Threading.Thread.SetData(Enclosing_Instance.doFail, this);
-					System.String id = "" + r.Next(50);
-					idField.SetValue(id);
+					doc.Add(new NumericDocValuesField("numericdv", 5));
+					doc.Add(new BinaryDocValuesField("binarydv", new BytesRef("hello")));
+					doc.Add(new SortedDocValuesField("sorteddv", new BytesRef("world")));
+				}
+				if (LuceneTestCase.DefaultCodecSupportsSortedSet())
+				{
+					doc.Add(new SortedSetDocValuesField("sortedsetdv", new BytesRef("hellllo")));
+					doc.Add(new SortedSetDocValuesField("sortedsetdv", new BytesRef("again")));
+				}
+				doc.Add(LuceneTestCase.NewField(this.r, "content7", "aaa bbb ccc ddd", TestIndexWriterExceptions.DocCopyIterator
+					.custom4));
+				Field idField = LuceneTestCase.NewField(this.r, "id", string.Empty, TestIndexWriterExceptions.DocCopyIterator
+					.custom2);
+				doc.Add(idField);
+				long stopTime = Runtime.CurrentTimeMillis() + 500;
+				do
+				{
+					if (LuceneTestCase.VERBOSE)
+					{
+						System.Console.Out.WriteLine(Sharpen.Thread.CurrentThread().GetName() + ": TEST: IndexerThread: cycle"
+							);
+					}
+					this._enclosing.doFail.Set(this);
+					string id = string.Empty + this.r.Next(50);
+					idField.SetStringValue(id);
 					Term idTerm = new Term("id", id);
 					try
 					{
-						writer.UpdateDocument(idTerm, doc);
-					}
-					catch (System.SystemException re)
-					{
-						if (Lucene.Net.Index.TestIndexWriterExceptions.DEBUG)
+						if (this.r.NextBoolean())
 						{
-							System.Console.Out.WriteLine(ThreadClass.CurrentThread().Name + ": EXC: ");
-							System.Console.Out.WriteLine(re.StackTrace);
+							this.writer.UpdateDocuments(idTerm, new TestIndexWriterExceptions.DocCopyIterator
+								(doc, TestUtil.NextInt(this.r, 1, 20)));
+						}
+						else
+						{
+							this.writer.UpdateDocument(idTerm, doc);
+						}
+					}
+					catch (RuntimeException re)
+					{
+						if (LuceneTestCase.VERBOSE)
+						{
+							System.Console.Out.WriteLine(Sharpen.Thread.CurrentThread().GetName() + ": EXC: "
+								);
+							Sharpen.Runtime.PrintStackTrace(re, System.Console.Out);
 						}
 						try
 						{
-							_TestUtil.CheckIndex(writer.Directory);
+							TestUtil.CheckIndex(this.writer.GetDirectory());
 						}
-						catch (System.IO.IOException ioe)
+						catch (IOException ioe)
 						{
-							System.Console.Out.WriteLine(ThreadClass.Current().Name + ": unexpected exception1");
-							System.Console.Out.WriteLine(ioe.StackTrace);
-							failure = ioe;
+							System.Console.Out.WriteLine(Sharpen.Thread.CurrentThread().GetName() + ": unexpected exception1"
+								);
+							Sharpen.Runtime.PrintStackTrace(ioe, System.Console.Out);
+							this.failure = ioe;
 							break;
 						}
 					}
-					catch (System.Exception t)
+					catch (Exception t)
 					{
-						System.Console.Out.WriteLine(ThreadClass.Current().Name + ": unexpected exception2");
-						System.Console.Out.WriteLine(t.StackTrace);
-						failure = t;
+						System.Console.Out.WriteLine(Sharpen.Thread.CurrentThread().GetName() + ": unexpected exception2"
+							);
+						Sharpen.Runtime.PrintStackTrace(t, System.Console.Out);
+						this.failure = t;
 						break;
 					}
-					
-					System.Threading.Thread.SetData(Enclosing_Instance.doFail, null);
-					
+					this._enclosing.doFail.Set(null);
 					// After a possible exception (above) I should be able
 					// to add a new document without hitting an
 					// exception:
 					try
 					{
-						writer.UpdateDocument(idTerm, doc);
+						this.writer.UpdateDocument(idTerm, doc);
 					}
-					catch (System.Exception t)
+					catch (Exception t)
 					{
-						System.Console.Out.WriteLine(ThreadClass.Current().Name + ": unexpected exception3");
-						System.Console.Out.WriteLine(t.StackTrace);
-						failure = t;
+						System.Console.Out.WriteLine(Sharpen.Thread.CurrentThread().GetName() + ": unexpected exception3"
+							);
+						Sharpen.Runtime.PrintStackTrace(t, System.Console.Out);
+						this.failure = t;
 						break;
 					}
 				}
+				while (Runtime.CurrentTimeMillis() < stopTime);
 			}
+
+			private readonly TestIndexWriterExceptions _enclosing;
 		}
-		
-		internal System.LocalDataStoreSlot doFail = System.Threading.Thread.AllocateDataSlot();
-		
-		public class MockIndexWriter:IndexWriter
+
+		internal ThreadLocal<Sharpen.Thread> doFail = new ThreadLocal<Sharpen.Thread>();
+
+		private class TestPoint1 : RandomIndexWriter.TestPoint
 		{
-			private void  InitBlock(TestIndexWriterExceptions enclosingInstance)
+			internal Random r = new Random(LuceneTestCase.Random().NextLong());
+
+			public virtual void Apply(string name)
 			{
-				this.enclosingInstance = enclosingInstance;
-			}
-			private TestIndexWriterExceptions enclosingInstance;
-			public TestIndexWriterExceptions Enclosing_Instance
-			{
-				get
+				if (this._enclosing.doFail.Get() != null && !name.Equals("startDoFlush") && this.
+					r.Next(40) == 17)
 				{
-					return enclosingInstance;
-				}
-				
-			}
-			internal System.Random r = new System.Random((System.Int32) 17);
-			
-			public MockIndexWriter(TestIndexWriterExceptions enclosingInstance, Directory dir, Analyzer a, bool create, MaxFieldLength mfl):base(dir, a, create, mfl)
-			{
-				InitBlock(enclosingInstance);
-			}
-			
-			public /*internal*/ override bool TestPoint(System.String name)
-			{
-				if (System.Threading.Thread.GetData(Enclosing_Instance.doFail) != null && !name.Equals("startDoFlush") && r.Next(20) == 17)
-				{
-					if (Lucene.Net.Index.TestIndexWriterExceptions.DEBUG)
+					if (LuceneTestCase.VERBOSE)
 					{
-						System.Console.Out.WriteLine(ThreadClass.Current().Name + ": NOW FAIL: " + name);
-						//new Throwable().printStackTrace(System.out);
+						System.Console.Out.WriteLine(Sharpen.Thread.CurrentThread().GetName() + ": NOW FAIL: "
+							 + name);
+						Sharpen.Runtime.PrintStackTrace(new Exception(), System.Console.Out);
 					}
-					throw new System.SystemException(ThreadClass.Current().Name + ": intentionally failing at " + name);
+					throw new RuntimeException(Sharpen.Thread.CurrentThread().GetName() + ": intentionally failing at "
+						 + name);
 				}
-				return true;
 			}
-		}
-		
-		[Test]
-		public virtual void  TestRandomExceptions()
-		{
-			MockRAMDirectory dir = new MockRAMDirectory();
-            random = new Random((int)(DateTime.Now.Ticks&0x7fffffff));
-			MockIndexWriter writer = new MockIndexWriter(this, dir, new WhitespaceAnalyzer(), true, IndexWriter.MaxFieldLength.LIMITED);
-			((ConcurrentMergeScheduler) writer.MergeScheduler).SetSuppressExceptions();
-			//writer.setMaxBufferedDocs(10);
-			writer.SetRAMBufferSizeMB(0.1);
-			
-			if (DEBUG)
+
+			internal TestPoint1(TestIndexWriterExceptions _enclosing)
 			{
-				System.IO.StreamWriter temp_writer;
-				temp_writer = new System.IO.StreamWriter(System.Console.OpenStandardOutput(), System.Console.Out.Encoding);
-				temp_writer.AutoFlush = true;
-				writer.SetInfoStream(temp_writer);
+				this._enclosing = _enclosing;
 			}
-			
-			IndexerThread thread = new IndexerThread(this, 0, writer);
+
+			private readonly TestIndexWriterExceptions _enclosing;
+		}
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestRandomExceptions()
+		{
+			if (VERBOSE)
+			{
+				System.Console.Out.WriteLine("\nTEST: start testRandomExceptions");
+			}
+			Directory dir = NewDirectory();
+			MockAnalyzer analyzer = new MockAnalyzer(Random());
+			analyzer.SetEnableChecks(false);
+			// disable workflow checking as we forcefully close() in exceptional cases.
+			IndexWriter writer = RandomIndexWriter.MockIndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig
+				(TEST_VERSION_CURRENT, analyzer).SetRAMBufferSizeMB(0.1)).SetMergeScheduler(new 
+				ConcurrentMergeScheduler()), new TestIndexWriterExceptions.TestPoint1(this));
+			((ConcurrentMergeScheduler)writer.GetConfig().GetMergeScheduler()).SetSuppressExceptions
+				();
+			//writer.setMaxBufferedDocs(10);
+			if (VERBOSE)
+			{
+				System.Console.Out.WriteLine("TEST: initial commit");
+			}
+			writer.Commit();
+			TestIndexWriterExceptions.IndexerThread thread = new TestIndexWriterExceptions.IndexerThread
+				(this, 0, writer);
 			thread.Run();
 			if (thread.failure != null)
 			{
-				System.Console.Out.WriteLine(thread.failure.StackTrace);
-				Assert.Fail("thread " + thread.Name + ": hit unexpected failure");
+				Sharpen.Runtime.PrintStackTrace(thread.failure, System.Console.Out);
+				NUnit.Framework.Assert.Fail("thread " + thread.GetName() + ": hit unexpected failure"
+					);
 			}
-			
+			if (VERBOSE)
+			{
+				System.Console.Out.WriteLine("TEST: commit after thread start");
+			}
 			writer.Commit();
-			
 			try
 			{
 				writer.Close();
 			}
-			catch (System.Exception t)
+			catch (Exception t)
 			{
 				System.Console.Out.WriteLine("exception during close:");
-				System.Console.Out.WriteLine(t.StackTrace);
+				Sharpen.Runtime.PrintStackTrace(t, System.Console.Out);
 				writer.Rollback();
 			}
-			
 			// Confirm that when doc hits exception partway through tokenization, it's deleted:
-			IndexReader r2 = IndexReader.Open(dir, true);
+			IndexReader r2 = DirectoryReader.Open(dir);
 			int count = r2.DocFreq(new Term("content4", "aaa"));
 			int count2 = r2.DocFreq(new Term("content4", "ddd"));
-			Assert.AreEqual(count, count2);
+			NUnit.Framework.Assert.AreEqual(count, count2);
 			r2.Close();
-			
-			_TestUtil.CheckIndex(dir);
+			dir.Close();
 		}
-		
-		[Test]
-		public virtual void  TestRandomExceptionsThreads()
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestRandomExceptionsThreads()
 		{
-            random = new Random((int)(DateTime.Now.Ticks & 0x7fffffff));
-			MockRAMDirectory dir = new MockRAMDirectory();
-			MockIndexWriter writer = new MockIndexWriter(this, dir, new WhitespaceAnalyzer(), true, IndexWriter.MaxFieldLength.LIMITED);
-			((ConcurrentMergeScheduler) writer.MergeScheduler).SetSuppressExceptions();
+			Directory dir = NewDirectory();
+			MockAnalyzer analyzer = new MockAnalyzer(Random());
+			analyzer.SetEnableChecks(false);
+			// disable workflow checking as we forcefully close() in exceptional cases.
+			IndexWriter writer = RandomIndexWriter.MockIndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig
+				(TEST_VERSION_CURRENT, analyzer).SetRAMBufferSizeMB(0.2)).SetMergeScheduler(new 
+				ConcurrentMergeScheduler()), new TestIndexWriterExceptions.TestPoint1(this));
+			((ConcurrentMergeScheduler)writer.GetConfig().GetMergeScheduler()).SetSuppressExceptions
+				();
 			//writer.setMaxBufferedDocs(10);
-			writer.SetRAMBufferSizeMB(0.2);
-			
-			if (DEBUG)
-			{
-				System.IO.StreamWriter temp_writer;
-				temp_writer = new System.IO.StreamWriter(System.Console.OpenStandardOutput(), System.Console.Out.Encoding);
-				temp_writer.AutoFlush = true;
-				writer.SetInfoStream(temp_writer);
-			}
-			
+			writer.Commit();
 			int NUM_THREADS = 4;
-			
-			IndexerThread[] threads = new IndexerThread[NUM_THREADS];
+			TestIndexWriterExceptions.IndexerThread[] threads = new TestIndexWriterExceptions.IndexerThread
+				[NUM_THREADS];
 			for (int i = 0; i < NUM_THREADS; i++)
 			{
-				threads[i] = new IndexerThread(this, i, writer);
+				threads[i] = new TestIndexWriterExceptions.IndexerThread(this, i, writer);
 				threads[i].Start();
 			}
-			
-			for (int i = 0; i < NUM_THREADS; i++)
-				threads[i].Join();
-			
-			for (int i = 0; i < NUM_THREADS; i++)
-                Assert.IsNull(threads[i].failure, "thread " + threads[i].Name + ": hit unexpected failure");
-			
+			for (int i_1 = 0; i_1 < NUM_THREADS; i_1++)
+			{
+				threads[i_1].Join();
+			}
+			for (int i_2 = 0; i_2 < NUM_THREADS; i_2++)
+			{
+				if (threads[i_2].failure != null)
+				{
+					NUnit.Framework.Assert.Fail("thread " + threads[i_2].GetName() + ": hit unexpected failure"
+						);
+				}
+			}
 			writer.Commit();
-			
 			try
 			{
 				writer.Close();
 			}
-			catch (System.Exception t)
+			catch (Exception t)
 			{
 				System.Console.Out.WriteLine("exception during close:");
-				System.Console.Out.WriteLine(t.StackTrace);
+				Sharpen.Runtime.PrintStackTrace(t, System.Console.Out);
 				writer.Rollback();
 			}
-			
 			// Confirm that when doc hits exception partway through tokenization, it's deleted:
-		    IndexReader r2 = IndexReader.Open(dir, true);
+			IndexReader r2 = DirectoryReader.Open(dir);
 			int count = r2.DocFreq(new Term("content4", "aaa"));
 			int count2 = r2.DocFreq(new Term("content4", "ddd"));
-			Assert.AreEqual(count, count2);
+			NUnit.Framework.Assert.AreEqual(count, count2);
 			r2.Close();
-			
-			_TestUtil.CheckIndex(dir);
+			dir.Close();
+		}
+
+		private sealed class TestPoint2 : RandomIndexWriter.TestPoint
+		{
+			internal bool doFail;
+
+			// LUCENE-1198
+			public void Apply(string name)
+			{
+				if (doFail && name.Equals("DocumentsWriterPerThread addDocument start"))
+				{
+					throw new RuntimeException("intentionally failing");
+				}
+			}
+		}
+
+		private static string CRASH_FAIL_MESSAGE = "I'm experiencing problems";
+
+		private class CrashingFilter : TokenFilter
+		{
+			internal string fieldName;
+
+			internal int count;
+
+			public CrashingFilter(TestIndexWriterExceptions _enclosing, string fieldName, TokenStream
+				 input) : base(input)
+			{
+				this._enclosing = _enclosing;
+				this.fieldName = fieldName;
+			}
+
+			/// <exception cref="System.IO.IOException"></exception>
+			public override bool IncrementToken()
+			{
+				if (this.fieldName.Equals("crash") && this.count++ >= 4)
+				{
+					throw new IOException(TestIndexWriterExceptions.CRASH_FAIL_MESSAGE);
+				}
+				return this.input.IncrementToken();
+			}
+
+			/// <exception cref="System.IO.IOException"></exception>
+			public override void Reset()
+			{
+				base.Reset();
+				this.count = 0;
+			}
+
+			private readonly TestIndexWriterExceptions _enclosing;
+		}
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestExceptionDocumentsWriterInit()
+		{
+			Directory dir = NewDirectory();
+			TestIndexWriterExceptions.TestPoint2 testPoint = new TestIndexWriterExceptions.TestPoint2
+				();
+			IndexWriter w = RandomIndexWriter.MockIndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT
+				, new MockAnalyzer(Random())), testPoint);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(NewTextField("field", "a field", Field.Store.YES));
+			w.AddDocument(doc);
+			testPoint.doFail = true;
+			try
+			{
+				w.AddDocument(doc);
+				NUnit.Framework.Assert.Fail("did not hit exception");
+			}
+			catch (RuntimeException)
+			{
+			}
+			// expected
+			w.Close();
+			dir.Close();
+		}
+
+		// LUCENE-1208
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestExceptionJustBeforeFlush()
+		{
+			Directory dir = NewDirectory();
+			IndexWriter w = RandomIndexWriter.MockIndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig
+				(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMaxBufferedDocs(2)), new TestIndexWriterExceptions.TestPoint1
+				(this));
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(NewTextField("field", "a field", Field.Store.YES));
+			w.AddDocument(doc);
+			Analyzer analyzer = new _Analyzer_394(Analyzer.PER_FIELD_REUSE_STRATEGY);
+			// disable workflow checking as we forcefully close() in exceptional cases.
+			Lucene.Net.Document.Document crashDoc = new Lucene.Net.Document.Document
+				();
+			crashDoc.Add(NewTextField("crash", "do it on token 4", Field.Store.YES));
+			try
+			{
+				w.AddDocument(crashDoc, analyzer);
+				NUnit.Framework.Assert.Fail("did not hit expected exception");
+			}
+			catch (IOException)
+			{
+			}
+			// expected
+			w.AddDocument(doc);
+			w.Close();
+			dir.Close();
+		}
+
+		private sealed class _Analyzer_394 : Analyzer
+		{
+			public _Analyzer_394(Analyzer.ReuseStrategy baseArg1) : base(baseArg1)
+			{
+			}
+
+			protected override Analyzer.TokenStreamComponents CreateComponents(string fieldName
+				, StreamReader reader)
+			{
+				MockTokenizer tokenizer = new MockTokenizer(reader, MockTokenizer.WHITESPACE, false
+					);
+				tokenizer.SetEnableChecks(false);
+				return new Analyzer.TokenStreamComponents(tokenizer, new TestIndexWriterExceptions.CrashingFilter
+					(this, fieldName, tokenizer));
+			}
+		}
+
+		private sealed class TestPoint3 : RandomIndexWriter.TestPoint
+		{
+			internal bool doFail;
+
+			internal bool failed;
+
+			public void Apply(string name)
+			{
+				if (doFail && name.Equals("startMergeInit"))
+				{
+					failed = true;
+					throw new RuntimeException("intentionally failing");
+				}
+			}
+		}
+
+		// LUCENE-1210
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestExceptionOnMergeInit()
+		{
+			Directory dir = NewDirectory();
+			IndexWriterConfig conf = ((IndexWriterConfig)NewIndexWriterConfig(TEST_VERSION_CURRENT
+				, new MockAnalyzer(Random())).SetMaxBufferedDocs(2)).SetMergePolicy(NewLogMergePolicy
+				());
+			ConcurrentMergeScheduler cms = new ConcurrentMergeScheduler();
+			cms.SetSuppressExceptions();
+			conf.SetMergeScheduler(cms);
+			((LogMergePolicy)conf.GetMergePolicy()).SetMergeFactor(2);
+			TestIndexWriterExceptions.TestPoint3 testPoint = new TestIndexWriterExceptions.TestPoint3
+				();
+			IndexWriter w = RandomIndexWriter.MockIndexWriter(dir, conf, testPoint);
+			testPoint.doFail = true;
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(NewTextField("field", "a field", Field.Store.YES));
+			for (int i = 0; i < 10; i++)
+			{
+				try
+				{
+					w.AddDocument(doc);
+				}
+				catch (RuntimeException)
+				{
+					break;
+				}
+			}
+			((ConcurrentMergeScheduler)w.GetConfig().GetMergeScheduler()).Sync();
+			NUnit.Framework.Assert.IsTrue(testPoint.failed);
+			w.Close();
+			dir.Close();
+		}
+
+		// LUCENE-1072
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestExceptionFromTokenStream()
+		{
+			Directory dir = NewDirectory();
+			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, new _Analyzer_459
+				());
+			// disable workflow checking as we forcefully close() in exceptional cases.
+			conf.SetMaxBufferedDocs(Math.Max(3, conf.GetMaxBufferedDocs()));
+			IndexWriter writer = new IndexWriter(dir, conf);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			string contents = "aa bb cc dd ee ff gg hh ii jj kk";
+			doc.Add(NewTextField("content", contents, Field.Store.NO));
+			try
+			{
+				writer.AddDocument(doc);
+				NUnit.Framework.Assert.Fail("did not hit expected exception");
+			}
+			catch (Exception)
+			{
+			}
+			// Make sure we can add another normal document
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewTextField("content", "aa bb cc dd", Field.Store.NO));
+			writer.AddDocument(doc);
+			// Make sure we can add another normal document
+			doc = new Lucene.Net.Document.Document();
+			doc.Add(NewTextField("content", "aa bb cc dd", Field.Store.NO));
+			writer.AddDocument(doc);
+			writer.Close();
+			IndexReader reader = DirectoryReader.Open(dir);
+			Term t = new Term("content", "aa");
+			NUnit.Framework.Assert.AreEqual(3, reader.DocFreq(t));
+			// Make sure the doc that hit the exception was marked
+			// as deleted:
+			DocsEnum tdocs = TestUtil.Docs(Random(), reader, t.Field(), new BytesRef(t.Text()
+				), MultiFields.GetLiveDocs(reader), null, 0);
+			int count = 0;
+			while (tdocs.NextDoc() != DocIdSetIterator.NO_MORE_DOCS)
+			{
+				count++;
+			}
+			NUnit.Framework.Assert.AreEqual(2, count);
+			NUnit.Framework.Assert.AreEqual(reader.DocFreq(new Term("content", "gg")), 0);
+			reader.Close();
+			dir.Close();
+		}
+
+		private sealed class _Analyzer_459 : Analyzer
+		{
+			public _Analyzer_459()
+			{
+			}
+
+			protected override Analyzer.TokenStreamComponents CreateComponents(string fieldName
+				, StreamReader reader)
+			{
+				MockTokenizer tokenizer = new MockTokenizer(reader, MockTokenizer.SIMPLE, true);
+				tokenizer.SetEnableChecks(false);
+				return new Analyzer.TokenStreamComponents(tokenizer, new _TokenFilter_465(tokenizer
+					));
+			}
+
+			private sealed class _TokenFilter_465 : TokenFilter
+			{
+				public _TokenFilter_465(TokenStream baseArg1) : base(baseArg1)
+				{
+					this.count = 0;
+				}
+
+				private int count;
+
+				/// <exception cref="System.IO.IOException"></exception>
+				public override bool IncrementToken()
+				{
+					if (this.count++ == 5)
+					{
+						throw new IOException();
+					}
+					return this.input.IncrementToken();
+				}
+
+				/// <exception cref="System.IO.IOException"></exception>
+				public override void Reset()
+				{
+					base.Reset();
+					this.count = 0;
+				}
+			}
+		}
+
+		private class FailOnlyOnFlush : MockDirectoryWrapper.Failure
+		{
+			internal bool doFail = false;
+
+			internal int count;
+
+			public override void SetDoFail()
+			{
+				this.doFail = true;
+			}
+
+			public override void ClearDoFail()
+			{
+				this.doFail = false;
+			}
+
+			/// <exception cref="System.IO.IOException"></exception>
+			public override void Eval(MockDirectoryWrapper dir)
+			{
+				if (doFail)
+				{
+					StackTraceElement[] trace = new Exception().GetStackTrace();
+					bool sawAppend = false;
+					bool sawFlush = false;
+					for (int i = 0; i < trace.Length; i++)
+					{
+						if (sawAppend && sawFlush)
+						{
+							break;
+						}
+						if (typeof(FreqProxTermsWriterPerField).FullName.Equals(trace[i].GetClassName()) 
+							&& "flush".Equals(trace[i].GetMethodName()))
+						{
+							sawAppend = true;
+						}
+						if ("flush".Equals(trace[i].GetMethodName()))
+						{
+							sawFlush = true;
+						}
+					}
+					if (sawAppend && sawFlush && count++ >= 30)
+					{
+						doFail = false;
+						throw new IOException("now failing during flush");
+					}
+				}
+			}
+		}
+
+		// LUCENE-1072: make sure an errant exception on flushing
+		// one segment only takes out those docs in that one flush
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestDocumentsWriterAbort()
+		{
+			MockDirectoryWrapper dir = NewMockDirectory();
+			TestIndexWriterExceptions.FailOnlyOnFlush failure = new TestIndexWriterExceptions.FailOnlyOnFlush
+				();
+			failure.SetDoFail();
+			dir.FailOn(failure);
+			IndexWriter writer = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig
+				(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMaxBufferedDocs(2)));
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			string contents = "aa bb cc dd ee ff gg hh ii jj kk";
+			doc.Add(NewTextField("content", contents, Field.Store.NO));
+			bool hitError = false;
+			for (int i = 0; i < 200; i++)
+			{
+				try
+				{
+					writer.AddDocument(doc);
+				}
+				catch (IOException)
+				{
+					// only one flush should fail:
+					NUnit.Framework.Assert.IsFalse(hitError);
+					hitError = true;
+				}
+			}
+			NUnit.Framework.Assert.IsTrue(hitError);
+			writer.Close();
+			IndexReader reader = DirectoryReader.Open(dir);
+			NUnit.Framework.Assert.AreEqual(198, reader.DocFreq(new Term("content", "aa")));
+			reader.Close();
+			dir.Close();
+		}
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestDocumentsWriterExceptions()
+		{
+			Analyzer analyzer = new _Analyzer_603(Analyzer.PER_FIELD_REUSE_STRATEGY);
+			// disable workflow checking as we forcefully close() in exceptional cases.
+			for (int i = 0; i < 2; i++)
+			{
+				if (VERBOSE)
+				{
+					System.Console.Out.WriteLine("TEST: cycle i=" + i);
+				}
+				Directory dir = NewDirectory();
+				IndexWriter writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT
+					, analyzer).SetMergePolicy(NewLogMergePolicy()));
+				// don't allow a sudden merge to clean up the deleted
+				// doc below:
+				LogMergePolicy lmp = (LogMergePolicy)writer.GetConfig().GetMergePolicy();
+				lmp.SetMergeFactor(Math.Max(lmp.GetMergeFactor(), 5));
+				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					();
+				doc.Add(NewField("contents", "here are some contents", TestIndexWriterExceptions.DocCopyIterator
+					.custom5));
+				writer.AddDocument(doc);
+				writer.AddDocument(doc);
+				doc.Add(NewField("crash", "this should crash after 4 terms", TestIndexWriterExceptions.DocCopyIterator
+					.custom5));
+				doc.Add(NewField("other", "this will not get indexed", TestIndexWriterExceptions.DocCopyIterator
+					.custom5));
+				try
+				{
+					writer.AddDocument(doc);
+					NUnit.Framework.Assert.Fail("did not hit expected exception");
+				}
+				catch (IOException ioe)
+				{
+					if (VERBOSE)
+					{
+						System.Console.Out.WriteLine("TEST: hit expected exception");
+						Sharpen.Runtime.PrintStackTrace(ioe, System.Console.Out);
+					}
+				}
+				if (0 == i)
+				{
+					doc = new Lucene.Net.Document.Document();
+					doc.Add(NewField("contents", "here are some contents", TestIndexWriterExceptions.DocCopyIterator
+						.custom5));
+					writer.AddDocument(doc);
+					writer.AddDocument(doc);
+				}
+				writer.Close();
+				if (VERBOSE)
+				{
+					System.Console.Out.WriteLine("TEST: open reader");
+				}
+				IndexReader reader = DirectoryReader.Open(dir);
+				if (i == 0)
+				{
+					int expected = 5;
+					NUnit.Framework.Assert.AreEqual(expected, reader.DocFreq(new Term("contents", "here"
+						)));
+					NUnit.Framework.Assert.AreEqual(expected, reader.MaxDoc());
+					int numDel = 0;
+					Bits liveDocs = MultiFields.GetLiveDocs(reader);
+					NUnit.Framework.Assert.IsNotNull(liveDocs);
+					for (int j = 0; j < reader.MaxDoc(); j++)
+					{
+						if (!liveDocs.Get(j))
+						{
+							numDel++;
+						}
+						else
+						{
+							reader.Document(j);
+							reader.GetTermVectors(j);
+						}
+					}
+					NUnit.Framework.Assert.AreEqual(1, numDel);
+				}
+				reader.Close();
+				writer = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig(TEST_VERSION_CURRENT
+					, analyzer).SetMaxBufferedDocs(10)));
+				doc = new Lucene.Net.Document.Document();
+				doc.Add(NewField("contents", "here are some contents", TestIndexWriterExceptions.DocCopyIterator
+					.custom5));
+				for (int j_1 = 0; j_1 < 17; j_1++)
+				{
+					writer.AddDocument(doc);
+				}
+				writer.ForceMerge(1);
+				writer.Close();
+				reader = DirectoryReader.Open(dir);
+				int expected_1 = 19 + (1 - i) * 2;
+				NUnit.Framework.Assert.AreEqual(expected_1, reader.DocFreq(new Term("contents", "here"
+					)));
+				NUnit.Framework.Assert.AreEqual(expected_1, reader.MaxDoc());
+				int numDel_1 = 0;
+				NUnit.Framework.Assert.IsNull(MultiFields.GetLiveDocs(reader));
+				for (int j_2 = 0; j_2 < reader.MaxDoc(); j_2++)
+				{
+					reader.Document(j_2);
+					reader.GetTermVectors(j_2);
+				}
+				reader.Close();
+				NUnit.Framework.Assert.AreEqual(0, numDel_1);
+				dir.Close();
+			}
+		}
+
+		private sealed class _Analyzer_603 : Analyzer
+		{
+			public _Analyzer_603(Analyzer.ReuseStrategy baseArg1) : base(baseArg1)
+			{
+			}
+
+			protected override Analyzer.TokenStreamComponents CreateComponents(string fieldName
+				, StreamReader reader)
+			{
+				MockTokenizer tokenizer = new MockTokenizer(reader, MockTokenizer.WHITESPACE, false
+					);
+				tokenizer.SetEnableChecks(false);
+				return new Analyzer.TokenStreamComponents(tokenizer, new TestIndexWriterExceptions.CrashingFilter
+					(this, fieldName, tokenizer));
+			}
+		}
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestDocumentsWriterExceptionThreads()
+		{
+			Analyzer analyzer = new _Analyzer_698(Analyzer.PER_FIELD_REUSE_STRATEGY);
+			// disable workflow checking as we forcefully close() in exceptional cases.
+			int NUM_THREAD = 3;
+			int NUM_ITER = 100;
+			for (int i = 0; i < 2; i++)
+			{
+				Directory dir = NewDirectory();
+				{
+					IndexWriter writer = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig
+						(TEST_VERSION_CURRENT, analyzer).SetMaxBufferedDocs(-1)).SetMergePolicy(Random()
+						.NextBoolean() ? NoMergePolicy.COMPOUND_FILES : NoMergePolicy.NO_COMPOUND_FILES)
+						);
+					// don't use a merge policy here they depend on the DWPThreadPool and its max thread states etc.
+					int finalI = i;
+					Sharpen.Thread[] threads = new Sharpen.Thread[NUM_THREAD];
+					for (int t = 0; t < NUM_THREAD; t++)
+					{
+						threads[t] = new _Thread_724(NUM_ITER, writer, finalI);
+						threads[t].Start();
+					}
+					for (int t_1 = 0; t_1 < NUM_THREAD; t_1++)
+					{
+						threads[t_1].Join();
+					}
+					writer.Close();
+				}
+				IndexReader reader = DirectoryReader.Open(dir);
+				int expected = (3 + (1 - i) * 2) * NUM_THREAD * NUM_ITER;
+				NUnit.Framework.Assert.AreEqual("i=" + i, expected, reader.DocFreq(new Term("contents"
+					, "here")));
+				NUnit.Framework.Assert.AreEqual(expected, reader.MaxDoc());
+				int numDel = 0;
+				Bits liveDocs = MultiFields.GetLiveDocs(reader);
+				NUnit.Framework.Assert.IsNotNull(liveDocs);
+				for (int j = 0; j < reader.MaxDoc(); j++)
+				{
+					if (!liveDocs.Get(j))
+					{
+						numDel++;
+					}
+					else
+					{
+						reader.Document(j);
+						reader.GetTermVectors(j);
+					}
+				}
+				reader.Close();
+				NUnit.Framework.Assert.AreEqual(NUM_THREAD * NUM_ITER, numDel);
+				IndexWriter writer_1 = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig
+					(TEST_VERSION_CURRENT, analyzer).SetMaxBufferedDocs(10)));
+				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					();
+				doc.Add(NewField("contents", "here are some contents", TestIndexWriterExceptions.DocCopyIterator
+					.custom5));
+				for (int j_1 = 0; j_1 < 17; j_1++)
+				{
+					writer_1.AddDocument(doc);
+				}
+				writer_1.ForceMerge(1);
+				writer_1.Close();
+				reader = DirectoryReader.Open(dir);
+				expected += 17 - NUM_THREAD * NUM_ITER;
+				NUnit.Framework.Assert.AreEqual(expected, reader.DocFreq(new Term("contents", "here"
+					)));
+				NUnit.Framework.Assert.AreEqual(expected, reader.MaxDoc());
+				NUnit.Framework.Assert.IsNull(MultiFields.GetLiveDocs(reader));
+				for (int j_2 = 0; j_2 < reader.MaxDoc(); j_2++)
+				{
+					reader.Document(j_2);
+					reader.GetTermVectors(j_2);
+				}
+				reader.Close();
+				dir.Close();
+			}
+		}
+
+		private sealed class _Analyzer_698 : Analyzer
+		{
+			public _Analyzer_698(Analyzer.ReuseStrategy baseArg1) : base(baseArg1)
+			{
+			}
+
+			protected override Analyzer.TokenStreamComponents CreateComponents(string fieldName
+				, StreamReader reader)
+			{
+				MockTokenizer tokenizer = new MockTokenizer(reader, MockTokenizer.WHITESPACE, false
+					);
+				tokenizer.SetEnableChecks(false);
+				return new Analyzer.TokenStreamComponents(tokenizer, new TestIndexWriterExceptions.CrashingFilter
+					(this, fieldName, tokenizer));
+			}
+		}
+
+		private sealed class _Thread_724 : Sharpen.Thread
+		{
+			public _Thread_724(int NUM_ITER, IndexWriter writer, int finalI)
+			{
+				this.NUM_ITER = NUM_ITER;
+				this.writer = writer;
+				this.finalI = finalI;
+			}
+
+			public override void Run()
+			{
+				try
+				{
+					for (int iter = 0; iter < NUM_ITER; iter++)
+					{
+						Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+							();
+						doc.Add(LuceneTestCase.NewField("contents", "here are some contents", TestIndexWriterExceptions.DocCopyIterator
+							.custom5));
+						writer.AddDocument(doc);
+						writer.AddDocument(doc);
+						doc.Add(LuceneTestCase.NewField("crash", "this should crash after 4 terms", TestIndexWriterExceptions.DocCopyIterator
+							.custom5));
+						doc.Add(LuceneTestCase.NewField("other", "this will not get indexed", TestIndexWriterExceptions.DocCopyIterator
+							.custom5));
+						try
+						{
+							writer.AddDocument(doc);
+							NUnit.Framework.Assert.Fail("did not hit expected exception");
+						}
+						catch (IOException)
+						{
+						}
+						if (0 == finalI)
+						{
+							doc = new Lucene.Net.Document.Document();
+							doc.Add(LuceneTestCase.NewField("contents", "here are some contents", TestIndexWriterExceptions.DocCopyIterator
+								.custom5));
+							writer.AddDocument(doc);
+							writer.AddDocument(doc);
+						}
+					}
+				}
+				catch (Exception t)
+				{
+					lock (this)
+					{
+						System.Console.Out.WriteLine(Sharpen.Thread.CurrentThread().GetName() + ": ERROR: hit unexpected exception"
+							);
+						Sharpen.Runtime.PrintStackTrace(t, System.Console.Out);
+					}
+					NUnit.Framework.Assert.Fail();
+				}
+			}
+
+			private readonly int NUM_ITER;
+
+			private readonly IndexWriter writer;
+
+			private readonly int finalI;
+		}
+
+		private class FailOnlyInSync : MockDirectoryWrapper.Failure
+		{
+			internal bool didFail;
+
+			// Throws IOException during MockDirectoryWrapper.sync
+			/// <exception cref="System.IO.IOException"></exception>
+			public override void Eval(MockDirectoryWrapper dir)
+			{
+				if (doFail)
+				{
+					StackTraceElement[] trace = new Exception().GetStackTrace();
+					for (int i = 0; i < trace.Length; i++)
+					{
+						if (doFail && typeof(MockDirectoryWrapper).FullName.Equals(trace[i].GetClassName(
+							)) && "sync".Equals(trace[i].GetMethodName()))
+						{
+							didFail = true;
+							if (VERBOSE)
+							{
+								System.Console.Out.WriteLine("TEST: now throw exc:");
+								Sharpen.Runtime.PrintStackTrace(new Exception(), System.Console.Out);
+							}
+							throw new IOException("now failing on purpose during sync");
+						}
+					}
+				}
+			}
+		}
+
+		// TODO: these are also in TestIndexWriter... add a simple doc-writing method
+		// like this to LuceneTestCase?
+		/// <exception cref="System.IO.IOException"></exception>
+		private void AddDoc(IndexWriter writer)
+		{
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(NewTextField("content", "aaa", Field.Store.NO));
+			writer.AddDocument(doc);
+		}
+
+		// LUCENE-1044: test exception during sync
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestExceptionDuringSync()
+		{
+			MockDirectoryWrapper dir = NewMockDirectory();
+			TestIndexWriterExceptions.FailOnlyInSync failure = new TestIndexWriterExceptions.FailOnlyInSync
+				();
+			dir.FailOn(failure);
+			IndexWriter writer = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig
+				(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMaxBufferedDocs(2)).SetMergeScheduler
+				(new ConcurrentMergeScheduler()).SetMergePolicy(NewLogMergePolicy(5)));
+			failure.SetDoFail();
+			for (int i = 0; i < 23; i++)
+			{
+				AddDoc(writer);
+				if ((i - 1) % 2 == 0)
+				{
+					try
+					{
+						writer.Commit();
+					}
+					catch (IOException)
+					{
+					}
+				}
+			}
+			// expected
+			((ConcurrentMergeScheduler)writer.GetConfig().GetMergeScheduler()).Sync();
+			NUnit.Framework.Assert.IsTrue(failure.didFail);
+			failure.ClearDoFail();
+			writer.Close();
+			IndexReader reader = DirectoryReader.Open(dir);
+			NUnit.Framework.Assert.AreEqual(23, reader.NumDocs());
+			reader.Close();
+			dir.Close();
+		}
+
+		private class FailOnlyInCommit : MockDirectoryWrapper.Failure
+		{
+			internal bool failOnCommit;
+
+			internal bool failOnDeleteFile;
+
+			private readonly bool dontFailDuringGlobalFieldMap;
+
+			private static readonly string PREPARE_STAGE = "prepareCommit";
+
+			private static readonly string FINISH_STAGE = "finishCommit";
+
+			private readonly string stage;
+
+			public FailOnlyInCommit(bool dontFailDuringGlobalFieldMap, string stage)
+			{
+				this.dontFailDuringGlobalFieldMap = dontFailDuringGlobalFieldMap;
+				this.stage = stage;
+			}
+
+			/// <exception cref="System.IO.IOException"></exception>
+			public override void Eval(MockDirectoryWrapper dir)
+			{
+				StackTraceElement[] trace = new Exception().GetStackTrace();
+				bool isCommit = false;
+				bool isDelete = false;
+				bool isInGlobalFieldMap = false;
+				for (int i = 0; i < trace.Length; i++)
+				{
+					if (isCommit && isDelete && isInGlobalFieldMap)
+					{
+						break;
+					}
+					if (typeof(SegmentInfos).FullName.Equals(trace[i].GetClassName()) && stage.Equals
+						(trace[i].GetMethodName()))
+					{
+						isCommit = true;
+					}
+					if (typeof(MockDirectoryWrapper).FullName.Equals(trace[i].GetClassName()) && "deleteFile"
+						.Equals(trace[i].GetMethodName()))
+					{
+						isDelete = true;
+					}
+					if (typeof(SegmentInfos).FullName.Equals(trace[i].GetClassName()) && "writeGlobalFieldMap"
+						.Equals(trace[i].GetMethodName()))
+					{
+						isInGlobalFieldMap = true;
+					}
+				}
+				if (isInGlobalFieldMap && dontFailDuringGlobalFieldMap)
+				{
+					isCommit = false;
+				}
+				if (isCommit)
+				{
+					if (!isDelete)
+					{
+						failOnCommit = true;
+						throw new RuntimeException("now fail first");
+					}
+					else
+					{
+						failOnDeleteFile = true;
+						throw new IOException("now fail during delete");
+					}
+				}
+			}
+		}
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestExceptionsDuringCommit()
+		{
+			TestIndexWriterExceptions.FailOnlyInCommit[] failures = new TestIndexWriterExceptions.FailOnlyInCommit
+				[] { new TestIndexWriterExceptions.FailOnlyInCommit(false, TestIndexWriterExceptions.FailOnlyInCommit
+				.PREPARE_STAGE), new TestIndexWriterExceptions.FailOnlyInCommit(true, TestIndexWriterExceptions.FailOnlyInCommit
+				.PREPARE_STAGE), new TestIndexWriterExceptions.FailOnlyInCommit(false, TestIndexWriterExceptions.FailOnlyInCommit
+				.FINISH_STAGE) };
+			// LUCENE-1214
+			// fail during global field map is written
+			// fail after global field map is written
+			// fail while running finishCommit    
+			foreach (TestIndexWriterExceptions.FailOnlyInCommit failure in failures)
+			{
+				MockDirectoryWrapper dir = NewMockDirectory();
+				dir.SetFailOnCreateOutput(false);
+				IndexWriter w = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new 
+					MockAnalyzer(Random())));
+				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					();
+				doc.Add(NewTextField("field", "a field", Field.Store.YES));
+				w.AddDocument(doc);
+				dir.FailOn(failure);
+				try
+				{
+					w.Close();
+					NUnit.Framework.Assert.Fail();
+				}
+				catch (IOException)
+				{
+					NUnit.Framework.Assert.Fail("expected only RuntimeException");
+				}
+				catch (RuntimeException)
+				{
+				}
+				// Expected
+				NUnit.Framework.Assert.IsTrue(failure.failOnCommit && failure.failOnDeleteFile);
+				w.Rollback();
+				string[] files = dir.ListAll();
+				NUnit.Framework.Assert.IsTrue(files.Length == 0 || Arrays.Equals(files, new string
+					[] { IndexWriter.WRITE_LOCK_NAME }));
+				dir.Close();
+			}
+		}
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestForceMergeExceptions()
+		{
+			Directory startDir = NewDirectory();
+			IndexWriterConfig conf = ((IndexWriterConfig)NewIndexWriterConfig(TEST_VERSION_CURRENT
+				, new MockAnalyzer(Random())).SetMaxBufferedDocs(2)).SetMergePolicy(NewLogMergePolicy
+				());
+			((LogMergePolicy)conf.GetMergePolicy()).SetMergeFactor(100);
+			IndexWriter w = new IndexWriter(startDir, conf);
+			for (int i = 0; i < 27; i++)
+			{
+				AddDoc(w);
+			}
+			w.Close();
+			int iter = TEST_NIGHTLY ? 200 : 10;
+			for (int i_1 = 0; i_1 < iter; i_1++)
+			{
+				if (VERBOSE)
+				{
+					System.Console.Out.WriteLine("TEST: iter " + i_1);
+				}
+				MockDirectoryWrapper dir = new MockDirectoryWrapper(Random(), new RAMDirectory(startDir
+					, NewIOContext(Random())));
+				conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMergeScheduler
+					(new ConcurrentMergeScheduler());
+				((ConcurrentMergeScheduler)conf.GetMergeScheduler()).SetSuppressExceptions();
+				w = new IndexWriter(dir, conf);
+				dir.SetRandomIOExceptionRate(0.5);
+				try
+				{
+					w.ForceMerge(1);
+				}
+				catch (IOException ioe)
+				{
+					if (ioe.InnerException == null)
+					{
+						NUnit.Framework.Assert.Fail("forceMerge threw IOException without root cause");
+					}
+				}
+				dir.SetRandomIOExceptionRate(0);
+				w.Close();
+				dir.Close();
+			}
+			startDir.Close();
+		}
+
+		// LUCENE-1429
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestOutOfMemoryErrorCausesCloseToFail()
+		{
+			AtomicBoolean thrown = new AtomicBoolean(false);
+			Directory dir = NewDirectory();
+			IndexWriter writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT
+				, new MockAnalyzer(Random())).SetInfoStream(new _InfoStream_995(thrown)));
+			try
+			{
+				writer.Close();
+				NUnit.Framework.Assert.Fail("OutOfMemoryError expected");
+			}
+			catch (OutOfMemoryException)
+			{
+			}
+			// throws IllegalStateEx w/o bug fix
+			writer.Close();
+			dir.Close();
+		}
+
+		private sealed class _InfoStream_995 : InfoStream
+		{
+			public _InfoStream_995(AtomicBoolean thrown)
+			{
+				this.thrown = thrown;
+			}
+
+			public override void Message(string component, string message)
+			{
+				if (message.StartsWith("now flush at close") && thrown.CompareAndSet(false, true))
+				{
+					throw new OutOfMemoryException("fake OOME at " + message);
+				}
+			}
+
+			public override bool IsEnabled(string component)
+			{
+				return true;
+			}
+
+			public override void Close()
+			{
+			}
+
+			private readonly AtomicBoolean thrown;
+		}
+
+		private sealed class TestPoint4 : RandomIndexWriter.TestPoint
+		{
+			internal bool doFail;
+
+			// LUCENE-1347
+			public void Apply(string name)
+			{
+				if (doFail && name.Equals("rollback before checkpoint"))
+				{
+					throw new RuntimeException("intentionally failing");
+				}
+			}
+		}
+
+		// LUCENE-1347
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestRollbackExceptionHang()
+		{
+			Directory dir = NewDirectory();
+			TestIndexWriterExceptions.TestPoint4 testPoint = new TestIndexWriterExceptions.TestPoint4
+				();
+			IndexWriter w = RandomIndexWriter.MockIndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT
+				, new MockAnalyzer(Random())), testPoint);
+			AddDoc(w);
+			testPoint.doFail = true;
+			try
+			{
+				w.Rollback();
+				NUnit.Framework.Assert.Fail("did not hit intentional RuntimeException");
+			}
+			catch (RuntimeException)
+			{
+			}
+			// expected
+			testPoint.doFail = false;
+			w.Rollback();
+			dir.Close();
+		}
+
+		// LUCENE-1044: Simulate checksum error in segments_N
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestSegmentsChecksumError()
+		{
+			Directory dir = NewDirectory();
+			IndexWriter writer = null;
+			writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
+				(Random())));
+			// add 100 documents
+			for (int i = 0; i < 100; i++)
+			{
+				AddDoc(writer);
+			}
+			// close
+			writer.Close();
+			long gen = SegmentInfos.GetLastCommitGeneration(dir);
+			NUnit.Framework.Assert.IsTrue("segment generation should be > 0 but got " + gen, 
+				gen > 0);
+			string segmentsFileName = SegmentInfos.GetLastCommitSegmentsFileName(dir);
+			IndexInput @in = dir.OpenInput(segmentsFileName, NewIOContext(Random()));
+			IndexOutput @out = dir.CreateOutput(IndexFileNames.FileNameFromGeneration(IndexFileNames
+				.SEGMENTS, string.Empty, 1 + gen), NewIOContext(Random()));
+			@out.CopyBytes(@in, @in.Length() - 1);
+			byte b = @in.ReadByte();
+			@out.WriteByte(unchecked((byte)(1 + b)));
+			@out.Close();
+			@in.Close();
+			IndexReader reader = null;
+			try
+			{
+				reader = DirectoryReader.Open(dir);
+			}
+			catch (IOException e)
+			{
+				Sharpen.Runtime.PrintStackTrace(e, System.Console.Out);
+				NUnit.Framework.Assert.Fail("segmentInfos failed to retry fallback to correct segments_N file"
+					);
+			}
+			reader.Close();
+			// should remove the corrumpted segments_N
+			new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, null)).Close();
+			dir.Close();
+		}
+
+		// Simulate a corrupt index by removing last byte of
+		// latest segments file and make sure we get an
+		// IOException trying to open the index:
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestSimulatedCorruptIndex1()
+		{
+			BaseDirectoryWrapper dir = NewDirectory();
+			dir.SetCheckIndexOnClose(false);
+			// we are corrupting it!
+			IndexWriter writer = null;
+			writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
+				(Random())));
+			// add 100 documents
+			for (int i = 0; i < 100; i++)
+			{
+				AddDoc(writer);
+			}
+			// close
+			writer.Close();
+			long gen = SegmentInfos.GetLastCommitGeneration(dir);
+			NUnit.Framework.Assert.IsTrue("segment generation should be > 0 but got " + gen, 
+				gen > 0);
+			string fileNameIn = SegmentInfos.GetLastCommitSegmentsFileName(dir);
+			string fileNameOut = IndexFileNames.FileNameFromGeneration(IndexFileNames.SEGMENTS
+				, string.Empty, 1 + gen);
+			IndexInput @in = dir.OpenInput(fileNameIn, NewIOContext(Random()));
+			IndexOutput @out = dir.CreateOutput(fileNameOut, NewIOContext(Random()));
+			long length = @in.Length();
+			for (int i_1 = 0; i_1 < length - 1; i_1++)
+			{
+				@out.WriteByte(@in.ReadByte());
+			}
+			@in.Close();
+			@out.Close();
+			dir.DeleteFile(fileNameIn);
+			IndexReader reader = null;
+			try
+			{
+				reader = DirectoryReader.Open(dir);
+				NUnit.Framework.Assert.Fail("reader did not hit IOException on opening a corrupt index"
+					);
+			}
+			catch (Exception)
+			{
+			}
+			if (reader != null)
+			{
+				reader.Close();
+			}
+			dir.Close();
+		}
+
+		// Simulate a corrupt index by removing one of the cfs
+		// files and make sure we get an IOException trying to
+		// open the index:
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestSimulatedCorruptIndex2()
+		{
+			BaseDirectoryWrapper dir = NewDirectory();
+			dir.SetCheckIndexOnClose(false);
+			// we are corrupting it!
+			IndexWriter writer = null;
+			writer = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig(TEST_VERSION_CURRENT
+				, new MockAnalyzer(Random())).SetMergePolicy(NewLogMergePolicy(true)).SetUseCompoundFile
+				(true)));
+			MergePolicy lmp = writer.GetConfig().GetMergePolicy();
+			// Force creation of CFS:
+			lmp.SetNoCFSRatio(1.0);
+			lmp.SetMaxCFSSegmentSizeMB(double.PositiveInfinity);
+			// add 100 documents
+			for (int i = 0; i < 100; i++)
+			{
+				AddDoc(writer);
+			}
+			// close
+			writer.Close();
+			long gen = SegmentInfos.GetLastCommitGeneration(dir);
+			NUnit.Framework.Assert.IsTrue("segment generation should be > 0 but got " + gen, 
+				gen > 0);
+			string[] files = dir.ListAll();
+			bool corrupted = false;
+			for (int i_1 = 0; i_1 < files.Length; i_1++)
+			{
+				if (files[i_1].EndsWith(".cfs"))
+				{
+					dir.DeleteFile(files[i_1]);
+					corrupted = true;
+					break;
+				}
+			}
+			NUnit.Framework.Assert.IsTrue("failed to find cfs file to remove", corrupted);
+			IndexReader reader = null;
+			try
+			{
+				reader = DirectoryReader.Open(dir);
+				NUnit.Framework.Assert.Fail("reader did not hit IOException on opening a corrupt index"
+					);
+			}
+			catch (Exception)
+			{
+			}
+			if (reader != null)
+			{
+				reader.Close();
+			}
+			dir.Close();
+		}
+
+		// Simulate a writer that crashed while writing segments
+		// file: make sure we can still open the index (ie,
+		// gracefully fallback to the previous segments file),
+		// and that we can add to the index:
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestSimulatedCrashedWriter()
+		{
+			Directory dir = NewDirectory();
+			if (dir is MockDirectoryWrapper)
+			{
+				((MockDirectoryWrapper)dir).SetPreventDoubleWrite(false);
+			}
+			IndexWriter writer = null;
+			writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
+				(Random())));
+			// add 100 documents
+			for (int i = 0; i < 100; i++)
+			{
+				AddDoc(writer);
+			}
+			// close
+			writer.Close();
+			long gen = SegmentInfos.GetLastCommitGeneration(dir);
+			NUnit.Framework.Assert.IsTrue("segment generation should be > 0 but got " + gen, 
+				gen > 0);
+			// Make the next segments file, with last byte
+			// missing, to simulate a writer that crashed while
+			// writing segments file:
+			string fileNameIn = SegmentInfos.GetLastCommitSegmentsFileName(dir);
+			string fileNameOut = IndexFileNames.FileNameFromGeneration(IndexFileNames.SEGMENTS
+				, string.Empty, 1 + gen);
+			IndexInput @in = dir.OpenInput(fileNameIn, NewIOContext(Random()));
+			IndexOutput @out = dir.CreateOutput(fileNameOut, NewIOContext(Random()));
+			long length = @in.Length();
+			for (int i_1 = 0; i_1 < length - 1; i_1++)
+			{
+				@out.WriteByte(@in.ReadByte());
+			}
+			@in.Close();
+			@out.Close();
+			IndexReader reader = null;
+			try
+			{
+				reader = DirectoryReader.Open(dir);
+			}
+			catch (Exception)
+			{
+				NUnit.Framework.Assert.Fail("reader failed to open on a crashed index");
+			}
+			reader.Close();
+			try
+			{
+				writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
+					(Random())).SetOpenMode(IndexWriterConfig.OpenMode.CREATE));
+			}
+			catch (Exception e)
+			{
+				Sharpen.Runtime.PrintStackTrace(e, System.Console.Out);
+				NUnit.Framework.Assert.Fail("writer failed to open on a crashed index");
+			}
+			// add 100 documents
+			for (int i_2 = 0; i_2 < 100; i_2++)
+			{
+				AddDoc(writer);
+			}
+			// close
+			writer.Close();
+			dir.Close();
+		}
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void TestTermVectorExceptions()
+		{
+			TestIndexWriterExceptions.FailOnTermVectors[] failures = new TestIndexWriterExceptions.FailOnTermVectors
+				[] { new TestIndexWriterExceptions.FailOnTermVectors(TestIndexWriterExceptions.FailOnTermVectors
+				.AFTER_INIT_STAGE), new TestIndexWriterExceptions.FailOnTermVectors(TestIndexWriterExceptions.FailOnTermVectors
+				.INIT_STAGE) };
+			int num = AtLeast(1);
+			for (int j = 0; j < num; j++)
+			{
+				foreach (TestIndexWriterExceptions.FailOnTermVectors failure in failures)
+				{
+					MockDirectoryWrapper dir = NewMockDirectory();
+					IndexWriter w = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new 
+						MockAnalyzer(Random())));
+					dir.FailOn(failure);
+					int numDocs = 10 + Random().Next(30);
+					for (int i = 0; i < numDocs; i++)
+					{
+						Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+							();
+						Field field = NewTextField(Random(), "field", "a field", Field.Store.YES);
+						doc.Add(field);
+						// random TV
+						try
+						{
+							w.AddDocument(doc);
+							NUnit.Framework.Assert.IsFalse(field.FieldType().StoreTermVectors());
+						}
+						catch (RuntimeException e)
+						{
+							NUnit.Framework.Assert.IsTrue(e.Message.StartsWith(TestIndexWriterExceptions.FailOnTermVectors
+								.EXC_MSG));
+						}
+						if (Random().Next(20) == 0)
+						{
+							w.Commit();
+							TestUtil.CheckIndex(dir);
+						}
+					}
+					Lucene.Net.Document.Document document = new Lucene.Net.Document.Document
+						();
+					document.Add(new TextField("field", "a field", Field.Store.YES));
+					w.AddDocument(document);
+					for (int i_1 = 0; i_1 < numDocs; i_1++)
+					{
+						Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+							();
+						Field field = NewTextField(Random(), "field", "a field", Field.Store.YES);
+						doc.Add(field);
+						// random TV
+						try
+						{
+							w.AddDocument(doc);
+							NUnit.Framework.Assert.IsFalse(field.FieldType().StoreTermVectors());
+						}
+						catch (RuntimeException e)
+						{
+							NUnit.Framework.Assert.IsTrue(e.Message.StartsWith(TestIndexWriterExceptions.FailOnTermVectors
+								.EXC_MSG));
+						}
+						if (Random().Next(20) == 0)
+						{
+							w.Commit();
+							TestUtil.CheckIndex(dir);
+						}
+					}
+					document = new Lucene.Net.Document.Document();
+					document.Add(new TextField("field", "a field", Field.Store.YES));
+					w.AddDocument(document);
+					w.Close();
+					IndexReader reader = DirectoryReader.Open(dir);
+					NUnit.Framework.Assert.IsTrue(reader.NumDocs() > 0);
+					SegmentInfos sis = new SegmentInfos();
+					sis.Read(dir);
+					foreach (AtomicReaderContext context in reader.Leaves())
+					{
+						NUnit.Framework.Assert.IsFalse(((AtomicReader)context.Reader()).GetFieldInfos().HasVectors
+							());
+					}
+					reader.Close();
+					dir.Close();
+				}
+			}
+		}
+
+		private class FailOnTermVectors : MockDirectoryWrapper.Failure
+		{
+			private static readonly string INIT_STAGE = "initTermVectorsWriter";
+
+			private static readonly string AFTER_INIT_STAGE = "finishDocument";
+
+			private static readonly string EXC_MSG = "FOTV";
+
+			private readonly string stage;
+
+			public FailOnTermVectors(string stage)
+			{
+				this.stage = stage;
+			}
+
+			/// <exception cref="System.IO.IOException"></exception>
+			public override void Eval(MockDirectoryWrapper dir)
+			{
+				StackTraceElement[] trace = new Exception().GetStackTrace();
+				bool fail = false;
+				for (int i = 0; i < trace.Length; i++)
+				{
+					if (typeof(TermVectorsConsumer).FullName.Equals(trace[i].GetClassName()) && stage
+						.Equals(trace[i].GetMethodName()))
+					{
+						fail = true;
+						break;
+					}
+				}
+				if (fail)
+				{
+					throw new RuntimeException(EXC_MSG);
+				}
+			}
+		}
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestAddDocsNonAbortingException()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter w = new RandomIndexWriter(Random(), dir);
+			int numDocs1 = Random().Next(25);
+			for (int docCount = 0; docCount < numDocs1; docCount++)
+			{
+				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					();
+				doc.Add(NewTextField("content", "good content", Field.Store.NO));
+				w.AddDocument(doc);
+			}
+			IList<Lucene.Net.Document.Document> docs = new AList<Lucene.Net.Document.Document
+				>();
+			for (int docCount_1 = 0; docCount_1 < 7; docCount_1++)
+			{
+				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					();
+				docs.AddItem(doc);
+				doc.Add(NewStringField("id", docCount_1 + string.Empty, Field.Store.NO));
+				doc.Add(NewTextField("content", "silly content " + docCount_1, Field.Store.NO));
+				if (docCount_1 == 4)
+				{
+					Field f = NewTextField("crash", string.Empty, Field.Store.NO);
+					doc.Add(f);
+					MockTokenizer tokenizer = new MockTokenizer(new StringReader("crash me on the 4th token"
+						), MockTokenizer.WHITESPACE, false);
+					tokenizer.SetEnableChecks(false);
+					// disable workflow checking as we forcefully close() in exceptional cases.
+					f.SetTokenStream(new TestIndexWriterExceptions.CrashingFilter(this, "crash", tokenizer
+						));
+				}
+			}
+			try
+			{
+				w.AddDocuments(docs.AsIterable());
+				// BUG: CrashingFilter didn't
+				NUnit.Framework.Assert.Fail("did not hit expected exception");
+			}
+			catch (IOException ioe)
+			{
+				// expected
+				NUnit.Framework.Assert.AreEqual(CRASH_FAIL_MESSAGE, ioe.Message);
+			}
+			int numDocs2 = Random().Next(25);
+			for (int docCount_2 = 0; docCount_2 < numDocs2; docCount_2++)
+			{
+				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					();
+				doc.Add(NewTextField("content", "good content", Field.Store.NO));
+				w.AddDocument(doc);
+			}
+			IndexReader r = w.GetReader();
+			w.Close();
+			IndexSearcher s = NewSearcher(r);
+			PhraseQuery pq = new PhraseQuery();
+			pq.Add(new Term("content", "silly"));
+			pq.Add(new Term("content", "content"));
+			NUnit.Framework.Assert.AreEqual(0, s.Search(pq, 1).totalHits);
+			pq = new PhraseQuery();
+			pq.Add(new Term("content", "good"));
+			pq.Add(new Term("content", "content"));
+			NUnit.Framework.Assert.AreEqual(numDocs1 + numDocs2, s.Search(pq, 1).totalHits);
+			r.Close();
+			dir.Close();
+		}
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestUpdateDocsNonAbortingException()
+		{
+			Directory dir = NewDirectory();
+			RandomIndexWriter w = new RandomIndexWriter(Random(), dir);
+			int numDocs1 = Random().Next(25);
+			for (int docCount = 0; docCount < numDocs1; docCount++)
+			{
+				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					();
+				doc.Add(NewTextField("content", "good content", Field.Store.NO));
+				w.AddDocument(doc);
+			}
+			// Use addDocs (no exception) to get docs in the index:
+			IList<Lucene.Net.Document.Document> docs = new AList<Lucene.Net.Document.Document
+				>();
+			int numDocs2 = Random().Next(25);
+			for (int docCount_1 = 0; docCount_1 < numDocs2; docCount_1++)
+			{
+				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					();
+				docs.AddItem(doc);
+				doc.Add(NewStringField("subid", "subs", Field.Store.NO));
+				doc.Add(NewStringField("id", docCount_1 + string.Empty, Field.Store.NO));
+				doc.Add(NewTextField("content", "silly content " + docCount_1, Field.Store.NO));
+			}
+			w.AddDocuments(docs.AsIterable());
+			int numDocs3 = Random().Next(25);
+			for (int docCount_2 = 0; docCount_2 < numDocs3; docCount_2++)
+			{
+				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					();
+				doc.Add(NewTextField("content", "good content", Field.Store.NO));
+				w.AddDocument(doc);
+			}
+			docs.Clear();
+			int limit = TestUtil.NextInt(Random(), 2, 25);
+			int crashAt = Random().Next(limit);
+			for (int docCount_3 = 0; docCount_3 < limit; docCount_3++)
+			{
+				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					();
+				docs.AddItem(doc);
+				doc.Add(NewStringField("id", docCount_3 + string.Empty, Field.Store.NO));
+				doc.Add(NewTextField("content", "silly content " + docCount_3, Field.Store.NO));
+				if (docCount_3 == crashAt)
+				{
+					Field f = NewTextField("crash", string.Empty, Field.Store.NO);
+					doc.Add(f);
+					MockTokenizer tokenizer = new MockTokenizer(new StringReader("crash me on the 4th token"
+						), MockTokenizer.WHITESPACE, false);
+					tokenizer.SetEnableChecks(false);
+					// disable workflow checking as we forcefully close() in exceptional cases.
+					f.SetTokenStream(new TestIndexWriterExceptions.CrashingFilter(this, "crash", tokenizer
+						));
+				}
+			}
+			try
+			{
+				w.UpdateDocuments(new Term("subid", "subs"), docs.AsIterable());
+				// BUG: CrashingFilter didn't
+				NUnit.Framework.Assert.Fail("did not hit expected exception");
+			}
+			catch (IOException ioe)
+			{
+				// expected
+				NUnit.Framework.Assert.AreEqual(CRASH_FAIL_MESSAGE, ioe.Message);
+			}
+			int numDocs4 = Random().Next(25);
+			for (int docCount_4 = 0; docCount_4 < numDocs4; docCount_4++)
+			{
+				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					();
+				doc.Add(NewTextField("content", "good content", Field.Store.NO));
+				w.AddDocument(doc);
+			}
+			IndexReader r = w.GetReader();
+			w.Close();
+			IndexSearcher s = NewSearcher(r);
+			PhraseQuery pq = new PhraseQuery();
+			pq.Add(new Term("content", "silly"));
+			pq.Add(new Term("content", "content"));
+			NUnit.Framework.Assert.AreEqual(numDocs2, s.Search(pq, 1).totalHits);
+			pq = new PhraseQuery();
+			pq.Add(new Term("content", "good"));
+			pq.Add(new Term("content", "content"));
+			NUnit.Framework.Assert.AreEqual(numDocs1 + numDocs3 + numDocs4, s.Search(pq, 1).totalHits
+				);
+			r.Close();
+			dir.Close();
+		}
+
+		internal class UOEDirectory : RAMDirectory
+		{
+			internal bool doFail = false;
+
+			/// <exception cref="System.IO.IOException"></exception>
+			public override IndexInput OpenInput(string name, IOContext context)
+			{
+				if (doFail && name.StartsWith("segments_"))
+				{
+					StackTraceElement[] trace = new Exception().GetStackTrace();
+					for (int i = 0; i < trace.Length; i++)
+					{
+						if ("read".Equals(trace[i].GetMethodName()))
+						{
+							throw new NotSupportedException("expected UOE");
+						}
+					}
+				}
+				return base.OpenInput(name, context);
+			}
+		}
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestExceptionOnCtor()
+		{
+			TestIndexWriterExceptions.UOEDirectory uoe = new TestIndexWriterExceptions.UOEDirectory
+				();
+			Directory d = new MockDirectoryWrapper(Random(), uoe);
+			IndexWriter iw = new IndexWriter(d, NewIndexWriterConfig(TEST_VERSION_CURRENT, null
+				));
+			iw.AddDocument(new Lucene.Net.Document.Document());
+			iw.Close();
+			uoe.doFail = true;
+			try
+			{
+				new IndexWriter(d, NewIndexWriterConfig(TEST_VERSION_CURRENT, null));
+				NUnit.Framework.Assert.Fail("should have gotten a UOE");
+			}
+			catch (NotSupportedException)
+			{
+			}
+			uoe.doFail = false;
+			d.Close();
+		}
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestIllegalPositions()
+		{
+			Directory dir = NewDirectory();
+			IndexWriter iw = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, 
+				null));
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			Token t1 = new Token("foo", 0, 3);
+			t1.SetPositionIncrement(int.MaxValue);
+			Token t2 = new Token("bar", 4, 7);
+			t2.SetPositionIncrement(200);
+			TokenStream overflowingTokenStream = new CannedTokenStream(new Token[] { t1, t2 }
+				);
+			Field field = new TextField("foo", overflowingTokenStream);
+			doc.Add(field);
+			try
+			{
+				iw.AddDocument(doc);
+				NUnit.Framework.Assert.Fail();
+			}
+			catch (ArgumentException)
+			{
+			}
+			// expected exception
+			iw.Close();
+			dir.Close();
+		}
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestLegalbutVeryLargePositions()
+		{
+			Directory dir = NewDirectory();
+			IndexWriter iw = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, 
+				null));
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			Token t1 = new Token("foo", 0, 3);
+			t1.SetPositionIncrement(int.MaxValue - 500);
+			if (Random().NextBoolean())
+			{
+				t1.SetPayload(new BytesRef(new byte[] { unchecked((int)(0x1)) }));
+			}
+			TokenStream overflowingTokenStream = new CannedTokenStream(new Token[] { t1 });
+			Field field = new TextField("foo", overflowingTokenStream);
+			doc.Add(field);
+			iw.AddDocument(doc);
+			iw.Close();
+			dir.Close();
+		}
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestBoostOmitNorms()
+		{
+			Directory dir = NewDirectory();
+			IndexWriterConfig iwc = new IndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
+				(Random()));
+			iwc.SetMergePolicy(NewLogMergePolicy());
+			IndexWriter iw = new IndexWriter(dir, iwc);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(new StringField("field1", "sometext", Field.Store.YES));
+			doc.Add(new TextField("field2", "sometext", Field.Store.NO));
+			doc.Add(new StringField("foo", "bar", Field.Store.NO));
+			iw.AddDocument(doc);
+			// add an 'ok' document
+			try
+			{
+				doc = new Lucene.Net.Document.Document();
+				// try to boost with norms omitted
+				IList<IndexableField> list = new AList<IndexableField>();
+				list.AddItem(new _IndexableField_1586());
+				iw.AddDocument(list.AsIterable());
+				NUnit.Framework.Assert.Fail("didn't get any exception, boost silently discarded");
+			}
+			catch (NotSupportedException)
+			{
+			}
+			// expected
+			DirectoryReader ir = DirectoryReader.Open(iw, false);
+			NUnit.Framework.Assert.AreEqual(1, ir.NumDocs());
+			NUnit.Framework.Assert.AreEqual("sometext", ir.Document(0).Get("field1"));
+			ir.Close();
+			iw.Close();
+			dir.Close();
+		}
+
+		private sealed class _IndexableField_1586 : IndexableField
+		{
+			public _IndexableField_1586()
+			{
+			}
+
+			public string Name()
+			{
+				return "foo";
+			}
+
+			public IndexableFieldType FieldType()
+			{
+				return StringField.TYPE_NOT_STORED;
+			}
+
+			public float Boost()
+			{
+				return 5f;
+			}
+
+			public BytesRef BinaryValue()
+			{
+				return null;
+			}
+
+			public string StringValue()
+			{
+				return "baz";
+			}
+
+			public StreamReader ReaderValue()
+			{
+				return null;
+			}
+
+			public Number NumericValue()
+			{
+				return null;
+			}
+
+			/// <exception cref="System.IO.IOException"></exception>
+			public TokenStream TokenStream(Analyzer analyzer)
+			{
+				return null;
+			}
+		}
+
+		// See LUCENE-4870 TooManyOpenFiles errors are thrown as
+		// FNFExceptions which can trigger data loss.
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestTooManyFileException()
+		{
+			// Create failure that throws Too many open files exception randomly
+			MockDirectoryWrapper.Failure failure = new _Failure_1646();
+			MockDirectoryWrapper dir = NewMockDirectory();
+			// The exception is only thrown on open input
+			dir.SetFailOnOpenInput(true);
+			dir.FailOn(failure);
+			// Create an index with one document
+			IndexWriterConfig iwc = new IndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
+				(Random()));
+			IndexWriter iw = new IndexWriter(dir, iwc);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			doc.Add(new StringField("foo", "bar", Field.Store.NO));
+			iw.AddDocument(doc);
+			// add a document
+			iw.Commit();
+			DirectoryReader ir = DirectoryReader.Open(dir);
+			NUnit.Framework.Assert.AreEqual(1, ir.NumDocs());
+			ir.Close();
+			iw.Close();
+			// Open and close the index a few times
+			for (int i = 0; i < 10; i++)
+			{
+				failure.SetDoFail();
+				iwc = new IndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(Random()));
+				try
+				{
+					iw = new IndexWriter(dir, iwc);
+				}
+				catch (CorruptIndexException)
+				{
+					// Exceptions are fine - we are running out of file handlers here
+					continue;
+				}
+				catch (IOException)
+				{
+					continue;
+				}
+				failure.ClearDoFail();
+				iw.Close();
+				ir = DirectoryReader.Open(dir);
+				NUnit.Framework.Assert.AreEqual("lost document after iteration: " + i, 1, ir.NumDocs
+					());
+				ir.Close();
+			}
+			// Check if document is still there
+			failure.ClearDoFail();
+			ir = DirectoryReader.Open(dir);
+			NUnit.Framework.Assert.AreEqual(1, ir.NumDocs());
+			ir.Close();
+			dir.Close();
+		}
+
+		private sealed class _Failure_1646 : MockDirectoryWrapper.Failure
+		{
+			public _Failure_1646()
+			{
+			}
+
+			public override MockDirectoryWrapper.Failure Reset()
+			{
+				this.doFail = false;
+				return this;
+			}
+
+			/// <exception cref="System.IO.IOException"></exception>
+			public override void Eval(MockDirectoryWrapper dir)
+			{
+				if (this.doFail)
+				{
+					if (LuceneTestCase.Random().NextBoolean())
+					{
+						throw new FileNotFoundException("some/file/name.ext (Too many open files)");
+					}
+				}
+			}
+		}
+
+		// Make sure if we hit a transient IOException (e.g., disk
+		// full), and then the exception stops (e.g., disk frees
+		// up), so we successfully close IW or open an NRT
+		// reader, we don't lose any deletes or updates:
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestNoLostDeletesOrUpdates()
+		{
+			int deleteCount = 0;
+			int docBase = 0;
+			int docCount = 0;
+			MockDirectoryWrapper dir = NewMockDirectory();
+			AtomicBoolean shouldFail = new AtomicBoolean();
+			dir.FailOn(new _Failure_1720(shouldFail));
+			// Don't throw exc if we are "flushing", else
+			// the segment is aborted and docs are lost:
+			// Only sometimes throw the exc, so we get
+			// it sometimes on creating the file, on
+			// flushing buffer, on closing the file:
+			RandomIndexWriter w = null;
+			for (int iter = 0; iter < 10 * RANDOM_MULTIPLIER; iter++)
+			{
+				int numDocs = AtLeast(100);
+				if (VERBOSE)
+				{
+					System.Console.Out.WriteLine("\nTEST: iter=" + iter + " numDocs=" + numDocs + " docBase="
+						 + docBase + " delCount=" + deleteCount);
+				}
+				if (w == null)
+				{
+					IndexWriterConfig iwc = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
+						(Random()));
+					MergeScheduler ms = iwc.GetMergeScheduler();
+					if (ms is ConcurrentMergeScheduler)
+					{
+						ConcurrentMergeScheduler suppressFakeIOE = new _ConcurrentMergeScheduler_1768();
+						// suppress only FakeIOException:
+						ConcurrentMergeScheduler cms = (ConcurrentMergeScheduler)ms;
+						suppressFakeIOE.SetMaxMergesAndThreads(cms.GetMaxMergeCount(), cms.GetMaxThreadCount
+							());
+						suppressFakeIOE.SetMergeThreadPriority(cms.GetMergeThreadPriority());
+						iwc.SetMergeScheduler(suppressFakeIOE);
+					}
+					w = new RandomIndexWriter(Random(), dir, iwc);
+					// Since we hit exc during merging, a partial
+					// forceMerge can easily return when there are still
+					// too many segments in the index:
+					w.SetDoRandomForceMergeAssert(false);
+				}
+				for (int i = 0; i < numDocs; i++)
+				{
+					Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+						();
+					doc.Add(new StringField("id", string.Empty + (docBase + i), Field.Store.NO));
+					if (DefaultCodecSupportsDocValues())
+					{
+						doc.Add(new NumericDocValuesField("f", 1L));
+						doc.Add(new NumericDocValuesField("cf", 2L));
+						doc.Add(new BinaryDocValuesField("bf", TestBinaryDocValuesUpdates.ToBytes(1L)));
+						doc.Add(new BinaryDocValuesField("bcf", TestBinaryDocValuesUpdates.ToBytes(2L)));
+					}
+					w.AddDocument(doc);
+				}
+				docCount += numDocs;
+				// TODO: we could make the test more evil, by letting
+				// it throw more than one exc, randomly, before "recovering"
+				// TODO: we could also install an infoStream and try
+				// to fail in "more evil" places inside BDS
+				shouldFail.Set(true);
+				bool doClose = false;
+				int updatingDocID = -1;
+				long updatingValue = -1;
+				try
+				{
+					bool defaultCodecSupportsFieldUpdates = DefaultCodecSupportsFieldUpdates();
+					for (int i_1 = 0; i_1 < numDocs; i_1++)
+					{
+						if (Random().Next(10) == 7)
+						{
+							bool fieldUpdate = defaultCodecSupportsFieldUpdates && Random().NextBoolean();
+							int docid = docBase + i_1;
+							if (fieldUpdate)
+							{
+								long value = iter;
+								if (VERBOSE)
+								{
+									System.Console.Out.WriteLine("  update id=" + docid + " to value " + value);
+								}
+								Term idTerm = new Term("id", Sharpen.Extensions.ToString(docid));
+								updatingDocID = docid;
+								// record that we're updating that document
+								updatingValue = value;
+								// and its updating value
+								if (Random().NextBoolean())
+								{
+									// update only numeric field
+									w.UpdateNumericDocValue(idTerm, "f", value);
+									w.UpdateNumericDocValue(idTerm, "cf", value * 2);
+								}
+								else
+								{
+									if (Random().NextBoolean())
+									{
+										w.UpdateBinaryDocValue(idTerm, "bf", TestBinaryDocValuesUpdates.ToBytes(value));
+										w.UpdateBinaryDocValue(idTerm, "bcf", TestBinaryDocValuesUpdates.ToBytes(value * 
+											2));
+									}
+									else
+									{
+										w.UpdateNumericDocValue(idTerm, "f", value);
+										w.UpdateNumericDocValue(idTerm, "cf", value * 2);
+										w.UpdateBinaryDocValue(idTerm, "bf", TestBinaryDocValuesUpdates.ToBytes(value));
+										w.UpdateBinaryDocValue(idTerm, "bcf", TestBinaryDocValuesUpdates.ToBytes(value * 
+											2));
+									}
+								}
+								// record that we successfully updated the document. this is
+								// important when we later 
+								//HM:revisit 
+								//assert the value of the DV fields of
+								// that document - since we update two fields that depend on each
+								// other, could be that one of the fields successfully updates,
+								// while the other fails (since we turn on random exceptions).
+								// while this is supported, it makes the test raise false alarms.
+								updatingDocID = -1;
+								updatingValue = -1;
+							}
+							// sometimes do both deletes and updates
+							if (!fieldUpdate || Random().NextBoolean())
+							{
+								if (VERBOSE)
+								{
+									System.Console.Out.WriteLine("  delete id=" + docid);
+								}
+								deleteCount++;
+								w.DeleteDocuments(new Term("id", string.Empty + docid));
+							}
+						}
+					}
+					// Trigger writeLiveDocs + writeFieldUpdates so we hit fake exc:
+					IndexReader r = w.GetReader(true);
+					// Sometimes we will make it here (we only randomly
+					// throw the exc):
+					NUnit.Framework.Assert.AreEqual(docCount - deleteCount, r.NumDocs());
+					r.Close();
+					// Sometimes close, so the disk full happens on close:
+					if (Random().NextBoolean())
+					{
+						if (VERBOSE)
+						{
+							System.Console.Out.WriteLine("  now close writer");
+						}
+						doClose = true;
+						w.Close();
+						w = null;
+					}
+				}
+				catch (IOException ioe)
+				{
+					// FakeIOException can be thrown from mergeMiddle, in which case IW
+					// registers it before our CMS gets to suppress it. IW.forceMerge later
+					// throws it as a wrapped IOE, so don't fail in this case.
+					if (ioe is MockDirectoryWrapper.FakeIOException || (ioe.InnerException != null &&
+						 ioe.InnerException is MockDirectoryWrapper.FakeIOException))
+					{
+						// expected
+						if (VERBOSE)
+						{
+							System.Console.Out.WriteLine("TEST: w.close() hit expected IOE");
+						}
+					}
+					else
+					{
+						throw;
+					}
+				}
+				shouldFail.Set(false);
+				if (updatingDocID != -1)
+				{
+					// Updating this document did not succeed. Since the fields we 
+					//HM:revisit 
+					//assert on
+					// depend on each other, and the update may have gone through halfway,
+					// replay the update on both numeric and binary DV fields, so later
+					// asserts succeed.
+					Term idTerm = new Term("id", string.Empty + updatingDocID);
+					w.UpdateNumericDocValue(idTerm, "f", updatingValue);
+					w.UpdateNumericDocValue(idTerm, "cf", updatingValue * 2);
+					w.UpdateBinaryDocValue(idTerm, "bf", TestBinaryDocValuesUpdates.ToBytes(updatingValue
+						));
+					w.UpdateBinaryDocValue(idTerm, "bcf", TestBinaryDocValuesUpdates.ToBytes(updatingValue
+						 * 2));
+				}
+				IndexReader r_1;
+				if (doClose && w != null)
+				{
+					if (VERBOSE)
+					{
+						System.Console.Out.WriteLine("  now 2nd close writer");
+					}
+					w.Close();
+					w = null;
+				}
+				if (w == null || Random().NextBoolean())
+				{
+					// Open non-NRT reader, to make sure the "on
+					// disk" bits are good:
+					if (VERBOSE)
+					{
+						System.Console.Out.WriteLine("TEST: verify against non-NRT reader");
+					}
+					if (w != null)
+					{
+						w.Commit();
+					}
+					r_1 = DirectoryReader.Open(dir);
+				}
+				else
+				{
+					if (VERBOSE)
+					{
+						System.Console.Out.WriteLine("TEST: verify against NRT reader");
+					}
+					r_1 = w.GetReader();
+				}
+				NUnit.Framework.Assert.AreEqual(docCount - deleteCount, r_1.NumDocs());
+				if (DefaultCodecSupportsDocValues())
+				{
+					BytesRef scratch = new BytesRef();
+					foreach (AtomicReaderContext context in r_1.Leaves())
+					{
+						AtomicReader reader = ((AtomicReader)context.Reader());
+						Bits liveDocs = reader.GetLiveDocs();
+						NumericDocValues f = reader.GetNumericDocValues("f");
+						NumericDocValues cf = reader.GetNumericDocValues("cf");
+						BinaryDocValues bf = reader.GetBinaryDocValues("bf");
+						BinaryDocValues bcf = reader.GetBinaryDocValues("bcf");
+						for (int i_1 = 0; i_1 < reader.MaxDoc(); i_1++)
+						{
+							if (liveDocs == null || liveDocs.Get(i_1))
+							{
+								NUnit.Framework.Assert.AreEqual("doc=" + (docBase + i_1), cf.Get(i_1), f.Get(i_1)
+									 * 2);
+								NUnit.Framework.Assert.AreEqual("doc=" + (docBase + i_1), TestBinaryDocValuesUpdates
+									.GetValue(bcf, i_1, scratch), TestBinaryDocValuesUpdates.GetValue(bf, i_1, scratch
+									) * 2);
+							}
+						}
+					}
+				}
+				r_1.Close();
+				// Sometimes re-use RIW, other times open new one:
+				if (w != null && Random().NextBoolean())
+				{
+					if (VERBOSE)
+					{
+						System.Console.Out.WriteLine("TEST: close writer");
+					}
+					w.Close();
+					w = null;
+				}
+				docBase += numDocs;
+			}
+			if (w != null)
+			{
+				w.Close();
+			}
+			// Final verify:
+			IndexReader r_2 = DirectoryReader.Open(dir);
+			NUnit.Framework.Assert.AreEqual(docCount - deleteCount, r_2.NumDocs());
+			r_2.Close();
+			dir.Close();
+		}
+
+		private sealed class _Failure_1720 : MockDirectoryWrapper.Failure
+		{
+			public _Failure_1720(AtomicBoolean shouldFail)
+			{
+				this.shouldFail = shouldFail;
+			}
+
+			/// <exception cref="System.IO.IOException"></exception>
+			public override void Eval(MockDirectoryWrapper dir)
+			{
+				StackTraceElement[] trace = new Exception().GetStackTrace();
+				if (shouldFail.Get() == false)
+				{
+					return;
+				}
+				bool sawSeal = false;
+				bool sawWrite = false;
+				for (int i = 0; i < trace.Length; i++)
+				{
+					if ("sealFlushedSegment".Equals(trace[i].GetMethodName()))
+					{
+						sawSeal = true;
+						break;
+					}
+					if ("writeLiveDocs".Equals(trace[i].GetMethodName()) || "writeFieldUpdates".Equals
+						(trace[i].GetMethodName()))
+					{
+						sawWrite = true;
+					}
+				}
+				if (sawWrite && sawSeal == false && LuceneTestCase.Random().Next(3) == 2)
+				{
+					if (LuceneTestCase.VERBOSE)
+					{
+						System.Console.Out.WriteLine("TEST: now fail; thread=" + Sharpen.Thread.CurrentThread
+							().GetName() + " exc:");
+						Sharpen.Runtime.PrintStackTrace(new Exception(), System.Console.Out);
+					}
+					shouldFail.Set(false);
+					throw new MockDirectoryWrapper.FakeIOException();
+				}
+			}
+
+			private readonly AtomicBoolean shouldFail;
+		}
+
+		private sealed class _ConcurrentMergeScheduler_1768 : ConcurrentMergeScheduler
+		{
+			public _ConcurrentMergeScheduler_1768()
+			{
+			}
+
+			protected override void HandleMergeException(Exception exc)
+			{
+				if (!(exc is MockDirectoryWrapper.FakeIOException))
+				{
+					base.HandleMergeException(exc);
+				}
+			}
+		}
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestExceptionDuringRollback()
+		{
+			// currently: fail in two different places
+			string messageToFailOn = Random().NextBoolean() ? "rollback: done finish merges" : 
+				"rollback before checkpoint";
+			// infostream that throws exception during rollback
+			InfoStream evilInfoStream = new _InfoStream_1985(messageToFailOn);
+			Directory dir = NewMockDirectory();
+			// we want to ensure we don't leak any locks or file handles
+			IndexWriterConfig iwc = new IndexWriterConfig(TEST_VERSION_CURRENT, null);
+			iwc.SetInfoStream(evilInfoStream);
+			IndexWriter iw = new IndexWriter(dir, iwc);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			for (int i = 0; i < 10; i++)
+			{
+				iw.AddDocument(doc);
+			}
+			iw.Commit();
+			iw.AddDocument(doc);
+			// pool readers
+			DirectoryReader r = DirectoryReader.Open(iw, false);
+			// sometimes sneak in a pending commit: we don't want to leak a file handle to that segments_N
+			if (Random().NextBoolean())
+			{
+				iw.PrepareCommit();
+			}
+			try
+			{
+				iw.Rollback();
+				NUnit.Framework.Assert.Fail();
+			}
+			catch (RuntimeException expected)
+			{
+				NUnit.Framework.Assert.AreEqual("BOOM!", expected.Message);
+			}
+			r.Close();
+			// even though we hit exception: we are closed, no locks or files held, index in good state
+			NUnit.Framework.Assert.IsTrue(iw.IsClosed());
+			NUnit.Framework.Assert.IsFalse(IndexWriter.IsLocked(dir));
+			r = DirectoryReader.Open(dir);
+			NUnit.Framework.Assert.AreEqual(10, r.MaxDoc());
+			r.Close();
+			// no leaks
+			dir.Close();
+		}
+
+		private sealed class _InfoStream_1985 : InfoStream
+		{
+			public _InfoStream_1985(string messageToFailOn)
+			{
+				this.messageToFailOn = messageToFailOn;
+			}
+
+			public override void Message(string component, string message)
+			{
+				if (messageToFailOn.Equals(message))
+				{
+					throw new RuntimeException("BOOM!");
+				}
+			}
+
+			public override bool IsEnabled(string component)
+			{
+				return true;
+			}
+
+			/// <exception cref="System.IO.IOException"></exception>
+			public override void Close()
+			{
+			}
+
+			private readonly string messageToFailOn;
+		}
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestRandomExceptionDuringRollback()
+		{
+			// fail in random places on i/o
+			int numIters = RANDOM_MULTIPLIER * 75;
+			for (int iter = 0; iter < numIters; iter++)
+			{
+				MockDirectoryWrapper dir = NewMockDirectory();
+				dir.FailOn(new _Failure_2048());
+				IndexWriterConfig iwc = new IndexWriterConfig(TEST_VERSION_CURRENT, null);
+				IndexWriter iw = new IndexWriter(dir, iwc);
+				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					();
+				for (int i = 0; i < 10; i++)
+				{
+					iw.AddDocument(doc);
+				}
+				iw.Commit();
+				iw.AddDocument(doc);
+				// pool readers
+				DirectoryReader r = DirectoryReader.Open(iw, false);
+				// sometimes sneak in a pending commit: we don't want to leak a file handle to that segments_N
+				if (Random().NextBoolean())
+				{
+					iw.PrepareCommit();
+				}
+				try
+				{
+					iw.Rollback();
+				}
+				catch (MockDirectoryWrapper.FakeIOException)
+				{
+				}
+				r.Close();
+				// even though we hit exception: we are closed, no locks or files held, index in good state
+				NUnit.Framework.Assert.IsTrue(iw.IsClosed());
+				NUnit.Framework.Assert.IsFalse(IndexWriter.IsLocked(dir));
+				r = DirectoryReader.Open(dir);
+				NUnit.Framework.Assert.AreEqual(10, r.MaxDoc());
+				r.Close();
+				// no leaks
+				dir.Close();
+			}
+		}
+
+		private sealed class _Failure_2048 : MockDirectoryWrapper.Failure
+		{
+			public _Failure_2048()
+			{
+			}
+
+			/// <exception cref="System.IO.IOException"></exception>
+			public override void Eval(MockDirectoryWrapper dir)
+			{
+				bool maybeFail = false;
+				StackTraceElement[] trace = new Exception().GetStackTrace();
+				for (int i = 0; i < trace.Length; i++)
+				{
+					if ("rollbackInternal".Equals(trace[i].GetMethodName()))
+					{
+						maybeFail = true;
+						break;
+					}
+				}
+				if (maybeFail && LuceneTestCase.Random().Next(10) == 0)
+				{
+					if (LuceneTestCase.VERBOSE)
+					{
+						System.Console.Out.WriteLine("TEST: now fail; thread=" + Sharpen.Thread.CurrentThread
+							().GetName() + " exc:");
+						Sharpen.Runtime.PrintStackTrace(new Exception(), System.Console.Out);
+					}
+					throw new MockDirectoryWrapper.FakeIOException();
+				}
+			}
 		}
 	}
 }

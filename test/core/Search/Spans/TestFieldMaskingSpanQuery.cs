@@ -1,321 +1,313 @@
-/* 
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+/*
+ * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
  * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using System;
-
-using NUnit.Framework;
-
-using WhitespaceAnalyzer = Lucene.Net.Analysis.WhitespaceAnalyzer;
-using Document = Lucene.Net.Documents.Document;
-using Field = Lucene.Net.Documents.Field;
-using IndexReader = Lucene.Net.Index.IndexReader;
-using IndexWriter = Lucene.Net.Index.IndexWriter;
-using Term = Lucene.Net.Index.Term;
-using RAMDirectory = Lucene.Net.Store.RAMDirectory;
-using LuceneTestCase = Lucene.Net.Util.LuceneTestCase;
+using System.Collections.Generic;
+using Lucene.Net.Analysis;
+using Lucene.Net.Document;
+using Lucene.Net.Index;
+using Lucene.Net.Search;
+using Lucene.Net.Search.Similarities;
+using Lucene.Net.Search.Spans;
+using Lucene.Net.Store;
+using Lucene.Net.Util;
+using Sharpen;
 
 namespace Lucene.Net.Search.Spans
 {
-	
-    [TestFixture]
-	public class TestFieldMaskingSpanQuery:LuceneTestCase
+	public class TestFieldMaskingSpanQuery : LuceneTestCase
 	{
-		[Serializable]
-		private class AnonymousClassSpanTermQuery:SpanTermQuery
+		protected internal static Lucene.Net.Document.Document Doc(Lucene.Net.Document.Field
+			[] fields)
 		{
-			private void  InitBlock(TestFieldMaskingSpanQuery enclosingInstance)
-			{
-				this.enclosingInstance = enclosingInstance;
-			}
-			private TestFieldMaskingSpanQuery enclosingInstance;
-			public TestFieldMaskingSpanQuery Enclosing_Instance
-			{
-				get
-				{
-					return enclosingInstance;
-				}
-				
-			}
-			internal AnonymousClassSpanTermQuery(TestFieldMaskingSpanQuery enclosingInstance, Lucene.Net.Index.Term Param1):base(Param1)
-			{
-				InitBlock(enclosingInstance);
-			}
-			public override Query Rewrite(IndexReader reader)
-			{
-				return new SpanOrQuery(new SpanQuery[]{new SpanTermQuery(new Term("first", "sally")), new SpanTermQuery(new Term("first", "james"))});
-			}
-		}
-		
-		protected internal static Document Doc(Field[] fields)
-		{
-			Document doc = new Document();
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
 			for (int i = 0; i < fields.Length; i++)
 			{
 				doc.Add(fields[i]);
 			}
 			return doc;
 		}
-		
-		protected internal static Field Field(System.String name, System.String value_Renamed)
-		{
-			return new Field(name, value_Renamed, Lucene.Net.Documents.Field.Store.NO, Lucene.Net.Documents.Field.Index.ANALYZED);
-		}
-		
-		protected internal IndexSearcher searcher;
-		
-		[SetUp]
-		public override void  SetUp()
-		{
-			base.SetUp();
-			RAMDirectory directory = new RAMDirectory();
-			IndexWriter writer = new IndexWriter(directory, new WhitespaceAnalyzer(), true, IndexWriter.MaxFieldLength.LIMITED);
-			
-			writer.AddDocument(Doc(new Field[]{Field("id", "0"), Field("gender", "male"), Field("first", "james"), Field("last", "jones")}));
-			
-			writer.AddDocument(Doc(new Field[]{Field("id", "1"), Field("gender", "male"), Field("first", "james"), Field("last", "smith"), Field("gender", "female"), Field("first", "sally"), Field("last", "jones")}));
-			
-			writer.AddDocument(Doc(new Field[]{Field("id", "2"), Field("gender", "female"), Field("first", "greta"), Field("last", "jones"), Field("gender", "female"), Field("first", "sally"), Field("last", "smith"), Field("gender", "male"), Field("first", "james"), Field("last", "jones")}));
-			
-			writer.AddDocument(Doc(new Field[]{Field("id", "3"), Field("gender", "female"), Field("first", "lisa"), Field("last", "jones"), Field("gender", "male"), Field("first", "bob"), Field("last", "costas")}));
-			
-			writer.AddDocument(Doc(new Field[]{Field("id", "4"), Field("gender", "female"), Field("first", "sally"), Field("last", "smith"), Field("gender", "female"), Field("first", "linda"), Field("last", "dixit"), Field("gender", "male"), Field("first", "bubba"), Field("last", "jones")}));
-			
-			writer.Close();
-			searcher = new IndexSearcher(directory, true);
-		}
-		
-		[TearDown]
-		public override void  TearDown()
-		{
-			base.TearDown();
-			searcher.Close();
-		}
-		
-		protected internal virtual void  Check(SpanQuery q, int[] docs)
-		{
-			CheckHits.CheckHitCollector(q, null, searcher, docs);
-		}
-		
-        [Test]
-		public virtual void  TestRewrite0()
-		{
-			SpanQuery q = new FieldMaskingSpanQuery(new SpanTermQuery(new Term("last", "sally")), "first");
-			q.Boost = 8.7654321f;
-			SpanQuery qr = (SpanQuery) searcher.Rewrite(q);
-			
-			QueryUtils.CheckEqual(q, qr);
 
-            var terms = Support.Compatibility.SetFactory.CreateHashSet<Term>();
-            qr.ExtractTerms(terms);
-			Assert.AreEqual(1, terms.Count);
+		protected internal static Lucene.Net.Document.Field Field(string name, string
+			 value)
+		{
+			return NewTextField(name, value, Field.Store.NO);
 		}
-		
-        [Test]
-		public virtual void  TestRewrite1()
+
+		protected internal static IndexSearcher searcher;
+
+		protected internal static Directory directory;
+
+		protected internal static IndexReader reader;
+
+		/// <exception cref="System.Exception"></exception>
+		[NUnit.Framework.BeforeClass]
+		public static void BeforeClass()
+		{
+			directory = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), directory, NewIndexWriterConfig
+				(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMergePolicy(NewLogMergePolicy
+				()));
+			writer.AddDocument(Doc(new Lucene.Net.Document.Field[] { Field("id", "0"), 
+				Field("gender", "male"), Field("first", "james"), Field("last", "jones") }));
+			writer.AddDocument(Doc(new Lucene.Net.Document.Field[] { Field("id", "1"), 
+				Field("gender", "male"), Field("first", "james"), Field("last", "smith"), Field(
+				"gender", "female"), Field("first", "sally"), Field("last", "jones") }));
+			writer.AddDocument(Doc(new Lucene.Net.Document.Field[] { Field("id", "2"), 
+				Field("gender", "female"), Field("first", "greta"), Field("last", "jones"), Field
+				("gender", "female"), Field("first", "sally"), Field("last", "smith"), Field("gender"
+				, "male"), Field("first", "james"), Field("last", "jones") }));
+			writer.AddDocument(Doc(new Lucene.Net.Document.Field[] { Field("id", "3"), 
+				Field("gender", "female"), Field("first", "lisa"), Field("last", "jones"), Field
+				("gender", "male"), Field("first", "bob"), Field("last", "costas") }));
+			writer.AddDocument(Doc(new Lucene.Net.Document.Field[] { Field("id", "4"), 
+				Field("gender", "female"), Field("first", "sally"), Field("last", "smith"), Field
+				("gender", "female"), Field("first", "linda"), Field("last", "dixit"), Field("gender"
+				, "male"), Field("first", "bubba"), Field("last", "jones") }));
+			reader = writer.GetReader();
+			writer.Close();
+			searcher = NewSearcher(reader);
+		}
+
+		/// <exception cref="System.Exception"></exception>
+		[NUnit.Framework.AfterClass]
+		public static void AfterClass()
+		{
+			searcher = null;
+			reader.Close();
+			reader = null;
+			directory.Close();
+			directory = null;
+		}
+
+		/// <exception cref="System.Exception"></exception>
+		protected internal virtual void Check(SpanQuery q, int[] docs)
+		{
+			CheckHits.CheckHitCollector(Random(), q, null, searcher, docs);
+		}
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestRewrite0()
+		{
+			SpanQuery q = new FieldMaskingSpanQuery(new SpanTermQuery(new Term("last", "sally"
+				)), "first");
+			q.SetBoost(8.7654321f);
+			SpanQuery qr = (SpanQuery)searcher.Rewrite(q);
+			QueryUtils.CheckEqual(q, qr);
+			ICollection<Term> terms = new HashSet<Term>();
+			qr.ExtractTerms(terms);
+			NUnit.Framework.Assert.AreEqual(1, terms.Count);
+		}
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestRewrite1()
 		{
 			// mask an anon SpanQuery class that rewrites to something else.
-			SpanQuery q = new FieldMaskingSpanQuery(new AnonymousClassSpanTermQuery(this, new Term("last", "sally")), "first");
-			
-			SpanQuery qr = (SpanQuery) searcher.Rewrite(q);
-			
+			SpanQuery q = new FieldMaskingSpanQuery(new _SpanTermQuery_149(new Term("last", "sally"
+				)), "first");
+			SpanQuery qr = (SpanQuery)searcher.Rewrite(q);
 			QueryUtils.CheckUnequal(q, qr);
-
-            var terms = Support.Compatibility.SetFactory.CreateHashSet<Term>();
-            qr.ExtractTerms(terms);
-			Assert.AreEqual(2, terms.Count);
+			ICollection<Term> terms = new HashSet<Term>();
+			qr.ExtractTerms(terms);
+			NUnit.Framework.Assert.AreEqual(2, terms.Count);
 		}
-		
-        [Test]
-		public virtual void  TestRewrite2()
+
+		private sealed class _SpanTermQuery_149 : SpanTermQuery
+		{
+			public _SpanTermQuery_149(Term baseArg1) : base(baseArg1)
+			{
+			}
+
+			public override Query Rewrite(IndexReader reader)
+			{
+				return new SpanOrQuery(new SpanTermQuery(new Term("first", "sally")), new SpanTermQuery
+					(new Term("first", "james")));
+			}
+		}
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestRewrite2()
 		{
 			SpanQuery q1 = new SpanTermQuery(new Term("last", "smith"));
 			SpanQuery q2 = new SpanTermQuery(new Term("last", "jones"));
-			SpanQuery q = new SpanNearQuery(new SpanQuery[]{q1, new FieldMaskingSpanQuery(q2, "last")}, 1, true);
+			SpanQuery q = new SpanNearQuery(new SpanQuery[] { q1, new FieldMaskingSpanQuery(q2
+				, "last") }, 1, true);
 			Query qr = searcher.Rewrite(q);
-			
 			QueryUtils.CheckEqual(q, qr);
-
-            var set_Renamed = Support.Compatibility.SetFactory.CreateHashSet<Term>();
-			qr.ExtractTerms(set_Renamed);
-			Assert.AreEqual(2, set_Renamed.Count);
+			HashSet<Term> set = new HashSet<Term>();
+			qr.ExtractTerms(set);
+			NUnit.Framework.Assert.AreEqual(2, set.Count);
 		}
-		
-        [Test]
-		public virtual void  TestEquality1()
+
+		public virtual void TestEquality1()
 		{
-			SpanQuery q1 = new FieldMaskingSpanQuery(new SpanTermQuery(new Term("last", "sally")), "first");
-			SpanQuery q2 = new FieldMaskingSpanQuery(new SpanTermQuery(new Term("last", "sally")), "first");
-			SpanQuery q3 = new FieldMaskingSpanQuery(new SpanTermQuery(new Term("last", "sally")), "XXXXX");
-			SpanQuery q4 = new FieldMaskingSpanQuery(new SpanTermQuery(new Term("last", "XXXXX")), "first");
-			SpanQuery q5 = new FieldMaskingSpanQuery(new SpanTermQuery(new Term("xXXX", "sally")), "first");
+			SpanQuery q1 = new FieldMaskingSpanQuery(new SpanTermQuery(new Term("last", "sally"
+				)), "first");
+			SpanQuery q2 = new FieldMaskingSpanQuery(new SpanTermQuery(new Term("last", "sally"
+				)), "first");
+			SpanQuery q3 = new FieldMaskingSpanQuery(new SpanTermQuery(new Term("last", "sally"
+				)), "XXXXX");
+			SpanQuery q4 = new FieldMaskingSpanQuery(new SpanTermQuery(new Term("last", "XXXXX"
+				)), "first");
+			SpanQuery q5 = new FieldMaskingSpanQuery(new SpanTermQuery(new Term("xXXX", "sally"
+				)), "first");
 			QueryUtils.CheckEqual(q1, q2);
 			QueryUtils.CheckUnequal(q1, q3);
 			QueryUtils.CheckUnequal(q1, q4);
 			QueryUtils.CheckUnequal(q1, q5);
-			
-			SpanQuery qA = new FieldMaskingSpanQuery(new SpanTermQuery(new Term("last", "sally")), "first");
-			qA.Boost = 9f;
-			SpanQuery qB = new FieldMaskingSpanQuery(new SpanTermQuery(new Term("last", "sally")), "first");
+			SpanQuery qA = new FieldMaskingSpanQuery(new SpanTermQuery(new Term("last", "sally"
+				)), "first");
+			qA.SetBoost(9f);
+			SpanQuery qB = new FieldMaskingSpanQuery(new SpanTermQuery(new Term("last", "sally"
+				)), "first");
 			QueryUtils.CheckUnequal(qA, qB);
-			qB.Boost = 9f;
+			qB.SetBoost(9f);
 			QueryUtils.CheckEqual(qA, qB);
 		}
-		
-        [Test]
-		public virtual void  TestNoop0()
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestNoop0()
 		{
 			SpanQuery q1 = new SpanTermQuery(new Term("last", "sally"));
 			SpanQuery q = new FieldMaskingSpanQuery(q1, "first");
-			Check(q, new int[]{});
+			Check(q, new int[] {  });
 		}
-        [Test]
-		public virtual void  TestNoop1()
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestNoop1()
 		{
 			SpanQuery q1 = new SpanTermQuery(new Term("last", "smith"));
 			SpanQuery q2 = new SpanTermQuery(new Term("last", "jones"));
-			SpanQuery q = new SpanNearQuery(new SpanQuery[]{q1, new FieldMaskingSpanQuery(q2, "last")}, 0, true);
-			Check(q, new int[]{1, 2});
-			q = new SpanNearQuery(new SpanQuery[]{new FieldMaskingSpanQuery(q1, "last"), new FieldMaskingSpanQuery(q2, "last")}, 0, true);
-			Check(q, new int[]{1, 2});
+			SpanQuery q = new SpanNearQuery(new SpanQuery[] { q1, new FieldMaskingSpanQuery(q2
+				, "last") }, 0, true);
+			Check(q, new int[] { 1, 2 });
+			q = new SpanNearQuery(new SpanQuery[] { new FieldMaskingSpanQuery(q1, "last"), new 
+				FieldMaskingSpanQuery(q2, "last") }, 0, true);
+			Check(q, new int[] { 1, 2 });
 		}
-		
-        [Test]
-		public virtual void  TestSimple1()
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestSimple1()
 		{
 			SpanQuery q1 = new SpanTermQuery(new Term("first", "james"));
 			SpanQuery q2 = new SpanTermQuery(new Term("last", "jones"));
-			SpanQuery q = new SpanNearQuery(new SpanQuery[]{q1, new FieldMaskingSpanQuery(q2, "first")}, - 1, false);
-			Check(q, new int[]{0, 2});
-			q = new SpanNearQuery(new SpanQuery[]{new FieldMaskingSpanQuery(q2, "first"), q1}, - 1, false);
-			Check(q, new int[]{0, 2});
-			q = new SpanNearQuery(new SpanQuery[]{q2, new FieldMaskingSpanQuery(q1, "last")}, - 1, false);
-			Check(q, new int[]{0, 2});
-			q = new SpanNearQuery(new SpanQuery[]{new FieldMaskingSpanQuery(q1, "last"), q2}, - 1, false);
-			Check(q, new int[]{0, 2});
+			SpanQuery q = new SpanNearQuery(new SpanQuery[] { q1, new FieldMaskingSpanQuery(q2
+				, "first") }, -1, false);
+			Check(q, new int[] { 0, 2 });
+			q = new SpanNearQuery(new SpanQuery[] { new FieldMaskingSpanQuery(q2, "first"), q1
+				 }, -1, false);
+			Check(q, new int[] { 0, 2 });
+			q = new SpanNearQuery(new SpanQuery[] { q2, new FieldMaskingSpanQuery(q1, "last")
+				 }, -1, false);
+			Check(q, new int[] { 0, 2 });
+			q = new SpanNearQuery(new SpanQuery[] { new FieldMaskingSpanQuery(q1, "last"), q2
+				 }, -1, false);
+			Check(q, new int[] { 0, 2 });
 		}
-		
-        [Test]
-		public virtual void  TestSimple2()
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestSimple2()
 		{
+			AssumeTrue("Broken scoring: LUCENE-3723", searcher.GetSimilarity() is TFIDFSimilarity
+				);
 			SpanQuery q1 = new SpanTermQuery(new Term("gender", "female"));
 			SpanQuery q2 = new SpanTermQuery(new Term("last", "smith"));
-			SpanQuery q = new SpanNearQuery(new SpanQuery[]{q1, new FieldMaskingSpanQuery(q2, "gender")}, - 1, false);
-			Check(q, new int[]{2, 4});
-			q = new SpanNearQuery(new SpanQuery[]{new FieldMaskingSpanQuery(q1, "id"), new FieldMaskingSpanQuery(q2, "id")}, - 1, false);
-			Check(q, new int[]{2, 4});
+			SpanQuery q = new SpanNearQuery(new SpanQuery[] { q1, new FieldMaskingSpanQuery(q2
+				, "gender") }, -1, false);
+			Check(q, new int[] { 2, 4 });
+			q = new SpanNearQuery(new SpanQuery[] { new FieldMaskingSpanQuery(q1, "id"), new 
+				FieldMaskingSpanQuery(q2, "id") }, -1, false);
+			Check(q, new int[] { 2, 4 });
 		}
-		
-        [Test]
-		public virtual void  TestSpans0()
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestSpans0()
 		{
 			SpanQuery q1 = new SpanTermQuery(new Term("gender", "female"));
 			SpanQuery q2 = new SpanTermQuery(new Term("first", "james"));
-			SpanQuery q = new SpanOrQuery(new SpanQuery[]{q1, new FieldMaskingSpanQuery(q2, "gender")});
-			Check(q, new int[]{0, 1, 2, 3, 4});
-			
-			Spans span = q.GetSpans(searcher.IndexReader);
-			
-			Assert.AreEqual(true, span.Next());
-			Assert.AreEqual(S(0, 0, 1), S(span));
-			
-			Assert.AreEqual(true, span.Next());
-			Assert.AreEqual(S(1, 0, 1), S(span));
-			
-			Assert.AreEqual(true, span.Next());
-			Assert.AreEqual(S(1, 1, 2), S(span));
-			
-			Assert.AreEqual(true, span.Next());
-			Assert.AreEqual(S(2, 0, 1), S(span));
-			
-			Assert.AreEqual(true, span.Next());
-			Assert.AreEqual(S(2, 1, 2), S(span));
-			
-			Assert.AreEqual(true, span.Next());
-			Assert.AreEqual(S(2, 2, 3), S(span));
-			
-			Assert.AreEqual(true, span.Next());
-			Assert.AreEqual(S(3, 0, 1), S(span));
-			
-			Assert.AreEqual(true, span.Next());
-			Assert.AreEqual(S(4, 0, 1), S(span));
-			
-			Assert.AreEqual(true, span.Next());
-			Assert.AreEqual(S(4, 1, 2), S(span));
-			
-			Assert.AreEqual(false, span.Next());
+			SpanQuery q = new SpanOrQuery(q1, new FieldMaskingSpanQuery(q2, "gender"));
+			Check(q, new int[] { 0, 1, 2, 3, 4 });
+			Lucene.Net.Search.Spans.Spans span = MultiSpansWrapper.Wrap(searcher.GetTopReaderContext
+				(), q);
+			NUnit.Framework.Assert.AreEqual(true, span.Next());
+			NUnit.Framework.Assert.AreEqual(S(0, 0, 1), S(span));
+			NUnit.Framework.Assert.AreEqual(true, span.Next());
+			NUnit.Framework.Assert.AreEqual(S(1, 0, 1), S(span));
+			NUnit.Framework.Assert.AreEqual(true, span.Next());
+			NUnit.Framework.Assert.AreEqual(S(1, 1, 2), S(span));
+			NUnit.Framework.Assert.AreEqual(true, span.Next());
+			NUnit.Framework.Assert.AreEqual(S(2, 0, 1), S(span));
+			NUnit.Framework.Assert.AreEqual(true, span.Next());
+			NUnit.Framework.Assert.AreEqual(S(2, 1, 2), S(span));
+			NUnit.Framework.Assert.AreEqual(true, span.Next());
+			NUnit.Framework.Assert.AreEqual(S(2, 2, 3), S(span));
+			NUnit.Framework.Assert.AreEqual(true, span.Next());
+			NUnit.Framework.Assert.AreEqual(S(3, 0, 1), S(span));
+			NUnit.Framework.Assert.AreEqual(true, span.Next());
+			NUnit.Framework.Assert.AreEqual(S(4, 0, 1), S(span));
+			NUnit.Framework.Assert.AreEqual(true, span.Next());
+			NUnit.Framework.Assert.AreEqual(S(4, 1, 2), S(span));
+			NUnit.Framework.Assert.AreEqual(false, span.Next());
 		}
-		
-        [Test]
-		public virtual void  TestSpans1()
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestSpans1()
 		{
 			SpanQuery q1 = new SpanTermQuery(new Term("first", "sally"));
 			SpanQuery q2 = new SpanTermQuery(new Term("first", "james"));
-			SpanQuery qA = new SpanOrQuery(new SpanQuery[]{q1, q2});
+			SpanQuery qA = new SpanOrQuery(q1, q2);
 			SpanQuery qB = new FieldMaskingSpanQuery(qA, "id");
-			
-			Check(qA, new int[]{0, 1, 2, 4});
-			Check(qB, new int[]{0, 1, 2, 4});
-			
-			Spans spanA = qA.GetSpans(searcher.IndexReader);
-			Spans spanB = qB.GetSpans(searcher.IndexReader);
-			
+			Check(qA, new int[] { 0, 1, 2, 4 });
+			Check(qB, new int[] { 0, 1, 2, 4 });
+			Lucene.Net.Search.Spans.Spans spanA = MultiSpansWrapper.Wrap(searcher.GetTopReaderContext
+				(), qA);
+			Lucene.Net.Search.Spans.Spans spanB = MultiSpansWrapper.Wrap(searcher.GetTopReaderContext
+				(), qB);
 			while (spanA.Next())
 			{
-				Assert.IsTrue(spanB.Next(), "spanB not still going");
-				Assert.AreEqual(S(spanA), S(spanB), "spanA not equal spanB");
+				NUnit.Framework.Assert.IsTrue("spanB not still going", spanB.Next());
+				NUnit.Framework.Assert.AreEqual("spanA not equal spanB", S(spanA), S(spanB));
 			}
-			Assert.IsTrue(!(spanB.Next()), "spanB still going even tough spanA is done");
+			NUnit.Framework.Assert.IsTrue("spanB still going even tough spanA is done", !(spanB
+				.Next()));
 		}
-		
-        [Test]
-		public virtual void  TestSpans2()
+
+		/// <exception cref="System.Exception"></exception>
+		public virtual void TestSpans2()
 		{
+			AssumeTrue("Broken scoring: LUCENE-3723", searcher.GetSimilarity() is TFIDFSimilarity
+				);
 			SpanQuery qA1 = new SpanTermQuery(new Term("gender", "female"));
 			SpanQuery qA2 = new SpanTermQuery(new Term("first", "james"));
-			SpanQuery qA = new SpanOrQuery(new SpanQuery[]{qA1, new FieldMaskingSpanQuery(qA2, "gender")});
+			SpanQuery qA = new SpanOrQuery(qA1, new FieldMaskingSpanQuery(qA2, "gender"));
 			SpanQuery qB = new SpanTermQuery(new Term("last", "jones"));
-			SpanQuery q = new SpanNearQuery(new SpanQuery[]{new FieldMaskingSpanQuery(qA, "id"), new FieldMaskingSpanQuery(qB, "id")}, - 1, false);
-			Check(q, new int[]{0, 1, 2, 3});
-			
-			Spans span = q.GetSpans(searcher.IndexReader);
-			
-			Assert.AreEqual(true, span.Next());
-			Assert.AreEqual(S(0, 0, 1), S(span));
-			
-			Assert.AreEqual(true, span.Next());
-			Assert.AreEqual(S(1, 1, 2), S(span));
-			
-			Assert.AreEqual(true, span.Next());
-			Assert.AreEqual(S(2, 0, 1), S(span));
-			
-			Assert.AreEqual(true, span.Next());
-			Assert.AreEqual(S(2, 2, 3), S(span));
-			
-			Assert.AreEqual(true, span.Next());
-			Assert.AreEqual(S(3, 0, 1), S(span));
-			
-			Assert.AreEqual(false, span.Next());
+			SpanQuery q = new SpanNearQuery(new SpanQuery[] { new FieldMaskingSpanQuery(qA, "id"
+				), new FieldMaskingSpanQuery(qB, "id") }, -1, false);
+			Check(q, new int[] { 0, 1, 2, 3 });
+			Lucene.Net.Search.Spans.Spans span = MultiSpansWrapper.Wrap(searcher.GetTopReaderContext
+				(), q);
+			NUnit.Framework.Assert.AreEqual(true, span.Next());
+			NUnit.Framework.Assert.AreEqual(S(0, 0, 1), S(span));
+			NUnit.Framework.Assert.AreEqual(true, span.Next());
+			NUnit.Framework.Assert.AreEqual(S(1, 1, 2), S(span));
+			NUnit.Framework.Assert.AreEqual(true, span.Next());
+			NUnit.Framework.Assert.AreEqual(S(2, 0, 1), S(span));
+			NUnit.Framework.Assert.AreEqual(true, span.Next());
+			NUnit.Framework.Assert.AreEqual(S(2, 2, 3), S(span));
+			NUnit.Framework.Assert.AreEqual(true, span.Next());
+			NUnit.Framework.Assert.AreEqual(S(3, 0, 1), S(span));
+			NUnit.Framework.Assert.AreEqual(false, span.Next());
 		}
-		
-		public virtual System.String S(Spans span)
+
+		public virtual string S(Lucene.Net.Search.Spans.Spans span)
 		{
 			return S(span.Doc(), span.Start(), span.End());
 		}
-		public virtual System.String S(int doc, int start, int end)
+
+		public virtual string S(int doc, int start, int end)
 		{
 			return "s(" + doc + "," + start + "," + end + ")";
 		}

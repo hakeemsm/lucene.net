@@ -39,8 +39,10 @@ namespace Lucene.Net.Documents
         [Test]
 		public virtual void  TestBinaryFieldInIndex()
 		{
-			IFieldable binaryFldStored = new Field("binaryStored", System.Text.UTF8Encoding.UTF8.GetBytes(binaryValStored), Field.Store.YES);
-			IFieldable stringFldStored = new Field("stringStored", binaryValStored, Field.Store.YES, Field.Index.NO, Field.TermVector.NO);
+			FieldType ft = new FieldType();
+			ft.SetStored(true);
+			IIndexableField binaryFldStored = new Field("binaryStored", System.Text.UTF8Encoding.UTF8.GetBytes(binaryValStored), Field.Store.YES);
+			IIndexableField stringFldStored = new Field("stringStored", binaryValStored, Field.Store.YES, Field.Index.NO, Field.TermVector.NO);
 			
 			// binary fields with store off are not allowed
             Assert.Throws<ArgumentException>(
@@ -53,30 +55,28 @@ namespace Lucene.Net.Documents
 			doc.Add(stringFldStored);
 			
 			/* test for field count */
-			Assert.AreEqual(2, doc.fields_ForNUnit.Count);
+			NUnit.Framework.Assert.AreEqual(2, doc.GetFields().Count);
 			
 			/* add the doc to a ram index */
-			MockRAMDirectory dir = new MockRAMDirectory();
-			IndexWriter writer = new IndexWriter(dir, new StandardAnalyzer(Lucene.Net.Util.Version.LUCENE_CURRENT), true, IndexWriter.MaxFieldLength.LIMITED);
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
 			writer.AddDocument(doc);
-			writer.Close();
 			
 			/* open a reader and fetch the document */
-			IndexReader reader = IndexReader.Open(dir, false);
+			IndexReader reader = writer.GetReader();
 			Document docFromReader = reader.Document(0);
 			Assert.IsTrue(docFromReader != null);
-			
+			BytesRef bytes = docFromReader.GetBinaryValue("binaryStored");
 			/* fetch the binary stored field and compare it's content with the original one */
-			System.String binaryFldStoredTest = new System.String(System.Text.UTF8Encoding.UTF8.GetChars(docFromReader.GetBinaryValue("binaryStored")));
+			string binaryFldStoredTest = new string(bytes.bytes, bytes.offset, bytes.length, 
+				StandardCharsets.UTF_8);
 			Assert.IsTrue(binaryFldStoredTest.Equals(binaryValStored));
 			
 			/* fetch the string field and compare it's content with the original one */
 			System.String stringFldStoredTest = docFromReader.Get("stringStored");
 			Assert.IsTrue(stringFldStoredTest.Equals(binaryValStored));
 			
-			/* delete the document from index */
-			reader.DeleteDocument(0);
-			Assert.AreEqual(0, reader.NumDocs());
+			writer.Close();
 			
 			reader.Close();
 			dir.Close();
@@ -85,30 +85,30 @@ namespace Lucene.Net.Documents
         [Test]
 		public virtual void  TestCompressionTools()
 		{
-			IFieldable binaryFldCompressed = new Field("binaryCompressed", CompressionTools.Compress(System.Text.UTF8Encoding.UTF8.GetBytes(binaryValCompressed)), Field.Store.YES);
-			IFieldable stringFldCompressed = new Field("stringCompressed", CompressionTools.CompressString(binaryValCompressed), Field.Store.YES);
-			
+			IIndexableField binaryFldCompressed = new StoredField("binaryCompressed", CompressionTools
+				.Compress(Sharpen.Runtime.GetBytesForString(binaryValCompressed, StandardCharsets
+				.UTF_8)));
+			IIndexableField stringFldCompressed = new StoredField("stringCompressed", CompressionTools
+				.CompressString(binaryValCompressed));
 			Document doc = new Document();
 			
 			doc.Add(binaryFldCompressed);
 			doc.Add(stringFldCompressed);
 			
 			/* add the doc to a ram index */
-			MockRAMDirectory dir = new MockRAMDirectory();
-			IndexWriter writer = new IndexWriter(dir, new StandardAnalyzer(Lucene.Net.Util.Version.LUCENE_CURRENT), true, IndexWriter.MaxFieldLength.LIMITED);
+			Directory dir = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
 			writer.AddDocument(doc);
+			IndexReader reader = writer.GetReader();
+			Org.Apache.Lucene.Document.Document docFromReader = reader.Document(0);
+			NUnit.Framework.Assert.IsTrue(docFromReader != null);
+			string binaryFldCompressedTest = new string(CompressionTools.Decompress(docFromReader
+				.GetBinaryValue("binaryCompressed")), StandardCharsets.UTF_8);
+			NUnit.Framework.Assert.IsTrue(binaryFldCompressedTest.Equals(binaryValCompressed)
+				);
+			NUnit.Framework.Assert.IsTrue(CompressionTools.DecompressString(docFromReader.GetBinaryValue
+				("stringCompressed")).Equals(binaryValCompressed));
 			writer.Close();
-			
-			/* open a reader and fetch the document */
-			IndexReader reader = IndexReader.Open(dir, false);
-			Document docFromReader = reader.Document(0);
-			Assert.IsTrue(docFromReader != null);
-			
-			/* fetch the binary compressed field and compare it's content with the original one */
-			System.String binaryFldCompressedTest = new System.String(System.Text.UTF8Encoding.UTF8.GetChars(CompressionTools.Decompress(docFromReader.GetBinaryValue("binaryCompressed"))));
-			Assert.IsTrue(binaryFldCompressedTest.Equals(binaryValCompressed));
-			Assert.IsTrue(CompressionTools.DecompressString(docFromReader.GetBinaryValue("stringCompressed")).Equals(binaryValCompressed));
-			
 			reader.Close();
 			dir.Close();
 		}

@@ -36,7 +36,7 @@ namespace Lucene.Net.Test.Util
         {
             var charsRef = new CharsRef();
             var builder = new StringBuilder();
-            int numStrings = atLeast(10);
+			int numStrings = AtLeast(10);
             for (var i = 0; i < numStrings; i++)
             {
                 char[] charArray = _TestUtil.RandomRealisticUnicodeString(new Random(), 1, 100).ToCharArray();

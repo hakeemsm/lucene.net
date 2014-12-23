@@ -26,7 +26,7 @@ namespace Lucene.Net.Test.Util
         public virtual void TestAvailableServices()
         {
             var codecs = Codec.AvailableCodecs;
-            Assert.IsTrue(codecs.Contains("Lucene42"));
+            Assert.IsTrue(codecs.Contains("Lucene46"));
         }
     }
 }

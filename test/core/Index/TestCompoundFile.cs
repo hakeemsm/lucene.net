@@ -74,7 +74,7 @@ namespace Lucene.Net.Index
 		/// <summary>Creates a file of the specified size with random data. </summary>
 		private void  CreateRandomFile(Directory dir, System.String name, int size)
 		{
-			IndexOutput os = dir.CreateOutput(name);
+			IndexOutput os = dir.CreateOutput(name, NewIOContext(Random()));
 			for (int i = 0; i < size; i++)
 			{
 				byte b = (byte) ((new System.Random().NextDouble()) * 256);
@@ -87,9 +87,9 @@ namespace Lucene.Net.Index
 		/// byte is written as the start byte provided. All subsequent bytes are
 		/// computed as start + offset where offset is the number of the byte.
 		/// </summary>
-		private void  CreateSequenceFile(Directory dir, System.String name, byte start, int size)
+		private void CreateSequenceFile(Directory dir, string name, byte start, int size)
 		{
-			IndexOutput os = dir.CreateOutput(name);
+			IndexOutput os = dir.CreateOutput(name, NewIOContext(Random()));
 			for (int i = 0; i < size; i++)
 			{
 				os.WriteByte(start);
@@ -99,7 +99,7 @@ namespace Lucene.Net.Index
 		}
 		
 		
-		private void  AssertSameStreams(System.String msg, IndexInput expected, IndexInput test)
+		private void AssertSameStreams(string msg, IndexInput expected, IndexInput test)
 		{
 			Assert.IsNotNull(expected, msg + " null expected");
 			Assert.IsNotNull(test, msg + " null test");
@@ -189,13 +189,15 @@ namespace Lucene.Net.Index
 			{
 				System.String name = "t" + data[i];
 				CreateSequenceFile(dir, name, (byte) 0, data[i]);
-				CompoundFileWriter csw = new CompoundFileWriter(dir, name + ".cfs");
-				csw.AddFile(name);
+				CompoundFileDirectory csw = new CompoundFileDirectory(dir, name + ".cfs", NewIOContext
+					(Random()), true);
+				dir.Copy(csw, name, name, NewIOContext(Random()));
 				csw.Close();
 				
-				CompoundFileReader csr = new CompoundFileReader(dir, name + ".cfs");
-				IndexInput expected = dir.OpenInput(name);
-				IndexInput actual = csr.OpenInput(name);
+				CompoundFileDirectory csr = new CompoundFileDirectory(dir, name + ".cfs", NewIOContext
+					(Random()), false);
+				IndexInput expected = dir.OpenInput(name, NewIOContext(Random()));
+				IndexInput actual = csr.OpenInput(name, NewIOContext(Random()));
 				AssertSameStreams(name, expected, actual);
 				AssertSameSeekBehavior(name, expected, actual);
 				expected.Close();
@@ -214,21 +216,23 @@ namespace Lucene.Net.Index
 			CreateSequenceFile(dir, "d1", (byte) 0, 15);
 			CreateSequenceFile(dir, "d2", (byte) 0, 114);
 			
-			CompoundFileWriter csw = new CompoundFileWriter(dir, "d.csf");
-			csw.AddFile("d1");
-			csw.AddFile("d2");
+			CompoundFileDirectory csw = new CompoundFileDirectory(dir, "d.cfs", NewIOContext(
+				Random()), true);
+			dir.Copy(csw, "d1", "d1", NewIOContext(Random()));
+			dir.Copy(csw, "d2", "d2", NewIOContext(Random()));
 			csw.Close();
 			
-			CompoundFileReader csr = new CompoundFileReader(dir, "d.csf");
-			IndexInput expected = dir.OpenInput("d1");
-			IndexInput actual = csr.OpenInput("d1");
+			CompoundFileDirectory csr = new CompoundFileDirectory(dir, "d.cfs", NewIOContext(
+				Random()), false);
+			IndexInput expected = dir.OpenInput("d1", NewIOContext(Random()));
+			IndexInput actual = csr.OpenInput("d1", NewIOContext(Random()));
 			AssertSameStreams("d1", expected, actual);
 			AssertSameSeekBehavior("d1", expected, actual);
 			expected.Close();
 			actual.Close();
 			
-			expected = dir.OpenInput("d2");
-			actual = csr.OpenInput("d2");
+			expected = dir.OpenInput("d2", NewIOContext(Random()));
+			actual = csr.OpenInput("d2", NewIOContext(Random()));
 			AssertSameStreams("d2", expected, actual);
 			AssertSameSeekBehavior("d2", expected, actual);
 			expected.Close();
@@ -266,19 +270,22 @@ namespace Lucene.Net.Index
 			CreateRandomFile(dir, segment + ".notIn2", 51);
 			
 			// Now test
-			CompoundFileWriter csw = new CompoundFileWriter(dir, "test.cfs");
+			CompoundFileDirectory csw = new CompoundFileDirectory(dir, "test.cfs", NewIOContext
+				(Random()), true);
 			System.String[] data = new System.String[]{".zero", ".one", ".ten", ".hundred", ".big1", ".big2", ".big3", ".big4", ".big5", ".big6", ".big7"};
 			for (int i = 0; i < data.Length; i++)
 			{
-				csw.AddFile(segment + data[i]);
+				string fileName = segment + data[i];
+				dir.Copy(csw, fileName, fileName, NewIOContext(Random()));
 			}
 			csw.Close();
 			
-			CompoundFileReader csr = new CompoundFileReader(dir, "test.cfs");
+			CompoundFileDirectory csr = new CompoundFileDirectory(dir, "test.cfs", NewIOContext
+				(Random()), false);
 			for (int i = 0; i < data.Length; i++)
 			{
-				IndexInput check = dir.OpenInput(segment + data[i]);
-				IndexInput test = csr.OpenInput(segment + data[i]);
+				IndexInput check = dir.OpenInput(segment + data[i_1], NewIOContext(Random()));
+				IndexInput test = csr.OpenInput(segment + data[i_1], NewIOContext(Random()));
 				AssertSameStreams(data[i], check, test);
 				AssertSameSeekBehavior(data[i], check, test);
 				test.Close();
@@ -295,11 +302,13 @@ namespace Lucene.Net.Index
 		/// </summary>
 		private void  SetUp_2()
 		{
-			CompoundFileWriter cw = new CompoundFileWriter(dir, "f.comp");
+			CompoundFileDirectory cw = new CompoundFileDirectory(dir, "f.comp", NewIOContext(
+				Random()), true);
 			for (int i = 0; i < 20; i++)
 			{
 				CreateSequenceFile(dir, "f" + i, (byte) 0, 2000);
-				cw.AddFile("f" + i);
+				string fileName = "f" + i;
+				dir.Copy(cw, fileName, fileName, NewIOContext(Random()));
 			}
 			cw.Close();
 		}
@@ -314,14 +323,14 @@ namespace Lucene.Net.Index
 		private void  Demo_FSIndexInputBug(Directory fsdir, System.String file)
 		{
 			// Setup the test file - we need more than 1024 bytes
-			IndexOutput os = fsdir.CreateOutput(file);
+			IndexOutput os = fsdir.CreateOutput(file, IOContext.DEFAULT);
 			for (int i = 0; i < 2000; i++)
 			{
 				os.WriteByte((byte) i);
 			}
 			os.Close();
 			
-			IndexInput in_Renamed = fsdir.OpenInput(file);
+			IndexInput in_Renamed = fsdir.OpenInput(file, IOContext.DEFAULT);
 			
 			// This read primes the buffer in IndexInput
 			byte b = in_Renamed.ReadByte();
@@ -366,16 +375,16 @@ namespace Lucene.Net.Index
 		public virtual void  TestClonedStreamsClosing()
 		{
 			SetUp_2();
-			CompoundFileReader cr = new CompoundFileReader(dir, "f.comp");
-			
+			CompoundFileDirectory cr = new CompoundFileDirectory(dir, "f.comp", NewIOContext(
+				Random()), false);
 			// basic clone
-			IndexInput expected = dir.OpenInput("f11");
+			IndexInput expected = dir.OpenInput("f11", NewIOContext(Random()));
 			
 			// this test only works for FSIndexInput
 			Assert.IsTrue(_TestHelper.IsSimpleFSIndexInput(expected));
 			Assert.IsTrue(_TestHelper.IsSimpleFSIndexInputOpen(expected));
 			
-			IndexInput one = cr.OpenInput("f11");
+			IndexInput one = cr.OpenInput("f11", NewIOContext(Random()));
 			Assert.IsTrue(IsCSIndexInputOpen(one));
 			
 			IndexInput two = (IndexInput) one.Clone();
@@ -425,14 +434,13 @@ namespace Lucene.Net.Index
 		public virtual void  TestRandomAccess()
 		{
 			SetUp_2();
-			CompoundFileReader cr = new CompoundFileReader(dir, "f.comp");
-			
+			CompoundFileDirectory cr = new CompoundFileDirectory(dir, "f.comp", NewIOContext(
+				Random()), false);
 			// Open two files
-			IndexInput e1 = dir.OpenInput("f11");
-			IndexInput e2 = dir.OpenInput("f3");
-			
-			IndexInput a1 = cr.OpenInput("f11");
-			IndexInput a2 = dir.OpenInput("f3");
+			IndexInput e1 = dir.OpenInput("f11", NewIOContext(Random()));
+			IndexInput e2 = dir.OpenInput("f3", NewIOContext(Random()));
+			IndexInput a1 = cr.OpenInput("f11", NewIOContext(Random()));
+			IndexInput a2 = dir.OpenInput("f3", NewIOContext(Random()));
 			
 			// Seek the first pair
 			e1.Seek(100);
@@ -506,11 +514,11 @@ namespace Lucene.Net.Index
 		public virtual void  TestRandomAccessClones()
 		{
 			SetUp_2();
-			CompoundFileReader cr = new CompoundFileReader(dir, "f.comp");
-			
+			CompoundFileDirectory cr = new CompoundFileDirectory(dir, "f.comp", NewIOContext(
+				Random()), false);
 			// Open two files
-			IndexInput e1 = cr.OpenInput("f11");
-			IndexInput e2 = cr.OpenInput("f3");
+			IndexInput e1 = cr.OpenInput("f11", NewIOContext(Random()));
+			IndexInput e2 = cr.OpenInput("f3", NewIOContext(Random()));
 			
 			IndexInput a1 = (IndexInput) e1.Clone();
 			IndexInput a2 = (IndexInput) e2.Clone();
@@ -585,7 +593,8 @@ namespace Lucene.Net.Index
 		public virtual void  TestFileNotFound()
 		{
 			SetUp_2();
-			CompoundFileReader cr = new CompoundFileReader(dir, "f.comp");
+			CompoundFileDirectory cr = new CompoundFileDirectory(dir, "f.comp", NewIOContext(
+				Random()), false);
 			// Open two files
 		    Assert.Throws<System.IO.IOException>(() => cr.OpenInput("bogus"), "File not found");
 			cr.Close();
@@ -596,8 +605,9 @@ namespace Lucene.Net.Index
 		public virtual void  TestReadPastEOF()
 		{
 			SetUp_2();
-			CompoundFileReader cr = new CompoundFileReader(dir, "f.comp");
-			IndexInput is_Renamed = cr.OpenInput("f2");
+			CompoundFileDirectory cr = new CompoundFileDirectory(dir, "f.comp", NewIOContext(
+				Random()), false);
+			IndexInput is_Renamed = cr.OpenInput("f2", NewIOContext(Random()));
 			is_Renamed.Seek(is_Renamed.Length() - 10);
 			byte[] b = new byte[100];
 			is_Renamed.ReadBytes(b, 0, 10);
@@ -617,7 +627,7 @@ namespace Lucene.Net.Index
 		[Test]
 		public virtual void  TestLargeWrites()
 		{
-			IndexOutput os = dir.CreateOutput("testBufferStart.txt");
+			IndexOutput os = dir.CreateOutput("testBufferStart.txt", NewIOContext(Random()));
 			
 			byte[] largeBuf = new byte[2048];
 			for (int i = 0; i < largeBuf.Length; i++)
@@ -635,6 +645,252 @@ namespace Lucene.Net.Index
 			finally
 			{
 				os.Close();
+			}
+		}
+		public virtual void TestAddExternalFile()
+		{
+			CreateSequenceFile(dir, "d1", unchecked((byte)0), 15);
+			Directory newDir = NewDirectory();
+			CompoundFileDirectory csw = new CompoundFileDirectory(newDir, "d.cfs", NewIOContext
+				(Random()), true);
+			dir.Copy(csw, "d1", "d1", NewIOContext(Random()));
+			csw.Close();
+			CompoundFileDirectory csr = new CompoundFileDirectory(newDir, "d.cfs", NewIOContext
+				(Random()), false);
+			IndexInput expected = dir.OpenInput("d1", NewIOContext(Random()));
+			IndexInput actual = csr.OpenInput("d1", NewIOContext(Random()));
+			AssertSameStreams("d1", expected, actual);
+			AssertSameSeekBehavior("d1", expected, actual);
+			expected.Close();
+			actual.Close();
+			csr.Close();
+			newDir.Close();
+		}
+		public virtual void TestAppend()
+		{
+			Directory newDir = NewDirectory();
+			CompoundFileDirectory csw = new CompoundFileDirectory(newDir, "d.cfs", NewIOContext
+				(Random()), true);
+			int size = 5 + Random().Next(128);
+			for (int j = 0; j < 2; j++)
+			{
+				IndexOutput os = csw.CreateOutput("seg_" + j + "_foo.txt", NewIOContext(Random())
+					);
+				for (int i = 0; i < size; i++)
+				{
+					os.WriteInt(i * j);
+				}
+				os.Close();
+				string[] listAll = newDir.ListAll();
+				NUnit.Framework.Assert.AreEqual(1, listAll.Length);
+				NUnit.Framework.Assert.AreEqual("d.cfs", listAll[0]);
+			}
+			CreateSequenceFile(dir, "d1", unchecked((byte)0), 15);
+			dir.Copy(csw, "d1", "d1", NewIOContext(Random()));
+			string[] listAll_1 = newDir.ListAll();
+			NUnit.Framework.Assert.AreEqual(1, listAll_1.Length);
+			NUnit.Framework.Assert.AreEqual("d.cfs", listAll_1[0]);
+			csw.Close();
+			CompoundFileDirectory csr = new CompoundFileDirectory(newDir, "d.cfs", NewIOContext
+				(Random()), false);
+			for (int j_1 = 0; j_1 < 2; j_1++)
+			{
+				IndexInput openInput = csr.OpenInput("seg_" + j_1 + "_foo.txt", NewIOContext(Random
+					()));
+				NUnit.Framework.Assert.AreEqual(size * 4, openInput.Length());
+				for (int i = 0; i < size; i++)
+				{
+					NUnit.Framework.Assert.AreEqual(i * j_1, openInput.ReadInt());
+				}
+				openInput.Close();
+			}
+			IndexInput expected = dir.OpenInput("d1", NewIOContext(Random()));
+			IndexInput actual = csr.OpenInput("d1", NewIOContext(Random()));
+			AssertSameStreams("d1", expected, actual);
+			AssertSameSeekBehavior("d1", expected, actual);
+			expected.Close();
+			actual.Close();
+			csr.Close();
+			newDir.Close();
+		}
+		public virtual void TestAppendTwice()
+		{
+			Directory newDir = NewDirectory();
+			CompoundFileDirectory csw = new CompoundFileDirectory(newDir, "d.cfs", NewIOContext
+				(Random()), true);
+			CreateSequenceFile(newDir, "d1", unchecked((byte)0), 15);
+			IndexOutput @out = csw.CreateOutput("d.xyz", NewIOContext(Random()));
+			@out.WriteInt(0);
+			@out.Close();
+			NUnit.Framework.Assert.AreEqual(1, csw.ListAll().Length);
+			NUnit.Framework.Assert.AreEqual("d.xyz", csw.ListAll()[0]);
+			csw.Close();
+			CompoundFileDirectory cfr = new CompoundFileDirectory(newDir, "d.cfs", NewIOContext
+				(Random()), false);
+			NUnit.Framework.Assert.AreEqual(1, cfr.ListAll().Length);
+			NUnit.Framework.Assert.AreEqual("d.xyz", cfr.ListAll()[0]);
+			cfr.Close();
+			newDir.Close();
+		}
+		public virtual void TestEmptyCFS()
+		{
+			Directory newDir = NewDirectory();
+			CompoundFileDirectory csw = new CompoundFileDirectory(newDir, "d.cfs", NewIOContext
+				(Random()), true);
+			csw.Close();
+			CompoundFileDirectory csr = new CompoundFileDirectory(newDir, "d.cfs", NewIOContext
+				(Random()), false);
+			NUnit.Framework.Assert.AreEqual(0, csr.ListAll().Length);
+			csr.Close();
+			newDir.Close();
+		}
+		public virtual void TestReadNestedCFP()
+		{
+			Directory newDir = NewDirectory();
+			CompoundFileDirectory csw = new CompoundFileDirectory(newDir, "d.cfs", NewIOContext
+				(Random()), true);
+			CompoundFileDirectory nested = new CompoundFileDirectory(newDir, "b.cfs", NewIOContext
+				(Random()), true);
+			IndexOutput @out = nested.CreateOutput("b.xyz", NewIOContext(Random()));
+			IndexOutput out1 = nested.CreateOutput("b_1.xyz", NewIOContext(Random()));
+			@out.WriteInt(0);
+			out1.WriteInt(1);
+			@out.Close();
+			out1.Close();
+			nested.Close();
+			newDir.Copy(csw, "b.cfs", "b.cfs", NewIOContext(Random()));
+			newDir.Copy(csw, "b.cfe", "b.cfe", NewIOContext(Random()));
+			newDir.DeleteFile("b.cfs");
+			newDir.DeleteFile("b.cfe");
+			csw.Close();
+			NUnit.Framework.Assert.AreEqual(2, newDir.ListAll().Length);
+			csw = new CompoundFileDirectory(newDir, "d.cfs", NewIOContext(Random()), false);
+			NUnit.Framework.Assert.AreEqual(2, csw.ListAll().Length);
+			nested = new CompoundFileDirectory(csw, "b.cfs", NewIOContext(Random()), false);
+			NUnit.Framework.Assert.AreEqual(2, nested.ListAll().Length);
+			IndexInput openInput = nested.OpenInput("b.xyz", NewIOContext(Random()));
+			NUnit.Framework.Assert.AreEqual(0, openInput.ReadInt());
+			openInput.Close();
+			openInput = nested.OpenInput("b_1.xyz", NewIOContext(Random()));
+			NUnit.Framework.Assert.AreEqual(1, openInput.ReadInt());
+			openInput.Close();
+			nested.Close();
+			csw.Close();
+			newDir.Close();
+		}
+		public virtual void TestDoubleClose()
+		{
+			Directory newDir = NewDirectory();
+			CompoundFileDirectory csw = new CompoundFileDirectory(newDir, "d.cfs", NewIOContext
+				(Random()), true);
+			IndexOutput @out = csw.CreateOutput("d.xyz", NewIOContext(Random()));
+			@out.WriteInt(0);
+			@out.Close();
+			csw.Close();
+			// close a second time - must have no effect according to Closeable
+			csw.Close();
+			csw = new CompoundFileDirectory(newDir, "d.cfs", NewIOContext(Random()), false);
+			IndexInput openInput = csw.OpenInput("d.xyz", NewIOContext(Random()));
+			NUnit.Framework.Assert.AreEqual(0, openInput.ReadInt());
+			openInput.Close();
+			csw.Close();
+			// close a second time - must have no effect according to Closeable
+			csw.Close();
+			newDir.Close();
+		}
+		public virtual void TestManySubFiles()
+		{
+			Directory d = NewFSDirectory(CreateTempDir("CFSManySubFiles"));
+			int FILE_COUNT = AtLeast(500);
+			for (int fileIdx = 0; fileIdx < FILE_COUNT; fileIdx++)
+			{
+				IndexOutput @out = d.CreateOutput("file." + fileIdx, NewIOContext(Random()));
+				@out.WriteByte(unchecked((byte)fileIdx));
+				@out.Close();
+			}
+			CompoundFileDirectory cfd = new CompoundFileDirectory(d, "c.cfs", NewIOContext(Random
+				()), true);
+			for (int fileIdx_1 = 0; fileIdx_1 < FILE_COUNT; fileIdx_1++)
+			{
+				string fileName = "file." + fileIdx_1;
+				d.Copy(cfd, fileName, fileName, NewIOContext(Random()));
+			}
+			cfd.Close();
+			IndexInput[] ins = new IndexInput[FILE_COUNT];
+			CompoundFileDirectory cfr = new CompoundFileDirectory(d, "c.cfs", NewIOContext(Random
+				()), false);
+			for (int fileIdx_2 = 0; fileIdx_2 < FILE_COUNT; fileIdx_2++)
+			{
+				ins[fileIdx_2] = cfr.OpenInput("file." + fileIdx_2, NewIOContext(Random()));
+			}
+			for (int fileIdx_3 = 0; fileIdx_3 < FILE_COUNT; fileIdx_3++)
+			{
+				NUnit.Framework.Assert.AreEqual(unchecked((byte)fileIdx_3), ins[fileIdx_3].ReadByte
+					());
+			}
+			for (int fileIdx_4 = 0; fileIdx_4 < FILE_COUNT; fileIdx_4++)
+			{
+				ins[fileIdx_4].Close();
+			}
+			cfr.Close();
+			d.Close();
+		}
+		public virtual void TestListAll()
+		{
+			Directory dir = NewDirectory();
+			// riw should sometimes create docvalues fields, etc
+			RandomIndexWriter riw = new RandomIndexWriter(Random(), dir);
+			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				();
+			// these fields should sometimes get term vectors, etc
+			Field idField = NewStringField("id", string.Empty, Field.Store.NO);
+			Field bodyField = NewTextField("body", string.Empty, Field.Store.NO);
+			doc.Add(idField);
+			doc.Add(bodyField);
+			for (int i = 0; i < 100; i++)
+			{
+				idField.SetStringValue(Sharpen.Extensions.ToString(i));
+				bodyField.SetStringValue(TestUtil.RandomUnicodeString(Random()));
+				riw.AddDocument(doc);
+				if (Random().Next(7) == 0)
+				{
+					riw.Commit();
+				}
+			}
+			riw.Close();
+			CheckFiles(dir);
+			dir.Close();
+		}
+		private void CheckFiles(Directory dir)
+		{
+			foreach (string file in dir.ListAll())
+			{
+				if (file.EndsWith(IndexFileNames.COMPOUND_FILE_EXTENSION))
+				{
+					CompoundFileDirectory cfsDir = new CompoundFileDirectory(dir, file, NewIOContext(
+						Random()), false);
+					CheckFiles(cfsDir);
+					// recurse into cfs
+					cfsDir.Close();
+				}
+				IndexInput @in = null;
+				bool success = false;
+				try
+				{
+					@in = dir.OpenInput(file, NewIOContext(Random()));
+					success = true;
+				}
+				finally
+				{
+					if (success)
+					{
+						IOUtils.Close(@in);
+					}
+					else
+					{
+						IOUtils.CloseWhileHandlingException(@in);
+					}
+				}
 			}
 		}
 	}

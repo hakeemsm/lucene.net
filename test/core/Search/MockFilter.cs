@@ -30,10 +30,11 @@ namespace Lucene.Net.Search
 	{
 		private bool wasCalled;
 		
-		public override DocIdSet GetDocIdSet(IndexReader reader)
+		public override DocIdSet GetDocIdSet(AtomicReaderContext context, Bits acceptDocs
+			)
 		{
 			wasCalled = true;
-			return new DocIdBitSet(new System.Collections.BitArray(64));
+			return new FixedBitSet(((AtomicReader)context.Reader()).MaxDoc());
 		}
 		
 		public virtual void  Clear()

@@ -32,7 +32,7 @@ namespace Lucene.Net.Search
 		{
 			private int idx = - 1;
 			
-			public SimpleScorer():base(null)
+			protected SimpleScorer(Weight weight) : base(weight)
 			{
 			}
 			
@@ -41,6 +41,10 @@ namespace Lucene.Net.Search
 			    return idx == scores.Length ? float.NaN : scores[idx];
 			}
 			
+			public override int Freq()
+			{
+				return 1;
+			}
 			public override int DocID()
 			{
 				return idx;
@@ -55,6 +59,10 @@ namespace Lucene.Net.Search
 			{
 				idx = target;
 			    return idx < scores.Length ? idx : NO_MORE_DOCS;
+			}
+			public override long Cost()
+			{
+				return scores.Length;
 			}
 		}
 		
@@ -78,8 +86,14 @@ namespace Lucene.Net.Search
 					++numPositiveScores;
 				}
 			}
-			
-			Scorer s = new SimpleScorer();
+			Directory directory = NewDirectory();
+			RandomIndexWriter writer = new RandomIndexWriter(Random(), directory);
+			writer.Commit();
+			IndexReader ir = writer.GetReader();
+			writer.Close();
+			IndexSearcher searcher = NewSearcher(ir);
+			Weight fake = new TermQuery(new Term("fake", "weight")).CreateWeight(searcher);
+			Scorer s = new TestPositiveScoresOnlyCollector.SimpleScorer(fake);
 			TopDocsCollector<ScoreDoc> tdc = TopScoreDocCollector.Create(scores.Length, true);
 			Collector c = new PositiveScoresOnlyCollector(tdc);
 			c.SetScorer(s);
@@ -94,6 +108,8 @@ namespace Lucene.Net.Search
 			{
 				Assert.IsTrue(sd[i].Score > 0, "only positive scores should return: " + sd[i].Score);
 			}
+			ir.Close();
+			directory.Close();
 		}
 	}
 }
