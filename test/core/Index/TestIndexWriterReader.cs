@@ -7,7 +7,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Codecs;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
@@ -32,7 +32,7 @@ namespace Lucene.Net.Index
 			{
 				while (td.NextDoc() != DocIdSetIterator.NO_MORE_DOCS)
 				{
-					td.DocID();
+					td.DocID;
 					count++;
 				}
 			}
@@ -83,7 +83,7 @@ namespace Lucene.Net.Index
 						}
 					}
 				}
-				NUnit.Framework.Assert.IsFalse(reader.IsCurrent());
+				IsFalse(reader.IsCurrent());
 				reader.Close();
 			}
 			writer.ForceMerge(1);
@@ -91,18 +91,18 @@ namespace Lucene.Net.Index
 			DirectoryReader reader_1 = writer.GetReader();
 			writer.Commit();
 			// no changes that are not visible to the reader
-			NUnit.Framework.Assert.IsTrue(reader_1.IsCurrent());
+			IsTrue(reader_1.IsCurrent());
 			writer.Close();
-			NUnit.Framework.Assert.IsTrue(reader_1.IsCurrent());
+			IsTrue(reader_1.IsCurrent());
 			// all changes are visible to the reader
 			iwc = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(Random()));
 			writer = new IndexWriter(dir1, iwc);
-			NUnit.Framework.Assert.IsTrue(reader_1.IsCurrent());
+			IsTrue(reader_1.IsCurrent());
 			writer.AddDocument(DocHelper.CreateDocument(1, "x", 1 + Random().Next(5)));
-			NUnit.Framework.Assert.IsTrue(reader_1.IsCurrent());
+			IsTrue(reader_1.IsCurrent());
 			// segments in ram but IW is different to the readers one
 			writer.Close();
-			NUnit.Framework.Assert.IsFalse(reader_1.IsCurrent());
+			IsFalse(reader_1.IsCurrent());
 			// segments written
 			reader_1.Close();
 			dir1.Close();
@@ -138,44 +138,44 @@ namespace Lucene.Net.Index
 			// writer.flush(false, true, true);
 			// get a reader
 			DirectoryReader r1 = writer.GetReader();
-			NUnit.Framework.Assert.IsTrue(r1.IsCurrent());
-			string id10 = r1.Document(10).GetField("id").StringValue();
-			Lucene.Net.Document.Document newDoc = r1.Document(10);
+			IsTrue(r1.IsCurrent());
+			string id10 = r1.Document(10).GetField("id").StringValue = );
+			Lucene.Net.Documents.Document newDoc = r1.Document(10);
 			newDoc.RemoveField("id");
 			newDoc.Add(NewStringField("id", Sharpen.Extensions.ToString(8000), Field.Store.YES
 				));
 			writer.UpdateDocument(new Term("id", id10), newDoc);
-			NUnit.Framework.Assert.IsFalse(r1.IsCurrent());
+			IsFalse(r1.IsCurrent());
 			DirectoryReader r2 = writer.GetReader();
-			NUnit.Framework.Assert.IsTrue(r2.IsCurrent());
-			NUnit.Framework.Assert.AreEqual(0, Count(new Term("id", id10), r2));
+			IsTrue(r2.IsCurrent());
+			AreEqual(0, Count(new Term("id", id10), r2));
 			if (VERBOSE)
 			{
 				System.Console.Out.WriteLine("TEST: verify id");
 			}
-			NUnit.Framework.Assert.AreEqual(1, Count(new Term("id", Sharpen.Extensions.ToString
+			AreEqual(1, Count(new Term("id", Sharpen.Extensions.ToString
 				(8000)), r2));
 			r1.Close();
-			NUnit.Framework.Assert.IsTrue(r2.IsCurrent());
+			IsTrue(r2.IsCurrent());
 			writer.Close();
-			NUnit.Framework.Assert.IsTrue(r2.IsCurrent());
+			IsTrue(r2.IsCurrent());
 			DirectoryReader r3 = DirectoryReader.Open(dir1);
-			NUnit.Framework.Assert.IsTrue(r3.IsCurrent());
-			NUnit.Framework.Assert.IsTrue(r2.IsCurrent());
-			NUnit.Framework.Assert.AreEqual(0, Count(new Term("id", id10), r3));
-			NUnit.Framework.Assert.AreEqual(1, Count(new Term("id", Sharpen.Extensions.ToString
+			IsTrue(r3.IsCurrent());
+			IsTrue(r2.IsCurrent());
+			AreEqual(0, Count(new Term("id", id10), r3));
+			AreEqual(1, Count(new Term("id", Sharpen.Extensions.ToString
 				(8000)), r3));
 			writer = new IndexWriter(dir1, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random())));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewTextField("field", "a b c", Field.Store.NO));
 			writer.AddDocument(doc);
-			NUnit.Framework.Assert.IsTrue(r2.IsCurrent());
-			NUnit.Framework.Assert.IsTrue(r3.IsCurrent());
+			IsTrue(r2.IsCurrent());
+			IsTrue(r3.IsCurrent());
 			writer.Close();
-			NUnit.Framework.Assert.IsFalse(r2.IsCurrent());
-			NUnit.Framework.Assert.IsTrue(!r3.IsCurrent());
+			IsFalse(r2.IsCurrent());
+			IsTrue(!r3.IsCurrent());
 			r2.Close();
 			r3.Close();
 			dir1.Close();
@@ -188,36 +188,36 @@ namespace Lucene.Net.Index
 			IndexWriterConfig iwc = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random()));
 			IndexWriter writer = new IndexWriter(dir, iwc);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewTextField("field", "a b c", Field.Store.NO));
 			writer.AddDocument(doc);
 			writer.Close();
 			iwc = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(Random()));
 			writer = new IndexWriter(dir, iwc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewTextField("field", "a b c", Field.Store.NO));
 			DirectoryReader nrtReader = writer.GetReader();
-			NUnit.Framework.Assert.IsTrue(nrtReader.IsCurrent());
+			IsTrue(nrtReader.IsCurrent());
 			writer.AddDocument(doc);
-			NUnit.Framework.Assert.IsFalse(nrtReader.IsCurrent());
+			IsFalse(nrtReader.IsCurrent());
 			// should see the changes
 			writer.ForceMerge(1);
 			// make sure we don't have a merge going on
-			NUnit.Framework.Assert.IsFalse(nrtReader.IsCurrent());
+			IsFalse(nrtReader.IsCurrent());
 			nrtReader.Close();
 			DirectoryReader dirReader = DirectoryReader.Open(dir);
 			nrtReader = writer.GetReader();
-			NUnit.Framework.Assert.IsTrue(dirReader.IsCurrent());
-			NUnit.Framework.Assert.IsTrue(nrtReader.IsCurrent());
+			IsTrue(dirReader.IsCurrent());
+			IsTrue(nrtReader.IsCurrent());
 			// nothing was committed yet so we are still current
-			NUnit.Framework.Assert.AreEqual(2, nrtReader.MaxDoc());
+			AreEqual(2, nrtReader.MaxDoc);
 			// sees the actual document added
-			NUnit.Framework.Assert.AreEqual(1, dirReader.MaxDoc());
+			AreEqual(1, dirReader.MaxDoc);
 			writer.Close();
 			// close is actually a commit both should see the changes
-			NUnit.Framework.Assert.IsTrue(nrtReader.IsCurrent());
-			NUnit.Framework.Assert.IsFalse(dirReader.IsCurrent());
+			IsTrue(nrtReader.IsCurrent());
+			IsFalse(dirReader.IsCurrent());
 			// this reader has been opened before the writer was closed / committed
 			dirReader.Close();
 			nrtReader.Close();
@@ -256,23 +256,23 @@ namespace Lucene.Net.Index
 			CreateIndexNoClose(!doFullMerge, "index2", writer2);
 			writer2.Close();
 			DirectoryReader r0 = writer.GetReader();
-			NUnit.Framework.Assert.IsTrue(r0.IsCurrent());
+			IsTrue(r0.IsCurrent());
 			writer.AddIndexes(dir2);
-			NUnit.Framework.Assert.IsFalse(r0.IsCurrent());
+			IsFalse(r0.IsCurrent());
 			r0.Close();
 			DirectoryReader r1 = writer.GetReader();
-			NUnit.Framework.Assert.IsTrue(r1.IsCurrent());
+			IsTrue(r1.IsCurrent());
 			writer.Commit();
-			NUnit.Framework.Assert.IsTrue(r1.IsCurrent());
+			IsTrue(r1.IsCurrent());
 			// we have seen all changes - no change after opening the NRT reader
-			NUnit.Framework.Assert.AreEqual(200, r1.MaxDoc());
+			AreEqual(200, r1.MaxDoc);
 			int index2df = r1.DocFreq(new Term("indexname", "index2"));
-			NUnit.Framework.Assert.AreEqual(100, index2df);
+			AreEqual(100, index2df);
 			// verify the docs are from different indexes
-			Lucene.Net.Document.Document doc5 = r1.Document(5);
-			NUnit.Framework.Assert.AreEqual("index1", doc5.Get("indexname"));
-			Lucene.Net.Document.Document doc150 = r1.Document(150);
-			NUnit.Framework.Assert.AreEqual("index2", doc150.Get("indexname"));
+			Lucene.Net.Documents.Document doc5 = r1.Document(5);
+			AreEqual("index1", doc5.Get("indexname"));
+			Lucene.Net.Documents.Document doc150 = r1.Document(150);
+			AreEqual("index2", doc150.Get("indexname"));
 			r1.Close();
 			writer.Close();
 			dir1.Close();
@@ -298,7 +298,7 @@ namespace Lucene.Net.Index
 			writer.AddIndexes(dir2);
 			writer.AddIndexes(dir2);
 			IndexReader r1 = writer.GetReader();
-			NUnit.Framework.Assert.AreEqual(500, r1.MaxDoc());
+			AreEqual(500, r1.MaxDoc);
 			r1.Close();
 			writer.Close();
 			dir1.Close();
@@ -319,23 +319,23 @@ namespace Lucene.Net.Index
 			writer.Flush(false, true);
 			// get a reader
 			IndexReader r1 = writer.GetReader();
-			string id10 = r1.Document(10).GetField("id").StringValue();
+			string id10 = r1.Document(10).GetField("id").StringValue = );
 			// deleted IW docs should not show up in the next getReader
 			writer.DeleteDocuments(new Term("id", id10));
 			IndexReader r2 = writer.GetReader();
-			NUnit.Framework.Assert.AreEqual(1, Count(new Term("id", id10), r1));
-			NUnit.Framework.Assert.AreEqual(0, Count(new Term("id", id10), r2));
-			string id50 = r1.Document(50).GetField("id").StringValue();
-			NUnit.Framework.Assert.AreEqual(1, Count(new Term("id", id50), r1));
+			AreEqual(1, Count(new Term("id", id10), r1));
+			AreEqual(0, Count(new Term("id", id10), r2));
+			string id50 = r1.Document(50).GetField("id").StringValue = );
+			AreEqual(1, Count(new Term("id", id50), r1));
 			writer.DeleteDocuments(new Term("id", id50));
 			IndexReader r3 = writer.GetReader();
-			NUnit.Framework.Assert.AreEqual(0, Count(new Term("id", id10), r3));
-			NUnit.Framework.Assert.AreEqual(0, Count(new Term("id", id50), r3));
-			string id75 = r1.Document(75).GetField("id").StringValue();
+			AreEqual(0, Count(new Term("id", id10), r3));
+			AreEqual(0, Count(new Term("id", id50), r3));
+			string id75 = r1.Document(75).GetField("id").StringValue = );
 			writer.DeleteDocuments(new TermQuery(new Term("id", id75)));
 			IndexReader r4 = writer.GetReader();
-			NUnit.Framework.Assert.AreEqual(1, Count(new Term("id", id75), r3));
-			NUnit.Framework.Assert.AreEqual(0, Count(new Term("id", id75), r4));
+			AreEqual(1, Count(new Term("id", id75), r3));
+			AreEqual(0, Count(new Term("id", id75), r4));
 			r1.Close();
 			r2.Close();
 			r3.Close();
@@ -345,7 +345,7 @@ namespace Lucene.Net.Index
 			writer = new IndexWriter(dir1, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random())));
 			IndexReader w2r1 = writer.GetReader();
-			NUnit.Framework.Assert.AreEqual(0, Count(new Term("id", id10), w2r1));
+			AreEqual(0, Count(new Term("id", id10), w2r1));
 			w2r1.Close();
 			writer.Close();
 			dir1.Close();
@@ -366,13 +366,13 @@ namespace Lucene.Net.Index
 			addDirThreads.JoinThreads();
 			//assertEquals(100 + numDirs * (3 * numIter / 4) * addDirThreads.numThreads
 			//    * addDirThreads.NUM_INIT_DOCS, addDirThreads.mainWriter.numDocs());
-			NUnit.Framework.Assert.AreEqual(addDirThreads.count, addDirThreads.mainWriter.NumDocs
+			AreEqual(addDirThreads.count, addDirThreads.mainWriter.NumDocs
 				());
 			addDirThreads.Close(true);
-			NUnit.Framework.Assert.IsTrue(addDirThreads.failures.Count == 0);
+			IsTrue(addDirThreads.failures.Count == 0);
 			TestUtil.CheckIndex(mainDir);
 			IndexReader reader = DirectoryReader.Open(mainDir);
-			NUnit.Framework.Assert.AreEqual(addDirThreads.count, reader.NumDocs());
+			AreEqual(addDirThreads.count, reader.NumDocs());
 			//assertEquals(100 + numDirs * (3 * numIter / 4) * addDirThreads.numThreads
 			//    * addDirThreads.NUM_INIT_DOCS, reader.numDocs());
 			reader.Close();
@@ -417,7 +417,7 @@ namespace Lucene.Net.Index
 				TestUtil.ReduceOpenFiles(writer);
 				for (int i = 0; i < TestIndexWriterReader.AddDirectoriesThreads.NUM_INIT_DOCS; i++)
 				{
-					Lucene.Net.Document.Document doc = DocHelper.CreateDocument(i, "addindex", 
+					Lucene.Net.Documents.Document doc = DocHelper.CreateDocument(i, "addindex", 
 						4);
 					writer.AddDocument(doc);
 				}
@@ -590,28 +590,28 @@ namespace Lucene.Net.Index
 			IndexWriter writer = new IndexWriter(dir1, NewIndexWriterConfig(TEST_VERSION_CURRENT
 				, new MockAnalyzer(Random())));
 			IndexReader r1 = writer.GetReader();
-			NUnit.Framework.Assert.AreEqual(0, r1.MaxDoc());
+			AreEqual(0, r1.MaxDoc);
 			CreateIndexNoClose(false, "index1", writer);
 			writer.Flush(!doFullMerge, true);
 			IndexReader iwr1 = writer.GetReader();
-			NUnit.Framework.Assert.AreEqual(100, iwr1.MaxDoc());
+			AreEqual(100, iwr1.MaxDoc);
 			IndexReader r2 = writer.GetReader();
-			NUnit.Framework.Assert.AreEqual(r2.MaxDoc(), 100);
+			AreEqual(r2.MaxDoc, 100);
 			// add 100 documents
 			for (int x = 10000; x < 10000 + 100; x++)
 			{
-				Lucene.Net.Document.Document d = DocHelper.CreateDocument(x, "index1", 5);
+				Lucene.Net.Documents.Document d = DocHelper.CreateDocument(x, "index1", 5);
 				writer.AddDocument(d);
 			}
 			writer.Flush(false, true);
 			// verify the reader was reopened internally
 			IndexReader iwr2 = writer.GetReader();
-			NUnit.Framework.Assert.IsTrue(iwr2 != r1);
-			NUnit.Framework.Assert.AreEqual(200, iwr2.MaxDoc());
+			IsTrue(iwr2 != r1);
+			AreEqual(200, iwr2.MaxDoc);
 			// should have flushed out a segment
 			IndexReader r3 = writer.GetReader();
-			NUnit.Framework.Assert.IsTrue(r2 != r3);
-			NUnit.Framework.Assert.AreEqual(200, r3.MaxDoc());
+			IsTrue(r2 != r3);
+			AreEqual(200, r3.MaxDoc);
 			// dec ref the readers rather than close them because
 			// closing flushes changes to the writer
 			r1.Close();
@@ -625,7 +625,7 @@ namespace Lucene.Net.Index
 				(Random())));
 			IndexReader w2r1 = writer.GetReader();
 			// insure the deletes were actually flushed to the directory
-			NUnit.Framework.Assert.AreEqual(200, w2r1.MaxDoc());
+			AreEqual(200, w2r1.MaxDoc);
 			w2r1.Close();
 			writer.Close();
 			dir1.Close();
@@ -695,11 +695,11 @@ namespace Lucene.Net.Index
 				writer.AddDocument(DocHelper.CreateDocument(i, "test", 4));
 			}
 			((ConcurrentMergeScheduler)writer.GetConfig().GetMergeScheduler()).Sync();
-			NUnit.Framework.Assert.IsTrue(warmer.warmCount > 0);
+			IsTrue(warmer.warmCount > 0);
 			int count = warmer.warmCount;
 			writer.AddDocument(DocHelper.CreateDocument(17, "test", 4));
 			writer.ForceMerge(1);
-			NUnit.Framework.Assert.IsTrue(warmer.warmCount > count);
+			IsTrue(warmer.warmCount > count);
 			writer.Close();
 			r1.Close();
 			dir1.Close();
@@ -719,7 +719,7 @@ namespace Lucene.Net.Index
 			TestUtil.CheckIndex(dir1);
 			writer.Commit();
 			TestUtil.CheckIndex(dir1);
-			NUnit.Framework.Assert.AreEqual(100, r1.NumDocs());
+			AreEqual(100, r1.NumDocs());
 			for (int i = 0; i < 10; i++)
 			{
 				writer.AddDocument(DocHelper.CreateDocument(i, "test", 4));
@@ -731,7 +731,7 @@ namespace Lucene.Net.Index
 				r1.Close();
 				r1 = r2;
 			}
-			NUnit.Framework.Assert.AreEqual(110, r1.NumDocs());
+			AreEqual(110, r1.NumDocs());
 			writer.Close();
 			r1.Close();
 			dir1.Close();
@@ -750,14 +750,14 @@ namespace Lucene.Net.Index
 			writer.Close();
 			TestUtil.CheckIndex(dir1);
 			// reader should remain usable even after IndexWriter is closed:
-			NUnit.Framework.Assert.AreEqual(100, r.NumDocs());
+			AreEqual(100, r.NumDocs());
 			Query q = new TermQuery(new Term("indexname", "test"));
 			IndexSearcher searcher = NewSearcher(r);
-			NUnit.Framework.Assert.AreEqual(100, searcher.Search(q, 10).totalHits);
+			AreEqual(100, searcher.Search(q, 10).TotalHits);
 			try
 			{
 				DirectoryReader.OpenIfChanged(r);
-				NUnit.Framework.Assert.Fail("failed to hit AlreadyClosedException");
+				Fail("failed to hit AlreadyClosedException");
 			}
 			catch (AlreadyClosedException)
 			{
@@ -808,8 +808,8 @@ namespace Lucene.Net.Index
 				}
 				Query q = new TermQuery(new Term("indexname", "test"));
 				IndexSearcher searcher = NewSearcher(r);
-				int count = searcher.Search(q, 10).totalHits;
-				NUnit.Framework.Assert.IsTrue(count >= lastCount);
+				int count = searcher.Search(q, 10).TotalHits;
+				IsTrue(count >= lastCount);
 				lastCount = count;
 			}
 			for (int i_2 = 0; i_2 < threads.Length; i_2++)
@@ -825,15 +825,15 @@ namespace Lucene.Net.Index
 			}
 			Query q_1 = new TermQuery(new Term("indexname", "test"));
 			IndexSearcher searcher_1 = NewSearcher(r);
-			int count_1 = searcher_1.Search(q_1, 10).totalHits;
-			NUnit.Framework.Assert.IsTrue(count_1 >= lastCount);
-			NUnit.Framework.Assert.AreEqual(0, excs.Count);
+			int count_1 = searcher_1.Search(q_1, 10).TotalHits;
+			IsTrue(count_1 >= lastCount);
+			AreEqual(0, excs.Count);
 			r.Close();
 			if (dir1 is MockDirectoryWrapper)
 			{
 				ICollection<string> openDeletedFiles = ((MockDirectoryWrapper)dir1).GetOpenDeletedFiles
 					();
-				NUnit.Framework.Assert.AreEqual("openDeleted=" + openDeletedFiles, 0, openDeletedFiles
+				AreEqual("openDeleted=" + openDeletedFiles, 0, openDeletedFiles
 					.Count);
 			}
 			writer.Close();
@@ -920,7 +920,7 @@ namespace Lucene.Net.Index
 				}
 				Query q = new TermQuery(new Term("indexname", "test"));
 				IndexSearcher searcher = NewSearcher(r);
-				sum += searcher.Search(q, 10).totalHits;
+				sum += searcher.Search(q, 10).TotalHits;
 			}
 			for (int i_1 = 0; i_1 < numThreads; i_1++)
 			{
@@ -935,9 +935,9 @@ namespace Lucene.Net.Index
 			}
 			Query q_1 = new TermQuery(new Term("indexname", "test"));
 			IndexSearcher searcher_1 = NewSearcher(r);
-			sum += searcher_1.Search(q_1, 10).totalHits;
-			NUnit.Framework.Assert.IsTrue("no documents found at all", sum > 0);
-			NUnit.Framework.Assert.AreEqual(0, excs.Count);
+			sum += searcher_1.Search(q_1, 10).TotalHits;
+			IsTrue("no documents found at all", sum > 0);
+			AreEqual(0, excs.Count);
 			writer.Close();
 			r.Close();
 			dir1.Close();
@@ -996,14 +996,14 @@ namespace Lucene.Net.Index
 			Directory dir = NewDirectory();
 			IndexWriter w = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new 
 				MockAnalyzer(Random())).SetMergePolicy(NewLogMergePolicy()));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewTextField("field", "a b c", Field.Store.NO));
 			Field id = NewStringField("id", string.Empty, Field.Store.NO);
 			doc.Add(id);
-			id.SetStringValue("0");
+			id.StringValue = "0");
 			w.AddDocument(doc);
-			id.SetStringValue("1");
+			id.StringValue = "1");
 			w.AddDocument(doc);
 			w.DeleteDocuments(new Term("id", "0"));
 			IndexReader r = w.GetReader();
@@ -1011,8 +1011,8 @@ namespace Lucene.Net.Index
 			w.Close();
 			r.Close();
 			r = DirectoryReader.Open(dir);
-			NUnit.Framework.Assert.AreEqual(1, r.NumDocs());
-			NUnit.Framework.Assert.IsFalse(r.HasDeletions());
+			AreEqual(1, r.NumDocs());
+			IsFalse(r.HasDeletions());
 			r.Close();
 			dir.Close();
 		}
@@ -1023,25 +1023,25 @@ namespace Lucene.Net.Index
 			Directory dir = NewDirectory();
 			IndexWriter w = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new 
 				MockAnalyzer(Random())));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewTextField("field", "a b c", Field.Store.NO));
 			Field id = NewStringField("id", string.Empty, Field.Store.NO);
 			doc.Add(id);
-			id.SetStringValue("0");
+			id.StringValue = "0");
 			w.AddDocument(doc);
-			id.SetStringValue("1");
+			id.StringValue = "1");
 			w.AddDocument(doc);
 			IndexReader r = w.GetReader();
-			NUnit.Framework.Assert.AreEqual(2, r.NumDocs());
+			AreEqual(2, r.NumDocs());
 			r.Close();
 			w.DeleteDocuments(new Term("id", "0"));
 			r = w.GetReader();
-			NUnit.Framework.Assert.AreEqual(1, r.NumDocs());
+			AreEqual(1, r.NumDocs());
 			r.Close();
 			w.DeleteDocuments(new Term("id", "1"));
 			r = w.GetReader();
-			NUnit.Framework.Assert.AreEqual(0, r.NumDocs());
+			AreEqual(0, r.NumDocs());
 			r.Close();
 			w.Close();
 			dir.Close();
@@ -1055,7 +1055,7 @@ namespace Lucene.Net.Index
 			IndexWriter w = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new 
 				MockAnalyzer(Random())));
 			IndexReader r = w.GetReader();
-			NUnit.Framework.Assert.AreEqual(0, r.NumDocs());
+			AreEqual(0, r.NumDocs());
 			r.Close();
 			w.Close();
 			dir.Close();
@@ -1070,7 +1070,7 @@ namespace Lucene.Net.Index
 				(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMaxBufferedDocs(2)).SetReaderPooling
 				(true).SetMergedSegmentWarmer(new _IndexReaderWarmer_962(didWarm))).SetMergePolicy
 				(NewLogMergePolicy(10)));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewStringField("foo", "bar", Field.Store.NO));
 			for (int i = 0; i < 20; i++)
@@ -1080,7 +1080,7 @@ namespace Lucene.Net.Index
 			w.WaitForMerges();
 			w.Close();
 			dir.Close();
-			NUnit.Framework.Assert.IsTrue(didWarm.Get());
+			IsTrue(didWarm.Get());
 		}
 
 		private sealed class _IndexReaderWarmer_962 : IndexWriter.IndexReaderWarmer
@@ -1095,7 +1095,7 @@ namespace Lucene.Net.Index
 			{
 				IndexSearcher s = LuceneTestCase.NewSearcher(r);
 				TopDocs hits = s.Search(new TermQuery(new Term("foo", "bar")), 10);
-				NUnit.Framework.Assert.AreEqual(20, hits.totalHits);
+				AreEqual(20, hits.TotalHits);
 				didWarm.Set(true);
 			}
 
@@ -1112,7 +1112,7 @@ namespace Lucene.Net.Index
 				(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMaxBufferedDocs(2)).SetReaderPooling
 				(true).SetInfoStream(infoStream).SetMergedSegmentWarmer(new SimpleMergedSegmentWarmer
 				(infoStream))).SetMergePolicy(NewLogMergePolicy(10)));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewStringField("foo", "bar", Field.Store.NO));
 			for (int i = 0; i < 20; i++)
@@ -1122,7 +1122,7 @@ namespace Lucene.Net.Index
 			w.WaitForMerges();
 			w.Close();
 			dir.Close();
-			NUnit.Framework.Assert.IsTrue(didWarm.Get());
+			IsTrue(didWarm.Get());
 		}
 
 		private sealed class _InfoStream_988 : InfoStream
@@ -1170,7 +1170,7 @@ namespace Lucene.Net.Index
 				Equals("Memory") || format.Equals("MockRandom") || format.Equals("Direct")));
 			Directory dir = NewDirectory();
 			IndexWriter w = new IndexWriter(dir, conf);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new TextField("f", "val", Field.Store.NO));
 			w.AddDocument(doc);
@@ -1179,7 +1179,7 @@ namespace Lucene.Net.Index
 			{
 				TestUtil.Docs(Random(), r, "f", new BytesRef("val"), null, null, DocsEnum.FLAG_NONE
 					);
-				NUnit.Framework.Assert.Fail("should have failed to seek since terms index was not loaded."
+				Fail("should have failed to seek since terms index was not loaded."
 					);
 			}
 			catch (InvalidOperationException)
@@ -1203,22 +1203,22 @@ namespace Lucene.Net.Index
 			DirectoryReader r = w.GetReader();
 			// start pooling readers
 			DirectoryReader r2 = DirectoryReader.OpenIfChanged(r);
-			NUnit.Framework.Assert.IsNull(r2);
-			w.AddDocument(new Lucene.Net.Document.Document());
+			IsNull(r2);
+			w.AddDocument(new Lucene.Net.Documents.Document());
 			DirectoryReader r3 = DirectoryReader.OpenIfChanged(r);
-			NUnit.Framework.Assert.IsNotNull(r3);
-			NUnit.Framework.Assert.IsTrue(r3.GetVersion() != r.GetVersion());
-			NUnit.Framework.Assert.IsTrue(r3.IsCurrent());
+			IsNotNull(r3);
+			IsTrue(r3.GetVersion() != r.GetVersion());
+			IsTrue(r3.IsCurrent());
 			// Deletes nothing in reality...:
 			w.DeleteDocuments(new Term("foo", "bar"));
 			// ... but IW marks this as not current:
-			NUnit.Framework.Assert.IsFalse(r3.IsCurrent());
+			IsFalse(r3.IsCurrent());
 			DirectoryReader r4 = DirectoryReader.OpenIfChanged(r3);
-			NUnit.Framework.Assert.IsNull(r4);
+			IsNull(r4);
 			// Deletes nothing in reality...:
 			w.DeleteDocuments(new Term("foo", "bar"));
 			DirectoryReader r5 = DirectoryReader.OpenIfChanged(r3, w, true);
-			NUnit.Framework.Assert.IsNull(r5);
+			IsNull(r5);
 			r3.Close();
 			w.Close();
 			d.Close();
@@ -1240,10 +1240,10 @@ namespace Lucene.Net.Index
 			// prevent merges from getting in the way
 			IndexWriter writer = new IndexWriter(dir, conf);
 			// create a segment and open an NRT reader
-			writer.AddDocument(new Lucene.Net.Document.Document());
+			writer.AddDocument(new Lucene.Net.Documents.Document());
 			writer.GetReader().Close();
 			// add a new document so a new NRT reader is required
-			writer.AddDocument(new Lucene.Net.Document.Document());
+			writer.AddDocument(new Lucene.Net.Documents.Document());
 			// try to obtain an NRT reader twice: first time it fails and closes all the
 			// other NRT readers. second time it fails, but also fails to close the
 			// other NRT reader, since it is already marked closed!
@@ -1319,13 +1319,13 @@ namespace Lucene.Net.Index
 			// Create 500 segments:
 			for (int i = 0; i < 500; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(NewStringField("id", string.Empty + i, Field.Store.NO));
 				w.AddDocument(doc);
 				IndexReader r = DirectoryReader.Open(w, true);
 				// Make sure segment count never exceeds 100:
-				NUnit.Framework.Assert.IsTrue(r.Leaves().Count < 100);
+				IsTrue(r.Leaves().Count < 100);
 				r.Close();
 			}
 			w.Close();

@@ -20,8 +20,8 @@ using System.IO;
 using Lucene.Net.Store;
 using NUnit.Framework;
 
-using Analyzer = Lucene.Net.Analysis.Analyzer;
-using StandardAnalyzer = Lucene.Net.Analysis.Standard.StandardAnalyzer;
+using Analyzer = Lucene.Net.Test.Analysis.Analyzer;
+using StandardAnalyzer = Lucene.Net.Test.Analysis.Standard.StandardAnalyzer;
 using Document = Lucene.Net.Documents.Document;
 using Field = Lucene.Net.Documents.Field;
 using IndexWriter = Lucene.Net.Index.IndexWriter;
@@ -69,11 +69,11 @@ namespace Lucene.Net
 			IndexReader ireader = DirectoryReader.Open(directory);
 			IndexSearcher isearcher = NewSearcher(ireader);
 			// Parse a simple query that searches for "text":
-			NUnit.Framework.Assert.AreEqual(1, isearcher.Search(new TermQuery(new Term("fieldname"
-				, longTerm)), 1).totalHits);
+			AreEqual(1, isearcher.Search(new TermQuery(new Term("fieldname"
+				, longTerm)), 1).TotalHits);
 			Query query = new TermQuery(new Term("fieldname", "text"));
 			TopDocs hits = isearcher.Search(query, null, 1);
-			NUnit.Framework.Assert.AreEqual(1, hits.totalHits);
+			AreEqual(1, hits.TotalHits);
 			// Iterate through the results:
 			for (int i = 0; i < hits.scoreDocs.Length; i++)
 			{
@@ -83,7 +83,7 @@ namespace Lucene.Net
 			PhraseQuery phraseQuery = new PhraseQuery();
 			phraseQuery.Add(new Term("fieldname", "to"));
 			phraseQuery.Add(new Term("fieldname", "be"));
-			NUnit.Framework.Assert.AreEqual(1, isearcher.Search(phraseQuery, null, 1).totalHits
+			AreEqual(1, isearcher.Search(phraseQuery, null, 1).TotalHits
 				);
 			ireader.Close();
 			directory.Close();

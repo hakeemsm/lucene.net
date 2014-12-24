@@ -40,7 +40,7 @@ namespace Lucene.Net.Search
 			long startTime = Runtime.CurrentTimeMillis();
 			// TODO: replace w/ the @nightly test data; make this
 			// into an optional @nightly stress test
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			Field body = NewTextField("body", string.Empty, Field.Store.NO);
 			doc.Add(body);
@@ -53,7 +53,7 @@ namespace Lucene.Net.Search
 					sb.Append(Random().NextBoolean() ? "aaa" : "bbb");
 					sb.Append(' ');
 				}
-				body.SetStringValue(sb.ToString());
+				body.StringValue = sb.ToString());
 				w.AddDocument(doc);
 				sb.Delete(0, sb.Length);
 			}
@@ -119,7 +119,7 @@ namespace Lucene.Net.Search
 						totHits += this.col.GetTotalHits();
 						totSearch++;
 					}
-					NUnit.Framework.Assert.IsTrue(totSearch > 0 && totHits > 0);
+					IsTrue(totSearch > 0 && totHits > 0);
 					netSearch.AddAndGet(totSearch);
 				}
 				catch (Exception exc)

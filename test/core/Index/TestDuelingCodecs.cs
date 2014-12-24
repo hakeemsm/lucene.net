@@ -4,7 +4,7 @@
  * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Codecs;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
@@ -116,7 +116,7 @@ namespace Lucene.Net.Index
 			// because linefiledocs doesn't cover all the possibilities.
 			for (int i = 0; i < numdocs; i++)
 			{
-				Lucene.Net.Document.Document document = lineFileDocs.NextDoc();
+				Lucene.Net.Documents.Document document = lineFileDocs.NextDoc();
 				// grab the title and add some SortedSet instances for fun
 				string title = document.Get("titleTokenized");
 				string[] split = title.Split("\\s+");

@@ -1,17 +1,7 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
-using NUnit.Framework;
+using Lucene.Net.TestFramework.Index;
 using Lucene.Net.Codecs;
-using Lucene.Net.Codecs.Lucene3x;
-using Lucene.Net.Index;
-using Lucene.Net.Util;
-using Sharpen;
 
-namespace Lucene.Net.Codecs.Lucene3x
+namespace Lucene.Net.Test.Codecs.Lucene3x
 {
 	/// <summary>Tests Lucene3x postings format</summary>
 	public class TestLucene3xPostingsFormat : BasePostingsFormatTestCase

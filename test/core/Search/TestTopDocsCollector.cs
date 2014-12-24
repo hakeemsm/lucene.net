@@ -19,7 +19,7 @@ using System;
 
 using NUnit.Framework;
 
-using KeywordAnalyzer = Lucene.Net.Analysis.KeywordAnalyzer;
+using KeywordAnalyzer = Lucene.Net.Test.Analysis.KeywordAnalyzer;
 using Document = Lucene.Net.Documents.Document;
 using IndexReader = Lucene.Net.Index.IndexReader;
 using IndexWriter = Lucene.Net.Index.IndexWriter;
@@ -66,12 +66,12 @@ namespace Lucene.Net.Search
 					maxScore = pq.Pop().Score;
 				}
 				
-				return new TopDocs(totalHits, results, maxScore);
+				return new TopDocs(TotalHits, results, maxScore);
 			}
 			
 			public override void  Collect(int doc)
 			{
-				++totalHits;
+				++TotalHits;
 				pq.InsertWithOverflow(new ScoreDoc(doc + base_Renamed, Lucene.Net.Search.TestTopDocsCollector.scores[idx++]));
 			}
 			

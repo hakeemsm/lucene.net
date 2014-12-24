@@ -1,34 +1,33 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using Lucene.Net.Codecs;
-using Lucene.Net.Codecs.Lucene42;
-using Lucene.Net.Index;
-using Sharpen;
+using Lucene.Net.Codecs.Lucene42.TestFramework;
+using Lucene.Net.TestFramework.Index;
+using NUnit.Framework;
 
-namespace Lucene.Net.Codecs.Lucene42
+namespace Lucene.Net.Test.Codecs.Lucene42
 {
 	/// <summary>Tests Lucene42DocValuesFormat</summary>
 	public class TestLucene42DocValuesFormat : BaseCompressingDocValuesFormatTestCase
 	{
 		private readonly Codec codec = new Lucene42RWCodec();
 
-		[NUnit.Framework.BeforeClass]
+		[SetUp]
 		public static void BeforeClass()
 		{
 			OLD_FORMAT_IMPERSONATION_IS_ACTIVE = true;
 		}
 
 		// explicitly instantiates ancient codec
-		protected override Codec GetCodec()
+		protected override Codec Codec
 		{
 			return codec;
 		}
 
-		protected override bool CodecAcceptsHugeBinaryValues(string field)
+	    protected override void AddRandomFields(Documents.Document doc)
+	    {
+	        throw new System.NotImplementedException();
+	    }
+
+	    protected override bool CodecAcceptsHugeBinaryValues(string field)
 		{
 			return false;
 		}

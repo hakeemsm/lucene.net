@@ -7,7 +7,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Codecs.Lucene41;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
@@ -87,7 +87,7 @@ namespace Lucene.Net.Index
 			directory.FailOn(failure);
 			IndexWriter writer = new IndexWriter(directory, ((IndexWriterConfig)NewIndexWriterConfig
 				(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMaxBufferedDocs(2)));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			Field idField = NewStringField("id", string.Empty, Field.Store.YES);
 			doc.Add(idField);
@@ -100,7 +100,7 @@ namespace Lucene.Net.Index
 				}
 				for (int j = 0; j < 20; j++)
 				{
-					idField.SetStringValue(Sharpen.Extensions.ToString(i * 20 + j));
+					idField.StringValue = Sharpen.Extensions.ToString(i * 20 + j));
 					writer.AddDocument(doc);
 				}
 				// must cycle here because sometimes the merge flushes
@@ -115,7 +115,7 @@ namespace Lucene.Net.Index
 						writer.Flush(true, true);
 						if (failure.hitExc)
 						{
-							NUnit.Framework.Assert.Fail("failed to hit IOException");
+							Fail("failed to hit IOException");
 						}
 						extraCount++;
 					}
@@ -129,11 +129,11 @@ namespace Lucene.Net.Index
 						break;
 					}
 				}
-				NUnit.Framework.Assert.AreEqual(20 * (i + 1) + extraCount, writer.NumDocs());
+				AreEqual(20 * (i + 1) + extraCount, writer.NumDocs());
 			}
 			writer.Close();
 			IndexReader reader = DirectoryReader.Open(directory);
-			NUnit.Framework.Assert.AreEqual(200 + extraCount, reader.NumDocs());
+			AreEqual(200 + extraCount, reader.NumDocs());
 			reader.Close();
 			directory.Close();
 		}
@@ -151,7 +151,7 @@ namespace Lucene.Net.Index
 			mp.SetMinMergeDocs(1000);
 			IndexWriter writer = new IndexWriter(directory, NewIndexWriterConfig(TEST_VERSION_CURRENT
 				, new MockAnalyzer(Random())).SetMergePolicy(mp));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			Field idField = NewStringField("id", string.Empty, Field.Store.YES);
 			doc.Add(idField);
@@ -163,7 +163,7 @@ namespace Lucene.Net.Index
 				}
 				for (int j = 0; j < 100; j++)
 				{
-					idField.SetStringValue(Sharpen.Extensions.ToString(i * 100 + j));
+					idField.StringValue = Sharpen.Extensions.ToString(i * 100 + j));
 					writer.AddDocument(doc);
 				}
 				int delID = i;
@@ -181,7 +181,7 @@ namespace Lucene.Net.Index
 			writer.Close();
 			IndexReader reader = DirectoryReader.Open(directory);
 			// Verify that we did not lose any deletes...
-			NUnit.Framework.Assert.AreEqual(450, reader.NumDocs());
+			AreEqual(450, reader.NumDocs());
 			reader.Close();
 			directory.Close();
 		}
@@ -200,7 +200,7 @@ namespace Lucene.Net.Index
 				}
 				for (int j = 0; j < 21; j++)
 				{
-					Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 						();
 					doc.Add(NewTextField("content", "a b c", Field.Store.NO));
 					writer.AddDocument(doc);
@@ -220,7 +220,7 @@ namespace Lucene.Net.Index
 		public virtual void TestNoWaitClose()
 		{
 			Directory directory = NewDirectory();
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			Field idField = NewStringField("id", string.Empty, Field.Store.YES);
 			doc.Add(idField);
@@ -231,7 +231,7 @@ namespace Lucene.Net.Index
 			{
 				for (int j = 0; j < 201; j++)
 				{
-					idField.SetStringValue(Sharpen.Extensions.ToString(iter * 201 + j));
+					idField.StringValue = Sharpen.Extensions.ToString(iter * 201 + j));
 					writer.AddDocument(doc);
 				}
 				int delID = iter * 201;
@@ -247,7 +247,7 @@ namespace Lucene.Net.Index
 				writer.Commit();
 				writer.Close(false);
 				IndexReader reader = DirectoryReader.Open(directory);
-				NUnit.Framework.Assert.AreEqual((1 + iter) * 182, reader.NumDocs());
+				AreEqual((1 + iter) * 182, reader.NumDocs());
 				reader.Close();
 				// Reopen
 				writer = new IndexWriter(directory, NewIndexWriterConfig(TEST_VERSION_CURRENT, new 
@@ -291,7 +291,7 @@ namespace Lucene.Net.Index
 			tmp.SetMaxMergeAtOnce(2);
 			tmp.SetSegmentsPerTier(2);
 			IndexWriter w = new IndexWriter(dir, iwc);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewField("field", "field", TextField.TYPE_NOT_STORED));
 			while (enoughMergesWaiting.GetCount() != 0 && !failed.Get())
@@ -324,7 +324,7 @@ namespace Lucene.Net.Index
 					int count = runningMergeCount.IncrementAndGet();
 					try
 					{
-						NUnit.Framework.Assert.IsTrue("count=" + count + " vs maxMergeCount=" + maxMergeCount
+						IsTrue("count=" + count + " vs maxMergeCount=" + maxMergeCount
 							, count <= maxMergeCount);
 						enoughMergesWaiting.CountDown();
 						while (true)
@@ -396,7 +396,7 @@ namespace Lucene.Net.Index
 			IndexWriter w = new IndexWriter(d, iwc);
 			for (int i = 0; i < 1000; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(new StringField("id", string.Empty + i, Field.Store.NO));
 				w.AddDocument(doc);
@@ -405,7 +405,7 @@ namespace Lucene.Net.Index
 					w.DeleteDocuments(new Term("id", string.Empty + Random().Next(i + 1)));
 				}
 			}
-			NUnit.Framework.Assert.IsTrue(((TestConcurrentMergeScheduler.TrackingCMS)w.GetConfig
+			IsTrue(((TestConcurrentMergeScheduler.TrackingCMS)w.GetConfig
 				().GetMergeScheduler()).totMergedBytes != 0);
 			w.Close();
 			d.Close();
@@ -434,25 +434,25 @@ namespace Lucene.Net.Index
 			// Makes 100 segments
 			for (int i = 0; i < 200; i++)
 			{
-				w.AddDocument(new Lucene.Net.Document.Document());
+				w.AddDocument(new Lucene.Net.Documents.Document());
 			}
 			// No merges should have run so far, because TMP has high segmentsPerTier:
-			NUnit.Framework.Assert.AreEqual(0, maxRunningMergeCount.Get());
+			AreEqual(0, maxRunningMergeCount.Get());
 			w.ForceMerge(1);
 			// At most 5 merge threads should have launched at once:
-			NUnit.Framework.Assert.IsTrue("maxRunningMergeCount=" + maxRunningMergeCount, maxRunningMergeCount
+			IsTrue("maxRunningMergeCount=" + maxRunningMergeCount, maxRunningMergeCount
 				.Get() <= 5);
 			maxRunningMergeCount.Set(0);
 			// Makes another 100 segments
 			for (int i_1 = 0; i_1 < 200; i_1++)
 			{
-				w.AddDocument(new Lucene.Net.Document.Document());
+				w.AddDocument(new Lucene.Net.Documents.Document());
 			}
 			((ConcurrentMergeScheduler)w.GetConfig().GetMergeScheduler()).SetMaxMergesAndThreads
 				(1, 1);
 			w.ForceMerge(1);
 			// At most 1 merge thread should have launched at once:
-			NUnit.Framework.Assert.AreEqual(1, maxRunningMergeCount.Get());
+			AreEqual(1, maxRunningMergeCount.Get());
 			w.Close();
 			d.Close();
 		}

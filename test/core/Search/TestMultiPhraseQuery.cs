@@ -19,8 +19,8 @@ using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 
-using SimpleAnalyzer = Lucene.Net.Analysis.SimpleAnalyzer;
-using StandardAnalyzer = Lucene.Net.Analysis.Standard.StandardAnalyzer;
+using SimpleAnalyzer = Lucene.Net.Test.Analysis.SimpleAnalyzer;
+using StandardAnalyzer = Lucene.Net.Test.Analysis.Standard.StandardAnalyzer;
 using Document = Lucene.Net.Documents.Document;
 using Field = Lucene.Net.Documents.Field;
 using IndexReader = Lucene.Net.Index.IndexReader;
@@ -142,7 +142,7 @@ namespace Lucene.Net.Search
 			q.Add(new Term("body", "blueberry"));
 			q.Add(new Term("body", "chocolate"));
 			q.Add(new Term[] { new Term("body", "pie"), new Term("body", "tart") });
-			NUnit.Framework.Assert.AreEqual(2, searcher.Search(q, 1).totalHits);
+			AreEqual(2, searcher.Search(q, 1).TotalHits);
 			r.Close();
 			indexStore.Close();
 		}
@@ -161,7 +161,7 @@ namespace Lucene.Net.Search
 			q.Add(new Term[] { new Term("body", "a"), new Term("body", "b") });
 			q.Add(new Term[] { new Term("body", "a") });
 			q.SetSlop(6);
-			NUnit.Framework.Assert.AreEqual(1, searcher.Search(q, 1).totalHits);
+			AreEqual(1, searcher.Search(q, 1).TotalHits);
 			// should match on "a b"
 			r.Close();
 			indexStore.Close();
@@ -177,7 +177,7 @@ namespace Lucene.Net.Search
 			MultiPhraseQuery q = new MultiPhraseQuery();
 			q.Add(new Term[] { new Term("body", "a"), new Term("body", "d") }, 0);
 			q.Add(new Term[] { new Term("body", "a"), new Term("body", "f") }, 2);
-			NUnit.Framework.Assert.AreEqual(1, searcher.Search(q, 1).totalHits);
+			AreEqual(1, searcher.Search(q, 1).TotalHits);
 			// should match on "a b"
 			r.Close();
 			indexStore.Close();
@@ -260,8 +260,8 @@ namespace Lucene.Net.Search
 			MultiPhraseQuery q = new MultiPhraseQuery();
 			q.Add(new Term("body", "a"));
 			q.Add(new Term[] { new Term("body", "nope"), new Term("body", "nope") });
-			NUnit.Framework.Assert.AreEqual("Wrong number of hits", 0, searcher.Search(q, null
-				, 1).totalHits);
+			AreEqual("Wrong number of hits", 0, searcher.Search(q, null
+				, 1).TotalHits);
 			// just make sure no exc:
 			searcher.Explain(q, 0);
 			writer.Close();
@@ -323,7 +323,7 @@ namespace Lucene.Net.Search
 			query.Add(new Term[] { new Term("body", "this"), new Term("body", "that") });
 			query.Add(new Term("body", "is"));
 			Weight weight = query.CreateWeight(searcher);
-			NUnit.Framework.Assert.AreEqual(10f * 10f, weight.GetValueForNormalization(), 0.001f
+			AreEqual(10f * 10f, weight.GetValueForNormalization(), 0.001f
 				);
 			writer.Close();
 			reader.Close();
@@ -355,11 +355,11 @@ namespace Lucene.Net.Search
 			tokens[2].Append("c");
 			tokens[2].SetPositionIncrement(0);
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new TextField("field", new CannedTokenStream(tokens)));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(new TextField("field", new CannedTokenStream(tokens)));
 			writer.AddDocument(doc);
 			IndexReader r = writer.GetReader();
@@ -384,8 +384,8 @@ namespace Lucene.Net.Search
 				mpq.Add(new Term[] { new Term("field", "b"), new Term("field", "c") }, 0);
 			}
 			TopDocs hits = s.Search(mpq, 2);
-			NUnit.Framework.Assert.AreEqual(2, hits.totalHits);
-			NUnit.Framework.Assert.AreEqual(hits.scoreDocs[0].score, hits.scoreDocs[1].score, 
+			AreEqual(2, hits.TotalHits);
+			AreEqual(hits.scoreDocs[0].score, hits.scoreDocs[1].score, 
 				1e-5);
 			r.Close();
 			dir.Close();
@@ -429,7 +429,7 @@ namespace Lucene.Net.Search
 			// random dir
 			IndexWriterConfig cfg = NewIndexWriterConfig(TEST_VERSION_CURRENT, null);
 			IndexWriter writer = new IndexWriter(dir, cfg);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new TextField("field", new CannedTokenStream(INCR_0_DOC_TOKENS)));
 			writer.AddDocument(doc);
@@ -441,11 +441,11 @@ namespace Lucene.Net.Search
 				System.Console.Out.WriteLine("QUERY=" + q);
 			}
 			TopDocs hits = s.Search(q, 1);
-			NUnit.Framework.Assert.AreEqual("wrong number of results", nExpected, hits.totalHits
+			AreEqual("wrong number of results", nExpected, hits.TotalHits
 				);
 			if (VERBOSE)
 			{
-				for (int hit = 0; hit < hits.totalHits; hit++)
+				for (int hit = 0; hit < hits.TotalHits; hit++)
 				{
 					ScoreDoc sd = hits.scoreDocs[hit];
 					System.Console.Out.WriteLine("  hit doc=" + sd.doc + " score=" + sd.score);
@@ -548,7 +548,7 @@ namespace Lucene.Net.Search
 			try
 			{
 				query.SetSlop(-2);
-				NUnit.Framework.Assert.Fail("didn't get expected exception");
+				Fail("didn't get expected exception");
 			}
 			catch (ArgumentException)
 			{

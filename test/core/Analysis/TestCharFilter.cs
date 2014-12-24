@@ -16,9 +16,10 @@
  */
 
 using System.IO;
+using Lucene.Net.Analysis;
 using NUnit.Framework;
 
-namespace Lucene.Net.Analysis
+namespace Lucene.Net.Test.Analysis
 {
 	
     [TestFixture]
@@ -26,37 +27,37 @@ namespace Lucene.Net.Analysis
 	{
 
         [Test]
-        public void testCharFilter1()
+        public void TestCharFilter1()
         {
-            CharFilter cs = new CharFilter1(new StringReader(""));
+            CharFilter cs = new CharFilter1(new StreamReader(""));
             assertEquals("corrected offset is invalid", 1, cs.CorrectOffset(0));
         }
 
         [Test]
-        public void testCharFilter2()
+        public void TestCharFilter2()
         {
-            CharFilter cs = new CharFilter2(new StringReader(""));
+            CharFilter cs = new CharFilter2(new StreamReader(""));
             assertEquals("corrected offset is invalid", 2, cs.CorrectOffset(0));
         }
 
         [Test]
-        public void testCharFilter12()
+        public void TestCharFilter12()
         {
-            CharFilter cs = new CharFilter2(new CharFilter1(new StringReader("")));
+            CharFilter cs = new CharFilter2(new CharFilter1(new StreamReader("")));
             assertEquals("corrected offset is invalid", 3, cs.CorrectOffset(0));
         }
 
         [Test]
-        public void testCharFilter11()
+        public void TestCharFilter11()
         {
-            CharFilter cs = new CharFilter1(new CharFilter1(new StringReader("")));
+            CharFilter cs = new CharFilter1(new CharFilter1(new StreamReader("")));
             assertEquals("corrected offset is invalid", 2, cs.CorrectOffset(0));
         }
 
         internal class CharFilter1 : CharFilter
 		{
 			
-			protected internal CharFilter1(TextReader cs):base(cs)
+			protected internal CharFilter1(StreamReader cs):base(cs)
 			{
 			}
 
@@ -64,7 +65,7 @@ namespace Lucene.Net.Analysis
 			{
 				return input.Read(cbuf, off, len);
 			}
-		    protected internal override int Correct(int currentOff)
+		    protected override int Correct(int currentOff)
 			{
 				return currentOff + 1;
 			}
@@ -73,7 +74,7 @@ namespace Lucene.Net.Analysis
 		internal class CharFilter2:CharFilter
 		{
 			
-			protected internal CharFilter2(TextReader cs):base(cs)
+			protected internal CharFilter2(StreamReader cs):base(cs)
 			{
 			}
 
@@ -81,7 +82,7 @@ namespace Lucene.Net.Analysis
 			{
 				return input.Read(cbuf, off, len);
 			}
-		    protected internal override int Correct(int currentOff)
+		    protected override int Correct(int currentOff)
 			{
 				return currentOff + 2;
 			}

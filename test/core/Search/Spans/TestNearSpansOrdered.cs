@@ -4,7 +4,7 @@
  * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -43,7 +43,7 @@ namespace Lucene.Net.Search.Spans
 				()));
 			for (int i = 0; i < docFields.Length; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(NewTextField(FIELD, docFields[i], Field.Store.NO));
 				writer.AddDocument(doc);
@@ -92,11 +92,11 @@ namespace Lucene.Net.Search.Spans
 			SpanNearQuery q = MakeQuery();
 			Lucene.Net.Search.Spans.Spans span = MultiSpansWrapper.Wrap(searcher.GetTopReaderContext
 				(), q);
-			NUnit.Framework.Assert.AreEqual(true, span.Next());
-			NUnit.Framework.Assert.AreEqual(S(0, 0, 3), S(span));
-			NUnit.Framework.Assert.AreEqual(true, span.Next());
-			NUnit.Framework.Assert.AreEqual(S(1, 0, 4), S(span));
-			NUnit.Framework.Assert.AreEqual(false, span.Next());
+			AreEqual(true, span.Next());
+			AreEqual(S(0, 0, 3), S(span));
+			AreEqual(true, span.Next());
+			AreEqual(S(1, 0, 4), S(span));
+			AreEqual(false, span.Next());
 		}
 
 		/// <summary>
@@ -110,11 +110,11 @@ namespace Lucene.Net.Search.Spans
 			SpanNearQuery q = MakeQuery();
 			Lucene.Net.Search.Spans.Spans span = MultiSpansWrapper.Wrap(searcher.GetTopReaderContext
 				(), q);
-			NUnit.Framework.Assert.AreEqual(true, span.SkipTo(0));
-			NUnit.Framework.Assert.AreEqual(S(0, 0, 3), S(span));
-			NUnit.Framework.Assert.AreEqual(true, span.SkipTo(1));
-			NUnit.Framework.Assert.AreEqual(S(1, 0, 4), S(span));
-			NUnit.Framework.Assert.AreEqual(false, span.SkipTo(2));
+			AreEqual(true, span.SkipTo(0));
+			AreEqual(S(0, 0, 3), S(span));
+			AreEqual(true, span.SkipTo(1));
+			AreEqual(S(1, 0, 4), S(span));
+			AreEqual(false, span.SkipTo(2));
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -123,11 +123,11 @@ namespace Lucene.Net.Search.Spans
 			SpanNearQuery q = MakeQuery();
 			Lucene.Net.Search.Spans.Spans span = MultiSpansWrapper.Wrap(searcher.GetTopReaderContext
 				(), q);
-			NUnit.Framework.Assert.AreEqual(true, span.Next());
-			NUnit.Framework.Assert.AreEqual(S(0, 0, 3), S(span));
-			NUnit.Framework.Assert.AreEqual(true, span.SkipTo(1));
-			NUnit.Framework.Assert.AreEqual(S(1, 0, 4), S(span));
-			NUnit.Framework.Assert.AreEqual(false, span.Next());
+			AreEqual(true, span.Next());
+			AreEqual(S(0, 0, 3), S(span));
+			AreEqual(true, span.SkipTo(1));
+			AreEqual(S(1, 0, 4), S(span));
+			AreEqual(false, span.Next());
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -136,9 +136,9 @@ namespace Lucene.Net.Search.Spans
 			SpanNearQuery q = MakeQuery();
 			Lucene.Net.Search.Spans.Spans span = MultiSpansWrapper.Wrap(searcher.GetTopReaderContext
 				(), q);
-			NUnit.Framework.Assert.AreEqual(true, span.Next());
-			NUnit.Framework.Assert.AreEqual(S(0, 0, 3), S(span));
-			NUnit.Framework.Assert.AreEqual(false, span.SkipTo(2));
+			AreEqual(true, span.Next());
+			AreEqual(S(0, 0, 3), S(span));
+			AreEqual(false, span.SkipTo(2));
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -147,7 +147,7 @@ namespace Lucene.Net.Search.Spans
 			SpanNearQuery q = MakeQuery();
 			Lucene.Net.Search.Spans.Spans span = MultiSpansWrapper.Wrap(searcher.GetTopReaderContext
 				(), q);
-			NUnit.Framework.Assert.AreEqual(false, span.SkipTo(2));
+			AreEqual(false, span.SkipTo(2));
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -156,8 +156,8 @@ namespace Lucene.Net.Search.Spans
 			SpanNearQuery q = MakeQuery();
 			Lucene.Net.Search.Spans.Spans span = MultiSpansWrapper.Wrap(searcher.GetTopReaderContext
 				(), q);
-			NUnit.Framework.Assert.AreEqual(true, span.SkipTo(0));
-			NUnit.Framework.Assert.AreEqual(S(0, 0, 3), S(span));
+			AreEqual(true, span.SkipTo(0));
+			AreEqual(S(0, 0, 3), S(span));
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -166,8 +166,8 @@ namespace Lucene.Net.Search.Spans
 			SpanNearQuery q = MakeQuery();
 			Lucene.Net.Search.Spans.Spans span = MultiSpansWrapper.Wrap(searcher.GetTopReaderContext
 				(), q);
-			NUnit.Framework.Assert.AreEqual(true, span.SkipTo(1));
-			NUnit.Framework.Assert.AreEqual(S(1, 0, 4), S(span));
+			AreEqual(true, span.SkipTo(1));
+			AreEqual(S(1, 0, 4), S(span));
 		}
 
 		/// <summary>
@@ -182,7 +182,7 @@ namespace Lucene.Net.Search.Spans
 			IndexReaderContext topReaderContext = searcher.GetTopReaderContext();
 			AtomicReaderContext leave = topReaderContext.Leaves()[0];
 			Scorer s = w.Scorer(leave, ((AtomicReader)leave.Reader()).GetLiveDocs());
-			NUnit.Framework.Assert.AreEqual(1, s.Advance(1));
+			AreEqual(1, s.Advance(1));
 		}
 
 		/// <summary>
@@ -194,7 +194,7 @@ namespace Lucene.Net.Search.Spans
 		{
 			SpanNearQuery q = MakeQuery();
 			Explanation e = searcher.Explain(q, 1);
-			NUnit.Framework.Assert.IsTrue("Scorer explanation value for doc#1 isn't positive: "
+			IsTrue("Scorer explanation value for doc#1 isn't positive: "
 				 + e.ToString(), 0.0f < e.GetValue());
 		}
 	}

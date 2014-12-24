@@ -19,10 +19,10 @@ namespace Lucene.Net.Index
 		public virtual void TestNoMergePolicy()
 		{
 			MergePolicy mp = NoMergePolicy.NO_COMPOUND_FILES;
-			NUnit.Framework.Assert.IsNull(mp.FindMerges(null, (SegmentInfos)null));
-			NUnit.Framework.Assert.IsNull(mp.FindForcedMerges(null, 0, null));
-			NUnit.Framework.Assert.IsNull(mp.FindForcedDeletesMerges(null));
-			NUnit.Framework.Assert.IsFalse(mp.UseCompoundFile(null, null));
+			IsNull(mp.FindMerges(null, (SegmentInfos)null));
+			IsNull(mp.FindForcedMerges(null, 0, null));
+			IsNull(mp.FindForcedDeletesMerges(null));
+			IsFalse(mp.UseCompoundFile(null, null));
 			mp.Close();
 		}
 
@@ -30,9 +30,9 @@ namespace Lucene.Net.Index
 		[NUnit.Framework.Test]
 		public virtual void TestCompoundFiles()
 		{
-			NUnit.Framework.Assert.IsFalse(NoMergePolicy.NO_COMPOUND_FILES.UseCompoundFile(null
+			IsFalse(NoMergePolicy.NO_COMPOUND_FILES.UseCompoundFile(null
 				, null));
-			NUnit.Framework.Assert.IsTrue(NoMergePolicy.COMPOUND_FILES.UseCompoundFile(null, 
+			IsTrue(NoMergePolicy.COMPOUND_FILES.UseCompoundFile(null, 
 				null));
 		}
 
@@ -40,12 +40,12 @@ namespace Lucene.Net.Index
 		[NUnit.Framework.Test]
 		public virtual void TestFinalSingleton()
 		{
-			NUnit.Framework.Assert.IsTrue(Modifier.IsFinal(typeof(NoMergePolicy).GetModifiers
+			IsTrue(Modifier.IsFinal(typeof(NoMergePolicy).GetModifiers
 				()));
 			Constructor<object>[] ctors = typeof(NoMergePolicy).GetDeclaredConstructors();
-			NUnit.Framework.Assert.AreEqual("expected 1 private ctor only: " + Arrays.ToString
+			AreEqual("expected 1 private ctor only: " + Arrays.ToString
 				(ctors), 1, ctors.Length);
-			NUnit.Framework.Assert.IsTrue("that 1 should be private: " + ctors[0], Modifier.IsPrivate
+			IsTrue("that 1 should be private: " + ctors[0], Modifier.IsPrivate
 				(ctors[0].GetModifiers()));
 		}
 
@@ -69,7 +69,7 @@ namespace Lucene.Net.Index
 				}
 				if (m.DeclaringType != typeof(object) && !Modifier.IsFinal(m.GetModifiers()))
 				{
-					NUnit.Framework.Assert.IsTrue(m + " is not overridden ! ", m.DeclaringType == typeof(
+					IsTrue(m + " is not overridden ! ", m.DeclaringType == typeof(
 						NoMergePolicy));
 				}
 			}

@@ -7,7 +7,7 @@
 using System;
 using System.IO;
 using System.Text;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -36,10 +36,10 @@ namespace Lucene.Net.Search
 			//writer.infoStream = System.out;
 			FieldType customType = new FieldType(TextField.TYPE_STORED);
 			customType.SetTokenized(false);
-			customType.SetStoreTermVectors(true);
+			customType.StoreTermVectors = true;
 			for (int i = 0; i < numDocs; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				Field fld = NewField("field", English.IntToEnglish(i), customType);
 				doc.Add(fld);
@@ -69,7 +69,7 @@ namespace Lucene.Net.Search
 			}
 			catch (IOException ioe)
 			{
-				NUnit.Framework.Assert.Fail(ioe.Message);
+				Fail(ioe.Message);
 			}
 			finally
 			{

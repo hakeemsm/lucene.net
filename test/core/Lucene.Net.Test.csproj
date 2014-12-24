@@ -272,12 +272,6 @@
     <Compile Include="Codecs\Compressing\TestFastCompressionMode.cs" />
     <Compile Include="Codecs\Compressing\TestFastDecompressionMode.cs" />
     <Compile Include="Codecs\Compressing\TestHighCompressionMode.cs" />
-    <Compile Include="Codecs\Lucene3x\TestImpersonation.cs" />
-    <Compile Include="Codecs\Lucene3x\TestLucene3xPostingsFormat.cs" />
-    <Compile Include="Codecs\Lucene3x\TestLucene3xStoredFieldsFormat.cs" />
-    <Compile Include="Codecs\Lucene3x\TestLucene3xTermVectorsFormat.cs" />
-    <Compile Include="Codecs\Lucene3x\TestSurrogates.cs" />
-    <Compile Include="Codecs\Lucene3x\TestTermInfosReaderIndex.cs" />
     <Compile Include="Codecs\Lucene40\TestBitVector.cs" />
     <Compile Include="Codecs\Lucene40\TestLucene40DocValuesFormat.cs" />
     <Compile Include="Codecs\Lucene40\TestLucene40PostingsFormat.cs" />

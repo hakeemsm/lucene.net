@@ -19,7 +19,7 @@ using System;
 
 using NUnit.Framework;
 
-using SimpleAnalyzer = Lucene.Net.Analysis.SimpleAnalyzer;
+using SimpleAnalyzer = Lucene.Net.Test.Analysis.SimpleAnalyzer;
 using Lucene.Net.Documents;
 using IndexReader = Lucene.Net.Index.IndexReader;
 using IndexWriter = Lucene.Net.Index.IndexWriter;
@@ -116,7 +116,7 @@ namespace Lucene.Net.Search
 					System.Console.Out.WriteLine(searcher.Explain(new TermQuery(new Term("field", "word"
 						)), i));
 				}
-				NUnit.Framework.Assert.IsTrue("score: " + scores[i] + " should be > lastScore: " 
+				IsTrue("score: " + scores[i] + " should be > lastScore: " 
 					+ lastScore, scores[i] > lastScore);
 				lastScore = scores[i];
 			}

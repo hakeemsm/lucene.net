@@ -4,8 +4,8 @@
  * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using Lucene.Net.Analysis;
-using Lucene.Net.Analysis.Tokenattributes;
+using Lucene.Net.Test.Analysis;
+using Lucene.Net.Test.Analysis.Tokenattributes;
 using Lucene.Net.Index;
 using Lucene.Net.Util;
 using Sharpen;
@@ -20,7 +20,7 @@ namespace Lucene.Net.Index
 	/// A binary tokenstream that lets you index a single
 	/// binary token (BytesRef value).
 	/// </remarks>
-	/// <seealso cref="Lucene.Net.Analysis.CannedBinaryTokenStream">Lucene.Net.Analysis.CannedBinaryTokenStream
+	/// <seealso cref="Lucene.Net.Test.Analysis.CannedBinaryTokenStream">Lucene.Net.Test.Analysis.CannedBinaryTokenStream
 	/// 	</seealso>
 	public sealed class BinaryTokenStream : TokenStream
 	{

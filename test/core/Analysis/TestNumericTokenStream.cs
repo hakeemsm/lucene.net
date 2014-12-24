@@ -16,12 +16,14 @@
  */
 
 using System;
-using Lucene.Net.Test.Analysis.TokenAttributes;
-using Lucene.Net.Test.Analysis;
+using Lucene.Net.Analysis;
+using Lucene.Net.Analysis.Tokenattributes;
+using Lucene.Net.TestFramework.Analysis;
+using Lucene.Net.Util;
 using NUnit.Framework;
 using NumericUtils = Lucene.Net.Util.NumericUtils;
 
-namespace Lucene.Net.Analysis
+namespace Lucene.Net.Test.Analysis
 {
 	
     [TestFixture]
@@ -32,29 +34,28 @@ namespace Lucene.Net.Analysis
 		internal const int ivalue = 123456;
 		
         [Test]
-		public virtual void  TestLongStream()
+		public virtual void TestLongStream()
 		{
 			NumericTokenStream stream = new NumericTokenStream().SetLongValue(lvalue);
 			// use getAttribute to test if attributes really exist, if not an IAE will be throwed
-			TermToBytesRefAttribute bytesAtt = stream.GetAttribute<TermToBytesRefAttribute>();
+			var bytesAtt = stream.GetAttribute<ITermToBytesRefAttribute>();
             ITypeAttribute typeAtt = stream.GetAttribute<ITypeAttribute>();
-			NumericTokenStream.NumericTermAttribute numericAtt = stream.GetAttribute<NumericTokenStream.NumericTermAttribute
-				>();
-			BytesRef bytes = bytesAtt.GetBytesRef();
+			var numericAtt = stream.GetAttribute<NumericTokenStream.NumericTermAttribute>();
+			BytesRef bytes = bytesAtt.BytesRef;
 			stream.Reset();
-			NUnit.Framework.Assert.AreEqual(64, numericAtt.GetValueSize());
+			AreEqual(64, numericAtt.ValueSize);
 			for (int shift = 0; shift < 64; shift += NumericUtils.PRECISION_STEP_DEFAULT)
 			{
-				Assert.IsTrue(stream.IncrementToken(), "New token is available");
-				NUnit.Framework.Assert.AreEqual("Shift value wrong", shift, numericAtt.GetShift()
-					);
+				IsTrue(stream.IncrementToken(), "New token is available");
+				AreEqual(shift, numericAtt.Shift, "Shift value wrong");
 				bytesAtt.FillBytesRef();
-				Assert.AreEqual(NumericUtils.LongToPrefixCoded(lvalue, shift), termAtt.Term, "Term is correctly encoded");
-				NUnit.Framework.Assert.AreEqual("Term raw value is incorrectly encoded", lvalue &
-					 ~((1L << shift) - 1L), numericAtt.GetRawValue());
-				Assert.AreEqual((shift == 0)?NumericTokenStream.TOKEN_TYPE_FULL_PREC:NumericTokenStream.TOKEN_TYPE_LOWER_PREC, typeAtt.Type, "Type incorrect");
+				AreEqual(lvalue & ~((1L << shift) - 1L), NumericUtils.PrefixCodedToLong(bytes), "Term is incorrectly encoded");
+				AreEqual(lvalue & ~((1L << shift) - 1L), numericAtt.RawValue, "Term raw value is incorrectly encoded");
+				AreEqual((shift == 0)?NumericTokenStream.TOKEN_TYPE_FULL_PREC:NumericTokenStream.TOKEN_TYPE_LOWER_PREC, typeAtt.Type, "Type incorrect");
 			}
-			Assert.IsFalse(stream.IncrementToken(), "No more tokens available");
+			IsFalse(stream.IncrementToken(), "No more tokens available");
+			stream.End();
+			stream.Dispose();
 		}
 		
         [Test]
@@ -62,25 +63,24 @@ namespace Lucene.Net.Analysis
 		{
 			NumericTokenStream stream = new NumericTokenStream().SetIntValue(ivalue);
 			// use getAttribute to test if attributes really exist, if not an IAE will be throwed
-			TermToBytesRefAttribute bytesAtt = stream.GetAttribute<TermToBytesRefAttribute>();
+			ITermToBytesRefAttribute bytesAtt = stream.GetAttribute<ITermToBytesRefAttribute>();
             ITypeAttribute typeAtt = stream.GetAttribute<ITypeAttribute>();
-			NumericTokenStream.NumericTermAttribute numericAtt = stream.GetAttribute<NumericTokenStream.NumericTermAttribute
-				>();
-			BytesRef bytes = bytesAtt.GetBytesRef();
+			var numericAtt = stream.GetAttribute<NumericTokenStream.NumericTermAttribute>();
+			BytesRef bytes = bytesAtt.BytesRef;
 			stream.Reset();
-			NUnit.Framework.Assert.AreEqual(32, numericAtt.GetValueSize());
+			AreEqual(32, numericAtt.ValueSize);
 			for (int shift = 0; shift < 32; shift += NumericUtils.PRECISION_STEP_DEFAULT)
 			{
-				Assert.IsTrue(stream.IncrementToken(), "New token is available");
-				NUnit.Framework.Assert.AreEqual("Shift value wrong", shift, numericAtt.GetShift()
-					);
+				IsTrue(stream.IncrementToken(), "New token is available");
+				AreEqual(shift, numericAtt.Shift, "Shift value wrong");
 				bytesAtt.FillBytesRef();
-				Assert.AreEqual(NumericUtils.IntToPrefixCoded(ivalue, shift), termAtt.Term, "Term is incorrectly encoded");
-				NUnit.Framework.Assert.AreEqual("Term raw value is incorrectly encoded", ((long)ivalue
-					) & ~((1L << shift) - 1L), numericAtt.GetRawValue());
-				Assert.AreEqual((shift == 0)?NumericTokenStream.TOKEN_TYPE_FULL_PREC:NumericTokenStream.TOKEN_TYPE_LOWER_PREC, typeAtt.Type, "Type correct");
+				AreEqual(ivalue & ~((1 << shift) - 1), NumericUtils.PrefixCodedToInt(bytes), "Term is incorrectly encoded");
+				AreEqual(ivalue & ~((1L << shift) - 1L), numericAtt.RawValue, "Term raw value is incorrectly encoded");
+				AreEqual((shift == 0)?NumericTokenStream.TOKEN_TYPE_FULL_PREC:NumericTokenStream.TOKEN_TYPE_LOWER_PREC, typeAtt.Type, "Type correct");
 			}
-			Assert.IsFalse(stream.IncrementToken(), "No more tokens available");
+			IsFalse(stream.IncrementToken(), "No more tokens available");
+			stream.End();
+			stream.Dispose();
 		}
 
         [Test]
@@ -88,40 +88,40 @@ namespace Lucene.Net.Analysis
         {
             NumericTokenStream stream = new NumericTokenStream();
 
-            Assert.Throws<SystemException>(stream.Reset, "reset() should not succeed.");
-            Assert.Throws<SystemException>(() => stream.IncrementToken(), "incrementToken() should not succeed.");
+            Throws<SystemException>(stream.Reset, "reset() should not succeed.");
+            Throws<SystemException>(() => stream.IncrementToken(), "incrementToken() should not succeed.");
         }
-		public interface TestAttribute : CharTermAttribute
+		public interface ITestAttribute : ICharTermAttribute
 		{
 			// pass
 		}
 
-		public class TestAttributeImpl : CharTermAttributeImpl, TestNumericTokenStream.TestAttribute
+		public class TestAttributeImpl : CharTermAttribute, ITestAttribute
 		{
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestCTA()
 		{
 			NumericTokenStream stream = new NumericTokenStream();
 			try
 			{
 				stream.AddAttribute<CharTermAttribute>();
-				NUnit.Framework.Assert.Fail("Succeeded to add CharTermAttribute.");
+				Fail("Succeeded to add CharTermAttribute.");
 			}
 			catch (ArgumentException iae)
 			{
-				NUnit.Framework.Assert.IsTrue(iae.Message.StartsWith("NumericTokenStream does not support"
+				IsTrue(iae.Message.StartsWith("NumericTokenStream does not support"
 					));
 			}
 			try
 			{
-				stream.AddAttribute<TestNumericTokenStream.TestAttribute>();
-				NUnit.Framework.Assert.Fail("Succeeded to add TestAttribute.");
+				stream.AddAttribute<TestNumericTokenStream.ITestAttribute>();
+				Fail("Succeeded to add TestAttribute.");
 			}
 			catch (ArgumentException iae)
 			{
-				NUnit.Framework.Assert.IsTrue(iae.Message.StartsWith("NumericTokenStream does not support"
+				IsTrue(iae.Message.StartsWith("NumericTokenStream does not support"
 					));
 			}
 		}

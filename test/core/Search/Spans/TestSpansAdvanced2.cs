@@ -4,7 +4,7 @@
  * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Search.Similarities;
@@ -62,7 +62,7 @@ namespace Lucene.Net.Search.Spans
 		public virtual void TestVerifyIndex()
 		{
 			IndexReader reader = DirectoryReader.Open(mDirectory);
-			NUnit.Framework.Assert.AreEqual(8, reader.NumDocs());
+			AreEqual(8, reader.NumDocs());
 			reader.Close();
 		}
 

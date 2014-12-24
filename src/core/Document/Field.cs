@@ -183,7 +183,7 @@ namespace Lucene.Net.Documents
          * getBinaryValue() must be set.
          */
 
-        public String StringValue
+        public virtual String StringValue
         {
             get
             {

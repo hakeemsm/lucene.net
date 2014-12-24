@@ -19,7 +19,7 @@ using System;
 
 using NUnit.Framework;
 
-using WhitespaceAnalyzer = Lucene.Net.Analysis.WhitespaceAnalyzer;
+using WhitespaceAnalyzer = Lucene.Net.Test.Analysis.WhitespaceAnalyzer;
 using Document = Lucene.Net.Documents.Document;
 using Field = Lucene.Net.Documents.Field;
 using IndexWriter = Lucene.Net.Index.IndexWriter;
@@ -60,9 +60,9 @@ namespace Lucene.Net.Search
 			Assert.AreEqual(1, hits.Length, "One in /Computers/Mac");
 			query = new PrefixQuery(new Term("category", string.Empty));
 			Terms terms = MultiFields.GetTerms(searcher.GetIndexReader(), "category");
-			NUnit.Framework.Assert.IsFalse(query.GetTermsEnum(terms) is PrefixTermsEnum);
+			IsFalse(query.GetTermsEnum(terms) is PrefixTermsEnum);
 			hits = searcher.Search(query, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual("everything", 3, hits.Length);
+			AreEqual("everything", 3, hits.Length);
 			writer.Close();
 			reader.Close();
 			directory.Close();

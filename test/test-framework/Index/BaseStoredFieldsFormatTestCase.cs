@@ -1,22 +1,7 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using System.Collections.Generic;
-using Com.Carrotsearch.Randomizedtesting.Generators;
-using Lucene.Net.TestFramework.Analysis;
-using Lucene.NetCodecs;
-using Lucene.NetCodecs.Lucene46;
-using Lucene.NetCodecs.Simpletext;
-using Lucene.NetDocument;
-using Lucene.Net.TestFramework.Index;
-using Lucene.Net.TestFramework.Search;
-using Lucene.Net.TestFramework.Store;
+using Lucene.Net.Documents;
 using Lucene.Net.TestFramework.Util;
-using Sharpen;
 
 namespace Lucene.Net.TestFramework.Index
 {

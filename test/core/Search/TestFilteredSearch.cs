@@ -4,7 +4,7 @@
  * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -48,7 +48,7 @@ namespace Lucene.Net.Search
 			for (int i = 0; i < 60; i++)
 			{
 				//Simple docs
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(NewStringField(FIELD, Sharpen.Extensions.ToString(i), Field.Store.YES));
 				writer.AddDocument(doc);
@@ -64,7 +64,7 @@ namespace Lucene.Net.Search
 			IndexReader reader = DirectoryReader.Open(directory);
 			IndexSearcher indexSearcher = NewSearcher(reader);
 			ScoreDoc[] hits = indexSearcher.Search(booleanQuery, filter, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual("Number of matched documents", 1, hits.Length);
+			AreEqual("Number of matched documents", 1, hits.Length);
 			reader.Close();
 		}
 
@@ -80,11 +80,11 @@ namespace Lucene.Net.Search
 			public override DocIdSet GetDocIdSet(AtomicReaderContext context, Bits acceptDocs
 				)
 			{
-				NUnit.Framework.Assert.IsNull("acceptDocs should be null, as we have an index without deletions"
+				IsNull("acceptDocs should be null, as we have an index without deletions"
 					, acceptDocs);
-				FixedBitSet set = new FixedBitSet(((AtomicReader)context.Reader()).MaxDoc());
+				FixedBitSet set = new FixedBitSet(((AtomicReader)context.Reader()).MaxDoc);
 				int docBase = context.docBase;
-				int limit = docBase + ((AtomicReader)context.Reader()).MaxDoc();
+				int limit = docBase + ((AtomicReader)context.Reader()).MaxDoc;
 				for (int index = 0; index < docs.Length; index++)
 				{
 					int docId = docs[index];

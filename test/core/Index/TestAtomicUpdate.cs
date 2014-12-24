@@ -19,14 +19,11 @@ using System;
 using Lucene.Net.Support;
 using NUnit.Framework;
 
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Documents;
-using Lucene.Net.QueryParsers;
 using Lucene.Net.Store;
-using Lucene.Net.Util;
-using Lucene.Net.Search;
 using English = Lucene.Net.Util.English;
-using LuceneTestCase = Lucene.Net.Util.LuceneTestCase;
+using Lucene.Net.TestFramework;
 using _TestUtil = Lucene.Net.Util._TestUtil;
 
 namespace Lucene.Net.Index
@@ -59,8 +56,8 @@ namespace Lucene.Net.Index
 			{
 				InitBlock(enclosingInstance);
 			}
-			
-			public /*internal*/ override bool TestPoint(System.String name)
+
+		    /*internal*/ protected override bool TestPoint(System.String name)
 			{
 				//      if (name.equals("startCommit")) {
 				if (Enclosing_Instance.RANDOM.Next(4) == 2)

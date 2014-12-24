@@ -29,7 +29,7 @@ namespace Lucene.Net.Search
 			int numDocs = AtLeast(100);
 			for (int i = 0; i < numDocs; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				iw.AddDocument(doc);
 			}
@@ -64,7 +64,7 @@ namespace Lucene.Net.Search
 				ScoreDoc[] sd = tdc.TopDocs().scoreDocs;
 				for (int j = 1; j < sd.Length; j++)
 				{
-					NUnit.Framework.Assert.IsTrue(sd[j].doc != sd[j - 1].doc);
+					IsTrue(sd[j].doc != sd[j - 1].doc);
 				}
 			}
 		}
@@ -84,9 +84,9 @@ namespace Lucene.Net.Search
 				ScoreDoc[] sd = td.scoreDocs;
 				for (int j = 0; j < sd.Length; j++)
 				{
-					NUnit.Framework.Assert.IsTrue(float.IsNaN(sd[j].score));
+					IsTrue(float.IsNaN(sd[j].score));
 				}
-				NUnit.Framework.Assert.IsTrue(float.IsNaN(td.GetMaxScore()));
+				IsTrue(float.IsNaN(td.GetMaxScore()));
 			}
 		}
 
@@ -105,9 +105,9 @@ namespace Lucene.Net.Search
 				ScoreDoc[] sd = td.scoreDocs;
 				for (int j = 0; j < sd.Length; j++)
 				{
-					NUnit.Framework.Assert.IsTrue(!float.IsNaN(sd[j].score));
+					IsTrue(!float.IsNaN(sd[j].score));
 				}
-				NUnit.Framework.Assert.IsTrue(float.IsNaN(td.GetMaxScore()));
+				IsTrue(float.IsNaN(td.GetMaxScore()));
 			}
 		}
 
@@ -127,9 +127,9 @@ namespace Lucene.Net.Search
 				ScoreDoc[] sd = td.scoreDocs;
 				for (int j = 0; j < sd.Length; j++)
 				{
-					NUnit.Framework.Assert.IsTrue(!float.IsNaN(sd[j].score));
+					IsTrue(!float.IsNaN(sd[j].score));
 				}
-				NUnit.Framework.Assert.IsTrue(float.IsNaN(td.GetMaxScore()));
+				IsTrue(float.IsNaN(td.GetMaxScore()));
 			}
 		}
 
@@ -148,9 +148,9 @@ namespace Lucene.Net.Search
 				ScoreDoc[] sd = td.scoreDocs;
 				for (int j = 0; j < sd.Length; j++)
 				{
-					NUnit.Framework.Assert.IsTrue(!float.IsNaN(sd[j].score));
+					IsTrue(!float.IsNaN(sd[j].score));
 				}
-				NUnit.Framework.Assert.IsTrue(!float.IsNaN(td.GetMaxScore()));
+				IsTrue(!float.IsNaN(td.GetMaxScore()));
 			}
 		}
 
@@ -181,12 +181,12 @@ namespace Lucene.Net.Search
 				{
 					TopDocsCollector<FieldValueHitQueue.Entry> tdc = TopFieldCollector.Create(sort[i]
 						, 10, tfcOptions[j][0], tfcOptions[j][1], tfcOptions[j][2], false);
-					NUnit.Framework.Assert.IsTrue(tdc.GetType().FullName.EndsWith("$" + actualTFCClasses
+					IsTrue(tdc.GetType().FullName.EndsWith("$" + actualTFCClasses
 						[j]));
 					@is.Search(bq, tdc);
 					TopDocs td = tdc.TopDocs();
 					ScoreDoc[] sd = td.scoreDocs;
-					NUnit.Framework.Assert.AreEqual(10, sd.Length);
+					AreEqual(10, sd.Length);
 				}
 			}
 		}
@@ -219,12 +219,12 @@ namespace Lucene.Net.Search
 				{
 					TopDocsCollector<FieldValueHitQueue.Entry> tdc = TopFieldCollector.Create(sort[i]
 						, 10, tfcOptions[j][0], tfcOptions[j][1], tfcOptions[j][2], false);
-					NUnit.Framework.Assert.IsTrue(tdc.GetType().FullName.EndsWith("$" + actualTFCClasses
+					IsTrue(tdc.GetType().FullName.EndsWith("$" + actualTFCClasses
 						[j]));
 					@is.Search(bq, tdc);
 					TopDocs td = tdc.TopDocs();
 					ScoreDoc[] sd = td.scoreDocs;
-					NUnit.Framework.Assert.AreEqual(10, sd.Length);
+					AreEqual(10, sd.Length);
 				}
 			}
 		}
@@ -239,8 +239,8 @@ namespace Lucene.Net.Search
 				TopDocsCollector<FieldValueHitQueue.Entry> tdc = TopFieldCollector.Create(sort[i]
 					, 10, true, true, true, true);
 				TopDocs td = tdc.TopDocs();
-				NUnit.Framework.Assert.AreEqual(0, td.totalHits);
-				NUnit.Framework.Assert.IsTrue(float.IsNaN(td.GetMaxScore()));
+				AreEqual(0, td.TotalHits);
+				IsTrue(float.IsNaN(td.GetMaxScore()));
 			}
 		}
 	}

@@ -19,7 +19,7 @@ using System;
 using Lucene.Net.Support;
 using NUnit.Framework;
 
-using WhitespaceAnalyzer = Lucene.Net.Analysis.WhitespaceAnalyzer;
+using WhitespaceAnalyzer = Lucene.Net.Test.Analysis.WhitespaceAnalyzer;
 using Document = Lucene.Net.Documents.Document;
 using Field = Lucene.Net.Documents.Field;
 using IndexWriter = Lucene.Net.Index.IndexWriter;
@@ -225,9 +225,9 @@ namespace Lucene.Net.Store
 			FilePath lockFile = new FilePath(tempDir, "test.lock");
 			lockFile.CreateNewFile();
 			Lock l = new NativeFSLockFactory(tempDir).MakeLock("test.lock");
-			NUnit.Framework.Assert.IsTrue("failed to obtain lock", l.Obtain());
+			IsTrue("failed to obtain lock", l.Obtain());
 			l.Close();
-			NUnit.Framework.Assert.IsFalse("failed to release lock", l.IsLocked());
+			IsFalse("failed to release lock", l.IsLocked());
 			if (lockFile.Exists())
 			{
 				lockFile.Delete();
@@ -271,11 +271,11 @@ namespace Lucene.Net.Store
 			Assert.IsTrue(null == prefix, "Default lock prefix should be null");
 			dir.Close();
 			dir = new MMapDirectory(dirName);
-			NUnit.Framework.Assert.IsNull("Default lock prefix should be null", dir.GetLockFactory
+			IsNull("Default lock prefix should be null", dir.GetLockFactory
 				().GetLockPrefix());
 			dir.Close();
 			dir = new NIOFSDirectory(dirName);
-			NUnit.Framework.Assert.IsNull("Default lock prefix should be null", dir.GetLockFactory
+			IsNull("Default lock prefix should be null", dir.GetLockFactory
 				().GetLockPrefix());
 			dir.Close();
 			_TestUtil.RmDir(dirName);

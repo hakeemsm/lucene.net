@@ -4,7 +4,7 @@
  * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -36,11 +36,11 @@ namespace Lucene.Net.Search
 			IndexSearcher searcher = NewSearcher(reader);
 			TopDocs search = searcher.Search(new TermQuery(new Term("all", "test")), new FieldValueFilter
 				("some", true), docs);
-			NUnit.Framework.Assert.AreEqual(search.totalHits, numDocsNoValue);
+			AreEqual(search.TotalHits, numDocsNoValue);
 			ScoreDoc[] scoreDocs = search.scoreDocs;
 			foreach (ScoreDoc scoreDoc in scoreDocs)
 			{
-				NUnit.Framework.Assert.IsNull(reader.Document(scoreDoc.doc).Get("some"));
+				IsNull(reader.Document(scoreDoc.doc).Get("some"));
 			}
 			reader.Close();
 			directory.Close();
@@ -66,11 +66,11 @@ namespace Lucene.Net.Search
 			IndexSearcher searcher = NewSearcher(reader);
 			TopDocs search = searcher.Search(new TermQuery(new Term("all", "test")), new FieldValueFilter
 				("some"), docs);
-			NUnit.Framework.Assert.AreEqual(search.totalHits, numDocsWithValue);
+			AreEqual(search.TotalHits, numDocsWithValue);
 			ScoreDoc[] scoreDocs = search.scoreDocs;
 			foreach (ScoreDoc scoreDoc in scoreDocs)
 			{
-				NUnit.Framework.Assert.AreEqual("value", reader.Document(scoreDoc.doc).Get("some"
+				AreEqual("value", reader.Document(scoreDoc.doc).Get("some"
 					));
 			}
 			reader.Close();
@@ -83,7 +83,7 @@ namespace Lucene.Net.Search
 			int[] docStates = new int[docs];
 			for (int i = 0; i < docs; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				if (Random().NextBoolean())
 				{

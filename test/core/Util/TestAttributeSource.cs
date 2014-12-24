@@ -19,7 +19,7 @@ using System;
 using System.Collections;
 using NUnit.Framework;
 
-using Token = Lucene.Net.Analysis.Token;
+using Token = Lucene.Net.Test.Analysis.Token;
 using Lucene.Net.Test.Analysis.TokenAttributes;
 using FlagsAttribute = Lucene.Net.Test.Analysis.TokenAttributes.FlagsAttribute;
 
@@ -108,18 +108,18 @@ namespace Lucene.Net.Util
 			flagsAtt2.SetFlags(4711);
 			typeAtt2.SetType("OtherType");
 			clone.CopyTo(src);
-			NUnit.Framework.Assert.AreEqual("FlagsAttribute of original must now contain updated term"
+			AreEqual("FlagsAttribute of original must now contain updated term"
 				, 4711, flagsAtt.GetFlags());
-			NUnit.Framework.Assert.AreEqual("TypeAttribute of original must now contain updated type"
+			AreEqual("TypeAttribute of original must now contain updated type"
 				, "OtherType", typeAtt.Type());
 			// verify again:
-			NUnit.Framework.Assert.AreNotSame("FlagsAttribute of original and clone must be different instances"
+			AreNotSame("FlagsAttribute of original and clone must be different instances"
 				, flagsAtt2, flagsAtt);
-			NUnit.Framework.Assert.AreNotSame("TypeAttribute of original and clone must be different instances"
+			AreNotSame("TypeAttribute of original and clone must be different instances"
 				, typeAtt2, typeAtt);
-			NUnit.Framework.Assert.AreEqual("FlagsAttribute of original and clone must be equal"
+			AreEqual("FlagsAttribute of original and clone must be equal"
 				, flagsAtt2, flagsAtt);
-			NUnit.Framework.Assert.AreEqual("TypeAttribute of original and clone must be equal"
+			AreEqual("TypeAttribute of original and clone must be equal"
 				, typeAtt2, typeAtt);
         }
 

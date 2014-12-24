@@ -24,11 +24,11 @@ namespace Lucene.Net.Store
 			try
 			{
 				dir.Close();
-				NUnit.Framework.Assert.Fail();
+				Fail();
 			}
 			catch (Exception expected)
 			{
-				NUnit.Framework.Assert.IsTrue(expected.Message.Contains("there are still open locks"
+				IsTrue(expected.Message.Contains("there are still open locks"
 					));
 			}
 			iw.Close();
@@ -45,11 +45,11 @@ namespace Lucene.Net.Store
 			try
 			{
 				dir.Close();
-				NUnit.Framework.Assert.Fail();
+				Fail();
 			}
 			catch (Exception expected)
 			{
-				NUnit.Framework.Assert.IsTrue(expected.Message.Contains("there are still open locks"
+				IsTrue(expected.Message.Contains("there are still open locks"
 					));
 			}
 			iw.Close();
@@ -72,7 +72,7 @@ namespace Lucene.Net.Store
 			try
 			{
 				@out.WriteBytes(bytes, bytes.Length);
-				NUnit.Framework.Assert.Fail("should have failed on disk full");
+				Fail("should have failed on disk full");
 			}
 			catch (IOException)
 			{
@@ -92,7 +92,7 @@ namespace Lucene.Net.Store
 			try
 			{
 				@out.CopyBytes(new ByteArrayDataInput(bytes), bytes.Length);
-				NUnit.Framework.Assert.Fail("should have failed on disk full");
+				Fail("should have failed on disk full");
 			}
 			catch (IOException)
 			{

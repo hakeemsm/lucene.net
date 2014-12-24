@@ -267,7 +267,7 @@ namespace Lucene.Net.Index
 				Sharpen.Runtime.PrintStackTrace(e, System.Console.Out);
 			}
 			// We couldn't get the JVM to crash for some reason.
-			NUnit.Framework.Assert.Fail();
+			Fail();
 		}
 	}
 }

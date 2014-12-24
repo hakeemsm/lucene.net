@@ -4,7 +4,7 @@
  * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -28,11 +28,11 @@ namespace Lucene.Net.Index
 		public override void SetUp()
 		{
 			base.SetUp();
-			Lucene.Net.Document.Document doc;
+			Lucene.Net.Documents.Document doc;
 			rd1 = NewDirectory();
 			IndexWriter iw1 = new IndexWriter(rd1, NewIndexWriterConfig(TEST_VERSION_CURRENT, 
 				new MockAnalyzer(Random())));
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewTextField("field1", "the quick brown fox jumps", Field.Store.YES));
 			doc.Add(NewTextField("field2", "the quick brown fox jumps", Field.Store.YES));
 			iw1.AddDocument(doc);
@@ -40,7 +40,7 @@ namespace Lucene.Net.Index
 			rd2 = NewDirectory();
 			IndexWriter iw2 = new IndexWriter(rd2, NewIndexWriterConfig(TEST_VERSION_CURRENT, 
 				new MockAnalyzer(Random())));
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewTextField("field1", "the fox jumps over the lazy dog", Field.Store.YES
 				));
 			doc.Add(NewTextField("field3", "the fox jumps over the lazy dog", Field.Store.YES
@@ -64,19 +64,19 @@ namespace Lucene.Net.Index
 		/// <exception cref="System.IO.IOException"></exception>
 		private void CheckTerms(Terms terms, Bits liveDocs, params string[] termsList)
 		{
-			NUnit.Framework.Assert.IsNotNull(terms);
+			IsNotNull(terms);
 			TermsEnum te = terms.Iterator(null);
 			foreach (string t in termsList)
 			{
 				BytesRef b = te.Next();
-				NUnit.Framework.Assert.IsNotNull(b);
-				NUnit.Framework.Assert.AreEqual(t, b.Utf8ToString());
+				IsNotNull(b);
+				AreEqual(t, b.Utf8ToString());
 				DocsEnum td = TestUtil.Docs(Random(), te, liveDocs, null, DocsEnum.FLAG_NONE);
-				NUnit.Framework.Assert.IsTrue(td.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
-				NUnit.Framework.Assert.AreEqual(0, td.DocID());
-				NUnit.Framework.Assert.AreEqual(td.NextDoc(), DocIdSetIterator.NO_MORE_DOCS);
+				IsTrue(td.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
+				AreEqual(0, td.DocID);
+				AreEqual(td.NextDoc(), DocIdSetIterator.NO_MORE_DOCS);
 			}
-			NUnit.Framework.Assert.IsNull(te.Next());
+			IsNull(te.Next());
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -87,16 +87,16 @@ namespace Lucene.Net.Index
 			Fields fields = pr.Fields();
 			Iterator<string> fe = fields.Iterator();
 			string f = fe.Next();
-			NUnit.Framework.Assert.AreEqual("field1", f);
+			AreEqual("field1", f);
 			CheckTerms(fields.Terms(f), liveDocs, "brown", "fox", "jumps", "quick", "the");
 			f = fe.Next();
-			NUnit.Framework.Assert.AreEqual("field2", f);
+			AreEqual("field2", f);
 			CheckTerms(fields.Terms(f), liveDocs, "brown", "fox", "jumps", "quick", "the");
 			f = fe.Next();
-			NUnit.Framework.Assert.AreEqual("field3", f);
+			AreEqual("field3", f);
 			CheckTerms(fields.Terms(f), liveDocs, "dog", "fox", "jumps", "lazy", "over", "the"
 				);
-			NUnit.Framework.Assert.IsFalse(fe.HasNext());
+			IsFalse(fe.HasNext());
 		}
 	}
 }

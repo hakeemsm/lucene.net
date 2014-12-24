@@ -5,7 +5,7 @@
  */
 
 using System;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -92,7 +92,7 @@ namespace Lucene.Net.Index
 			IndexWriterConfig config = NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer);
 			config.SetSimilarity(new TestNorms.CustomNormEncodingSimilarity(this));
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir, config);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			Field foo = NewTextField("foo", string.Empty, Field.Store.NO);
 			Field bar = NewTextField("bar", string.Empty, Field.Store.NO);
@@ -100,20 +100,20 @@ namespace Lucene.Net.Index
 			doc.Add(bar);
 			for (int i = 0; i < 100; i++)
 			{
-				bar.SetStringValue("singleton");
+				bar.StringValue = "singleton");
 				writer.AddDocument(doc);
 			}
 			IndexReader reader = writer.GetReader();
 			writer.Close();
 			NumericDocValues fooNorms = MultiDocValues.GetNormValues(reader, "foo");
-			for (int i_1 = 0; i_1 < reader.MaxDoc(); i_1++)
+			for (int i_1 = 0; i_1 < reader.MaxDoc; i_1++)
 			{
-				NUnit.Framework.Assert.AreEqual(0, fooNorms.Get(i_1));
+				AreEqual(0, fooNorms.Get(i_1));
 			}
 			NumericDocValues barNorms = MultiDocValues.GetNormValues(reader, "bar");
-			for (int i_2 = 0; i_2 < reader.MaxDoc(); i_2++)
+			for (int i_2 = 0; i_2 < reader.MaxDoc; i_2++)
 			{
-				NUnit.Framework.Assert.AreEqual(1, barNorms.Get(i_2));
+				AreEqual(1, barNorms.Get(i_2));
 			}
 			reader.Close();
 			dir.Close();
@@ -126,12 +126,12 @@ namespace Lucene.Net.Index
 			BuildIndex(dir);
 			AtomicReader open = SlowCompositeReaderWrapper.Wrap(DirectoryReader.Open(dir));
 			NumericDocValues normValues = open.GetNormValues(byteTestField);
-			NUnit.Framework.Assert.IsNotNull(normValues);
-			for (int i = 0; i < open.MaxDoc(); i++)
+			IsNotNull(normValues);
+			for (int i = 0; i < open.MaxDoc; i++)
 			{
-				Lucene.Net.Document.Document document = open.Document(i);
+				Lucene.Net.Documents.Document document = open.Document(i);
 				int expected = System.Convert.ToInt32(document.Get(byteTestField));
-				NUnit.Framework.Assert.AreEqual(expected, normValues.Get(i) & unchecked((int)(0xff
+				AreEqual(expected, normValues.Get(i) & unchecked((int)(0xff
 					)));
 			}
 			open.Close();
@@ -154,7 +154,7 @@ namespace Lucene.Net.Index
 			int num = AtLeast(100);
 			for (int i = 0; i < num; i++)
 			{
-				Lucene.Net.Document.Document doc = docs.NextDoc();
+				Lucene.Net.Documents.Document doc = docs.NextDoc();
 				int boost = Random().Next(255);
 				Field f = new TextField(byteTestField, string.Empty + boost, Field.Store.YES);
 				f.SetBoost(boost);

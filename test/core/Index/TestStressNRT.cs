@@ -7,7 +7,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -313,7 +313,7 @@ namespace Lucene.Net.Index
 								{
 									if (tombstones)
 									{
-										Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+										Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 										d.Add(LuceneTestCase.NewStringField("id", "-" + Sharpen.Extensions.ToString(id), 
 											Field.Store.YES));
 										d.Add(LuceneTestCase.NewField(this._enclosing.field, System.Convert.ToString(nextVal
@@ -334,7 +334,7 @@ namespace Lucene.Net.Index
 									{
 										if (tombstones)
 										{
-											Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+											Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 											d.Add(LuceneTestCase.NewStringField("id", "-" + Sharpen.Extensions.ToString(id), 
 												Field.Store.YES));
 											d.Add(LuceneTestCase.NewField(this._enclosing.field, System.Convert.ToString(nextVal
@@ -352,7 +352,7 @@ namespace Lucene.Net.Index
 									}
 									else
 									{
-										Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+										Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 										d.Add(LuceneTestCase.NewStringField("id", Sharpen.Extensions.ToString(id), Field.Store
 											.YES));
 										d.Add(LuceneTestCase.NewField(this._enclosing.field, System.Convert.ToString(nextVal
@@ -462,44 +462,44 @@ namespace Lucene.Net.Index
 						}
 						Query q = new TermQuery(new Term("id", Sharpen.Extensions.ToString(id)));
 						TopDocs results = searcher.Search(q, 10);
-						if (results.totalHits == 0 && tombstones)
+						if (results.TotalHits == 0 && tombstones)
 						{
 							q = new TermQuery(new Term("id", "-" + Sharpen.Extensions.ToString(id)));
 							results = searcher.Search(q, 1);
-							if (results.totalHits == 0)
+							if (results.TotalHits == 0)
 							{
 								if (val == -1L)
 								{
 									r.DecRef();
 									continue;
 								}
-								NUnit.Framework.Assert.Fail("No documents or tombstones found for id " + id + ", expected at least "
+								Fail("No documents or tombstones found for id " + id + ", expected at least "
 									 + val + " reader=" + r);
 							}
 						}
-						if (results.totalHits == 0 && !tombstones)
+						if (results.TotalHits == 0 && !tombstones)
 						{
 						}
 						else
 						{
-							if (results.totalHits != 1)
+							if (results.TotalHits != 1)
 							{
 								System.Console.Out.WriteLine("FAIL: hits id:" + id + " val=" + val);
 								foreach (ScoreDoc sd in results.scoreDocs)
 								{
-									Lucene.Net.Document.Document doc = r.Document(sd.doc);
+									Lucene.Net.Documents.Document doc = r.Document(sd.doc);
 									System.Console.Out.WriteLine("  docID=" + sd.doc + " id:" + doc.Get("id") + " foundVal="
 										 + doc.Get(this._enclosing.field));
 								}
-								NUnit.Framework.Assert.Fail("id=" + id + " reader=" + r + " totalHits=" + results
-									.totalHits);
+								Fail("id=" + id + " reader=" + r + " TotalHits=" + results
+									.TotalHits);
 							}
-							Lucene.Net.Document.Document doc_1 = searcher.Doc(results.scoreDocs[0].doc
+							Lucene.Net.Documents.Document doc_1 = searcher.Doc(results.scoreDocs[0].doc
 								);
 							long foundVal = long.Parse(doc_1.Get(this._enclosing.field));
 							if (foundVal < Math.Abs(val))
 							{
-								NUnit.Framework.Assert.Fail("foundVal=" + foundVal + " val=" + val + " id=" + id 
+								Fail("foundVal=" + foundVal + " val=" + val + " id=" + id 
 									+ " reader=" + r);
 							}
 						}

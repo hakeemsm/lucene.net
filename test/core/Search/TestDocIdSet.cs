@@ -46,7 +46,7 @@ namespace Lucene.Net.Search
 			{
 				System.Console.Out.WriteLine("answer: " + Arrays.ToString(answer));
 				System.Console.Out.WriteLine("gotten: " + Arrays.ToString(docs));
-				NUnit.Framework.Assert.Fail();
+				Fail();
 			}
 		}
 
@@ -72,7 +72,7 @@ namespace Lucene.Net.Search
 
 				internal int docid;
 
-				public override int DocID()
+				public override int DocID
 				{
 					return this.docid;
 				}
@@ -120,7 +120,7 @@ namespace Lucene.Net.Search
 			// IndexSearcher, everything works fine. This came up in LUCENE-1754.
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewStringField("c", "val", Field.Store.NO));
 			writer.AddDocument(doc);
@@ -129,11 +129,11 @@ namespace Lucene.Net.Search
 			// First verify the document is searchable.
 			IndexSearcher searcher = NewSearcher(reader);
 			//HM:revisit 
-			//assert.assertEquals(1, searcher.search(new MatchAllDocsQuery(), 10).totalHits);
+			//assert.assertEquals(1, searcher.search(new MatchAllDocsQuery(), 10).TotalHits);
 			// Now search w/ a Filter which returns a null DocIdSet
 			Filter f = new _Filter_122();
 			//HM:revisit 
-			//assert.assertEquals(0, searcher.search(new MatchAllDocsQuery(), f, 10).totalHits);
+			//assert.assertEquals(0, searcher.search(new MatchAllDocsQuery(), f, 10).TotalHits);
 			reader.Close();
 			dir.Close();
 		}
@@ -156,7 +156,7 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewStringField("c", "val", Field.Store.NO));
 			writer.AddDocument(doc);
@@ -165,11 +165,11 @@ namespace Lucene.Net.Search
 			// First verify the document is searchable.
 			IndexSearcher searcher = NewSearcher(reader);
 			//HM:revisit 
-			//assert.assertEquals(1, searcher.search(new MatchAllDocsQuery(), 10).totalHits);
+			//assert.assertEquals(1, searcher.search(new MatchAllDocsQuery(), 10).TotalHits);
 			// Now search w/ a Filter which returns a null DocIdSet
 			Filter f = new _Filter_152();
 			//HM:revisit 
-			//assert.assertEquals(0, searcher.search(new MatchAllDocsQuery(), f, 10).totalHits);
+			//assert.assertEquals(0, searcher.search(new MatchAllDocsQuery(), f, 10).TotalHits);
 			reader.Close();
 			dir.Close();
 		}

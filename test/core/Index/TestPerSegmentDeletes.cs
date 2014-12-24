@@ -5,7 +5,7 @@
  */
 
 using System.Collections.Generic;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
@@ -38,7 +38,7 @@ namespace Lucene.Net.Index
 			//System.out.println("numRamDocs(" + x + ")" + writer.numRamDocs());
 			//System.out.println("commit1");
 			writer.Commit();
-			NUnit.Framework.Assert.AreEqual(1, writer.segmentInfos.Size());
+			AreEqual(1, writer.segmentInfos.Size());
 			for (int x_1 = 5; x_1 < 10; x_1++)
 			{
 				writer.AddDocument(DocHelper.CreateDocument(x_1, "2", 2));
@@ -46,7 +46,7 @@ namespace Lucene.Net.Index
 			//System.out.println("numRamDocs(" + x + ")" + writer.numRamDocs());
 			//System.out.println("commit2");
 			writer.Commit();
-			NUnit.Framework.Assert.AreEqual(2, writer.segmentInfos.Size());
+			AreEqual(2, writer.segmentInfos.Size());
 			for (int x_2 = 10; x_2 < 15; x_2++)
 			{
 				writer.AddDocument(DocHelper.CreateDocument(x_2, "3", 2));
@@ -57,11 +57,11 @@ namespace Lucene.Net.Index
 			// flushing without applying deletes means
 			// there will still be deletes in the segment infos
 			writer.Flush(false, false);
-			NUnit.Framework.Assert.IsTrue(writer.bufferedUpdatesStream.Any());
+			IsTrue(writer.bufferedUpdatesStream.Any());
 			// get reader flushes pending deletes
 			// so there should not be anymore
 			IndexReader r1 = writer.GetReader();
-			NUnit.Framework.Assert.IsFalse(writer.bufferedUpdatesStream.Any());
+			IsFalse(writer.bufferedUpdatesStream.Any());
 			r1.Close();
 			// delete id:2 from the first segment
 			// merge segments 0 and 1
@@ -74,12 +74,12 @@ namespace Lucene.Net.Index
 			fsmp.start = 0;
 			fsmp.length = 2;
 			writer.MaybeMerge();
-			NUnit.Framework.Assert.AreEqual(2, writer.segmentInfos.Size());
+			AreEqual(2, writer.segmentInfos.Size());
 			// id:2 shouldn't exist anymore because
 			// it's been applied in the merge and now it's gone
 			IndexReader r2 = writer.GetReader();
 			int[] id2docs = ToDocsArray(new Term("id", "2"), null, r2);
-			NUnit.Framework.Assert.IsTrue(id2docs == null);
+			IsTrue(id2docs == null);
 			r2.Close();
 			// System.out.println("segdels2:"+writer.docWriter.segmentDeletes.toString());
 			//System.out.println("close");
@@ -175,7 +175,7 @@ namespace Lucene.Net.Index
 			IList<int> docs = new AList<int>();
 			while (docsEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS)
 			{
-				int docID = docsEnum.DocID();
+				int docID = docsEnum.DocID;
 				docs.AddItem(docID);
 			}
 			return ArrayUtil.ToIntArray(docs);

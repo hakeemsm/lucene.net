@@ -5,7 +5,7 @@
  */
 
 using System.IO;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -67,7 +67,7 @@ namespace Lucene.Net.Index
 				(false)));
 			for (int i = 0; i < numDocs; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				string content;
 				if (i % (numDocs / numHits) == 0)
@@ -129,10 +129,10 @@ namespace Lucene.Net.Index
 			this.seeksCounter = 0;
 			ScoreDoc[] hits = Search();
 			// verify that the right number of docs was found
-			NUnit.Framework.Assert.AreEqual(numHits, hits.Length);
+			AreEqual(numHits, hits.Length);
 			// check if the number of calls of seek() does not exceed the number of hits
-			NUnit.Framework.Assert.IsTrue(this.seeksCounter > 0);
-			NUnit.Framework.Assert.IsTrue("seeksCounter=" + this.seeksCounter + " numHits=" +
+			IsTrue(this.seeksCounter > 0);
+			IsTrue("seeksCounter=" + this.seeksCounter + " numHits=" +
 				 numHits, this.seeksCounter <= numHits + 1);
 			searcher.GetIndexReader().Close();
 		}
@@ -161,7 +161,7 @@ namespace Lucene.Net.Index
 				, new MockAnalyzer(Random())));
 			for (int i = 0; i < 10; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(NewTextField(this.field, "a b", Field.Store.YES));
 				writer.AddDocument(doc);
@@ -173,16 +173,16 @@ namespace Lucene.Net.Index
 			for (int i_1 = 0; i_1 < 10; i_1++)
 			{
 				tp.NextDoc();
-				NUnit.Framework.Assert.AreEqual(tp.DocID(), i_1);
-				NUnit.Framework.Assert.AreEqual(tp.NextPosition(), 1);
+				AreEqual(tp.DocID, i_1);
+				AreEqual(tp.NextPosition(), 1);
 			}
 			tp = MultiFields.GetTermPositionsEnum(reader, MultiFields.GetLiveDocs(reader), this
 				.field, new BytesRef("a"));
 			for (int i_2 = 0; i_2 < 10; i_2++)
 			{
 				tp.NextDoc();
-				NUnit.Framework.Assert.AreEqual(tp.DocID(), i_2);
-				NUnit.Framework.Assert.AreEqual(tp.NextPosition(), 0);
+				AreEqual(tp.DocID, i_2);
+				AreEqual(tp.NextPosition(), 0);
 			}
 			reader.Close();
 			directory.Close();
@@ -219,9 +219,9 @@ namespace Lucene.Net.Index
 				this.input.Close();
 			}
 
-			public override long GetFilePointer()
+			public override long FilePointer
 			{
-				return this.input.GetFilePointer();
+				return this.input.FilePointer;
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>

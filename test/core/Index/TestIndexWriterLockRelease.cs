@@ -5,7 +5,7 @@
  */
 
 using System.IO;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
 using Lucene.Net.Util;

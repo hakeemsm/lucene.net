@@ -33,21 +33,21 @@ namespace Lucene.Net.Util
 					string randomRealisticUnicodeString = TestUtil.RandomRealisticUnicodeString(random
 						);
 					spare.CopyChars(randomRealisticUnicodeString);
-					NUnit.Framework.Assert.AreEqual(i + initSize, list.Append(spare));
+					AreEqual(i + initSize, list.Append(spare));
 					stringList.AddItem(randomRealisticUnicodeString);
 				}
 				for (int i_1 = 0; i_1 < entries; i_1++)
 				{
-					NUnit.Framework.Assert.IsNotNull(list.Get(spare, i_1));
-					NUnit.Framework.Assert.AreEqual("entry " + i_1 + " doesn't match", stringList[i_1
+					IsNotNull(list.Get(spare, i_1));
+					AreEqual("entry " + i_1 + " doesn't match", stringList[i_1
 						], spare.Utf8ToString());
 				}
 				// check random
 				for (int i_2 = 0; i_2 < entries; i_2++)
 				{
 					int e = random.Next(entries);
-					NUnit.Framework.Assert.IsNotNull(list.Get(spare, e));
-					NUnit.Framework.Assert.AreEqual("entry " + i_2 + " doesn't match", stringList[e], 
+					IsNotNull(list.Get(spare, e));
+					AreEqual("entry " + i_2 + " doesn't match", stringList[e], 
 						spare.Utf8ToString());
 				}
 				for (int i_3 = 0; i_3 < 2; i_3++)
@@ -55,7 +55,7 @@ namespace Lucene.Net.Util
 					BytesRefIterator iterator = list.Iterator();
 					foreach (string @string in stringList)
 					{
-						NUnit.Framework.Assert.AreEqual(@string, iterator.Next().Utf8ToString());
+						AreEqual(@string, iterator.Next().Utf8ToString());
 					}
 				}
 			}
@@ -82,7 +82,7 @@ namespace Lucene.Net.Util
 					string randomRealisticUnicodeString = TestUtil.RandomRealisticUnicodeString(random
 						);
 					spare.CopyChars(randomRealisticUnicodeString);
-					NUnit.Framework.Assert.AreEqual(initSize + i, list.Append(spare));
+					AreEqual(initSize + i, list.Append(spare));
 					stringList.AddItem(randomRealisticUnicodeString);
 				}
 				stringList.Sort();
@@ -90,12 +90,12 @@ namespace Lucene.Net.Util
 				int i_1 = 0;
 				while ((spare = iter.Next()) != null)
 				{
-					NUnit.Framework.Assert.AreEqual("entry " + i_1 + " doesn't match", stringList[i_1
+					AreEqual("entry " + i_1 + " doesn't match", stringList[i_1
 						], spare.Utf8ToString());
 					i_1++;
 				}
-				NUnit.Framework.Assert.IsNull(iter.Next());
-				NUnit.Framework.Assert.AreEqual(i_1, stringList.Count);
+				IsNull(iter.Next());
+				AreEqual(i_1, stringList.Count);
 			}
 		}
 	}

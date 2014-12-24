@@ -29,12 +29,12 @@ namespace Lucene.Net.Index
 		[NUnit.Framework.Test]
 		public virtual void TestFinalSingleton()
 		{
-			NUnit.Framework.Assert.IsTrue(Modifier.IsFinal(typeof(NoMergeScheduler).GetModifiers
+			IsTrue(Modifier.IsFinal(typeof(NoMergeScheduler).GetModifiers
 				()));
 			Constructor<object>[] ctors = typeof(NoMergeScheduler).GetDeclaredConstructors();
-			NUnit.Framework.Assert.AreEqual("expected 1 private ctor only: " + Arrays.ToString
+			AreEqual("expected 1 private ctor only: " + Arrays.ToString
 				(ctors), 1, ctors.Length);
-			NUnit.Framework.Assert.IsTrue("that 1 should be private: " + ctors[0], Modifier.IsPrivate
+			IsTrue("that 1 should be private: " + ctors[0], Modifier.IsPrivate
 				(ctors[0].GetModifiers()));
 		}
 
@@ -54,7 +54,7 @@ namespace Lucene.Net.Index
 				// this will need to change.
 				if (m.DeclaringType != typeof(object))
 				{
-					NUnit.Framework.Assert.IsTrue(m + " is not overridden !", m.DeclaringType == typeof(
+					IsTrue(m + " is not overridden !", m.DeclaringType == typeof(
 						NoMergeScheduler));
 				}
 			}

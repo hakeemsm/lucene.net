@@ -7,7 +7,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Codecs;
 using Lucene.Net.Codecs.Lucene3x;
 using Lucene.Net.Codecs.Lucene40;
@@ -360,34 +360,34 @@ namespace Lucene.Net.Index
 				));
 			Iterator<string> fieldsEnum = reader.Iterator();
 			string fieldName = fieldsEnum.Next();
-			NUnit.Framework.Assert.IsNotNull(fieldName);
+			IsNotNull(fieldName);
 			Terms terms2 = reader.Terms(fieldName);
-			NUnit.Framework.Assert.IsNotNull(terms2);
+			IsNotNull(terms2);
 			TermsEnum termsEnum = terms2.Iterator(null);
 			DocsEnum docsEnum = null;
 			for (int i_1 = 0; i_1 < NUM_TERMS; i_1++)
 			{
 				BytesRef term = termsEnum.Next();
-				NUnit.Framework.Assert.IsNotNull(term);
-				NUnit.Framework.Assert.AreEqual(terms[i_1].text2, term.Utf8ToString());
+				IsNotNull(term);
+				AreEqual(terms[i_1].text2, term.Utf8ToString());
 				// do this twice to stress test the codec's reuse, ie,
 				// make sure it properly fully resets (rewinds) its
 				// internal state:
 				for (int iter = 0; iter < 2; iter++)
 				{
 					docsEnum = TestUtil.Docs(Random(), termsEnum, null, docsEnum, DocsEnum.FLAG_NONE);
-					NUnit.Framework.Assert.AreEqual(terms[i_1].docs[0], docsEnum.NextDoc());
-					NUnit.Framework.Assert.AreEqual(DocIdSetIterator.NO_MORE_DOCS, docsEnum.NextDoc()
+					AreEqual(terms[i_1].docs[0], docsEnum.NextDoc());
+					AreEqual(DocIdSetIterator.NO_MORE_DOCS, docsEnum.NextDoc()
 						);
 				}
 			}
-			NUnit.Framework.Assert.IsNull(termsEnum.Next());
+			IsNull(termsEnum.Next());
 			for (int i_2 = 0; i_2 < NUM_TERMS; i_2++)
 			{
-				NUnit.Framework.Assert.AreEqual(termsEnum.SeekCeil(new BytesRef(terms[i_2].text2)
+				AreEqual(termsEnum.SeekCeil(new BytesRef(terms[i_2].text2)
 					), TermsEnum.SeekStatus.FOUND);
 			}
-			NUnit.Framework.Assert.IsFalse(fieldsEnum.HasNext());
+			IsFalse(fieldsEnum.HasNext());
 			reader.Close();
 			dir.Close();
 		}
@@ -453,7 +453,7 @@ namespace Lucene.Net.Index
 				PhraseQuery pq = new PhraseQuery();
 				pq.Add(new Term("content", "bbb"));
 				pq.Add(new Term("content", "ccc"));
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
 				customType.SetOmitNorms(true);
@@ -462,20 +462,20 @@ namespace Lucene.Net.Index
 				writer.AddDocument(doc);
 				writer.Commit();
 				ScoreDoc[] results = this.Search(writer, pq, 5);
-				NUnit.Framework.Assert.AreEqual(1, results.Length);
-				NUnit.Framework.Assert.AreEqual(0, results[0].doc);
+				AreEqual(1, results.Length);
+				AreEqual(0, results[0].doc);
 				// add document and force commit for creating a second segment
 				writer.AddDocument(doc);
 				writer.Commit();
 				// at this point, there should be at least two segments
 				results = this.Search(writer, pq, 5);
-				NUnit.Framework.Assert.AreEqual(2, results.Length);
-				NUnit.Framework.Assert.AreEqual(0, results[0].doc);
+				AreEqual(2, results.Length);
+				AreEqual(0, results[0].doc);
 				writer.ForceMerge(1);
 				// optimise to merge the segments.
 				results = this.Search(writer, pq, 5);
-				NUnit.Framework.Assert.AreEqual(2, results.Length);
-				NUnit.Framework.Assert.AreEqual(0, results[0].doc);
+				AreEqual(2, results.Length);
+				AreEqual(0, results[0].doc);
 			}
 			finally
 			{
@@ -538,14 +538,14 @@ namespace Lucene.Net.Index
 				for (int i = 0; i < docs.Length; i++)
 				{
 					int doc = docsEnum.NextDoc();
-					NUnit.Framework.Assert.IsTrue(doc != DocIdSetIterator.NO_MORE_DOCS);
-					NUnit.Framework.Assert.AreEqual(docs[i], doc);
+					IsTrue(doc != DocIdSetIterator.NO_MORE_DOCS);
+					AreEqual(docs[i], doc);
 					if (doPos)
 					{
 						this.VerifyPositions(positions[i], ((DocsAndPositionsEnum)docsEnum));
 					}
 				}
-				NUnit.Framework.Assert.AreEqual(DocIdSetIterator.NO_MORE_DOCS, docsEnum.NextDoc()
+				AreEqual(DocIdSetIterator.NO_MORE_DOCS, docsEnum.NextDoc()
 					);
 			}
 
@@ -558,21 +558,21 @@ namespace Lucene.Net.Index
 				for (int i = 0; i < positions.Length; i++)
 				{
 					int pos = posEnum.NextPosition();
-					NUnit.Framework.Assert.AreEqual(positions[i].pos, pos);
+					AreEqual(positions[i].pos, pos);
 					if (positions[i].payload != null)
 					{
-						NUnit.Framework.Assert.IsNotNull(posEnum.GetPayload());
+						IsNotNull(posEnum.GetPayload());
 						if (LuceneTestCase.Random().Next(3) < 2)
 						{
 							// Verify the payload bytes
 							BytesRef otherPayload = posEnum.GetPayload();
-							NUnit.Framework.Assert.IsTrue("expected=" + positions[i].payload.ToString() + " got="
+							IsTrue("expected=" + positions[i].payload.ToString() + " got="
 								 + otherPayload.ToString(), positions[i].payload.Equals(otherPayload));
 						}
 					}
 					else
 					{
-						NUnit.Framework.Assert.IsNull(posEnum.GetPayload());
+						IsNull(posEnum.GetPayload());
 					}
 				}
 			}
@@ -585,7 +585,7 @@ namespace Lucene.Net.Index
 					TestCodecs.FieldData field = this.fields[LuceneTestCase.Random().Next(this.fields
 						.Length)];
 					TermsEnum termsEnum = this.termsDict.Terms(field.fieldInfo.name).Iterator(null);
-					if (this.si.GetCodec() is Lucene3xCodec)
+					if (this.si.Codec is Lucene3xCodec)
 					{
 						// code below expects unicode sort order
 						continue;
@@ -600,16 +600,16 @@ namespace Lucene.Net.Index
 							break;
 						}
 						BytesRef expected = new BytesRef(field.terms[upto++].text2);
-						NUnit.Framework.Assert.IsTrue("expected=" + expected + " vs actual " + term, expected
+						IsTrue("expected=" + expected + " vs actual " + term, expected
 							.BytesEquals(term));
 					}
-					NUnit.Framework.Assert.AreEqual(upto, field.terms.Length);
+					AreEqual(upto, field.terms.Length);
 					// Test random seek:
 					TestCodecs.TermData term_1 = field.terms[LuceneTestCase.Random().Next(field.terms
 						.Length)];
 					TermsEnum.SeekStatus status = termsEnum.SeekCeil(new BytesRef(term_1.text2));
-					NUnit.Framework.Assert.AreEqual(status, TermsEnum.SeekStatus.FOUND);
-					NUnit.Framework.Assert.AreEqual(term_1.docs.Length, termsEnum.DocFreq());
+					AreEqual(status, TermsEnum.SeekStatus.FOUND);
+					AreEqual(term_1.docs.Length, termsEnum.DocFreq);
 					if (field.omitTF)
 					{
 						this.VerifyDocs(term_1.docs, term_1.positions, TestUtil.Docs(LuceneTestCase.Random
@@ -635,10 +635,10 @@ namespace Lucene.Net.Index
 					// ok -- skip it
 					if (success)
 					{
-						NUnit.Framework.Assert.AreEqual(status, TermsEnum.SeekStatus.FOUND);
-						NUnit.Framework.Assert.IsTrue(termsEnum.Term().BytesEquals(new BytesRef(term_1.text2
+						AreEqual(status, TermsEnum.SeekStatus.FOUND);
+						IsTrue(termsEnum.Term().BytesEquals(new BytesRef(term_1.text2
 							)));
-						NUnit.Framework.Assert.AreEqual(term_1.docs.Length, termsEnum.DocFreq());
+						AreEqual(term_1.docs.Length, termsEnum.DocFreq);
 						if (field.omitTF)
 						{
 							this.VerifyDocs(term_1.docs, term_1.positions, TestUtil.Docs(LuceneTestCase.Random
@@ -659,7 +659,7 @@ namespace Lucene.Net.Index
 					{
 						string text2 = TestUtil.RandomUnicodeString(LuceneTestCase.Random()) + ".";
 						status = termsEnum.SeekCeil(new BytesRef(text2));
-						NUnit.Framework.Assert.IsTrue(status == TermsEnum.SeekStatus.NOT_FOUND || status 
+						IsTrue(status == TermsEnum.SeekStatus.NOT_FOUND || status 
 							== TermsEnum.SeekStatus.END);
 					}
 					// Seek to each term, backwards:
@@ -669,10 +669,10 @@ namespace Lucene.Net.Index
 					}
 					for (int i_1 = field.terms.Length - 1; i_1 >= 0; i_1--)
 					{
-						NUnit.Framework.Assert.AreEqual(Sharpen.Thread.CurrentThread().GetName() + ": field="
+						AreEqual(Sharpen.Thread.CurrentThread().GetName() + ": field="
 							 + field.fieldInfo.name + " term=" + field.terms[i_1].text2, TermsEnum.SeekStatus
 							.FOUND, termsEnum.SeekCeil(new BytesRef(field.terms[i_1].text2)));
-						NUnit.Framework.Assert.AreEqual(field.terms[i_1].docs.Length, termsEnum.DocFreq()
+						AreEqual(field.terms[i_1].docs.Length, termsEnum.DocFreq
 							);
 					}
 					// Seek to each term by ord, backwards
@@ -681,9 +681,9 @@ namespace Lucene.Net.Index
 						try
 						{
 							termsEnum.SeekExact(i_2);
-							NUnit.Framework.Assert.AreEqual(field.terms[i_2].docs.Length, termsEnum.DocFreq()
+							AreEqual(field.terms[i_2].docs.Length, termsEnum.DocFreq
 								);
-							NUnit.Framework.Assert.IsTrue(termsEnum.Term().BytesEquals(new BytesRef(field.terms
+							IsTrue(termsEnum.Term().BytesEquals(new BytesRef(field.terms
 								[i_2].text2)));
 						}
 						catch (NotSupportedException)
@@ -692,10 +692,10 @@ namespace Lucene.Net.Index
 					}
 					// Seek to non-existent empty-string term
 					status = termsEnum.SeekCeil(new BytesRef(string.Empty));
-					NUnit.Framework.Assert.IsNotNull(status);
+					IsNotNull(status);
 					//assertEquals(TermsEnum.SeekStatus.NOT_FOUND, status);
 					// Make sure we're now pointing to first term
-					NUnit.Framework.Assert.IsTrue(termsEnum.Term().BytesEquals(new BytesRef(field.terms
+					IsTrue(termsEnum.Term().BytesEquals(new BytesRef(field.terms
 						[0].text2)));
 					// Test docs enum
 					termsEnum.SeekCeil(new BytesRef(string.Empty));
@@ -728,7 +728,7 @@ namespace Lucene.Net.Index
 								docs = TestUtil.Docs(LuceneTestCase.Random(), termsEnum, null, null, DocsEnum.FLAG_NONE
 									);
 							}
-							NUnit.Framework.Assert.IsNotNull(docs);
+							IsNotNull(docs);
 							int upto2 = -1;
 							bool ended = false;
 							while (upto2 < term_1.docs.Length - 1)
@@ -743,7 +743,7 @@ namespace Lucene.Net.Index
 									if (LuceneTestCase.Random().Next(2) == 1)
 									{
 										doc = docs.Advance(term_1.docs[upto2]);
-										NUnit.Framework.Assert.AreEqual(term_1.docs[upto2], doc);
+										AreEqual(term_1.docs[upto2], doc);
 									}
 									else
 									{
@@ -771,13 +771,13 @@ namespace Lucene.Net.Index
 								else
 								{
 									doc = docs.NextDoc();
-									NUnit.Framework.Assert.IsTrue(doc != -1);
+									IsTrue(doc != -1);
 									upto2++;
 								}
-								NUnit.Framework.Assert.AreEqual(term_1.docs[upto2], doc);
+								AreEqual(term_1.docs[upto2], doc);
 								if (!field.omitTF)
 								{
-									NUnit.Framework.Assert.AreEqual(term_1.positions[upto2].Length, postings.Freq());
+									AreEqual(term_1.positions[upto2].Length, postings.Freq);
 									if (LuceneTestCase.Random().Next(2) == 1)
 									{
 										this.VerifyPositions(term_1.positions[upto2], postings);
@@ -786,13 +786,13 @@ namespace Lucene.Net.Index
 							}
 							if (!ended)
 							{
-								NUnit.Framework.Assert.AreEqual(DocIdSetIterator.NO_MORE_DOCS, docs.NextDoc());
+								AreEqual(DocIdSetIterator.NO_MORE_DOCS, docs.NextDoc());
 							}
 						}
 						upto++;
 					}
 					while (termsEnum.Next() != null);
-					NUnit.Framework.Assert.AreEqual(upto, field.terms.Length);
+					AreEqual(upto, field.terms.Length);
 				}
 			}
 
@@ -838,7 +838,7 @@ namespace Lucene.Net.Index
 			int numDocs = AtLeast(random, 50);
 			for (int i = 0; i < numDocs; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(new StringField("f", "doc", Field.Store.NO));
 				writer.AddDocument(doc);
@@ -851,7 +851,7 @@ namespace Lucene.Net.Index
 				DocsEnum de = ((AtomicReader)ctx.Reader()).TermDocsEnum(term);
 				while (de.NextDoc() != DocIdSetIterator.NO_MORE_DOCS)
 				{
-					NUnit.Framework.Assert.AreEqual("wrong freq for doc " + de.DocID(), 1, de.Freq());
+					AreEqual("wrong freq for doc " + de.DocID, 1, de.Freq);
 				}
 			}
 			reader.Close();
@@ -868,7 +868,7 @@ namespace Lucene.Net.Index
 				(Random()));
 			conf.SetCodec(oldCodecs[Random().Next(oldCodecs.Length)]);
 			IndexWriter writer = new IndexWriter(dir, conf);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new StringField("f", "bar", Field.Store.YES));
 			doc.Add(new NumericDocValuesField("n", 18L));
@@ -877,7 +877,7 @@ namespace Lucene.Net.Index
 			try
 			{
 				writer.Close();
-				NUnit.Framework.Assert.Fail("should not have succeeded to impersonate an old format!"
+				Fail("should not have succeeded to impersonate an old format!"
 					);
 			}
 			catch (NotSupportedException)

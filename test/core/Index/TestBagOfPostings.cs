@@ -7,7 +7,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Codecs.Lucene3x;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
@@ -82,21 +82,21 @@ namespace Lucene.Net.Index
 			}
 			iw.ForceMerge(1);
 			DirectoryReader ir = iw.GetReader();
-			NUnit.Framework.Assert.AreEqual(1, ir.Leaves().Count);
+			AreEqual(1, ir.Leaves().Count);
 			AtomicReader air = ((AtomicReader)ir.Leaves()[0].Reader());
 			Terms terms = air.Terms("field");
 			// numTerms-1 because there cannot be a term 0 with 0 postings:
-			NUnit.Framework.Assert.AreEqual(numTerms - 1, air.Fields().GetUniqueTermCount());
-			if (iwc.GetCodec() is Lucene3xCodec == false)
+			AreEqual(numTerms - 1, air.Fields().GetUniqueTermCount());
+			if (iwc.Codec is Lucene3xCodec == false)
 			{
-				NUnit.Framework.Assert.AreEqual(numTerms - 1, terms.Size());
+				AreEqual(numTerms - 1, terms.Size());
 			}
 			TermsEnum termsEnum = terms.Iterator(null);
 			BytesRef term_1;
 			while ((term_1 = termsEnum.Next()) != null)
 			{
 				int value = System.Convert.ToInt32(term_1.Utf8ToString());
-				NUnit.Framework.Assert.AreEqual(value, termsEnum.DocFreq());
+				AreEqual(value, termsEnum.DocFreq);
 			}
 			// don't really need to check more than this, as CheckIndex
 			// will verify that docFreq == actual number of documents seen
@@ -121,7 +121,7 @@ namespace Lucene.Net.Index
 			{
 				try
 				{
-					Lucene.Net.Document.Document document = new Lucene.Net.Document.Document
+					Lucene.Net.Documents.Document document = new Lucene.Net.Documents.Document
 						();
 					Field field = LuceneTestCase.NewTextField("field", string.Empty, Field.Store.NO);
 					document.Add(field);
@@ -146,7 +146,7 @@ namespace Lucene.Net.Index
 							text.Append(token);
 							visited.AddItem(token);
 						}
-						field.SetStringValue(text.ToString());
+						field.StringValue = text.ToString());
 						iw.AddDocument(document);
 					}
 				}

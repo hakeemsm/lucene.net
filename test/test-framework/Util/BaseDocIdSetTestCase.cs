@@ -5,6 +5,9 @@
  */
 
 using System;
+using System.Collections;
+using Lucene.Net.Search;
+using Lucene.Net.Support;
 using Lucene.Net.TestFramework.Search;
 using Lucene.Net.TestFramework.Util;
 using Sharpen;
@@ -156,11 +159,11 @@ namespace Lucene.Net.TestFramework.Util
 		/// //assert that the content of the
 		/// <see cref="Lucene.NetSearch.DocIdSet">Lucene.NetSearch.DocIdSet</see>
 		/// is the same as the content of the
-		/// <see cref="Sharpen.BitSet">Sharpen.BitSet</see>
+		/// <see cref="BitArray">BitArray</see>
 		/// .
 		/// </summary>
 		/// <exception cref="System.IO.IOException"></exception>
-		public virtual void AssertEquals(int numBits, BitSet ds1, T ds2)
+		public virtual void AssertEquals(int numBits, BitArray ds1, T ds2)
 		{
 			// nextDoc
 			DocIdSetIterator it2 = ds2.Iterator();

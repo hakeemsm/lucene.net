@@ -1,29 +1,13 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using Lucene.NetCodecs;
-using Lucene.NetCodecs.Asserting;
-using Lucene.NetCodecs.Bloom;
-using Lucene.NetCodecs.Diskdv;
-using Lucene.NetCodecs.Lucene41;
-using Lucene.NetCodecs.Lucene41ords;
-using Lucene.NetCodecs.Lucene45;
-using Lucene.NetCodecs.Lucene46;
-using Lucene.NetCodecs.Memory;
-using Lucene.NetCodecs.Mockintblock;
-using Lucene.NetCodecs.Mockrandom;
-using Lucene.NetCodecs.Mocksep;
-using Lucene.NetCodecs.Nestedpulsing;
-using Lucene.NetCodecs.Pulsing;
-using Lucene.NetCodecs.Simpletext;
+using Lucene.Net.Codecs;
+using Lucene.Net.Codecs.Bloom.TestFramework;
+using Lucene.Net.Codecs.Lucene41;
+using Lucene.Net.Codecs.Lucene46;
+using Lucene.Net.Codecs.Mockintblock.TestFramework;
+using Lucene.Net.Codecs.Mocksep;
 using Lucene.Net.TestFramework.Util;
-using Sharpen;
 
 namespace Lucene.Net.TestFramework.Index
 {

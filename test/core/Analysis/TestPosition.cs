@@ -1,28 +1,28 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using Lucene.Net.Analysis;
-using Sharpen;
+using Lucene.Net.TestFramework.Analysis;
 
-namespace Lucene.Net.Analysis
+namespace Lucene.Net.Test.Analysis
 {
 	/// <summary>Trivial position class.</summary>
-	/// <remarks>Trivial position class.</remarks>
-	public class TestPosition : LookaheadTokenFilter.Position
+	
+	public class TestPosition : Position
 	{
 		private string fact;
 
-		public virtual string GetFact()
-		{
-			return fact;
-		}
+	    public TestPosition(TokenStream input) //: base(input)
+	    {
+	    }
 
-		public virtual void SetFact(string fact)
-		{
-			this.fact = fact;
-		}
+	    public string Fact { get; set; }
+
+        //public override bool IncrementToken()
+        //{
+        //    throw new System.NotImplementedException();
+        //}
+
+        //protected override Position NewPosition()
+        //{
+        //    throw new System.NotImplementedException();
+        //}
 	}
 }

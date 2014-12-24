@@ -4,7 +4,7 @@
  * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
@@ -80,17 +80,17 @@ namespace Lucene.Net.Index
 				}
 				IndexWriter iw = new IndexWriter(rd1, NewIndexWriterConfig(TEST_VERSION_CURRENT, 
 					new MockAnalyzer(Random())));
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				Field idField = NewTextField("id", string.Empty, Field.Store.NO);
 				doc.Add(idField);
 				FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
-				customType.SetStoreTermVectors(true);
+				customType.StoreTermVectors = true;
 				doc.Add(NewField("test", string.Empty, customType));
-				idField.SetStringValue("1");
+				idField.StringValue = "1");
 				iw.AddDocument(doc);
 				doc.Add(NewTextField("test", string.Empty, Field.Store.NO));
-				idField.SetStringValue("2");
+				idField.StringValue = "2");
 				iw.AddDocument(doc);
 				iw.Close();
 				IndexWriterConfig dontMergeConfig = new IndexWriterConfig(TEST_VERSION_CURRENT, new 
@@ -103,8 +103,8 @@ namespace Lucene.Net.Index
 				writer.DeleteDocuments(new Term("id", "1"));
 				writer.Close();
 				IndexReader ir = DirectoryReader.Open(rd1);
-				NUnit.Framework.Assert.AreEqual(2, ir.MaxDoc());
-				NUnit.Framework.Assert.AreEqual(1, ir.NumDocs());
+				AreEqual(2, ir.MaxDoc);
+				AreEqual(1, ir.NumDocs());
 				ir.Close();
 				iw = new IndexWriter(rd1, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 					(Random())).SetOpenMode(IndexWriterConfig.OpenMode.APPEND));
@@ -115,7 +115,7 @@ namespace Lucene.Net.Index
 			{
 				IndexWriter iw = new IndexWriter(rd2, NewIndexWriterConfig(TEST_VERSION_CURRENT, 
 					new MockAnalyzer(Random())));
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				iw.AddDocument(doc);
 				iw.Close();
@@ -135,8 +135,8 @@ namespace Lucene.Net.Index
 			// 
 			//HM:revisit 
 			//assert subreaders were closed
-			NUnit.Framework.Assert.AreEqual(0, reader1.GetRefCount());
-			NUnit.Framework.Assert.AreEqual(0, reader2.GetRefCount());
+			AreEqual(0, reader1.GetRefCount());
+			AreEqual(0, reader2.GetRefCount());
 			rd1.Close();
 			rd2.Close();
 			iwOut.ForceMerge(1);

@@ -7,7 +7,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -25,11 +25,11 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewStringField("value", "foo", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "bar", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
@@ -37,11 +37,11 @@ namespace Lucene.Net.Search
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.STRING));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
-			NUnit.Framework.Assert.AreEqual(2, td.totalHits);
+			AreEqual(2, td.TotalHits);
 			// 'bar' comes before 'foo'
-			NUnit.Framework.Assert.AreEqual("bar", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("bar", searcher.Doc(td.scoreDocs[0].doc).Get("value"
 				));
-			NUnit.Framework.Assert.AreEqual("foo", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+			AreEqual("foo", searcher.Doc(td.scoreDocs[1].doc).Get("value"
 				));
 			ir.Close();
 			dir.Close();
@@ -53,13 +53,13 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "foo", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "bar", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
@@ -67,12 +67,12 @@ namespace Lucene.Net.Search
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.STRING));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
-			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			AreEqual(3, td.TotalHits);
 			// null comes first
-			NUnit.Framework.Assert.IsNull(searcher.Doc(td.scoreDocs[0].doc).Get("value"));
-			NUnit.Framework.Assert.AreEqual("bar", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+			IsNull(searcher.Doc(td.scoreDocs[0].doc).Get("value"));
+			AreEqual("bar", searcher.Doc(td.scoreDocs[1].doc).Get("value"
 				));
-			NUnit.Framework.Assert.AreEqual("foo", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+			AreEqual("foo", searcher.Doc(td.scoreDocs[2].doc).Get("value"
 				));
 			ir.Close();
 			dir.Close();
@@ -84,11 +84,11 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewStringField("value", "bar", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "foo", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
@@ -96,11 +96,11 @@ namespace Lucene.Net.Search
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.STRING, true));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
-			NUnit.Framework.Assert.AreEqual(2, td.totalHits);
+			AreEqual(2, td.TotalHits);
 			// 'foo' comes after 'bar' in reverse order
-			NUnit.Framework.Assert.AreEqual("foo", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("foo", searcher.Doc(td.scoreDocs[0].doc).Get("value"
 				));
-			NUnit.Framework.Assert.AreEqual("bar", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+			AreEqual("bar", searcher.Doc(td.scoreDocs[1].doc).Get("value"
 				));
 			ir.Close();
 			dir.Close();
@@ -112,11 +112,11 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewStringField("value", "foo", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "bar", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
@@ -124,11 +124,11 @@ namespace Lucene.Net.Search
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.STRING_VAL));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
-			NUnit.Framework.Assert.AreEqual(2, td.totalHits);
+			AreEqual(2, td.TotalHits);
 			// 'bar' comes before 'foo'
-			NUnit.Framework.Assert.AreEqual("bar", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("bar", searcher.Doc(td.scoreDocs[0].doc).Get("value"
 				));
-			NUnit.Framework.Assert.AreEqual("foo", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+			AreEqual("foo", searcher.Doc(td.scoreDocs[1].doc).Get("value"
 				));
 			ir.Close();
 			dir.Close();
@@ -140,13 +140,13 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "foo", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "bar", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
@@ -154,12 +154,12 @@ namespace Lucene.Net.Search
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.STRING_VAL));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
-			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			AreEqual(3, td.TotalHits);
 			// null comes first
-			NUnit.Framework.Assert.IsNull(searcher.Doc(td.scoreDocs[0].doc).Get("value"));
-			NUnit.Framework.Assert.AreEqual("bar", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+			IsNull(searcher.Doc(td.scoreDocs[0].doc).Get("value"));
+			AreEqual("bar", searcher.Doc(td.scoreDocs[1].doc).Get("value"
 				));
-			NUnit.Framework.Assert.AreEqual("foo", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+			AreEqual("foo", searcher.Doc(td.scoreDocs[2].doc).Get("value"
 				));
 			ir.Close();
 			dir.Close();
@@ -174,13 +174,13 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "foo", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "bar", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
@@ -189,12 +189,12 @@ namespace Lucene.Net.Search
 			SortField sf = new SortField("value", SortField.Type.STRING);
 			Sort sort = new Sort(sf);
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
-			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			AreEqual(3, td.TotalHits);
 			// null comes first
-			NUnit.Framework.Assert.IsNull(searcher.Doc(td.scoreDocs[0].doc).Get("value"));
-			NUnit.Framework.Assert.AreEqual("bar", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+			IsNull(searcher.Doc(td.scoreDocs[0].doc).Get("value"));
+			AreEqual("bar", searcher.Doc(td.scoreDocs[1].doc).Get("value"
 				));
-			NUnit.Framework.Assert.AreEqual("foo", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+			AreEqual("foo", searcher.Doc(td.scoreDocs[2].doc).Get("value"
 				));
 			ir.Close();
 			dir.Close();
@@ -209,13 +209,13 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "foo", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "bar", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
@@ -224,13 +224,13 @@ namespace Lucene.Net.Search
 			SortField sf = new SortField("value", SortField.Type.STRING, true);
 			Sort sort = new Sort(sf);
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
-			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
-			NUnit.Framework.Assert.AreEqual("foo", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual(3, td.TotalHits);
+			AreEqual("foo", searcher.Doc(td.scoreDocs[0].doc).Get("value"
 				));
-			NUnit.Framework.Assert.AreEqual("bar", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+			AreEqual("bar", searcher.Doc(td.scoreDocs[1].doc).Get("value"
 				));
 			// null comes last
-			NUnit.Framework.Assert.IsNull(searcher.Doc(td.scoreDocs[2].doc).Get("value"));
+			IsNull(searcher.Doc(td.scoreDocs[2].doc).Get("value"));
 			ir.Close();
 			dir.Close();
 		}
@@ -244,13 +244,13 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "foo", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "bar", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
@@ -260,13 +260,13 @@ namespace Lucene.Net.Search
 			sf.SetMissingValue(SortField.STRING_LAST);
 			Sort sort = new Sort(sf);
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
-			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
-			NUnit.Framework.Assert.AreEqual("bar", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual(3, td.TotalHits);
+			AreEqual("bar", searcher.Doc(td.scoreDocs[0].doc).Get("value"
 				));
-			NUnit.Framework.Assert.AreEqual("foo", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+			AreEqual("foo", searcher.Doc(td.scoreDocs[1].doc).Get("value"
 				));
 			// null comes last
-			NUnit.Framework.Assert.IsNull(searcher.Doc(td.scoreDocs[2].doc).Get("value"));
+			IsNull(searcher.Doc(td.scoreDocs[2].doc).Get("value"));
 			ir.Close();
 			dir.Close();
 		}
@@ -280,13 +280,13 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "foo", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "bar", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
@@ -296,12 +296,12 @@ namespace Lucene.Net.Search
 			sf.SetMissingValue(SortField.STRING_LAST);
 			Sort sort = new Sort(sf);
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
-			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			AreEqual(3, td.TotalHits);
 			// null comes first
-			NUnit.Framework.Assert.IsNull(searcher.Doc(td.scoreDocs[0].doc).Get("value"));
-			NUnit.Framework.Assert.AreEqual("foo", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+			IsNull(searcher.Doc(td.scoreDocs[0].doc).Get("value"));
+			AreEqual("foo", searcher.Doc(td.scoreDocs[1].doc).Get("value"
 				));
-			NUnit.Framework.Assert.AreEqual("bar", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+			AreEqual("bar", searcher.Doc(td.scoreDocs[2].doc).Get("value"
 				));
 			ir.Close();
 			dir.Close();
@@ -313,11 +313,11 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewStringField("value", "bar", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "foo", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
@@ -325,11 +325,11 @@ namespace Lucene.Net.Search
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.STRING_VAL, true));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
-			NUnit.Framework.Assert.AreEqual(2, td.totalHits);
+			AreEqual(2, td.TotalHits);
 			// 'foo' comes after 'bar' in reverse order
-			NUnit.Framework.Assert.AreEqual("foo", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("foo", searcher.Doc(td.scoreDocs[0].doc).Get("value"
 				));
-			NUnit.Framework.Assert.AreEqual("bar", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+			AreEqual("bar", searcher.Doc(td.scoreDocs[1].doc).Get("value"
 				));
 			ir.Close();
 			dir.Close();
@@ -341,11 +341,11 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewStringField("value", "foo", Field.Store.NO));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "bar", Field.Store.NO));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
@@ -353,10 +353,10 @@ namespace Lucene.Net.Search
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(SortField.FIELD_DOC);
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
-			NUnit.Framework.Assert.AreEqual(2, td.totalHits);
+			AreEqual(2, td.TotalHits);
 			// docid 0, then docid 1
-			NUnit.Framework.Assert.AreEqual(0, td.scoreDocs[0].doc);
-			NUnit.Framework.Assert.AreEqual(1, td.scoreDocs[1].doc);
+			AreEqual(0, td.scoreDocs[0].doc);
+			AreEqual(1, td.scoreDocs[1].doc);
 			ir.Close();
 			dir.Close();
 		}
@@ -367,11 +367,11 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewStringField("value", "foo", Field.Store.NO));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "bar", Field.Store.NO));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
@@ -379,10 +379,10 @@ namespace Lucene.Net.Search
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField(null, SortField.Type.DOC, true));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
-			NUnit.Framework.Assert.AreEqual(2, td.totalHits);
+			AreEqual(2, td.TotalHits);
 			// docid 1, then docid 0
-			NUnit.Framework.Assert.AreEqual(1, td.scoreDocs[0].doc);
-			NUnit.Framework.Assert.AreEqual(0, td.scoreDocs[1].doc);
+			AreEqual(1, td.scoreDocs[0].doc);
+			AreEqual(0, td.scoreDocs[1].doc);
 			ir.Close();
 			dir.Close();
 		}
@@ -393,11 +393,11 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewTextField("value", "foo bar bar bar bar", Field.Store.NO));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewTextField("value", "foo foo foo foo foo", Field.Store.NO));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
@@ -406,13 +406,13 @@ namespace Lucene.Net.Search
 			Sort sort = new Sort();
 			TopDocs actual = searcher.Search(new TermQuery(new Term("value", "foo")), 10, sort
 				);
-			NUnit.Framework.Assert.AreEqual(2, actual.totalHits);
+			AreEqual(2, actual.TotalHits);
 			TopDocs expected = searcher.Search(new TermQuery(new Term("value", "foo")), 10);
 			// the two topdocs should be the same
-			NUnit.Framework.Assert.AreEqual(expected.totalHits, actual.totalHits);
+			AreEqual(expected.TotalHits, actual.TotalHits);
 			for (int i = 0; i < actual.scoreDocs.Length; i++)
 			{
-				NUnit.Framework.Assert.AreEqual(actual.scoreDocs[i].doc, expected.scoreDocs[i].doc
+				AreEqual(actual.scoreDocs[i].doc, expected.scoreDocs[i].doc
 					);
 			}
 			ir.Close();
@@ -425,11 +425,11 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewTextField("value", "foo bar bar bar bar", Field.Store.NO));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewTextField("value", "foo foo foo foo foo", Field.Store.NO));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
@@ -438,13 +438,13 @@ namespace Lucene.Net.Search
 			Sort sort = new Sort(new SortField(null, SortField.Type.SCORE, true));
 			TopDocs actual = searcher.Search(new TermQuery(new Term("value", "foo")), 10, sort
 				);
-			NUnit.Framework.Assert.AreEqual(2, actual.totalHits);
+			AreEqual(2, actual.TotalHits);
 			TopDocs expected = searcher.Search(new TermQuery(new Term("value", "foo")), 10);
 			// the two topdocs should be the reverse of each other
-			NUnit.Framework.Assert.AreEqual(expected.totalHits, actual.totalHits);
-			NUnit.Framework.Assert.AreEqual(actual.scoreDocs[0].doc, expected.scoreDocs[1].doc
+			AreEqual(expected.TotalHits, actual.TotalHits);
+			AreEqual(actual.scoreDocs[0].doc, expected.scoreDocs[1].doc
 				);
-			NUnit.Framework.Assert.AreEqual(actual.scoreDocs[1].doc, expected.scoreDocs[0].doc
+			AreEqual(actual.scoreDocs[1].doc, expected.scoreDocs[0].doc
 				);
 			ir.Close();
 			dir.Close();
@@ -456,14 +456,14 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewStringField("value", "23", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "-1", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
@@ -471,13 +471,13 @@ namespace Lucene.Net.Search
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.BYTE));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
-			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			AreEqual(3, td.TotalHits);
 			// numeric order
-			NUnit.Framework.Assert.AreEqual("-1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("-1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
 				));
-			NUnit.Framework.Assert.AreEqual("4", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+			AreEqual("4", searcher.Doc(td.scoreDocs[1].doc).Get("value"
 				));
-			NUnit.Framework.Assert.AreEqual("23", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+			AreEqual("23", searcher.Doc(td.scoreDocs[2].doc).Get("value"
 				));
 			ir.Close();
 			dir.Close();
@@ -489,13 +489,13 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "-1", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
@@ -503,12 +503,12 @@ namespace Lucene.Net.Search
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.BYTE));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
-			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			AreEqual(3, td.TotalHits);
 			// null value is treated as a 0
-			NUnit.Framework.Assert.AreEqual("-1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("-1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
 				));
-			NUnit.Framework.Assert.IsNull(searcher.Doc(td.scoreDocs[1].doc).Get("value"));
-			NUnit.Framework.Assert.AreEqual("4", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+			IsNull(searcher.Doc(td.scoreDocs[1].doc).Get("value"));
+			AreEqual("4", searcher.Doc(td.scoreDocs[2].doc).Get("value"
 				));
 			ir.Close();
 			dir.Close();
@@ -521,13 +521,13 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "-1", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
@@ -537,13 +537,13 @@ namespace Lucene.Net.Search
 			sortField.SetMissingValue(byte.MaxValue);
 			Sort sort = new Sort(sortField);
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
-			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			AreEqual(3, td.TotalHits);
 			// null value is treated Byte.MAX_VALUE
-			NUnit.Framework.Assert.AreEqual("-1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("-1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
 				));
-			NUnit.Framework.Assert.AreEqual("4", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+			AreEqual("4", searcher.Doc(td.scoreDocs[1].doc).Get("value"
 				));
-			NUnit.Framework.Assert.IsNull(searcher.Doc(td.scoreDocs[2].doc).Get("value"));
+			IsNull(searcher.Doc(td.scoreDocs[2].doc).Get("value"));
 			ir.Close();
 			dir.Close();
 		}
@@ -554,14 +554,14 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewStringField("value", "23", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "-1", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
@@ -569,13 +569,13 @@ namespace Lucene.Net.Search
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.BYTE, true));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
-			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			AreEqual(3, td.TotalHits);
 			// reverse numeric order
-			NUnit.Framework.Assert.AreEqual("23", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("23", searcher.Doc(td.scoreDocs[0].doc).Get("value"
 				));
-			NUnit.Framework.Assert.AreEqual("4", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+			AreEqual("4", searcher.Doc(td.scoreDocs[1].doc).Get("value"
 				));
-			NUnit.Framework.Assert.AreEqual("-1", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+			AreEqual("-1", searcher.Doc(td.scoreDocs[2].doc).Get("value"
 				));
 			ir.Close();
 			dir.Close();
@@ -587,14 +587,14 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewStringField("value", "300", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "-1", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
@@ -602,13 +602,13 @@ namespace Lucene.Net.Search
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.SHORT));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
-			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			AreEqual(3, td.TotalHits);
 			// numeric order
-			NUnit.Framework.Assert.AreEqual("-1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("-1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
 				));
-			NUnit.Framework.Assert.AreEqual("4", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+			AreEqual("4", searcher.Doc(td.scoreDocs[1].doc).Get("value"
 				));
-			NUnit.Framework.Assert.AreEqual("300", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+			AreEqual("300", searcher.Doc(td.scoreDocs[2].doc).Get("value"
 				));
 			ir.Close();
 			dir.Close();
@@ -620,13 +620,13 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "-1", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
@@ -634,12 +634,12 @@ namespace Lucene.Net.Search
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.SHORT));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
-			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			AreEqual(3, td.TotalHits);
 			// null is treated as a 0
-			NUnit.Framework.Assert.AreEqual("-1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("-1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
 				));
-			NUnit.Framework.Assert.IsNull(searcher.Doc(td.scoreDocs[1].doc).Get("value"));
-			NUnit.Framework.Assert.AreEqual("4", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+			IsNull(searcher.Doc(td.scoreDocs[1].doc).Get("value"));
+			AreEqual("4", searcher.Doc(td.scoreDocs[2].doc).Get("value"
 				));
 			ir.Close();
 			dir.Close();
@@ -652,13 +652,13 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "-1", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
@@ -668,13 +668,13 @@ namespace Lucene.Net.Search
 			sortField.SetMissingValue(short.MaxValue);
 			Sort sort = new Sort(sortField);
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
-			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			AreEqual(3, td.TotalHits);
 			// null is treated as Short.MAX_VALUE
-			NUnit.Framework.Assert.AreEqual("-1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("-1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
 				));
-			NUnit.Framework.Assert.AreEqual("4", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+			AreEqual("4", searcher.Doc(td.scoreDocs[1].doc).Get("value"
 				));
-			NUnit.Framework.Assert.IsNull(searcher.Doc(td.scoreDocs[2].doc).Get("value"));
+			IsNull(searcher.Doc(td.scoreDocs[2].doc).Get("value"));
 			ir.Close();
 			dir.Close();
 		}
@@ -685,14 +685,14 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewStringField("value", "300", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "-1", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
@@ -700,13 +700,13 @@ namespace Lucene.Net.Search
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.SHORT, true));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
-			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			AreEqual(3, td.TotalHits);
 			// reverse numeric order
-			NUnit.Framework.Assert.AreEqual("300", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("300", searcher.Doc(td.scoreDocs[0].doc).Get("value"
 				));
-			NUnit.Framework.Assert.AreEqual("4", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+			AreEqual("4", searcher.Doc(td.scoreDocs[1].doc).Get("value"
 				));
-			NUnit.Framework.Assert.AreEqual("-1", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+			AreEqual("-1", searcher.Doc(td.scoreDocs[2].doc).Get("value"
 				));
 			ir.Close();
 			dir.Close();
@@ -718,14 +718,14 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewStringField("value", "300000", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "-1", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
@@ -733,13 +733,13 @@ namespace Lucene.Net.Search
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.INT));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
-			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			AreEqual(3, td.TotalHits);
 			// numeric order
-			NUnit.Framework.Assert.AreEqual("-1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("-1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
 				));
-			NUnit.Framework.Assert.AreEqual("4", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+			AreEqual("4", searcher.Doc(td.scoreDocs[1].doc).Get("value"
 				));
-			NUnit.Framework.Assert.AreEqual("300000", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+			AreEqual("300000", searcher.Doc(td.scoreDocs[2].doc).Get("value"
 				));
 			ir.Close();
 			dir.Close();
@@ -751,13 +751,13 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "-1", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
@@ -765,12 +765,12 @@ namespace Lucene.Net.Search
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.INT));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
-			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			AreEqual(3, td.TotalHits);
 			// null is treated as a 0
-			NUnit.Framework.Assert.AreEqual("-1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("-1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
 				));
-			NUnit.Framework.Assert.IsNull(searcher.Doc(td.scoreDocs[1].doc).Get("value"));
-			NUnit.Framework.Assert.AreEqual("4", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+			IsNull(searcher.Doc(td.scoreDocs[1].doc).Get("value"));
+			AreEqual("4", searcher.Doc(td.scoreDocs[2].doc).Get("value"
 				));
 			ir.Close();
 			dir.Close();
@@ -783,13 +783,13 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "-1", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
@@ -799,13 +799,13 @@ namespace Lucene.Net.Search
 			sortField.SetMissingValue(int.MaxValue);
 			Sort sort = new Sort(sortField);
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
-			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			AreEqual(3, td.TotalHits);
 			// null is treated as a Integer.MAX_VALUE
-			NUnit.Framework.Assert.AreEqual("-1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("-1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
 				));
-			NUnit.Framework.Assert.AreEqual("4", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+			AreEqual("4", searcher.Doc(td.scoreDocs[1].doc).Get("value"
 				));
-			NUnit.Framework.Assert.IsNull(searcher.Doc(td.scoreDocs[2].doc).Get("value"));
+			IsNull(searcher.Doc(td.scoreDocs[2].doc).Get("value"));
 			ir.Close();
 			dir.Close();
 		}
@@ -816,14 +816,14 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewStringField("value", "300000", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "-1", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
@@ -831,13 +831,13 @@ namespace Lucene.Net.Search
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.INT, true));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
-			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			AreEqual(3, td.TotalHits);
 			// reverse numeric order
-			NUnit.Framework.Assert.AreEqual("300000", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("300000", searcher.Doc(td.scoreDocs[0].doc).Get("value"
 				));
-			NUnit.Framework.Assert.AreEqual("4", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+			AreEqual("4", searcher.Doc(td.scoreDocs[1].doc).Get("value"
 				));
-			NUnit.Framework.Assert.AreEqual("-1", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+			AreEqual("-1", searcher.Doc(td.scoreDocs[2].doc).Get("value"
 				));
 			ir.Close();
 			dir.Close();
@@ -849,14 +849,14 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewStringField("value", "3000000000", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "-1", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
@@ -864,13 +864,13 @@ namespace Lucene.Net.Search
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.LONG));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
-			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			AreEqual(3, td.TotalHits);
 			// numeric order
-			NUnit.Framework.Assert.AreEqual("-1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("-1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
 				));
-			NUnit.Framework.Assert.AreEqual("4", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+			AreEqual("4", searcher.Doc(td.scoreDocs[1].doc).Get("value"
 				));
-			NUnit.Framework.Assert.AreEqual("3000000000", searcher.Doc(td.scoreDocs[2].doc).Get
+			AreEqual("3000000000", searcher.Doc(td.scoreDocs[2].doc).Get
 				("value"));
 			ir.Close();
 			dir.Close();
@@ -882,13 +882,13 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "-1", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
@@ -896,12 +896,12 @@ namespace Lucene.Net.Search
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.LONG));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
-			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			AreEqual(3, td.TotalHits);
 			// null is treated as 0
-			NUnit.Framework.Assert.AreEqual("-1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("-1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
 				));
-			NUnit.Framework.Assert.IsNull(searcher.Doc(td.scoreDocs[1].doc).Get("value"));
-			NUnit.Framework.Assert.AreEqual("4", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+			IsNull(searcher.Doc(td.scoreDocs[1].doc).Get("value"));
+			AreEqual("4", searcher.Doc(td.scoreDocs[2].doc).Get("value"
 				));
 			ir.Close();
 			dir.Close();
@@ -914,13 +914,13 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "-1", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
@@ -930,13 +930,13 @@ namespace Lucene.Net.Search
 			sortField.SetMissingValue(long.MaxValue);
 			Sort sort = new Sort(sortField);
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
-			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			AreEqual(3, td.TotalHits);
 			// null is treated as Long.MAX_VALUE
-			NUnit.Framework.Assert.AreEqual("-1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("-1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
 				));
-			NUnit.Framework.Assert.AreEqual("4", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+			AreEqual("4", searcher.Doc(td.scoreDocs[1].doc).Get("value"
 				));
-			NUnit.Framework.Assert.IsNull(searcher.Doc(td.scoreDocs[2].doc).Get("value"));
+			IsNull(searcher.Doc(td.scoreDocs[2].doc).Get("value"));
 			ir.Close();
 			dir.Close();
 		}
@@ -947,14 +947,14 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewStringField("value", "3000000000", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "-1", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
@@ -962,13 +962,13 @@ namespace Lucene.Net.Search
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.LONG, true));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
-			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			AreEqual(3, td.TotalHits);
 			// reverse numeric order
-			NUnit.Framework.Assert.AreEqual("3000000000", searcher.Doc(td.scoreDocs[0].doc).Get
+			AreEqual("3000000000", searcher.Doc(td.scoreDocs[0].doc).Get
 				("value"));
-			NUnit.Framework.Assert.AreEqual("4", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+			AreEqual("4", searcher.Doc(td.scoreDocs[1].doc).Get("value"
 				));
-			NUnit.Framework.Assert.AreEqual("-1", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+			AreEqual("-1", searcher.Doc(td.scoreDocs[2].doc).Get("value"
 				));
 			ir.Close();
 			dir.Close();
@@ -980,14 +980,14 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewStringField("value", "30.1", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "-1.3", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4.2", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
@@ -995,13 +995,13 @@ namespace Lucene.Net.Search
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.FLOAT));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
-			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			AreEqual(3, td.TotalHits);
 			// numeric order
-			NUnit.Framework.Assert.AreEqual("-1.3", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("-1.3", searcher.Doc(td.scoreDocs[0].doc).Get("value"
 				));
-			NUnit.Framework.Assert.AreEqual("4.2", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+			AreEqual("4.2", searcher.Doc(td.scoreDocs[1].doc).Get("value"
 				));
-			NUnit.Framework.Assert.AreEqual("30.1", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+			AreEqual("30.1", searcher.Doc(td.scoreDocs[2].doc).Get("value"
 				));
 			ir.Close();
 			dir.Close();
@@ -1013,13 +1013,13 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "-1.3", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4.2", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
@@ -1027,12 +1027,12 @@ namespace Lucene.Net.Search
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.FLOAT));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
-			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			AreEqual(3, td.TotalHits);
 			// null is treated as 0
-			NUnit.Framework.Assert.AreEqual("-1.3", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("-1.3", searcher.Doc(td.scoreDocs[0].doc).Get("value"
 				));
-			NUnit.Framework.Assert.IsNull(searcher.Doc(td.scoreDocs[1].doc).Get("value"));
-			NUnit.Framework.Assert.AreEqual("4.2", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+			IsNull(searcher.Doc(td.scoreDocs[1].doc).Get("value"));
+			AreEqual("4.2", searcher.Doc(td.scoreDocs[2].doc).Get("value"
 				));
 			ir.Close();
 			dir.Close();
@@ -1045,13 +1045,13 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "-1.3", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4.2", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
@@ -1061,13 +1061,13 @@ namespace Lucene.Net.Search
 			sortField.SetMissingValue(float.MaxValue);
 			Sort sort = new Sort(sortField);
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
-			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			AreEqual(3, td.TotalHits);
 			// null is treated as Float.MAX_VALUE
-			NUnit.Framework.Assert.AreEqual("-1.3", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("-1.3", searcher.Doc(td.scoreDocs[0].doc).Get("value"
 				));
-			NUnit.Framework.Assert.AreEqual("4.2", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+			AreEqual("4.2", searcher.Doc(td.scoreDocs[1].doc).Get("value"
 				));
-			NUnit.Framework.Assert.IsNull(searcher.Doc(td.scoreDocs[2].doc).Get("value"));
+			IsNull(searcher.Doc(td.scoreDocs[2].doc).Get("value"));
 			ir.Close();
 			dir.Close();
 		}
@@ -1078,14 +1078,14 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewStringField("value", "30.1", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "-1.3", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4.2", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
@@ -1093,13 +1093,13 @@ namespace Lucene.Net.Search
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.FLOAT, true));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
-			NUnit.Framework.Assert.AreEqual(3, td.totalHits);
+			AreEqual(3, td.TotalHits);
 			// reverse numeric order
-			NUnit.Framework.Assert.AreEqual("30.1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("30.1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
 				));
-			NUnit.Framework.Assert.AreEqual("4.2", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+			AreEqual("4.2", searcher.Doc(td.scoreDocs[1].doc).Get("value"
 				));
-			NUnit.Framework.Assert.AreEqual("-1.3", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+			AreEqual("-1.3", searcher.Doc(td.scoreDocs[2].doc).Get("value"
 				));
 			ir.Close();
 			dir.Close();
@@ -1111,17 +1111,17 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewStringField("value", "30.1", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "-1.3", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4.2333333333333", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4.2333333333332", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
@@ -1129,15 +1129,15 @@ namespace Lucene.Net.Search
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.DOUBLE));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
-			NUnit.Framework.Assert.AreEqual(4, td.totalHits);
+			AreEqual(4, td.TotalHits);
 			// numeric order
-			NUnit.Framework.Assert.AreEqual("-1.3", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("-1.3", searcher.Doc(td.scoreDocs[0].doc).Get("value"
 				));
-			NUnit.Framework.Assert.AreEqual("4.2333333333332", searcher.Doc(td.scoreDocs[1].doc
+			AreEqual("4.2333333333332", searcher.Doc(td.scoreDocs[1].doc
 				).Get("value"));
-			NUnit.Framework.Assert.AreEqual("4.2333333333333", searcher.Doc(td.scoreDocs[2].doc
+			AreEqual("4.2333333333333", searcher.Doc(td.scoreDocs[2].doc
 				).Get("value"));
-			NUnit.Framework.Assert.AreEqual("30.1", searcher.Doc(td.scoreDocs[3].doc).Get("value"
+			AreEqual("30.1", searcher.Doc(td.scoreDocs[3].doc).Get("value"
 				));
 			ir.Close();
 			dir.Close();
@@ -1149,24 +1149,24 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewStringField("value", "+0", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "-0", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			IndexReader ir = writer.GetReader();
 			writer.Close();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.DOUBLE));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
-			NUnit.Framework.Assert.AreEqual(2, td.totalHits);
+			AreEqual(2, td.TotalHits);
 			// numeric order
-			NUnit.Framework.Assert.AreEqual("-0", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("-0", searcher.Doc(td.scoreDocs[0].doc).Get("value"
 				));
-			NUnit.Framework.Assert.AreEqual("+0", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+			AreEqual("+0", searcher.Doc(td.scoreDocs[1].doc).Get("value"
 				));
 			ir.Close();
 			dir.Close();
@@ -1178,16 +1178,16 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "-1.3", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4.2333333333333", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4.2333333333332", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
@@ -1195,14 +1195,14 @@ namespace Lucene.Net.Search
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.DOUBLE));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
-			NUnit.Framework.Assert.AreEqual(4, td.totalHits);
+			AreEqual(4, td.TotalHits);
 			// null treated as a 0
-			NUnit.Framework.Assert.AreEqual("-1.3", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("-1.3", searcher.Doc(td.scoreDocs[0].doc).Get("value"
 				));
-			NUnit.Framework.Assert.IsNull(searcher.Doc(td.scoreDocs[1].doc).Get("value"));
-			NUnit.Framework.Assert.AreEqual("4.2333333333332", searcher.Doc(td.scoreDocs[2].doc
+			IsNull(searcher.Doc(td.scoreDocs[1].doc).Get("value"));
+			AreEqual("4.2333333333332", searcher.Doc(td.scoreDocs[2].doc
 				).Get("value"));
-			NUnit.Framework.Assert.AreEqual("4.2333333333333", searcher.Doc(td.scoreDocs[3].doc
+			AreEqual("4.2333333333333", searcher.Doc(td.scoreDocs[3].doc
 				).Get("value"));
 			ir.Close();
 			dir.Close();
@@ -1215,16 +1215,16 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "-1.3", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4.2333333333333", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4.2333333333332", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
@@ -1234,15 +1234,15 @@ namespace Lucene.Net.Search
 			sortField.SetMissingValue(double.MaxValue);
 			Sort sort = new Sort(sortField);
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
-			NUnit.Framework.Assert.AreEqual(4, td.totalHits);
+			AreEqual(4, td.TotalHits);
 			// null treated as Double.MAX_VALUE
-			NUnit.Framework.Assert.AreEqual("-1.3", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("-1.3", searcher.Doc(td.scoreDocs[0].doc).Get("value"
 				));
-			NUnit.Framework.Assert.AreEqual("4.2333333333332", searcher.Doc(td.scoreDocs[1].doc
+			AreEqual("4.2333333333332", searcher.Doc(td.scoreDocs[1].doc
 				).Get("value"));
-			NUnit.Framework.Assert.AreEqual("4.2333333333333", searcher.Doc(td.scoreDocs[2].doc
+			AreEqual("4.2333333333333", searcher.Doc(td.scoreDocs[2].doc
 				).Get("value"));
-			NUnit.Framework.Assert.IsNull(searcher.Doc(td.scoreDocs[3].doc).Get("value"));
+			IsNull(searcher.Doc(td.scoreDocs[3].doc).Get("value"));
 			ir.Close();
 			dir.Close();
 		}
@@ -1253,17 +1253,17 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewStringField("value", "30.1", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "-1.3", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4.2333333333333", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4.2333333333332", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
@@ -1271,15 +1271,15 @@ namespace Lucene.Net.Search
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.DOUBLE, true));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
-			NUnit.Framework.Assert.AreEqual(4, td.totalHits);
+			AreEqual(4, td.TotalHits);
 			// numeric order
-			NUnit.Framework.Assert.AreEqual("30.1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("30.1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
 				));
-			NUnit.Framework.Assert.AreEqual("4.2333333333333", searcher.Doc(td.scoreDocs[1].doc
+			AreEqual("4.2333333333333", searcher.Doc(td.scoreDocs[1].doc
 				).Get("value"));
-			NUnit.Framework.Assert.AreEqual("4.2333333333332", searcher.Doc(td.scoreDocs[2].doc
+			AreEqual("4.2333333333332", searcher.Doc(td.scoreDocs[2].doc
 				).Get("value"));
-			NUnit.Framework.Assert.AreEqual("-1.3", searcher.Doc(td.scoreDocs[3].doc).Get("value"
+			AreEqual("-1.3", searcher.Doc(td.scoreDocs[3].doc).Get("value"
 				));
 			ir.Close();
 			dir.Close();
@@ -1291,13 +1291,13 @@ namespace Lucene.Net.Search
 			Directory dir = NewDirectory();
 			IndexWriter w = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new 
 				MockAnalyzer(Random())));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewStringField("f", string.Empty, Field.Store.NO));
 			doc.Add(NewStringField("t", "1", Field.Store.NO));
 			w.AddDocument(doc);
 			w.Commit();
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("t", "1", Field.Store.NO));
 			w.AddDocument(doc);
 			IndexReader r = DirectoryReader.Open(w, true);
@@ -1305,10 +1305,10 @@ namespace Lucene.Net.Search
 			IndexSearcher s = NewSearcher(r);
 			TopDocs hits = s.Search(new TermQuery(new Term("t", "1")), null, 10, new Sort(new 
 				SortField("f", SortField.Type.STRING)));
-			NUnit.Framework.Assert.AreEqual(2, hits.totalHits);
+			AreEqual(2, hits.TotalHits);
 			// null sorts first
-			NUnit.Framework.Assert.AreEqual(1, hits.scoreDocs[0].doc);
-			NUnit.Framework.Assert.AreEqual(0, hits.scoreDocs[1].doc);
+			AreEqual(1, hits.scoreDocs[0].doc);
+			AreEqual(0, hits.scoreDocs[1].doc);
 			r.Close();
 			dir.Close();
 		}
@@ -1322,7 +1322,7 @@ namespace Lucene.Net.Search
 				, new MockAnalyzer(Random())));
 			for (int i = 0; i < 5; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(new StringField("string", "a" + i, Field.Store.NO));
 				doc.Add(new StringField("string", "b" + i, Field.Store.NO));
@@ -1353,7 +1353,7 @@ namespace Lucene.Net.Search
 			{
 				for (int docIDX = 0; docIDX < 10; docIDX++)
 				{
-					Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 						();
 					doc.Add(NewStringField("id", string.Empty + docIDX, Field.Store.YES));
 					StringBuilder sb = new StringBuilder();
@@ -1373,14 +1373,14 @@ namespace Lucene.Net.Search
 			Query q = new TermQuery(new Term("body", "text"));
 			IndexSearcher s = NewSearcher(r);
 			float maxScore = s.Search(q, 10).GetMaxScore();
-			NUnit.Framework.Assert.AreEqual(maxScore, s.Search(q, null, 3, Sort.INDEXORDER, Random
+			AreEqual(maxScore, s.Search(q, null, 3, Sort.INDEXORDER, Random
 				().NextBoolean(), true).GetMaxScore(), 0.0);
-			NUnit.Framework.Assert.AreEqual(maxScore, s.Search(q, null, 3, Sort.RELEVANCE, Random
+			AreEqual(maxScore, s.Search(q, null, 3, Sort.RELEVANCE, Random
 				().NextBoolean(), true).GetMaxScore(), 0.0);
-			NUnit.Framework.Assert.AreEqual(maxScore, s.Search(q, null, 3, new Sort(new SortField
+			AreEqual(maxScore, s.Search(q, null, 3, new Sort(new SortField
 				[] { new SortField("id", SortField.Type.INT, false) }), Random().NextBoolean(), 
 				true).GetMaxScore(), 0.0);
-			NUnit.Framework.Assert.AreEqual(maxScore, s.Search(q, null, 3, new Sort(new SortField
+			AreEqual(maxScore, s.Search(q, null, 3, new Sort(new SortField
 				[] { new SortField("id", SortField.Type.INT, true) }), Random().NextBoolean(), true
 				).GetMaxScore(), 0.0);
 			r.Close();
@@ -1395,25 +1395,25 @@ namespace Lucene.Net.Search
 			Query query = new TermQuery(new Term("contents", "foo"));
 			Sort sort = new Sort();
 			TopDocs td = empty.Search(query, null, 10, sort, true, true);
-			NUnit.Framework.Assert.AreEqual(0, td.totalHits);
+			AreEqual(0, td.TotalHits);
 			sort.SetSort(SortField.FIELD_DOC);
 			td = empty.Search(query, null, 10, sort, true, true);
-			NUnit.Framework.Assert.AreEqual(0, td.totalHits);
+			AreEqual(0, td.TotalHits);
 			sort.SetSort(new SortField("int", SortField.Type.INT), SortField.FIELD_DOC);
 			td = empty.Search(query, null, 10, sort, true, true);
-			NUnit.Framework.Assert.AreEqual(0, td.totalHits);
+			AreEqual(0, td.TotalHits);
 			sort.SetSort(new SortField("string", SortField.Type.STRING, true), SortField.FIELD_DOC
 				);
 			td = empty.Search(query, null, 10, sort, true, true);
-			NUnit.Framework.Assert.AreEqual(0, td.totalHits);
+			AreEqual(0, td.TotalHits);
 			sort.SetSort(new SortField("string_val", SortField.Type.STRING_VAL, true), SortField
 				.FIELD_DOC);
 			td = empty.Search(query, null, 10, sort, true, true);
-			NUnit.Framework.Assert.AreEqual(0, td.totalHits);
+			AreEqual(0, td.TotalHits);
 			sort.SetSort(new SortField("float", SortField.Type.FLOAT), new SortField("string"
 				, SortField.Type.STRING));
 			td = empty.Search(query, null, 10, sort, true, true);
-			NUnit.Framework.Assert.AreEqual(0, td.totalHits);
+			AreEqual(0, td.TotalHits);
 		}
 
 		/// <summary>test sorts for a custom int parser that uses a simple char encoding</summary>
@@ -1427,7 +1427,7 @@ namespace Lucene.Net.Search
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir);
 			foreach (string letter in letters)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(NewStringField("parser", letter, Field.Store.YES));
 				iw.AddDocument(doc);
@@ -1439,11 +1439,11 @@ namespace Lucene.Net.Search
 				);
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
 			// results should be in alphabetical order
-			NUnit.Framework.Assert.AreEqual(10, td.totalHits);
+			AreEqual(10, td.TotalHits);
 			letters.Sort();
 			for (int i = 0; i < letters.Count; i++)
 			{
-				NUnit.Framework.Assert.AreEqual(letters[i], searcher.Doc(td.scoreDocs[i].doc).Get
+				AreEqual(letters[i], searcher.Doc(td.scoreDocs[i].doc).Get
 					("parser"));
 			}
 			ir.Close();
@@ -1479,7 +1479,7 @@ namespace Lucene.Net.Search
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir);
 			foreach (string letter in letters)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(NewStringField("parser", letter, Field.Store.YES));
 				iw.AddDocument(doc);
@@ -1491,11 +1491,11 @@ namespace Lucene.Net.Search
 				);
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
 			// results should be in alphabetical order
-			NUnit.Framework.Assert.AreEqual(10, td.totalHits);
+			AreEqual(10, td.TotalHits);
 			letters.Sort();
 			for (int i = 0; i < letters.Count; i++)
 			{
-				NUnit.Framework.Assert.AreEqual(letters[i], searcher.Doc(td.scoreDocs[i].doc).Get
+				AreEqual(letters[i], searcher.Doc(td.scoreDocs[i].doc).Get
 					("parser"));
 			}
 			ir.Close();
@@ -1531,7 +1531,7 @@ namespace Lucene.Net.Search
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir);
 			foreach (string letter in letters)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(NewStringField("parser", letter, Field.Store.YES));
 				iw.AddDocument(doc);
@@ -1543,11 +1543,11 @@ namespace Lucene.Net.Search
 				FIELD_DOC);
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
 			// results should be in alphabetical order
-			NUnit.Framework.Assert.AreEqual(10, td.totalHits);
+			AreEqual(10, td.TotalHits);
 			letters.Sort();
 			for (int i = 0; i < letters.Count; i++)
 			{
-				NUnit.Framework.Assert.AreEqual(letters[i], searcher.Doc(td.scoreDocs[i].doc).Get
+				AreEqual(letters[i], searcher.Doc(td.scoreDocs[i].doc).Get
 					("parser"));
 			}
 			ir.Close();
@@ -1583,7 +1583,7 @@ namespace Lucene.Net.Search
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir);
 			foreach (string letter in letters)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(NewStringField("parser", letter, Field.Store.YES));
 				iw.AddDocument(doc);
@@ -1595,11 +1595,11 @@ namespace Lucene.Net.Search
 				);
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
 			// results should be in alphabetical order
-			NUnit.Framework.Assert.AreEqual(10, td.totalHits);
+			AreEqual(10, td.TotalHits);
 			letters.Sort();
 			for (int i = 0; i < letters.Count; i++)
 			{
-				NUnit.Framework.Assert.AreEqual(letters[i], searcher.Doc(td.scoreDocs[i].doc).Get
+				AreEqual(letters[i], searcher.Doc(td.scoreDocs[i].doc).Get
 					("parser"));
 			}
 			ir.Close();
@@ -1635,7 +1635,7 @@ namespace Lucene.Net.Search
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir);
 			foreach (string letter in letters)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(NewStringField("parser", letter, Field.Store.YES));
 				iw.AddDocument(doc);
@@ -1647,11 +1647,11 @@ namespace Lucene.Net.Search
 				FIELD_DOC);
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
 			// results should be in alphabetical order
-			NUnit.Framework.Assert.AreEqual(10, td.totalHits);
+			AreEqual(10, td.TotalHits);
 			letters.Sort();
 			for (int i = 0; i < letters.Count; i++)
 			{
-				NUnit.Framework.Assert.AreEqual(letters[i], searcher.Doc(td.scoreDocs[i].doc).Get
+				AreEqual(letters[i], searcher.Doc(td.scoreDocs[i].doc).Get
 					("parser"));
 			}
 			ir.Close();
@@ -1687,7 +1687,7 @@ namespace Lucene.Net.Search
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir);
 			foreach (string letter in letters)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(NewStringField("parser", letter, Field.Store.YES));
 				iw.AddDocument(doc);
@@ -1699,11 +1699,11 @@ namespace Lucene.Net.Search
 				.FIELD_DOC);
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
 			// results should be in alphabetical order
-			NUnit.Framework.Assert.AreEqual(10, td.totalHits);
+			AreEqual(10, td.TotalHits);
 			letters.Sort();
 			for (int i = 0; i < letters.Count; i++)
 			{
-				NUnit.Framework.Assert.AreEqual(letters[i], searcher.Doc(td.scoreDocs[i].doc).Get
+				AreEqual(letters[i], searcher.Doc(td.scoreDocs[i].doc).Get
 					("parser"));
 			}
 			ir.Close();
@@ -1734,7 +1734,7 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewStringField("value", "foo", Field.Store.YES));
 			writer.AddDocument(doc);
@@ -1743,8 +1743,8 @@ namespace Lucene.Net.Search
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.STRING));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
-			NUnit.Framework.Assert.AreEqual(1, td.totalHits);
-			NUnit.Framework.Assert.AreEqual("foo", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual(1, td.TotalHits);
+			AreEqual("foo", searcher.Doc(td.scoreDocs[0].doc).Get("value"
 				));
 			ir.Close();
 			dir.Close();
@@ -1756,7 +1756,7 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewStringField("value", "foo", Field.Store.YES));
 			writer.AddDocument(doc);
@@ -1765,11 +1765,11 @@ namespace Lucene.Net.Search
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.STRING));
 			TopDocs expected = searcher.Search(new TermQuery(new Term("value", "foo")), 10);
-			NUnit.Framework.Assert.AreEqual(1, expected.totalHits);
+			AreEqual(1, expected.TotalHits);
 			TopDocs actual = searcher.Search(new TermQuery(new Term("value", "foo")), null, 10
 				, sort, true, true);
-			NUnit.Framework.Assert.AreEqual(expected.totalHits, actual.totalHits);
-			NUnit.Framework.Assert.AreEqual(expected.scoreDocs[0].score, actual.scoreDocs[0].
+			AreEqual(expected.TotalHits, actual.TotalHits);
+			AreEqual(expected.scoreDocs[0].score, actual.scoreDocs[0].
 				score, 0F);
 			ir.Close();
 			dir.Close();
@@ -1781,12 +1781,12 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewStringField("tievalue", "tied", Field.Store.NO));
 			doc.Add(NewStringField("value", "foo", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("tievalue", "tied", Field.Store.NO));
 			doc.Add(NewStringField("value", "bar", Field.Store.YES));
 			writer.AddDocument(doc);
@@ -1797,11 +1797,11 @@ namespace Lucene.Net.Search
 			Sort sort = new Sort(new SortField("tievalue", SortField.Type.STRING), new SortField
 				("value", SortField.Type.STRING));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
-			NUnit.Framework.Assert.AreEqual(2, td.totalHits);
+			AreEqual(2, td.TotalHits);
 			// 'bar' comes before 'foo'
-			NUnit.Framework.Assert.AreEqual("bar", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("bar", searcher.Doc(td.scoreDocs[0].doc).Get("value"
 				));
-			NUnit.Framework.Assert.AreEqual("foo", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+			AreEqual("foo", searcher.Doc(td.scoreDocs[1].doc).Get("value"
 				));
 			ir.Close();
 			dir.Close();
@@ -1812,11 +1812,11 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewStringField("value", "bar", Field.Store.NO));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "foo", Field.Store.NO));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
@@ -1827,9 +1827,9 @@ namespace Lucene.Net.Search
 			bq.Add(new TermQuery(new Term("value", "foo")), BooleanClause.Occur.SHOULD);
 			bq.Add(new MatchAllDocsQuery(), BooleanClause.Occur.SHOULD);
 			TopDocs td = searcher.Search(bq, 10, sort);
-			NUnit.Framework.Assert.AreEqual(2, td.totalHits);
-			NUnit.Framework.Assert.AreEqual(1, td.scoreDocs[0].doc);
-			NUnit.Framework.Assert.AreEqual(0, td.scoreDocs[1].doc);
+			AreEqual(2, td.TotalHits);
+			AreEqual(1, td.scoreDocs[0].doc);
+			AreEqual(0, td.scoreDocs[1].doc);
 			ir.Close();
 			dir.Close();
 		}

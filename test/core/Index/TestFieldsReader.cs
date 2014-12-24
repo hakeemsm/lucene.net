@@ -6,7 +6,7 @@
 
 using System.Collections.Generic;
 using System.IO;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
@@ -19,7 +19,7 @@ namespace Lucene.Net.Index
 	{
 		private static Directory dir;
 
-		private static Lucene.Net.Document.Document testDoc;
+		private static Lucene.Net.Documents.Document testDoc;
 
 		private static FieldInfos.Builder fieldInfos = null;
 
@@ -27,10 +27,10 @@ namespace Lucene.Net.Index
 		[NUnit.Framework.BeforeClass]
 		public static void BeforeClass()
 		{
-			testDoc = new Lucene.Net.Document.Document();
+			testDoc = new Lucene.Net.Documents.Document();
 			fieldInfos = new FieldInfos.Builder();
 			DocHelper.SetupDoc(testDoc);
-			foreach (IndexableField field in testDoc)
+			foreach (IIndexableField field in testDoc)
 			{
 				fieldInfos.AddOrUpdate(field.Name(), field.FieldType());
 			}
@@ -57,36 +57,36 @@ namespace Lucene.Net.Index
 		/// <exception cref="System.IO.IOException"></exception>
 		public virtual void Test()
 		{
-			NUnit.Framework.Assert.IsTrue(dir != null);
-			NUnit.Framework.Assert.IsTrue(fieldInfos != null);
+			IsTrue(dir != null);
+			IsTrue(fieldInfos != null);
 			IndexReader reader = DirectoryReader.Open(dir);
-			Lucene.Net.Document.Document doc = reader.Document(0);
-			NUnit.Framework.Assert.IsTrue(doc != null);
-			NUnit.Framework.Assert.IsTrue(doc.GetField(DocHelper.TEXT_FIELD_1_KEY) != null);
+			Lucene.Net.Documents.Document doc = reader.Document(0);
+			IsTrue(doc != null);
+			IsTrue(doc.GetField(DocHelper.TEXT_FIELD_1_KEY) != null);
 			Field field = (Field)doc.GetField(DocHelper.TEXT_FIELD_2_KEY);
-			NUnit.Framework.Assert.IsTrue(field != null);
-			NUnit.Framework.Assert.IsTrue(field.FieldType().StoreTermVectors());
-			NUnit.Framework.Assert.IsFalse(field.FieldType().OmitNorms());
-			NUnit.Framework.Assert.IsTrue(field.FieldType().IndexOptions() == FieldInfo.IndexOptions
+			IsTrue(field != null);
+			IsTrue(field.FieldType().StoreTermVectors());
+			IsFalse(field.FieldType().OmitNorms());
+			IsTrue(field.FieldType().IndexOptions() == FieldInfo.IndexOptions
 				.DOCS_AND_FREQS_AND_POSITIONS);
 			field = (Field)doc.GetField(DocHelper.TEXT_FIELD_3_KEY);
-			NUnit.Framework.Assert.IsTrue(field != null);
-			NUnit.Framework.Assert.IsFalse(field.FieldType().StoreTermVectors());
-			NUnit.Framework.Assert.IsTrue(field.FieldType().OmitNorms());
-			NUnit.Framework.Assert.IsTrue(field.FieldType().IndexOptions() == FieldInfo.IndexOptions
+			IsTrue(field != null);
+			IsFalse(field.FieldType().StoreTermVectors());
+			IsTrue(field.FieldType().OmitNorms());
+			IsTrue(field.FieldType().IndexOptions() == FieldInfo.IndexOptions
 				.DOCS_AND_FREQS_AND_POSITIONS);
 			field = (Field)doc.GetField(DocHelper.NO_TF_KEY);
-			NUnit.Framework.Assert.IsTrue(field != null);
-			NUnit.Framework.Assert.IsFalse(field.FieldType().StoreTermVectors());
-			NUnit.Framework.Assert.IsFalse(field.FieldType().OmitNorms());
-			NUnit.Framework.Assert.IsTrue(field.FieldType().IndexOptions() == FieldInfo.IndexOptions
+			IsTrue(field != null);
+			IsFalse(field.FieldType().StoreTermVectors());
+			IsFalse(field.FieldType().OmitNorms());
+			IsTrue(field.FieldType().IndexOptions() == FieldInfo.IndexOptions
 				.DOCS_ONLY);
 			DocumentStoredFieldVisitor visitor = new DocumentStoredFieldVisitor(DocHelper.TEXT_FIELD_3_KEY
 				);
 			reader.Document(0, visitor);
-			IList<IndexableField> fields = visitor.GetDocument().GetFields();
-			NUnit.Framework.Assert.AreEqual(1, fields.Count);
-			NUnit.Framework.Assert.AreEqual(DocHelper.TEXT_FIELD_3_KEY, fields[0].Name());
+			IList<IIndexableField> fields = visitor.GetDocument().GetFields();
+			AreEqual(1, fields.Count);
+			AreEqual(DocHelper.TEXT_FIELD_3_KEY, fields[0].Name());
 			reader.Close();
 		}
 
@@ -176,7 +176,7 @@ namespace Lucene.Net.Index
 			protected override void ReadInternal(byte[] b, int offset, int length)
 			{
 				SimOutage();
-				delegate_.Seek(GetFilePointer());
+				delegate_.Seek(FilePointer);
 				delegate_.ReadBytes(b, offset, length);
 			}
 
@@ -203,7 +203,7 @@ namespace Lucene.Net.Index
 				// seek the clone to our current position
 				try
 				{
-					i.Seek(GetFilePointer());
+					i.Seek(FilePointer);
 				}
 				catch (IOException)
 				{
@@ -254,7 +254,7 @@ namespace Lucene.Net.Index
 						exc = true;
 					}
 				}
-				NUnit.Framework.Assert.IsTrue(exc);
+				IsTrue(exc);
 				reader.Close();
 				dir.Close();
 			}

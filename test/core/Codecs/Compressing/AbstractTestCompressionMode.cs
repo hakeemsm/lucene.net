@@ -1,17 +1,15 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
-using Com.Carrotsearch.Randomizedtesting.Generators;
+using System;
 using Lucene.Net.Codecs.Compressing;
+using Lucene.Net.Randomized.Generators;
 using Lucene.Net.Store;
+using Lucene.Net.Support;
+using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
-using Sharpen;
+using NUnit.Framework;
 
-namespace Lucene.Net.Codecs.Compressing
+namespace Lucene.Net.Test.Codecs.Compressing
 {
+    [TestFixture]
 	public abstract class AbstractTestCompressionMode : LuceneTestCase
 	{
 		internal CompressionMode mode;
@@ -42,14 +40,13 @@ namespace Lucene.Net.Codecs.Compressing
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		internal static byte[] Compress(Compressor compressor, byte[] decompressed, int off
-			, int len)
+		internal static byte[] Compress(Compressor compressor, byte[] decompressed, int off, int len)
 		{
-			byte[] compressed = new byte[len * 2 + 16];
+			var compressed = new byte[len * 2 + 16];
 			// should be enough
 			ByteArrayDataOutput @out = new ByteArrayDataOutput(compressed);
-			compressor.Compress(decompressed, off, len, @out);
-			int compressedLen = @out.GetPosition();
+			compressor.Compress(Array.ConvertAll(decompressed,Convert.ToSByte), off, len, @out);
+			int compressedLen = @out.Position;
 			return Arrays.CopyOf(compressed, compressedLen);
 		}
 
@@ -67,7 +64,8 @@ namespace Lucene.Net.Codecs.Compressing
 			BytesRef bytes = new BytesRef();
 			decompressor.Decompress(new ByteArrayDataInput(compressed), originalLength, 0, originalLength
 				, bytes);
-			return Arrays.CopyOfRange(bytes.bytes, bytes.offset, bytes.offset + bytes.length);
+		    byte[] convertedBytes = Array.ConvertAll(bytes.bytes, Convert.ToByte);
+		    return Arrays.CopyOfRange(convertedBytes, bytes.offset, bytes.offset + bytes.length);
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -78,10 +76,11 @@ namespace Lucene.Net.Codecs.Compressing
 			BytesRef bytes = new BytesRef();
 			decompressor.Decompress(new ByteArrayDataInput(compressed), originalLength, offset
 				, length, bytes);
-			return Arrays.CopyOfRange(bytes.bytes, bytes.offset, bytes.offset + bytes.length);
+            byte[] convertedBytes = Array.ConvertAll(bytes.bytes, Convert.ToByte);
+            return Arrays.CopyOfRange(convertedBytes, bytes.offset, bytes.offset + bytes.length);
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestDecompress()
 		{
 			int iterations = AtLeast(10);
@@ -94,11 +93,11 @@ namespace Lucene.Net.Codecs.Compressing
 					(), 0, decompressed.Length - off);
 				byte[] compressed = Compress(decompressed, off, len);
 				byte[] restored = Decompress(compressed, len);
-				AssertArrayEquals(Arrays.CopyOfRange(decompressed, off, off + len), restored);
+				Assert.AreEqual(Arrays.CopyOfRange(decompressed, off, off + len), restored);
 			}
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestPartialDecompress()
 		{
 			int iterations = AtLeast(10);
@@ -118,27 +117,28 @@ namespace Lucene.Net.Codecs.Compressing
 					length = Random().Next(decompressed.Length - offset);
 				}
 				byte[] restored = Decompress(compressed, decompressed.Length, offset, length);
-				AssertArrayEquals(Arrays.CopyOfRange(decompressed, offset, offset + length), restored
-					);
+				Assert.AreEqual(Arrays.CopyOfRange(decompressed, offset, offset + length), restored);
+                //AssertArrayEquals(Arrays.CopyOfRange(decompressed, offset, offset + length), restored);
+                
 			}
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		
 		public virtual byte[] Test(byte[] decompressed)
 		{
 			return Test(decompressed, 0, decompressed.Length);
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual byte[] Test(byte[] decompressed, int off, int len)
 		{
 			byte[] compressed = Compress(decompressed, off, len);
 			byte[] restored = Decompress(compressed, len);
-			NUnit.Framework.Assert.AreEqual(len, restored.Length);
+			AreEqual(len, restored.Length);
 			return compressed;
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestEmptySequence()
 		{
 			Test(new byte[0]);
@@ -150,7 +150,7 @@ namespace Lucene.Net.Codecs.Compressing
 			Test(new byte[] { unchecked((byte)Random().Next(256)) });
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestIncompressible()
 		{
 			byte[] decompressed = new byte[RandomInts.RandomIntBetween(Random(), 20, 256)];
@@ -161,7 +161,7 @@ namespace Lucene.Net.Codecs.Compressing
 			Test(decompressed);
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestConstant()
 		{
 			byte[] decompressed = new byte[TestUtil.NextInt(Random(), 1, 10000)];
@@ -169,7 +169,7 @@ namespace Lucene.Net.Codecs.Compressing
 			Test(decompressed);
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestLUCENE5201()
 		{
 			byte[] data = new byte[] { 14, 72, 14, 85, 3, 72, 14, 85, 3, 72, 14, 72, 14, 72, 

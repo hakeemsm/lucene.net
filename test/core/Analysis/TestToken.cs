@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using Lucene.Net.Analysis;
 using Lucene.Net.Analysis.Tokenattributes;
 using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
@@ -26,7 +27,7 @@ using NUnit.Framework;
 using Attribute = Lucene.Net.Util.Attribute;
 using FlagsAttribute = Lucene.Net.Analysis.Tokenattributes.FlagsAttribute;
 
-namespace Lucene.Net.Analysis
+namespace Lucene.Net.Test.Analysis
 {	
     [TestFixture]
 	public class TestToken:LuceneTestCase
@@ -289,7 +290,8 @@ namespace Lucene.Net.Analysis
             IsTrue(ts.AddAttribute<IPositionIncrementAttribute>() is Token, "PositionIncrementAttribute is not implemented by Token");
             IsTrue(ts.AddAttribute<ITypeAttribute>() is Token, "TypeAttribute is not implemented by Token");
         }
-//        [Test]
+
+        [Test]
 		public virtual void TestAttributeReflection()
 		{
 			Token t = new Token("foobar", 6, 22, 8);

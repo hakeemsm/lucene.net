@@ -6,7 +6,7 @@
 
 using System.Collections.Generic;
 using NUnit.Framework;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -40,7 +40,7 @@ namespace Lucene.Net.Search
 				()).SetSimilarity(new DefaultSimilarity()));
 			for (int i = 0; i < values.Length; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(NewTextField(FIELD, values[i], Field.Store.YES));
 				writer.AddDocument(doc);
@@ -65,7 +65,7 @@ namespace Lucene.Net.Search
 			Term allTerm = new Term(FIELD, "all");
 			TermQuery termQuery = new TermQuery(allTerm);
 			Weight weight = indexSearcher.CreateNormalizedWeight(termQuery);
-			NUnit.Framework.Assert.IsTrue(indexSearcher.GetTopReaderContext() is AtomicReaderContext
+			IsTrue(indexSearcher.GetTopReaderContext() is AtomicReaderContext
 				);
 			AtomicReaderContext context = (AtomicReaderContext)indexSearcher.GetTopReaderContext
 				();
@@ -76,14 +76,14 @@ namespace Lucene.Net.Search
 			IList<TestTermScorer.TestHit> docs = new AList<TestTermScorer.TestHit>();
 			// must call next first
 			ts.Score(new _Collector_87(docs));
-			NUnit.Framework.Assert.IsTrue("docs Size: " + docs.Count + " is not: " + 2, docs.
+			IsTrue("docs Size: " + docs.Count + " is not: " + 2, docs.
 				Count == 2);
 			TestTermScorer.TestHit doc0 = docs[0];
 			TestTermScorer.TestHit doc5 = docs[1];
 			// The scores should be the same
-			NUnit.Framework.Assert.IsTrue(doc0.score + " does not equal: " + doc5.score, doc0
+			IsTrue(doc0.score + " does not equal: " + doc5.score, doc0
 				.score == doc5.score);
-			NUnit.Framework.Assert.IsTrue(doc0.score + " does not equal: " + 1.6931472f, doc0
+			IsTrue(doc0.score + " does not equal: " + 1.6931472f, doc0
 				.score == 1.6931472f);
 		}
 
@@ -110,9 +110,9 @@ namespace Lucene.Net.Search
 				float score = this.scorer.Score();
 				doc = doc + this.@base;
 				docs.AddItem(new TestTermScorer.TestHit(this, doc, score));
-				NUnit.Framework.Assert.IsTrue("score " + score + " is not greater than 0", score 
+				IsTrue("score " + score + " is not greater than 0", score 
 					> 0);
-				NUnit.Framework.Assert.IsTrue("Doc: " + doc + " does not equal 0 or doc does not equal 5"
+				IsTrue("Doc: " + doc + " does not equal 0 or doc does not equal 5"
 					, doc == 0 || doc == 5);
 			}
 
@@ -135,19 +135,19 @@ namespace Lucene.Net.Search
 			Term allTerm = new Term(FIELD, "all");
 			TermQuery termQuery = new TermQuery(allTerm);
 			Weight weight = indexSearcher.CreateNormalizedWeight(termQuery);
-			NUnit.Framework.Assert.IsTrue(indexSearcher.GetTopReaderContext() is AtomicReaderContext
+			IsTrue(indexSearcher.GetTopReaderContext() is AtomicReaderContext
 				);
 			AtomicReaderContext context = (AtomicReaderContext)indexSearcher.GetTopReaderContext
 				();
 			Scorer ts = weight.Scorer(context, ((AtomicReader)context.Reader()).GetLiveDocs()
 				);
-			NUnit.Framework.Assert.IsTrue("next did not return a doc", ts.NextDoc() != DocIdSetIterator
+			IsTrue("next did not return a doc", ts.NextDoc() != DocIdSetIterator
 				.NO_MORE_DOCS);
-			NUnit.Framework.Assert.IsTrue("score is not correct", ts.Score() == 1.6931472f);
-			NUnit.Framework.Assert.IsTrue("next did not return a doc", ts.NextDoc() != DocIdSetIterator
+			IsTrue("score is not correct", ts.Score() == 1.6931472f);
+			IsTrue("next did not return a doc", ts.NextDoc() != DocIdSetIterator
 				.NO_MORE_DOCS);
-			NUnit.Framework.Assert.IsTrue("score is not correct", ts.Score() == 1.6931472f);
-			NUnit.Framework.Assert.IsTrue("next returned a doc and it should not have", ts.NextDoc
+			IsTrue("score is not correct", ts.Score() == 1.6931472f);
+			IsTrue("next returned a doc and it should not have", ts.NextDoc
 				() == DocIdSetIterator.NO_MORE_DOCS);
 		}
 
@@ -157,16 +157,16 @@ namespace Lucene.Net.Search
 			Term allTerm = new Term(FIELD, "all");
 			TermQuery termQuery = new TermQuery(allTerm);
 			Weight weight = indexSearcher.CreateNormalizedWeight(termQuery);
-			NUnit.Framework.Assert.IsTrue(indexSearcher.GetTopReaderContext() is AtomicReaderContext
+			IsTrue(indexSearcher.GetTopReaderContext() is AtomicReaderContext
 				);
 			AtomicReaderContext context = (AtomicReaderContext)indexSearcher.GetTopReaderContext
 				();
 			Scorer ts = weight.Scorer(context, ((AtomicReader)context.Reader()).GetLiveDocs()
 				);
-			NUnit.Framework.Assert.IsTrue("Didn't skip", ts.Advance(3) != DocIdSetIterator.NO_MORE_DOCS
+			IsTrue("Didn't skip", ts.Advance(3) != DocIdSetIterator.NO_MORE_DOCS
 				);
 			// The next doc should be doc 5
-			NUnit.Framework.Assert.IsTrue("doc should be number 5", ts.DocID() == 5);
+			IsTrue("doc should be number 5", ts.DocID == 5);
 		}
 
 		private class TestHit

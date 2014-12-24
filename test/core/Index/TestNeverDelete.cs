@@ -6,7 +6,7 @@
 
 using System;
 using System.Collections.Generic;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
@@ -56,7 +56,7 @@ namespace Lucene.Net.Index
 				// Make sure no old files were removed
 				foreach (string fileName in allFiles)
 				{
-					NUnit.Framework.Assert.IsTrue("file " + fileName + " does not exist", SlowFileExists
+					IsTrue("file " + fileName + " does not exist", SlowFileExists
 						(d, fileName));
 				}
 				DirectoryReader r2 = DirectoryReader.OpenIfChanged(r);
@@ -92,7 +92,7 @@ namespace Lucene.Net.Index
 					int docCount = 0;
 					while (Runtime.CurrentTimeMillis() < stopTime)
 					{
-						Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+						Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 							();
 						doc.Add(LuceneTestCase.NewStringField("dc", string.Empty + docCount, Field.Store.
 							YES));

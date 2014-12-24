@@ -34,7 +34,7 @@ namespace Lucene.Net.Search
 			base.SetUp();
 			directory = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), directory);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewTextField(FN, "the quick brown fox jumps over the lazy ??? dog 493432 49344"
 				, Field.Store.NO));
@@ -61,40 +61,40 @@ namespace Lucene.Net.Search
 		private int RegexQueryNrHits(string regex)
 		{
 			RegexpQuery query = new RegexpQuery(NewTerm(regex));
-			return searcher.Search(query, 5).totalHits;
+			return searcher.Search(query, 5).TotalHits;
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
 		public virtual void TestRegex1()
 		{
-			NUnit.Framework.Assert.AreEqual(1, RegexQueryNrHits("q.[aeiou]c.*"));
+			AreEqual(1, RegexQueryNrHits("q.[aeiou]c.*"));
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
 		public virtual void TestRegex2()
 		{
-			NUnit.Framework.Assert.AreEqual(0, RegexQueryNrHits(".[aeiou]c.*"));
+			AreEqual(0, RegexQueryNrHits(".[aeiou]c.*"));
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
 		public virtual void TestRegex3()
 		{
-			NUnit.Framework.Assert.AreEqual(0, RegexQueryNrHits("q.[aeiou]c"));
+			AreEqual(0, RegexQueryNrHits("q.[aeiou]c"));
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
 		public virtual void TestNumericRange()
 		{
-			NUnit.Framework.Assert.AreEqual(1, RegexQueryNrHits("<420000-600000>"));
-			NUnit.Framework.Assert.AreEqual(0, RegexQueryNrHits("<493433-600000>"));
+			AreEqual(1, RegexQueryNrHits("<420000-600000>"));
+			AreEqual(0, RegexQueryNrHits("<493433-600000>"));
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
 		public virtual void TestRegexComplement()
 		{
-			NUnit.Framework.Assert.AreEqual(1, RegexQueryNrHits("4934~[3]"));
+			AreEqual(1, RegexQueryNrHits("4934~[3]"));
 			// not the empty lang, i.e. match all docs
-			NUnit.Framework.Assert.AreEqual(1, RegexQueryNrHits("~#"));
+			AreEqual(1, RegexQueryNrHits("~#"));
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -104,7 +104,7 @@ namespace Lucene.Net.Search
 			// automaton that matches quick or brown
 			RegexpQuery query = new RegexpQuery(NewTerm("<quickBrown>"), RegExp.ALL, myProvider
 				);
-			NUnit.Framework.Assert.AreEqual(1, searcher.Search(query, 5).totalHits);
+			AreEqual(1, searcher.Search(query, 5).TotalHits);
 		}
 
 		private sealed class _AutomatonProvider_98 : AutomatonProvider
@@ -143,7 +143,7 @@ namespace Lucene.Net.Search
 		/// <exception cref="System.IO.IOException"></exception>
 		public virtual void TestBacktracking()
 		{
-			NUnit.Framework.Assert.AreEqual(1, RegexQueryNrHits("4934[314]"));
+			AreEqual(1, RegexQueryNrHits("4934[314]"));
 		}
 	}
 }

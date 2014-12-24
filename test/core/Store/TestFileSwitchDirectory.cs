@@ -5,7 +5,7 @@
  */
 
 using System.Collections.Generic;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Codecs;
 using Lucene.Net.Codecs.Lucene40;
 using Lucene.Net.Index;
@@ -43,30 +43,30 @@ namespace Lucene.Net.Store
 				(false)).SetCodec(Codec.ForName("Lucene40")).SetUseCompoundFile(false)));
 			TestIndexWriterReader.CreateIndexNoClose(true, "ram", writer);
 			IndexReader reader = DirectoryReader.Open(writer, true);
-			NUnit.Framework.Assert.AreEqual(100, reader.MaxDoc());
+			AreEqual(100, reader.MaxDoc);
 			writer.Commit();
 			// we should see only fdx,fdt files here
 			string[] files = primaryDir.ListAll();
-			NUnit.Framework.Assert.IsTrue(files.Length > 0);
+			IsTrue(files.Length > 0);
 			for (int x = 0; x < files.Length; x++)
 			{
 				string ext = FileSwitchDirectory.GetExtension(files[x]);
-				NUnit.Framework.Assert.IsTrue(fileExtensions.Contains(ext));
+				IsTrue(fileExtensions.Contains(ext));
 			}
 			files = secondaryDir.ListAll();
-			NUnit.Framework.Assert.IsTrue(files.Length > 0);
+			IsTrue(files.Length > 0);
 			// we should not see fdx,fdt files here
 			for (int x_1 = 0; x_1 < files.Length; x_1++)
 			{
 				string ext = FileSwitchDirectory.GetExtension(files[x_1]);
-				NUnit.Framework.Assert.IsFalse(fileExtensions.Contains(ext));
+				IsFalse(fileExtensions.Contains(ext));
 			}
 			reader.Close();
 			writer.Close();
 			files = fsd.ListAll();
 			for (int i = 0; i < files.Length; i++)
 			{
-				NUnit.Framework.Assert.IsNotNull(files[i]);
+				IsNotNull(files[i]);
 			}
 			fsd.Close();
 			OLD_FORMAT_IMPERSONATION_IS_ACTIVE = oldValue;
@@ -104,7 +104,7 @@ namespace Lucene.Net.Store
 			try
 			{
 				DirectoryReader.Open(dir);
-				NUnit.Framework.Assert.Fail("did not hit expected exception");
+				Fail("did not hit expected exception");
 			}
 			catch (NoSuchDirectoryException)
 			{
@@ -122,8 +122,8 @@ namespace Lucene.Net.Store
 			try
 			{
 				dir.CreateOutput(name, NewIOContext(Random())).Close();
-				NUnit.Framework.Assert.IsTrue(SlowFileExists(dir, name));
-				NUnit.Framework.Assert.IsTrue(Arrays.AsList(dir.ListAll()).Contains(name));
+				IsTrue(SlowFileExists(dir, name));
+				IsTrue(Arrays.AsList(dir.ListAll()).Contains(name));
 			}
 			finally
 			{
@@ -142,13 +142,13 @@ namespace Lucene.Net.Store
 			IndexOutput @out = csw.CreateOutput("d.xyz", NewIOContext(Random()));
 			@out.WriteInt(0);
 			@out.Close();
-			NUnit.Framework.Assert.AreEqual(1, csw.ListAll().Length);
-			NUnit.Framework.Assert.AreEqual("d.xyz", csw.ListAll()[0]);
+			AreEqual(1, csw.ListAll().Length);
+			AreEqual("d.xyz", csw.ListAll()[0]);
 			csw.Close();
 			CompoundFileDirectory cfr = new CompoundFileDirectory(newDir, "d.cfs", NewIOContext
 				(Random()), false);
-			NUnit.Framework.Assert.AreEqual(1, cfr.ListAll().Length);
-			NUnit.Framework.Assert.AreEqual("d.xyz", cfr.ListAll()[0]);
+			AreEqual(1, cfr.ListAll().Length);
+			AreEqual("d.xyz", cfr.ListAll()[0]);
 			cfr.Close();
 			newDir.Close();
 		}

@@ -44,7 +44,7 @@ namespace Lucene.Net.Search
 			int numDocs = AtLeast(300);
 			for (int i = 0; i < numDocs; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				AddSome(doc, alwaysTerms);
 				if (Random().Next(100) < 90)
@@ -94,7 +94,7 @@ namespace Lucene.Net.Search
 			dir = null;
 		}
 
-		private static void AddSome(Lucene.Net.Document.Document doc, string[] values
+		private static void AddSome(Lucene.Net.Documents.Document doc, string[] values
 			)
 		{
 			IList<string> list = Arrays.AsList(values);
@@ -135,21 +135,21 @@ namespace Lucene.Net.Search
 		{
 			if (actual == null)
 			{
-				NUnit.Framework.Assert.AreEqual(DocIdSetIterator.NO_MORE_DOCS, expected.NextDoc()
+				AreEqual(DocIdSetIterator.NO_MORE_DOCS, expected.NextDoc()
 					);
 				return;
 			}
 			int doc;
 			while ((doc = expected.NextDoc()) != DocIdSetIterator.NO_MORE_DOCS)
 			{
-				NUnit.Framework.Assert.AreEqual(doc, actual.NextDoc());
-				NUnit.Framework.Assert.AreEqual(expected.Freq(), actual.Freq());
+				AreEqual(doc, actual.NextDoc());
+				AreEqual(expected.Freq, actual.Freq);
 				float expectedScore = expected.Score();
 				float actualScore = actual.Score();
-				NUnit.Framework.Assert.AreEqual(expectedScore, actualScore, CheckHits.ExplainToleranceDelta
+				AreEqual(expectedScore, actualScore, CheckHits.ExplainToleranceDelta
 					(expectedScore, actualScore));
 			}
-			NUnit.Framework.Assert.AreEqual(DocIdSetIterator.NO_MORE_DOCS, actual.NextDoc());
+			AreEqual(DocIdSetIterator.NO_MORE_DOCS, actual.NextDoc());
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -158,7 +158,7 @@ namespace Lucene.Net.Search
 		{
 			if (actual == null)
 			{
-				NUnit.Framework.Assert.AreEqual(DocIdSetIterator.NO_MORE_DOCS, expected.NextDoc()
+				AreEqual(DocIdSetIterator.NO_MORE_DOCS, expected.NextDoc()
 					);
 				return;
 			}
@@ -167,15 +167,15 @@ namespace Lucene.Net.Search
 			while ((doc = expected.Advance(prevDoc + amount)) != DocIdSetIterator.NO_MORE_DOCS
 				)
 			{
-				NUnit.Framework.Assert.AreEqual(doc, actual.Advance(prevDoc + amount));
-				NUnit.Framework.Assert.AreEqual(expected.Freq(), actual.Freq());
+				AreEqual(doc, actual.Advance(prevDoc + amount));
+				AreEqual(expected.Freq, actual.Freq);
 				float expectedScore = expected.Score();
 				float actualScore = actual.Score();
-				NUnit.Framework.Assert.AreEqual(expectedScore, actualScore, CheckHits.ExplainToleranceDelta
+				AreEqual(expectedScore, actualScore, CheckHits.ExplainToleranceDelta
 					(expectedScore, actualScore));
 				prevDoc = doc;
 			}
-			NUnit.Framework.Assert.AreEqual(DocIdSetIterator.NO_MORE_DOCS, actual.Advance(prevDoc
+			AreEqual(DocIdSetIterator.NO_MORE_DOCS, actual.Advance(prevDoc
 				 + amount));
 		}
 
@@ -341,7 +341,7 @@ namespace Lucene.Net.Search
 				// current docid
 				// current number of terms matched
 				this.dv = reader.GetSortedSetDocValues("dv");
-				this.maxDoc = reader.MaxDoc();
+				this.maxDoc = reader.MaxDoc;
 				BooleanQuery bq = (BooleanQuery)weight.GetQuery();
 				this.minNrShouldMatch = bq.GetMinimumNumberShouldMatch();
 				this.sims = new Similarity.SimScorer[(int)dv.GetValueCount()];
@@ -381,12 +381,12 @@ namespace Lucene.Net.Search
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
-			public override int Freq()
+			public override int Freq
 			{
 				return currentMatched;
 			}
 
-			public override int DocID()
+			public override int DocID
 			{
 				return currentDoc;
 			}

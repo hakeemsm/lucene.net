@@ -69,8 +69,8 @@ namespace Lucene.Net.Search.Similarities
 			foreach (Similarity sim in sims)
 			{
 				@is.SetSimilarity(sim);
-				NUnit.Framework.Assert.AreEqual(0, @is.Search(new TermQuery(new Term("foo", "bar"
-					)), 10).totalHits);
+				AreEqual(0, @is.Search(new TermQuery(new Term("foo", "bar"
+					)), 10).TotalHits);
 			}
 			ir.Close();
 			dir.Close();
@@ -82,7 +82,7 @@ namespace Lucene.Net.Search.Similarities
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewTextField("foo", "bar", Field.Store.NO));
 			iw.AddDocument(doc);
@@ -95,7 +95,7 @@ namespace Lucene.Net.Search.Similarities
 				BooleanQuery query = new BooleanQuery(true);
 				query.Add(new TermQuery(new Term("foo", "bar")), BooleanClause.Occur.SHOULD);
 				query.Add(new TermQuery(new Term("bar", "baz")), BooleanClause.Occur.SHOULD);
-				NUnit.Framework.Assert.AreEqual(1, @is.Search(query, 10).totalHits);
+				AreEqual(1, @is.Search(query, 10).TotalHits);
 			}
 			ir.Close();
 			dir.Close();
@@ -108,7 +108,7 @@ namespace Lucene.Net.Search.Similarities
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewTextField("foo", "bar", Field.Store.NO));
 			iw.AddDocument(doc);
@@ -121,7 +121,7 @@ namespace Lucene.Net.Search.Similarities
 				BooleanQuery query = new BooleanQuery(true);
 				query.Add(new TermQuery(new Term("foo", "bar")), BooleanClause.Occur.SHOULD);
 				query.Add(new TermQuery(new Term("foo", "baz")), BooleanClause.Occur.SHOULD);
-				NUnit.Framework.Assert.AreEqual(1, @is.Search(query, 10).totalHits);
+				AreEqual(1, @is.Search(query, 10).TotalHits);
 			}
 			ir.Close();
 			dir.Close();
@@ -133,7 +133,7 @@ namespace Lucene.Net.Search.Similarities
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
 			ft.SetOmitNorms(true);
@@ -148,7 +148,7 @@ namespace Lucene.Net.Search.Similarities
 				@is.SetSimilarity(sim);
 				BooleanQuery query = new BooleanQuery(true);
 				query.Add(new TermQuery(new Term("foo", "bar")), BooleanClause.Occur.SHOULD);
-				NUnit.Framework.Assert.AreEqual(1, @is.Search(query, 10).totalHits);
+				AreEqual(1, @is.Search(query, 10).TotalHits);
 			}
 			ir.Close();
 			dir.Close();
@@ -160,7 +160,7 @@ namespace Lucene.Net.Search.Similarities
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
 			ft.SetIndexOptions(FieldInfo.IndexOptions.DOCS_ONLY);
@@ -176,7 +176,7 @@ namespace Lucene.Net.Search.Similarities
 				@is.SetSimilarity(sim);
 				BooleanQuery query = new BooleanQuery(true);
 				query.Add(new TermQuery(new Term("foo", "bar")), BooleanClause.Occur.SHOULD);
-				NUnit.Framework.Assert.AreEqual(1, @is.Search(query, 10).totalHits);
+				AreEqual(1, @is.Search(query, 10).TotalHits);
 			}
 			ir.Close();
 			dir.Close();
@@ -188,7 +188,7 @@ namespace Lucene.Net.Search.Similarities
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
 			ft.SetIndexOptions(FieldInfo.IndexOptions.DOCS_ONLY);
@@ -205,7 +205,7 @@ namespace Lucene.Net.Search.Similarities
 				@is.SetSimilarity(sim);
 				BooleanQuery query = new BooleanQuery(true);
 				query.Add(new TermQuery(new Term("foo", "bar")), BooleanClause.Occur.SHOULD);
-				NUnit.Framework.Assert.AreEqual(1, @is.Search(query, 10).totalHits);
+				AreEqual(1, @is.Search(query, 10).TotalHits);
 			}
 			ir.Close();
 			dir.Close();
@@ -222,7 +222,7 @@ namespace Lucene.Net.Search.Similarities
 			// inner queries are not real queries, their boosts are ignored, etc.
 			Directory dir = NewDirectory();
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
 			doc.Add(NewField("foo", "bar", ft));
@@ -237,10 +237,10 @@ namespace Lucene.Net.Search.Similarities
 				SpanTermQuery s2 = new SpanTermQuery(new Term("foo", "baz"));
 				Query query = new SpanOrQuery(s1, s2);
 				TopDocs td = @is.Search(query, 10);
-				NUnit.Framework.Assert.AreEqual(1, td.totalHits);
+				AreEqual(1, td.TotalHits);
 				float score = td.scoreDocs[0].score;
-				NUnit.Framework.Assert.IsTrue(score >= 0.0f);
-				NUnit.Framework.Assert.IsFalse("inf score for " + sim, float.IsInfinite(score));
+				IsTrue(score >= 0.0f);
+				IsFalse("inf score for " + sim, float.IsInfinite(score));
 			}
 			ir.Close();
 			dir.Close();

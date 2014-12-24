@@ -16,7 +16,7 @@ namespace Lucene.Net.Codecs
 
         public abstract long RamBytesUsed { get; }
 		public abstract void CheckIntegrity();
-        public abstract TermVectorsReader Clone();
+        public abstract object Clone();
 
         public void Dispose()
         {

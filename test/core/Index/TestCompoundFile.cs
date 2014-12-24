@@ -682,14 +682,14 @@ namespace Lucene.Net.Index
 				}
 				os.Close();
 				string[] listAll = newDir.ListAll();
-				NUnit.Framework.Assert.AreEqual(1, listAll.Length);
-				NUnit.Framework.Assert.AreEqual("d.cfs", listAll[0]);
+				AreEqual(1, listAll.Length);
+				AreEqual("d.cfs", listAll[0]);
 			}
 			CreateSequenceFile(dir, "d1", unchecked((byte)0), 15);
 			dir.Copy(csw, "d1", "d1", NewIOContext(Random()));
 			string[] listAll_1 = newDir.ListAll();
-			NUnit.Framework.Assert.AreEqual(1, listAll_1.Length);
-			NUnit.Framework.Assert.AreEqual("d.cfs", listAll_1[0]);
+			AreEqual(1, listAll_1.Length);
+			AreEqual("d.cfs", listAll_1[0]);
 			csw.Close();
 			CompoundFileDirectory csr = new CompoundFileDirectory(newDir, "d.cfs", NewIOContext
 				(Random()), false);
@@ -697,10 +697,10 @@ namespace Lucene.Net.Index
 			{
 				IndexInput openInput = csr.OpenInput("seg_" + j_1 + "_foo.txt", NewIOContext(Random
 					()));
-				NUnit.Framework.Assert.AreEqual(size * 4, openInput.Length());
+				AreEqual(size * 4, openInput.Length());
 				for (int i = 0; i < size; i++)
 				{
-					NUnit.Framework.Assert.AreEqual(i * j_1, openInput.ReadInt());
+					AreEqual(i * j_1, openInput.ReadInt());
 				}
 				openInput.Close();
 			}
@@ -722,13 +722,13 @@ namespace Lucene.Net.Index
 			IndexOutput @out = csw.CreateOutput("d.xyz", NewIOContext(Random()));
 			@out.WriteInt(0);
 			@out.Close();
-			NUnit.Framework.Assert.AreEqual(1, csw.ListAll().Length);
-			NUnit.Framework.Assert.AreEqual("d.xyz", csw.ListAll()[0]);
+			AreEqual(1, csw.ListAll().Length);
+			AreEqual("d.xyz", csw.ListAll()[0]);
 			csw.Close();
 			CompoundFileDirectory cfr = new CompoundFileDirectory(newDir, "d.cfs", NewIOContext
 				(Random()), false);
-			NUnit.Framework.Assert.AreEqual(1, cfr.ListAll().Length);
-			NUnit.Framework.Assert.AreEqual("d.xyz", cfr.ListAll()[0]);
+			AreEqual(1, cfr.ListAll().Length);
+			AreEqual("d.xyz", cfr.ListAll()[0]);
 			cfr.Close();
 			newDir.Close();
 		}
@@ -740,7 +740,7 @@ namespace Lucene.Net.Index
 			csw.Close();
 			CompoundFileDirectory csr = new CompoundFileDirectory(newDir, "d.cfs", NewIOContext
 				(Random()), false);
-			NUnit.Framework.Assert.AreEqual(0, csr.ListAll().Length);
+			AreEqual(0, csr.ListAll().Length);
 			csr.Close();
 			newDir.Close();
 		}
@@ -763,16 +763,16 @@ namespace Lucene.Net.Index
 			newDir.DeleteFile("b.cfs");
 			newDir.DeleteFile("b.cfe");
 			csw.Close();
-			NUnit.Framework.Assert.AreEqual(2, newDir.ListAll().Length);
+			AreEqual(2, newDir.ListAll().Length);
 			csw = new CompoundFileDirectory(newDir, "d.cfs", NewIOContext(Random()), false);
-			NUnit.Framework.Assert.AreEqual(2, csw.ListAll().Length);
+			AreEqual(2, csw.ListAll().Length);
 			nested = new CompoundFileDirectory(csw, "b.cfs", NewIOContext(Random()), false);
-			NUnit.Framework.Assert.AreEqual(2, nested.ListAll().Length);
+			AreEqual(2, nested.ListAll().Length);
 			IndexInput openInput = nested.OpenInput("b.xyz", NewIOContext(Random()));
-			NUnit.Framework.Assert.AreEqual(0, openInput.ReadInt());
+			AreEqual(0, openInput.ReadInt());
 			openInput.Close();
 			openInput = nested.OpenInput("b_1.xyz", NewIOContext(Random()));
-			NUnit.Framework.Assert.AreEqual(1, openInput.ReadInt());
+			AreEqual(1, openInput.ReadInt());
 			openInput.Close();
 			nested.Close();
 			csw.Close();
@@ -791,7 +791,7 @@ namespace Lucene.Net.Index
 			csw.Close();
 			csw = new CompoundFileDirectory(newDir, "d.cfs", NewIOContext(Random()), false);
 			IndexInput openInput = csw.OpenInput("d.xyz", NewIOContext(Random()));
-			NUnit.Framework.Assert.AreEqual(0, openInput.ReadInt());
+			AreEqual(0, openInput.ReadInt());
 			openInput.Close();
 			csw.Close();
 			// close a second time - must have no effect according to Closeable
@@ -825,7 +825,7 @@ namespace Lucene.Net.Index
 			}
 			for (int fileIdx_3 = 0; fileIdx_3 < FILE_COUNT; fileIdx_3++)
 			{
-				NUnit.Framework.Assert.AreEqual(unchecked((byte)fileIdx_3), ins[fileIdx_3].ReadByte
+				AreEqual(unchecked((byte)fileIdx_3), ins[fileIdx_3].ReadByte
 					());
 			}
 			for (int fileIdx_4 = 0; fileIdx_4 < FILE_COUNT; fileIdx_4++)
@@ -840,7 +840,7 @@ namespace Lucene.Net.Index
 			Directory dir = NewDirectory();
 			// riw should sometimes create docvalues fields, etc
 			RandomIndexWriter riw = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			// these fields should sometimes get term vectors, etc
 			Field idField = NewStringField("id", string.Empty, Field.Store.NO);
@@ -849,8 +849,8 @@ namespace Lucene.Net.Index
 			doc.Add(bodyField);
 			for (int i = 0; i < 100; i++)
 			{
-				idField.SetStringValue(Sharpen.Extensions.ToString(i));
-				bodyField.SetStringValue(TestUtil.RandomUnicodeString(Random()));
+				idField.StringValue = Sharpen.Extensions.ToString(i));
+				bodyField.StringValue = TestUtil.RandomUnicodeString(Random()));
 				riw.AddDocument(doc);
 				if (Random().Next(7) == 0)
 				{

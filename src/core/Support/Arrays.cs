@@ -127,5 +127,19 @@ namespace Lucene.Net.Support
         {
             Array.Sort(ar, comparer);
         }
+
+        public static T[] CopyOfRange<T>(T[] array, int from, int to)
+        {
+            if (from<0||from>array.Length)
+            {
+                throw new ArgumentOutOfRangeException("from");
+            }
+            T[] output = new T[to];
+            for (int i = 0; i < to; i++)
+            {
+                output[i] = i >= array.Length ? default(T) : array[i];
+            }
+            return output;
+        }
     }
 }

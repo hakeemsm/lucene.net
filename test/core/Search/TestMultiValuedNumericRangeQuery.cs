@@ -5,7 +5,7 @@
  */
 
 using System.Globalization;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -37,7 +37,7 @@ namespace Lucene.Net.Search
 			int num = AtLeast(500);
 			for (int l = 0; l < num; l++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				for (int m = 0; m <= c; m++)
 				{
@@ -67,8 +67,8 @@ namespace Lucene.Net.Search
 					, true);
 				TopDocs trTopDocs = searcher.Search(cq, 1);
 				TopDocs nrTopDocs = searcher.Search(tq, 1);
-				NUnit.Framework.Assert.AreEqual("Returned count for NumericRangeQuery and TermRangeQuery must be equal"
-					, trTopDocs.totalHits, nrTopDocs.totalHits);
+				AreEqual("Returned count for NumericRangeQuery and TermRangeQuery must be equal"
+					, trTopDocs.TotalHits, nrTopDocs.TotalHits);
 			}
 			reader.Close();
 			directory.Close();

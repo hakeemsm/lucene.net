@@ -37,7 +37,7 @@ namespace Lucene.Net.Search
 			// TODO: deletions
 			while (numDocs < NUM_DOCS)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				// 10% of the time, the document is missing the value:
 				BytesRef br;
@@ -147,7 +147,7 @@ namespace Lucene.Net.Search
 				{
 					sort = new Sort(sf, SortField.FIELD_DOC);
 				}
-				int hitCount = TestUtil.NextInt(random, 1, r.MaxDoc() + 20);
+				int hitCount = TestUtil.NextInt(random, 1, r.MaxDoc + 20);
 				TestSortRandom.RandomFilter f = new TestSortRandom.RandomFilter(random, random.NextFloat
 					(), docValues);
 				int queryType = random.Next(3);
@@ -179,7 +179,7 @@ namespace Lucene.Net.Search
 				}
 				if (VERBOSE)
 				{
-					System.Console.Out.WriteLine("\nTEST: iter=" + iter + " " + hits.totalHits + " hits; topN="
+					System.Console.Out.WriteLine("\nTEST: iter=" + iter + " " + hits.TotalHits + " hits; topN="
 						 + hitCount + "; reverse=" + reverse + "; sortMissingLast=" + sortMissingLast + 
 						" sort=" + sort);
 				}
@@ -238,7 +238,7 @@ namespace Lucene.Net.Search
 					{
 						br2 = new BytesRef();
 					}
-					NUnit.Framework.Assert.AreEqual("hit=" + hitIDX_1 + " has wrong sort value", br, 
+					AreEqual("hit=" + hitIDX_1 + " has wrong sort value", br, 
 						br2);
 				}
 			}
@@ -316,10 +316,10 @@ namespace Lucene.Net.Search
 			public override DocIdSet GetDocIdSet(AtomicReaderContext context, Bits acceptDocs
 				)
 			{
-				int maxDoc = ((AtomicReader)context.Reader()).MaxDoc();
+				int maxDoc = ((AtomicReader)context.Reader()).MaxDoc;
 				FieldCache.Ints idSource = FieldCache.DEFAULT.GetInts(((AtomicReader)context.Reader
 					()), "id", false);
-				NUnit.Framework.Assert.IsNotNull(idSource);
+				IsNotNull(idSource);
 				FixedBitSet bits = new FixedBitSet(maxDoc);
 				for (int docID = 0; docID < maxDoc; docID++)
 				{

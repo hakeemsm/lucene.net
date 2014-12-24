@@ -1,25 +1,20 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
-using Com.Carrotsearch.Randomizedtesting.Generators;
 using Lucene.Net.Codecs.Lucene41;
+using Lucene.Net.Randomized.Generators;
 using Lucene.Net.Store;
-using Lucene.Net.Util;
+using Lucene.Net.Support;
 using Lucene.Net.Util.Packed;
-using Sharpen;
+using NUnit.Framework;
 
-namespace Lucene.Net.Codecs.Lucene41
+namespace Lucene.Net.Test.Codecs.Lucene41
 {
+    [TestFixture]
 	public class TestForUtil : LuceneTestCase
 	{
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestEncodeDecode()
 		{
 			int iterations = RandomInts.RandomIntBetween(Random(), 1, 1000);
-			float acceptableOverheadRatio = Random().NextFloat();
+			float acceptableOverheadRatio = (float) Random().NextDouble();
 			int[] values = new int[(iterations - 1) * Lucene41PostingsFormat.BLOCK_SIZE + ForUtil
 				.MAX_DATA_SIZE];
 			for (int i = 0; i < iterations; ++i)
@@ -51,10 +46,10 @@ namespace Lucene.Net.Codecs.Lucene41
 				for (int i_1 = 0; i_1 < iterations; ++i_1)
 				{
 					forUtil.WriteBlock(Arrays.CopyOfRange(values, i_1 * Lucene41PostingsFormat.BLOCK_SIZE
-						, values.Length), new byte[ForUtil.MAX_ENCODED_SIZE], @out);
+						, values.Length), new sbyte[ForUtil.MAX_ENCODED_SIZE], @out);
 				}
-				endPointer = @out.GetFilePointer();
-				@out.Close();
+				endPointer = @out.FilePointer;
+				@out.Dispose();
 			}
 			{
 				// decode
@@ -68,13 +63,13 @@ namespace Lucene.Net.Codecs.Lucene41
 						continue;
 					}
 					int[] restored = new int[ForUtil.MAX_DATA_SIZE];
-					forUtil.ReadBlock(@in, new byte[ForUtil.MAX_ENCODED_SIZE], restored);
-					AssertArrayEquals(Arrays.CopyOfRange(values, i_1 * Lucene41PostingsFormat.BLOCK_SIZE
+					forUtil.ReadBlock(@in, new sbyte[ForUtil.MAX_ENCODED_SIZE], restored);
+					AreEqual(Arrays.CopyOfRange(values, i_1 * Lucene41PostingsFormat.BLOCK_SIZE
 						, (i_1 + 1) * Lucene41PostingsFormat.BLOCK_SIZE), Arrays.CopyOf(restored, Lucene41PostingsFormat
 						.BLOCK_SIZE));
 				}
-				NUnit.Framework.Assert.AreEqual(endPointer, @in.GetFilePointer());
-				@in.Close();
+				AreEqual(endPointer, @in.FilePointer);
+				@in.Dispose();
 			}
 		}
 	}

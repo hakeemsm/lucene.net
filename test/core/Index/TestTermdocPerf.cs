@@ -5,8 +5,8 @@
  */
 
 using System.IO;
-using Lucene.Net.Analysis;
-using Lucene.Net.Analysis.Tokenattributes;
+using Lucene.Net.Test.Analysis;
+using Lucene.Net.Test.Analysis.Tokenattributes;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -75,7 +75,7 @@ namespace Lucene.Net.Index
 			, string val, int maxTF, float percentDocs)
 		{
 			Analyzer analyzer = new _Analyzer_81(val, random, percentDocs, maxTF);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewStringField(field, val, Field.Store.NO));
 			IndexWriter writer = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig
@@ -140,7 +140,7 @@ namespace Lucene.Net.Index
 					.FLAG_NONE);
 				while (tdocs.NextDoc() != DocIdSetIterator.NO_MORE_DOCS)
 				{
-					ret += tdocs.DocID();
+					ret += tdocs.DocID;
 				}
 			}
 			end = Runtime.CurrentTimeMillis();

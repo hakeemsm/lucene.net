@@ -4,7 +4,7 @@
  * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
@@ -29,7 +29,7 @@ namespace Lucene.Net.Index
 				(IndexWriterConfig.DISABLE_AUTO_FLUSH)).SetRAMBufferSizeMB(256.0)).SetMergeScheduler
 				(new ConcurrentMergeScheduler()).SetMergePolicy(NewLogMergePolicy(false, 10)).SetOpenMode
 				(IndexWriterConfig.OpenMode.CREATE));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			byte[] bytes = new byte[4];
 			BytesRef data = new BytesRef(bytes);
@@ -59,14 +59,14 @@ namespace Lucene.Net.Index
 				AtomicReader reader = ((AtomicReader)context.Reader());
 				BytesRef scratch = new BytesRef();
 				BinaryDocValues dv = reader.GetBinaryDocValues("dv");
-				for (int i_1 = 0; i_1 < reader.MaxDoc(); i_1++)
+				for (int i_1 = 0; i_1 < reader.MaxDoc; i_1++)
 				{
 					bytes[0] = unchecked((byte)(expectedValue >> 24));
 					bytes[1] = unchecked((byte)(expectedValue >> 16));
 					bytes[2] = unchecked((byte)(expectedValue >> 8));
 					bytes[3] = unchecked((byte)expectedValue);
 					dv.Get(i_1, scratch);
-					NUnit.Framework.Assert.AreEqual(data, scratch);
+					AreEqual(data, scratch);
 					expectedValue++;
 				}
 			}
@@ -88,7 +88,7 @@ namespace Lucene.Net.Index
 				(IndexWriterConfig.DISABLE_AUTO_FLUSH)).SetRAMBufferSizeMB(256.0)).SetMergeScheduler
 				(new ConcurrentMergeScheduler()).SetMergePolicy(NewLogMergePolicy(false, 10)).SetOpenMode
 				(IndexWriterConfig.OpenMode.CREATE));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			byte[] bytes = new byte[4];
 			ByteArrayDataOutput encoder = new ByteArrayDataOutput(bytes);
@@ -120,12 +120,12 @@ namespace Lucene.Net.Index
 				AtomicReader reader = ((AtomicReader)context.Reader());
 				BytesRef scratch = new BytesRef(bytes);
 				BinaryDocValues dv = reader.GetBinaryDocValues("dv");
-				for (int i_1 = 0; i_1 < reader.MaxDoc(); i_1++)
+				for (int i_1 = 0; i_1 < reader.MaxDoc; i_1++)
 				{
 					dv.Get(i_1, scratch);
 					input.Reset(scratch.bytes, scratch.offset, scratch.length);
-					NUnit.Framework.Assert.AreEqual(expectedValue % 65535, input.ReadVInt());
-					NUnit.Framework.Assert.IsTrue(input.Eof());
+					AreEqual(expectedValue % 65535, input.ReadVInt());
+					IsTrue(input.Eof());
 					expectedValue++;
 				}
 			}

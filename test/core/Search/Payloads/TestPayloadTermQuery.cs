@@ -6,8 +6,8 @@
 
 using System.IO;
 using NUnit.Framework;
-using Lucene.Net.Analysis;
-using Lucene.Net.Analysis.Tokenattributes;
+using Lucene.Net.Test.Analysis;
+using Lucene.Net.Test.Analysis.Tokenattributes;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -118,7 +118,7 @@ namespace Lucene.Net.Search.Payloads
 			//writer.infoStream = System.out;
 			for (int i = 0; i < 1000; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				Field noPayloadField = NewTextField(PayloadHelper.NO_PAYLOAD_FIELD, English.IntToEnglish
 					(i), Field.Store.YES);
@@ -152,23 +152,23 @@ namespace Lucene.Net.Search.Payloads
 			PayloadTermQuery query = new PayloadTermQuery(new Term("field", "seventy"), new MaxPayloadFunction
 				());
 			TopDocs hits = searcher.Search(query, null, 100);
-			NUnit.Framework.Assert.IsTrue("hits is null and it shouldn't be", hits != null);
-			NUnit.Framework.Assert.IsTrue("hits Size: " + hits.totalHits + " is not: " + 100, 
-				hits.totalHits == 100);
+			IsTrue("hits is null and it shouldn't be", hits != null);
+			IsTrue("hits Size: " + hits.TotalHits + " is not: " + 100, 
+				hits.TotalHits == 100);
 			//they should all have the exact same score, because they all contain seventy once, and we set
 			//all the other similarity factors to be 1
-			NUnit.Framework.Assert.IsTrue(hits.GetMaxScore() + " does not equal: " + 1, hits.
+			IsTrue(hits.GetMaxScore() + " does not equal: " + 1, hits.
 				GetMaxScore() == 1);
 			for (int i = 0; i < hits.scoreDocs.Length; i++)
 			{
 				ScoreDoc doc = hits.scoreDocs[i];
-				NUnit.Framework.Assert.IsTrue(doc.score + " does not equal: " + 1, doc.score == 1
+				IsTrue(doc.score + " does not equal: " + 1, doc.score == 1
 					);
 			}
 			CheckHits.CheckExplanations(query, PayloadHelper.FIELD, searcher, true);
 			Lucene.Net.Search.Spans.Spans spans = MultiSpansWrapper.Wrap(searcher.GetTopReaderContext
 				(), query);
-			NUnit.Framework.Assert.IsTrue("spans is null and it shouldn't be", spans != null);
+			IsTrue("spans is null and it shouldn't be", spans != null);
 		}
 
 		public virtual void TestQuery()
@@ -178,7 +178,7 @@ namespace Lucene.Net.Search.Payloads
 			QueryUtils.Check(boostingFuncTermQuery);
 			SpanTermQuery spanTermQuery = new SpanTermQuery(new Term(PayloadHelper.MULTI_FIELD
 				, "seventy"));
-			NUnit.Framework.Assert.IsTrue(boostingFuncTermQuery.Equals(spanTermQuery) == spanTermQuery
+			IsTrue(boostingFuncTermQuery.Equals(spanTermQuery) == spanTermQuery
 				.Equals(boostingFuncTermQuery));
 			PayloadTermQuery boostingFuncTermQuery2 = new PayloadTermQuery(new Term(PayloadHelper
 				.MULTI_FIELD, "seventy"), new AveragePayloadFunction());
@@ -191,13 +191,13 @@ namespace Lucene.Net.Search.Payloads
 			PayloadTermQuery query = new PayloadTermQuery(new Term(PayloadHelper.MULTI_FIELD, 
 				"seventy"), new MaxPayloadFunction());
 			TopDocs hits = searcher.Search(query, null, 100);
-			NUnit.Framework.Assert.IsTrue("hits is null and it shouldn't be", hits != null);
-			NUnit.Framework.Assert.IsTrue("hits Size: " + hits.totalHits + " is not: " + 100, 
-				hits.totalHits == 100);
+			IsTrue("hits is null and it shouldn't be", hits != null);
+			IsTrue("hits Size: " + hits.TotalHits + " is not: " + 100, 
+				hits.TotalHits == 100);
 			//they should all have the exact same score, because they all contain seventy once, and we set
 			//all the other similarity factors to be 1
 			//System.out.println("Hash: " + seventyHash + " Twice Hash: " + 2*seventyHash);
-			NUnit.Framework.Assert.IsTrue(hits.GetMaxScore() + " does not equal: " + 4.0, hits
+			IsTrue(hits.GetMaxScore() + " does not equal: " + 4.0, hits
 				.GetMaxScore() == 4.0);
 			//there should be exactly 10 items that score a 4, all the rest should score a 2
 			//The 10 items are: 70 + i*100 where i in [0-9]
@@ -208,20 +208,20 @@ namespace Lucene.Net.Search.Payloads
 				if (doc.doc % 10 == 0)
 				{
 					numTens++;
-					NUnit.Framework.Assert.IsTrue(doc.score + " does not equal: " + 4.0, doc.score ==
+					IsTrue(doc.score + " does not equal: " + 4.0, doc.score ==
 						 4.0);
 				}
 				else
 				{
-					NUnit.Framework.Assert.IsTrue(doc.score + " does not equal: " + 2, doc.score == 2
+					IsTrue(doc.score + " does not equal: " + 2, doc.score == 2
 						);
 				}
 			}
-			NUnit.Framework.Assert.IsTrue(numTens + " does not equal: " + 10, numTens == 10);
+			IsTrue(numTens + " does not equal: " + 10, numTens == 10);
 			CheckHits.CheckExplanations(query, "field", searcher, true);
 			Lucene.Net.Search.Spans.Spans spans = MultiSpansWrapper.Wrap(searcher.GetTopReaderContext
 				(), query);
-			NUnit.Framework.Assert.IsTrue("spans is null and it shouldn't be", spans != null);
+			IsTrue("spans is null and it shouldn't be", spans != null);
 			//should be two matches per document
 			int count = 0;
 			//100 hits times 2 matches per hit, we should have 200 in count
@@ -229,7 +229,7 @@ namespace Lucene.Net.Search.Payloads
 			{
 				count++;
 			}
-			NUnit.Framework.Assert.IsTrue(count + " does not equal: " + 200, count == 200);
+			IsTrue(count + " does not equal: " + 200, count == 200);
 		}
 
 		//Set includeSpanScore to false, in which case just the payload score comes through.
@@ -242,13 +242,13 @@ namespace Lucene.Net.Search.Payloads
 			IndexSearcher theSearcher = NewSearcher(reader);
 			theSearcher.SetSimilarity(new TestPayloadTermQuery.FullSimilarity());
 			TopDocs hits = searcher.Search(query, null, 100);
-			NUnit.Framework.Assert.IsTrue("hits is null and it shouldn't be", hits != null);
-			NUnit.Framework.Assert.IsTrue("hits Size: " + hits.totalHits + " is not: " + 100, 
-				hits.totalHits == 100);
+			IsTrue("hits is null and it shouldn't be", hits != null);
+			IsTrue("hits Size: " + hits.TotalHits + " is not: " + 100, 
+				hits.TotalHits == 100);
 			//they should all have the exact same score, because they all contain seventy once, and we set
 			//all the other similarity factors to be 1
 			//System.out.println("Hash: " + seventyHash + " Twice Hash: " + 2*seventyHash);
-			NUnit.Framework.Assert.IsTrue(hits.GetMaxScore() + " does not equal: " + 4.0, hits
+			IsTrue(hits.GetMaxScore() + " does not equal: " + 4.0, hits
 				.GetMaxScore() == 4.0);
 			//there should be exactly 10 items that score a 4, all the rest should score a 2
 			//The 10 items are: 70 + i*100 where i in [0-9]
@@ -259,20 +259,20 @@ namespace Lucene.Net.Search.Payloads
 				if (doc.doc % 10 == 0)
 				{
 					numTens++;
-					NUnit.Framework.Assert.IsTrue(doc.score + " does not equal: " + 4.0, doc.score ==
+					IsTrue(doc.score + " does not equal: " + 4.0, doc.score ==
 						 4.0);
 				}
 				else
 				{
-					NUnit.Framework.Assert.IsTrue(doc.score + " does not equal: " + 2, doc.score == 2
+					IsTrue(doc.score + " does not equal: " + 2, doc.score == 2
 						);
 				}
 			}
-			NUnit.Framework.Assert.IsTrue(numTens + " does not equal: " + 10, numTens == 10);
+			IsTrue(numTens + " does not equal: " + 10, numTens == 10);
 			CheckHits.CheckExplanations(query, "field", searcher, true);
 			Lucene.Net.Search.Spans.Spans spans = MultiSpansWrapper.Wrap(searcher.GetTopReaderContext
 				(), query);
-			NUnit.Framework.Assert.IsTrue("spans is null and it shouldn't be", spans != null);
+			IsTrue("spans is null and it shouldn't be", spans != null);
 			//should be two matches per document
 			int count = 0;
 			//100 hits times 2 matches per hit, we should have 200 in count
@@ -289,9 +289,9 @@ namespace Lucene.Net.Search.Payloads
 			PayloadTermQuery query = new PayloadTermQuery(new Term(PayloadHelper.FIELD, "junk"
 				), new MaxPayloadFunction());
 			TopDocs hits = searcher.Search(query, null, 100);
-			NUnit.Framework.Assert.IsTrue("hits is null and it shouldn't be", hits != null);
-			NUnit.Framework.Assert.IsTrue("hits Size: " + hits.totalHits + " is not: " + 0, hits
-				.totalHits == 0);
+			IsTrue("hits is null and it shouldn't be", hits != null);
+			IsTrue("hits Size: " + hits.TotalHits + " is not: " + 0, hits
+				.TotalHits == 0);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -307,9 +307,9 @@ namespace Lucene.Net.Search.Payloads
 			query.Add(c1);
 			query.Add(c2);
 			TopDocs hits = searcher.Search(query, null, 100);
-			NUnit.Framework.Assert.IsTrue("hits is null and it shouldn't be", hits != null);
-			NUnit.Framework.Assert.IsTrue("hits Size: " + hits.totalHits + " is not: " + 1, hits
-				.totalHits == 1);
+			IsTrue("hits is null and it shouldn't be", hits != null);
+			IsTrue("hits Size: " + hits.TotalHits + " is not: " + 1, hits
+				.TotalHits == 1);
 			int[] results = new int[1];
 			results[0] = 0;
 			//hits.scoreDocs[0].doc;

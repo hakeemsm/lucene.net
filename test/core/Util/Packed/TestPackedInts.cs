@@ -24,25 +24,25 @@ namespace Lucene.Net.Util.Packed
 		//HM:revisit. testcase commented out bcoz the jar doesnt have FormatHelper
 		public virtual void TestBitsRequired()
 		{
-			NUnit.Framework.Assert.AreEqual(61, PackedInts.BitsRequired((long)Math.Pow(2, 61)
+			AreEqual(61, PackedInts.BitsRequired((long)Math.Pow(2, 61)
 				 - 1));
-			NUnit.Framework.Assert.AreEqual(61, PackedInts.BitsRequired(unchecked((long)(0x1FFFFFFFFFFFFFFFL
+			AreEqual(61, PackedInts.BitsRequired(unchecked((long)(0x1FFFFFFFFFFFFFFFL
 				))));
-			NUnit.Framework.Assert.AreEqual(62, PackedInts.BitsRequired(unchecked((long)(0x3FFFFFFFFFFFFFFFL
+			AreEqual(62, PackedInts.BitsRequired(unchecked((long)(0x3FFFFFFFFFFFFFFFL
 				))));
-			NUnit.Framework.Assert.AreEqual(63, PackedInts.BitsRequired(unchecked((long)(0x7FFFFFFFFFFFFFFFL
+			AreEqual(63, PackedInts.BitsRequired(unchecked((long)(0x7FFFFFFFFFFFFFFFL
 				))));
 		}
 
 		public virtual void TestMaxValues()
 		{
-			NUnit.Framework.Assert.AreEqual("1 bit -> max == 1", 1, PackedInts.MaxValue(1));
-			NUnit.Framework.Assert.AreEqual("2 bit -> max == 3", 3, PackedInts.MaxValue(2));
-			NUnit.Framework.Assert.AreEqual("8 bit -> max == 255", 255, PackedInts.MaxValue(8
+			AreEqual("1 bit -> max == 1", 1, PackedInts.MaxValue(1));
+			AreEqual("2 bit -> max == 3", 3, PackedInts.MaxValue(2));
+			AreEqual("8 bit -> max == 255", 255, PackedInts.MaxValue(8
 				));
-			NUnit.Framework.Assert.AreEqual("63 bit -> max == Long.MAX_VALUE", long.MaxValue, 
+			AreEqual("63 bit -> max == Long.MAX_VALUE", long.MaxValue, 
 				PackedInts.MaxValue(63));
-			NUnit.Framework.Assert.AreEqual("64 bit -> max == Long.MAX_VALUE (same as for 63 bit)"
+			AreEqual("64 bit -> max == Long.MAX_VALUE (same as for 63 bit)"
 				, long.MaxValue, PackedInts.MaxValue(64));
 		}
 
@@ -120,9 +120,9 @@ namespace Lucene.Net.Util.Packed
 					if (Random().NextBoolean())
 					{
 						int got = packed1.Get(start, buffer, offset, len);
-						NUnit.Framework.Assert.IsTrue(got <= len);
+						IsTrue(got <= len);
 						int sot = packed2.Set(start, buffer, offset, got);
-						NUnit.Framework.Assert.IsTrue(sot <= got);
+						IsTrue(sot <= got);
 					}
 					else
 					{
@@ -131,7 +131,7 @@ namespace Lucene.Net.Util.Packed
 				}
 				for (int i_1 = 0; i_1 < valueCount; i_1++)
 				{
-					NUnit.Framework.Assert.AreEqual("value " + i_1, packed1.Get(i_1), packed2.Get(i_1
+					AreEqual("value " + i_1, packed1.Get(i_1), packed2.Get(i_1
 						));
 				}
 			}
@@ -163,7 +163,7 @@ namespace Lucene.Net.Util.Packed
 				catch (Exception e)
 				{
 					Sharpen.Runtime.PrintStackTrace(e, System.Console.Error);
-					NUnit.Framework.Assert.Fail(string.Format(CultureInfo.ROOT, "Exception while filling %s: valueCount=%d, bitsPerValue=%s"
+					Fail(string.Format(CultureInfo.ROOT, "Exception while filling %s: valueCount=%d, bitsPerValue=%s"
 						, packedInt.GetType().Name, valueCount, bitsPerValue));
 				}
 			}
@@ -218,7 +218,7 @@ namespace Lucene.Net.Util.Packed
 			{
 				long value = TestUtil.NextLong(rnd2, 0, maxValue);
 				packedInt.Set(i, value);
-				NUnit.Framework.Assert.AreEqual(string.Format(CultureInfo.ROOT, "The set/get of the value at index %d should match for %s"
+				AreEqual(string.Format(CultureInfo.ROOT, "The set/get of the value at index %d should match for %s"
 					, i, packedInt.GetType().Name), value, packedInt.Get(i));
 			}
 		}
@@ -239,14 +239,14 @@ namespace Lucene.Net.Util.Packed
 			int valueCount = @base.Size();
 			foreach (PackedInts.Reader packedInt in packedInts)
 			{
-				NUnit.Framework.Assert.AreEqual(message + ". The number of values should be the same "
+				AreEqual(message + ". The number of values should be the same "
 					, valueCount, packedInt.Size());
 			}
 			for (int i = 0; i < valueCount; i++)
 			{
 				for (int j = 1; j < packedInts.Count; j++)
 				{
-					NUnit.Framework.Assert.AreEqual(string.Format(CultureInfo.ROOT, "%s. The value at index %d should be the same for %s and %s"
+					AreEqual(string.Format(CultureInfo.ROOT, "%s. The value at index %d should be the same for %s and %s"
 						, message, i, @base.GetType().Name, packedInts[j].GetType().Name), @base.Get(i), 
 						packedInts[j].Get(i));
 				}
@@ -265,14 +265,14 @@ namespace Lucene.Net.Util.Packed
 				long value = 17L & PackedInts.MaxValue(bitsPerValue);
 				w.Add(value);
 				w.Finish();
-				long end = @out.GetFilePointer();
+				long end = @out.FilePointer;
 				@out.Close();
 				IndexInput @in = dir.OpenInput("out", NewIOContext(Random()));
 				PackedInts.Reader reader = PackedInts.GetReader(@in);
 				string msg = "Impl=" + w.GetType().Name + ", bitsPerValue=" + bitsPerValue;
-				NUnit.Framework.Assert.AreEqual(msg, 1, reader.Size());
-				NUnit.Framework.Assert.AreEqual(msg, value, reader.Get(0));
-				NUnit.Framework.Assert.AreEqual(msg, end, @in.GetFilePointer());
+				AreEqual(msg, 1, reader.Size());
+				AreEqual(msg, value, reader.Get(0));
+				AreEqual(msg, end, @in.FilePointer);
 				@in.Close();
 				dir.Close();
 			}
@@ -282,10 +282,10 @@ namespace Lucene.Net.Util.Packed
 		{
 			PackedInts.Mutable mutable = new Packed64(26, 5);
 			mutable.Set(24, 31);
-			NUnit.Framework.Assert.AreEqual("The value #24 should be correct", 31, mutable.Get
+			AreEqual("The value #24 should be correct", 31, mutable.Get
 				(24));
 			mutable.Set(4, 16);
-			NUnit.Framework.Assert.AreEqual("The value #24 should remain unchanged", 31, mutable
+			AreEqual("The value #24 should remain unchanged", 31, mutable
 				.Get(24));
 		}
 
@@ -309,7 +309,7 @@ namespace Lucene.Net.Util.Packed
 			if (p64 != null)
 			{
 				p64.Set(INDEX - 1, 1);
-				NUnit.Framework.Assert.AreEqual("The value at position " + (INDEX - 1) + " should be correct for Packed64"
+				AreEqual("The value at position " + (INDEX - 1) + " should be correct for Packed64"
 					, 1, p64.Get(INDEX - 1));
 				p64 = null;
 			}
@@ -325,7 +325,7 @@ namespace Lucene.Net.Util.Packed
 			if (p64sb != null)
 			{
 				p64sb.Set(INDEX - 1, 1);
-				NUnit.Framework.Assert.AreEqual("The value at position " + (INDEX - 1) + " should be correct for "
+				AreEqual("The value at position " + (INDEX - 1) + " should be correct for "
 					 + p64sb.GetType().Name, 1, p64sb.Get(INDEX - 1));
 			}
 			int index = int.MaxValue / 24 + 1;
@@ -341,7 +341,7 @@ namespace Lucene.Net.Util.Packed
 			if (p8 != null)
 			{
 				p8.Set(index - 1, 1);
-				NUnit.Framework.Assert.AreEqual("The value at position " + (index - 1) + " should be correct for Packed8ThreeBlocks"
+				AreEqual("The value at position " + (index - 1) + " should be correct for Packed8ThreeBlocks"
 					, 1, p8.Get(index - 1));
 				p8 = null;
 			}
@@ -358,7 +358,7 @@ namespace Lucene.Net.Util.Packed
 			if (p16 != null)
 			{
 				p16.Set(index - 1, 1);
-				NUnit.Framework.Assert.AreEqual("The value at position " + (index - 1) + " should be correct for Packed16ThreeBlocks"
+				AreEqual("The value at position " + (index - 1) + " should be correct for Packed16ThreeBlocks"
 					, 1, p16.Get(index - 1));
 				p16 = null;
 			}
@@ -383,11 +383,11 @@ namespace Lucene.Net.Util.Packed
 					{
 						if (i >= from && i < to)
 						{
-							NUnit.Framework.Assert.AreEqual(msg + ", i=" + i, val, ints.Get(i));
+							AreEqual(msg + ", i=" + i, val, ints.Get(i));
 						}
 						else
 						{
-							NUnit.Framework.Assert.AreEqual(msg + ", i=" + i, 1, ints.Get(i));
+							AreEqual(msg + ", i=" + i, 1, ints.Get(i));
 						}
 					}
 				}
@@ -399,23 +399,23 @@ namespace Lucene.Net.Util.Packed
 			// must be > 10 for the bulk reads below
 			int size = TestUtil.NextInt(Random(), 11, 256);
 			PackedInts.Reader packedInts = new PackedInts.NullReader(size);
-			NUnit.Framework.Assert.AreEqual(0, packedInts.Get(TestUtil.NextInt(Random(), 0, size
+			AreEqual(0, packedInts.Get(TestUtil.NextInt(Random(), 0, size
 				 - 1)));
 			long[] arr = new long[size + 10];
 			int r;
 			Arrays.Fill(arr, 1);
 			r = packedInts.Get(0, arr, 0, size - 1);
-			NUnit.Framework.Assert.AreEqual(size - 1, r);
+			AreEqual(size - 1, r);
 			for (r--; r >= 0; r--)
 			{
-				NUnit.Framework.Assert.AreEqual(0, arr[r]);
+				AreEqual(0, arr[r]);
 			}
 			Arrays.Fill(arr, 1);
 			r = packedInts.Get(10, arr, 0, size + 10);
-			NUnit.Framework.Assert.AreEqual(size - 10, r);
+			AreEqual(size - 10, r);
 			for (int i = 0; i < size - 10; i++)
 			{
-				NUnit.Framework.Assert.AreEqual(0, arr[i]);
+				AreEqual(0, arr[i]);
 			}
 		}
 
@@ -439,19 +439,19 @@ namespace Lucene.Net.Util.Packed
 					string msg = ints.GetType().Name + " valueCount=" + valueCount + ", index=" + index
 						 + ", len=" + len + ", off=" + off;
 					int gets = ints.Get(index, arr, off, len);
-					NUnit.Framework.Assert.IsTrue(msg, gets > 0);
-					NUnit.Framework.Assert.IsTrue(msg, gets <= len);
-					NUnit.Framework.Assert.IsTrue(msg, gets <= ints.Size() - index);
+					IsTrue(msg, gets > 0);
+					IsTrue(msg, gets <= len);
+					IsTrue(msg, gets <= ints.Size() - index);
 					for (int i_1 = 0; i_1 < arr.Length; ++i_1)
 					{
 						string m = msg + ", i=" + i_1;
 						if (i_1 >= off && i_1 < off + gets)
 						{
-							NUnit.Framework.Assert.AreEqual(m, ints.Get(i_1 - off + index), arr[i_1]);
+							AreEqual(m, ints.Get(i_1 - off + index), arr[i_1]);
 						}
 						else
 						{
-							NUnit.Framework.Assert.AreEqual(m, 0, arr[i_1]);
+							AreEqual(m, 0, arr[i_1]);
 						}
 					}
 				}
@@ -478,18 +478,18 @@ namespace Lucene.Net.Util.Packed
 					string msg = ints.GetType().Name + " valueCount=" + valueCount + ", index=" + index
 						 + ", len=" + len + ", off=" + off;
 					int sets = ints.Set(index, arr, off, len);
-					NUnit.Framework.Assert.IsTrue(msg, sets > 0);
-					NUnit.Framework.Assert.IsTrue(msg, sets <= len);
+					IsTrue(msg, sets > 0);
+					IsTrue(msg, sets <= len);
 					for (int i_1 = 0; i_1 < ints.Size(); ++i_1)
 					{
 						string m = msg + ", i=" + i_1;
 						if (i_1 >= index && i_1 < index + sets)
 						{
-							NUnit.Framework.Assert.AreEqual(m, arr[off - index + i_1], ints.Get(i_1));
+							AreEqual(m, arr[off - index + i_1], ints.Get(i_1));
 						}
 						else
 						{
-							NUnit.Framework.Assert.AreEqual(m, 0, ints.Get(i_1));
+							AreEqual(m, 0, ints.Get(i_1));
 						}
 					}
 				}
@@ -522,11 +522,11 @@ namespace Lucene.Net.Util.Packed
 							string m = msg + ", i=" + i_1;
 							if (i_1 >= off2 && i_1 < off2 + len)
 							{
-								NUnit.Framework.Assert.AreEqual(m, r1.Get(i_1 - off2 + off1), r2.Get(i_1));
+								AreEqual(m, r1.Get(i_1 - off2 + off1), r2.Get(i_1));
 							}
 							else
 							{
-								NUnit.Framework.Assert.AreEqual(m, 0, r2.Get(i_1));
+								AreEqual(m, 0, r2.Get(i_1));
 							}
 						}
 					}
@@ -543,21 +543,21 @@ namespace Lucene.Net.Util.Packed
 			wrt.Set(valueCount - 10, 99);
 			wrt.Set(99, 999);
 			wrt.Set(valueCount - 1, 1 << 10);
-			NUnit.Framework.Assert.AreEqual(1 << 10, wrt.Get(valueCount - 1));
+			AreEqual(1 << 10, wrt.Get(valueCount - 1));
 			wrt.Set(99, (1 << 23) - 1);
-			NUnit.Framework.Assert.AreEqual(1 << 10, wrt.Get(valueCount - 1));
+			AreEqual(1 << 10, wrt.Get(valueCount - 1));
 			wrt.Set(1, long.MaxValue);
 			wrt.Set(2, -3);
-			NUnit.Framework.Assert.AreEqual(64, wrt.GetBitsPerValue());
-			NUnit.Framework.Assert.AreEqual(1 << 10, wrt.Get(valueCount - 1));
-			NUnit.Framework.Assert.AreEqual(long.MaxValue, wrt.Get(1));
-			NUnit.Framework.Assert.AreEqual(-3L, wrt.Get(2));
-			NUnit.Framework.Assert.AreEqual(2, wrt.Get(4));
-			NUnit.Framework.Assert.AreEqual((1 << 23) - 1, wrt.Get(99));
-			NUnit.Framework.Assert.AreEqual(10, wrt.Get(7));
-			NUnit.Framework.Assert.AreEqual(99, wrt.Get(valueCount - 10));
-			NUnit.Framework.Assert.AreEqual(1 << 10, wrt.Get(valueCount - 1));
-			NUnit.Framework.Assert.AreEqual(RamUsageEstimator.SizeOf(wrt), wrt.RamBytesUsed()
+			AreEqual(64, wrt.GetBitsPerValue());
+			AreEqual(1 << 10, wrt.Get(valueCount - 1));
+			AreEqual(long.MaxValue, wrt.Get(1));
+			AreEqual(-3L, wrt.Get(2));
+			AreEqual(2, wrt.Get(4));
+			AreEqual((1 << 23) - 1, wrt.Get(99));
+			AreEqual(10, wrt.Get(7));
+			AreEqual(99, wrt.Get(valueCount - 10));
+			AreEqual(1 << 10, wrt.Get(valueCount - 1));
+			AreEqual(RamUsageEstimator.SizeOf(wrt), wrt.RamBytesUsed()
 				);
 		}
 
@@ -567,7 +567,7 @@ namespace Lucene.Net.Util.Packed
 			// supports 0 values?
 			PagedGrowableWriter writer = new PagedGrowableWriter(0, pageSize, TestUtil.NextInt
 				(Random(), 1, 64), Random().NextFloat());
-			NUnit.Framework.Assert.AreEqual(0, writer.Size());
+			AreEqual(0, writer.Size());
 			// compare against AppendingDeltaPackedLongBuffer
 			AppendingDeltaPackedLongBuffer buf = new AppendingDeltaPackedLongBuffer();
 			int size = Random().Next(1000000);
@@ -583,17 +583,17 @@ namespace Lucene.Net.Util.Packed
 			}
 			writer = new PagedGrowableWriter(size, pageSize, TestUtil.NextInt(Random(), 1, 64
 				), Random().NextFloat());
-			NUnit.Framework.Assert.AreEqual(size, writer.Size());
+			AreEqual(size, writer.Size());
 			for (int i_1 = size - 1; i_1 >= 0; --i_1)
 			{
 				writer.Set(i_1, buf.Get(i_1));
 			}
 			for (int i_2 = 0; i_2 < size; ++i_2)
 			{
-				NUnit.Framework.Assert.AreEqual(buf.Get(i_2), writer.Get(i_2));
+				AreEqual(buf.Get(i_2), writer.Get(i_2));
 			}
 			// test ramBytesUsed
-			NUnit.Framework.Assert.AreEqual(RamUsageEstimator.SizeOf(writer), writer.RamBytesUsed
+			AreEqual(RamUsageEstimator.SizeOf(writer), writer.RamBytesUsed
 				(), 8);
 			// test copy
 			PagedGrowableWriter copy = writer.Resize(TestUtil.NextLong(Random(), writer.Size(
@@ -602,11 +602,11 @@ namespace Lucene.Net.Util.Packed
 			{
 				if (i_3 < writer.Size())
 				{
-					NUnit.Framework.Assert.AreEqual(writer.Get(i_3), copy.Get(i_3));
+					AreEqual(writer.Get(i_3), copy.Get(i_3));
 				}
 				else
 				{
-					NUnit.Framework.Assert.AreEqual(0, copy.Get(i_3));
+					AreEqual(0, copy.Get(i_3));
 				}
 			}
 			// test grow
@@ -616,11 +616,11 @@ namespace Lucene.Net.Util.Packed
 			{
 				if (i_4 < writer.Size())
 				{
-					NUnit.Framework.Assert.AreEqual(writer.Get(i_4), grow.Get(i_4));
+					AreEqual(writer.Get(i_4), grow.Get(i_4));
 				}
 				else
 				{
-					NUnit.Framework.Assert.AreEqual(0, grow.Get(i_4));
+					AreEqual(0, grow.Get(i_4));
 				}
 			}
 		}
@@ -633,7 +633,7 @@ namespace Lucene.Net.Util.Packed
 			// supports 0 values?
 			PagedMutable writer = new PagedMutable(0, pageSize, bitsPerValue, Random().NextFloat
 				() / 2);
-			NUnit.Framework.Assert.AreEqual(0, writer.Size());
+			AreEqual(0, writer.Size());
 			// compare against AppendingDeltaPackedLongBuffer
 			AppendingDeltaPackedLongBuffer buf = new AppendingDeltaPackedLongBuffer();
 			int size = Random().Next(1000000);
@@ -643,17 +643,17 @@ namespace Lucene.Net.Util.Packed
 					max));
 			}
 			writer = new PagedMutable(size, pageSize, bitsPerValue, Random().NextFloat());
-			NUnit.Framework.Assert.AreEqual(size, writer.Size());
+			AreEqual(size, writer.Size());
 			for (int i_1 = size - 1; i_1 >= 0; --i_1)
 			{
 				writer.Set(i_1, buf.Get(i_1));
 			}
 			for (int i_2 = 0; i_2 < size; ++i_2)
 			{
-				NUnit.Framework.Assert.AreEqual(buf.Get(i_2), writer.Get(i_2));
+				AreEqual(buf.Get(i_2), writer.Get(i_2));
 			}
 			// test ramBytesUsed
-			NUnit.Framework.Assert.AreEqual(RamUsageEstimator.SizeOf(writer) - RamUsageEstimator
+			AreEqual(RamUsageEstimator.SizeOf(writer) - RamUsageEstimator
 				.SizeOf(writer.format), writer.RamBytesUsed());
 			// test copy
 			PagedMutable copy = writer.Resize(TestUtil.NextLong(Random(), writer.Size() / 2, 
@@ -662,11 +662,11 @@ namespace Lucene.Net.Util.Packed
 			{
 				if (i_3 < writer.Size())
 				{
-					NUnit.Framework.Assert.AreEqual(writer.Get(i_3), copy.Get(i_3));
+					AreEqual(writer.Get(i_3), copy.Get(i_3));
 				}
 				else
 				{
-					NUnit.Framework.Assert.AreEqual(0, copy.Get(i_3));
+					AreEqual(0, copy.Get(i_3));
 				}
 			}
 			// test grow
@@ -676,11 +676,11 @@ namespace Lucene.Net.Util.Packed
 			{
 				if (i_4 < writer.Size())
 				{
-					NUnit.Framework.Assert.AreEqual(writer.Get(i_4), grow.Get(i_4));
+					AreEqual(writer.Get(i_4), grow.Get(i_4));
 				}
 				else
 				{
-					NUnit.Framework.Assert.AreEqual(0, grow.Get(i_4));
+					AreEqual(0, grow.Get(i_4));
 				}
 			}
 		}
@@ -696,17 +696,17 @@ namespace Lucene.Net.Util.Packed
 				NextFloat());
 			long index = TestUtil.NextLong(Random(), (long)int.MaxValue, size - 1);
 			writer.Set(index, 2);
-			NUnit.Framework.Assert.AreEqual(2, writer.Get(index));
+			AreEqual(2, writer.Get(index));
 			for (int i = 0; i < 1000000; ++i)
 			{
 				long idx = TestUtil.NextLong(Random(), 0, size);
 				if (idx == index)
 				{
-					NUnit.Framework.Assert.AreEqual(2, writer.Get(idx));
+					AreEqual(2, writer.Get(idx));
 				}
 				else
 				{
-					NUnit.Framework.Assert.AreEqual(0, writer.Get(idx));
+					AreEqual(0, writer.Get(idx));
 				}
 			}
 		}
@@ -731,23 +731,23 @@ namespace Lucene.Net.Util.Packed
 					@out.Close();
 					IndexInput @in = directory.OpenInput("packed-ints.bin", IOContext.DEFAULT);
 					PackedInts.Reader reader = PackedInts.GetReader(@in);
-					NUnit.Framework.Assert.AreEqual(mutable.GetBitsPerValue(), reader.GetBitsPerValue
+					AreEqual(mutable.GetBitsPerValue(), reader.GetBitsPerValue
 						());
-					NUnit.Framework.Assert.AreEqual(valueCount, reader.Size());
+					AreEqual(valueCount, reader.Size());
 					if (mutable is Packed64SingleBlock)
 					{
 						// make sure that we used the right format so that the reader has
 						// the same performance characteristics as the mutable that has been
 						// serialized
-						NUnit.Framework.Assert.IsTrue(reader is Packed64SingleBlock);
+						IsTrue(reader is Packed64SingleBlock);
 					}
 					else
 					{
-						NUnit.Framework.Assert.IsFalse(reader is Packed64SingleBlock);
+						IsFalse(reader is Packed64SingleBlock);
 					}
 					for (int i_1 = 0; i_1 < valueCount; ++i_1)
 					{
-						NUnit.Framework.Assert.AreEqual(mutable.Get(i_1), reader.Get(i_1));
+						AreEqual(mutable.Get(i_1), reader.Get(i_1));
 					}
 					@in.Close();
 					directory.DeleteFile("packed-ints.bin");
@@ -859,7 +859,7 @@ namespace Lucene.Net.Util.Packed
 					{
 						buf.Add(arr[i_1]);
 					}
-					NUnit.Framework.Assert.AreEqual(arr.Length, buf.Size());
+					AreEqual(arr.Length, buf.Size());
 					if (Random().NextBoolean())
 					{
 						buf.Freeze();
@@ -869,21 +869,21 @@ namespace Lucene.Net.Util.Packed
 							buf.Freeze();
 						}
 					}
-					NUnit.Framework.Assert.AreEqual(arr.Length, buf.Size());
+					AreEqual(arr.Length, buf.Size());
 					for (int i_2 = 0; i_2 < arr.Length; ++i_2)
 					{
-						NUnit.Framework.Assert.AreEqual(arr[i_2], buf.Get(i_2));
+						AreEqual(arr[i_2], buf.Get(i_2));
 					}
 					AbstractAppendingLongBuffer.Iterator it = buf.Iterator();
 					for (int i_3 = 0; i_3 < arr.Length; ++i_3)
 					{
 						if (Random().NextBoolean())
 						{
-							NUnit.Framework.Assert.IsTrue(it.HasNext());
+							IsTrue(it.HasNext());
 						}
-						NUnit.Framework.Assert.AreEqual(arr[i_3], it.Next());
+						AreEqual(arr[i_3], it.Next());
 					}
-					NUnit.Framework.Assert.IsFalse(it.HasNext());
+					IsFalse(it.HasNext());
 					long[] target = new long[arr.Length + 1024];
 					// check the request for more is OK.
 					for (int i_4 = 0; i_4 < arr.Length; i_4 += TestUtil.NextInt(Random(), 0, 10000))
@@ -895,19 +895,19 @@ namespace Lucene.Net.Util.Packed
 						while (off < arr.Length && lenToRead > 0)
 						{
 							int read = buf.Get(off, target, off, lenToRead);
-							NUnit.Framework.Assert.IsTrue(read > 0);
-							NUnit.Framework.Assert.IsTrue(read <= lenToRead);
+							IsTrue(read > 0);
+							IsTrue(read <= lenToRead);
 							lenToRead -= read;
 							off += read;
 						}
 						for (int j = 0; j < lenToCheck; j++)
 						{
-							NUnit.Framework.Assert.AreEqual(arr[j + i_4], target[j + i_4]);
+							AreEqual(arr[j + i_4], target[j + i_4]);
 						}
 					}
 					long expectedBytesUsed = RamUsageEstimator.SizeOf(buf);
 					long computedBytesUsed = buf.RamBytesUsed();
-					NUnit.Framework.Assert.AreEqual(expectedBytesUsed, computedBytesUsed);
+					AreEqual(expectedBytesUsed, computedBytesUsed);
 				}
 			}
 		}
@@ -948,21 +948,21 @@ namespace Lucene.Net.Util.Packed
 				}
 			}
 			pout.Flush();
-			NUnit.Framework.Assert.AreEqual((long)Math.Ceil((double)totalBits / 8), @out.GetFilePointer
+			AreEqual((long)Math.Ceil((double)totalBits / 8), @out.GetFilePointer
 				());
 			@out.Close();
 			IndexInput @in = dir.OpenInput("out.bin", IOContext.READONCE);
 			PackedDataInput pin = new PackedDataInput(@in);
 			for (int i_2 = 0; i_2 < longs.Length; ++i_2)
 			{
-				NUnit.Framework.Assert.AreEqual(string.Empty + i_2, longs[i_2], pin.ReadLong(bitsPerValues
+				AreEqual(string.Empty + i_2, longs[i_2], pin.ReadLong(bitsPerValues
 					[i_2]));
 				if (skip[i_2])
 				{
 					pin.SkipToNextByte();
 				}
 			}
-			NUnit.Framework.Assert.AreEqual((long)Math.Ceil((double)totalBits / 8), @in.GetFilePointer
+			AreEqual((long)Math.Ceil((double)totalBits / 8), @in.GetFilePointer
 				());
 			@in.Close();
 			dir.Close();
@@ -1007,13 +1007,13 @@ namespace Lucene.Net.Util.Packed
 				BlockPackedWriter writer = new BlockPackedWriter(@out, blockSize);
 				for (int i_1 = 0; i_1 < valueCount; ++i_1)
 				{
-					NUnit.Framework.Assert.AreEqual(i_1, writer.Ord());
+					AreEqual(i_1, writer.Ord());
 					writer.Add(values[i_1]);
 				}
-				NUnit.Framework.Assert.AreEqual(valueCount, writer.Ord());
+				AreEqual(valueCount, writer.Ord());
 				writer.Finish();
-				NUnit.Framework.Assert.AreEqual(valueCount, writer.Ord());
-				long fp = @out.GetFilePointer();
+				AreEqual(valueCount, writer.Ord());
+				long fp = @out.FilePointer;
 				@out.Close();
 				IndexInput in1 = dir.OpenInput("out.bin", IOContext.DEFAULT);
 				byte[] buf = new byte[(int)fp];
@@ -1027,7 +1027,7 @@ namespace Lucene.Net.Util.Packed
 				{
 					if (Random().NextBoolean())
 					{
-						NUnit.Framework.Assert.AreEqual(string.Empty + i_2, values[i_2], it.Next());
+						AreEqual(string.Empty + i_2, values[i_2], it.Next());
 						++i_2;
 					}
 					else
@@ -1035,19 +1035,19 @@ namespace Lucene.Net.Util.Packed
 						LongsRef nextValues = it.Next(TestUtil.NextInt(Random(), 1, 1024));
 						for (int j = 0; j < nextValues.length; ++j)
 						{
-							NUnit.Framework.Assert.AreEqual(string.Empty + (i_2 + j), values[i_2 + j], nextValues
+							AreEqual(string.Empty + (i_2 + j), values[i_2 + j], nextValues
 								.longs[nextValues.offset + j]);
 						}
 						i_2 += nextValues.length;
 					}
-					NUnit.Framework.Assert.AreEqual(i_2, it.Ord());
+					AreEqual(i_2, it.Ord());
 				}
-				NUnit.Framework.Assert.AreEqual(fp, @in is ByteArrayDataInput ? ((ByteArrayDataInput
-					)@in).GetPosition() : ((IndexInput)@in).GetFilePointer());
+				AreEqual(fp, @in is ByteArrayDataInput ? ((ByteArrayDataInput
+					)@in).GetPosition() : ((IndexInput)@in).FilePointer);
 				try
 				{
 					it.Next();
-					NUnit.Framework.Assert.IsTrue(false);
+					IsTrue(false);
 				}
 				catch (IOException)
 				{
@@ -1069,23 +1069,23 @@ namespace Lucene.Net.Util.Packed
 					int skip = TestUtil.NextInt(Random(), 0, valueCount - i_3);
 					it2.Skip(skip);
 					i_3 += skip;
-					NUnit.Framework.Assert.AreEqual(i_3, it2.Ord());
+					AreEqual(i_3, it2.Ord());
 					if (i_3 == valueCount)
 					{
 						break;
 					}
 					else
 					{
-						NUnit.Framework.Assert.AreEqual(values[i_3], it2.Next());
+						AreEqual(values[i_3], it2.Next());
 						++i_3;
 					}
 				}
-				NUnit.Framework.Assert.AreEqual(fp, @in is ByteArrayDataInput ? ((ByteArrayDataInput
-					)@in).GetPosition() : ((IndexInput)@in).GetFilePointer());
+				AreEqual(fp, @in is ByteArrayDataInput ? ((ByteArrayDataInput
+					)@in).GetPosition() : ((IndexInput)@in).FilePointer);
 				try
 				{
 					it2.Skip(1);
-					NUnit.Framework.Assert.IsTrue(false);
+					IsTrue(false);
 				}
 				catch (IOException)
 				{
@@ -1094,10 +1094,10 @@ namespace Lucene.Net.Util.Packed
 				in1.Seek(0L);
 				BlockPackedReader reader = new BlockPackedReader(in1, PackedInts.VERSION_CURRENT, 
 					blockSize, valueCount, Random().NextBoolean());
-				NUnit.Framework.Assert.AreEqual(in1.GetFilePointer(), in1.Length());
+				AreEqual(in1.FilePointer, in1.Length());
 				for (i_3 = 0; i_3 < valueCount; ++i_3)
 				{
-					NUnit.Framework.Assert.AreEqual("i=" + i_3, values[i_3], reader.Get(i_3));
+					AreEqual("i=" + i_3, values[i_3], reader.Get(i_3));
 				}
 				in1.Close();
 				dir.Close();
@@ -1134,21 +1134,21 @@ namespace Lucene.Net.Util.Packed
 					);
 				for (int i_1 = 0; i_1 < valueCount; ++i_1)
 				{
-					NUnit.Framework.Assert.AreEqual(i_1, writer.Ord());
+					AreEqual(i_1, writer.Ord());
 					writer.Add(values[i_1]);
 				}
-				NUnit.Framework.Assert.AreEqual(valueCount, writer.Ord());
+				AreEqual(valueCount, writer.Ord());
 				writer.Finish();
-				NUnit.Framework.Assert.AreEqual(valueCount, writer.Ord());
-				long fp = @out.GetFilePointer();
+				AreEqual(valueCount, writer.Ord());
+				long fp = @out.FilePointer;
 				@out.Close();
 				IndexInput @in = dir.OpenInput("out.bin", IOContext.DEFAULT);
 				MonotonicBlockPackedReader reader = new MonotonicBlockPackedReader(@in, PackedInts
 					.VERSION_CURRENT, blockSize, valueCount, Random().NextBoolean());
-				NUnit.Framework.Assert.AreEqual(fp, @in.GetFilePointer());
+				AreEqual(fp, @in.FilePointer);
 				for (int i_2 = 0; i_2 < valueCount; ++i_2)
 				{
-					NUnit.Framework.Assert.AreEqual("i=" + i_2, values[i_2], reader.Get(i_2));
+					AreEqual("i=" + i_2, values[i_2], reader.Get(i_2));
 				}
 				@in.Close();
 				dir.Close();
@@ -1169,7 +1169,7 @@ namespace Lucene.Net.Util.Packed
 			long valueOffset = TestUtil.NextLong(Random(), 0, valueCount - 1);
 			for (long i = 0; i < valueCount; )
 			{
-				NUnit.Framework.Assert.AreEqual(i, writer.Ord());
+				AreEqual(i, writer.Ord());
 				if ((i & (blockSize - 1)) == 0 && (i + blockSize < valueOffset || i > valueOffset
 					 && i + blockSize < valueCount))
 				{
@@ -1196,21 +1196,21 @@ namespace Lucene.Net.Util.Packed
 			BlockPackedReaderIterator it = new BlockPackedReaderIterator(@in, PackedInts.VERSION_CURRENT
 				, blockSize, valueCount);
 			it.Skip(valueOffset);
-			NUnit.Framework.Assert.AreEqual(value, it.Next());
+			AreEqual(value, it.Next());
 			@in.Seek(0L);
 			BlockPackedReader reader = new BlockPackedReader(@in, PackedInts.VERSION_CURRENT, 
 				blockSize, valueCount, Random().NextBoolean());
-			NUnit.Framework.Assert.AreEqual(value, reader.Get(valueOffset));
+			AreEqual(value, reader.Get(valueOffset));
 			for (int i_1 = 0; i_1 < 5; ++i_1)
 			{
 				long offset = TestUtil.NextLong(Random(), 0, valueCount - 1);
 				if (offset == valueOffset)
 				{
-					NUnit.Framework.Assert.AreEqual(value, reader.Get(offset));
+					AreEqual(value, reader.Get(offset));
 				}
 				else
 				{
-					NUnit.Framework.Assert.AreEqual(0, reader.Get(offset));
+					AreEqual(0, reader.Get(offset));
 				}
 			}
 			@in.Close();

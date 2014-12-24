@@ -19,7 +19,7 @@ using System;
 
 using NUnit.Framework;
 
-using KeywordAnalyzer = Lucene.Net.Analysis.KeywordAnalyzer;
+using KeywordAnalyzer = Lucene.Net.Test.Analysis.KeywordAnalyzer;
 using Document = Lucene.Net.Documents.Document;
 using Field = Lucene.Net.Documents.Field;
 using IndexReader = Lucene.Net.Index.IndexReader;

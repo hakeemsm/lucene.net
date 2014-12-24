@@ -45,7 +45,7 @@ namespace Lucene.Net.Search
 			{
 				// don't decrease; if to low the
 				// problem doesn't show up
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				if ((i % 5) != 0)
 				{
@@ -141,7 +141,7 @@ namespace Lucene.Net.Search
 				{
 					Log("ID " + idHitDate + " not found. Possibliy a duplicate.");
 				}
-				NUnit.Framework.Assert.IsTrue(resultMap.ContainsKey(idHitDate));
+				IsTrue(resultMap.ContainsKey(idHitDate));
 				// same ID must be in the
 				// Map from the rank-sorted
 				// search
@@ -158,7 +158,7 @@ namespace Lucene.Net.Search
 				// log("All hits matched");
 				Log("Couldn't match " + resultMap.Count + " hits.");
 			}
-			NUnit.Framework.Assert.AreEqual(resultMap.Count, 0);
+			AreEqual(resultMap.Count, 0);
 		}
 
 		/// <summary>Check the hits for duplicates.</summary>

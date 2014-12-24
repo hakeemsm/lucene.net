@@ -20,7 +20,7 @@ using System;
 using NUnit.Framework;
 
 using LuceneTestCase = Lucene.Net.Util.LuceneTestCase;
-using WhitespaceAnalyzer = Lucene.Net.Analysis.WhitespaceAnalyzer;
+using WhitespaceAnalyzer = Lucene.Net.Test.Analysis.WhitespaceAnalyzer;
 using Document = Lucene.Net.Documents.Document;
 using Field = Lucene.Net.Documents.Field;
 using IndexWriter = Lucene.Net.Index.IndexWriter;
@@ -54,7 +54,7 @@ namespace Lucene.Net.Search
 			base.SetUp();
 			directory = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), directory);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			Field field = NewStringField(FIELD, "meaninglessnames", Field.Store.NO);
 			doc.Add(field);
@@ -62,15 +62,15 @@ namespace Lucene.Net.Search
 			{
 				writer.AddDocument(doc);
 			}
-			field.SetStringValue("tangfulin");
+			field.StringValue = "tangfulin");
 				writer.AddDocument(doc);
-			field.SetStringValue("meaninglessnames");
+			field.StringValue = "meaninglessnames");
 			
 			for (int i = 5138; i < 11377; ++i)
 			{
 				writer.AddDocument(doc);
 			}
-			field.SetStringValue("tangfulin");
+			field.StringValue = "tangfulin");
 			writer.AddDocument(doc);
 			reader = writer.GetReader();
 			searcher = NewSearcher(reader);

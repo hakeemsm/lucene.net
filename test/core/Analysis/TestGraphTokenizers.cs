@@ -1,21 +1,18 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using Lucene.Net.Analysis;
-using Lucene.Net.Test.Analysis.TokenAttributes;
-using Lucene.Net.Util;
+using Lucene.Net.Analysis.Tokenattributes;
+using Lucene.Net.Support;
+using Lucene.Net.TestFramework.Analysis;
 using Lucene.Net.Util.Automaton;
-using Sharpen;
+using NUnit.Framework;
 
-namespace Lucene.Net.Analysis
+namespace Lucene.Net.Test.Analysis
 {
+    [TestFixture]
 	public class TestGraphTokenizers : BaseTokenStreamTestCase
 	{
 		private class GraphTokenizer : Tokenizer
@@ -26,21 +23,28 @@ namespace Lucene.Net.Analysis
 
 			private int inputLength;
 
-			private readonly CharTermAttribute termAtt = AddAttribute<CharTermAttribute>();
+		    private CharTermAttribute termAtt;
 
-			private readonly OffsetAttribute offsetAtt = AddAttribute<OffsetAttribute>();
+		    private OffsetAttribute offsetAtt;
 
-			private readonly PositionIncrementAttribute posIncrAtt = AddAttribute<PositionIncrementAttribute
-				>();
+		    private PositionIncrementAttribute posIncrAtt;
 
-			private readonly PositionLengthAttribute posLengthAtt = AddAttribute<PositionLengthAttribute
-				>();
+		    private PositionLengthAttribute posLengthAtt;
 
-			protected GraphTokenizer(StreamReader input) : base(input)
+			protected internal GraphTokenizer(TextReader input) : base(input)
 			{
+			    InitAttributes();
 			}
 
-			// Makes a graph TokenStream from the string; separate
+		    private void InitAttributes()
+		    {
+		        termAtt = AddAttribute<CharTermAttribute>();
+		        offsetAtt = AddAttribute<OffsetAttribute>();
+		        posIncrAtt = AddAttribute<PositionIncrementAttribute>();
+		        posLengthAtt = AddAttribute<PositionLengthAttribute>();
+		    }
+
+		    // Makes a graph TokenStream from the string; separate
 			// positions with single space, multiple tokens at the same
 			// position with /, and add optional position length with
 			// :.  EG "a b c" is a simple chain, "a/x b c" adds 'x'
@@ -77,9 +81,9 @@ namespace Lucene.Net.Analysis
 				//System.out.println("  return token=" + t);
 				ClearAttributes();
 				termAtt.Append(t.ToString());
-				offsetAtt.SetOffset(t.StartOffset(), t.EndOffset());
-				posIncrAtt.SetPositionIncrement(t.GetPositionIncrement());
-				posLengthAtt.SetPositionLength(t.GetPositionLength());
+				offsetAtt.SetOffset(t.StartOffset, t.EndOffset);
+				posIncrAtt.PositionIncrement = t.PositionIncrement;
+				posLengthAtt.PositionLength = t.PositionLength;
 				return true;
 			}
 
@@ -90,9 +94,9 @@ namespace Lucene.Net.Analysis
 				// NOTE: somewhat... hackish, but we need this to
 				// satisfy BTSTC:
 				int lastOffset;
-				if (tokens != null && !tokens.IsEmpty())
+				if (tokens != null && tokens.Any())
 				{
-					lastOffset = tokens[tokens.Count - 1].EndOffset();
+					lastOffset = tokens[tokens.Count - 1].EndOffset;
 				}
 				else
 				{
@@ -108,7 +112,7 @@ namespace Lucene.Net.Analysis
 				char[] buffer = new char[256];
 				while (true)
 				{
-					int count = input.Read(buffer);
+					int count = input.Read(buffer,0,256);
 					if (count == -1)
 					{
 						break;
@@ -118,15 +122,15 @@ namespace Lucene.Net.Analysis
 				//System.out.println("got count=" + count);
 				//System.out.println("fillTokens: " + sb);
 				inputLength = sb.Length;
-				string[] parts = sb.ToString().Split(" ");
-				tokens = new AList<Token>();
+				string[] parts = sb.ToString().Split(new []{' '});
+				tokens = new List<Token>();
 				int pos = 0;
 				int maxPos = -1;
 				int offset = 0;
 				//System.out.println("again");
 				foreach (string part in parts)
 				{
-					string[] overlapped = part.Split("/");
+					string[] overlapped = part.Split(new []{'/'});
 					bool firstAtPos = true;
 					int minPosLength = int.MaxValue;
 					foreach (string part2 in overlapped)
@@ -136,9 +140,8 @@ namespace Lucene.Net.Analysis
 						int posLength;
 						if (colonIndex != -1)
 						{
-							token = Sharpen.Runtime.Substring(part2, 0, colonIndex);
-							posLength = System.Convert.ToInt32(Sharpen.Runtime.Substring(part2, 1 + colonIndex
-								));
+							token = part2.Substring(0, colonIndex);
+							posLength = Convert.ToInt32(part2.Substring(1 + colonIndex));
 						}
 						else
 						{
@@ -148,21 +151,21 @@ namespace Lucene.Net.Analysis
 						maxPos = Math.Max(maxPos, pos + posLength);
 						minPosLength = Math.Min(minPosLength, posLength);
 						Token t = new Token(token, offset, offset + 2 * posLength - 1);
-						t.SetPositionLength(posLength);
-						t.SetPositionIncrement(firstAtPos ? 1 : 0);
+						t.PositionLength = posLength;
+						t.PositionIncrement = firstAtPos ? 1 : 0;
 						firstAtPos = false;
 						//System.out.println("  add token=" + t + " startOff=" + t.startOffset() + " endOff=" + t.endOffset());
-						tokens.AddItem(t);
+						tokens.Add(t);
 					}
 					pos += minPosLength;
 					offset = 2 * pos;
 				}
 			}
-			//HM:revisit 
+			
 			//assert maxPos <= pos: "input string mal-formed: posLength>1 tokens hang over the end";
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestMockGraphTokenFilterBasic()
 		{
 			for (int iter = 0; iter < 10 * RANDOM_MULTIPLIER; iter++)
@@ -173,27 +176,22 @@ namespace Lucene.Net.Analysis
 				}
 				// Make new analyzer each time, because MGTF has fixed
 				// seed:
-				Analyzer a = new _Analyzer_177();
+				Analyzer a = new AnonymousAnalyzer();
 				CheckAnalysisConsistency(Random(), a, false, "a b c d e f g h i j k");
 			}
 		}
 
-		private sealed class _Analyzer_177 : Analyzer
+		private sealed class AnonymousAnalyzer : Analyzer
 		{
-			public _Analyzer_177()
-			{
-			}
-
-			protected override Analyzer.TokenStreamComponents CreateComponents(string fieldName
-				, StreamReader reader)
+		    public override TokenStreamComponents CreateComponents(string fieldName, TextReader reader)
 			{
 				Tokenizer t = new MockTokenizer(reader, MockTokenizer.WHITESPACE, false);
-				TokenStream t2 = new MockGraphTokenFilter(LuceneTestCase.Random(), t);
-				return new Analyzer.TokenStreamComponents(t, t2);
+				TokenStream t2 = new MockGraphTokenFilter(Random(), t);
+				return new TokenStreamComponents(t, t2);
 			}
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestMockGraphTokenFilterOnGraphInput()
 		{
 			for (int iter = 0; iter < 100 * RANDOM_MULTIPLIER; iter++)
@@ -204,21 +202,16 @@ namespace Lucene.Net.Analysis
 				}
 				// Make new analyzer each time, because MGTF has fixed
 				// seed:
-				Analyzer a = new _Analyzer_199();
+				Analyzer a = new AnonymousAnalyzer2();
 				CheckAnalysisConsistency(Random(), a, false, "a/x:3 c/y:2 d e f/z:4 g h i j k");
 			}
 		}
 
-		private sealed class _Analyzer_199 : Analyzer
+		private sealed class AnonymousAnalyzer2 : Analyzer
 		{
-			public _Analyzer_199()
+		    public override TokenStreamComponents CreateComponents(string fieldName, TextReader reader)
 			{
-			}
-
-			protected override Analyzer.TokenStreamComponents CreateComponents(string fieldName
-				, StreamReader reader)
-			{
-				Tokenizer t = new TestGraphTokenizers.GraphTokenizer(reader);
+				Tokenizer t = new GraphTokenizer(reader);
 				TokenStream t2 = new MockGraphTokenFilter(LuceneTestCase.Random(), t);
 				return new Analyzer.TokenStreamComponents(t, t2);
 			}
@@ -228,16 +221,22 @@ namespace Lucene.Net.Analysis
 		{
 			private int pendingPosInc;
 
-			private readonly CharTermAttribute termAtt = AddAttribute<CharTermAttribute>();
+		    private CharTermAttribute termAtt;
 
-			private readonly PositionIncrementAttribute posIncAtt = AddAttribute<PositionIncrementAttribute
-				>();
+		    private PositionIncrementAttribute posIncAtt;
 
-			protected RemoveATokens(TokenStream @in) : base(@in)
+			protected internal RemoveATokens(TokenStream ts) : base(ts)
 			{
+			    InitAttributes();
 			}
 
-			// Just deletes (leaving hole) token 'a':
+		    private void InitAttributes()
+		    {
+                termAtt = AddAttribute<CharTermAttribute>();
+                posIncAtt = AddAttribute<PositionIncrementAttribute>();
+		    }
+
+		    // Just deletes (leaving hole) token 'a':
 			/// <exception cref="System.IO.IOException"></exception>
 			public override void Reset()
 			{
@@ -249,7 +248,7 @@ namespace Lucene.Net.Analysis
 			public override void End()
 			{
 				base.End();
-				posIncAtt.SetPositionIncrement(pendingPosInc + posIncAtt.GetPositionIncrement());
+				posIncAtt.PositionIncrement = pendingPosInc + posIncAtt.PositionIncrement;
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
@@ -266,11 +265,11 @@ namespace Lucene.Net.Analysis
 					{
 						if (termAtt.ToString().Equals("a"))
 						{
-							pendingPosInc += posIncAtt.GetPositionIncrement();
+							pendingPosInc += posIncAtt.PositionIncrement;
 						}
 						else
 						{
-							posIncAtt.SetPositionIncrement(pendingPosInc + posIncAtt.GetPositionIncrement());
+							posIncAtt.PositionIncrement = pendingPosInc + posIncAtt.PositionIncrement;
 							pendingPosInc = 0;
 							return true;
 						}
@@ -279,7 +278,7 @@ namespace Lucene.Net.Analysis
 			}
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestMockGraphTokenFilterBeforeHoles()
 		{
 			for (int iter = 0; iter < 100 * RANDOM_MULTIPLIER; iter++)
@@ -290,7 +289,7 @@ namespace Lucene.Net.Analysis
 				}
 				// Make new analyzer each time, because MGTF has fixed
 				// seed:
-				Analyzer a = new _Analyzer_261();
+				Analyzer a = new AnonymousAnalyzer3();
 				Random random = Random();
 				CheckAnalysisConsistency(random, a, false, "a b c d e f g h i j k");
 				CheckAnalysisConsistency(random, a, false, "x y a b c d e f g h i j k");
@@ -299,23 +298,18 @@ namespace Lucene.Net.Analysis
 			}
 		}
 
-		private sealed class _Analyzer_261 : Analyzer
+		private sealed class AnonymousAnalyzer3 : Analyzer
 		{
-			public _Analyzer_261()
-			{
-			}
-
-			protected override Analyzer.TokenStreamComponents CreateComponents(string fieldName
-				, StreamReader reader)
+		    public override TokenStreamComponents CreateComponents(string fieldName, TextReader reader)
 			{
 				Tokenizer t = new MockTokenizer(reader, MockTokenizer.WHITESPACE, false);
-				TokenStream t2 = new MockGraphTokenFilter(LuceneTestCase.Random(), t);
-				TokenStream t3 = new TestGraphTokenizers.RemoveATokens(t2);
-				return new Analyzer.TokenStreamComponents(t, t3);
+				TokenStream t2 = new MockGraphTokenFilter(Random(), t);
+				TokenStream t3 = new RemoveATokens(t2);
+				return new TokenStreamComponents(t, t3);
 			}
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestMockGraphTokenFilterAfterHoles()
 		{
 			for (int iter = 0; iter < 100 * RANDOM_MULTIPLIER; iter++)
@@ -326,7 +320,7 @@ namespace Lucene.Net.Analysis
 				}
 				// Make new analyzer each time, because MGTF has fixed
 				// seed:
-				Analyzer a = new _Analyzer_288();
+				Analyzer a = new AnonymousAnalyzer4();
 				Random random = Random();
 				CheckAnalysisConsistency(random, a, false, "a b c d e f g h i j k");
 				CheckAnalysisConsistency(random, a, false, "x y a b c d e f g h i j k");
@@ -335,23 +329,18 @@ namespace Lucene.Net.Analysis
 			}
 		}
 
-		private sealed class _Analyzer_288 : Analyzer
+		private sealed class AnonymousAnalyzer4 : Analyzer
 		{
-			public _Analyzer_288()
-			{
-			}
-
-			protected override Analyzer.TokenStreamComponents CreateComponents(string fieldName
-				, StreamReader reader)
+		    public override TokenStreamComponents CreateComponents(string fieldName, TextReader reader)
 			{
 				Tokenizer t = new MockTokenizer(reader, MockTokenizer.WHITESPACE, false);
-				TokenStream t2 = new TestGraphTokenizers.RemoveATokens(t);
-				TokenStream t3 = new MockGraphTokenFilter(LuceneTestCase.Random(), t2);
-				return new Analyzer.TokenStreamComponents(t, t3);
+				TokenStream t2 = new RemoveATokens(t);
+				TokenStream t3 = new MockGraphTokenFilter(Random(), t2);
+				return new TokenStreamComponents(t, t3);
 			}
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestMockGraphTokenFilterRandom()
 		{
 			for (int iter = 0; iter < 10 * RANDOM_MULTIPLIER; iter++)
@@ -362,20 +351,15 @@ namespace Lucene.Net.Analysis
 				}
 				// Make new analyzer each time, because MGTF has fixed
 				// seed:
-				Analyzer a = new _Analyzer_315();
+				Analyzer a = new AnonymousAnalyzer5();
 				Random random = Random();
 				CheckRandomData(random, a, 5, AtLeast(100));
 			}
 		}
 
-		private sealed class _Analyzer_315 : Analyzer
+		private sealed class AnonymousAnalyzer5 : Analyzer
 		{
-			public _Analyzer_315()
-			{
-			}
-
-			protected override Analyzer.TokenStreamComponents CreateComponents(string fieldName
-				, StreamReader reader)
+		    public override TokenStreamComponents CreateComponents(string fieldName, TextReader reader)
 			{
 				Tokenizer t = new MockTokenizer(reader, MockTokenizer.WHITESPACE, false);
 				TokenStream t2 = new MockGraphTokenFilter(LuceneTestCase.Random(), t);
@@ -383,8 +367,7 @@ namespace Lucene.Net.Analysis
 			}
 		}
 
-		// Two MockGraphTokenFilters
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestDoubleMockGraphTokenFilterRandom()
 		{
 			for (int iter = 0; iter < 10 * RANDOM_MULTIPLIER; iter++)
@@ -395,20 +378,16 @@ namespace Lucene.Net.Analysis
 				}
 				// Make new analyzer each time, because MGTF has fixed
 				// seed:
-				Analyzer a = new _Analyzer_339();
+				Analyzer a = new AnonymousAnalyzer6();
 				Random random = Random();
 				CheckRandomData(random, a, 5, AtLeast(100));
 			}
 		}
 
-		private sealed class _Analyzer_339 : Analyzer
+		private sealed class AnonymousAnalyzer6 : Analyzer
 		{
-			public _Analyzer_339()
-			{
-			}
 
-			protected override Analyzer.TokenStreamComponents CreateComponents(string fieldName
-				, StreamReader reader)
+		    public override TokenStreamComponents CreateComponents(string fieldName, TextReader reader)
 			{
 				Tokenizer t = new MockTokenizer(reader, MockTokenizer.WHITESPACE, false);
 				TokenStream t1 = new MockGraphTokenFilter(LuceneTestCase.Random(), t);
@@ -417,7 +396,7 @@ namespace Lucene.Net.Analysis
 			}
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestMockGraphTokenFilterBeforeHolesRandom()
 		{
 			for (int iter = 0; iter < 10 * RANDOM_MULTIPLIER; iter++)
@@ -428,29 +407,24 @@ namespace Lucene.Net.Analysis
 				}
 				// Make new analyzer each time, because MGTF has fixed
 				// seed:
-				Analyzer a = new _Analyzer_363();
+				Analyzer a = new AnonymousAnalyzer7();
 				Random random = Random();
 				CheckRandomData(random, a, 5, AtLeast(100));
 			}
 		}
 
-		private sealed class _Analyzer_363 : Analyzer
+		private sealed class AnonymousAnalyzer7 : Analyzer
 		{
-			public _Analyzer_363()
-			{
-			}
-
-			protected override Analyzer.TokenStreamComponents CreateComponents(string fieldName
-				, StreamReader reader)
+		    public override TokenStreamComponents CreateComponents(string fieldName, TextReader reader)
 			{
 				Tokenizer t = new MockTokenizer(reader, MockTokenizer.WHITESPACE, false);
 				TokenStream t1 = new MockGraphTokenFilter(LuceneTestCase.Random(), t);
-				TokenStream t2 = new MockHoleInjectingTokenFilter(LuceneTestCase.Random(), t1);
+				TokenStream t2 = new MockHoleInjectingTokenFilter(Random(), t1);
 				return new Analyzer.TokenStreamComponents(t, t2);
 			}
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestMockGraphTokenFilterAfterHolesRandom()
 		{
 			for (int iter = 0; iter < 10 * RANDOM_MULTIPLIER; iter++)
@@ -461,20 +435,15 @@ namespace Lucene.Net.Analysis
 				}
 				// Make new analyzer each time, because MGTF has fixed
 				// seed:
-				Analyzer a = new _Analyzer_387();
+				Analyzer a = new AnonymousAnalyzer8();
 				Random random = Random();
 				CheckRandomData(random, a, 5, AtLeast(100));
 			}
 		}
 
-		private sealed class _Analyzer_387 : Analyzer
+		private sealed class AnonymousAnalyzer8 : Analyzer
 		{
-			public _Analyzer_387()
-			{
-			}
-
-			protected override Analyzer.TokenStreamComponents CreateComponents(string fieldName
-				, StreamReader reader)
+		    public override TokenStreamComponents CreateComponents(string fieldName, TextReader reader)
 			{
 				Tokenizer t = new MockTokenizer(reader, MockTokenizer.WHITESPACE, false);
 				TokenStream t1 = new MockHoleInjectingTokenFilter(LuceneTestCase.Random(), t);
@@ -485,219 +454,202 @@ namespace Lucene.Net.Analysis
 
 		private static Token Token(string term, int posInc, int posLength)
 		{
-			Token t = new Token(term, 0, 0);
-			t.SetPositionIncrement(posInc);
-			t.SetPositionLength(posLength);
-			return t;
+			return new Token(term, 0, 0) {PositionIncrement = posInc, PositionLength = posLength};
 		}
 
 		private static Token Token(string term, int posInc, int posLength, int startOffset
 			, int endOffset)
 		{
-			Token t = new Token(term, startOffset, endOffset);
-			t.SetPositionIncrement(posInc);
-			t.SetPositionLength(posLength);
-			return t;
+			return new Token(term, startOffset, endOffset) {PositionIncrement = posInc, PositionLength = posLength};
+		   
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestSingleToken()
 		{
 			TokenStream ts = new CannedTokenStream(new Token[] { Token("abc", 1, 1) });
-			Lucene.Net.Util.Automaton.Automaton actual = (new TokenStreamToAutomaton()
+			Automaton actual = (new TokenStreamToAutomaton()
 				).ToAutomaton(ts);
-			Lucene.Net.Util.Automaton.Automaton expected = BasicAutomata.MakeString("abc"
+			Automaton expected = BasicAutomata.MakeString("abc"
 				);
-			NUnit.Framework.Assert.IsTrue(BasicOperations.SameLanguage(expected, actual));
+			IsTrue(BasicOperations.SameLanguage(expected, actual));
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestMultipleHoles()
 		{
 			TokenStream ts = new CannedTokenStream(new Token[] { Token("a", 1, 1), Token("b", 
 				3, 1) });
-			Lucene.Net.Util.Automaton.Automaton actual = (new TokenStreamToAutomaton()
+			Automaton actual = (new TokenStreamToAutomaton()
 				).ToAutomaton(ts);
-			Lucene.Net.Util.Automaton.Automaton expected = Join(S2a("a"), SEP_A, HOLE_A
+			Automaton expected = Join(S2a("a"), SEP_A, HOLE_A
 				, SEP_A, HOLE_A, SEP_A, S2a("b"));
-			NUnit.Framework.Assert.IsTrue(BasicOperations.SameLanguage(expected, actual));
+			IsTrue(BasicOperations.SameLanguage(expected, actual));
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestSynOverMultipleHoles()
 		{
 			TokenStream ts = new CannedTokenStream(new Token[] { Token("a", 1, 1), Token("x", 
 				0, 3), Token("b", 3, 1) });
-			Lucene.Net.Util.Automaton.Automaton actual = (new TokenStreamToAutomaton()
+			Automaton actual = (new TokenStreamToAutomaton()
 				).ToAutomaton(ts);
-			Lucene.Net.Util.Automaton.Automaton a1 = Join(S2a("a"), SEP_A, HOLE_A, SEP_A
+			Automaton a1 = Join(S2a("a"), SEP_A, HOLE_A, SEP_A
 				, HOLE_A, SEP_A, S2a("b"));
-			Lucene.Net.Util.Automaton.Automaton a2 = Join(S2a("x"), SEP_A, S2a("b"));
-			Lucene.Net.Util.Automaton.Automaton expected = BasicOperations.Union(a1, a2
+			Automaton a2 = Join(S2a("x"), SEP_A, S2a("b"));
+			Automaton expected = BasicOperations.Union(a1, a2
 				);
-			NUnit.Framework.Assert.IsTrue(BasicOperations.SameLanguage(expected, actual));
+			IsTrue(BasicOperations.SameLanguage(expected, actual));
 		}
 
-		private static readonly Lucene.Net.Util.Automaton.Automaton SEP_A = BasicAutomata
+		private static readonly Automaton SEP_A = BasicAutomata
 			.MakeChar(TokenStreamToAutomaton.POS_SEP);
 
-		private static readonly Lucene.Net.Util.Automaton.Automaton HOLE_A = BasicAutomata
+		private static readonly Automaton HOLE_A = BasicAutomata
 			.MakeChar(TokenStreamToAutomaton.HOLE);
 
 		// for debugging!
-		private Lucene.Net.Util.Automaton.Automaton Join(params string[] strings)
+		private Automaton Join(params string[] strings)
 		{
-			IList<Lucene.Net.Util.Automaton.Automaton> @as = new AList<Lucene.Net.Util.Automaton.Automaton
-				>();
+			var aList = new List<Automaton>();
 			foreach (string s in strings)
 			{
-				@as.AddItem(BasicAutomata.MakeString(s));
-				@as.AddItem(SEP_A);
+				aList.Add(BasicAutomata.MakeString(s));
+				aList.Add(SEP_A);
 			}
-			@as.Remove(@as.Count - 1);
-			return BasicOperations.Concatenate(@as);
+			aList.RemoveAt(aList.Count - 1);
+			return BasicOperations.Concatenate(aList);
 		}
 
-		private Lucene.Net.Util.Automaton.Automaton Join(params Lucene.Net.Util.Automaton.Automaton
-			[] @as)
+		private Automaton Join(params Automaton[] aList)
 		{
-			return BasicOperations.Concatenate(Arrays.AsList(@as));
+			return BasicOperations.Concatenate(Arrays.AsList(aList));
 		}
 
-		private Lucene.Net.Util.Automaton.Automaton S2a(string s)
+		private Automaton S2a(string s)
 		{
 			return BasicAutomata.MakeString(s);
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestTwoTokens()
 		{
-			TokenStream ts = new CannedTokenStream(new Token[] { Token("abc", 1, 1), Token("def"
-				, 1, 1) });
-			Lucene.Net.Util.Automaton.Automaton actual = (new TokenStreamToAutomaton()
-				).ToAutomaton(ts);
-			Lucene.Net.Util.Automaton.Automaton expected = Join("abc", "def");
+			TokenStream ts = new CannedTokenStream(new Token[] { Token("abc", 1, 1), Token("def", 1, 1) });
+			var actual = (new TokenStreamToAutomaton()).ToAutomaton(ts);
+			var expected = Join("abc", "def");
 			//toDot(actual);
-			NUnit.Framework.Assert.IsTrue(BasicOperations.SameLanguage(expected, actual));
+			IsTrue(BasicOperations.SameLanguage(expected, actual));
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestHole()
 		{
-			TokenStream ts = new CannedTokenStream(new Token[] { Token("abc", 1, 1), Token("def"
-				, 2, 1) });
-			Lucene.Net.Util.Automaton.Automaton actual = (new TokenStreamToAutomaton()
-				).ToAutomaton(ts);
-			Lucene.Net.Util.Automaton.Automaton expected = Join(S2a("abc"), SEP_A, HOLE_A
-				, SEP_A, S2a("def"));
+			TokenStream ts = new CannedTokenStream(new Token[] { Token("abc", 1, 1), Token("def", 2, 1) });
+			var actual = (new TokenStreamToAutomaton()).ToAutomaton(ts);
+			var expected = Join(S2a("abc"), SEP_A, HOLE_A, SEP_A, S2a("def"));
 			//toDot(actual);
-			NUnit.Framework.Assert.IsTrue(BasicOperations.SameLanguage(expected, actual));
+			IsTrue(BasicOperations.SameLanguage(expected, actual));
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestOverlappedTokensSausage()
 		{
 			// Two tokens on top of each other (sausage):
-			TokenStream ts = new CannedTokenStream(new Token[] { Token("abc", 1, 1), Token("xyz"
-				, 0, 1) });
-			Lucene.Net.Util.Automaton.Automaton actual = (new TokenStreamToAutomaton()
-				).ToAutomaton(ts);
-			Lucene.Net.Util.Automaton.Automaton a1 = BasicAutomata.MakeString("abc");
-			Lucene.Net.Util.Automaton.Automaton a2 = BasicAutomata.MakeString("xyz");
-			Lucene.Net.Util.Automaton.Automaton expected = BasicOperations.Union(a1, a2
-				);
-			NUnit.Framework.Assert.IsTrue(BasicOperations.SameLanguage(expected, actual));
+			TokenStream ts = new CannedTokenStream(new Token[] { Token("abc", 1, 1), Token("xyz", 0, 1) });
+			Automaton actual = (new TokenStreamToAutomaton()).ToAutomaton(ts);
+			var a1 = BasicAutomata.MakeString("abc");
+			var a2 = BasicAutomata.MakeString("xyz");
+			var expected = BasicOperations.Union(a1, a2);
+			IsTrue(BasicOperations.SameLanguage(expected, actual));
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestOverlappedTokensLattice()
 		{
 			TokenStream ts = new CannedTokenStream(new Token[] { Token("abc", 1, 1), Token("xyz"
 				, 0, 2), Token("def", 1, 1) });
-			Lucene.Net.Util.Automaton.Automaton actual = (new TokenStreamToAutomaton()
-				).ToAutomaton(ts);
-			Lucene.Net.Util.Automaton.Automaton a1 = BasicAutomata.MakeString("xyz");
-			Lucene.Net.Util.Automaton.Automaton a2 = Join("abc", "def");
-			Lucene.Net.Util.Automaton.Automaton expected = BasicOperations.Union(a1, a2
-				);
+			Automaton actual = (new TokenStreamToAutomaton()).ToAutomaton(ts);
+			Automaton a1 = BasicAutomata.MakeString("xyz");
+			Automaton a2 = Join("abc", "def");
+			Automaton expected = BasicOperations.Union(a1, a2);
 			//toDot(actual);
-			NUnit.Framework.Assert.IsTrue(BasicOperations.SameLanguage(expected, actual));
+			IsTrue(BasicOperations.SameLanguage(expected, actual));
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestSynOverHole()
 		{
 			TokenStream ts = new CannedTokenStream(new Token[] { Token("a", 1, 1), Token("X", 
 				0, 2), Token("b", 2, 1) });
-			Lucene.Net.Util.Automaton.Automaton actual = (new TokenStreamToAutomaton()
+			Automaton actual = (new TokenStreamToAutomaton()
 				).ToAutomaton(ts);
-			Lucene.Net.Util.Automaton.Automaton a1 = BasicOperations.Union(Join(S2a("a"
+			Automaton a1 = BasicOperations.Union(Join(S2a("a"
 				), SEP_A, HOLE_A), BasicAutomata.MakeString("X"));
-			Lucene.Net.Util.Automaton.Automaton expected = BasicOperations.Concatenate
+			Automaton expected = BasicOperations.Concatenate
 				(a1, Join(SEP_A, S2a("b")));
 			//toDot(actual);
-			NUnit.Framework.Assert.IsTrue(BasicOperations.SameLanguage(expected, actual));
+			IsTrue(BasicOperations.SameLanguage(expected, actual));
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestSynOverHole2()
 		{
 			TokenStream ts = new CannedTokenStream(new Token[] { Token("xyz", 1, 1), Token("abc"
 				, 0, 3), Token("def", 2, 1) });
-			Lucene.Net.Util.Automaton.Automaton actual = (new TokenStreamToAutomaton()
+			Automaton actual = (new TokenStreamToAutomaton()
 				).ToAutomaton(ts);
-			Lucene.Net.Util.Automaton.Automaton expected = BasicOperations.Union(Join(
+			Automaton expected = BasicOperations.Union(Join(
 				S2a("xyz"), SEP_A, HOLE_A, SEP_A, S2a("def")), BasicAutomata.MakeString("abc"));
-			NUnit.Framework.Assert.IsTrue(BasicOperations.SameLanguage(expected, actual));
+			IsTrue(BasicOperations.SameLanguage(expected, actual));
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestOverlappedTokensLattice2()
 		{
 			TokenStream ts = new CannedTokenStream(new Token[] { Token("abc", 1, 1), Token("xyz"
 				, 0, 3), Token("def", 1, 1), Token("ghi", 1, 1) });
-			Lucene.Net.Util.Automaton.Automaton actual = (new TokenStreamToAutomaton()
+			Automaton actual = (new TokenStreamToAutomaton()
 				).ToAutomaton(ts);
-			Lucene.Net.Util.Automaton.Automaton a1 = BasicAutomata.MakeString("xyz");
-			Lucene.Net.Util.Automaton.Automaton a2 = Join("abc", "def", "ghi");
-			Lucene.Net.Util.Automaton.Automaton expected = BasicOperations.Union(a1, a2
+			Automaton a1 = BasicAutomata.MakeString("xyz");
+			Automaton a2 = Join("abc", "def", "ghi");
+			Automaton expected = BasicOperations.Union(a1, a2
 				);
 			//toDot(actual);
-			NUnit.Framework.Assert.IsTrue(BasicOperations.SameLanguage(expected, actual));
+			IsTrue(BasicOperations.SameLanguage(expected, actual));
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestToDot()
 		{
 			TokenStream ts = new CannedTokenStream(new Token[] { Token("abc", 1, 1, 0, 4) });
-			StringWriter w = new StringWriter();
-			new TokenStreamToDot("abcd", ts, new PrintWriter(w)).ToDot();
-			NUnit.Framework.Assert.IsTrue(w.ToString().IndexOf("abc / abcd") != -1);
+			var w = new StringWriter();
+			new TokenStreamToDot("abcd", ts, new StreamWriter(new MemoryStream())).ToDot();
+			IsTrue(w.ToString().IndexOf("abc / abcd") != -1);
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestStartsWithHole()
 		{
 			TokenStream ts = new CannedTokenStream(new Token[] { Token("abc", 2, 1) });
-			Lucene.Net.Util.Automaton.Automaton actual = (new TokenStreamToAutomaton()
+			Automaton actual = (new TokenStreamToAutomaton()
 				).ToAutomaton(ts);
-			Lucene.Net.Util.Automaton.Automaton expected = Join(HOLE_A, SEP_A, S2a("abc"
+			Automaton expected = Join(HOLE_A, SEP_A, S2a("abc"
 				));
 			//toDot(actual);
-			NUnit.Framework.Assert.IsTrue(BasicOperations.SameLanguage(expected, actual));
+			IsTrue(BasicOperations.SameLanguage(expected, actual));
 		}
 
 		// TODO: testEndsWithHole... but we need posInc to set in TS.end()
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestSynHangingOverEnd()
 		{
 			TokenStream ts = new CannedTokenStream(new Token[] { Token("a", 1, 1), Token("X", 
 				0, 10) });
-			Lucene.Net.Util.Automaton.Automaton actual = (new TokenStreamToAutomaton()
+			Automaton actual = (new TokenStreamToAutomaton()
 				).ToAutomaton(ts);
-			Lucene.Net.Util.Automaton.Automaton expected = BasicOperations.Union(BasicAutomata
+			Automaton expected = BasicOperations.Union(BasicAutomata
 				.MakeString("a"), BasicAutomata.MakeString("X"));
-			NUnit.Framework.Assert.IsTrue(BasicOperations.SameLanguage(expected, actual));
+			IsTrue(BasicOperations.SameLanguage(expected, actual));
 		}
 	}
 }

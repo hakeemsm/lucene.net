@@ -35,7 +35,7 @@ namespace Lucene.Net.Search
 			RandomIndexWriter w = new RandomIndexWriter(Random(), index);
 			for (int i = 0; i < data.Length; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(NewStringField("id", i.ToString(), Field.Store.YES));
 				//Field.Keyword("id",String.valueOf(i)));
@@ -74,7 +74,7 @@ namespace Lucene.Net.Search
 			{
 				PrintHits(GetTestName(), h, s);
 			}
-			NUnit.Framework.Assert.AreEqual("result count", expected, h.Length);
+			AreEqual("result count", expected, h.Length);
 			//System.out.println("TEST: now check");
 			// bs2
 			TopScoreDocCollector collector = TopScoreDocCollector.Create(1000, true);
@@ -84,7 +84,7 @@ namespace Lucene.Net.Search
 			{
 				PrintHits(GetTestName(), h2, s);
 			}
-			NUnit.Framework.Assert.AreEqual("result count (bs2)", expected, h2.Length);
+			AreEqual("result count (bs2)", expected, h2.Length);
 			QueryUtils.Check(Random(), q, s);
 		}
 
@@ -424,26 +424,26 @@ namespace Lucene.Net.Search
 		{
 			// The constrained query
 			// should be a subset to the unconstrained query.
-			if (top2.totalHits > top1.totalHits)
+			if (top2.TotalHits > top1.TotalHits)
 			{
-				NUnit.Framework.Assert.Fail("Constrained results not a subset:\n" + CheckHits.TopdocsString
+				Fail("Constrained results not a subset:\n" + CheckHits.TopdocsString
 					(top1, 0, 0) + CheckHits.TopdocsString(top2, 0, 0) + "for query:" + q.ToString()
 					);
 			}
-			for (int hit = 0; hit < top2.totalHits; hit++)
+			for (int hit = 0; hit < top2.TotalHits; hit++)
 			{
 				int id = top2.scoreDocs[hit].doc;
 				float score = top2.scoreDocs[hit].score;
 				bool found = false;
 				// find this doc in other hits
-				for (int other = 0; other < top1.totalHits; other++)
+				for (int other = 0; other < top1.TotalHits; other++)
 				{
 					if (top1.scoreDocs[other].doc == id)
 					{
 						found = true;
 						float otherScore = top1.scoreDocs[other].score;
 						// check if scores match
-						NUnit.Framework.Assert.AreEqual("Doc " + id + " scores don't match\n" + CheckHits
+						AreEqual("Doc " + id + " scores don't match\n" + CheckHits
 							.TopdocsString(top1, 0, 0) + CheckHits.TopdocsString(top2, 0, 0) + "for query:" 
 							+ q.ToString(), score, otherScore, CheckHits.ExplainToleranceDelta(score, otherScore
 							));
@@ -452,7 +452,7 @@ namespace Lucene.Net.Search
 				// check if subset
 				if (!found)
 				{
-					NUnit.Framework.Assert.Fail("Doc " + id + " not found\n" + CheckHits.TopdocsString
+					Fail("Doc " + id + " not found\n" + CheckHits.TopdocsString
 						(top1, 0, 0) + CheckHits.TopdocsString(top2, 0, 0) + "for query:" + q.ToString()
 						);
 				}
@@ -536,7 +536,7 @@ namespace Lucene.Net.Search
 				CultureInfo.ROOT));
 			for (int i = 0; i < h.Length; i++)
 			{
-				Lucene.Net.Document.Document d = searcher.Doc(h[i].doc);
+				Lucene.Net.Documents.Document d = searcher.Doc(h[i].doc);
 				float score = h[i].score;
 				System.Console.Error.WriteLine("#" + i + ": " + f.Format(score) + " - " + d.Get("id"
 					) + " - " + d.Get("data"));

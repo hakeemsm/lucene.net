@@ -5,7 +5,7 @@
  */
 
 using System.Collections.Generic;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -37,7 +37,7 @@ namespace Lucene.Net.Search.Spans
 				()));
 			for (int i = 0; i < docFields.Length; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(NewTextField(field, docFields[i], Field.Store.YES));
 				writer.AddDocument(doc);
@@ -196,15 +196,15 @@ namespace Lucene.Net.Search.Spans
 				MakeSpanTermQuery("t2"), MakeSpanTermQuery("t3") }, slop, ordered);
 			Lucene.Net.Search.Spans.Spans spans = MultiSpansWrapper.Wrap(searcher.GetTopReaderContext
 				(), snq);
-			NUnit.Framework.Assert.IsTrue("first range", spans.Next());
-			NUnit.Framework.Assert.AreEqual("first doc", 11, spans.Doc());
-			NUnit.Framework.Assert.AreEqual("first start", 0, spans.Start());
-			NUnit.Framework.Assert.AreEqual("first end", 4, spans.End());
-			NUnit.Framework.Assert.IsTrue("second range", spans.Next());
-			NUnit.Framework.Assert.AreEqual("second doc", 11, spans.Doc());
-			NUnit.Framework.Assert.AreEqual("second start", 2, spans.Start());
-			NUnit.Framework.Assert.AreEqual("second end", 6, spans.End());
-			NUnit.Framework.Assert.IsFalse("third range", spans.Next());
+			IsTrue("first range", spans.Next());
+			AreEqual("first doc", 11, spans.Doc());
+			AreEqual("first start", 0, spans.Start());
+			AreEqual("first end", 4, spans.End());
+			IsTrue("second range", spans.Next());
+			AreEqual("second doc", 11, spans.Doc());
+			AreEqual("second start", 2, spans.Start());
+			AreEqual("second end", 6, spans.End());
+			IsFalse("third range", spans.Next());
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -216,71 +216,71 @@ namespace Lucene.Net.Search.Spans
 				("u2") }, 0, false);
 			Lucene.Net.Search.Spans.Spans spans = MultiSpansWrapper.Wrap(searcher.GetTopReaderContext
 				(), snq);
-			NUnit.Framework.Assert.IsTrue("Does not have next and it should", spans.Next());
-			NUnit.Framework.Assert.AreEqual("doc", 4, spans.Doc());
-			NUnit.Framework.Assert.AreEqual("start", 1, spans.Start());
-			NUnit.Framework.Assert.AreEqual("end", 3, spans.End());
-			NUnit.Framework.Assert.IsTrue("Does not have next and it should", spans.Next());
-			NUnit.Framework.Assert.AreEqual("doc", 5, spans.Doc());
-			NUnit.Framework.Assert.AreEqual("start", 2, spans.Start());
-			NUnit.Framework.Assert.AreEqual("end", 4, spans.End());
-			NUnit.Framework.Assert.IsTrue("Does not have next and it should", spans.Next());
-			NUnit.Framework.Assert.AreEqual("doc", 8, spans.Doc());
-			NUnit.Framework.Assert.AreEqual("start", 2, spans.Start());
-			NUnit.Framework.Assert.AreEqual("end", 4, spans.End());
-			NUnit.Framework.Assert.IsTrue("Does not have next and it should", spans.Next());
-			NUnit.Framework.Assert.AreEqual("doc", 9, spans.Doc());
-			NUnit.Framework.Assert.AreEqual("start", 0, spans.Start());
-			NUnit.Framework.Assert.AreEqual("end", 2, spans.End());
-			NUnit.Framework.Assert.IsTrue("Does not have next and it should", spans.Next());
-			NUnit.Framework.Assert.AreEqual("doc", 10, spans.Doc());
-			NUnit.Framework.Assert.AreEqual("start", 0, spans.Start());
-			NUnit.Framework.Assert.AreEqual("end", 2, spans.End());
-			NUnit.Framework.Assert.IsTrue("Has next and it shouldn't: " + spans.Doc(), spans.
+			IsTrue("Does not have next and it should", spans.Next());
+			AreEqual("doc", 4, spans.Doc());
+			AreEqual("start", 1, spans.Start());
+			AreEqual("end", 3, spans.End());
+			IsTrue("Does not have next and it should", spans.Next());
+			AreEqual("doc", 5, spans.Doc());
+			AreEqual("start", 2, spans.Start());
+			AreEqual("end", 4, spans.End());
+			IsTrue("Does not have next and it should", spans.Next());
+			AreEqual("doc", 8, spans.Doc());
+			AreEqual("start", 2, spans.Start());
+			AreEqual("end", 4, spans.End());
+			IsTrue("Does not have next and it should", spans.Next());
+			AreEqual("doc", 9, spans.Doc());
+			AreEqual("start", 0, spans.Start());
+			AreEqual("end", 2, spans.End());
+			IsTrue("Does not have next and it should", spans.Next());
+			AreEqual("doc", 10, spans.Doc());
+			AreEqual("start", 0, spans.Start());
+			AreEqual("end", 2, spans.End());
+			IsTrue("Has next and it shouldn't: " + spans.Doc(), spans.
 				Next() == false);
 			SpanNearQuery u1u2 = new SpanNearQuery(new SpanQuery[] { MakeSpanTermQuery("u1"), 
 				MakeSpanTermQuery("u2") }, 0, false);
 			snq = new SpanNearQuery(new SpanQuery[] { u1u2, MakeSpanTermQuery("u2") }, 1, false
 				);
 			spans = MultiSpansWrapper.Wrap(searcher.GetTopReaderContext(), snq);
-			NUnit.Framework.Assert.IsTrue("Does not have next and it should", spans.Next());
-			NUnit.Framework.Assert.AreEqual("doc", 4, spans.Doc());
-			NUnit.Framework.Assert.AreEqual("start", 0, spans.Start());
-			NUnit.Framework.Assert.AreEqual("end", 3, spans.End());
-			NUnit.Framework.Assert.IsTrue("Does not have next and it should", spans.Next());
+			IsTrue("Does not have next and it should", spans.Next());
+			AreEqual("doc", 4, spans.Doc());
+			AreEqual("start", 0, spans.Start());
+			AreEqual("end", 3, spans.End());
+			IsTrue("Does not have next and it should", spans.Next());
 			//unordered spans can be subsets
-			NUnit.Framework.Assert.AreEqual("doc", 4, spans.Doc());
-			NUnit.Framework.Assert.AreEqual("start", 1, spans.Start());
-			NUnit.Framework.Assert.AreEqual("end", 3, spans.End());
-			NUnit.Framework.Assert.IsTrue("Does not have next and it should", spans.Next());
-			NUnit.Framework.Assert.AreEqual("doc", 5, spans.Doc());
-			NUnit.Framework.Assert.AreEqual("start", 0, spans.Start());
-			NUnit.Framework.Assert.AreEqual("end", 4, spans.End());
-			NUnit.Framework.Assert.IsTrue("Does not have next and it should", spans.Next());
-			NUnit.Framework.Assert.AreEqual("doc", 5, spans.Doc());
-			NUnit.Framework.Assert.AreEqual("start", 2, spans.Start());
-			NUnit.Framework.Assert.AreEqual("end", 4, spans.End());
-			NUnit.Framework.Assert.IsTrue("Does not have next and it should", spans.Next());
-			NUnit.Framework.Assert.AreEqual("doc", 8, spans.Doc());
-			NUnit.Framework.Assert.AreEqual("start", 0, spans.Start());
-			NUnit.Framework.Assert.AreEqual("end", 4, spans.End());
-			NUnit.Framework.Assert.IsTrue("Does not have next and it should", spans.Next());
-			NUnit.Framework.Assert.AreEqual("doc", 8, spans.Doc());
-			NUnit.Framework.Assert.AreEqual("start", 2, spans.Start());
-			NUnit.Framework.Assert.AreEqual("end", 4, spans.End());
-			NUnit.Framework.Assert.IsTrue("Does not have next and it should", spans.Next());
-			NUnit.Framework.Assert.AreEqual("doc", 9, spans.Doc());
-			NUnit.Framework.Assert.AreEqual("start", 0, spans.Start());
-			NUnit.Framework.Assert.AreEqual("end", 2, spans.End());
-			NUnit.Framework.Assert.IsTrue("Does not have next and it should", spans.Next());
-			NUnit.Framework.Assert.AreEqual("doc", 9, spans.Doc());
-			NUnit.Framework.Assert.AreEqual("start", 0, spans.Start());
-			NUnit.Framework.Assert.AreEqual("end", 4, spans.End());
-			NUnit.Framework.Assert.IsTrue("Does not have next and it should", spans.Next());
-			NUnit.Framework.Assert.AreEqual("doc", 10, spans.Doc());
-			NUnit.Framework.Assert.AreEqual("start", 0, spans.Start());
-			NUnit.Framework.Assert.AreEqual("end", 2, spans.End());
-			NUnit.Framework.Assert.IsTrue("Has next and it shouldn't", spans.Next() == false);
+			AreEqual("doc", 4, spans.Doc());
+			AreEqual("start", 1, spans.Start());
+			AreEqual("end", 3, spans.End());
+			IsTrue("Does not have next and it should", spans.Next());
+			AreEqual("doc", 5, spans.Doc());
+			AreEqual("start", 0, spans.Start());
+			AreEqual("end", 4, spans.End());
+			IsTrue("Does not have next and it should", spans.Next());
+			AreEqual("doc", 5, spans.Doc());
+			AreEqual("start", 2, spans.Start());
+			AreEqual("end", 4, spans.End());
+			IsTrue("Does not have next and it should", spans.Next());
+			AreEqual("doc", 8, spans.Doc());
+			AreEqual("start", 0, spans.Start());
+			AreEqual("end", 4, spans.End());
+			IsTrue("Does not have next and it should", spans.Next());
+			AreEqual("doc", 8, spans.Doc());
+			AreEqual("start", 2, spans.Start());
+			AreEqual("end", 4, spans.End());
+			IsTrue("Does not have next and it should", spans.Next());
+			AreEqual("doc", 9, spans.Doc());
+			AreEqual("start", 0, spans.Start());
+			AreEqual("end", 2, spans.End());
+			IsTrue("Does not have next and it should", spans.Next());
+			AreEqual("doc", 9, spans.Doc());
+			AreEqual("start", 0, spans.Start());
+			AreEqual("end", 4, spans.End());
+			IsTrue("Does not have next and it should", spans.Next());
+			AreEqual("doc", 10, spans.Doc());
+			AreEqual("start", 0, spans.Start());
+			AreEqual("end", 2, spans.End());
+			IsTrue("Has next and it shouldn't", spans.Next() == false);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -299,20 +299,20 @@ namespace Lucene.Net.Search.Spans
 		private void TstNextSpans(Lucene.Net.Search.Spans.Spans spans, int doc, int
 			 start, int end)
 		{
-			NUnit.Framework.Assert.IsTrue("next", spans.Next());
-			NUnit.Framework.Assert.AreEqual("doc", doc, spans.Doc());
-			NUnit.Framework.Assert.AreEqual("start", start, spans.Start());
-			NUnit.Framework.Assert.AreEqual("end", end, spans.End());
+			IsTrue("next", spans.Next());
+			AreEqual("doc", doc, spans.Doc());
+			AreEqual("start", start, spans.Start());
+			AreEqual("end", end, spans.End());
 		}
 
 		/// <exception cref="System.Exception"></exception>
 		public virtual void TestSpanOrEmpty()
 		{
 			Lucene.Net.Search.Spans.Spans spans = OrSpans(new string[0]);
-			NUnit.Framework.Assert.IsFalse("empty next", spans.Next());
+			IsFalse("empty next", spans.Next());
 			SpanOrQuery a = new SpanOrQuery();
 			SpanOrQuery b = new SpanOrQuery();
-			NUnit.Framework.Assert.IsTrue("empty should equal", a.Equals(b));
+			IsTrue("empty should equal", a.Equals(b));
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -320,7 +320,7 @@ namespace Lucene.Net.Search.Spans
 		{
 			Lucene.Net.Search.Spans.Spans spans = OrSpans(new string[] { "w5" });
 			TstNextSpans(spans, 0, 4, 5);
-			NUnit.Framework.Assert.IsFalse("final next", spans.Next());
+			IsFalse("final next", spans.Next());
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -329,13 +329,13 @@ namespace Lucene.Net.Search.Spans
 			Lucene.Net.Search.Spans.Spans spans = OrSpans(new string[] { "w1", "xx" });
 			spans.Next();
 			int doc = spans.Doc();
-			NUnit.Framework.Assert.AreEqual(0, doc);
+			AreEqual(0, doc);
 			spans.SkipTo(0);
 			doc = spans.Doc();
 			// LUCENE-1583:
 			// according to Spans, a skipTo to the same doc or less
 			// should still call next() on the underlying Spans
-			NUnit.Framework.Assert.AreEqual(1, doc);
+			AreEqual(1, doc);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -346,19 +346,19 @@ namespace Lucene.Net.Search.Spans
 			TstNextSpans(spans, 2, 3, 4);
 			TstNextSpans(spans, 3, 4, 5);
 			TstNextSpans(spans, 7, 3, 4);
-			NUnit.Framework.Assert.IsFalse("final next", spans.Next());
+			IsFalse("final next", spans.Next());
 		}
 
 		/// <exception cref="System.Exception"></exception>
 		public virtual void TestSpanOrDoubleSkip()
 		{
 			Lucene.Net.Search.Spans.Spans spans = OrSpans(new string[] { "w5", "yy" });
-			NUnit.Framework.Assert.IsTrue("initial skipTo", spans.SkipTo(3));
-			NUnit.Framework.Assert.AreEqual("doc", 3, spans.Doc());
-			NUnit.Framework.Assert.AreEqual("start", 4, spans.Start());
-			NUnit.Framework.Assert.AreEqual("end", 5, spans.End());
+			IsTrue("initial skipTo", spans.SkipTo(3));
+			AreEqual("doc", 3, spans.Doc());
+			AreEqual("start", 4, spans.Start());
+			AreEqual("end", 5, spans.End());
 			TstNextSpans(spans, 7, 3, 4);
-			NUnit.Framework.Assert.IsFalse("final next", spans.Next());
+			IsFalse("final next", spans.Next());
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -370,7 +370,7 @@ namespace Lucene.Net.Search.Spans
 			TstNextSpans(spans, 2, 3, 4);
 			TstNextSpans(spans, 3, 4, 5);
 			TstNextSpans(spans, 7, 3, 4);
-			NUnit.Framework.Assert.IsFalse("final next", spans.Next());
+			IsFalse("final next", spans.Next());
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -384,7 +384,7 @@ namespace Lucene.Net.Search.Spans
 			TstNextSpans(spans, 11, 3, 4);
 			TstNextSpans(spans, 11, 4, 5);
 			TstNextSpans(spans, 11, 5, 6);
-			NUnit.Framework.Assert.IsFalse("final next", spans.Next());
+			IsFalse("final next", spans.Next());
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -415,17 +415,17 @@ namespace Lucene.Net.Search.Spans
 				}
 				if (i == subIndex)
 				{
-					NUnit.Framework.Assert.IsTrue("first doc", spanScorer.NextDoc() != DocIdSetIterator
+					IsTrue("first doc", spanScorer.NextDoc() != DocIdSetIterator
 						.NO_MORE_DOCS);
-					NUnit.Framework.Assert.AreEqual("first doc number", spanScorer.DocID() + ctx.docBase
+					AreEqual("first doc number", spanScorer.DocID + ctx.docBase
 						, 11);
 					float score = spanScorer.Score();
-					NUnit.Framework.Assert.IsTrue("first doc score should be zero, " + score, score ==
+					IsTrue("first doc score should be zero, " + score, score ==
 						 0.0f);
 				}
 				else
 				{
-					NUnit.Framework.Assert.IsTrue("no second doc", spanScorer.NextDoc() == DocIdSetIterator
+					IsTrue("no second doc", spanScorer.NextDoc() == DocIdSetIterator
 						.NO_MORE_DOCS);
 				}
 			}
@@ -447,7 +447,7 @@ namespace Lucene.Net.Search.Spans
 		/// <exception cref="System.IO.IOException"></exception>
 		private void AddDoc(IndexWriter writer, string id, string text)
 		{
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewStringField("id", id, Field.Store.YES));
 			doc.Add(NewTextField("text", text, Field.Store.YES));
@@ -458,7 +458,7 @@ namespace Lucene.Net.Search.Spans
 		/// <exception cref="System.Exception"></exception>
 		private int HitCount(IndexSearcher searcher, string word)
 		{
-			return searcher.Search(new TermQuery(new Term("text", word)), 10).totalHits;
+			return searcher.Search(new TermQuery(new Term("text", word)), 10).TotalHits;
 		}
 
 		// LUCENE-1404
@@ -497,13 +497,13 @@ namespace Lucene.Net.Search.Spans
 			IndexReader reader = DirectoryReader.Open(dir);
 			IndexSearcher searcher = NewSearcher(reader);
 			// Control (make sure docs indexed)
-			NUnit.Framework.Assert.AreEqual(2, HitCount(searcher, "the"));
-			NUnit.Framework.Assert.AreEqual(1, HitCount(searcher, "cat"));
-			NUnit.Framework.Assert.AreEqual(1, HitCount(searcher, "dogs"));
-			NUnit.Framework.Assert.AreEqual(0, HitCount(searcher, "rabbit"));
+			AreEqual(2, HitCount(searcher, "the"));
+			AreEqual(1, HitCount(searcher, "cat"));
+			AreEqual(1, HitCount(searcher, "dogs"));
+			AreEqual(0, HitCount(searcher, "rabbit"));
 			// This throws exception (it shouldn't)
-			NUnit.Framework.Assert.AreEqual(1, searcher.Search(CreateSpan(0, true, new SpanQuery
-				[] { CreateSpan(4, false, "chased", "cat"), CreateSpan("ate") }), 10).totalHits);
+			AreEqual(1, searcher.Search(CreateSpan(0, true, new SpanQuery
+				[] { CreateSpan(4, false, "chased", "cat"), CreateSpan("ate") }), 10).TotalHits);
 			reader.Close();
 			dir.Close();
 		}
@@ -511,48 +511,48 @@ namespace Lucene.Net.Search.Spans
 		/// <exception cref="System.Exception"></exception>
 		public virtual void TestSpanNots()
 		{
-			NUnit.Framework.Assert.AreEqual("SpanNotIncludeExcludeSame1", 0, SpanCount("s2", 
+			AreEqual("SpanNotIncludeExcludeSame1", 0, SpanCount("s2", 
 				"s2", 0, 0), 0);
-			NUnit.Framework.Assert.AreEqual("SpanNotIncludeExcludeSame2", 0, SpanCount("s2", 
+			AreEqual("SpanNotIncludeExcludeSame2", 0, SpanCount("s2", 
 				"s2", 10, 10), 0);
 			//focus on behind
-			NUnit.Framework.Assert.AreEqual("SpanNotS2NotS1_6_0", 1, SpanCount("s2", "s1", 6, 
+			AreEqual("SpanNotS2NotS1_6_0", 1, SpanCount("s2", "s1", 6, 
 				0));
-			NUnit.Framework.Assert.AreEqual("SpanNotS2NotS1_5_0", 2, SpanCount("s2", "s1", 5, 
+			AreEqual("SpanNotS2NotS1_5_0", 2, SpanCount("s2", "s1", 5, 
 				0));
-			NUnit.Framework.Assert.AreEqual("SpanNotS2NotS1_3_0", 3, SpanCount("s2", "s1", 3, 
+			AreEqual("SpanNotS2NotS1_3_0", 3, SpanCount("s2", "s1", 3, 
 				0));
-			NUnit.Framework.Assert.AreEqual("SpanNotS2NotS1_2_0", 4, SpanCount("s2", "s1", 2, 
+			AreEqual("SpanNotS2NotS1_2_0", 4, SpanCount("s2", "s1", 2, 
 				0));
-			NUnit.Framework.Assert.AreEqual("SpanNotS2NotS1_0_0", 4, SpanCount("s2", "s1", 0, 
+			AreEqual("SpanNotS2NotS1_0_0", 4, SpanCount("s2", "s1", 0, 
 				0));
 			//focus on both
-			NUnit.Framework.Assert.AreEqual("SpanNotS2NotS1_3_1", 2, SpanCount("s2", "s1", 3, 
+			AreEqual("SpanNotS2NotS1_3_1", 2, SpanCount("s2", "s1", 3, 
 				1));
-			NUnit.Framework.Assert.AreEqual("SpanNotS2NotS1_2_1", 3, SpanCount("s2", "s1", 2, 
+			AreEqual("SpanNotS2NotS1_2_1", 3, SpanCount("s2", "s1", 2, 
 				1));
-			NUnit.Framework.Assert.AreEqual("SpanNotS2NotS1_1_1", 3, SpanCount("s2", "s1", 1, 
+			AreEqual("SpanNotS2NotS1_1_1", 3, SpanCount("s2", "s1", 1, 
 				1));
-			NUnit.Framework.Assert.AreEqual("SpanNotS2NotS1_10_10", 0, SpanCount("s2", "s1", 
+			AreEqual("SpanNotS2NotS1_10_10", 0, SpanCount("s2", "s1", 
 				10, 10));
 			//focus on ahead
-			NUnit.Framework.Assert.AreEqual("SpanNotS1NotS2_10_10", 0, SpanCount("s1", "s2", 
+			AreEqual("SpanNotS1NotS2_10_10", 0, SpanCount("s1", "s2", 
 				10, 10));
-			NUnit.Framework.Assert.AreEqual("SpanNotS1NotS2_0_1", 3, SpanCount("s1", "s2", 0, 
+			AreEqual("SpanNotS1NotS2_0_1", 3, SpanCount("s1", "s2", 0, 
 				1));
-			NUnit.Framework.Assert.AreEqual("SpanNotS1NotS2_0_2", 3, SpanCount("s1", "s2", 0, 
+			AreEqual("SpanNotS1NotS2_0_2", 3, SpanCount("s1", "s2", 0, 
 				2));
-			NUnit.Framework.Assert.AreEqual("SpanNotS1NotS2_0_3", 2, SpanCount("s1", "s2", 0, 
+			AreEqual("SpanNotS1NotS2_0_3", 2, SpanCount("s1", "s2", 0, 
 				3));
-			NUnit.Framework.Assert.AreEqual("SpanNotS1NotS2_0_4", 1, SpanCount("s1", "s2", 0, 
+			AreEqual("SpanNotS1NotS2_0_4", 1, SpanCount("s1", "s2", 0, 
 				4));
-			NUnit.Framework.Assert.AreEqual("SpanNotS1NotS2_0_8", 0, SpanCount("s1", "s2", 0, 
+			AreEqual("SpanNotS1NotS2_0_8", 0, SpanCount("s1", "s2", 0, 
 				8));
 			//exclude doesn't exist
-			NUnit.Framework.Assert.AreEqual("SpanNotS1NotS3_8_8", 3, SpanCount("s1", "s3", 8, 
+			AreEqual("SpanNotS1NotS3_8_8", 3, SpanCount("s1", "s3", 8, 
 				8));
 			//include doesn't exist
-			NUnit.Framework.Assert.AreEqual("SpanNotS3NotS1_8_8", 0, SpanCount("s3", "s1", 8, 
+			AreEqual("SpanNotS3NotS1_8_8", 0, SpanCount("s3", "s1", 8, 
 				8));
 		}
 

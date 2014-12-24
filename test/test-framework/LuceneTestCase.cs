@@ -863,7 +863,7 @@ namespace Lucene.Net
             }
         }
 
-		public static BaseDirectoryWrapper NewFSDirectory(FileInfo d)
+		public static BaseDirectoryWrapper NewFSDirectory(DirectoryInfo d)
 		{
 			return NewFSDirectory(d, null);
 		}
@@ -2269,6 +2269,13 @@ namespace Lucene.Net
                 Assert.True(condition, message);
             else
                 Assert.True(condition);
+        }
+
+        protected static DirectoryInfo CreateTempDir(string name)
+        {
+            var directoryInfo = new DirectoryInfo(Path.Combine(AppSettings.Get("tempDir", ""), name));
+            directoryInfo.Create();
+            return directoryInfo;
         }
     }
 }

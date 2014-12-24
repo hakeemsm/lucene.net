@@ -6,7 +6,7 @@
 
 using System.Collections.Generic;
 using System.IO;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
 using Lucene.Net.Util;
@@ -94,7 +94,7 @@ namespace Lucene.Net.Index
 					// Verify numDocs only increases, to catch IndexWriter
 					// accidentally deleting the index:
 					dir.SetRandomIOExceptionRateOnOpen(0.0);
-					NUnit.Framework.Assert.IsTrue(DirectoryReader.IndexExists(dir));
+					IsTrue(DirectoryReader.IndexExists(dir));
 					if (r2 == null)
 					{
 						r2 = DirectoryReader.Open(dir);
@@ -108,7 +108,7 @@ namespace Lucene.Net.Index
 							r2 = r3;
 						}
 					}
-					NUnit.Framework.Assert.IsTrue("before=" + lastNumDocs + " after=" + r2.NumDocs(), 
+					IsTrue("before=" + lastNumDocs + " after=" + r2.NumDocs(), 
 						r2.NumDocs() >= lastNumDocs);
 					lastNumDocs = r2.NumDocs();
 					//System.out.println("numDocs=" + lastNumDocs);

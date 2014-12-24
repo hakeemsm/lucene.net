@@ -5,7 +5,7 @@
  */
 
 using System;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
 using Lucene.Net.Util;
@@ -88,7 +88,7 @@ namespace Lucene.Net.Index
 			w.ForceMerge(1);
 			doStop.Set(true);
 			t.Join();
-			NUnit.Framework.Assert.IsTrue("merge count is " + w.mergeCount.Get(), w.mergeCount
+			IsTrue("merge count is " + w.mergeCount.Get(), w.mergeCount
 				.Get() <= 1);
 			w.Close();
 			d.Close();

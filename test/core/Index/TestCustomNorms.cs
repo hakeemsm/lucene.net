@@ -5,7 +5,7 @@
  */
 
 using System;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -37,7 +37,7 @@ namespace Lucene.Net.Index
 			int num = AtLeast(100);
 			for (int i = 0; i < num; i++)
 			{
-				Lucene.Net.Document.Document doc = docs.NextDoc();
+				Lucene.Net.Documents.Document doc = docs.NextDoc();
 				float nextFloat = Random().NextFloat();
 				Field f = new TextField(floatTestField, string.Empty + nextFloat, Field.Store.YES
 					);
@@ -54,12 +54,12 @@ namespace Lucene.Net.Index
 			writer.Close();
 			AtomicReader open = SlowCompositeReaderWrapper.Wrap(DirectoryReader.Open(dir));
 			NumericDocValues norms = open.GetNormValues(floatTestField);
-			NUnit.Framework.Assert.IsNotNull(norms);
-			for (int i_1 = 0; i_1 < open.MaxDoc(); i_1++)
+			IsNotNull(norms);
+			for (int i_1 = 0; i_1 < open.MaxDoc; i_1++)
 			{
-				Lucene.Net.Document.Document document = open.Document(i_1);
+				Lucene.Net.Documents.Document document = open.Document(i_1);
 				float expected = float.ParseFloat(document.Get(floatTestField));
-				NUnit.Framework.Assert.AreEqual(expected, Sharpen.Runtime.IntBitsToFloat((int)norms
+				AreEqual(expected, Sharpen.Runtime.IntBitsToFloat((int)norms
 					.Get(i_1)), 0.0f);
 			}
 			open.Close();

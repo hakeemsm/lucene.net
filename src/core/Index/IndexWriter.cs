@@ -4625,7 +4625,7 @@ namespace Lucene.Net.Index
             throw oom;
         }
 
-        internal virtual bool TestPoint(String message)
+        protected virtual bool TestPoint(String message)
         {
             if (infoStream.IsEnabled("TP"))
             {

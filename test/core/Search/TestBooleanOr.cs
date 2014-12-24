@@ -5,7 +5,7 @@
  */
 
 using NUnit.Framework;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -39,16 +39,16 @@ namespace Lucene.Net.Search
 		private int Search(Query q)
 		{
 			QueryUtils.Check(Random(), q, searcher);
-			return searcher.Search(q, null, 1000).totalHits;
+			return searcher.Search(q, null, 1000).TotalHits;
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
 		public virtual void TestElements()
 		{
-			NUnit.Framework.Assert.AreEqual(1, Search(t1));
-			NUnit.Framework.Assert.AreEqual(1, Search(t2));
-			NUnit.Framework.Assert.AreEqual(1, Search(c1));
-			NUnit.Framework.Assert.AreEqual(1, Search(c2));
+			AreEqual(1, Search(t1));
+			AreEqual(1, Search(t2));
+			AreEqual(1, Search(c1));
+			AreEqual(1, Search(c2));
 		}
 
 		/// <summary>
@@ -67,7 +67,7 @@ namespace Lucene.Net.Search
 			q.Add(new BooleanClause(t2, BooleanClause.Occur.SHOULD));
 			q.Add(new BooleanClause(c1, BooleanClause.Occur.SHOULD));
 			q.Add(new BooleanClause(c2, BooleanClause.Occur.SHOULD));
-			NUnit.Framework.Assert.AreEqual(1, Search(q));
+			AreEqual(1, Search(q));
 		}
 
 		/// <summary>
@@ -90,7 +90,7 @@ namespace Lucene.Net.Search
 			BooleanQuery q2 = new BooleanQuery();
 			q2.Add(q3, BooleanClause.Occur.SHOULD);
 			q2.Add(q4, BooleanClause.Occur.SHOULD);
-			NUnit.Framework.Assert.AreEqual(1, Search(q2));
+			AreEqual(1, Search(q2));
 		}
 
 		/// <summary>
@@ -113,7 +113,7 @@ namespace Lucene.Net.Search
 			BooleanQuery q2 = new BooleanQuery();
 			q2.Add(q3, BooleanClause.Occur.SHOULD);
 			q2.Add(q4, BooleanClause.Occur.MUST);
-			NUnit.Framework.Assert.AreEqual(1, Search(q2));
+			AreEqual(1, Search(q2));
 		}
 
 		/// <summary>
@@ -136,7 +136,7 @@ namespace Lucene.Net.Search
 			BooleanQuery q2 = new BooleanQuery();
 			q2.Add(q3, BooleanClause.Occur.SHOULD);
 			q2.Add(q4, BooleanClause.Occur.SHOULD);
-			NUnit.Framework.Assert.AreEqual(1, Search(q2));
+			AreEqual(1, Search(q2));
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -148,7 +148,7 @@ namespace Lucene.Net.Search
 			//
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
 			//
-			Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+			Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 			d.Add(NewField(FIELD_T, "Optimize not deleting all files", TextField.TYPE_STORED)
 				);
 			d.Add(NewField(FIELD_C, "Deleted When I run an optimize in our production environment."
@@ -178,7 +178,7 @@ namespace Lucene.Net.Search
 			int docCount = AtLeast(10000);
 			for (int i = 0; i < docCount; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(NewField("field", "a", TextField.TYPE_NOT_STORED));
 				riw.AddDocument(doc);
@@ -191,7 +191,7 @@ namespace Lucene.Net.Search
 			bq.Add(new TermQuery(new Term("field", "a")), BooleanClause.Occur.SHOULD);
 			bq.Add(new TermQuery(new Term("field", "a")), BooleanClause.Occur.SHOULD);
 			Weight w = s.CreateNormalizedWeight(bq);
-			NUnit.Framework.Assert.AreEqual(1, s.GetIndexReader().Leaves().Count);
+			AreEqual(1, s.GetIndexReader().Leaves().Count);
 			BulkScorer scorer = w.BulkScorer(s.GetIndexReader().Leaves()[0], false, null);
 			FixedBitSet hits = new FixedBitSet(docCount);
 			AtomicInteger end = new AtomicInteger();
@@ -202,7 +202,7 @@ namespace Lucene.Net.Search
 				end.GetAndAdd(inc);
 				scorer.Score(c, end);
 			}
-			NUnit.Framework.Assert.AreEqual(docCount, hits.Cardinality());
+			AreEqual(docCount, hits.Cardinality());
 			r.Close();
 			dir.Close();
 		}
@@ -221,7 +221,7 @@ namespace Lucene.Net.Search
 
 			public override void Collect(int doc)
 			{
-				NUnit.Framework.Assert.IsTrue("collected doc=" + doc + " beyond max=" + end, doc 
+				IsTrue("collected doc=" + doc + " beyond max=" + end, doc 
 					< end);
 				hits.Set(doc);
 			}

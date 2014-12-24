@@ -6,7 +6,7 @@
 
 using System;
 using System.IO;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -44,12 +44,12 @@ namespace Lucene.Net.Index
 
 			public override void Run()
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				FieldType customType = new FieldType(TextField.TYPE_STORED);
-				customType.SetStoreTermVectors(true);
-				customType.SetStoreTermVectorPositions(true);
-				customType.SetStoreTermVectorOffsets(true);
+				customType.StoreTermVectors = true;
+				customType.StoreTermVectorPositions = true;
+				customType.StoreTermVectorOffsets = true;
 				doc.Add(LuceneTestCase.NewField("field", "aaa bbb ccc ddd eee fff ggg hhh iii jjj"
 					, customType));
 				doc.Add(new NumericDocValuesField("dv", 5));
@@ -156,7 +156,7 @@ namespace Lucene.Net.Index
 					// Without fix for LUCENE-1130: one of the
 					// threads will hang
 					threads[i_2].Join();
-					NUnit.Framework.Assert.IsTrue("hit unexpected Throwable", threads[i_2].error == null
+					IsTrue("hit unexpected Throwable", threads[i_2].error == null
 						);
 				}
 				// Make sure once disk space is avail again, we can
@@ -214,7 +214,7 @@ namespace Lucene.Net.Index
 						{
 							if (!threads[i_2].IsAlive())
 							{
-								NUnit.Framework.Assert.Fail("thread failed before indexing a single document");
+								Fail("thread failed before indexing a single document");
 							}
 						}
 					}
@@ -232,7 +232,7 @@ namespace Lucene.Net.Index
 					threads[i_3].Join();
 					if (threads[i_3].IsAlive())
 					{
-						NUnit.Framework.Assert.Fail("thread seems to be hung");
+						Fail("thread seems to be hung");
 					}
 				}
 				// Quick test to make sure index is not corrupt:
@@ -244,7 +244,7 @@ namespace Lucene.Net.Index
 				{
 					count++;
 				}
-				NUnit.Framework.Assert.IsTrue(count > 0);
+				IsTrue(count > 0);
 				reader.Close();
 				dir.Close();
 			}
@@ -285,7 +285,7 @@ namespace Lucene.Net.Index
 				for (int i_2 = 0; i_2 < NUM_THREADS; i_2++)
 				{
 					threads[i_2].Join();
-					NUnit.Framework.Assert.IsTrue("hit unexpected Throwable", threads[i_2].error == null
+					IsTrue("hit unexpected Throwable", threads[i_2].error == null
 						);
 				}
 				bool success = false;
@@ -307,7 +307,7 @@ namespace Lucene.Net.Index
 				{
 					IndexReader reader = DirectoryReader.Open(dir);
 					Bits delDocs = MultiFields.GetLiveDocs(reader);
-					for (int j = 0; j < reader.MaxDoc(); j++)
+					for (int j = 0; j < reader.MaxDoc; j++)
 					{
 						if (delDocs == null || !delDocs.Get(j))
 						{
@@ -331,12 +331,12 @@ namespace Lucene.Net.Index
 			IndexWriter writer = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig
 				(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMaxBufferedDocs(2)).SetMergeScheduler
 				(new ConcurrentMergeScheduler()));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			FieldType customType = new FieldType(TextField.TYPE_STORED);
-			customType.SetStoreTermVectors(true);
-			customType.SetStoreTermVectorPositions(true);
-			customType.SetStoreTermVectorOffsets(true);
+			customType.StoreTermVectors = true;
+			customType.StoreTermVectorPositions = true;
+			customType.StoreTermVectorOffsets = true;
 			doc.Add(NewField("field", "aaa bbb ccc ddd eee fff ggg hhh iii jjj", customType));
 			for (int i = 0; i < 6; i++)
 			{
@@ -349,7 +349,7 @@ namespace Lucene.Net.Index
 				writer.AddDocument(doc);
 				writer.AddDocument(doc);
 				writer.Commit();
-				NUnit.Framework.Assert.Fail("did not hit exception");
+				Fail("did not hit exception");
 			}
 			catch (IOException)
 			{
@@ -548,13 +548,13 @@ namespace Lucene.Net.Index
 					);
 				AssumeFalse("aborting test: timeout obtaining lock", thread2.failure is LockObtainFailedException
 					);
-				NUnit.Framework.Assert.IsFalse("Failed due to: " + thread1.failure, thread1.failed
+				IsFalse("Failed due to: " + thread1.failure, thread1.failed
 					);
-				NUnit.Framework.Assert.IsFalse("Failed due to: " + thread2.failure, thread2.failed
+				IsFalse("Failed due to: " + thread2.failure, thread2.failed
 					);
 				// now verify that we have two documents in the index
 				IndexReader reader = DirectoryReader.Open(dir);
-				NUnit.Framework.Assert.AreEqual("IndexReader should have one document per thread running"
+				AreEqual("IndexReader should have one document per thread running"
 					, 2, reader.NumDocs());
 				reader.Close();
 			}
@@ -591,7 +591,7 @@ namespace Lucene.Net.Index
 			{
 				try
 				{
-					Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 						();
 					Field field = NewTextField("field", "testData", Field.Store.YES);
 					doc.Add(field);
@@ -650,7 +650,7 @@ namespace Lucene.Net.Index
 			{
 				threads[threadID_1].Join();
 			}
-			NUnit.Framework.Assert.IsTrue(!failed.Get());
+			IsTrue(!failed.Get());
 			writerRef.Get().Close();
 			d.Close();
 		}

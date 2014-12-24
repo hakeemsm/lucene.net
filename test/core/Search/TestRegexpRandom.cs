@@ -6,7 +6,7 @@
 
 using System.Globalization;
 using System.Text;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -38,7 +38,7 @@ namespace Lucene.Net.Search
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir, ((IndexWriterConfig
 				)NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMaxBufferedDocs
 				(TestUtil.NextInt(Random(), 50, 1000))));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			FieldType customType = new FieldType(TextField.TYPE_STORED);
 			customType.SetOmitNorms(true);
@@ -48,7 +48,7 @@ namespace Lucene.Net.Search
 				));
 			for (int i = 0; i < 1000; i++)
 			{
-				field.SetStringValue(df.Format(i));
+				field.StringValue = df.Format(i));
 				writer.AddDocument(doc);
 			}
 			reader = writer.GetReader();
@@ -89,8 +89,8 @@ namespace Lucene.Net.Search
 		{
 			Query wq = new RegexpQuery(new Term("field", FillPattern(pattern)));
 			TopDocs docs = searcher.Search(wq, 25);
-			NUnit.Framework.Assert.AreEqual("Incorrect hits for pattern: " + pattern, numHits
-				, docs.totalHits);
+			AreEqual("Incorrect hits for pattern: " + pattern, numHits
+				, docs.TotalHits);
 		}
 
 		/// <exception cref="System.Exception"></exception>

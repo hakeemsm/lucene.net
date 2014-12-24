@@ -5,7 +5,7 @@
  */
 
 using System.Collections.Generic;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Codecs;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
@@ -29,15 +29,15 @@ namespace Lucene.Net.Index
 			Directory dir = NewDirectory();
 			RandomIndexWriter w = new RandomIndexWriter(Random(), dir, NewIndexWriterConfig(TEST_VERSION_CURRENT
 				, new MockAnalyzer(Random())).SetMergePolicy(NewLogMergePolicy()));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			Field field = NewTextField("field", string.Empty, Field.Store.NO);
 			doc.Add(field);
-			field.SetStringValue("a b c");
+			field.StringValue = "a b c");
 			w.AddDocument(doc);
-			field.SetStringValue("d e f");
+			field.StringValue = "d e f");
 			w.AddDocument(doc);
-			field.SetStringValue("a f");
+			field.StringValue = "a f");
 			w.AddDocument(doc);
 			IndexReader r = w.GetReader();
 			w.Close();
@@ -45,19 +45,19 @@ namespace Lucene.Net.Index
 			DocTermOrds dto = new DocTermOrds(ar, ar.GetLiveDocs(), "field");
 			SortedSetDocValues iter = dto.Iterator(ar);
 			iter.SetDocument(0);
-			NUnit.Framework.Assert.AreEqual(0, iter.NextOrd());
-			NUnit.Framework.Assert.AreEqual(1, iter.NextOrd());
-			NUnit.Framework.Assert.AreEqual(2, iter.NextOrd());
-			NUnit.Framework.Assert.AreEqual(SortedSetDocValues.NO_MORE_ORDS, iter.NextOrd());
+			AreEqual(0, iter.NextOrd());
+			AreEqual(1, iter.NextOrd());
+			AreEqual(2, iter.NextOrd());
+			AreEqual(SortedSetDocValues.NO_MORE_ORDS, iter.NextOrd());
 			iter.SetDocument(1);
-			NUnit.Framework.Assert.AreEqual(3, iter.NextOrd());
-			NUnit.Framework.Assert.AreEqual(4, iter.NextOrd());
-			NUnit.Framework.Assert.AreEqual(5, iter.NextOrd());
-			NUnit.Framework.Assert.AreEqual(SortedSetDocValues.NO_MORE_ORDS, iter.NextOrd());
+			AreEqual(3, iter.NextOrd());
+			AreEqual(4, iter.NextOrd());
+			AreEqual(5, iter.NextOrd());
+			AreEqual(SortedSetDocValues.NO_MORE_ORDS, iter.NextOrd());
 			iter.SetDocument(2);
-			NUnit.Framework.Assert.AreEqual(0, iter.NextOrd());
-			NUnit.Framework.Assert.AreEqual(5, iter.NextOrd());
-			NUnit.Framework.Assert.AreEqual(SortedSetDocValues.NO_MORE_ORDS, iter.NextOrd());
+			AreEqual(0, iter.NextOrd());
+			AreEqual(5, iter.NextOrd());
+			AreEqual(SortedSetDocValues.NO_MORE_ORDS, iter.NextOrd());
 			r.Close();
 			dir.Close();
 		}
@@ -96,7 +96,7 @@ namespace Lucene.Net.Index
 			ICollection<int> ordsForDocSet = new HashSet<int>();
 			for (int id = 0; id < NUM_DOCS; id++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(new IntField("id", id, Field.Store.NO));
 				int termCount = TestUtil.NextInt(Random(), 0, 20 * RANDOM_MULTIPLIER);
@@ -200,7 +200,7 @@ namespace Lucene.Net.Index
 			ICollection<int> ordsForDocSet = new HashSet<int>();
 			for (int id = 0; id < NUM_DOCS; id++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(new IntField("id", id, Field.Store.NO));
 				int termCount = TestUtil.NextInt(Random(), 0, 20 * RANDOM_MULTIPLIER);
@@ -307,7 +307,7 @@ namespace Lucene.Net.Index
 			{
 				if (prefixRef == null)
 				{
-					NUnit.Framework.Assert.IsNull(MultiFields.GetTerms(r, "field"));
+					IsNull(MultiFields.GetTerms(r, "field"));
 				}
 				else
 				{
@@ -318,7 +318,7 @@ namespace Lucene.Net.Index
 						TermsEnum.SeekStatus result = termsEnum.SeekCeil(prefixRef);
 						if (result != TermsEnum.SeekStatus.END)
 						{
-							NUnit.Framework.Assert.IsFalse("term=" + termsEnum.Term().Utf8ToString() + " matches prefix="
+							IsFalse("term=" + termsEnum.Term().Utf8ToString() + " matches prefix="
 								 + prefixRef.Utf8ToString(), StringHelper.StartsWith(termsEnum.Term(), prefixRef
 								));
 						}
@@ -343,11 +343,11 @@ namespace Lucene.Net.Index
 				}
 			}
 			SortedSetDocValues iter = dto.Iterator(r);
-			for (int docID = 0; docID < r.MaxDoc(); docID++)
+			for (int docID = 0; docID < r.MaxDoc; docID++)
 			{
 				if (VERBOSE)
 				{
-					System.Console.Out.WriteLine("TEST: docID=" + docID + " of " + r.MaxDoc() + " (id="
+					System.Console.Out.WriteLine("TEST: docID=" + docID + " of " + r.MaxDoc + " (id="
 						 + docIDToID.Get(docID) + ")");
 				}
 				iter.SetDocument(docID);
@@ -363,10 +363,10 @@ namespace Lucene.Net.Index
 						System.Console.Out.WriteLine("  exp=" + expected.Utf8ToString() + " actual=" + te
 							.Term().Utf8ToString());
 					}
-					NUnit.Framework.Assert.AreEqual("expected=" + expected.Utf8ToString() + " actual="
+					AreEqual("expected=" + expected.Utf8ToString() + " actual="
 						 + te.Term().Utf8ToString() + " ord=" + ord, expected, te.Term());
 				}
-				NUnit.Framework.Assert.AreEqual(answers.Length, upto);
+				AreEqual(answers.Length, upto);
 			}
 		}
 
@@ -376,11 +376,11 @@ namespace Lucene.Net.Index
 			Directory dir = NewDirectory();
 			IndexWriter iw = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, 
 				null));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewStringField("foo", "bar", Field.Store.NO));
 			iw.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("foo", "baz", Field.Store.NO));
 			iw.AddDocument(doc);
 			DirectoryReader r1 = DirectoryReader.Open(iw, true);
@@ -389,9 +389,9 @@ namespace Lucene.Net.Index
 			FieldCache.DEFAULT.GetDocTermOrds(GetOnlySegmentReader(r2), "foo");
 			SortedSetDocValues v = FieldCache.DEFAULT.GetDocTermOrds(GetOnlySegmentReader(r1)
 				, "foo");
-			NUnit.Framework.Assert.AreEqual(2, v.GetValueCount());
+			AreEqual(2, v.GetValueCount());
 			v.SetDocument(1);
-			NUnit.Framework.Assert.AreEqual(1, v.NextOrd());
+			AreEqual(1, v.NextOrd());
 			iw.Close();
 			r1.Close();
 			r2.Close();
@@ -406,14 +406,14 @@ namespace Lucene.Net.Index
 			IndexWriterConfig iwconfig = NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer);
 			iwconfig.SetMergePolicy(NewLogMergePolicy());
 			RandomIndexWriter iwriter = new RandomIndexWriter(Random(), directory, iwconfig);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new StringField("field", "hello", Field.Store.NO));
 			iwriter.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(new StringField("field", "world", Field.Store.NO));
 			iwriter.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(new StringField("field", "beer", Field.Store.NO));
 			iwriter.AddDocument(doc);
 			iwriter.ForceMerge(1);
@@ -421,47 +421,47 @@ namespace Lucene.Net.Index
 			iwriter.Close();
 			AtomicReader ar = GetOnlySegmentReader(ireader);
 			SortedSetDocValues dv = FieldCache.DEFAULT.GetDocTermOrds(ar, "field");
-			NUnit.Framework.Assert.AreEqual(3, dv.GetValueCount());
+			AreEqual(3, dv.GetValueCount());
 			TermsEnum termsEnum = dv.TermsEnum();
 			// next()
-			NUnit.Framework.Assert.AreEqual("beer", termsEnum.Next().Utf8ToString());
-			NUnit.Framework.Assert.AreEqual(0, termsEnum.Ord());
-			NUnit.Framework.Assert.AreEqual("hello", termsEnum.Next().Utf8ToString());
-			NUnit.Framework.Assert.AreEqual(1, termsEnum.Ord());
-			NUnit.Framework.Assert.AreEqual("world", termsEnum.Next().Utf8ToString());
-			NUnit.Framework.Assert.AreEqual(2, termsEnum.Ord());
+			AreEqual("beer", termsEnum.Next().Utf8ToString());
+			AreEqual(0, termsEnum.Ord());
+			AreEqual("hello", termsEnum.Next().Utf8ToString());
+			AreEqual(1, termsEnum.Ord());
+			AreEqual("world", termsEnum.Next().Utf8ToString());
+			AreEqual(2, termsEnum.Ord());
 			// seekCeil()
-			NUnit.Framework.Assert.AreEqual(TermsEnum.SeekStatus.NOT_FOUND, termsEnum.SeekCeil
+			AreEqual(TermsEnum.SeekStatus.NOT_FOUND, termsEnum.SeekCeil
 				(new BytesRef("ha!")));
-			NUnit.Framework.Assert.AreEqual("hello", termsEnum.Term().Utf8ToString());
-			NUnit.Framework.Assert.AreEqual(1, termsEnum.Ord());
-			NUnit.Framework.Assert.AreEqual(TermsEnum.SeekStatus.FOUND, termsEnum.SeekCeil(new 
+			AreEqual("hello", termsEnum.Term().Utf8ToString());
+			AreEqual(1, termsEnum.Ord());
+			AreEqual(TermsEnum.SeekStatus.FOUND, termsEnum.SeekCeil(new 
 				BytesRef("beer")));
-			NUnit.Framework.Assert.AreEqual("beer", termsEnum.Term().Utf8ToString());
-			NUnit.Framework.Assert.AreEqual(0, termsEnum.Ord());
-			NUnit.Framework.Assert.AreEqual(TermsEnum.SeekStatus.END, termsEnum.SeekCeil(new 
+			AreEqual("beer", termsEnum.Term().Utf8ToString());
+			AreEqual(0, termsEnum.Ord());
+			AreEqual(TermsEnum.SeekStatus.END, termsEnum.SeekCeil(new 
 				BytesRef("zzz")));
 			// seekExact()
-			NUnit.Framework.Assert.IsTrue(termsEnum.SeekExact(new BytesRef("beer")));
-			NUnit.Framework.Assert.AreEqual("beer", termsEnum.Term().Utf8ToString());
-			NUnit.Framework.Assert.AreEqual(0, termsEnum.Ord());
-			NUnit.Framework.Assert.IsTrue(termsEnum.SeekExact(new BytesRef("hello")));
-			NUnit.Framework.Assert.AreEqual("hello", termsEnum.Term().Utf8ToString());
-			NUnit.Framework.Assert.AreEqual(1, termsEnum.Ord());
-			NUnit.Framework.Assert.IsTrue(termsEnum.SeekExact(new BytesRef("world")));
-			NUnit.Framework.Assert.AreEqual("world", termsEnum.Term().Utf8ToString());
-			NUnit.Framework.Assert.AreEqual(2, termsEnum.Ord());
-			NUnit.Framework.Assert.IsFalse(termsEnum.SeekExact(new BytesRef("bogus")));
+			IsTrue(termsEnum.SeekExact(new BytesRef("beer")));
+			AreEqual("beer", termsEnum.Term().Utf8ToString());
+			AreEqual(0, termsEnum.Ord());
+			IsTrue(termsEnum.SeekExact(new BytesRef("hello")));
+			AreEqual("hello", termsEnum.Term().Utf8ToString());
+			AreEqual(1, termsEnum.Ord());
+			IsTrue(termsEnum.SeekExact(new BytesRef("world")));
+			AreEqual("world", termsEnum.Term().Utf8ToString());
+			AreEqual(2, termsEnum.Ord());
+			IsFalse(termsEnum.SeekExact(new BytesRef("bogus")));
 			// seek(ord)
 			termsEnum.SeekExact(0);
-			NUnit.Framework.Assert.AreEqual("beer", termsEnum.Term().Utf8ToString());
-			NUnit.Framework.Assert.AreEqual(0, termsEnum.Ord());
+			AreEqual("beer", termsEnum.Term().Utf8ToString());
+			AreEqual(0, termsEnum.Ord());
 			termsEnum.SeekExact(1);
-			NUnit.Framework.Assert.AreEqual("hello", termsEnum.Term().Utf8ToString());
-			NUnit.Framework.Assert.AreEqual(1, termsEnum.Ord());
+			AreEqual("hello", termsEnum.Term().Utf8ToString());
+			AreEqual(1, termsEnum.Ord());
 			termsEnum.SeekExact(2);
-			NUnit.Framework.Assert.AreEqual("world", termsEnum.Term().Utf8ToString());
-			NUnit.Framework.Assert.AreEqual(2, termsEnum.Ord());
+			AreEqual("world", termsEnum.Term().Utf8ToString());
+			AreEqual(2, termsEnum.Ord());
 			ireader.Close();
 			directory.Close();
 		}

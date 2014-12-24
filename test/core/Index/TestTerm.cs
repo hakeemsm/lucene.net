@@ -19,11 +19,11 @@ namespace Lucene.Net.Index
 			Term differentField = new Term("different", "same");
 			Term differentText = new Term("same", "different");
 			string differentType = "AString";
-			NUnit.Framework.Assert.AreEqual(@base, @base);
-			NUnit.Framework.Assert.AreEqual(@base, same);
-			NUnit.Framework.Assert.IsFalse(@base.Equals(differentField));
-			NUnit.Framework.Assert.IsFalse(@base.Equals(differentText));
-			NUnit.Framework.Assert.IsFalse(@base.Equals(differentType));
+			AreEqual(@base, @base);
+			AreEqual(@base, same);
+			IsFalse(@base.Equals(differentField));
+			IsFalse(@base.Equals(differentText));
+			IsFalse(@base.Equals(differentType));
 		}
 	}
 }

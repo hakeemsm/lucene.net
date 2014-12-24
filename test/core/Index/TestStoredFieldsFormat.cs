@@ -19,7 +19,7 @@ namespace Lucene.Net.Index
 	/// </remarks>
 	public class TestStoredFieldsFormat : BaseStoredFieldsFormatTestCase
 	{
-		protected override Codec GetCodec()
+		protected override Codec Codec
 		{
 			return Codec.GetDefault();
 		}
@@ -27,7 +27,7 @@ namespace Lucene.Net.Index
 		/// <exception cref="System.IO.IOException"></exception>
 		public override void TestWriteReadMerge()
 		{
-			AssumeFalse("impersonation isnt good enough", GetCodec() is Lucene3xCodec);
+			AssumeFalse("impersonation isnt good enough", Codec is Lucene3xCodec);
 			// this test tries to switch up between the codec and another codec.
 			// for 3.x: we currently cannot take an index with existing 4.x segments
 			// and merge into newly formed 3.x segments.

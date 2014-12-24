@@ -7,7 +7,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -37,13 +37,13 @@ namespace Lucene.Net.Index
 			config.SetMergePolicy(NewLogMergePolicy());
 			config.SetSimilarity(new TestUniqueTermCount.TestSimilarity(this));
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir, config);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			Field foo = NewTextField("foo", string.Empty, Field.Store.NO);
 			doc.Add(foo);
 			for (int i = 0; i < 100; i++)
 			{
-				foo.SetStringValue(AddValue());
+				foo.StringValue = AddValue());
 				writer.AddDocument(doc);
 			}
 			reader = writer.GetReader();
@@ -62,10 +62,10 @@ namespace Lucene.Net.Index
 		public virtual void Test()
 		{
 			NumericDocValues fooNorms = MultiDocValues.GetNormValues(reader, "foo");
-			NUnit.Framework.Assert.IsNotNull(fooNorms);
-			for (int i = 0; i < reader.MaxDoc(); i++)
+			IsNotNull(fooNorms);
+			for (int i = 0; i < reader.MaxDoc; i++)
 			{
-				NUnit.Framework.Assert.AreEqual(expected[i], fooNorms.Get(i));
+				AreEqual(expected[i], fooNorms.Get(i));
 			}
 		}
 

@@ -57,7 +57,7 @@ namespace Lucene.Net.Util
 			OfflineSorter.SortInfo info = CheckSort(new OfflineSorter(OfflineSorter.DEFAULT_COMPARATOR
 				, OfflineSorter.BufferSize.Megabytes(1), OfflineSorter.DefaultTempDir(), 2), GenerateRandom
 				((int)OfflineSorter.MB * 20));
-			NUnit.Framework.Assert.IsTrue(info.mergeRounds > 10);
+			IsTrue(info.mergeRounds > 10);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -67,7 +67,7 @@ namespace Lucene.Net.Util
 			OfflineSorter.SortInfo sortInfo = CheckSort(new OfflineSorter(OfflineSorter.DEFAULT_COMPARATOR
 				, OfflineSorter.BufferSize.Megabytes(1), OfflineSorter.DefaultTempDir(), OfflineSorter
 				.MAX_TEMPFILES), GenerateRandom((int)OfflineSorter.MB * 20));
-			NUnit.Framework.Assert.AreEqual(1, sortInfo.mergeRounds);
+			AreEqual(1, sortInfo.mergeRounds);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -143,7 +143,7 @@ namespace Lucene.Net.Util
 		/// <exception cref="System.IO.IOException"></exception>
 		private void AssertFilesIdentical(FilePath golden, FilePath sorted)
 		{
-			NUnit.Framework.Assert.AreEqual(golden.Length(), sorted.Length());
+			AreEqual(golden.Length(), sorted.Length());
 			byte[] buf1 = new byte[64 * 1024];
 			byte[] buf2 = new byte[64 * 1024];
 			int len;
@@ -154,7 +154,7 @@ namespace Lucene.Net.Util
 				is2.ReadFully(buf2, 0, len);
 				for (int i = 0; i < len; i++)
 				{
-					NUnit.Framework.Assert.AreEqual(buf1[i], buf2[i]);
+					AreEqual(buf1[i], buf2[i]);
 				}
 			}
 			IOUtils.Close(is1, is2);
@@ -185,7 +185,7 @@ namespace Lucene.Net.Util
 			try
 			{
 				OfflineSorter.BufferSize.Megabytes(2048);
-				NUnit.Framework.Assert.Fail("max mb is 2047");
+				Fail("max mb is 2047");
 			}
 			catch (ArgumentException)
 			{
@@ -193,7 +193,7 @@ namespace Lucene.Net.Util
 			try
 			{
 				OfflineSorter.BufferSize.Megabytes(0);
-				NUnit.Framework.Assert.Fail("min mb is 0.5");
+				Fail("min mb is 0.5");
 			}
 			catch (ArgumentException)
 			{
@@ -201,7 +201,7 @@ namespace Lucene.Net.Util
 			try
 			{
 				OfflineSorter.BufferSize.Megabytes(-1);
-				NUnit.Framework.Assert.Fail("min mb is 0.5");
+				Fail("min mb is 0.5");
 			}
 			catch (ArgumentException)
 			{

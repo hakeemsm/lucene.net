@@ -14,7 +14,7 @@ namespace Lucene.Net.Index
 {
 	/// <summary>
 	/// Tests
-	/// <see cref="Terms.GetSumDocFreq()">Terms.GetSumDocFreq()</see>
+	/// <see cref="Terms.SumDocFreq">Terms.SumDocFreq</see>
 	/// </summary>
 	/// <lucene.experimental></lucene.experimental>
 	public class TestSumDocFreq : LuceneTestCase
@@ -25,7 +25,7 @@ namespace Lucene.Net.Index
 			int numDocs = AtLeast(500);
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			Field id = NewStringField("id", string.Empty, Field.Store.NO);
 			Field field1 = NewTextField("foo", string.Empty, Field.Store.NO);
@@ -35,13 +35,13 @@ namespace Lucene.Net.Index
 			doc.Add(field2);
 			for (int i = 0; i < numDocs; i++)
 			{
-				id.SetStringValue(string.Empty + i);
+				id.StringValue = string.Empty + i);
 				char ch1 = (char)TestUtil.NextInt(Random(), 'a', 'z');
 				char ch2 = (char)TestUtil.NextInt(Random(), 'a', 'z');
-				field1.SetStringValue(string.Empty + ch1 + " " + ch2);
+				field1.StringValue = string.Empty + ch1 + " " + ch2);
 				ch1 = (char)TestUtil.NextInt(Random(), 'a', 'z');
 				ch2 = (char)TestUtil.NextInt(Random(), 'a', 'z');
-				field2.SetStringValue(string.Empty + ch1 + " " + ch2);
+				field2.StringValue = string.Empty + ch1 + " " + ch2);
 				writer.AddDocument(doc);
 			}
 			IndexReader ir = writer.GetReader();
@@ -68,7 +68,7 @@ namespace Lucene.Net.Index
 			foreach (string f in fields)
 			{
 				Terms terms = fields.Terms(f);
-				long sumDocFreq = terms.GetSumDocFreq();
+				long sumDocFreq = terms.SumDocFreq;
 				if (sumDocFreq == -1)
 				{
 					if (VERBOSE)
@@ -82,9 +82,9 @@ namespace Lucene.Net.Index
 				TermsEnum termsEnum = terms.Iterator(null);
 				while (termsEnum.Next() != null)
 				{
-					computedSumDocFreq += termsEnum.DocFreq();
+					computedSumDocFreq += termsEnum.DocFreq;
 				}
-				NUnit.Framework.Assert.AreEqual(computedSumDocFreq, sumDocFreq);
+				AreEqual(computedSumDocFreq, sumDocFreq);
 			}
 		}
 	}

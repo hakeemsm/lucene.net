@@ -5,7 +5,7 @@
  */
 
 using System.Collections.Generic;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Codecs;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
@@ -49,7 +49,7 @@ namespace Lucene.Net.Index
 					w = new RandomIndexWriter(Random(), dir, iwc);
 					docsLeftInThisSegment = TestUtil.NextInt(Random(), 10, 100);
 				}
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(NewStringField("id", docUpto.ToString(), Field.Store.YES));
 				w.AddDocument(doc);
@@ -72,7 +72,7 @@ namespace Lucene.Net.Index
 					if (Random().Next(17) == 6)
 					{
 						IndexReader r = w.GetReader();
-						NUnit.Framework.Assert.AreEqual(NUM_DOCS - deleted.Count, r.NumDocs());
+						AreEqual(NUM_DOCS - deleted.Count, r.NumDocs());
 						r.Close();
 					}
 				}

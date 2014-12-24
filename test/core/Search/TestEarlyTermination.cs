@@ -28,7 +28,7 @@ namespace Lucene.Net.Search
 			int numDocs = AtLeast(100);
 			for (int i = 0; i < numDocs; i++)
 			{
-				writer.AddDocument(new Lucene.Net.Document.Document());
+				writer.AddDocument(new Lucene.Net.Documents.Document());
 				if (Rarely())
 				{
 					writer.Commit();
@@ -78,7 +78,7 @@ namespace Lucene.Net.Search
 			/// <exception cref="System.IO.IOException"></exception>
 			public override void Collect(int doc)
 			{
-				NUnit.Framework.Assert.IsFalse(this.collectionTerminated);
+				IsFalse(this.collectionTerminated);
 				if (LuceneTestCase.Rarely())
 				{
 					this.collectionTerminated = true;

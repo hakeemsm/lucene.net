@@ -6,7 +6,7 @@
 
 using System.Collections.Generic;
 using NUnit.Framework;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -33,11 +33,11 @@ namespace Lucene.Net.Search
 			int num = AtLeast(31);
 			for (int i = 0; i < num; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(NewTextField("f", "a b c d b c d c d d", Field.Store.NO));
 				w.AddDocument(doc);
-				doc = new Lucene.Net.Document.Document();
+				doc = new Lucene.Net.Documents.Document();
 				doc.Add(NewTextField("f", "a b c d", Field.Store.NO));
 				w.AddDocument(doc);
 			}
@@ -107,8 +107,8 @@ namespace Lucene.Net.Search
 				foreach (KeyValuePair<Query, Scorer> ent in subScorers.EntrySet())
 				{
 					Scorer value = ent.Value;
-					int matchId = value.DocID();
-					freqs.Put(ent.Key, matchId == doc ? value.Freq() : 0.0f);
+					int matchId = value.DocID;
+					freqs.Put(ent.Key, matchId == doc ? value.Freq : 0.0f);
 				}
 				docCounts.Put(doc + docBase, freqs);
 				other.Collect(doc);
@@ -137,16 +137,16 @@ namespace Lucene.Net.Search
 			TestSubScorerFreqs.CountingCollector c = new TestSubScorerFreqs.CountingCollector
 				(TopScoreDocCollector.Create(10, true));
 			s.Search(q, null, c);
-			int maxDocs = s.GetIndexReader().MaxDoc();
-			NUnit.Framework.Assert.AreEqual(maxDocs, c.docCounts.Count);
+			int maxDocs = s.GetIndexReader().MaxDoc;
+			AreEqual(maxDocs, c.docCounts.Count);
 			for (int i = 0; i < maxDocs; i++)
 			{
 				IDictionary<Query, float> doc0 = c.docCounts.Get(i);
-				NUnit.Framework.Assert.AreEqual(1, doc0.Count);
-				NUnit.Framework.Assert.AreEqual(4.0F, doc0.Get(q), FLOAT_TOLERANCE);
+				AreEqual(1, doc0.Count);
+				AreEqual(4.0F, doc0.Get(q), FLOAT_TOLERANCE);
 				IDictionary<Query, float> doc1 = c.docCounts.Get(++i);
-				NUnit.Framework.Assert.AreEqual(1, doc1.Count);
-				NUnit.Framework.Assert.AreEqual(1.0F, doc1.Get(q), FLOAT_TOLERANCE);
+				AreEqual(1, doc1.Count);
+				AreEqual(1.0F, doc1.Get(q), FLOAT_TOLERANCE);
 			}
 		}
 
@@ -174,26 +174,26 @@ namespace Lucene.Net.Search
 				TestSubScorerFreqs.CountingCollector c = new TestSubScorerFreqs.CountingCollector
 					(TopScoreDocCollector.Create(10, true), occur);
 				s.Search(query, null, c);
-				int maxDocs = s.GetIndexReader().MaxDoc();
-				NUnit.Framework.Assert.AreEqual(maxDocs, c.docCounts.Count);
+				int maxDocs = s.GetIndexReader().MaxDoc;
+				AreEqual(maxDocs, c.docCounts.Count);
 				bool includeOptional = occur.Contains("SHOULD");
 				for (int i = 0; i < maxDocs; i++)
 				{
 					IDictionary<Query, float> doc0 = c.docCounts.Get(i);
-					NUnit.Framework.Assert.AreEqual(includeOptional ? 5 : 4, doc0.Count);
-					NUnit.Framework.Assert.AreEqual(1.0F, doc0.Get(aQuery), FLOAT_TOLERANCE);
-					NUnit.Framework.Assert.AreEqual(4.0F, doc0.Get(dQuery), FLOAT_TOLERANCE);
+					AreEqual(includeOptional ? 5 : 4, doc0.Count);
+					AreEqual(1.0F, doc0.Get(aQuery), FLOAT_TOLERANCE);
+					AreEqual(4.0F, doc0.Get(dQuery), FLOAT_TOLERANCE);
 					if (includeOptional)
 					{
-						NUnit.Framework.Assert.AreEqual(3.0F, doc0.Get(cQuery), FLOAT_TOLERANCE);
+						AreEqual(3.0F, doc0.Get(cQuery), FLOAT_TOLERANCE);
 					}
 					IDictionary<Query, float> doc1 = c.docCounts.Get(++i);
-					NUnit.Framework.Assert.AreEqual(includeOptional ? 5 : 4, doc1.Count);
-					NUnit.Framework.Assert.AreEqual(1.0F, doc1.Get(aQuery), FLOAT_TOLERANCE);
-					NUnit.Framework.Assert.AreEqual(1.0F, doc1.Get(dQuery), FLOAT_TOLERANCE);
+					AreEqual(includeOptional ? 5 : 4, doc1.Count);
+					AreEqual(1.0F, doc1.Get(aQuery), FLOAT_TOLERANCE);
+					AreEqual(1.0F, doc1.Get(dQuery), FLOAT_TOLERANCE);
 					if (includeOptional)
 					{
-						NUnit.Framework.Assert.AreEqual(1.0F, doc1.Get(cQuery), FLOAT_TOLERANCE);
+						AreEqual(1.0F, doc1.Get(cQuery), FLOAT_TOLERANCE);
 					}
 				}
 			}
@@ -209,16 +209,16 @@ namespace Lucene.Net.Search
 			TestSubScorerFreqs.CountingCollector c = new TestSubScorerFreqs.CountingCollector
 				(TopScoreDocCollector.Create(10, true));
 			s.Search(q, null, c);
-			int maxDocs = s.GetIndexReader().MaxDoc();
-			NUnit.Framework.Assert.AreEqual(maxDocs, c.docCounts.Count);
+			int maxDocs = s.GetIndexReader().MaxDoc;
+			AreEqual(maxDocs, c.docCounts.Count);
 			for (int i = 0; i < maxDocs; i++)
 			{
 				IDictionary<Query, float> doc0 = c.docCounts.Get(i);
-				NUnit.Framework.Assert.AreEqual(1, doc0.Count);
-				NUnit.Framework.Assert.AreEqual(2.0F, doc0.Get(q), FLOAT_TOLERANCE);
+				AreEqual(1, doc0.Count);
+				AreEqual(2.0F, doc0.Get(q), FLOAT_TOLERANCE);
 				IDictionary<Query, float> doc1 = c.docCounts.Get(++i);
-				NUnit.Framework.Assert.AreEqual(1, doc1.Count);
-				NUnit.Framework.Assert.AreEqual(1.0F, doc1.Get(q), FLOAT_TOLERANCE);
+				AreEqual(1, doc1.Count);
+				AreEqual(1.0F, doc1.Get(q), FLOAT_TOLERANCE);
 			}
 		}
 	}

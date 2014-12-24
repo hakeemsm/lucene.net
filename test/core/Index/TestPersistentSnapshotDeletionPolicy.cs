@@ -45,9 +45,9 @@ namespace Lucene.Net.Index
 				)));
 			PersistentSnapshotDeletionPolicy psdp = (PersistentSnapshotDeletionPolicy)writer.
 				GetConfig().GetIndexDeletionPolicy();
-			NUnit.Framework.Assert.IsNull(psdp.GetLastSaveFile());
+			IsNull(psdp.GetLastSaveFile());
 			PrepareIndexAndSnapshots(psdp, writer, numSnapshots);
-			NUnit.Framework.Assert.IsNotNull(psdp.GetLastSaveFile());
+			IsNotNull(psdp.GetLastSaveFile());
 			writer.Close();
 			// Make sure only 1 save file exists:
 			int count = 0;
@@ -58,7 +58,7 @@ namespace Lucene.Net.Index
 					count++;
 				}
 			}
-			NUnit.Framework.Assert.AreEqual(1, count);
+			AreEqual(1, count);
 			// Make sure we fsync:
 			dir.Crash();
 			dir.ClearCrash();
@@ -68,14 +68,14 @@ namespace Lucene.Net.Index
 			writer = new IndexWriter(dir, GetConfig(Random(), psdp));
 			psdp = (PersistentSnapshotDeletionPolicy)writer.GetConfig().GetIndexDeletionPolicy
 				();
-			NUnit.Framework.Assert.AreEqual(numSnapshots, psdp.GetSnapshots().Count);
-			NUnit.Framework.Assert.AreEqual(numSnapshots, psdp.GetSnapshotCount());
+			AreEqual(numSnapshots, psdp.GetSnapshots().Count);
+			AreEqual(numSnapshots, psdp.GetSnapshotCount());
 			AssertSnapshotExists(dir, psdp, numSnapshots, false);
-			writer.AddDocument(new Lucene.Net.Document.Document());
+			writer.AddDocument(new Lucene.Net.Documents.Document());
 			writer.Commit();
 			snapshots.AddItem(psdp.Snapshot());
-			NUnit.Framework.Assert.AreEqual(numSnapshots + 1, psdp.GetSnapshots().Count);
-			NUnit.Framework.Assert.AreEqual(numSnapshots + 1, psdp.GetSnapshotCount());
+			AreEqual(numSnapshots + 1, psdp.GetSnapshots().Count);
+			AreEqual(numSnapshots + 1, psdp.GetSnapshotCount());
 			AssertSnapshotExists(dir, psdp, numSnapshots + 1, false);
 			writer.Close();
 			dir.Close();
@@ -100,7 +100,7 @@ namespace Lucene.Net.Index
 			{
 				new PersistentSnapshotDeletionPolicy(new KeepOnlyLastCommitDeletionPolicy(), dir, 
 					IndexWriterConfig.OpenMode.APPEND);
-				NUnit.Framework.Assert.Fail("did not hit expected exception");
+				Fail("did not hit expected exception");
 			}
 			catch (InvalidOperationException)
 			{
@@ -117,7 +117,7 @@ namespace Lucene.Net.Index
 			IndexWriter writer = new IndexWriter(dir, GetConfig(Random(), new PersistentSnapshotDeletionPolicy
 				(new KeepOnlyLastCommitDeletionPolicy(), dir, IndexWriterConfig.OpenMode.CREATE_OR_APPEND
 				)));
-			writer.AddDocument(new Lucene.Net.Document.Document());
+			writer.AddDocument(new Lucene.Net.Documents.Document());
 			writer.Commit();
 			PersistentSnapshotDeletionPolicy psdp = (PersistentSnapshotDeletionPolicy)writer.
 				GetConfig().GetIndexDeletionPolicy();
@@ -136,9 +136,9 @@ namespace Lucene.Net.Index
 					throw;
 				}
 			}
-			NUnit.Framework.Assert.AreEqual(0, psdp.GetSnapshotCount());
+			AreEqual(0, psdp.GetSnapshotCount());
 			writer.Close();
-			NUnit.Framework.Assert.AreEqual(1, DirectoryReader.ListCommits(dir).Count);
+			AreEqual(1, DirectoryReader.ListCommits(dir).Count);
 			dir.Close();
 		}
 
@@ -177,7 +177,7 @@ namespace Lucene.Net.Index
 			psdp.Release(snapshots[0]);
 			psdp = new PersistentSnapshotDeletionPolicy(new KeepOnlyLastCommitDeletionPolicy(
 				), dir, IndexWriterConfig.OpenMode.APPEND);
-			NUnit.Framework.Assert.AreEqual("Should have no snapshots !", 0, psdp.GetSnapshotCount
+			AreEqual("Should have no snapshots !", 0, psdp.GetSnapshotCount
 				());
 			dir.Close();
 		}
@@ -196,7 +196,7 @@ namespace Lucene.Net.Index
 			psdp.Release(snapshots[0].GetGeneration());
 			psdp = new PersistentSnapshotDeletionPolicy(new KeepOnlyLastCommitDeletionPolicy(
 				), dir, IndexWriterConfig.OpenMode.APPEND);
-			NUnit.Framework.Assert.AreEqual("Should have no snapshots !", 0, psdp.GetSnapshotCount
+			AreEqual("Should have no snapshots !", 0, psdp.GetSnapshotCount
 				());
 			dir.Close();
 		}

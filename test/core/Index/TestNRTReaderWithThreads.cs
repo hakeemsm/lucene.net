@@ -5,7 +5,7 @@
  */
 
 using System;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
 using Lucene.Net.Util;
@@ -50,7 +50,7 @@ namespace Lucene.Net.Index
 			for (int x_1 = 0; x_1 < indexThreads.Length; x_1++)
 			{
 				indexThreads[x_1].run = false;
-				NUnit.Framework.Assert.IsNull("Exception thrown: " + indexThreads[x_1].ex, indexThreads
+				IsNull("Exception thrown: " + indexThreads[x_1].ex, indexThreads
 					[x_1].ex);
 				addCount += indexThreads[x_1].addCount;
 				delCount += indexThreads[x_1].delCount;
@@ -61,7 +61,7 @@ namespace Lucene.Net.Index
 			}
 			for (int x_3 = 0; x_3 < indexThreads.Length; x_3++)
 			{
-				NUnit.Framework.Assert.IsNull("Exception thrown: " + indexThreads[x_3].ex, indexThreads
+				IsNull("Exception thrown: " + indexThreads[x_3].ex, indexThreads
 					[x_3].ex);
 			}
 			//System.out.println("addCount:"+addCount);
@@ -104,7 +104,7 @@ namespace Lucene.Net.Index
 						if (this.type == 0)
 						{
 							int i = this._enclosing.seq.AddAndGet(1);
-							Lucene.Net.Document.Document doc = DocHelper.CreateDocument(i, "index1", 10
+							Lucene.Net.Documents.Document doc = DocHelper.CreateDocument(i, "index1", 10
 								);
 							this.writer.AddDocument(doc);
 							this.addCount++;

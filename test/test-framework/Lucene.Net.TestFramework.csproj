@@ -252,6 +252,8 @@
     <Compile Include="Index\BaseIndexFileFormatTestCase.cs" />
     <Compile Include="Index\BaseMergePolicyTestCase.cs" />
     <Compile Include="Index\BasePostingsFormatTestCase.cs" />
+    <Compile Include="Index\BaseStoredFieldsFormatTestCase.cs" />
+    <Compile Include="Index\BaseTermVectorsFormatTestCase.cs" />
     <Compile Include="Index\DocHelper.cs" />
     <Compile Include="Index\FieldFilterAtomicReader.cs" />
     <Compile Include="Index\MockIndexInput.cs" />

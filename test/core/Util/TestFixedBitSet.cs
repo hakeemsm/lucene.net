@@ -203,7 +203,7 @@ namespace Lucene.Net.Test.Util
 
                     Assert.Equals(a_and.Cardinality(), b_and.Cardinality());
                     Assert.Equals(a_or.Cardinality(), b_or.Cardinality());
-					NUnit.Framework.Assert.AreEqual(a_xor.Cardinality(), b_xor.Cardinality());
+					AreEqual(a_xor.Cardinality(), b_xor.Cardinality());
                     Assert.Equals(a_andn.Cardinality(), b_andn.Cardinality());
                 }
 
@@ -386,25 +386,25 @@ namespace Lucene.Net.Test.Util
 			bits.Set(4);
 			FixedBitSet newBits = FixedBitSet.EnsureCapacity(bits, 8);
 			// grow within the word
-			NUnit.Framework.Assert.IsTrue(newBits.Get(1));
-			NUnit.Framework.Assert.IsTrue(newBits.Get(4));
+			IsTrue(newBits.Get(1));
+			IsTrue(newBits.Get(4));
 			newBits.Clear(1);
 			// we align to 64-bits, so even though it shouldn't have, it re-allocated a long[1]
-			NUnit.Framework.Assert.IsTrue(bits.Get(1));
-			NUnit.Framework.Assert.IsFalse(newBits.Get(1));
+			IsTrue(bits.Get(1));
+			IsFalse(newBits.Get(1));
 			newBits.Set(1);
 			newBits = FixedBitSet.EnsureCapacity(newBits, newBits.Length() - 2);
 			// reuse
-			NUnit.Framework.Assert.IsTrue(newBits.Get(1));
+			IsTrue(newBits.Get(1));
 			bits.Set(1);
 			newBits = FixedBitSet.EnsureCapacity(bits, 72);
 			// grow beyond one word
-			NUnit.Framework.Assert.IsTrue(newBits.Get(1));
-			NUnit.Framework.Assert.IsTrue(newBits.Get(4));
+			IsTrue(newBits.Get(1));
+			IsTrue(newBits.Get(4));
 			newBits.Clear(1);
 			// we grew the long[], so it's not shared
-			NUnit.Framework.Assert.IsTrue(bits.Get(1));
-			NUnit.Framework.Assert.IsFalse(newBits.Get(1));
+			IsTrue(bits.Get(1));
+			IsFalse(newBits.Get(1));
 		}
     }
 }

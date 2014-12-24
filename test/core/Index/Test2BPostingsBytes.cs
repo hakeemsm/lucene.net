@@ -4,8 +4,8 @@
  * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using Lucene.Net.Analysis;
-using Lucene.Net.Analysis.Tokenattributes;
+using Lucene.Net.Test.Analysis;
+using Lucene.Net.Test.Analysis.Tokenattributes;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
@@ -43,7 +43,7 @@ namespace Lucene.Net.Index
 				// 1 petabyte:
 				((LogByteSizeMergePolicy)mp).SetMaxMergeMB(1024 * 1024 * 1024);
 			}
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
 			ft.SetIndexOptions(FieldInfo.IndexOptions.DOCS_AND_FREQS);

@@ -4,8 +4,8 @@
  * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using Lucene.Net.Analysis;
-using Lucene.Net.Analysis.Tokenattributes;
+using Lucene.Net.Test.Analysis;
+using Lucene.Net.Test.Analysis.Tokenattributes;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
@@ -29,7 +29,7 @@ namespace Lucene.Net.Index
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter riw = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new TextField("eng", new BugReproTokenStream()));
 			riw.AddDocument(doc);
@@ -45,7 +45,7 @@ namespace Lucene.Net.Index
 			RandomIndexWriter riw = new RandomIndexWriter(Random(), dir);
 			for (int i = 0; i < 100; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(new TextField("eng", new BugReproTokenStream()));
 				riw.AddDocument(doc);

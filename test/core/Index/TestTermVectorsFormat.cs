@@ -20,7 +20,7 @@ namespace Lucene.Net.Index
 	/// </remarks>
 	public class TestTermVectorsFormat : BaseTermVectorsFormatTestCase
 	{
-		protected override Codec GetCodec()
+		protected override Codec Codec
 		{
 			return Codec.GetDefault();
 		}
@@ -28,7 +28,7 @@ namespace Lucene.Net.Index
 		protected override ICollection<BaseTermVectorsFormatTestCase.Options> ValidOptions
 			()
 		{
-			if (GetCodec() is Lucene3xCodec)
+			if (Codec is Lucene3xCodec)
 			{
 				// payloads are not supported on vectors in 3.x indexes
 				return EnumSet.Range(BaseTermVectorsFormatTestCase.Options.NONE, BaseTermVectorsFormatTestCase.Options

@@ -6,7 +6,7 @@
 
 using System.Collections.Generic;
 using System.IO;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Codecs;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
@@ -153,14 +153,14 @@ namespace Lucene.Net.Index
 			@out.Close();
 			sw.Close();
 			string singleFileOutput = sw.ToString();
-			NUnit.Framework.Assert.AreEqual(multiFileOutput, singleFileOutput);
+			AreEqual(multiFileOutput, singleFileOutput);
 		}
 
 		/// <exception cref="System.Exception"></exception>
 		private SegmentCommitInfo IndexDoc(IndexWriter writer, string fileName)
 		{
 			FilePath file = new FilePath(workDir, fileName);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			InputStreamReader @is = new InputStreamReader(new FileInputStream(file), StandardCharsets
 				.UTF_8);
@@ -191,7 +191,7 @@ namespace Lucene.Net.Index
 			r1.Close();
 			r2.Close();
 			SegmentInfo info = new SegmentInfo(si1.info.dir, Constants.LUCENE_MAIN_VERSION, merged
-				, si1.info.GetDocCount() + si2.info.GetDocCount(), false, codec, null);
+				, si1.info.DocCount + si2.info.DocCount, false, codec, null);
 			info.SetFiles(new HashSet<string>(trackingDir.GetCreatedFiles()));
 			if (useCompoundFile)
 			{
@@ -219,20 +219,20 @@ namespace Lucene.Net.Index
 			foreach (string field in fields)
 			{
 				Terms terms = fields.Terms(field);
-				NUnit.Framework.Assert.IsNotNull(terms);
+				IsNotNull(terms);
 				TermsEnum tis = terms.Iterator(null);
 				while (tis.Next() != null)
 				{
 					@out.Write("  term=" + field + ":" + tis.Term());
-					@out.WriteLine("    DF=" + tis.DocFreq());
+					@out.WriteLine("    DF=" + tis.DocFreq);
 					DocsAndPositionsEnum positions = tis.DocsAndPositions(reader.GetLiveDocs(), null);
 					while (positions.NextDoc() != DocIdSetIterator.NO_MORE_DOCS)
 					{
-						@out.Write(" doc=" + positions.DocID());
-						@out.Write(" TF=" + positions.Freq());
+						@out.Write(" doc=" + positions.DocID);
+						@out.Write(" TF=" + positions.Freq);
 						@out.Write(" pos=");
 						@out.Write(positions.NextPosition());
-						for (int j = 1; j < positions.Freq(); j++)
+						for (int j = 1; j < positions.Freq; j++)
 						{
 							@out.Write("," + positions.NextPosition());
 						}

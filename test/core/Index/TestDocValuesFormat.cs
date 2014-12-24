@@ -21,7 +21,7 @@ namespace Lucene.Net.Index
 	/// </remarks>
 	public class TestDocValuesFormat : BaseDocValuesFormatTestCase
 	{
-		protected override Codec GetCodec()
+		protected override Codec Codec
 		{
 			return Codec.GetDefault();
 		}

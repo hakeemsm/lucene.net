@@ -41,16 +41,16 @@ namespace Lucene.Net.Util
 		public virtual void AssertSorted(BaseSortTestCase.Entry[] original, BaseSortTestCase.Entry
 			[] sorted)
 		{
-			NUnit.Framework.Assert.AreEqual(original.Length, sorted.Length);
+			AreEqual(original.Length, sorted.Length);
 			BaseSortTestCase.Entry[] actuallySorted = Arrays.CopyOf(original, original.Length
 				);
 			Arrays.Sort(actuallySorted);
 			for (int i = 0; i < original.Length; ++i)
 			{
-				NUnit.Framework.Assert.AreEqual(actuallySorted[i].value, sorted[i].value);
+				AreEqual(actuallySorted[i].value, sorted[i].value);
 				if (stable)
 				{
-					NUnit.Framework.Assert.AreEqual(actuallySorted[i].ord, sorted[i].ord);
+					AreEqual(actuallySorted[i].ord, sorted[i].ord);
 				}
 			}
 		}

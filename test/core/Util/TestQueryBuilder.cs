@@ -5,8 +5,8 @@
  */
 
 using System.IO;
-using Lucene.Net.Analysis;
-using Lucene.Net.Analysis.Tokenattributes;
+using Lucene.Net.Test.Analysis;
+using Lucene.Net.Test.Analysis.Tokenattributes;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Util;
@@ -21,7 +21,7 @@ namespace Lucene.Net.Util
 		{
 			TermQuery expected = new TermQuery(new Term("field", "test"));
 			QueryBuilder builder = new QueryBuilder(new MockAnalyzer(Random()));
-			NUnit.Framework.Assert.AreEqual(expected, builder.CreateBooleanQuery("field", "test"
+			AreEqual(expected, builder.CreateBooleanQuery("field", "test"
 				));
 		}
 
@@ -31,7 +31,7 @@ namespace Lucene.Net.Util
 			expected.Add(new TermQuery(new Term("field", "foo")), BooleanClause.Occur.SHOULD);
 			expected.Add(new TermQuery(new Term("field", "bar")), BooleanClause.Occur.SHOULD);
 			QueryBuilder builder = new QueryBuilder(new MockAnalyzer(Random()));
-			NUnit.Framework.Assert.AreEqual(expected, builder.CreateBooleanQuery("field", "foo bar"
+			AreEqual(expected, builder.CreateBooleanQuery("field", "foo bar"
 				));
 		}
 
@@ -41,21 +41,21 @@ namespace Lucene.Net.Util
 			expected.Add(new TermQuery(new Term("field", "foo")), BooleanClause.Occur.MUST);
 			expected.Add(new TermQuery(new Term("field", "bar")), BooleanClause.Occur.MUST);
 			QueryBuilder builder = new QueryBuilder(new MockAnalyzer(Random()));
-			NUnit.Framework.Assert.AreEqual(expected, builder.CreateBooleanQuery("field", "foo bar"
+			AreEqual(expected, builder.CreateBooleanQuery("field", "foo bar"
 				, BooleanClause.Occur.MUST));
 		}
 
 		public virtual void TestMinShouldMatchNone()
 		{
 			QueryBuilder builder = new QueryBuilder(new MockAnalyzer(Random()));
-			NUnit.Framework.Assert.AreEqual(builder.CreateBooleanQuery("field", "one two three four"
+			AreEqual(builder.CreateBooleanQuery("field", "one two three four"
 				), builder.CreateMinShouldMatchQuery("field", "one two three four", 0f));
 		}
 
 		public virtual void TestMinShouldMatchAll()
 		{
 			QueryBuilder builder = new QueryBuilder(new MockAnalyzer(Random()));
-			NUnit.Framework.Assert.AreEqual(builder.CreateBooleanQuery("field", "one two three four"
+			AreEqual(builder.CreateBooleanQuery("field", "one two three four"
 				, BooleanClause.Occur.MUST), builder.CreateMinShouldMatchQuery("field", "one two three four"
 				, 1f));
 		}
@@ -71,24 +71,24 @@ namespace Lucene.Net.Util
 				);
 			expected.SetMinimumNumberShouldMatch(0);
 			QueryBuilder builder = new QueryBuilder(new MockAnalyzer(Random()));
-			NUnit.Framework.Assert.AreEqual(expected, builder.CreateMinShouldMatchQuery("field"
+			AreEqual(expected, builder.CreateMinShouldMatchQuery("field"
 				, "one two three four", 0.1f));
-			NUnit.Framework.Assert.AreEqual(expected, builder.CreateMinShouldMatchQuery("field"
+			AreEqual(expected, builder.CreateMinShouldMatchQuery("field"
 				, "one two three four", 0.24f));
 			expected.SetMinimumNumberShouldMatch(1);
-			NUnit.Framework.Assert.AreEqual(expected, builder.CreateMinShouldMatchQuery("field"
+			AreEqual(expected, builder.CreateMinShouldMatchQuery("field"
 				, "one two three four", 0.25f));
-			NUnit.Framework.Assert.AreEqual(expected, builder.CreateMinShouldMatchQuery("field"
+			AreEqual(expected, builder.CreateMinShouldMatchQuery("field"
 				, "one two three four", 0.49f));
 			expected.SetMinimumNumberShouldMatch(2);
-			NUnit.Framework.Assert.AreEqual(expected, builder.CreateMinShouldMatchQuery("field"
+			AreEqual(expected, builder.CreateMinShouldMatchQuery("field"
 				, "one two three four", 0.5f));
-			NUnit.Framework.Assert.AreEqual(expected, builder.CreateMinShouldMatchQuery("field"
+			AreEqual(expected, builder.CreateMinShouldMatchQuery("field"
 				, "one two three four", 0.74f));
 			expected.SetMinimumNumberShouldMatch(3);
-			NUnit.Framework.Assert.AreEqual(expected, builder.CreateMinShouldMatchQuery("field"
+			AreEqual(expected, builder.CreateMinShouldMatchQuery("field"
 				, "one two three four", 0.75f));
-			NUnit.Framework.Assert.AreEqual(expected, builder.CreateMinShouldMatchQuery("field"
+			AreEqual(expected, builder.CreateMinShouldMatchQuery("field"
 				, "one two three four", 0.99f));
 		}
 
@@ -103,14 +103,14 @@ namespace Lucene.Net.Util
 			Analyzer analyzer = new MockAnalyzer(Random(), MockTokenizer.WHITESPACE, false, stopList
 				);
 			QueryBuilder builder = new QueryBuilder(analyzer);
-			NUnit.Framework.Assert.AreEqual(expected, builder.CreatePhraseQuery("field", "1 stop 2"
+			AreEqual(expected, builder.CreatePhraseQuery("field", "1 stop 2"
 				));
 		}
 
 		public virtual void TestEmpty()
 		{
 			QueryBuilder builder = new QueryBuilder(new MockAnalyzer(Random()));
-			NUnit.Framework.Assert.IsNull(builder.CreateBooleanQuery("field", string.Empty));
+			IsNull(builder.CreateBooleanQuery("field", string.Empty));
 		}
 
 		/// <summary>adds synonym of "dog" for "dogs".</summary>
@@ -175,13 +175,13 @@ namespace Lucene.Net.Util
 			expected.Add(new TermQuery(new Term("field", "dog")), BooleanClause.Occur.SHOULD);
 			QueryBuilder builder = new QueryBuilder(new TestQueryBuilder.MockSynonymAnalyzer(
 				));
-			NUnit.Framework.Assert.AreEqual(expected, builder.CreateBooleanQuery("field", "dogs"
+			AreEqual(expected, builder.CreateBooleanQuery("field", "dogs"
 				));
-			NUnit.Framework.Assert.AreEqual(expected, builder.CreatePhraseQuery("field", "dogs"
+			AreEqual(expected, builder.CreatePhraseQuery("field", "dogs"
 				));
-			NUnit.Framework.Assert.AreEqual(expected, builder.CreateBooleanQuery("field", "dogs"
+			AreEqual(expected, builder.CreateBooleanQuery("field", "dogs"
 				, BooleanClause.Occur.MUST));
-			NUnit.Framework.Assert.AreEqual(expected, builder.CreatePhraseQuery("field", "dogs"
+			AreEqual(expected, builder.CreatePhraseQuery("field", "dogs"
 				));
 		}
 
@@ -194,7 +194,7 @@ namespace Lucene.Net.Util
 			expected.Add(new Term[] { new Term("field", "dogs"), new Term("field", "dog") });
 			QueryBuilder builder = new QueryBuilder(new TestQueryBuilder.MockSynonymAnalyzer(
 				));
-			NUnit.Framework.Assert.AreEqual(expected, builder.CreatePhraseQuery("field", "old dogs"
+			AreEqual(expected, builder.CreatePhraseQuery("field", "old dogs"
 				));
 		}
 
@@ -247,7 +247,7 @@ namespace Lucene.Net.Util
 			expected.Add(new TermQuery(new Term("field", "ä¸­")), BooleanClause.Occur.SHOULD);
 			expected.Add(new TermQuery(new Term("field", "å›½")), BooleanClause.Occur.SHOULD);
 			QueryBuilder builder = new QueryBuilder(analyzer);
-			NUnit.Framework.Assert.AreEqual(expected, builder.CreateBooleanQuery("field", "ä¸­å›½"
+			AreEqual(expected, builder.CreateBooleanQuery("field", "ä¸­å›½"
 				));
 		}
 
@@ -261,7 +261,7 @@ namespace Lucene.Net.Util
 			expected.Add(new Term("field", "ä¸­"));
 			expected.Add(new Term("field", "å›½"));
 			QueryBuilder builder = new QueryBuilder(analyzer);
-			NUnit.Framework.Assert.AreEqual(expected, builder.CreatePhraseQuery("field", "ä¸­å›½"
+			AreEqual(expected, builder.CreatePhraseQuery("field", "ä¸­å›½"
 				));
 		}
 
@@ -276,7 +276,7 @@ namespace Lucene.Net.Util
 			expected.Add(new Term("field", "ä¸­"));
 			expected.Add(new Term("field", "å›½"));
 			QueryBuilder builder = new QueryBuilder(analyzer);
-			NUnit.Framework.Assert.AreEqual(expected, builder.CreatePhraseQuery("field", "ä¸­å›½"
+			AreEqual(expected, builder.CreatePhraseQuery("field", "ä¸­å›½"
 				, 3));
 		}
 
@@ -339,11 +339,11 @@ namespace Lucene.Net.Util
 			expected.Add(new TermQuery(new Term("field", "åœ‹")), BooleanClause.Occur.SHOULD);
 			QueryBuilder builder = new QueryBuilder(new TestQueryBuilder.MockCJKSynonymAnalyzer
 				());
-			NUnit.Framework.Assert.AreEqual(expected, builder.CreateBooleanQuery("field", "å›½"
+			AreEqual(expected, builder.CreateBooleanQuery("field", "å›½"
 				));
-			NUnit.Framework.Assert.AreEqual(expected, builder.CreatePhraseQuery("field", "å›½"
+			AreEqual(expected, builder.CreatePhraseQuery("field", "å›½"
 				));
-			NUnit.Framework.Assert.AreEqual(expected, builder.CreateBooleanQuery("field", "å›½"
+			AreEqual(expected, builder.CreateBooleanQuery("field", "å›½"
 				, BooleanClause.Occur.MUST));
 		}
 
@@ -359,7 +359,7 @@ namespace Lucene.Net.Util
 			expected.Add(inner, BooleanClause.Occur.SHOULD);
 			QueryBuilder builder = new QueryBuilder(new TestQueryBuilder.MockCJKSynonymAnalyzer
 				());
-			NUnit.Framework.Assert.AreEqual(expected, builder.CreateBooleanQuery("field", "ä¸­å›½"
+			AreEqual(expected, builder.CreateBooleanQuery("field", "ä¸­å›½"
 				));
 		}
 
@@ -379,7 +379,7 @@ namespace Lucene.Net.Util
 			expected.Add(inner2, BooleanClause.Occur.SHOULD);
 			QueryBuilder builder = new QueryBuilder(new TestQueryBuilder.MockCJKSynonymAnalyzer
 				());
-			NUnit.Framework.Assert.AreEqual(expected, builder.CreateBooleanQuery("field", "ä¸­å›½å›½"
+			AreEqual(expected, builder.CreateBooleanQuery("field", "ä¸­å›½å›½"
 				));
 		}
 
@@ -395,7 +395,7 @@ namespace Lucene.Net.Util
 			expected.Add(inner, BooleanClause.Occur.MUST);
 			QueryBuilder builder = new QueryBuilder(new TestQueryBuilder.MockCJKSynonymAnalyzer
 				());
-			NUnit.Framework.Assert.AreEqual(expected, builder.CreateBooleanQuery("field", "ä¸­å›½"
+			AreEqual(expected, builder.CreateBooleanQuery("field", "ä¸­å›½"
 				, BooleanClause.Occur.MUST));
 		}
 
@@ -415,7 +415,7 @@ namespace Lucene.Net.Util
 			expected.Add(inner2, BooleanClause.Occur.MUST);
 			QueryBuilder builder = new QueryBuilder(new TestQueryBuilder.MockCJKSynonymAnalyzer
 				());
-			NUnit.Framework.Assert.AreEqual(expected, builder.CreateBooleanQuery("field", "ä¸­å›½å›½"
+			AreEqual(expected, builder.CreateBooleanQuery("field", "ä¸­å›½å›½"
 				, BooleanClause.Occur.MUST));
 		}
 
@@ -428,10 +428,10 @@ namespace Lucene.Net.Util
 			expected.Add(new Term[] { new Term("field", "å›½"), new Term("field", "åœ‹") });
 			QueryBuilder builder = new QueryBuilder(new TestQueryBuilder.MockCJKSynonymAnalyzer
 				());
-			NUnit.Framework.Assert.AreEqual(expected, builder.CreatePhraseQuery("field", "ä¸­å›½"
+			AreEqual(expected, builder.CreatePhraseQuery("field", "ä¸­å›½"
 				));
 			expected.SetSlop(3);
-			NUnit.Framework.Assert.AreEqual(expected, builder.CreatePhraseQuery("field", "ä¸­å›½"
+			AreEqual(expected, builder.CreatePhraseQuery("field", "ä¸­å›½"
 				, 3));
 		}
 	}

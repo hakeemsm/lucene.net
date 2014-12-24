@@ -6,8 +6,8 @@
 
 using System;
 using System.IO;
-using Lucene.Net.Analysis;
-using Lucene.Net.Analysis.Tokenattributes;
+using Lucene.Net.Test.Analysis;
+using Lucene.Net.Test.Analysis.Tokenattributes;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
@@ -27,29 +27,29 @@ namespace Lucene.Net.Index
 				(Random()));
 			iwc.SetMergePolicy(NewLogMergePolicy());
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir, iwc);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
-			customType.SetStoreTermVectors(true);
-			customType.SetStoreTermVectorPositions(true);
-			customType.SetStoreTermVectorPayloads(true);
+			customType.StoreTermVectors = true;
+			customType.StoreTermVectorPositions = true;
+			customType.StoreTermVectorPayloads = true;
 			customType.SetStoreTermVectorOffsets(Random().NextBoolean());
 			Field field = new Field("field", string.Empty, customType);
 			TokenStream ts = new MockTokenizer(new StringReader("here we go"), MockTokenizer.
 				WHITESPACE, true);
-			NUnit.Framework.Assert.IsFalse(ts.HasAttribute(typeof(PayloadAttribute)));
+			IsFalse(ts.HasAttribute(typeof(PayloadAttribute)));
 			field.SetTokenStream(ts);
 			doc.Add(field);
 			writer.AddDocument(doc);
 			Token withPayload = new Token("withPayload", 0, 11);
 			withPayload.SetPayload(new BytesRef("test"));
 			ts = new CannedTokenStream(withPayload);
-			NUnit.Framework.Assert.IsTrue(ts.HasAttribute(typeof(PayloadAttribute)));
+			IsTrue(ts.HasAttribute(typeof(PayloadAttribute)));
 			field.SetTokenStream(ts);
 			writer.AddDocument(doc);
 			ts = new MockTokenizer(new StringReader("another"), MockTokenizer.WHITESPACE, true
 				);
-			NUnit.Framework.Assert.IsFalse(ts.HasAttribute(typeof(PayloadAttribute)));
+			IsFalse(ts.HasAttribute(typeof(PayloadAttribute)));
 			field.SetTokenStream(ts);
 			writer.AddDocument(doc);
 			DirectoryReader reader = writer.GetReader();
@@ -57,11 +57,11 @@ namespace Lucene.Net.Index
 			//HM:revisit 
 			//assert terms != null;
 			TermsEnum termsEnum = terms.Iterator(null);
-			NUnit.Framework.Assert.IsTrue(termsEnum.SeekExact(new BytesRef("withPayload")));
+			IsTrue(termsEnum.SeekExact(new BytesRef("withPayload")));
 			DocsAndPositionsEnum de = termsEnum.DocsAndPositions(null, null);
-			NUnit.Framework.Assert.AreEqual(0, de.NextDoc());
-			NUnit.Framework.Assert.AreEqual(0, de.NextPosition());
-			NUnit.Framework.Assert.AreEqual(new BytesRef("test"), de.GetPayload());
+			AreEqual(0, de.NextDoc());
+			AreEqual(0, de.NextPosition());
+			AreEqual(new BytesRef("test"), de.GetPayload());
 			writer.Close();
 			reader.Close();
 			dir.Close();
@@ -73,30 +73,30 @@ namespace Lucene.Net.Index
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
-			customType.SetStoreTermVectors(true);
-			customType.SetStoreTermVectorPositions(true);
-			customType.SetStoreTermVectorPayloads(true);
+			customType.StoreTermVectors = true;
+			customType.StoreTermVectorPositions = true;
+			customType.StoreTermVectorPayloads = true;
 			customType.SetStoreTermVectorOffsets(Random().NextBoolean());
 			Field field = new Field("field", string.Empty, customType);
 			TokenStream ts = new MockTokenizer(new StringReader("here we go"), MockTokenizer.
 				WHITESPACE, true);
-			NUnit.Framework.Assert.IsFalse(ts.HasAttribute(typeof(PayloadAttribute)));
+			IsFalse(ts.HasAttribute(typeof(PayloadAttribute)));
 			field.SetTokenStream(ts);
 			doc.Add(field);
 			Field field2 = new Field("field", string.Empty, customType);
 			Token withPayload = new Token("withPayload", 0, 11);
 			withPayload.SetPayload(new BytesRef("test"));
 			ts = new CannedTokenStream(withPayload);
-			NUnit.Framework.Assert.IsTrue(ts.HasAttribute(typeof(PayloadAttribute)));
+			IsTrue(ts.HasAttribute(typeof(PayloadAttribute)));
 			field2.SetTokenStream(ts);
 			doc.Add(field2);
 			Field field3 = new Field("field", string.Empty, customType);
 			ts = new MockTokenizer(new StringReader("nopayload"), MockTokenizer.WHITESPACE, true
 				);
-			NUnit.Framework.Assert.IsFalse(ts.HasAttribute(typeof(PayloadAttribute)));
+			IsFalse(ts.HasAttribute(typeof(PayloadAttribute)));
 			field3.SetTokenStream(ts);
 			doc.Add(field3);
 			writer.AddDocument(doc);
@@ -105,11 +105,11 @@ namespace Lucene.Net.Index
 			//HM:revisit 
 			//assert terms != null;
 			TermsEnum termsEnum = terms.Iterator(null);
-			NUnit.Framework.Assert.IsTrue(termsEnum.SeekExact(new BytesRef("withPayload")));
+			IsTrue(termsEnum.SeekExact(new BytesRef("withPayload")));
 			DocsAndPositionsEnum de = termsEnum.DocsAndPositions(null, null);
-			NUnit.Framework.Assert.AreEqual(0, de.NextDoc());
-			NUnit.Framework.Assert.AreEqual(3, de.NextPosition());
-			NUnit.Framework.Assert.AreEqual(new BytesRef("test"), de.GetPayload());
+			AreEqual(0, de.NextDoc());
+			AreEqual(3, de.NextPosition());
+			AreEqual(new BytesRef("test"), de.GetPayload());
 			writer.Close();
 			reader.Close();
 			dir.Close();
@@ -120,18 +120,18 @@ namespace Lucene.Net.Index
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
-			customType.SetStoreTermVectors(true);
+			customType.StoreTermVectors = true;
 			customType.SetStoreTermVectorPositions(false);
-			customType.SetStoreTermVectorPayloads(true);
+			customType.StoreTermVectorPayloads = true;
 			customType.SetStoreTermVectorOffsets(Random().NextBoolean());
 			doc.Add(new Field("field", "foo", customType));
 			try
 			{
 				writer.AddDocument(doc);
-				NUnit.Framework.Assert.Fail();
+				Fail();
 			}
 			catch (ArgumentException)
 			{

@@ -24,7 +24,7 @@ namespace Lucene.Net.Search
 			Directory indexStore = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), indexStore);
 			long now = Runtime.CurrentTimeMillis();
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			// add time that is in the past
 			doc.Add(NewStringField("datefield", DateTools.TimeToString(now - 1000, DateTools.Resolution
@@ -52,18 +52,18 @@ namespace Lucene.Net.Search
 			ScoreDoc[] result;
 			// ensure that queries return expected results without DateFilter first
 			result = searcher.Search(query1, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(0, result.Length);
+			AreEqual(0, result.Length);
 			result = searcher.Search(query2, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(1, result.Length);
+			AreEqual(1, result.Length);
 			// run queries with DateFilter
 			result = searcher.Search(query1, df1, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(0, result.Length);
+			AreEqual(0, result.Length);
 			result = searcher.Search(query1, df2, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(0, result.Length);
+			AreEqual(0, result.Length);
 			result = searcher.Search(query2, df1, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(1, result.Length);
+			AreEqual(1, result.Length);
 			result = searcher.Search(query2, df2, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(0, result.Length);
+			AreEqual(0, result.Length);
 			reader.Close();
 			indexStore.Close();
 		}
@@ -75,7 +75,7 @@ namespace Lucene.Net.Search
 			Directory indexStore = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), indexStore);
 			long now = Runtime.CurrentTimeMillis();
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			// add time that is in the future
 			doc.Add(NewStringField("datefield", DateTools.TimeToString(now + 888888, DateTools.Resolution
@@ -103,18 +103,18 @@ namespace Lucene.Net.Search
 			ScoreDoc[] result;
 			// ensure that queries return expected results without DateFilter first
 			result = searcher.Search(query1, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(0, result.Length);
+			AreEqual(0, result.Length);
 			result = searcher.Search(query2, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(1, result.Length);
+			AreEqual(1, result.Length);
 			// run queries with DateFilter
 			result = searcher.Search(query1, df1, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(0, result.Length);
+			AreEqual(0, result.Length);
 			result = searcher.Search(query1, df2, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(0, result.Length);
+			AreEqual(0, result.Length);
 			result = searcher.Search(query2, df1, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(1, result.Length);
+			AreEqual(1, result.Length);
 			result = searcher.Search(query2, df2, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(0, result.Length);
+			AreEqual(0, result.Length);
 			reader.Close();
 			indexStore.Close();
 		}

@@ -103,8 +103,8 @@ namespace Lucene.Net.Store
 				{
 					FSDirectory d2 = dirs[j];
 					d2.EnsureOpen();
-					NUnit.Framework.Assert.IsTrue(SlowFileExists(d2, fname));
-					NUnit.Framework.Assert.AreEqual(1 + largeBuffer.Length, d2.FileLength(fname));
+					IsTrue(SlowFileExists(d2, fname));
+					AreEqual(1 + largeBuffer.Length, d2.FileLength(fname));
 					
 					// don't do read tests if unmapping is not supported!
 					if (d2 is MMapDirectory && !((MMapDirectory)d2).GetUseUnmap())
@@ -129,7 +129,7 @@ namespace Lucene.Net.Store
 				for (int j_1 = 0; j_1 < dirs.Length; j_1++)
 				{
 					FSDirectory d2 = dirs[j_1];
-					NUnit.Framework.Assert.IsFalse(SlowFileExists(d2, fname));
+					IsFalse(SlowFileExists(d2, fname));
 				}
 				
 				Lock lock_Renamed = dir.MakeLock(lockname);
@@ -174,9 +174,9 @@ namespace Lucene.Net.Store
 			System.IO.DirectoryInfo path = new System.IO.DirectoryInfo(System.IO.Path.Combine(AppSettings.Get("tempDir", ""), "doesnotexist"));
 			try
 			{
-				NUnit.Framework.Assert.IsTrue(!path.Exists());
+				IsTrue(!path.Exists());
 				Directory dir = new SimpleFSDirectory(path, null);
-				NUnit.Framework.Assert.IsTrue(!path.Exists());
+				IsTrue(!path.Exists());
 				dir.Close();
 			}
 			finally
@@ -206,7 +206,7 @@ namespace Lucene.Net.Store
 			try
 			{
 				dir.CreateOutput(name, NewIOContext(Random())).Close();
-				NUnit.Framework.Assert.IsTrue(SlowFileExists(dir, name));
+				IsTrue(SlowFileExists(dir, name));
 				Assert.IsTrue(new System.Collections.ArrayList(dir.ListAll()).Contains(name));
 			}
 			finally
@@ -225,7 +225,7 @@ namespace Lucene.Net.Store
 				System.IO.Directory.CreateDirectory(path.FullName);
 				System.IO.Directory.CreateDirectory(new System.IO.DirectoryInfo(System.IO.Path.Combine(path.FullName, "subdir")).FullName);
 				Directory fsDir = new SimpleFSDirectory(path, null);
-				NUnit.Framework.Assert.AreEqual(0, new RAMDirectory(fsDir, NewIOContext(Random())
+				AreEqual(0, new RAMDirectory(fsDir, NewIOContext(Random())
 					).ListAll().Length);
 			}
 			finally
@@ -244,7 +244,7 @@ namespace Lucene.Net.Store
 			{
 				IndexOutput out_Renamed = fsDir.CreateOutput("afile", NewIOContext(Random()));
 				out_Renamed.Close();
-				NUnit.Framework.Assert.IsTrue(SlowFileExists(fsDir, "afile"));
+				IsTrue(SlowFileExists(fsDir, "afile"));
 
 			    Assert.Throws<NoSuchDirectoryException>(
 			        () =>
@@ -267,14 +267,14 @@ namespace Lucene.Net.Store
 			@out.WriteString("boo");
 			@out.Close();
 			// delete it
-			NUnit.Framework.Assert.IsTrue(new FilePath(path, "afile").Delete());
+			IsTrue(new FilePath(path, "afile").Delete());
 			// directory is empty
-			NUnit.Framework.Assert.AreEqual(0, fsdir.ListAll().Length);
+			AreEqual(0, fsdir.ListAll().Length);
 			// fsync it
 			try
 			{
 				fsdir.Sync(Collections.Singleton("afile"));
-				NUnit.Framework.Assert.Fail("didn't get expected exception, instead fsync created new files: "
+				Fail("didn't get expected exception, instead fsync created new files: "
 					 + Arrays.AsList(fsdir.ListAll()));
 			}
 			catch (IOException)
@@ -282,7 +282,7 @@ namespace Lucene.Net.Store
 			}
 			// ok
 			// directory is still empty
-			NUnit.Framework.Assert.AreEqual(0, fsdir.ListAll().Length);
+			AreEqual(0, fsdir.ListAll().Length);
 			fsdir.Close();
 		}
 	}

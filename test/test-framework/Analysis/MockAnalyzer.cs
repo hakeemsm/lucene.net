@@ -160,7 +160,7 @@ namespace Lucene.Net.Analysis
    * Toggle maxTokenLength for MockTokenizer
    */
 
-        public void setMaxTokenLength(int length)
+        public void SetMaxTokenLength(int length)
         {
             this.maxTokenLength = length;
         }

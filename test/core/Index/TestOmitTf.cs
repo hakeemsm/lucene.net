@@ -7,7 +7,7 @@
 using System;
 using System.Text;
 using NUnit.Framework;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -94,7 +94,7 @@ namespace Lucene.Net.Index
 			Analyzer analyzer = new MockAnalyzer(Random());
 			IndexWriter writer = new IndexWriter(ram, NewIndexWriterConfig(TEST_VERSION_CURRENT
 				, analyzer));
-			Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+			Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 			// this field will have Tf
 			Field f1 = NewField("f1", "This field has term freqs", normalType);
 			d.Add(f1);
@@ -105,7 +105,7 @@ namespace Lucene.Net.Index
 			writer.ForceMerge(1);
 			// now we add another document which has term freq for field f2 and not for f1 and verify if the SegmentMerger
 			// keep things constant
-			d = new Lucene.Net.Document.Document();
+			d = new Lucene.Net.Documents.Document();
 			// Reverse
 			f1 = NewField("f1", "This field has term freqs", omitType);
 			d.Add(f1);
@@ -118,9 +118,9 @@ namespace Lucene.Net.Index
 			writer.Close();
 			SegmentReader reader = GetOnlySegmentReader(DirectoryReader.Open(ram));
 			FieldInfos fi = reader.GetFieldInfos();
-			NUnit.Framework.Assert.AreEqual("OmitTermFreqAndPositions field bit should be set."
+			AreEqual("OmitTermFreqAndPositions field bit should be set."
 				, FieldInfo.IndexOptions.DOCS_ONLY, fi.FieldInfo("f1").GetIndexOptions());
-			NUnit.Framework.Assert.AreEqual("OmitTermFreqAndPositions field bit should be set."
+			AreEqual("OmitTermFreqAndPositions field bit should be set."
 				, FieldInfo.IndexOptions.DOCS_ONLY, fi.FieldInfo("f2").GetIndexOptions());
 			reader.Close();
 			ram.Close();
@@ -136,7 +136,7 @@ namespace Lucene.Net.Index
 			IndexWriter writer = new IndexWriter(ram, ((IndexWriterConfig)NewIndexWriterConfig
 				(TEST_VERSION_CURRENT, analyzer).SetMaxBufferedDocs(3)).SetMergePolicy(NewLogMergePolicy
 				(2)));
-			Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+			Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 			// this field will have Tf
 			Field f1 = NewField("f1", "This field has term freqs", normalType);
 			d.Add(f1);
@@ -149,7 +149,7 @@ namespace Lucene.Net.Index
 			}
 			// now we add another document which has term freq for field f2 and not for f1 and verify if the SegmentMerger
 			// keep things constant
-			d = new Lucene.Net.Document.Document();
+			d = new Lucene.Net.Documents.Document();
 			// Reverese
 			f1 = NewField("f1", "This field has term freqs", omitType);
 			d.Add(f1);
@@ -165,9 +165,9 @@ namespace Lucene.Net.Index
 			writer.Close();
 			SegmentReader reader = GetOnlySegmentReader(DirectoryReader.Open(ram));
 			FieldInfos fi = reader.GetFieldInfos();
-			NUnit.Framework.Assert.AreEqual("OmitTermFreqAndPositions field bit should be set."
+			AreEqual("OmitTermFreqAndPositions field bit should be set."
 				, FieldInfo.IndexOptions.DOCS_ONLY, fi.FieldInfo("f1").GetIndexOptions());
-			NUnit.Framework.Assert.AreEqual("OmitTermFreqAndPositions field bit should be set."
+			AreEqual("OmitTermFreqAndPositions field bit should be set."
 				, FieldInfo.IndexOptions.DOCS_ONLY, fi.FieldInfo("f2").GetIndexOptions());
 			reader.Close();
 			ram.Close();
@@ -184,7 +184,7 @@ namespace Lucene.Net.Index
 			IndexWriter writer = new IndexWriter(ram, ((IndexWriterConfig)NewIndexWriterConfig
 				(TEST_VERSION_CURRENT, analyzer).SetMaxBufferedDocs(10)).SetMergePolicy(NewLogMergePolicy
 				(2)));
-			Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+			Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 			// this field will have Tf
 			Field f1 = NewField("f1", "This field has term freqs", normalType);
 			d.Add(f1);
@@ -205,10 +205,10 @@ namespace Lucene.Net.Index
 			writer.Close();
 			SegmentReader reader = GetOnlySegmentReader(DirectoryReader.Open(ram));
 			FieldInfos fi = reader.GetFieldInfos();
-			NUnit.Framework.Assert.AreEqual("OmitTermFreqAndPositions field bit should not be set."
+			AreEqual("OmitTermFreqAndPositions field bit should not be set."
 				, FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS, fi.FieldInfo("f1").GetIndexOptions
 				());
-			NUnit.Framework.Assert.AreEqual("OmitTermFreqAndPositions field bit should be set."
+			AreEqual("OmitTermFreqAndPositions field bit should be set."
 				, FieldInfo.IndexOptions.DOCS_ONLY, fi.FieldInfo("f2").GetIndexOptions());
 			reader.Close();
 			ram.Close();
@@ -220,8 +220,8 @@ namespace Lucene.Net.Index
 			string[] files = dir.ListAll();
 			for (int i = 0; i < files.Length; i++)
 			{
-				NUnit.Framework.Assert.IsFalse(files[i].EndsWith(".prx"));
-				NUnit.Framework.Assert.IsFalse(files[i].EndsWith(".pos"));
+				IsFalse(files[i].EndsWith(".prx"));
+				IsFalse(files[i].EndsWith(".pos"));
 			}
 		}
 
@@ -237,7 +237,7 @@ namespace Lucene.Net.Index
 			LogMergePolicy lmp = (LogMergePolicy)writer.GetConfig().GetMergePolicy();
 			lmp.SetMergeFactor(2);
 			lmp.SetNoCFSRatio(0.0);
-			Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+			Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 			Field f1 = NewField("f1", "This field has term freqs", omitType);
 			d.Add(f1);
 			for (int i = 0; i < 30; i++)
@@ -248,7 +248,7 @@ namespace Lucene.Net.Index
 			AssertNoPrx(ram);
 			// now add some documents with positions, and check
 			// there is no prox after full merge
-			d = new Lucene.Net.Document.Document();
+			d = new Lucene.Net.Documents.Document();
 			f1 = NewTextField("f1", "This field has positions", Field.Store.NO);
 			d.Add(f1);
 			for (int i_1 = 0; i_1 < 30; i_1++)
@@ -276,7 +276,7 @@ namespace Lucene.Net.Index
 			string term = "term";
 			for (int i = 0; i < 30; i++)
 			{
-				Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+				Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 				sb.Append(term).Append(" ");
 				string content = sb.ToString();
 				Field noTf = NewField("noTf", content + (i % 2 == 0 ? string.Empty : " notf"), omitType
@@ -308,7 +308,7 @@ namespace Lucene.Net.Index
 			try
 			{
 				searcher.Search(pq, 10);
-				NUnit.Framework.Assert.Fail("did not hit expected exception");
+				Fail("did not hit expected exception");
 			}
 			catch (Exception e)
 			{
@@ -341,7 +341,7 @@ namespace Lucene.Net.Index
 			bq.Add(q4, BooleanClause.Occur.MUST);
 			searcher.Search(bq, new _CountingHitCollector_406());
 			//System.out.println("BQ: Doc=" + doc + " score=" + score);
-			NUnit.Framework.Assert.AreEqual(15, TestOmitTf.CountingHitCollector.GetCount());
+			AreEqual(15, TestOmitTf.CountingHitCollector.GetCount());
 			reader.Close();
 			dir.Close();
 		}
@@ -363,7 +363,7 @@ namespace Lucene.Net.Index
 			public sealed override void Collect(int doc)
 			{
 				float score = this.scorer.Score();
-				NUnit.Framework.Assert.IsTrue("got score=" + score, score == 1.0f);
+				IsTrue("got score=" + score, score == 1.0f);
 				base.Collect(doc);
 			}
 		}
@@ -385,7 +385,7 @@ namespace Lucene.Net.Index
 			public sealed override void Collect(int doc)
 			{
 				float score = this.scorer.Score();
-				NUnit.Framework.Assert.AreEqual(1.0f + doc, score, 0.00001f);
+				AreEqual(1.0f + doc, score, 0.00001f);
 				base.Collect(doc);
 			}
 		}
@@ -407,8 +407,8 @@ namespace Lucene.Net.Index
 			public sealed override void Collect(int doc)
 			{
 				float score = this.scorer.Score();
-				NUnit.Framework.Assert.IsTrue(score == 1.0f);
-				NUnit.Framework.Assert.IsFalse(doc % 2 == 0);
+				IsTrue(score == 1.0f);
+				IsFalse(doc % 2 == 0);
 				base.Collect(doc);
 			}
 		}
@@ -430,8 +430,8 @@ namespace Lucene.Net.Index
 			public sealed override void Collect(int doc)
 			{
 				float score = this.scorer.Score();
-				NUnit.Framework.Assert.IsTrue(score == 1.0f);
-				NUnit.Framework.Assert.IsTrue(doc % 2 == 0);
+				IsTrue(score == 1.0f);
+				IsTrue(doc % 2 == 0);
 				base.Collect(doc);
 			}
 		}
@@ -505,7 +505,7 @@ namespace Lucene.Net.Index
 			Directory dir = NewDirectory();
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir, NewIndexWriterConfig(
 				TEST_VERSION_CURRENT, new MockAnalyzer(Random())));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
 			ft.SetIndexOptions(FieldInfo.IndexOptions.DOCS_ONLY);
@@ -515,9 +515,9 @@ namespace Lucene.Net.Index
 			iw.AddDocument(doc);
 			IndexReader ir = iw.GetReader();
 			iw.Close();
-			NUnit.Framework.Assert.AreEqual(-1, ir.TotalTermFreq(new Term("foo", new BytesRef
+			AreEqual(-1, ir.TotalTermFreq(new Term("foo", new BytesRef
 				("bar"))));
-			NUnit.Framework.Assert.AreEqual(-1, ir.GetSumTotalTermFreq("foo"));
+			AreEqual(-1, ir.GetSumTotalTermFreq("foo"));
 			ir.Close();
 			dir.Close();
 		}

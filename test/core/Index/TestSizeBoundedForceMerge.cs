@@ -25,7 +25,7 @@ namespace Lucene.Net.Index
 		{
 			for (int i = 0; i < numDocs; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				if (withID)
 				{
@@ -74,7 +74,7 @@ namespace Lucene.Net.Index
 			// Should only be 3 segments in the index, because one of them exceeds the size limit
 			sis = new SegmentInfos();
 			sis.Read(dir);
-			NUnit.Framework.Assert.AreEqual(3, sis.Size());
+			AreEqual(3, sis.Size());
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -103,7 +103,7 @@ namespace Lucene.Net.Index
 			// Should only be 3 segments in the index, because one of them exceeds the size limit
 			SegmentInfos sis = new SegmentInfos();
 			sis.Read(dir);
-			NUnit.Framework.Assert.AreEqual(3, sis.Size());
+			AreEqual(3, sis.Size());
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -126,7 +126,7 @@ namespace Lucene.Net.Index
 			writer.Close();
 			SegmentInfos sis = new SegmentInfos();
 			sis.Read(dir);
-			NUnit.Framework.Assert.AreEqual(2, sis.Size());
+			AreEqual(2, sis.Size());
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -149,7 +149,7 @@ namespace Lucene.Net.Index
 			writer.Close();
 			SegmentInfos sis = new SegmentInfos();
 			sis.Read(dir);
-			NUnit.Framework.Assert.AreEqual(2, sis.Size());
+			AreEqual(2, sis.Size());
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -172,7 +172,7 @@ namespace Lucene.Net.Index
 			writer.Close();
 			SegmentInfos sis = new SegmentInfos();
 			sis.Read(dir);
-			NUnit.Framework.Assert.AreEqual(1, sis.Size());
+			AreEqual(1, sis.Size());
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -194,7 +194,7 @@ namespace Lucene.Net.Index
 			writer.Close();
 			SegmentInfos sis = new SegmentInfos();
 			sis.Read(dir);
-			NUnit.Framework.Assert.AreEqual(3, sis.Size());
+			AreEqual(3, sis.Size());
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -217,7 +217,7 @@ namespace Lucene.Net.Index
 			writer.Close();
 			SegmentInfos sis = new SegmentInfos();
 			sis.Read(dir);
-			NUnit.Framework.Assert.AreEqual(4, sis.Size());
+			AreEqual(4, sis.Size());
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -246,7 +246,7 @@ namespace Lucene.Net.Index
 			// max merge docs settings.
 			SegmentInfos sis = new SegmentInfos();
 			sis.Read(dir);
-			NUnit.Framework.Assert.AreEqual(4, sis.Size());
+			AreEqual(4, sis.Size());
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -271,8 +271,8 @@ namespace Lucene.Net.Index
 			// Verify that the last segment does not have deletions.
 			SegmentInfos sis = new SegmentInfos();
 			sis.Read(dir);
-			NUnit.Framework.Assert.AreEqual(3, sis.Size());
-			NUnit.Framework.Assert.IsFalse(sis.Info(2).HasDeletions());
+			AreEqual(3, sis.Size());
+			IsFalse(sis.Info(2).HasDeletions());
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -293,7 +293,7 @@ namespace Lucene.Net.Index
 			// Verify that the last segment does not have deletions.
 			SegmentInfos sis = new SegmentInfos();
 			sis.Read(dir);
-			NUnit.Framework.Assert.AreEqual(1, sis.Size());
+			AreEqual(1, sis.Size());
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -316,8 +316,8 @@ namespace Lucene.Net.Index
 			// Verify that the last segment does not have deletions.
 			SegmentInfos sis = new SegmentInfos();
 			sis.Read(dir);
-			NUnit.Framework.Assert.AreEqual(1, sis.Size());
-			NUnit.Framework.Assert.IsTrue(sis.Info(0).HasDeletions());
+			AreEqual(1, sis.Size());
+			IsTrue(sis.Info(0).HasDeletions());
 		}
 	}
 }

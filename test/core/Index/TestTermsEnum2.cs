@@ -5,7 +5,7 @@
  */
 
 using System.Collections.Generic;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Codecs;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
@@ -45,7 +45,7 @@ namespace Lucene.Net.Index
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir, ((IndexWriterConfig
 				)NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(Random(), MockTokenizer
 				.KEYWORD, false)).SetMaxBufferedDocs(TestUtil.NextInt(Random(), 50, 1000))));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			Field field = NewStringField("field", string.Empty, Field.Store.YES);
 			doc.Add(field);
@@ -54,7 +54,7 @@ namespace Lucene.Net.Index
 			for (int i = 0; i < num; i++)
 			{
 				string s = TestUtil.RandomUnicodeString(Random());
-				field.SetStringValue(s);
+				field.StringValue = s);
 				terms.AddItem(new BytesRef(s));
 				writer.AddDocument(doc);
 			}
@@ -123,13 +123,13 @@ namespace Lucene.Net.Index
 						if (Random().NextBoolean())
 						{
 							// seek exact
-							NUnit.Framework.Assert.IsTrue(te.SeekExact(term));
+							IsTrue(te.SeekExact(term));
 						}
 						else
 						{
 							// seek ceil
-							NUnit.Framework.Assert.AreEqual(TermsEnum.SeekStatus.FOUND, te.SeekCeil(term));
-							NUnit.Framework.Assert.AreEqual(term, te.Term());
+							AreEqual(TermsEnum.SeekStatus.FOUND, te.SeekCeil(term));
+							AreEqual(term, te.Term());
 						}
 					}
 				}
@@ -148,18 +148,18 @@ namespace Lucene.Net.Index
 					int c = Random().Next(3);
 					if (c == 0)
 					{
-						NUnit.Framework.Assert.AreEqual(term, te.Next());
+						AreEqual(term, te.Next());
 					}
 					else
 					{
 						if (c == 1)
 						{
-							NUnit.Framework.Assert.AreEqual(TermsEnum.SeekStatus.FOUND, te.SeekCeil(term));
-							NUnit.Framework.Assert.AreEqual(term, te.Term());
+							AreEqual(TermsEnum.SeekStatus.FOUND, te.SeekCeil(term));
+							AreEqual(term, te.Term());
 						}
 						else
 						{
-							NUnit.Framework.Assert.IsTrue(te.SeekExact(term));
+							IsTrue(te.SeekExact(term));
 						}
 					}
 				}
@@ -187,7 +187,7 @@ namespace Lucene.Net.Index
 				}
 				Lucene.Net.Util.Automaton.Automaton actual = BasicAutomata.MakeStringUnion
 					(found);
-				NUnit.Framework.Assert.IsTrue(BasicOperations.SameLanguage(expected, actual));
+				IsTrue(BasicOperations.SameLanguage(expected, actual));
 			}
 		}
 	}

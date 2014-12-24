@@ -114,12 +114,12 @@ namespace Lucene.Net.Analysis
                 this.@delegate = @delegate;
             }
 
-            public override Attribute CreateAttributeInstance<T>(T attClass)
+            public override Attribute CreateAttributeInstance<T>()
             {
                 if (typeof(CharTermAttribute).IsAssignableFrom(typeof(T)))
                     throw new ArgumentException("NumericTokenStream does not support CharTermAttribute.");
 
-                return @delegate.CreateAttributeInstance<T>(attClass);
+                return @delegate.CreateAttributeInstance<T>();
             }
         }
 

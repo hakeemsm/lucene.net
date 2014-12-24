@@ -1,35 +1,27 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System.Collections.Generic;
-using Lucene.Net.Test.Analysis.TokenAttributes;
-using Lucene.Net.Util;
-using Sharpen;
+using Lucene.Net.Analysis.Tokenattributes;
+using Lucene.Net.Support;
+using Lucene.Net.TestFramework.Util;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Analysis.TokenAttributes
 {
+    [TestFixture]
 	public class TestSimpleAttributeImpl : LuceneTestCase
 	{
 		// this checks using reflection API if the defaults are correct
+        [Test]
 		public virtual void TestAttributes()
 		{
-			TestUtil.AssertAttributeReflection(new PositionIncrementAttributeImpl(), Collections
-				.SingletonMap(typeof(PositionIncrementAttribute).FullName + "#positionIncrement"
-				, 1));
-			TestUtil.AssertAttributeReflection(new PositionLengthAttributeImpl(), Collections
-				.SingletonMap(typeof(PositionLengthAttribute).FullName + "#positionLength", 1));
-			TestUtil.AssertAttributeReflection(new FlagsAttributeImpl(), Collections.SingletonMap
-				(typeof(FlagsAttribute).FullName + "#flags", 0));
-			TestUtil.AssertAttributeReflection(new TypeAttributeImpl(), Collections.SingletonMap
-				(typeof(TypeAttribute).FullName + "#type", TypeAttribute.DEFAULT_TYPE));
-			TestUtil.AssertAttributeReflection(new PayloadAttributeImpl(), Collections.SingletonMap
-				(typeof(PayloadAttribute).FullName + "#payload", null));
-			TestUtil.AssertAttributeReflection(new KeywordAttributeImpl(), Collections.SingletonMap
-				(typeof(KeywordAttribute).FullName + "#keyword", false));
-			TestUtil.AssertAttributeReflection(new OffsetAttributeImpl(), new _Dictionary_42(
+			TestUtil.AssertAttributeReflection(new PositionIncrementAttribute(), Collections
+				.UnmodifiableMap(new Dictionary<string,int>{{typeof(PositionIncrementAttribute).FullName + "#positionIncrement", 1}}));
+			TestUtil.AssertAttributeReflection(new PositionLengthAttribute(), Collections
+                .UnmodifiableMap(new Dictionary<string, int> { { typeof(PositionIncrementAttribute).FullName + "#positionLength", 1 } }));
+			TestUtil.AssertAttributeReflection(new FlagsAttribute(), Collections.UnmodifiableMap(new Dictionary<string,int>{{typeof(PositionIncrementAttribute).FullName + "#flags", 0}}));
+			TestUtil.AssertAttributeReflection(new TypeAttribute(), Collections.UnmodifiableMap(new Dictionary<string,string>{{typeof(PositionIncrementAttribute).FullName + "#type", TypeAttribute.DEFAULT_TYPE}}));
+            TestUtil.AssertAttributeReflection(new PayloadAttribute(), Collections.UnmodifiableMap(new Dictionary<string, int?> { { typeof(PositionIncrementAttribute).FullName + "#payload", null } }));
+			TestUtil.AssertAttributeReflection(new KeywordAttribute(), Collections.UnmodifiableMap(new Dictionary<string,bool>{{typeof(PositionIncrementAttribute).FullName + "#keyword", false}}));
+			TestUtil.AssertAttributeReflection(new OffsetAttribute(), new _Dictionary_42(
 				));
 		}
 
@@ -38,8 +30,8 @@ namespace Lucene.Net.Test.Analysis.TokenAttributes
 			public _Dictionary_42()
 			{
 				{
-					this.Put(typeof(OffsetAttribute).FullName + "#startOffset", 0);
-					this.Put(typeof(OffsetAttribute).FullName + "#endOffset", 0);
+					this[typeof(OffsetAttribute).FullName + "#startOffset"] = 0;
+					this[typeof(OffsetAttribute).FullName + "#endOffset"] = 0;
 				}
 			}
 		}

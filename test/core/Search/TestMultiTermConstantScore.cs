@@ -5,7 +5,7 @@
  */
 
 using NUnit.Framework;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -44,7 +44,7 @@ namespace Lucene.Net.Search
 			customType.SetTokenized(false);
 			for (int i = 0; i < data.Length; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(NewField("id", i.ToString(), customType));
 				// Field.Keyword("id",String.valueOf(i)));
@@ -141,7 +141,7 @@ namespace Lucene.Net.Search
 			float score = result[0].score;
 			for (int i = 1; i < numHits; i++)
 			{
-				NUnit.Framework.Assert.AreEqual("score for " + i + " was not the same", score, result
+				AreEqual("score for " + i + " was not the same", score, result
 					[i].score, SCORE_COMP_THRESH);
 			}
 			result = search.Search(Csrq("data", "1", "6", T, T, MultiTermQuery.CONSTANT_SCORE_BOOLEAN_QUERY_REWRITE
@@ -150,7 +150,7 @@ namespace Lucene.Net.Search
 			AssertEquals("wrong number of results", 6, numHits);
 			for (int i_1 = 0; i_1 < numHits; i_1++)
 			{
-				NUnit.Framework.Assert.AreEqual("score for " + i_1 + " was not the same", score, 
+				AreEqual("score for " + i_1 + " was not the same", score, 
 					result[i_1].score, SCORE_COMP_THRESH);
 			}
 			result = search.Search(Csrq("data", "1", "6", T, T, MultiTermQuery.CONSTANT_SCORE_AUTO_REWRITE_DEFAULT
@@ -159,7 +159,7 @@ namespace Lucene.Net.Search
 			AssertEquals("wrong number of results", 6, numHits);
 			for (int i_2 = 0; i_2 < numHits; i_2++)
 			{
-				NUnit.Framework.Assert.AreEqual("score for " + i_2 + " was not the same", score, 
+				AreEqual("score for " + i_2 + " was not the same", score, 
 					result[i_2].score, SCORE_COMP_THRESH);
 			}
 		}
@@ -184,7 +184,7 @@ namespace Lucene.Net.Search
 			float score = result[0].score;
 			for (int i = 1; i < numHits; i++)
 			{
-				NUnit.Framework.Assert.AreEqual("score for " + i + " was not the same", score, result
+				AreEqual("score for " + i + " was not the same", score, result
 					[i].score, SCORE_COMP_THRESH);
 			}
 			bq = new BooleanQuery();
@@ -198,7 +198,7 @@ namespace Lucene.Net.Search
 			AssertEquals("wrong number of results", 1, numHits);
 			for (int i_1 = 0; i_1 < numHits; i_1++)
 			{
-				NUnit.Framework.Assert.AreEqual("score for " + i_1 + " was not the same", score, 
+				AreEqual("score for " + i_1 + " was not the same", score, 
 					result[i_1].score, SCORE_COMP_THRESH);
 			}
 			bq = new BooleanQuery();
@@ -212,7 +212,7 @@ namespace Lucene.Net.Search
 			AssertEquals("wrong number of results", 1, numHits);
 			for (int i_2 = 0; i_2 < numHits; i_2++)
 			{
-				NUnit.Framework.Assert.AreEqual("score for " + i_2 + " was not the same", score, 
+				AreEqual("score for " + i_2 + " was not the same", score, 
 					result[i_2].score, SCORE_COMP_THRESH);
 			}
 		}
@@ -246,7 +246,7 @@ namespace Lucene.Net.Search
 			//assert.assertEquals(1, hits[0].doc);
 			//HM:revisit 
 			//assert.assertEquals(0, hits[1].doc);
-			NUnit.Framework.Assert.IsTrue(hits[0].score > hits[1].score);
+			IsTrue(hits[0].score > hits[1].score);
 			q1 = Csrq("data", "A", "A", T, T, MultiTermQuery.CONSTANT_SCORE_BOOLEAN_QUERY_REWRITE
 				);
 			// matches document #0
@@ -262,7 +262,7 @@ namespace Lucene.Net.Search
 			//assert.assertEquals(1, hits[0].doc);
 			//HM:revisit 
 			//assert.assertEquals(0, hits[1].doc);
-			NUnit.Framework.Assert.IsTrue(hits[0].score > hits[1].score);
+			IsTrue(hits[0].score > hits[1].score);
 			q1 = Csrq("data", "A", "A", T, T);
 			// matches document #0
 			q1.SetBoost(10f);
@@ -276,7 +276,7 @@ namespace Lucene.Net.Search
 			//assert.assertEquals(0, hits[0].doc);
 			//HM:revisit 
 			//assert.assertEquals(1, hits[1].doc);
-			NUnit.Framework.Assert.IsTrue(hits[0].score > hits[1].score);
+			IsTrue(hits[0].score > hits[1].score);
 		}
 
 		private sealed class _Collector_231 : Collector
@@ -298,7 +298,7 @@ namespace Lucene.Net.Search
 			/// <exception cref="System.IO.IOException"></exception>
 			public override void Collect(int doc)
 			{
-				NUnit.Framework.Assert.AreEqual("score for doc " + (doc + this.@base) + " was not correct"
+				AreEqual("score for doc " + (doc + this.@base) + " was not correct"
 					, 1.0f, this.scorer.Score(), TestMultiTermConstantScore.SCORE_COMP_THRESH);
 			}
 

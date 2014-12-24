@@ -19,7 +19,7 @@ using System;
 
 using NUnit.Framework;
 
-using WhitespaceAnalyzer = Lucene.Net.Analysis.WhitespaceAnalyzer;
+using WhitespaceAnalyzer = Lucene.Net.Test.Analysis.WhitespaceAnalyzer;
 using DateTools = Lucene.Net.Documents.DateTools;
 using Document = Lucene.Net.Documents.Document;
 using Field = Lucene.Net.Documents.Field;

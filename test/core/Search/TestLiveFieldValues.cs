@@ -8,7 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using NUnit.Framework;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -61,7 +61,7 @@ namespace Lucene.Net.Search
 				thread_1.Join();
 			}
 			mgr.MaybeRefresh();
-			NUnit.Framework.Assert.AreEqual(0, rt.Size());
+			AreEqual(0, rt.Size());
 			rt.Close();
 			mgr.Close();
 			w.Close();
@@ -92,14 +92,14 @@ namespace Lucene.Net.Search
 			{
 				TermQuery tq = new TermQuery(new Term("id", id));
 				TopDocs hits = s.Search(tq, 1);
-				NUnit.Framework.Assert.IsTrue(hits.totalHits <= 1);
-				if (hits.totalHits == 0)
+				IsTrue(hits.TotalHits <= 1);
+				if (hits.TotalHits == 0)
 				{
 					return null;
 				}
 				else
 				{
-					Lucene.Net.Document.Document doc = s.Doc(hits.scoreDocs[0].doc);
+					Lucene.Net.Documents.Document doc = s.Doc(hits.scoreDocs[0].doc);
 					return (int)doc.GetField("field").NumericValue();
 				}
 			}
@@ -135,7 +135,7 @@ namespace Lucene.Net.Search
 					startingGun.Await();
 					for (int iter = 0; iter < iters; iter++)
 					{
-						Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+						Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 							();
 						if (threadRandom.NextDouble() <= addChance)
 						{
@@ -177,7 +177,7 @@ namespace Lucene.Net.Search
 						}
 						if (threadRandom.Next(10) == 7)
 						{
-							NUnit.Framework.Assert.AreEqual(null, rt.Get("foo"));
+							AreEqual(null, rt.Get("foo"));
 						}
 						if (allIDs.Count > 0)
 						{
@@ -187,7 +187,7 @@ namespace Lucene.Net.Search
 							{
 								expected = null;
 							}
-							NUnit.Framework.Assert.AreEqual("id=" + randomID, expected, rt.Get(randomID));
+							AreEqual("id=" + randomID, expected, rt.Get(randomID));
 						}
 					}
 				}

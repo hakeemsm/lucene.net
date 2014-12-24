@@ -6,7 +6,7 @@
 
 using System;
 using System.Collections.Generic;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Codecs;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
@@ -77,9 +77,9 @@ namespace Lucene.Net.Index
 			// TODO: 
 			//HM:revisit 
 			//assert is bogus (relies upon codec-specific filenames)
-			NUnit.Framework.Assert.IsTrue(SlowFileExists(dir, "_3.fdt") || SlowFileExists(dir
+			IsTrue(SlowFileExists(dir, "_3.fdt") || SlowFileExists(dir
 				, "_3.fld"));
-			NUnit.Framework.Assert.IsTrue(!SlowFileExists(dir, "_3.cfs"));
+			IsTrue(!SlowFileExists(dir, "_3.cfs"));
 			CopyFile(dir, "_1.cfs", "_3.cfs");
 			string[] filesPre = dir.ListAll();
 			// Open & close a writer: it should delete the above 4
@@ -94,7 +94,7 @@ namespace Lucene.Net.Index
 			ICollection<string> dif = DifFiles(files, files2);
 			if (!Arrays.Equals(files, files2))
 			{
-				NUnit.Framework.Assert.Fail("IndexFileDeleter failed to delete unreferenced extra files: should have deleted "
+				Fail("IndexFileDeleter failed to delete unreferenced extra files: should have deleted "
 					 + (filesPre.Length - files.Length) + " files but only deleted " + (filesPre.Length
 					 - files2.Length) + "; expected files:\n    " + AsString(files) + "\n  actual files:\n    "
 					 + AsString(files2) + "\ndiff: " + dif);
@@ -170,7 +170,7 @@ namespace Lucene.Net.Index
 		/// <exception cref="System.IO.IOException"></exception>
 		private void AddDoc(IndexWriter writer, int id)
 		{
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewTextField("content", "aaa", Field.Store.NO));
 			doc.Add(NewStringField("id", Sharpen.Extensions.ToString(id), Field.Store.NO));

@@ -6,7 +6,7 @@
 
 using System;
 using System.Reflection;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -126,15 +126,15 @@ namespace Lucene.Net.Index
 			Directory directory = NewDirectory();
 			IndexWriter writer = new IndexWriter(directory, NewIndexWriterConfig(TEST_VERSION_CURRENT
 				, new MockAnalyzer(Random())));
-			Lucene.Net.Document.Document d1 = new Lucene.Net.Document.Document(
+			Lucene.Net.Documents.Document d1 = new Lucene.Net.Documents.Document(
 				);
 			d1.Add(NewTextField("default", "one two", Field.Store.YES));
 			writer.AddDocument(d1);
-			Lucene.Net.Document.Document d2 = new Lucene.Net.Document.Document(
+			Lucene.Net.Documents.Document d2 = new Lucene.Net.Documents.Document(
 				);
 			d2.Add(NewTextField("default", "one three", Field.Store.YES));
 			writer.AddDocument(d2);
-			Lucene.Net.Document.Document d3 = new Lucene.Net.Document.Document(
+			Lucene.Net.Documents.Document d3 = new Lucene.Net.Documents.Document(
 				);
 			d3.Add(NewTextField("default", "two four", Field.Store.YES));
 			writer.AddDocument(d3);
@@ -153,15 +153,15 @@ namespace Lucene.Net.Index
 			TermsEnum terms = MultiFields.GetTerms(reader, "default").Iterator(null);
 			while (terms.Next() != null)
 			{
-				NUnit.Framework.Assert.IsTrue(terms.Term().Utf8ToString().IndexOf('e') != -1);
+				IsTrue(terms.Term().Utf8ToString().IndexOf('e') != -1);
 			}
-			NUnit.Framework.Assert.AreEqual(TermsEnum.SeekStatus.FOUND, terms.SeekCeil(new BytesRef
+			AreEqual(TermsEnum.SeekStatus.FOUND, terms.SeekCeil(new BytesRef
 				("one")));
 			DocsAndPositionsEnum positions = terms.DocsAndPositions(MultiFields.GetLiveDocs(reader
 				), null);
 			while (positions.NextDoc() != DocIdSetIterator.NO_MORE_DOCS)
 			{
-				NUnit.Framework.Assert.IsTrue((positions.DocID() % 2) == 1);
+				IsTrue((positions.DocID % 2) == 1);
 			}
 			reader.Close();
 			directory.Close();
@@ -190,7 +190,7 @@ namespace Lucene.Net.Index
 				if (subM.DeclaringType == clazz && m.DeclaringType != typeof(object) && m.DeclaringType
 					 != subM.DeclaringType)
 				{
-					NUnit.Framework.Assert.Fail(clazz + " overrides " + m + " although it has a default impl"
+					Fail(clazz + " overrides " + m + " although it has a default impl"
 						);
 				}
 			}

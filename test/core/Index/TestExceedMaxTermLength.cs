@@ -6,7 +6,7 @@
 
 using System;
 using NUnit.Framework;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
@@ -53,7 +53,7 @@ namespace Lucene.Net.Index
 				ft.SetIndexed(true);
 				ft.SetStored(Random().NextBoolean());
 				ft.Freeze();
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				if (Random().NextBoolean())
 				{
@@ -76,18 +76,18 @@ namespace Lucene.Net.Index
 				try
 				{
 					w.AddDocument(doc);
-					NUnit.Framework.Assert.Fail("Did not get an exception from adding a monster term"
+					Fail("Did not get an exception from adding a monster term"
 						);
 				}
 				catch (ArgumentException e)
 				{
 					string maxLengthMsg = IndexWriter.MAX_TERM_LENGTH.ToString();
 					string msg = e.Message;
-					NUnit.Framework.Assert.IsTrue("IllegalArgumentException didn't mention 'immense term': "
+					IsTrue("IllegalArgumentException didn't mention 'immense term': "
 						 + msg, msg.Contains("immense term"));
-					NUnit.Framework.Assert.IsTrue("IllegalArgumentException didn't mention max length ("
+					IsTrue("IllegalArgumentException didn't mention max length ("
 						 + maxLengthMsg + "): " + msg, msg.Contains(maxLengthMsg));
-					NUnit.Framework.Assert.IsTrue("IllegalArgumentException didn't mention field name ("
+					IsTrue("IllegalArgumentException didn't mention field name ("
 						 + name + "): " + msg, msg.Contains(name));
 				}
 			}

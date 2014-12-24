@@ -6,8 +6,8 @@
 
 using System.Collections.Generic;
 using System.IO;
-using Lucene.Net.Analysis;
-using Lucene.Net.Analysis.Tokenattributes;
+using Lucene.Net.Test.Analysis;
+using Lucene.Net.Test.Analysis.Tokenattributes;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -32,7 +32,7 @@ namespace Lucene.Net.Search
 			// TODO: use CannedTokenStream
 			Directory store = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), store, analyzer);
-			Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+			Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 			d.Add(NewTextField("field", "bogus", Field.Store.YES));
 			writer.AddDocument(d);
 			IndexReader reader = writer.GetReader();
@@ -43,80 +43,80 @@ namespace Lucene.Net.Search
 				));
 			pos.NextDoc();
 			// first token should be at position 0
-			NUnit.Framework.Assert.AreEqual(0, pos.NextPosition());
+			AreEqual(0, pos.NextPosition());
 			pos = MultiFields.GetTermPositionsEnum(searcher.GetIndexReader(), MultiFields.GetLiveDocs
 				(searcher.GetIndexReader()), "field", new BytesRef("2"));
 			pos.NextDoc();
 			// second token should be at position 2
-			NUnit.Framework.Assert.AreEqual(2, pos.NextPosition());
+			AreEqual(2, pos.NextPosition());
 			PhraseQuery q;
 			ScoreDoc[] hits;
 			q = new PhraseQuery();
 			q.Add(new Term("field", "1"));
 			q.Add(new Term("field", "2"));
 			hits = searcher.Search(q, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(0, hits.Length);
+			AreEqual(0, hits.Length);
 			// same as previous, just specify positions explicitely.
 			q = new PhraseQuery();
 			q.Add(new Term("field", "1"), 0);
 			q.Add(new Term("field", "2"), 1);
 			hits = searcher.Search(q, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(0, hits.Length);
+			AreEqual(0, hits.Length);
 			// specifying correct positions should find the phrase.
 			q = new PhraseQuery();
 			q.Add(new Term("field", "1"), 0);
 			q.Add(new Term("field", "2"), 2);
 			hits = searcher.Search(q, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(1, hits.Length);
+			AreEqual(1, hits.Length);
 			q = new PhraseQuery();
 			q.Add(new Term("field", "2"));
 			q.Add(new Term("field", "3"));
 			hits = searcher.Search(q, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(1, hits.Length);
+			AreEqual(1, hits.Length);
 			q = new PhraseQuery();
 			q.Add(new Term("field", "3"));
 			q.Add(new Term("field", "4"));
 			hits = searcher.Search(q, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(0, hits.Length);
+			AreEqual(0, hits.Length);
 			// phrase query would find it when correct positions are specified. 
 			q = new PhraseQuery();
 			q.Add(new Term("field", "3"), 0);
 			q.Add(new Term("field", "4"), 0);
 			hits = searcher.Search(q, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(1, hits.Length);
+			AreEqual(1, hits.Length);
 			// phrase query should fail for non existing searched term 
 			// even if there exist another searched terms in the same searched position. 
 			q = new PhraseQuery();
 			q.Add(new Term("field", "3"), 0);
 			q.Add(new Term("field", "9"), 0);
 			hits = searcher.Search(q, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(0, hits.Length);
+			AreEqual(0, hits.Length);
 			// multi-phrase query should succed for non existing searched term
 			// because there exist another searched terms in the same searched position. 
 			MultiPhraseQuery mq = new MultiPhraseQuery();
 			mq.Add(new Term[] { new Term("field", "3"), new Term("field", "9") }, 0);
 			hits = searcher.Search(mq, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(1, hits.Length);
+			AreEqual(1, hits.Length);
 			q = new PhraseQuery();
 			q.Add(new Term("field", "2"));
 			q.Add(new Term("field", "4"));
 			hits = searcher.Search(q, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(1, hits.Length);
+			AreEqual(1, hits.Length);
 			q = new PhraseQuery();
 			q.Add(new Term("field", "3"));
 			q.Add(new Term("field", "5"));
 			hits = searcher.Search(q, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(1, hits.Length);
+			AreEqual(1, hits.Length);
 			q = new PhraseQuery();
 			q.Add(new Term("field", "4"));
 			q.Add(new Term("field", "5"));
 			hits = searcher.Search(q, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(1, hits.Length);
+			AreEqual(1, hits.Length);
 			q = new PhraseQuery();
 			q.Add(new Term("field", "2"));
 			q.Add(new Term("field", "5"));
 			hits = searcher.Search(q, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(0, hits.Length);
+			AreEqual(0, hits.Length);
 			reader.Close();
 			store.Close();
 		}
@@ -186,7 +186,7 @@ namespace Lucene.Net.Search
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir, new MockPayloadAnalyzer
 				());
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new TextField("content", new StringReader("a a b c d e a f g h i j a b k k"
 				)));
@@ -195,15 +195,15 @@ namespace Lucene.Net.Search
 			AtomicReader r = SlowCompositeReaderWrapper.Wrap(readerFromWriter);
 			DocsAndPositionsEnum tp = r.TermPositionsEnum(new Term("content", "a"));
 			int count = 0;
-			NUnit.Framework.Assert.IsTrue(tp.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
+			IsTrue(tp.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
 			// "a" occurs 4 times
-			NUnit.Framework.Assert.AreEqual(4, tp.Freq());
-			NUnit.Framework.Assert.AreEqual(0, tp.NextPosition());
-			NUnit.Framework.Assert.AreEqual(1, tp.NextPosition());
-			NUnit.Framework.Assert.AreEqual(3, tp.NextPosition());
-			NUnit.Framework.Assert.AreEqual(6, tp.NextPosition());
+			AreEqual(4, tp.Freq);
+			AreEqual(0, tp.NextPosition());
+			AreEqual(1, tp.NextPosition());
+			AreEqual(3, tp.NextPosition());
+			AreEqual(6, tp.NextPosition());
 			// only one doc has "a"
-			NUnit.Framework.Assert.AreEqual(DocIdSetIterator.NO_MORE_DOCS, tp.NextDoc());
+			AreEqual(DocIdSetIterator.NO_MORE_DOCS, tp.NextDoc());
 			IndexSearcher @is = NewSearcher(readerFromWriter);
 			SpanTermQuery stq1 = new SpanTermQuery(new Term("content", "a"));
 			SpanTermQuery stq2 = new SpanTermQuery(new Term("content", "k"));
@@ -222,8 +222,8 @@ namespace Lucene.Net.Search
 					count++;
 				}
 			}
-			NUnit.Framework.Assert.IsTrue(sawZero);
-			NUnit.Framework.Assert.AreEqual(5, count);
+			IsTrue(sawZero);
+			AreEqual(5, count);
 			// System.out.println("\ngetSpans test");
 			Lucene.Net.Search.Spans.Spans spans = MultiSpansWrapper.Wrap(@is.GetTopReaderContext
 				(), snq);
@@ -236,8 +236,8 @@ namespace Lucene.Net.Search
 			}
 			// System.out.println(spans.doc() + " - " + spans.start() + " - " +
 			// spans.end());
-			NUnit.Framework.Assert.AreEqual(4, count);
-			NUnit.Framework.Assert.IsTrue(sawZero);
+			AreEqual(4, count);
+			IsTrue(sawZero);
 			// System.out.println("\nPayloadSpanUtil test");
 			sawZero = false;
 			PayloadSpanUtil psu = new PayloadSpanUtil(@is.GetTopReaderContext());
@@ -249,8 +249,8 @@ namespace Lucene.Net.Search
 				//System.out.println(s);
 				sawZero |= s.Equals("pos: 0");
 			}
-			NUnit.Framework.Assert.AreEqual(5, count);
-			NUnit.Framework.Assert.IsTrue(sawZero);
+			AreEqual(5, count);
+			IsTrue(sawZero);
 			writer.Close();
 			@is.GetIndexReader().Close();
 			dir.Close();

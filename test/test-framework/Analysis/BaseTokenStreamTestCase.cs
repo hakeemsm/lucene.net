@@ -575,7 +575,7 @@ namespace Lucene.Net.TestFramework.Analysis
                     postingsFormat.Equals("SimpleText"));
 			if (Rarely(random) && codecOk)
 			{
-			    var tmpFile = new FileInfo(Path.GetTempPath() + "bttc");
+			    var tmpFile = CreateTempDir("bttc");
 
 			    dir = NewFSDirectory(tmpFile);
                 iw = new RandomIndexWriter(new Random(seed), dir, a);

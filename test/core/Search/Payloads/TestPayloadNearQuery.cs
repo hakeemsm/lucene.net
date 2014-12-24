@@ -6,8 +6,8 @@
 
 using System.IO;
 using NUnit.Framework;
-using Lucene.Net.Analysis;
-using Lucene.Net.Analysis.Tokenattributes;
+using Lucene.Net.Test.Analysis;
+using Lucene.Net.Test.Analysis.Tokenattributes;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -111,7 +111,7 @@ namespace Lucene.Net.Search.Payloads
 			//writer.infoStream = System.out;
 			for (int i = 0; i < 1000; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(NewTextField("field", English.IntToEnglish(i), Field.Store.YES));
 				string txt = English.IntToEnglish(i) + ' ' + English.IntToEnglish(i + 1);
@@ -145,12 +145,12 @@ namespace Lucene.Net.Search.Payloads
 			// all 10 hits should have score = 3 because adjacent terms have payloads of 2,4
 			// and all the similarity factors are set to 1
 			hits = searcher.Search(query, null, 100);
-			NUnit.Framework.Assert.IsTrue("hits is null and it shouldn't be", hits != null);
-			NUnit.Framework.Assert.IsTrue("should be 10 hits", hits.totalHits == 10);
+			IsTrue("hits is null and it shouldn't be", hits != null);
+			IsTrue("should be 10 hits", hits.TotalHits == 10);
 			for (int j = 0; j < hits.scoreDocs.Length; j++)
 			{
 				ScoreDoc doc = hits.scoreDocs[j];
-				NUnit.Framework.Assert.IsTrue(doc.score + " does not equal: " + 3, doc.score == 3
+				IsTrue(doc.score + " does not equal: " + 3, doc.score == 3
 					);
 			}
 			for (int i = 1; i < 10; i++)
@@ -164,14 +164,14 @@ namespace Lucene.Net.Search.Payloads
 				// all should have score = 3 because adjacent terms have payloads of 2,4
 				// and all the similarity factors are set to 1
 				hits = searcher.Search(query, null, 100);
-				NUnit.Framework.Assert.IsTrue("hits is null and it shouldn't be", hits != null);
-				NUnit.Framework.Assert.AreEqual("should be 100 hits", 100, hits.totalHits);
+				IsTrue("hits is null and it shouldn't be", hits != null);
+				AreEqual("should be 100 hits", 100, hits.TotalHits);
 				for (int j_1 = 0; j_1 < hits.scoreDocs.Length; j_1++)
 				{
 					ScoreDoc doc = hits.scoreDocs[j_1];
 					//        System.out.println("Doc: " + doc.toString());
 					//        System.out.println("Explain: " + searcher.explain(query, doc.doc));
-					NUnit.Framework.Assert.IsTrue(doc.score + " does not equal: " + 3, doc.score == 3
+					IsTrue(doc.score + " does not equal: " + 3, doc.score == 3
 						);
 				}
 			}
@@ -191,7 +191,7 @@ namespace Lucene.Net.Search.Payloads
 			clauses[1] = q2;
 			query = new PayloadNearQuery(clauses, 10, false);
 			//System.out.println(query.toString());
-			NUnit.Framework.Assert.AreEqual(12, searcher.Search(query, null, 100).totalHits);
+			AreEqual(12, searcher.Search(query, null, 100).TotalHits);
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -204,17 +204,17 @@ namespace Lucene.Net.Search.Payloads
 			// all 10 hits should have score = 3 because adjacent terms have payloads of 2,4
 			// and all the similarity factors are set to 1
 			hits = searcher.Search(query, null, 100);
-			NUnit.Framework.Assert.IsTrue("hits is null and it shouldn't be", hits != null);
-			NUnit.Framework.Assert.IsTrue("should be 10 hits", hits.totalHits == 10);
+			IsTrue("hits is null and it shouldn't be", hits != null);
+			IsTrue("should be 10 hits", hits.TotalHits == 10);
 			for (int j = 0; j < hits.scoreDocs.Length; j++)
 			{
 				ScoreDoc doc = hits.scoreDocs[j];
-				NUnit.Framework.Assert.IsTrue(doc.score + " does not equal: " + 3, doc.score == 3
+				IsTrue(doc.score + " does not equal: " + 3, doc.score == 3
 					);
 				Explanation explain = searcher.Explain(query, hits.scoreDocs[j].doc);
 				string exp = explain.ToString();
-				NUnit.Framework.Assert.IsTrue(exp, exp.IndexOf("AveragePayloadFunction") > -1);
-				NUnit.Framework.Assert.IsTrue(hits.scoreDocs[j].score + " explain value does not equal: "
+				IsTrue(exp, exp.IndexOf("AveragePayloadFunction") > -1);
+				IsTrue(hits.scoreDocs[j].score + " explain value does not equal: "
 					 + 3, explain.GetValue() == 3f);
 			}
 		}
@@ -228,17 +228,17 @@ namespace Lucene.Net.Search.Payloads
 			QueryUtils.Check(query);
 			// all 10 hits should have score = 4 (max payload value)
 			hits = searcher.Search(query, null, 100);
-			NUnit.Framework.Assert.IsTrue("hits is null and it shouldn't be", hits != null);
-			NUnit.Framework.Assert.IsTrue("should be 10 hits", hits.totalHits == 10);
+			IsTrue("hits is null and it shouldn't be", hits != null);
+			IsTrue("should be 10 hits", hits.TotalHits == 10);
 			for (int j = 0; j < hits.scoreDocs.Length; j++)
 			{
 				ScoreDoc doc = hits.scoreDocs[j];
-				NUnit.Framework.Assert.IsTrue(doc.score + " does not equal: " + 4, doc.score == 4
+				IsTrue(doc.score + " does not equal: " + 4, doc.score == 4
 					);
 				Explanation explain = searcher.Explain(query, hits.scoreDocs[j].doc);
 				string exp = explain.ToString();
-				NUnit.Framework.Assert.IsTrue(exp, exp.IndexOf("MaxPayloadFunction") > -1);
-				NUnit.Framework.Assert.IsTrue(hits.scoreDocs[j].score + " explain value does not equal: "
+				IsTrue(exp, exp.IndexOf("MaxPayloadFunction") > -1);
+				IsTrue(hits.scoreDocs[j].score + " explain value does not equal: "
 					 + 4, explain.GetValue() == 4f);
 			}
 		}
@@ -252,17 +252,17 @@ namespace Lucene.Net.Search.Payloads
 			QueryUtils.Check(query);
 			// all 10 hits should have score = 2 (min payload value)
 			hits = searcher.Search(query, null, 100);
-			NUnit.Framework.Assert.IsTrue("hits is null and it shouldn't be", hits != null);
-			NUnit.Framework.Assert.IsTrue("should be 10 hits", hits.totalHits == 10);
+			IsTrue("hits is null and it shouldn't be", hits != null);
+			IsTrue("should be 10 hits", hits.TotalHits == 10);
 			for (int j = 0; j < hits.scoreDocs.Length; j++)
 			{
 				ScoreDoc doc = hits.scoreDocs[j];
-				NUnit.Framework.Assert.IsTrue(doc.score + " does not equal: " + 2, doc.score == 2
+				IsTrue(doc.score + " does not equal: " + 2, doc.score == 2
 					);
 				Explanation explain = searcher.Explain(query, hits.scoreDocs[j].doc);
 				string exp = explain.ToString();
-				NUnit.Framework.Assert.IsTrue(exp, exp.IndexOf("MinPayloadFunction") > -1);
-				NUnit.Framework.Assert.IsTrue(hits.scoreDocs[j].score + " explain value does not equal: "
+				IsTrue(exp, exp.IndexOf("MinPayloadFunction") > -1);
+				IsTrue(hits.scoreDocs[j].score + " explain value does not equal: "
 					 + 2, explain.GetValue() == 2f);
 			}
 		}
@@ -299,14 +299,14 @@ namespace Lucene.Net.Search.Payloads
 			query = NewPhraseQuery("field", "nine hundred ninety nine", true, new AveragePayloadFunction
 				());
 			hits = searcher.Search(query, null, 100);
-			NUnit.Framework.Assert.IsTrue("hits is null and it shouldn't be", hits != null);
+			IsTrue("hits is null and it shouldn't be", hits != null);
 			ScoreDoc doc = hits.scoreDocs[0];
 			//    System.out.println("Doc: " + doc.toString());
 			//    System.out.println("Explain: " + searcher.explain(query, doc.doc));
-			NUnit.Framework.Assert.IsTrue("there should only be one hit", hits.totalHits == 1
+			IsTrue("there should only be one hit", hits.TotalHits == 1
 				);
 			// should have score = 3 because adjacent terms have payloads of 2,4
-			NUnit.Framework.Assert.IsTrue(doc.score + " does not equal: " + 3, doc.score == 3
+			IsTrue(doc.score + " does not equal: " + 3, doc.score == 3
 				);
 		}
 
@@ -328,15 +328,15 @@ namespace Lucene.Net.Search.Payloads
 				, q2 }, 0, true), new PayloadNearQuery(new SpanQuery[] { q3, q4 }, 0, false) };
 			query = new PayloadNearQuery(clauses, 0, false);
 			hits = searcher.Search(query, null, 100);
-			NUnit.Framework.Assert.IsTrue("hits is null and it shouldn't be", hits != null);
+			IsTrue("hits is null and it shouldn't be", hits != null);
 			// should be only 1 hit - doc 999
-			NUnit.Framework.Assert.IsTrue("should only be one hit", hits.scoreDocs.Length == 
+			IsTrue("should only be one hit", hits.scoreDocs.Length == 
 				1);
 			// the score should be 3 - the average of all the underlying payloads
 			ScoreDoc doc = hits.scoreDocs[0];
 			//    System.out.println("Doc: " + doc.toString());
 			//    System.out.println("Explain: " + searcher.explain(query, doc.doc));
-			NUnit.Framework.Assert.IsTrue(doc.score + " does not equal: " + 3, doc.score == 3
+			IsTrue(doc.score + " does not equal: " + 3, doc.score == 3
 				);
 		}
 

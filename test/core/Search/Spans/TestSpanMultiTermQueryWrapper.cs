@@ -33,15 +33,15 @@ namespace Lucene.Net.Search.Spans
 			base.SetUp();
 			directory = NewDirectory();
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), directory);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			Field field = NewTextField("field", string.Empty, Field.Store.NO);
 			doc.Add(field);
-			field.SetStringValue("quick brown fox");
+			field.StringValue = "quick brown fox");
 			iw.AddDocument(doc);
-			field.SetStringValue("jumps over lazy broun dog");
+			field.StringValue = "jumps over lazy broun dog");
 			iw.AddDocument(doc);
-			field.SetStringValue("jumps over extremely very lazy broxn dog");
+			field.StringValue = "jumps over extremely very lazy broxn dog");
 			iw.AddDocument(doc);
 			reader = iw.GetReader();
 			iw.Close();
@@ -63,7 +63,7 @@ namespace Lucene.Net.Search.Spans
 			SpanQuery swq = new SpanMultiTermQueryWrapper<WildcardQuery>(wq);
 			// will only match quick brown fox
 			SpanFirstQuery sfq = new SpanFirstQuery(swq, 2);
-			NUnit.Framework.Assert.AreEqual(1, searcher.Search(sfq, 10).totalHits);
+			AreEqual(1, searcher.Search(sfq, 10).TotalHits);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -73,7 +73,7 @@ namespace Lucene.Net.Search.Spans
 			SpanQuery swq = new SpanMultiTermQueryWrapper<WildcardQuery>(wq);
 			// will only match "jumps over extremely very lazy broxn dog"
 			SpanFirstQuery sfq = new SpanFirstQuery(swq, 3);
-			NUnit.Framework.Assert.AreEqual(1, searcher.Search(sfq, 10).totalHits);
+			AreEqual(1, searcher.Search(sfq, 10).TotalHits);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -83,7 +83,7 @@ namespace Lucene.Net.Search.Spans
 			SpanQuery sfq = new SpanMultiTermQueryWrapper<FuzzyQuery>(fq);
 			// will not match quick brown fox
 			SpanPositionRangeQuery sprq = new SpanPositionRangeQuery(sfq, 3, 6);
-			NUnit.Framework.Assert.AreEqual(2, searcher.Search(sprq, 10).totalHits);
+			AreEqual(2, searcher.Search(sprq, 10).TotalHits);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -94,7 +94,7 @@ namespace Lucene.Net.Search.Spans
 			SpanQuery sfq = new SpanMultiTermQueryWrapper<FuzzyQuery>(fq);
 			// will only match jumps over lazy broun dog
 			SpanPositionRangeQuery sprq = new SpanPositionRangeQuery(sfq, 0, 100);
-			NUnit.Framework.Assert.AreEqual(1, searcher.Search(sprq, 10).totalHits);
+			AreEqual(1, searcher.Search(sprq, 10).TotalHits);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -106,29 +106,29 @@ namespace Lucene.Net.Search.Spans
 			SpanQuery spanNoSuch = new SpanMultiTermQueryWrapper<FuzzyQuery>(fuzzyNoSuch);
 			SpanQuery term = new SpanTermQuery(new Term("field", "brown"));
 			SpanQuery near = new SpanNearQuery(new SpanQuery[] { term, spanNoSuch }, 1, true);
-			NUnit.Framework.Assert.AreEqual(0, searcher.Search(near, 10).totalHits);
+			AreEqual(0, searcher.Search(near, 10).TotalHits);
 			//flip order
 			near = new SpanNearQuery(new SpanQuery[] { spanNoSuch, term }, 1, true);
-			NUnit.Framework.Assert.AreEqual(0, searcher.Search(near, 10).totalHits);
+			AreEqual(0, searcher.Search(near, 10).TotalHits);
 			WildcardQuery wcNoSuch = new WildcardQuery(new Term("field", "noSuch*"));
 			SpanQuery spanWCNoSuch = new SpanMultiTermQueryWrapper<WildcardQuery>(wcNoSuch);
 			near = new SpanNearQuery(new SpanQuery[] { term, spanWCNoSuch }, 1, true);
-			NUnit.Framework.Assert.AreEqual(0, searcher.Search(near, 10).totalHits);
+			AreEqual(0, searcher.Search(near, 10).TotalHits);
 			RegexpQuery rgxNoSuch = new RegexpQuery(new Term("field", "noSuch"));
 			SpanQuery spanRgxNoSuch = new SpanMultiTermQueryWrapper<RegexpQuery>(rgxNoSuch);
 			near = new SpanNearQuery(new SpanQuery[] { term, spanRgxNoSuch }, 1, true);
-			NUnit.Framework.Assert.AreEqual(0, searcher.Search(near, 10).totalHits);
+			AreEqual(0, searcher.Search(near, 10).TotalHits);
 			PrefixQuery prfxNoSuch = new PrefixQuery(new Term("field", "noSuch"));
 			SpanQuery spanPrfxNoSuch = new SpanMultiTermQueryWrapper<PrefixQuery>(prfxNoSuch);
 			near = new SpanNearQuery(new SpanQuery[] { term, spanPrfxNoSuch }, 1, true);
-			NUnit.Framework.Assert.AreEqual(0, searcher.Search(near, 10).totalHits);
+			AreEqual(0, searcher.Search(near, 10).TotalHits);
 			//test single noSuch
 			near = new SpanNearQuery(new SpanQuery[] { spanPrfxNoSuch }, 1, true);
-			NUnit.Framework.Assert.AreEqual(0, searcher.Search(near, 10).totalHits);
+			AreEqual(0, searcher.Search(near, 10).TotalHits);
 			//test double noSuch
 			near = new SpanNearQuery(new SpanQuery[] { spanPrfxNoSuch, spanPrfxNoSuch }, 1, true
 				);
-			NUnit.Framework.Assert.AreEqual(0, searcher.Search(near, 10).totalHits);
+			AreEqual(0, searcher.Search(near, 10).TotalHits);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -140,25 +140,25 @@ namespace Lucene.Net.Search.Spans
 			SpanQuery spanNoSuch = new SpanMultiTermQueryWrapper<FuzzyQuery>(fuzzyNoSuch);
 			SpanQuery term = new SpanTermQuery(new Term("field", "brown"));
 			SpanNotQuery notNear = new SpanNotQuery(term, spanNoSuch, 0, 0);
-			NUnit.Framework.Assert.AreEqual(1, searcher.Search(notNear, 10).totalHits);
+			AreEqual(1, searcher.Search(notNear, 10).TotalHits);
 			//flip
 			notNear = new SpanNotQuery(spanNoSuch, term, 0, 0);
-			NUnit.Framework.Assert.AreEqual(0, searcher.Search(notNear, 10).totalHits);
+			AreEqual(0, searcher.Search(notNear, 10).TotalHits);
 			//both noSuch
 			notNear = new SpanNotQuery(spanNoSuch, spanNoSuch, 0, 0);
-			NUnit.Framework.Assert.AreEqual(0, searcher.Search(notNear, 10).totalHits);
+			AreEqual(0, searcher.Search(notNear, 10).TotalHits);
 			WildcardQuery wcNoSuch = new WildcardQuery(new Term("field", "noSuch*"));
 			SpanQuery spanWCNoSuch = new SpanMultiTermQueryWrapper<WildcardQuery>(wcNoSuch);
 			notNear = new SpanNotQuery(term, spanWCNoSuch, 0, 0);
-			NUnit.Framework.Assert.AreEqual(1, searcher.Search(notNear, 10).totalHits);
+			AreEqual(1, searcher.Search(notNear, 10).TotalHits);
 			RegexpQuery rgxNoSuch = new RegexpQuery(new Term("field", "noSuch"));
 			SpanQuery spanRgxNoSuch = new SpanMultiTermQueryWrapper<RegexpQuery>(rgxNoSuch);
 			notNear = new SpanNotQuery(term, spanRgxNoSuch, 1, 1);
-			NUnit.Framework.Assert.AreEqual(1, searcher.Search(notNear, 10).totalHits);
+			AreEqual(1, searcher.Search(notNear, 10).TotalHits);
 			PrefixQuery prfxNoSuch = new PrefixQuery(new Term("field", "noSuch"));
 			SpanQuery spanPrfxNoSuch = new SpanMultiTermQueryWrapper<PrefixQuery>(prfxNoSuch);
 			notNear = new SpanNotQuery(term, spanPrfxNoSuch, 1, 1);
-			NUnit.Framework.Assert.AreEqual(1, searcher.Search(notNear, 10).totalHits);
+			AreEqual(1, searcher.Search(notNear, 10).TotalHits);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -170,26 +170,26 @@ namespace Lucene.Net.Search.Spans
 			SpanQuery spanNoSuch = new SpanMultiTermQueryWrapper<FuzzyQuery>(fuzzyNoSuch);
 			SpanQuery term = new SpanTermQuery(new Term("field", "brown"));
 			SpanOrQuery near = new SpanOrQuery(new SpanQuery[] { term, spanNoSuch });
-			NUnit.Framework.Assert.AreEqual(1, searcher.Search(near, 10).totalHits);
+			AreEqual(1, searcher.Search(near, 10).TotalHits);
 			//flip
 			near = new SpanOrQuery(new SpanQuery[] { spanNoSuch, term });
-			NUnit.Framework.Assert.AreEqual(1, searcher.Search(near, 10).totalHits);
+			AreEqual(1, searcher.Search(near, 10).TotalHits);
 			WildcardQuery wcNoSuch = new WildcardQuery(new Term("field", "noSuch*"));
 			SpanQuery spanWCNoSuch = new SpanMultiTermQueryWrapper<WildcardQuery>(wcNoSuch);
 			near = new SpanOrQuery(new SpanQuery[] { term, spanWCNoSuch });
-			NUnit.Framework.Assert.AreEqual(1, searcher.Search(near, 10).totalHits);
+			AreEqual(1, searcher.Search(near, 10).TotalHits);
 			RegexpQuery rgxNoSuch = new RegexpQuery(new Term("field", "noSuch"));
 			SpanQuery spanRgxNoSuch = new SpanMultiTermQueryWrapper<RegexpQuery>(rgxNoSuch);
 			near = new SpanOrQuery(new SpanQuery[] { term, spanRgxNoSuch });
-			NUnit.Framework.Assert.AreEqual(1, searcher.Search(near, 10).totalHits);
+			AreEqual(1, searcher.Search(near, 10).TotalHits);
 			PrefixQuery prfxNoSuch = new PrefixQuery(new Term("field", "noSuch"));
 			SpanQuery spanPrfxNoSuch = new SpanMultiTermQueryWrapper<PrefixQuery>(prfxNoSuch);
 			near = new SpanOrQuery(new SpanQuery[] { term, spanPrfxNoSuch });
-			NUnit.Framework.Assert.AreEqual(1, searcher.Search(near, 10).totalHits);
+			AreEqual(1, searcher.Search(near, 10).TotalHits);
 			near = new SpanOrQuery(new SpanQuery[] { spanPrfxNoSuch });
-			NUnit.Framework.Assert.AreEqual(0, searcher.Search(near, 10).totalHits);
+			AreEqual(0, searcher.Search(near, 10).TotalHits);
 			near = new SpanOrQuery(new SpanQuery[] { spanPrfxNoSuch, spanPrfxNoSuch });
-			NUnit.Framework.Assert.AreEqual(0, searcher.Search(near, 10).totalHits);
+			AreEqual(0, searcher.Search(near, 10).TotalHits);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -200,19 +200,19 @@ namespace Lucene.Net.Search.Spans
 				);
 			SpanQuery spanNoSuch = new SpanMultiTermQueryWrapper<FuzzyQuery>(fuzzyNoSuch);
 			SpanQuery spanFirst = new SpanFirstQuery(spanNoSuch, 10);
-			NUnit.Framework.Assert.AreEqual(0, searcher.Search(spanFirst, 10).totalHits);
+			AreEqual(0, searcher.Search(spanFirst, 10).TotalHits);
 			WildcardQuery wcNoSuch = new WildcardQuery(new Term("field", "noSuch*"));
 			SpanQuery spanWCNoSuch = new SpanMultiTermQueryWrapper<WildcardQuery>(wcNoSuch);
 			spanFirst = new SpanFirstQuery(spanWCNoSuch, 10);
-			NUnit.Framework.Assert.AreEqual(0, searcher.Search(spanFirst, 10).totalHits);
+			AreEqual(0, searcher.Search(spanFirst, 10).TotalHits);
 			RegexpQuery rgxNoSuch = new RegexpQuery(new Term("field", "noSuch"));
 			SpanQuery spanRgxNoSuch = new SpanMultiTermQueryWrapper<RegexpQuery>(rgxNoSuch);
 			spanFirst = new SpanFirstQuery(spanRgxNoSuch, 10);
-			NUnit.Framework.Assert.AreEqual(0, searcher.Search(spanFirst, 10).totalHits);
+			AreEqual(0, searcher.Search(spanFirst, 10).TotalHits);
 			PrefixQuery prfxNoSuch = new PrefixQuery(new Term("field", "noSuch"));
 			SpanQuery spanPrfxNoSuch = new SpanMultiTermQueryWrapper<PrefixQuery>(prfxNoSuch);
 			spanFirst = new SpanFirstQuery(spanPrfxNoSuch, 10);
-			NUnit.Framework.Assert.AreEqual(0, searcher.Search(spanFirst, 10).totalHits);
+			AreEqual(0, searcher.Search(spanFirst, 10).TotalHits);
 		}
 	}
 }

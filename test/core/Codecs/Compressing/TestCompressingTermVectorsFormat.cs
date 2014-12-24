@@ -1,50 +1,48 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using Lucene.Net.Codecs;
-using Lucene.Net.Codecs.Compressing;
-using Lucene.Net.Document;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
+using Lucene.Net.TestFramework.Codecs.Compressing;
+using Lucene.Net.TestFramework.Index;
 using Lucene.Net.Util;
-using Sharpen;
+using NUnit.Framework;
 
-namespace Lucene.Net.Codecs.Compressing
+namespace Lucene.Net.Test.Codecs.Compressing
 {
+    [TestFixture]
 	public class TestCompressingTermVectorsFormat : BaseTermVectorsFormatTestCase
 	{
 		// give it a chance to test various compression modes with different chunk sizes
-		protected override Codec GetCodec()
+		protected override Codec Codec
 		{
 			return CompressingCodec.RandomInstance(Random());
 		}
 
-		// https://issues.apache.org/jira/browse/LUCENE-5156
-		/// <exception cref="System.Exception"></exception>
+	    protected override void AddRandomFields(Documents.Document doc)
+	    {
+	        throw new NotImplementedException();
+	    }
+
+	    // https://issues.apache.org/jira/browse/LUCENE-5156
+		[Test]
 		public virtual void TestNoOrds()
 		{
 			Directory dir = NewDirectory();
-			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
-				();
-			FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
-			ft.SetStoreTermVectors(true);
-			doc.Add(new Field("foo", "this is a test", ft));
+			var iw = new RandomIndexWriter(Random(), dir);
+			var doc = new Lucene.Net.Documents.Document();
+			var ft = new FieldType(TextField.TYPE_NOT_STORED) {StoreTermVectors = true};
+		    doc.Add(new Field("foo", "this is a test", ft));
 			iw.AddDocument(doc);
 			AtomicReader ir = GetOnlySegmentReader(iw.GetReader());
 			Terms terms = ir.GetTermVector(0, "foo");
-			NUnit.Framework.Assert.IsNotNull(terms);
+			IsNotNull(terms);
 			TermsEnum termsEnum = terms.Iterator(null);
-			NUnit.Framework.Assert.AreEqual(TermsEnum.SeekStatus.FOUND, termsEnum.SeekCeil(new 
-				BytesRef("this")));
+			AreEqual(TermsEnum.SeekStatus.FOUND, termsEnum.SeekCeil(new BytesRef("this")));
 			try
 			{
-				termsEnum.Ord();
-				NUnit.Framework.Assert.Fail();
+			    var ord = termsEnum.Ord;
+			    Fail();
 			}
 			catch (NotSupportedException)
 			{
@@ -53,15 +51,15 @@ namespace Lucene.Net.Codecs.Compressing
 			try
 			{
 				termsEnum.SeekExact(0);
-				NUnit.Framework.Assert.Fail();
+				Fail();
 			}
 			catch (NotSupportedException)
 			{
 			}
 			// expected exception
-			ir.Close();
+			ir.Dispose();
 			iw.Close();
-			dir.Close();
+			dir.Dispose();
 		}
 	}
 }

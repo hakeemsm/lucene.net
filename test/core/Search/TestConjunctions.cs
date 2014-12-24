@@ -4,7 +4,7 @@
  * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -51,9 +51,9 @@ namespace Lucene.Net.Search
 			searcher.SetSimilarity(new TestConjunctions.TFSimilarity());
 		}
 
-		internal static Lucene.Net.Document.Document Doc(string v1, string v2)
+		internal static Lucene.Net.Documents.Document Doc(string v1, string v2)
 		{
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new StringField(F1, v1, Field.Store.YES));
 			doc.Add(new TextField(F2, v2, Field.Store.YES));
@@ -67,8 +67,8 @@ namespace Lucene.Net.Search
 			bq.Add(new TermQuery(new Term(F1, "nutch")), BooleanClause.Occur.MUST);
 			bq.Add(new TermQuery(new Term(F2, "is")), BooleanClause.Occur.MUST);
 			TopDocs td = searcher.Search(bq, 3);
-			NUnit.Framework.Assert.AreEqual(1, td.totalHits);
-			NUnit.Framework.Assert.AreEqual(3F, td.scoreDocs[0].score, 0.001F);
+			AreEqual(1, td.TotalHits);
+			AreEqual(3F, td.scoreDocs[0].score, 0.001F);
 		}
 
 		// f1:nutch + f2:is + f2:is

@@ -26,7 +26,7 @@ namespace Lucene.Net.Index
 			directory = NewDirectory();
 			writer = new RandomIndexWriter(Random(), directory);
 			// write document
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewTextField("UUID", "1", Field.Store.YES));
 			writer.AddDocument(doc);
@@ -51,9 +51,9 @@ namespace Lucene.Net.Index
 			// 
 			//HM:revisit 
 			//assert index has a document and reader is up2date 
-			NUnit.Framework.Assert.AreEqual("One document should be in the index", 1, writer.
+			AreEqual("One document should be in the index", 1, writer.
 				NumDocs());
-			NUnit.Framework.Assert.IsTrue("One document added, reader should be current", reader
+			IsTrue("One document added, reader should be current", reader
 				.IsCurrent());
 			// remove document
 			Term idTerm = new Term("UUID", "1");
@@ -62,9 +62,9 @@ namespace Lucene.Net.Index
 			// 
 			//HM:revisit 
 			//assert document has been deleted (index changed), reader is stale
-			NUnit.Framework.Assert.AreEqual("Document should be removed", 0, writer.NumDocs()
+			AreEqual("Document should be removed", 0, writer.NumDocs()
 				);
-			NUnit.Framework.Assert.IsFalse("Reader should be stale", reader.IsCurrent());
+			IsFalse("Reader should be stale", reader.IsCurrent());
 			reader.Close();
 		}
 
@@ -79,9 +79,9 @@ namespace Lucene.Net.Index
 			// 
 			//HM:revisit 
 			//assert index has a document and reader is up2date 
-			NUnit.Framework.Assert.AreEqual("One document should be in the index", 1, writer.
+			AreEqual("One document should be in the index", 1, writer.
 				NumDocs());
-			NUnit.Framework.Assert.IsTrue("Document added, reader should be stale ", reader.IsCurrent
+			IsTrue("Document added, reader should be stale ", reader.IsCurrent
 				());
 			// remove all documents
 			writer.DeleteAll();
@@ -89,9 +89,9 @@ namespace Lucene.Net.Index
 			// 
 			//HM:revisit 
 			//assert document has been deleted (index changed), reader is stale
-			NUnit.Framework.Assert.AreEqual("Document should be removed", 0, writer.NumDocs()
+			AreEqual("Document should be removed", 0, writer.NumDocs()
 				);
-			NUnit.Framework.Assert.IsFalse("Reader should be stale", reader.IsCurrent());
+			IsFalse("Reader should be stale", reader.IsCurrent());
 			reader.Close();
 		}
 	}

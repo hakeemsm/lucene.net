@@ -38,18 +38,18 @@ namespace Lucene.Net.Index
 				reader.Reset(start, upto);
 				for (int i_1 = 0; i_1 < num; i_1++)
 				{
-					NUnit.Framework.Assert.AreEqual(i_1, reader.ReadInt());
+					AreEqual(i_1, reader.ReadInt());
 				}
-				NUnit.Framework.Assert.IsTrue(reader.EndOfSlice());
+				IsTrue(reader.EndOfSlice());
 				if (Random().NextBoolean())
 				{
 					pool.Reset(true, false);
-					NUnit.Framework.Assert.AreEqual(0, bytesUsed.Get());
+					AreEqual(0, bytesUsed.Get());
 				}
 				else
 				{
 					pool.Reset(true, true);
-					NUnit.Framework.Assert.AreEqual(IntBlockPool.INT_BLOCK_SIZE * RamUsageEstimator.NUM_BYTES_INT
+					AreEqual(IntBlockPool.INT_BLOCK_SIZE * RamUsageEstimator.NUM_BYTES_INT
 						, bytesUsed.Get());
 				}
 			}
@@ -100,12 +100,12 @@ namespace Lucene.Net.Index
 				if (Random().NextBoolean())
 				{
 					pool.Reset(true, false);
-					NUnit.Framework.Assert.AreEqual(0, bytesUsed.Get());
+					AreEqual(0, bytesUsed.Get());
 				}
 				else
 				{
 					pool.Reset(true, true);
-					NUnit.Framework.Assert.AreEqual(IntBlockPool.INT_BLOCK_SIZE * RamUsageEstimator.NUM_BYTES_INT
+					AreEqual(IntBlockPool.INT_BLOCK_SIZE * RamUsageEstimator.NUM_BYTES_INT
 						, bytesUsed.Get());
 				}
 			}
@@ -144,9 +144,9 @@ namespace Lucene.Net.Index
 			reader.Reset(values.start, values.end);
 			for (int i = 0; i < values.valueCount; i++)
 			{
-				NUnit.Framework.Assert.AreEqual(values.valueOffset + i, reader.ReadInt());
+				AreEqual(values.valueOffset + i, reader.ReadInt());
 			}
-			NUnit.Framework.Assert.IsTrue(reader.EndOfSlice());
+			IsTrue(reader.EndOfSlice());
 		}
 
 		private class StartEndAndValues

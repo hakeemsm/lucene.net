@@ -4,7 +4,7 @@
  * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -48,7 +48,7 @@ namespace Lucene.Net.Util
 			float theFloat = float.MaxValue;
 			for (int i = 0; i < NUM_DOCS; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(NewStringField("theLong", (theLong--).ToString(), Field.Store.NO));
 				doc.Add(NewStringField("theDouble", (theDouble--).ToString(), Field.Store.NO));
@@ -107,7 +107,7 @@ namespace Lucene.Net.Util
 				DumpArray(GetTestClass().FullName + "#" + GetTestName() + " INSANITY", insanity, 
 					System.Console.Error);
 			}
-			NUnit.Framework.Assert.AreEqual("shouldn't be any cache insanity", 0, insanity.Length
+			AreEqual("shouldn't be any cache insanity", 0, insanity.Length
 				);
 			cache.PurgeAllCaches();
 		}
@@ -123,11 +123,11 @@ namespace Lucene.Net.Util
 			// // // 
 			FieldCacheSanityChecker.Insanity[] insanity = FieldCacheSanityChecker.CheckSanity
 				(cache.GetCacheEntries());
-			NUnit.Framework.Assert.AreEqual("wrong number of cache errors", 1, insanity.Length
+			AreEqual("wrong number of cache errors", 1, insanity.Length
 				);
-			NUnit.Framework.Assert.AreEqual("wrong type of cache error", FieldCacheSanityChecker.InsanityType
+			AreEqual("wrong type of cache error", FieldCacheSanityChecker.InsanityType
 				.VALUEMISMATCH, insanity[0].GetType());
-			NUnit.Framework.Assert.AreEqual("wrong number of entries in cache error", 2, insanity
+			AreEqual("wrong number of entries in cache error", 2, insanity
 				[0].GetCacheEntries().Length);
 			// we expect bad things, don't let tearDown complain about them
 			cache.PurgeAllCaches();
@@ -145,11 +145,11 @@ namespace Lucene.Net.Util
 			// // // 
 			FieldCacheSanityChecker.Insanity[] insanity = FieldCacheSanityChecker.CheckSanity
 				(cache.GetCacheEntries());
-			NUnit.Framework.Assert.AreEqual("wrong number of cache errors", 1, insanity.Length
+			AreEqual("wrong number of cache errors", 1, insanity.Length
 				);
-			NUnit.Framework.Assert.AreEqual("wrong type of cache error", FieldCacheSanityChecker.InsanityType
+			AreEqual("wrong type of cache error", FieldCacheSanityChecker.InsanityType
 				.SUBREADER, insanity[0].GetType());
-			NUnit.Framework.Assert.AreEqual("wrong number of entries in cache error", 3, insanity
+			AreEqual("wrong number of entries in cache error", 3, insanity
 				[0].GetCacheEntries().Length);
 			// we expect bad things, don't let tearDown complain about them
 			cache.PurgeAllCaches();

@@ -20,7 +20,7 @@ using System.IO;
 using Lucene.Net.Support;
 using NUnit.Framework;
 
-using WhitespaceAnalyzer = Lucene.Net.Analysis.WhitespaceAnalyzer;
+using WhitespaceAnalyzer = Lucene.Net.Test.Analysis.WhitespaceAnalyzer;
 using Document = Lucene.Net.Documents.Document;
 using Field = Lucene.Net.Documents.Field;
 using IndexReader = Lucene.Net.Index.IndexReader;
@@ -108,7 +108,7 @@ namespace Lucene.Net.Store
 					));
 				writer.AddDocument(doc);
 			}
-			Assert.AreEqual(docsToAdd, writer.MaxDoc());
+			Assert.AreEqual(docsToAdd, writer.MaxDoc);
 			writer.Close();
 		    dir.Close();
 		}
@@ -172,7 +172,7 @@ namespace Lucene.Net.Store
 				threads[i].Join();
 			
 			writer.ForceMerge(1);
-			NUnit.Framework.Assert.AreEqual(ramDir.SizeInBytes(), ramDir.GetRecomputedSizeInBytes
+			AreEqual(ramDir.SizeInBytes(), ramDir.GetRecomputedSizeInBytes
 				());
 			writer.Close();
 		}

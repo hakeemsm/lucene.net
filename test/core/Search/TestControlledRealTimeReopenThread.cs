@@ -8,7 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using NUnit.Framework;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -91,7 +91,7 @@ namespace Lucene.Net.Search
 				}
 				try
 				{
-					NUnit.Framework.Assert.AreEqual(docs.Count, s.Search(new TermQuery(id), 10).totalHits
+					AreEqual(docs.Count, s.Search(new TermQuery(id), 10).TotalHits
 						);
 				}
 				finally
@@ -123,7 +123,7 @@ namespace Lucene.Net.Search
 				}
 				try
 				{
-					NUnit.Framework.Assert.AreEqual(docs.Count, s.Search(new TermQuery(id), 10).totalHits
+					AreEqual(docs.Count, s.Search(new TermQuery(id), 10).TotalHits
 						);
 				}
 				finally
@@ -155,7 +155,7 @@ namespace Lucene.Net.Search
 				}
 				try
 				{
-					NUnit.Framework.Assert.AreEqual(1, s.Search(new TermQuery(id), 10).totalHits);
+					AreEqual(1, s.Search(new TermQuery(id), 10).TotalHits);
 				}
 				finally
 				{
@@ -186,7 +186,7 @@ namespace Lucene.Net.Search
 				}
 				try
 				{
-					NUnit.Framework.Assert.AreEqual(1, s.Search(new TermQuery(id), 10).totalHits);
+					AreEqual(1, s.Search(new TermQuery(id), 10).TotalHits);
 				}
 				finally
 				{
@@ -217,7 +217,7 @@ namespace Lucene.Net.Search
 				}
 				try
 				{
-					NUnit.Framework.Assert.AreEqual(0, s.Search(new TermQuery(id), 10).totalHits);
+					AreEqual(0, s.Search(new TermQuery(id), 10).TotalHits);
 				}
 				finally
 				{
@@ -337,7 +337,7 @@ namespace Lucene.Net.Search
 		/// <exception cref="System.Exception"></exception>
 		protected override void DoClose()
 		{
-			NUnit.Framework.Assert.IsTrue(warmCalled);
+			IsTrue(warmCalled);
 			if (VERBOSE)
 			{
 				System.Console.Out.WriteLine("TEST: now close SearcherManagers");
@@ -363,7 +363,7 @@ namespace Lucene.Net.Search
 				(d, conf, latch, signal);
 			TrackingIndexWriter writer = new TrackingIndexWriter(_writer);
 			SearcherManager manager = new SearcherManager(_writer, false, null);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewTextField("test", "test", Field.Store.YES));
 			writer.AddDocument(doc);
@@ -376,12 +376,12 @@ namespace Lucene.Net.Search
 			// wait in addDocument to let some reopens go through
 			long lastGen = writer.UpdateDocument(new Term("foo", "bar"), doc);
 			// once this returns the doc is already reflected in the last reopen
-			NUnit.Framework.Assert.IsFalse(manager.IsSearcherCurrent());
+			IsFalse(manager.IsSearcherCurrent());
 			// false since there is a delete in the queue
 			IndexSearcher searcher = manager.Acquire();
 			try
 			{
-				NUnit.Framework.Assert.AreEqual(2, searcher.GetIndexReader().NumDocs());
+				AreEqual(2, searcher.GetIndexReader().NumDocs());
 			}
 			finally
 			{
@@ -403,7 +403,7 @@ namespace Lucene.Net.Search
 			if (!finished.Get())
 			{
 				waiter.Interrupt();
-				NUnit.Framework.Assert.Fail("thread deadlocked on waitForGeneration");
+				Fail("thread deadlocked on waitForGeneration");
 			}
 			thread.Close();
 			thread.Join();
@@ -527,7 +527,7 @@ namespace Lucene.Net.Search
 			try
 			{
 				new SearcherManager(w.w, false, theEvilOne);
-				NUnit.Framework.Assert.Fail("didn't hit expected exception");
+				Fail("didn't hit expected exception");
 			}
 			catch (InvalidOperationException)
 			{
@@ -562,11 +562,11 @@ namespace Lucene.Net.Search
 			AtomicBoolean afterRefreshCalled = new AtomicBoolean(false);
 			SearcherManager sm = new SearcherManager(iw, true, new SearcherFactory());
 			sm.AddListener(new _RefreshListener_440(afterRefreshCalled));
-			iw.AddDocument(new Lucene.Net.Document.Document());
+			iw.AddDocument(new Lucene.Net.Documents.Document());
 			iw.Commit();
-			NUnit.Framework.Assert.IsFalse(afterRefreshCalled.Get());
+			IsFalse(afterRefreshCalled.Get());
 			sm.MaybeRefreshBlocking();
-			NUnit.Framework.Assert.IsTrue(afterRefreshCalled.Get());
+			IsTrue(afterRefreshCalled.Get());
 			sm.Close();
 			iw.Close();
 			dir.Close();
@@ -636,20 +636,20 @@ namespace Lucene.Net.Search
 					commitThread.Start();
 					commitThreads.AddItem(commitThread);
 				}
-				Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+				Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 				d.Add(new TextField("count", i_1 + string.Empty, Field.Store.NO));
 				d.Add(new TextField("content", content, Field.Store.YES));
 				long start = Runtime.CurrentTimeMillis();
 				long l = tiw.AddDocument(d);
 				controlledRealTimeReopenThread.WaitForGeneration(l);
 				long wait = Runtime.CurrentTimeMillis() - start;
-				NUnit.Framework.Assert.IsTrue("waited too long for generation " + wait, wait < (maxStaleSecs
+				IsTrue("waited too long for generation " + wait, wait < (maxStaleSecs
 					 * 1000));
 				IndexSearcher searcher = sm.Acquire();
 				TopDocs td = searcher.Search(new TermQuery(new Term("count", i_1 + string.Empty))
 					, 10);
 				sm.Release(searcher);
-				NUnit.Framework.Assert.AreEqual(1, td.totalHits);
+				AreEqual(1, td.TotalHits);
 			}
 			foreach (Sharpen.Thread commitThread_1 in commitThreads)
 			{
@@ -678,7 +678,7 @@ namespace Lucene.Net.Search
 					IndexCommit ic = sdp.Snapshot();
 					foreach (string name in ic.GetFileNames())
 					{
-						NUnit.Framework.Assert.IsTrue(LuceneTestCase.SlowFileExists(dir, name));
+						IsTrue(LuceneTestCase.SlowFileExists(dir, name));
 					}
 				}
 				catch (Exception e)

@@ -31,7 +31,7 @@ namespace Lucene.Net.Search
 			base.SetUp();
 			directory = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), directory);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			Field titleField = NewTextField("title", "some title", Field.Store.NO);
 			Field field = NewTextField(FN, "this is document one 2345", Field.Store.NO);
@@ -40,9 +40,9 @@ namespace Lucene.Net.Search
 			doc.Add(field);
 			doc.Add(footerField);
 			writer.AddDocument(doc);
-			field.SetStringValue("some text from doc two a short piece 5678.91");
+			field.StringValue = "some text from doc two a short piece 5678.91");
 			writer.AddDocument(doc);
-			field.SetStringValue("doc three has some different stuff" + " with numbers 1234 5678.9 and letter b"
+			field.StringValue = "doc three has some different stuff" + " with numbers 1234 5678.9 and letter b"
 				);
 			writer.AddDocument(doc);
 			reader = writer.GetReader();
@@ -70,7 +70,7 @@ namespace Lucene.Net.Search
 			{
 				System.Console.Out.WriteLine("TEST: run aq=" + query);
 			}
-			return searcher.Search(query, 5).totalHits;
+			return searcher.Search(query, 5).TotalHits;
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -79,13 +79,13 @@ namespace Lucene.Net.Search
 		{
 			AutomatonQuery query = new AutomatonQuery(NewTerm("bogus"), automaton);
 			query.SetRewriteMethod(MultiTermQuery.SCORING_BOOLEAN_QUERY_REWRITE);
-			NUnit.Framework.Assert.AreEqual(expected, AutomatonQueryNrHits(query));
+			AreEqual(expected, AutomatonQueryNrHits(query));
 			query.SetRewriteMethod(MultiTermQuery.CONSTANT_SCORE_FILTER_REWRITE);
-			NUnit.Framework.Assert.AreEqual(expected, AutomatonQueryNrHits(query));
+			AreEqual(expected, AutomatonQueryNrHits(query));
 			query.SetRewriteMethod(MultiTermQuery.CONSTANT_SCORE_BOOLEAN_QUERY_REWRITE);
-			NUnit.Framework.Assert.AreEqual(expected, AutomatonQueryNrHits(query));
+			AreEqual(expected, AutomatonQueryNrHits(query));
 			query.SetRewriteMethod(MultiTermQuery.CONSTANT_SCORE_AUTO_REWRITE_DEFAULT);
-			NUnit.Framework.Assert.AreEqual(expected, AutomatonQueryNrHits(query));
+			AreEqual(expected, AutomatonQueryNrHits(query));
 		}
 
 		/// <summary>Test some very simple automata.</summary>
@@ -140,20 +140,20 @@ namespace Lucene.Net.Search
 			// different than a1 (different term, same language)
 			AutomatonQuery a5 = new AutomatonQuery(NewTerm("blah"), BasicAutomata.MakeString(
 				"foobar"));
-			NUnit.Framework.Assert.AreEqual(a1.GetHashCode(), a2.GetHashCode());
-			NUnit.Framework.Assert.AreEqual(a1, a2);
-			NUnit.Framework.Assert.AreEqual(a1.GetHashCode(), a3.GetHashCode());
-			NUnit.Framework.Assert.AreEqual(a1, a3);
+			AreEqual(a1.GetHashCode(), a2.GetHashCode());
+			AreEqual(a1, a2);
+			AreEqual(a1.GetHashCode(), a3.GetHashCode());
+			AreEqual(a1, a3);
 			// different class
 			AutomatonQuery w1 = new WildcardQuery(NewTerm("foobar"));
 			// different class
 			AutomatonQuery w2 = new RegexpQuery(NewTerm("foobar"));
-			NUnit.Framework.Assert.IsFalse(a1.Equals(w1));
-			NUnit.Framework.Assert.IsFalse(a1.Equals(w2));
-			NUnit.Framework.Assert.IsFalse(w1.Equals(w2));
-			NUnit.Framework.Assert.IsFalse(a1.Equals(a4));
-			NUnit.Framework.Assert.IsFalse(a1.Equals(a5));
-			NUnit.Framework.Assert.IsFalse(a1.Equals(null));
+			IsFalse(a1.Equals(w1));
+			IsFalse(a1.Equals(w2));
+			IsFalse(w1.Equals(w2));
+			IsFalse(a1.Equals(a4));
+			IsFalse(a1.Equals(a5));
+			IsFalse(a1.Equals(null));
 		}
 
 		/// <summary>
@@ -170,8 +170,8 @@ namespace Lucene.Net.Search
 			AutomatonQuery aq = new AutomatonQuery(NewTerm("bogus"), BasicAutomata.MakeString
 				("piece"));
 			Terms terms = MultiFields.GetTerms(searcher.GetIndexReader(), FN);
-			NUnit.Framework.Assert.IsTrue(aq.GetTermsEnum(terms) is SingleTermsEnum);
-			NUnit.Framework.Assert.AreEqual(1, AutomatonQueryNrHits(aq));
+			IsTrue(aq.GetTermsEnum(terms) is SingleTermsEnum);
+			AreEqual(1, AutomatonQueryNrHits(aq));
 		}
 
 		/// <summary>
@@ -192,8 +192,8 @@ namespace Lucene.Net.Search
 				(pfx, BasicAutomata.MakeAnyString());
 			AutomatonQuery aq = new AutomatonQuery(NewTerm("bogus"), prefixAutomaton);
 			Terms terms = MultiFields.GetTerms(searcher.GetIndexReader(), FN);
-			NUnit.Framework.Assert.IsTrue(aq.GetTermsEnum(terms) is PrefixTermsEnum);
-			NUnit.Framework.Assert.AreEqual(3, AutomatonQueryNrHits(aq));
+			IsTrue(aq.GetTermsEnum(terms) is PrefixTermsEnum);
+			AreEqual(3, AutomatonQueryNrHits(aq));
 		}
 
 		/// <summary>Test handling of the empty language</summary>
@@ -205,8 +205,8 @@ namespace Lucene.Net.Search
 			// not yet available: assertTrue(aq.getEnum(searcher.getIndexReader())
 			// instanceof EmptyTermEnum);
 			Terms terms = MultiFields.GetTerms(searcher.GetIndexReader(), FN);
-			NUnit.Framework.Assert.AreSame(TermsEnum.EMPTY, aq.GetTermsEnum(terms));
-			NUnit.Framework.Assert.AreEqual(0, AutomatonQueryNrHits(aq));
+			AreSame(TermsEnum.EMPTY, aq.GetTermsEnum(terms));
+			AreEqual(0, AutomatonQueryNrHits(aq));
 		}
 
 		/// <exception cref="System.Exception"></exception>

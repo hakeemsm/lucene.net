@@ -10,7 +10,7 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 using NUnit.Framework;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -84,9 +84,9 @@ namespace Lucene.Net.Util.Fst
 					}
 					FST<object> fst = new FSTTester<object>(Random(), dir, inputMode, pairs, outputs, 
 						false).DoTest(0, 0, false);
-					NUnit.Framework.Assert.IsNotNull(fst);
-					NUnit.Framework.Assert.AreEqual(22, fst.GetNodeCount());
-					NUnit.Framework.Assert.AreEqual(27, fst.GetArcCount());
+					IsNotNull(fst);
+					AreEqual(22, fst.GetNodeCount());
+					AreEqual(27, fst.GetArcCount());
 				}
 				{
 					// FST ord pos int
@@ -99,9 +99,9 @@ namespace Lucene.Net.Util.Fst
 					}
 					FST<long> fst = new FSTTester<long>(Random(), dir, inputMode, pairs, outputs, true
 						).DoTest(0, 0, false);
-					NUnit.Framework.Assert.IsNotNull(fst);
-					NUnit.Framework.Assert.AreEqual(22, fst.GetNodeCount());
-					NUnit.Framework.Assert.AreEqual(27, fst.GetArcCount());
+					IsNotNull(fst);
+					AreEqual(22, fst.GetNodeCount());
+					AreEqual(27, fst.GetArcCount());
 				}
 				{
 					// FST byte sequence ord
@@ -117,9 +117,9 @@ namespace Lucene.Net.Util.Fst
 					}
 					FST<BytesRef> fst = new FSTTester<BytesRef>(Random(), dir, inputMode, pairs, outputs
 						, false).DoTest(0, 0, false);
-					NUnit.Framework.Assert.IsNotNull(fst);
-					NUnit.Framework.Assert.AreEqual(24, fst.GetNodeCount());
-					NUnit.Framework.Assert.AreEqual(30, fst.GetArcCount());
+					IsNotNull(fst);
+					AreEqual(24, fst.GetNodeCount());
+					AreEqual(30, fst.GetArcCount());
 				}
 			}
 		}
@@ -301,7 +301,7 @@ namespace Lucene.Net.Util.Fst
 			Directory dir = NewFSDirectory(tempDir);
 			IndexWriter writer = new IndexWriter(dir, conf);
 			long stopTime = Runtime.CurrentTimeMillis() + RUN_TIME_MSEC;
-			Lucene.Net.Document.Document doc;
+			Lucene.Net.Documents.Document doc;
 			int docCount = 0;
 			while ((doc = docs.NextDoc()) != null && Runtime.CurrentTimeMillis() < stopTime)
 			{
@@ -344,10 +344,10 @@ namespace Lucene.Net.Util.Fst
 				while ((term = termsEnum.Next()) != null)
 				{
 					BytesRef term2 = termsEnum2.Next();
-					NUnit.Framework.Assert.IsNotNull(term2);
-					NUnit.Framework.Assert.AreEqual(term, term2);
-					NUnit.Framework.Assert.AreEqual(termsEnum.DocFreq(), termsEnum2.DocFreq());
-					NUnit.Framework.Assert.AreEqual(termsEnum.TotalTermFreq(), termsEnum2.TotalTermFreq
+					IsNotNull(term2);
+					AreEqual(term, term2);
+					AreEqual(termsEnum.DocFreq, termsEnum2.DocFreq);
+					AreEqual(termsEnum.TotalTermFreq, termsEnum2.TotalTermFreq
 						());
 					if (ord == 0)
 					{
@@ -372,7 +372,7 @@ namespace Lucene.Net.Util.Fst
 					}
 					else
 					{
-						output = termsEnum.DocFreq();
+						output = termsEnum.DocFreq;
 					}
 					builder.Add(Lucene.Net.Util.Fst.Util.ToIntsRef(term, scratchIntsRef), (long
 						)output);
@@ -408,7 +408,7 @@ namespace Lucene.Net.Util.Fst
 						BytesRefFSTEnum.InputOutput<long> fstSeekResult = fstEnum.SeekCeil(randomTerm);
 						if (seekResult == TermsEnum.SeekStatus.END)
 						{
-							NUnit.Framework.Assert.IsNull("got " + (fstSeekResult == null ? "null" : fstSeekResult
+							IsNull("got " + (fstSeekResult == null ? "null" : fstSeekResult
 								.input.Utf8ToString()) + " but expected null", fstSeekResult);
 						}
 						else
@@ -430,7 +430,7 @@ namespace Lucene.Net.Util.Fst
 									{
 										System.Console.Out.WriteLine("  term=" + termsEnum.Term().Utf8ToString());
 									}
-									NUnit.Framework.Assert.IsNotNull(fstEnum.Next());
+									IsNotNull(fstEnum.Next());
 									AssertSame(termsEnum, fstEnum, storeOrd);
 								}
 								else
@@ -444,7 +444,7 @@ namespace Lucene.Net.Util.Fst
 									{
 										System.Console.Out.WriteLine("expected null but got: input=" + nextResult.input.Utf8ToString
 											() + " output=" + outputs.OutputToString(nextResult.output));
-										NUnit.Framework.Assert.Fail();
+										Fail();
 									}
 									break;
 								}
@@ -463,24 +463,24 @@ namespace Lucene.Net.Util.Fst
 		{
 			if (termsEnum.Term() == null)
 			{
-				NUnit.Framework.Assert.IsNull(fstEnum.Current());
+				IsNull(fstEnum.Current());
 			}
 			else
 			{
-				NUnit.Framework.Assert.IsNotNull(fstEnum.Current());
-				NUnit.Framework.Assert.AreEqual(termsEnum.Term().Utf8ToString() + " != " + fstEnum
+				IsNotNull(fstEnum.Current());
+				AreEqual(termsEnum.Term().Utf8ToString() + " != " + fstEnum
 					.Current().input.Utf8ToString(), termsEnum.Term(), fstEnum.Current().input);
 				if (storeOrd)
 				{
 					// fst stored the ord
-					NUnit.Framework.Assert.AreEqual("term=" + termsEnum.Term().Utf8ToString() + " " +
+					AreEqual("term=" + termsEnum.Term().Utf8ToString() + " " +
 						 termsEnum.Term(), termsEnum.Ord(), ((long)fstEnum.Current().output));
 				}
 				else
 				{
 					// fst stored the docFreq
-					NUnit.Framework.Assert.AreEqual("term=" + termsEnum.Term().Utf8ToString() + " " +
-						 termsEnum.Term(), termsEnum.DocFreq(), (int)(((long)fstEnum.Current().output)));
+					AreEqual("term=" + termsEnum.Term().Utf8ToString() + " " +
+						 termsEnum.Term(), termsEnum.DocFreq, (int)(((long)fstEnum.Current().output)));
 				}
 			}
 		}
@@ -904,8 +904,8 @@ namespace Lucene.Net.Util.Fst
 			b.Add(Lucene.Net.Util.Fst.Util.ToIntsRef(new BytesRef("foobar"), new IntsRef
 				()), outputs.GetNoOutput());
 			BytesRefFSTEnum<object> fstEnum = new BytesRefFSTEnum<object>(b.Finish());
-			NUnit.Framework.Assert.IsNull(fstEnum.SeekFloor(new BytesRef("foo")));
-			NUnit.Framework.Assert.IsNull(fstEnum.SeekCeil(new BytesRef("foobaz")));
+			IsNull(fstEnum.SeekFloor(new BytesRef("foo")));
+			IsNull(fstEnum.SeekCeil(new BytesRef("foobaz")));
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -928,10 +928,10 @@ namespace Lucene.Net.Util.Fst
 			{
 				count++;
 			}
-			NUnit.Framework.Assert.AreEqual(1, count);
-			NUnit.Framework.Assert.IsNotNull(Lucene.Net.Util.Fst.Util.Get(fst, new BytesRef
+			AreEqual(1, count);
+			IsNotNull(Lucene.Net.Util.Fst.Util.Get(fst, new BytesRef
 				(str)));
-			NUnit.Framework.Assert.IsNull(Lucene.Net.Util.Fst.Util.Get(fst, new BytesRef
+			IsNull(Lucene.Net.Util.Fst.Util.Get(fst, new BytesRef
 				("foobaz")));
 		}
 
@@ -954,34 +954,34 @@ namespace Lucene.Net.Util.Fst
 			builder.Add(Lucene.Net.Util.Fst.Util.ToIntsRef(c, new IntsRef()), 13824324872317238L
 				);
 			FST<long> fst = builder.Finish();
-			NUnit.Framework.Assert.AreEqual(13824324872317238L, (long)Lucene.Net.Util.Fst.Util
+			AreEqual(13824324872317238L, (long)Lucene.Net.Util.Fst.Util
 				.Get(fst, c));
-			NUnit.Framework.Assert.AreEqual(42, (long)Lucene.Net.Util.Fst.Util.Get(fst
+			AreEqual(42, (long)Lucene.Net.Util.Fst.Util.Get(fst
 				, b));
-			NUnit.Framework.Assert.AreEqual(17, (long)Lucene.Net.Util.Fst.Util.Get(fst
+			AreEqual(17, (long)Lucene.Net.Util.Fst.Util.Get(fst
 				, a));
 			BytesRefFSTEnum<long> fstEnum = new BytesRefFSTEnum<long>(fst);
 			BytesRefFSTEnum.InputOutput<long> seekResult;
 			seekResult = fstEnum.SeekFloor(a);
-			NUnit.Framework.Assert.IsNotNull(seekResult);
-			NUnit.Framework.Assert.AreEqual(17, (long)seekResult.output);
+			IsNotNull(seekResult);
+			AreEqual(17, (long)seekResult.output);
 			// goes to a
 			seekResult = fstEnum.SeekFloor(new BytesRef("aa"));
-			NUnit.Framework.Assert.IsNotNull(seekResult);
-			NUnit.Framework.Assert.AreEqual(17, (long)seekResult.output);
+			IsNotNull(seekResult);
+			AreEqual(17, (long)seekResult.output);
 			// goes to b
 			seekResult = fstEnum.SeekCeil(new BytesRef("aa"));
-			NUnit.Framework.Assert.IsNotNull(seekResult);
-			NUnit.Framework.Assert.AreEqual(b, seekResult.input);
-			NUnit.Framework.Assert.AreEqual(42, (long)seekResult.output);
-			NUnit.Framework.Assert.AreEqual(Lucene.Net.Util.Fst.Util.ToIntsRef(new BytesRef
+			IsNotNull(seekResult);
+			AreEqual(b, seekResult.input);
+			AreEqual(42, (long)seekResult.output);
+			AreEqual(Lucene.Net.Util.Fst.Util.ToIntsRef(new BytesRef
 				("c"), new IntsRef()), Lucene.Net.Util.Fst.Util.GetByOutput(fst, 13824324872317238L
 				));
-			NUnit.Framework.Assert.IsNull(Lucene.Net.Util.Fst.Util.GetByOutput(fst, 47
+			IsNull(Lucene.Net.Util.Fst.Util.GetByOutput(fst, 47
 				));
-			NUnit.Framework.Assert.AreEqual(Lucene.Net.Util.Fst.Util.ToIntsRef(new BytesRef
+			AreEqual(Lucene.Net.Util.Fst.Util.ToIntsRef(new BytesRef
 				("b"), new IntsRef()), Lucene.Net.Util.Fst.Util.GetByOutput(fst, 42));
-			NUnit.Framework.Assert.AreEqual(Lucene.Net.Util.Fst.Util.ToIntsRef(new BytesRef
+			AreEqual(Lucene.Net.Util.Fst.Util.ToIntsRef(new BytesRef
 				("a"), new IntsRef()), Lucene.Net.Util.Fst.Util.GetByOutput(fst, 17));
 		}
 
@@ -997,7 +997,7 @@ namespace Lucene.Net.Util.Fst
 				}
 				RandomIndexWriter w = new RandomIndexWriter(Random(), dir, NewIndexWriterConfig(TEST_VERSION_CURRENT
 					, new MockAnalyzer(Random())).SetOpenMode(IndexWriterConfig.OpenMode.CREATE));
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				Field idField = NewStringField("id", string.Empty, Field.Store.NO);
 				doc.Add(idField);
@@ -1029,7 +1029,7 @@ namespace Lucene.Net.Util.Fst
 						}
 					}
 					allIDs.AddItem(idString);
-					idField.SetStringValue(idString);
+					idField.StringValue = idString);
 					w.AddDocument(doc);
 				}
 				//w.forceMerge(1);
@@ -1073,8 +1073,8 @@ namespace Lucene.Net.Util.Fst
 						System.Console.Out.WriteLine("TEST: TermQuery " + (exists ? string.Empty : "non-exist "
 							) + " id=" + id_1);
 					}
-					NUnit.Framework.Assert.AreEqual((exists ? string.Empty : "non-exist ") + "id=" + 
-						id_1, exists ? 1 : 0, s_1.Search(new TermQuery(new Term("id", id_1)), 1).totalHits
+					AreEqual((exists ? string.Empty : "non-exist ") + "id=" + 
+						id_1, exists ? 1 : 0, s_1.Search(new TermQuery(new Term("id", id_1)), 1).TotalHits
 						);
 				}
 				// Verify w/ MultiTermsEnum
@@ -1134,20 +1134,20 @@ namespace Lucene.Net.Util.Fst
 					}
 					if (nextID != null)
 					{
-						NUnit.Framework.Assert.AreEqual(TermsEnum.SeekStatus.NOT_FOUND, status);
-						NUnit.Framework.Assert.AreEqual("expected=" + nextID + " actual=" + termsEnum.Term
+						AreEqual(TermsEnum.SeekStatus.NOT_FOUND, status);
+						AreEqual("expected=" + nextID + " actual=" + termsEnum.Term
 							().Utf8ToString(), new BytesRef(nextID), termsEnum.Term());
 					}
 					else
 					{
 						if (!exists)
 						{
-							NUnit.Framework.Assert.IsTrue(status == TermsEnum.SeekStatus.NOT_FOUND || status 
+							IsTrue(status == TermsEnum.SeekStatus.NOT_FOUND || status 
 								== TermsEnum.SeekStatus.END);
 						}
 						else
 						{
-							NUnit.Framework.Assert.AreEqual(TermsEnum.SeekStatus.FOUND, status);
+							AreEqual(TermsEnum.SeekStatus.FOUND, status);
 						}
 					}
 				}
@@ -1162,7 +1162,7 @@ namespace Lucene.Net.Util.Fst
 			Directory dir = NewDirectory();
 			RandomIndexWriter w = new RandomIndexWriter(Random(), dir, NewIndexWriterConfig(TEST_VERSION_CURRENT
 				, new MockAnalyzer(Random())).SetOpenMode(IndexWriterConfig.OpenMode.CREATE));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			Field f = NewStringField("field", string.Empty, Field.Store.NO);
 			doc.Add(f);
@@ -1178,7 +1178,7 @@ namespace Lucene.Net.Util.Fst
 			}
 			foreach (string term in allTerms)
 			{
-				f.SetStringValue(term);
+				f.StringValue = term);
 				w.AddDocument(doc);
 			}
 			// turn writer into reader:
@@ -1202,8 +1202,8 @@ namespace Lucene.Net.Util.Fst
 				{
 					System.Console.Out.WriteLine("TEST: term=" + term_1);
 				}
-				NUnit.Framework.Assert.AreEqual("term=" + term_1, 1, s.Search(new TermQuery(new Term
-					("field", term_1)), 1).totalHits);
+				AreEqual("term=" + term_1, 1, s.Search(new TermQuery(new Term
+					("field", term_1)), 1).TotalHits);
 			}
 			r.Close();
 			dir.Close();
@@ -1219,9 +1219,9 @@ namespace Lucene.Net.Util.Fst
 		public virtual void TestExpandedCloseToRoot()
 		{
 			// Sanity check.
-			NUnit.Framework.Assert.IsTrue(FST.FIXED_ARRAY_NUM_ARCS_SHALLOW < FST.FIXED_ARRAY_NUM_ARCS_DEEP
+			IsTrue(FST.FIXED_ARRAY_NUM_ARCS_SHALLOW < FST.FIXED_ARRAY_NUM_ARCS_DEEP
 				);
-			NUnit.Framework.Assert.IsTrue(FST.FIXED_ARRAY_SHALLOW_DISTANCE >= 0);
+			IsTrue(FST.FIXED_ARRAY_SHALLOW_DISTANCE >= 0);
 			_T1856215747 s = new _T1856215747(this);
 			AList<string> @out = new AList<string>();
 			StringBuilder b = new StringBuilder();
@@ -1290,7 +1290,7 @@ namespace Lucene.Net.Util.Fst
 						bool expanded = fst.IsExpandedTarget(arc, fstReader);
 						int children = this.VerifyStateAndBelow(fst, new FST.Arc<object>().CopyFrom(arc), 
 							depth + 1);
-						NUnit.Framework.Assert.AreEqual(expanded, (depth <= FST.FIXED_ARRAY_SHALLOW_DISTANCE
+						AreEqual(expanded, (depth <= FST.FIXED_ARRAY_SHALLOW_DISTANCE
 							 && children >= FST.FIXED_ARRAY_NUM_ARCS_SHALLOW) || children >= FST.FIXED_ARRAY_NUM_ARCS_DEEP
 							);
 						if (arc.IsLast())
@@ -1327,7 +1327,7 @@ namespace Lucene.Net.Util.Fst
 			Lucene.Net.Util.Fst.Util.ToDot(fst, w, false, false);
 			w.Close();
 			//System.out.println(w.toString());
-			NUnit.Framework.Assert.IsTrue(w.ToString().IndexOf("label=\"t/[7]\"") != -1);
+			IsTrue(w.ToString().IndexOf("label=\"t/[7]\"") != -1);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -1348,10 +1348,10 @@ namespace Lucene.Net.Util.Fst
 			w.Close();
 			//System.out.println(w.toString());
 			// check for accept state at label t
-			NUnit.Framework.Assert.IsTrue(w.ToString().IndexOf("[label=\"t\" style=\"bold\"")
+			IsTrue(w.ToString().IndexOf("[label=\"t\" style=\"bold\"")
 				 != -1);
 			// check for accept state at label n
-			NUnit.Framework.Assert.IsTrue(w.ToString().IndexOf("[label=\"n\" style=\"bold\"")
+			IsTrue(w.ToString().IndexOf("[label=\"n\" style=\"bold\"")
 				 != -1);
 		}
 
@@ -1411,17 +1411,17 @@ namespace Lucene.Net.Util.Fst
 		{
 			long nothing = outputs.GetNoOutput();
 			FST.Arc<long> startArc = fst.GetFirstArc(new FST.Arc<long>());
-			NUnit.Framework.Assert.AreEqual(nothing, startArc.output);
-			NUnit.Framework.Assert.AreEqual(nothing, startArc.nextFinalOutput);
+			AreEqual(nothing, startArc.output);
+			AreEqual(nothing, startArc.nextFinalOutput);
 			FST.Arc<long> arc = fst.ReadFirstTargetArc(startArc, new FST.Arc<long>(), fst.GetBytesReader
 				());
-			NUnit.Framework.Assert.AreEqual('a', arc.label);
-			NUnit.Framework.Assert.AreEqual(17, arc.nextFinalOutput);
-			NUnit.Framework.Assert.IsTrue(arc.IsFinal());
+			AreEqual('a', arc.label);
+			AreEqual(17, arc.nextFinalOutput);
+			IsTrue(arc.IsFinal());
 			arc = fst.ReadNextArc(arc, fst.GetBytesReader());
-			NUnit.Framework.Assert.AreEqual('b', arc.label);
-			NUnit.Framework.Assert.IsFalse(arc.IsFinal());
-			NUnit.Framework.Assert.AreEqual(42, arc.output);
+			AreEqual('b', arc.label);
+			IsFalse(arc.IsFinal());
+			AreEqual(42, arc.output);
 		}
 
 		private sealed class _IComparer_1224 : IComparer<long>
@@ -1458,17 +1458,17 @@ namespace Lucene.Net.Util.Fst
 			Util.TopResults<long> res = Lucene.Net.Util.Fst.Util.ShortestPaths(fst, fst
 				.GetFirstArc(new FST.Arc<long>()), outputs.GetNoOutput(), minLongComparator, 3, 
 				true);
-			NUnit.Framework.Assert.IsTrue(res.isComplete);
-			NUnit.Framework.Assert.AreEqual(3, res.topN.Count);
-			NUnit.Framework.Assert.AreEqual(Lucene.Net.Util.Fst.Util.ToIntsRef(new BytesRef
+			IsTrue(res.isComplete);
+			AreEqual(3, res.topN.Count);
+			AreEqual(Lucene.Net.Util.Fst.Util.ToIntsRef(new BytesRef
 				("aac"), scratch), res.topN[0].input);
-			NUnit.Framework.Assert.AreEqual(7L, res.topN[0].output);
-			NUnit.Framework.Assert.AreEqual(Lucene.Net.Util.Fst.Util.ToIntsRef(new BytesRef
+			AreEqual(7L, res.topN[0].output);
+			AreEqual(Lucene.Net.Util.Fst.Util.ToIntsRef(new BytesRef
 				("ax"), scratch), res.topN[1].input);
-			NUnit.Framework.Assert.AreEqual(17L, res.topN[1].output);
-			NUnit.Framework.Assert.AreEqual(Lucene.Net.Util.Fst.Util.ToIntsRef(new BytesRef
+			AreEqual(17L, res.topN[1].output);
+			AreEqual(Lucene.Net.Util.Fst.Util.ToIntsRef(new BytesRef
 				("aab"), scratch), res.topN[2].input);
-			NUnit.Framework.Assert.AreEqual(22L, res.topN[2].output);
+			AreEqual(22L, res.topN[2].output);
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -1494,20 +1494,20 @@ namespace Lucene.Net.Util.Fst
 			searcher.AddStartPaths(fst.GetFirstArc(new FST.Arc<long>()), outputs.GetNoOutput(
 				), true, new IntsRef());
 			Util.TopResults<long> res = searcher.Search();
-			NUnit.Framework.Assert.AreEqual(rejectCount.Get(), 4);
-			NUnit.Framework.Assert.IsTrue(res.isComplete);
+			AreEqual(rejectCount.Get(), 4);
+			IsTrue(res.isComplete);
 			// rejected(4) + topN(2) <= maxQueueSize(6)
-			NUnit.Framework.Assert.AreEqual(1, res.topN.Count);
-			NUnit.Framework.Assert.AreEqual(Lucene.Net.Util.Fst.Util.ToIntsRef(new BytesRef
+			AreEqual(1, res.topN.Count);
+			AreEqual(Lucene.Net.Util.Fst.Util.ToIntsRef(new BytesRef
 				("aac"), scratch), res.topN[0].input);
-			NUnit.Framework.Assert.AreEqual(7L, res.topN[0].output);
+			AreEqual(7L, res.topN[0].output);
 			rejectCount.Set(0);
 			searcher = new _TopNSearcher_1295(rejectCount, fst, 2, 5, minLongComparator);
 			searcher.AddStartPaths(fst.GetFirstArc(new FST.Arc<long>()), outputs.GetNoOutput(
 				), true, new IntsRef());
 			res = searcher.Search();
-			NUnit.Framework.Assert.AreEqual(rejectCount.Get(), 4);
-			NUnit.Framework.Assert.IsFalse(res.isComplete);
+			AreEqual(rejectCount.Get(), 4);
+			IsFalse(res.isComplete);
 		}
 
 		private sealed class _TopNSearcher_1275 : Util.TopNSearcher<long>
@@ -1597,25 +1597,25 @@ namespace Lucene.Net.Util.Fst
 			Util.TopResults<PairOutputs.Pair<long, long>> res = Lucene.Net.Util.Fst.Util
 				.ShortestPaths(fst, fst.GetFirstArc(new FST.Arc<PairOutputs.Pair<long, long>>())
 				, outputs.GetNoOutput(), minPairWeightComparator, 3, true);
-			NUnit.Framework.Assert.IsTrue(res.isComplete);
-			NUnit.Framework.Assert.AreEqual(3, res.topN.Count);
-			NUnit.Framework.Assert.AreEqual(Lucene.Net.Util.Fst.Util.ToIntsRef(new BytesRef
+			IsTrue(res.isComplete);
+			AreEqual(3, res.topN.Count);
+			AreEqual(Lucene.Net.Util.Fst.Util.ToIntsRef(new BytesRef
 				("aac"), scratch), res.topN[0].input);
-			NUnit.Framework.Assert.AreEqual(7L, res.topN[0].output.output1);
+			AreEqual(7L, res.topN[0].output.output1);
 			// weight
-			NUnit.Framework.Assert.AreEqual(36L, res.topN[0].output.output2);
+			AreEqual(36L, res.topN[0].output.output2);
 			// output
-			NUnit.Framework.Assert.AreEqual(Lucene.Net.Util.Fst.Util.ToIntsRef(new BytesRef
+			AreEqual(Lucene.Net.Util.Fst.Util.ToIntsRef(new BytesRef
 				("ax"), scratch), res.topN[1].input);
-			NUnit.Framework.Assert.AreEqual(17L, res.topN[1].output.output1);
+			AreEqual(17L, res.topN[1].output.output1);
 			// weight
-			NUnit.Framework.Assert.AreEqual(85L, res.topN[1].output.output2);
+			AreEqual(85L, res.topN[1].output.output2);
 			// output
-			NUnit.Framework.Assert.AreEqual(Lucene.Net.Util.Fst.Util.ToIntsRef(new BytesRef
+			AreEqual(Lucene.Net.Util.Fst.Util.ToIntsRef(new BytesRef
 				("aab"), scratch), res.topN[2].input);
-			NUnit.Framework.Assert.AreEqual(22L, res.topN[2].output.output1);
+			AreEqual(22L, res.topN[2].output.output1);
 			// weight
-			NUnit.Framework.Assert.AreEqual(57L, res.topN[2].output.output2);
+			AreEqual(57L, res.topN[2].output.output2);
 		}
 
 		// output
@@ -1672,14 +1672,14 @@ namespace Lucene.Net.Util.Fst
 				{
 					if (fst.FindTargetArc((int)prefix[idx], arc, arc, reader) == null)
 					{
-						NUnit.Framework.Assert.Fail();
+						Fail();
 					}
 					prefixOutput += arc.output;
 				}
 				int topN = TestUtil.NextInt(random, 1, 10);
 				Util.TopResults<long> r = Lucene.Net.Util.Fst.Util.ShortestPaths(fst, arc, 
 					fst.outputs.GetNoOutput(), minLongComparator, topN, true);
-				NUnit.Framework.Assert.IsTrue(r.isComplete);
+				IsTrue(r.isComplete);
 				// 2. go thru whole treemap (slowCompletor) and check its actually the best suggestion
 				IList<Util.Result<long>> matches = new AList<Util.Result<long>>();
 				// TODO: could be faster... but its slowCompletor for a reason
@@ -1693,18 +1693,18 @@ namespace Lucene.Net.Util.Fst
 							.Value - prefixOutput));
 					}
 				}
-				NUnit.Framework.Assert.IsTrue(matches.Count > 0);
+				IsTrue(matches.Count > 0);
 				matches.Sort(new TestFSTs.TieBreakByInputComparator<long>(minLongComparator));
 				if (matches.Count > topN)
 				{
 					matches.SubList(topN, matches.Count).Clear();
 				}
-				NUnit.Framework.Assert.AreEqual(matches.Count, r.topN.Count);
+				AreEqual(matches.Count, r.topN.Count);
 				for (int hit = 0; hit < r.topN.Count; hit++)
 				{
 					//System.out.println("  check hit " + hit);
-					NUnit.Framework.Assert.AreEqual(matches[hit].input, r.topN[hit].input);
-					NUnit.Framework.Assert.AreEqual(matches[hit].output, r.topN[hit].output);
+					AreEqual(matches[hit].input, r.topN[hit].input);
+					AreEqual(matches[hit].output, r.topN[hit].output);
 				}
 			}
 		}
@@ -1813,7 +1813,7 @@ namespace Lucene.Net.Util.Fst
 				{
 					if (fst.FindTargetArc((int)prefix[idx], arc, arc, reader) == null)
 					{
-						NUnit.Framework.Assert.Fail();
+						Fail();
 					}
 					prefixOutput = outputs.Add(prefixOutput, arc.output);
 				}
@@ -1821,7 +1821,7 @@ namespace Lucene.Net.Util.Fst
 				Util.TopResults<PairOutputs.Pair<long, long>> r = Lucene.Net.Util.Fst.Util
 					.ShortestPaths(fst, arc, fst.outputs.GetNoOutput(), minPairWeightComparator, topN
 					, true);
-				NUnit.Framework.Assert.IsTrue(r.isComplete);
+				IsTrue(r.isComplete);
 				// 2. go thru whole treemap (slowCompletor) and check its actually the best suggestion
 				IList<Util.Result<PairOutputs.Pair<long, long>>> matches = new AList<Util.Result<
 					PairOutputs.Pair<long, long>>>();
@@ -1837,19 +1837,19 @@ namespace Lucene.Net.Util.Fst
 							.output2)));
 					}
 				}
-				NUnit.Framework.Assert.IsTrue(matches.Count > 0);
+				IsTrue(matches.Count > 0);
 				matches.Sort(new TestFSTs.TieBreakByInputComparator<PairOutputs.Pair<long, long>>
 					(minPairWeightComparator));
 				if (matches.Count > topN)
 				{
 					matches.SubList(topN, matches.Count).Clear();
 				}
-				NUnit.Framework.Assert.AreEqual(matches.Count, r.topN.Count);
+				AreEqual(matches.Count, r.topN.Count);
 				for (int hit = 0; hit < r.topN.Count; hit++)
 				{
 					//System.out.println("  check hit " + hit);
-					NUnit.Framework.Assert.AreEqual(matches[hit].input, r.topN[hit].input);
-					NUnit.Framework.Assert.AreEqual(matches[hit].output, r.topN[hit].output);
+					AreEqual(matches[hit].input, r.topN[hit].input);
+					AreEqual(matches[hit].output, r.topN[hit].output);
 				}
 			}
 		}
@@ -1875,12 +1875,12 @@ namespace Lucene.Net.Util.Fst
 			{
 				input.ints[0] = arc_1;
 				BytesRef result = Lucene.Net.Util.Fst.Util.Get(fst, input);
-				NUnit.Framework.Assert.IsNotNull(result);
-				NUnit.Framework.Assert.AreEqual(300, result.length);
-				NUnit.Framework.Assert.AreEqual(result.bytes[result.offset], arc_1);
+				IsNotNull(result);
+				AreEqual(300, result.length);
+				AreEqual(result.bytes[result.offset], arc_1);
 				for (int byteIDX = 1; byteIDX < result.length; byteIDX++)
 				{
-					NUnit.Framework.Assert.AreEqual(0, result.bytes[result.offset + byteIDX]);
+					AreEqual(0, result.bytes[result.offset + byteIDX]);
 				}
 			}
 		}

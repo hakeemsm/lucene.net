@@ -5,7 +5,7 @@
  */
 
 using System;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
 using Lucene.Net.Util;
@@ -73,13 +73,13 @@ namespace Lucene.Net.Index
 			IndexWriter writer = new IndexWriter(dir, iwc);
 			flushPolicy = (TestFlushByRamOrCountsPolicy.MockDefaultFlushPolicy)writer.GetConfig
 				().GetFlushPolicy();
-			NUnit.Framework.Assert.IsFalse(flushPolicy.FlushOnDocCount());
-			NUnit.Framework.Assert.IsFalse(flushPolicy.FlushOnDeleteTerms());
-			NUnit.Framework.Assert.IsTrue(flushPolicy.FlushOnRAM());
+			IsFalse(flushPolicy.FlushOnDocCount());
+			IsFalse(flushPolicy.FlushOnDeleteTerms());
+			IsTrue(flushPolicy.FlushOnRAM());
 			DocumentsWriter docsWriter = writer.GetDocsWriter();
-			NUnit.Framework.Assert.IsNotNull(docsWriter);
+			IsNotNull(docsWriter);
 			DocumentsWriterFlushControl flushControl = docsWriter.flushControl;
-			NUnit.Framework.Assert.AreEqual(" bytes must be 0 after init", 0, flushControl.FlushBytes
+			AreEqual(" bytes must be 0 after init", 0, flushControl.FlushBytes
 				());
 			TestFlushByRamOrCountsPolicy.IndexThread[] threads = new TestFlushByRamOrCountsPolicy.IndexThread
 				[numThreads];
@@ -94,23 +94,23 @@ namespace Lucene.Net.Index
 				threads[x_1].Join();
 			}
 			long maxRAMBytes = (long)(iwc.GetRAMBufferSizeMB() * 1024. * 1024.);
-			NUnit.Framework.Assert.AreEqual(" all flushes must be due numThreads=" + numThreads
+			AreEqual(" all flushes must be due numThreads=" + numThreads
 				, 0, flushControl.FlushBytes());
-			NUnit.Framework.Assert.AreEqual(numDocumentsToIndex, writer.NumDocs());
-			NUnit.Framework.Assert.AreEqual(numDocumentsToIndex, writer.MaxDoc());
-			NUnit.Framework.Assert.IsTrue("peak bytes without flush exceeded watermark", flushPolicy
+			AreEqual(numDocumentsToIndex, writer.NumDocs());
+			AreEqual(numDocumentsToIndex, writer.MaxDoc);
+			IsTrue("peak bytes without flush exceeded watermark", flushPolicy
 				.peakBytesWithoutFlush <= maxRAMBytes);
 			AssertActiveBytesAfter(flushControl);
 			if (flushPolicy.hasMarkedPending)
 			{
-				NUnit.Framework.Assert.IsTrue(maxRAMBytes < flushControl.peakActiveBytes);
+				IsTrue(maxRAMBytes < flushControl.peakActiveBytes);
 			}
 			if (ensureNotStalled)
 			{
-				NUnit.Framework.Assert.IsFalse(docsWriter.flushControl.stallControl.WasStalled());
+				IsFalse(docsWriter.flushControl.stallControl.WasStalled());
 			}
 			writer.Close();
-			NUnit.Framework.Assert.AreEqual(0, flushControl.ActiveBytes());
+			AreEqual(0, flushControl.ActiveBytes());
 			dir.Close();
 		}
 
@@ -138,13 +138,13 @@ namespace Lucene.Net.Index
 				IndexWriter writer = new IndexWriter(dir, iwc);
 				flushPolicy = (TestFlushByRamOrCountsPolicy.MockDefaultFlushPolicy)writer.GetConfig
 					().GetFlushPolicy();
-				NUnit.Framework.Assert.IsTrue(flushPolicy.FlushOnDocCount());
-				NUnit.Framework.Assert.IsFalse(flushPolicy.FlushOnDeleteTerms());
-				NUnit.Framework.Assert.IsFalse(flushPolicy.FlushOnRAM());
+				IsTrue(flushPolicy.FlushOnDocCount());
+				IsFalse(flushPolicy.FlushOnDeleteTerms());
+				IsFalse(flushPolicy.FlushOnRAM());
 				DocumentsWriter docsWriter = writer.GetDocsWriter();
-				NUnit.Framework.Assert.IsNotNull(docsWriter);
+				IsNotNull(docsWriter);
 				DocumentsWriterFlushControl flushControl = docsWriter.flushControl;
-				NUnit.Framework.Assert.AreEqual(" bytes must be 0 after init", 0, flushControl.FlushBytes
+				AreEqual(" bytes must be 0 after init", 0, flushControl.FlushBytes
 					());
 				TestFlushByRamOrCountsPolicy.IndexThread[] threads = new TestFlushByRamOrCountsPolicy.IndexThread
 					[numThreads[i]];
@@ -158,15 +158,15 @@ namespace Lucene.Net.Index
 				{
 					threads[x_1].Join();
 				}
-				NUnit.Framework.Assert.AreEqual(" all flushes must be due numThreads=" + numThreads
+				AreEqual(" all flushes must be due numThreads=" + numThreads
 					[i], 0, flushControl.FlushBytes());
-				NUnit.Framework.Assert.AreEqual(numDocumentsToIndex, writer.NumDocs());
-				NUnit.Framework.Assert.AreEqual(numDocumentsToIndex, writer.MaxDoc());
-				NUnit.Framework.Assert.IsTrue("peak bytes without flush exceeded watermark", flushPolicy
+				AreEqual(numDocumentsToIndex, writer.NumDocs());
+				AreEqual(numDocumentsToIndex, writer.MaxDoc);
+				IsTrue("peak bytes without flush exceeded watermark", flushPolicy
 					.peakDocCountWithoutFlush <= iwc.GetMaxBufferedDocs());
 				AssertActiveBytesAfter(flushControl);
 				writer.Close();
-				NUnit.Framework.Assert.AreEqual(0, flushControl.ActiveBytes());
+				AreEqual(0, flushControl.ActiveBytes());
 				dir.Close();
 			}
 		}
@@ -192,9 +192,9 @@ namespace Lucene.Net.Index
 			flushPolicy = (TestFlushByRamOrCountsPolicy.MockDefaultFlushPolicy)writer.GetConfig
 				().GetFlushPolicy();
 			DocumentsWriter docsWriter = writer.GetDocsWriter();
-			NUnit.Framework.Assert.IsNotNull(docsWriter);
+			IsNotNull(docsWriter);
 			DocumentsWriterFlushControl flushControl = docsWriter.flushControl;
-			NUnit.Framework.Assert.AreEqual(" bytes must be 0 after init", 0, flushControl.FlushBytes
+			AreEqual(" bytes must be 0 after init", 0, flushControl.FlushBytes
 				());
 			TestFlushByRamOrCountsPolicy.IndexThread[] threads = new TestFlushByRamOrCountsPolicy.IndexThread
 				[numThreads];
@@ -208,33 +208,33 @@ namespace Lucene.Net.Index
 			{
 				threads[x_1].Join();
 			}
-			NUnit.Framework.Assert.AreEqual(" all flushes must be due", 0, flushControl.FlushBytes
+			AreEqual(" all flushes must be due", 0, flushControl.FlushBytes
 				());
-			NUnit.Framework.Assert.AreEqual(numDocumentsToIndex, writer.NumDocs());
-			NUnit.Framework.Assert.AreEqual(numDocumentsToIndex, writer.MaxDoc());
+			AreEqual(numDocumentsToIndex, writer.NumDocs());
+			AreEqual(numDocumentsToIndex, writer.MaxDoc);
 			if (flushPolicy.FlushOnRAM() && !flushPolicy.FlushOnDocCount() && !flushPolicy.FlushOnDeleteTerms
 				())
 			{
 				long maxRAMBytes = (long)(iwc.GetRAMBufferSizeMB() * 1024. * 1024.);
-				NUnit.Framework.Assert.IsTrue("peak bytes without flush exceeded watermark", flushPolicy
+				IsTrue("peak bytes without flush exceeded watermark", flushPolicy
 					.peakBytesWithoutFlush <= maxRAMBytes);
 				if (flushPolicy.hasMarkedPending)
 				{
-					NUnit.Framework.Assert.IsTrue("max: " + maxRAMBytes + " " + flushControl.peakActiveBytes
+					IsTrue("max: " + maxRAMBytes + " " + flushControl.peakActiveBytes
 						, maxRAMBytes <= flushControl.peakActiveBytes);
 				}
 			}
 			AssertActiveBytesAfter(flushControl);
 			writer.Commit();
-			NUnit.Framework.Assert.AreEqual(0, flushControl.ActiveBytes());
+			AreEqual(0, flushControl.ActiveBytes());
 			IndexReader r = DirectoryReader.Open(dir);
-			NUnit.Framework.Assert.AreEqual(numDocumentsToIndex, r.NumDocs());
-			NUnit.Framework.Assert.AreEqual(numDocumentsToIndex, r.MaxDoc());
+			AreEqual(numDocumentsToIndex, r.NumDocs());
+			AreEqual(numDocumentsToIndex, r.MaxDoc);
 			if (!flushPolicy.FlushOnRAM())
 			{
-				NUnit.Framework.Assert.IsFalse("never stall if we don't flush on RAM", docsWriter
+				IsFalse("never stall if we don't flush on RAM", docsWriter
 					.flushControl.stallControl.WasStalled());
-				NUnit.Framework.Assert.IsFalse("never block if we don't flush on RAM", docsWriter
+				IsFalse("never block if we don't flush on RAM", docsWriter
 					.flushControl.stallControl.HasBlocked());
 			}
 			r.Close();
@@ -279,21 +279,21 @@ namespace Lucene.Net.Index
 					threads[x_1].Join();
 				}
 				DocumentsWriter docsWriter = writer.GetDocsWriter();
-				NUnit.Framework.Assert.IsNotNull(docsWriter);
+				IsNotNull(docsWriter);
 				DocumentsWriterFlushControl flushControl = docsWriter.flushControl;
-				NUnit.Framework.Assert.AreEqual(" all flushes must be due", 0, flushControl.FlushBytes
+				AreEqual(" all flushes must be due", 0, flushControl.FlushBytes
 					());
-				NUnit.Framework.Assert.AreEqual(numDocumentsToIndex, writer.NumDocs());
-				NUnit.Framework.Assert.AreEqual(numDocumentsToIndex, writer.MaxDoc());
+				AreEqual(numDocumentsToIndex, writer.NumDocs());
+				AreEqual(numDocumentsToIndex, writer.MaxDoc);
 				if (numThreads[i] == 1)
 				{
-					NUnit.Framework.Assert.IsFalse("single thread must not block numThreads: " + numThreads
+					IsFalse("single thread must not block numThreads: " + numThreads
 						[i], docsWriter.flushControl.stallControl.HasBlocked());
 				}
 				if (docsWriter.flushControl.peakNetBytes > (2.d * iwc.GetRAMBufferSizeMB() * 1024.d
 					 * 1024.d))
 				{
-					NUnit.Framework.Assert.IsTrue(docsWriter.flushControl.stallControl.WasStalled());
+					IsTrue(docsWriter.flushControl.stallControl.WasStalled());
 				}
 				AssertActiveBytesAfter(flushControl);
 				writer.Close(true);
@@ -315,7 +315,7 @@ namespace Lucene.Net.Index
 					bytesUsed += next.dwpt.BytesUsed();
 				}
 			}
-			NUnit.Framework.Assert.AreEqual(bytesUsed, flushControl.ActiveBytes());
+			AreEqual(bytesUsed, flushControl.ActiveBytes());
 		}
 
 		public class IndexThread : Sharpen.Thread
@@ -348,7 +348,7 @@ namespace Lucene.Net.Index
 					long ramSize = 0;
 					while (this.pendingDocs.DecrementAndGet() > -1)
 					{
-						Lucene.Net.Document.Document doc = this.docs.NextDoc();
+						Lucene.Net.Documents.Document doc = this.docs.NextDoc();
 						this.writer.AddDocument(doc);
 						long newRamSize = this.writer.RamSizeInBytes();
 						if (newRamSize != ramSize)
@@ -415,18 +415,18 @@ namespace Lucene.Net.Index
 				{
 					if (flushCurrent)
 					{
-						NUnit.Framework.Assert.IsTrue(pending.Remove(toFlush));
+						IsTrue(pending.Remove(toFlush));
 					}
 					else
 					{
-						NUnit.Framework.Assert.IsTrue(notPending.Remove(toFlush));
+						IsTrue(notPending.Remove(toFlush));
 					}
-					NUnit.Framework.Assert.IsTrue(toFlush.flushPending);
+					IsTrue(toFlush.flushPending);
 					hasMarkedPending = true;
 				}
 				foreach (DocumentsWriterPerThreadPool.ThreadState threadState in notPending)
 				{
-					NUnit.Framework.Assert.IsFalse(threadState.flushPending);
+					IsFalse(threadState.flushPending);
 				}
 			}
 
@@ -458,7 +458,7 @@ namespace Lucene.Net.Index
 							* 1024. * 1024.))
 						{
 							toFlush = FindLargestNonPendingWriter(control, state);
-							NUnit.Framework.Assert.IsFalse(toFlush.flushPending);
+							IsFalse(toFlush.flushPending);
 						}
 						else
 						{
@@ -471,13 +471,13 @@ namespace Lucene.Net.Index
 				{
 					if (flushCurrent)
 					{
-						NUnit.Framework.Assert.IsTrue(pending.Remove(toFlush));
+						IsTrue(pending.Remove(toFlush));
 					}
 					else
 					{
-						NUnit.Framework.Assert.IsTrue(notPending.Remove(toFlush));
+						IsTrue(notPending.Remove(toFlush));
 					}
-					NUnit.Framework.Assert.IsTrue(toFlush.flushPending);
+					IsTrue(toFlush.flushPending);
 					hasMarkedPending = true;
 				}
 				else
@@ -488,7 +488,7 @@ namespace Lucene.Net.Index
 				}
 				foreach (DocumentsWriterPerThreadPool.ThreadState threadState in notPending)
 				{
-					NUnit.Framework.Assert.IsFalse(threadState.flushPending);
+					IsFalse(threadState.flushPending);
 				}
 			}
 		}

@@ -48,9 +48,9 @@ namespace Lucene.Net.Store
 					}
 				}
 				@out.WriteBytes(bytes, 0, byteUpto);
-				NUnit.Framework.Assert.AreEqual(size, @out.GetFilePointer());
+				AreEqual(size, @out.FilePointer);
 				@out.Close();
-				NUnit.Framework.Assert.AreEqual(size, dir.FileLength("test"));
+				AreEqual(size, dir.FileLength("test"));
 				// copy from test -> test2
 				IndexInput @in = dir.OpenInput("test", NewIOContext(Random()));
 				@out = dir.CreateOutput("test2", NewIOContext(Random()));
@@ -69,7 +69,7 @@ namespace Lucene.Net.Store
 						upto += chunk;
 					}
 				}
-				NUnit.Framework.Assert.AreEqual(size, upto);
+				AreEqual(size, upto);
 				@out.Close();
 				@in.Close();
 				// verify
@@ -80,7 +80,7 @@ namespace Lucene.Net.Store
 					if (Random().NextBoolean())
 					{
 						byte v = in2.ReadByte();
-						NUnit.Framework.Assert.AreEqual(Value(upto), v);
+						AreEqual(Value(upto), v);
 						upto++;
 					}
 					else
@@ -89,7 +89,7 @@ namespace Lucene.Net.Store
 						in2.ReadBytes(bytes, 0, limit);
 						for (int byteIdx = 0; byteIdx < limit; byteIdx++)
 						{
-							NUnit.Framework.Assert.AreEqual(Value(upto), bytes[byteIdx]);
+							AreEqual(Value(upto), bytes[byteIdx]);
 							upto++;
 						}
 					}

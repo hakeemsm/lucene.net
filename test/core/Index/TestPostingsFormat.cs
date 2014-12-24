@@ -20,7 +20,7 @@ namespace Lucene.Net.Index
 	/// </remarks>
 	public class TestPostingsFormat : BasePostingsFormatTestCase
 	{
-		protected override Codec GetCodec()
+		protected override Codec Codec
 		{
 			return Codec.GetDefault();
 		}

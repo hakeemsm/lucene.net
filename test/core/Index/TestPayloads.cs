@@ -9,8 +9,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using NUnit.Framework;
-using Lucene.Net.Analysis;
-using Lucene.Net.Analysis.Tokenattributes;
+using Lucene.Net.Test.Analysis;
+using Lucene.Net.Test.Analysis.Tokenattributes;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -27,13 +27,13 @@ namespace Lucene.Net.Index
 		public virtual void TestPayload()
 		{
 			BytesRef payload = new BytesRef("This is a test!");
-			NUnit.Framework.Assert.AreEqual("Wrong payload length.", "This is a test!".Length
+			AreEqual("Wrong payload length.", "This is a test!".Length
 				, payload.length);
 			BytesRef clone = payload.Clone();
-			NUnit.Framework.Assert.AreEqual(payload.length, clone.length);
+			AreEqual(payload.length, clone.length);
 			for (int i = 0; i < payload.length; i++)
 			{
-				NUnit.Framework.Assert.AreEqual(payload.bytes[i + payload.offset], clone.bytes[i 
+				AreEqual(payload.bytes[i + payload.offset], clone.bytes[i 
 					+ clone.offset]);
 			}
 		}
@@ -47,7 +47,7 @@ namespace Lucene.Net.Index
 			TestPayloads.PayloadAnalyzer analyzer = new TestPayloads.PayloadAnalyzer();
 			IndexWriter writer = new IndexWriter(ram, NewIndexWriterConfig(TEST_VERSION_CURRENT
 				, analyzer));
-			Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+			Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 			// this field won't have any payloads
 			d.Add(NewTextField("f1", "This field has no payloads", Field.Store.NO));
 			// this field will have payloads in all docs, however not for all term positions,
@@ -67,11 +67,11 @@ namespace Lucene.Net.Index
 			writer.Close();
 			SegmentReader reader = GetOnlySegmentReader(DirectoryReader.Open(ram));
 			FieldInfos fi = reader.GetFieldInfos();
-			NUnit.Framework.Assert.IsFalse("Payload field bit should not be set.", fi.FieldInfo
+			IsFalse("Payload field bit should not be set.", fi.FieldInfo
 				("f1").HasPayloads());
-			NUnit.Framework.Assert.IsTrue("Payload field bit should be set.", fi.FieldInfo("f2"
+			IsTrue("Payload field bit should be set.", fi.FieldInfo("f2"
 				).HasPayloads());
-			NUnit.Framework.Assert.IsFalse("Payload field bit should not be set.", fi.FieldInfo
+			IsFalse("Payload field bit should not be set.", fi.FieldInfo
 				("f3").HasPayloads());
 			reader.Close();
 			// now we add another document which has payloads for field f3 and verify if the SegmentMerger
@@ -80,7 +80,7 @@ namespace Lucene.Net.Index
 			// Clear payload state for each field
 			writer = new IndexWriter(ram, NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer
 				).SetOpenMode(IndexWriterConfig.OpenMode.CREATE));
-			d = new Lucene.Net.Document.Document();
+			d = new Lucene.Net.Documents.Document();
 			d.Add(NewTextField("f1", "This field has no payloads", Field.Store.NO));
 			d.Add(NewTextField("f2", "This field has payloads in all docs", Field.Store.NO));
 			d.Add(NewTextField("f2", "This field has payloads in all docs", Field.Store.NO));
@@ -97,11 +97,11 @@ namespace Lucene.Net.Index
 			writer.Close();
 			reader = GetOnlySegmentReader(DirectoryReader.Open(ram));
 			fi = reader.GetFieldInfos();
-			NUnit.Framework.Assert.IsFalse("Payload field bit should not be set.", fi.FieldInfo
+			IsFalse("Payload field bit should not be set.", fi.FieldInfo
 				("f1").HasPayloads());
-			NUnit.Framework.Assert.IsTrue("Payload field bit should be set.", fi.FieldInfo("f2"
+			IsTrue("Payload field bit should be set.", fi.FieldInfo("f2"
 				).HasPayloads());
-			NUnit.Framework.Assert.IsTrue("Payload field bit should be set.", fi.FieldInfo("f3"
+			IsTrue("Payload field bit should be set.", fi.FieldInfo("f3"
 				).HasPayloads());
 			reader.Close();
 			ram.Close();
@@ -142,7 +142,7 @@ namespace Lucene.Net.Index
 			int payloadDataLength = numTerms * numDocs * 2 + numTerms * numDocs * (numDocs - 
 				1) / 2;
 			byte[] payloadData = GenerateRandomData(payloadDataLength);
-			Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+			Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 			d.Add(NewTextField(fieldName, content, Field.Store.NO));
 			// add the same document multiple times to have the same payload lengths for all
 			// occurrences within two consecutive skip intervals
@@ -180,7 +180,7 @@ namespace Lucene.Net.Index
 				{
 					tps[i_4].NextDoc();
 				}
-				int freq = tps[0].Freq();
+				int freq = tps[0].Freq;
 				for (int i_5 = 0; i_5 < freq; i_5++)
 				{
 					for (int j = 0; j < numTerms; j++)
@@ -206,8 +206,8 @@ namespace Lucene.Net.Index
 			// now we don't read this payload
 			tp.NextPosition();
 			BytesRef payload = tp.GetPayload();
-			NUnit.Framework.Assert.AreEqual("Wrong payload length.", 1, payload.length);
-			NUnit.Framework.Assert.AreEqual(payload.bytes[payload.offset], payloadData[numTerms
+			AreEqual("Wrong payload length.", 1, payload.length);
+			AreEqual(payload.bytes[payload.offset], payloadData[numTerms
 				]);
 			tp.NextDoc();
 			tp.NextPosition();
@@ -215,26 +215,26 @@ namespace Lucene.Net.Index
 			tp.Advance(5);
 			tp.NextPosition();
 			payload = tp.GetPayload();
-			NUnit.Framework.Assert.AreEqual("Wrong payload length.", 1, payload.length);
-			NUnit.Framework.Assert.AreEqual(payload.bytes[payload.offset], payloadData[5 * numTerms
+			AreEqual("Wrong payload length.", 1, payload.length);
+			AreEqual(payload.bytes[payload.offset], payloadData[5 * numTerms
 				]);
 			tp = MultiFields.GetTermPositionsEnum(reader, MultiFields.GetLiveDocs(reader), terms
 				[1].Field(), new BytesRef(terms[1].Text()));
 			tp.NextDoc();
 			tp.NextPosition();
-			NUnit.Framework.Assert.AreEqual("Wrong payload length.", 1, tp.GetPayload().length
+			AreEqual("Wrong payload length.", 1, tp.GetPayload().length
 				);
 			tp.Advance(skipInterval - 1);
 			tp.NextPosition();
-			NUnit.Framework.Assert.AreEqual("Wrong payload length.", 1, tp.GetPayload().length
+			AreEqual("Wrong payload length.", 1, tp.GetPayload().length
 				);
 			tp.Advance(2 * skipInterval - 1);
 			tp.NextPosition();
-			NUnit.Framework.Assert.AreEqual("Wrong payload length.", 1, tp.GetPayload().length
+			AreEqual("Wrong payload length.", 1, tp.GetPayload().length
 				);
 			tp.Advance(3 * skipInterval - 1);
 			tp.NextPosition();
-			NUnit.Framework.Assert.AreEqual("Wrong payload length.", 3 * skipInterval - 2 * numDocs
+			AreEqual("Wrong payload length.", 3 * skipInterval - 2 * numDocs
 				 - 1, tp.GetPayload().length);
 			reader.Close();
 			// test long payload
@@ -242,7 +242,7 @@ namespace Lucene.Net.Index
 			writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer
 				).SetOpenMode(IndexWriterConfig.OpenMode.CREATE));
 			string singleTerm = "lucene";
-			d = new Lucene.Net.Document.Document();
+			d = new Lucene.Net.Documents.Document();
 			d.Add(NewTextField(fieldName, singleTerm, Field.Store.NO));
 			// add a payload whose length is greater than the buffer size of BufferedIndexOutput
 			payloadData = GenerateRandomData(2000);
@@ -307,14 +307,14 @@ namespace Lucene.Net.Index
 		{
 			if (b1.Length != b2.Length)
 			{
-				NUnit.Framework.Assert.Fail("Byte arrays have different lengths: " + b1.Length + 
+				Fail("Byte arrays have different lengths: " + b1.Length + 
 					", " + b2.Length);
 			}
 			for (int i = 0; i < b1.Length; i++)
 			{
 				if (b1[i] != b2[i])
 				{
-					NUnit.Framework.Assert.Fail("Byte arrays different at index " + i + ": " + b1[i] 
+					Fail("Byte arrays different at index " + i + ": " + b1[i] 
 						+ ", " + b2[i]);
 				}
 			}
@@ -325,14 +325,14 @@ namespace Lucene.Net.Index
 		{
 			if (b1.Length != b2length)
 			{
-				NUnit.Framework.Assert.Fail("Byte arrays have different lengths: " + b1.Length + 
+				Fail("Byte arrays have different lengths: " + b1.Length + 
 					", " + b2length);
 			}
 			for (int i = 0; i < b1.Length; i++)
 			{
 				if (b1[i] != b2[b2offset + i])
 				{
-					NUnit.Framework.Assert.Fail("Byte arrays different at index " + i + ": " + b1[i] 
+					Fail("Byte arrays different at index " + i + ": " + b1[i] 
 						+ ", " + b2[b2offset + i]);
 				}
 			}
@@ -478,18 +478,18 @@ namespace Lucene.Net.Index
 				tp = terms.DocsAndPositions(liveDocs, tp);
 				while (tp.NextDoc() != DocIdSetIterator.NO_MORE_DOCS)
 				{
-					int freq = tp.Freq();
+					int freq = tp.Freq;
 					for (int i_2 = 0; i_2 < freq; i_2++)
 					{
 						tp.NextPosition();
 						BytesRef payload = tp.GetPayload();
-						NUnit.Framework.Assert.AreEqual(termText, payload.Utf8ToString());
+						AreEqual(termText, payload.Utf8ToString());
 					}
 				}
 			}
 			reader.Close();
 			dir.Close();
-			NUnit.Framework.Assert.AreEqual(pool.Size(), numThreads);
+			AreEqual(pool.Size(), numThreads);
 		}
 
 		private sealed class _Thread_464 : Sharpen.Thread
@@ -509,7 +509,7 @@ namespace Lucene.Net.Index
 				{
 					for (int j = 0; j < numDocs; j++)
 					{
-						Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+						Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 						d.Add(new TextField(field, new TestPayloads.PoolingPayloadTokenStream(this, pool)
 							));
 						writer.AddDocument(d);
@@ -518,7 +518,7 @@ namespace Lucene.Net.Index
 				catch (Exception e)
 				{
 					Sharpen.Runtime.PrintStackTrace(e);
-					NUnit.Framework.Assert.Fail(e.ToString());
+					Fail(e.ToString());
 				}
 			}
 
@@ -625,14 +625,14 @@ namespace Lucene.Net.Index
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir, new MockAnalyzer(
 				Random(), MockTokenizer.WHITESPACE, true));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new TextField("hasMaybepayload", "here we go", Field.Store.YES));
 			writer.AddDocument(doc);
 			writer.Close();
 			writer = new RandomIndexWriter(Random(), dir, new MockAnalyzer(Random(), MockTokenizer
 				.WHITESPACE, true));
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(new TextField("hasMaybepayload2", "here we go", Field.Store.YES));
 			writer.AddDocument(doc);
 			writer.AddDocument(doc);
@@ -649,24 +649,24 @@ namespace Lucene.Net.Index
 			IndexWriterConfig iwc = NewIndexWriterConfig(TEST_VERSION_CURRENT, null);
 			iwc.SetMergePolicy(NewLogMergePolicy());
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir, iwc);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			Field field = new TextField("field", string.Empty, Field.Store.NO);
 			TokenStream ts = new MockTokenizer(new StringReader("here we go"), MockTokenizer.
 				WHITESPACE, true);
-			NUnit.Framework.Assert.IsFalse(ts.HasAttribute(typeof(PayloadAttribute)));
+			IsFalse(ts.HasAttribute(typeof(PayloadAttribute)));
 			field.SetTokenStream(ts);
 			doc.Add(field);
 			writer.AddDocument(doc);
 			Token withPayload = new Token("withPayload", 0, 11);
 			withPayload.SetPayload(new BytesRef("test"));
 			ts = new CannedTokenStream(withPayload);
-			NUnit.Framework.Assert.IsTrue(ts.HasAttribute(typeof(PayloadAttribute)));
+			IsTrue(ts.HasAttribute(typeof(PayloadAttribute)));
 			field.SetTokenStream(ts);
 			writer.AddDocument(doc);
 			ts = new MockTokenizer(new StringReader("another"), MockTokenizer.WHITESPACE, true
 				);
-			NUnit.Framework.Assert.IsFalse(ts.HasAttribute(typeof(PayloadAttribute)));
+			IsFalse(ts.HasAttribute(typeof(PayloadAttribute)));
 			field.SetTokenStream(ts);
 			writer.AddDocument(doc);
 			DirectoryReader reader = writer.GetReader();
@@ -674,7 +674,7 @@ namespace Lucene.Net.Index
 			DocsAndPositionsEnum de = sr.TermPositionsEnum(new Term("field", "withPayload"));
 			de.NextDoc();
 			de.NextPosition();
-			NUnit.Framework.Assert.AreEqual(new BytesRef("test"), de.GetPayload());
+			AreEqual(new BytesRef("test"), de.GetPayload());
 			writer.Close();
 			reader.Close();
 			dir.Close();
@@ -686,25 +686,25 @@ namespace Lucene.Net.Index
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			Field field = new TextField("field", string.Empty, Field.Store.NO);
 			TokenStream ts = new MockTokenizer(new StringReader("here we go"), MockTokenizer.
 				WHITESPACE, true);
-			NUnit.Framework.Assert.IsFalse(ts.HasAttribute(typeof(PayloadAttribute)));
+			IsFalse(ts.HasAttribute(typeof(PayloadAttribute)));
 			field.SetTokenStream(ts);
 			doc.Add(field);
 			Field field2 = new TextField("field", string.Empty, Field.Store.NO);
 			Token withPayload = new Token("withPayload", 0, 11);
 			withPayload.SetPayload(new BytesRef("test"));
 			ts = new CannedTokenStream(withPayload);
-			NUnit.Framework.Assert.IsTrue(ts.HasAttribute(typeof(PayloadAttribute)));
+			IsTrue(ts.HasAttribute(typeof(PayloadAttribute)));
 			field2.SetTokenStream(ts);
 			doc.Add(field2);
 			Field field3 = new TextField("field", string.Empty, Field.Store.NO);
 			ts = new MockTokenizer(new StringReader("nopayload"), MockTokenizer.WHITESPACE, true
 				);
-			NUnit.Framework.Assert.IsFalse(ts.HasAttribute(typeof(PayloadAttribute)));
+			IsFalse(ts.HasAttribute(typeof(PayloadAttribute)));
 			field3.SetTokenStream(ts);
 			doc.Add(field3);
 			writer.AddDocument(doc);
@@ -713,7 +713,7 @@ namespace Lucene.Net.Index
 			DocsAndPositionsEnum de = sr.TermPositionsEnum(new Term("field", "withPayload"));
 			de.NextDoc();
 			de.NextPosition();
-			NUnit.Framework.Assert.AreEqual(new BytesRef("test"), de.GetPayload());
+			AreEqual(new BytesRef("test"), de.GetPayload());
 			writer.Close();
 			reader.Close();
 			dir.Close();

@@ -4,7 +4,7 @@
  * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Codecs;
 using Lucene.Net.Codecs.Lucene46;
 using Lucene.Net.Document;
@@ -27,7 +27,7 @@ namespace Lucene.Net.Index
 				(Random()));
 			conf.SetCodec(new Lucene46Codec());
 			RandomIndexWriter riw = new RandomIndexWriter(Random(), dir, conf);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			// these fields should sometimes get term vectors, etc
 			Field idField = NewStringField("id", string.Empty, Field.Store.NO);
@@ -38,8 +38,8 @@ namespace Lucene.Net.Index
 			doc.Add(dvField);
 			for (int i = 0; i < 100; i++)
 			{
-				idField.SetStringValue(Sharpen.Extensions.ToString(i));
-				bodyField.SetStringValue(TestUtil.RandomUnicodeString(Random()));
+				idField.StringValue = Sharpen.Extensions.ToString(i));
+				bodyField.StringValue = TestUtil.RandomUnicodeString(Random()));
 				riw.AddDocument(doc);
 				if (Random().Next(7) == 0)
 				{
@@ -84,7 +84,7 @@ namespace Lucene.Net.Index
 				{
 					@in = dir.OpenInput(file, NewIOContext(Random()));
 					int val = @in.ReadInt();
-					NUnit.Framework.Assert.AreEqual(file + " has no codec header, instead found: " + 
+					AreEqual(file + " has no codec header, instead found: " + 
 						val, CodecUtil.CODEC_MAGIC, val);
 					success = true;
 				}

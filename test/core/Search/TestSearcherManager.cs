@@ -6,7 +6,7 @@
 
 using System;
 using System.Collections.Generic;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
@@ -36,7 +36,7 @@ namespace Lucene.Net.Search
 			{
 				writer.Commit();
 			}
-			NUnit.Framework.Assert.IsTrue(mgr.MaybeRefresh() || mgr.IsSearcherCurrent());
+			IsTrue(mgr.MaybeRefresh() || mgr.IsSearcherCurrent());
 			return mgr.Acquire();
 		}
 
@@ -220,7 +220,7 @@ namespace Lucene.Net.Search
 		/// <exception cref="System.Exception"></exception>
 		protected override void DoClose()
 		{
-			NUnit.Framework.Assert.IsTrue(warmCalled);
+			IsTrue(warmCalled);
 			if (VERBOSE)
 			{
 				System.Console.Out.WriteLine("TEST: now close SearcherManager");
@@ -237,7 +237,7 @@ namespace Lucene.Net.Search
 			// Test can deadlock if we use SMS:
 			IndexWriter writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT
 				, new MockAnalyzer(Random())).SetMergeScheduler(new ConcurrentMergeScheduler()));
-			writer.AddDocument(new Lucene.Net.Document.Document());
+			writer.AddDocument(new Lucene.Net.Documents.Document());
 			writer.Commit();
 			CountDownLatch awaitEnterWarm = new CountDownLatch(1);
 			CountDownLatch awaitClose = new CountDownLatch(1);
@@ -256,13 +256,13 @@ namespace Lucene.Net.Search
 			IndexSearcher searcher = searcherManager.Acquire();
 			try
 			{
-				NUnit.Framework.Assert.AreEqual(1, searcher.GetIndexReader().NumDocs());
+				AreEqual(1, searcher.GetIndexReader().NumDocs());
 			}
 			finally
 			{
 				searcherManager.Release(searcher);
 			}
-			writer.AddDocument(new Lucene.Net.Document.Document());
+			writer.AddDocument(new Lucene.Net.Documents.Document());
 			writer.Commit();
 			AtomicBoolean success = new AtomicBoolean(false);
 			Exception[] exc = new Exception[1];
@@ -286,15 +286,15 @@ namespace Lucene.Net.Search
 			try
 			{
 				searcherManager.Acquire();
-				NUnit.Framework.Assert.Fail("already closed");
+				Fail("already closed");
 			}
 			catch (AlreadyClosedException)
 			{
 			}
 			// expected
-			NUnit.Framework.Assert.IsFalse(success.Get());
-			NUnit.Framework.Assert.IsTrue(triedReopen.Get());
-			NUnit.Framework.Assert.IsNull(string.Empty + exc[0], exc[0]);
+			IsFalse(success.Get());
+			IsTrue(triedReopen.Get());
+			IsNull(string.Empty + exc[0], exc[0]);
 			writer.Close();
 			dir.Close();
 			if (es != null)
@@ -406,7 +406,7 @@ namespace Lucene.Net.Search
 			IndexWriter writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT
 				, new MockAnalyzer(Random())).SetMergeScheduler(new ConcurrentMergeScheduler()));
 			SearcherManager sm = new SearcherManager(writer, false, new SearcherFactory());
-			writer.AddDocument(new Lucene.Net.Document.Document());
+			writer.AddDocument(new Lucene.Net.Documents.Document());
 			writer.Commit();
 			sm.MaybeRefreshBlocking();
 			IndexSearcher acquire = sm.Acquire();
@@ -419,7 +419,7 @@ namespace Lucene.Net.Search
 			try
 			{
 				sm.Acquire();
-				NUnit.Framework.Assert.Fail("acquire should have thrown an IllegalStateException since we modified the refCount outside of the manager"
+				Fail("acquire should have thrown an IllegalStateException since we modified the refCount outside of the manager"
 					);
 			}
 			catch (InvalidOperationException)
@@ -471,11 +471,11 @@ namespace Lucene.Net.Search
 			AtomicBoolean afterRefreshCalled = new AtomicBoolean(false);
 			SearcherManager sm = new SearcherManager(iw, false, new SearcherFactory());
 			sm.AddListener(new _RefreshListener_368(afterRefreshCalled));
-			iw.AddDocument(new Lucene.Net.Document.Document());
+			iw.AddDocument(new Lucene.Net.Documents.Document());
 			iw.Commit();
-			NUnit.Framework.Assert.IsFalse(afterRefreshCalled.Get());
+			IsFalse(afterRefreshCalled.Get());
 			sm.MaybeRefreshBlocking();
-			NUnit.Framework.Assert.IsTrue(afterRefreshCalled.Get());
+			IsTrue(afterRefreshCalled.Get());
 			sm.Close();
 			iw.Close();
 			dir.Close();
@@ -562,7 +562,7 @@ namespace Lucene.Net.Search
 			t.Start();
 			t.Join();
 			// if maybeRefreshBlocking didn't release the lock, this will fail.
-			NUnit.Framework.Assert.IsTrue("failde to obtain the refreshLock!", sm.MaybeRefresh
+			IsTrue("failde to obtain the refreshLock!", sm.MaybeRefresh
 				());
 			sm.Close();
 			dir.Close();

@@ -19,7 +19,7 @@ using System;
 
 using NUnit.Framework;
 
-using SimpleAnalyzer = Lucene.Net.Analysis.SimpleAnalyzer;
+using SimpleAnalyzer = Lucene.Net.Test.Analysis.SimpleAnalyzer;
 using Document = Lucene.Net.Documents.Document;
 using Field = Lucene.Net.Documents.Field;
 using IndexWriter = Lucene.Net.Index.IndexWriter;
@@ -50,7 +50,7 @@ namespace Lucene.Net.Search
 			query.Add(new TermQuery(new Term("field", "a")), BooleanClause.Occur.SHOULD);
 			query.Add(new TermQuery(new Term("field", "b")), BooleanClause.Occur.MUST_NOT);
 			ScoreDoc[] hits = searcher.Search(query, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(0, hits.Length);
+			AreEqual(0, hits.Length);
 			writer.Close();
 			reader.Close();
 			store.Close();

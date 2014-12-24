@@ -4,7 +4,7 @@
  * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
@@ -24,7 +24,7 @@ namespace Lucene.Net.Index
 			Analyzer analyzer = new MockAnalyzer(Random());
 			IndexWriter writer = new IndexWriter(ram, NewIndexWriterConfig(TEST_VERSION_CURRENT
 				, analyzer));
-			Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+			Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 			// this field will have norms
 			Field f1 = NewTextField("f1", "This field has norms", Field.Store.NO);
 			d.Add(f1);
@@ -37,7 +37,7 @@ namespace Lucene.Net.Index
 			writer.ForceMerge(1);
 			// now we add another document which has term freq for field f2 and not for f1 and verify if the SegmentMerger
 			// keep things constant
-			d = new Lucene.Net.Document.Document();
+			d = new Lucene.Net.Documents.Document();
 			// Reverse
 			d.Add(NewField("f1", "This field has norms", customType));
 			d.Add(NewTextField("f2", "This field has NO norms in all docs", Field.Store.NO));
@@ -48,9 +48,9 @@ namespace Lucene.Net.Index
 			writer.Close();
 			SegmentReader reader = GetOnlySegmentReader(DirectoryReader.Open(ram));
 			FieldInfos fi = reader.GetFieldInfos();
-			NUnit.Framework.Assert.IsTrue("OmitNorms field bit should be set.", fi.FieldInfo(
+			IsTrue("OmitNorms field bit should be set.", fi.FieldInfo(
 				"f1").OmitsNorms());
-			NUnit.Framework.Assert.IsTrue("OmitNorms field bit should be set.", fi.FieldInfo(
+			IsTrue("OmitNorms field bit should be set.", fi.FieldInfo(
 				"f2").OmitsNorms());
 			reader.Close();
 			ram.Close();
@@ -66,7 +66,7 @@ namespace Lucene.Net.Index
 			IndexWriter writer = new IndexWriter(ram, ((IndexWriterConfig)NewIndexWriterConfig
 				(TEST_VERSION_CURRENT, analyzer).SetMaxBufferedDocs(3)).SetMergePolicy(NewLogMergePolicy
 				(2)));
-			Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+			Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 			// this field will have norms
 			Field f1 = NewTextField("f1", "This field has norms", Field.Store.NO);
 			d.Add(f1);
@@ -81,7 +81,7 @@ namespace Lucene.Net.Index
 			}
 			// now we add another document which has norms for field f2 and not for f1 and verify if the SegmentMerger
 			// keep things constant
-			d = new Lucene.Net.Document.Document();
+			d = new Lucene.Net.Documents.Document();
 			// Reverese
 			d.Add(NewField("f1", "This field has norms", customType));
 			d.Add(NewTextField("f2", "This field has NO norms in all docs", Field.Store.NO));
@@ -95,9 +95,9 @@ namespace Lucene.Net.Index
 			writer.Close();
 			SegmentReader reader = GetOnlySegmentReader(DirectoryReader.Open(ram));
 			FieldInfos fi = reader.GetFieldInfos();
-			NUnit.Framework.Assert.IsTrue("OmitNorms field bit should be set.", fi.FieldInfo(
+			IsTrue("OmitNorms field bit should be set.", fi.FieldInfo(
 				"f1").OmitsNorms());
-			NUnit.Framework.Assert.IsTrue("OmitNorms field bit should be set.", fi.FieldInfo(
+			IsTrue("OmitNorms field bit should be set.", fi.FieldInfo(
 				"f2").OmitsNorms());
 			reader.Close();
 			ram.Close();
@@ -114,7 +114,7 @@ namespace Lucene.Net.Index
 			IndexWriter writer = new IndexWriter(ram, ((IndexWriterConfig)NewIndexWriterConfig
 				(TEST_VERSION_CURRENT, analyzer).SetMaxBufferedDocs(10)).SetMergePolicy(NewLogMergePolicy
 				(2)));
-			Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+			Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 			// this field will have norms
 			Field f1 = NewTextField("f1", "This field has norms", Field.Store.NO);
 			d.Add(f1);
@@ -137,9 +137,9 @@ namespace Lucene.Net.Index
 			writer.Close();
 			SegmentReader reader = GetOnlySegmentReader(DirectoryReader.Open(ram));
 			FieldInfos fi = reader.GetFieldInfos();
-			NUnit.Framework.Assert.IsTrue("OmitNorms field bit should not be set.", !fi.FieldInfo
+			IsTrue("OmitNorms field bit should not be set.", !fi.FieldInfo
 				("f1").OmitsNorms());
-			NUnit.Framework.Assert.IsTrue("OmitNorms field bit should be set.", fi.FieldInfo(
+			IsTrue("OmitNorms field bit should be set.", fi.FieldInfo(
 				"f2").OmitsNorms());
 			reader.Close();
 			ram.Close();
@@ -152,7 +152,7 @@ namespace Lucene.Net.Index
 			for (int i = 0; i < files.Length; i++)
 			{
 				// TODO: this relies upon filenames
-				NUnit.Framework.Assert.IsFalse(files[i].EndsWith(".nrm") || files[i].EndsWith(".len"
+				IsFalse(files[i].EndsWith(".nrm") || files[i].EndsWith(".len"
 					));
 			}
 		}
@@ -169,7 +169,7 @@ namespace Lucene.Net.Index
 			LogMergePolicy lmp = (LogMergePolicy)writer.GetConfig().GetMergePolicy();
 			lmp.SetMergeFactor(2);
 			lmp.SetNoCFSRatio(0.0);
-			Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+			Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 			FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
 			customType.SetOmitNorms(true);
 			Field f1 = NewField("f1", "This field has no norms", customType);
@@ -219,21 +219,21 @@ namespace Lucene.Net.Index
 			Field noNormsNoIndex = new Field("foo", "a", customType3);
 			// not indexed nor stored (doesnt exist at all, we index a different field instead)
 			Field emptyNorms = new Field("bar", "a", customType);
-			NUnit.Framework.Assert.IsNotNull(GetNorms("foo", norms, norms));
-			NUnit.Framework.Assert.IsNull(GetNorms("foo", norms, noNorms));
-			NUnit.Framework.Assert.IsNotNull(GetNorms("foo", norms, noIndex));
-			NUnit.Framework.Assert.IsNotNull(GetNorms("foo", norms, noNormsNoIndex));
-			NUnit.Framework.Assert.IsNotNull(GetNorms("foo", norms, emptyNorms));
-			NUnit.Framework.Assert.IsNull(GetNorms("foo", noNorms, noNorms));
-			NUnit.Framework.Assert.IsNull(GetNorms("foo", noNorms, noIndex));
-			NUnit.Framework.Assert.IsNull(GetNorms("foo", noNorms, noNormsNoIndex));
-			NUnit.Framework.Assert.IsNull(GetNorms("foo", noNorms, emptyNorms));
-			NUnit.Framework.Assert.IsNull(GetNorms("foo", noIndex, noIndex));
-			NUnit.Framework.Assert.IsNull(GetNorms("foo", noIndex, noNormsNoIndex));
-			NUnit.Framework.Assert.IsNull(GetNorms("foo", noIndex, emptyNorms));
-			NUnit.Framework.Assert.IsNull(GetNorms("foo", noNormsNoIndex, noNormsNoIndex));
-			NUnit.Framework.Assert.IsNull(GetNorms("foo", noNormsNoIndex, emptyNorms));
-			NUnit.Framework.Assert.IsNull(GetNorms("foo", emptyNorms, emptyNorms));
+			IsNotNull(GetNorms("foo", norms, norms));
+			IsNull(GetNorms("foo", norms, noNorms));
+			IsNotNull(GetNorms("foo", norms, noIndex));
+			IsNotNull(GetNorms("foo", norms, noNormsNoIndex));
+			IsNotNull(GetNorms("foo", norms, emptyNorms));
+			IsNull(GetNorms("foo", noNorms, noNorms));
+			IsNull(GetNorms("foo", noNorms, noIndex));
+			IsNull(GetNorms("foo", noNorms, noNormsNoIndex));
+			IsNull(GetNorms("foo", noNorms, emptyNorms));
+			IsNull(GetNorms("foo", noIndex, noIndex));
+			IsNull(GetNorms("foo", noIndex, noNormsNoIndex));
+			IsNull(GetNorms("foo", noIndex, emptyNorms));
+			IsNull(GetNorms("foo", noNormsNoIndex, noNormsNoIndex));
+			IsNull(GetNorms("foo", noNormsNoIndex, emptyNorms));
+			IsNull(GetNorms("foo", emptyNorms, emptyNorms));
 		}
 
 		/// <summary>Indexes at least 1 document with f1, and at least 1 document with f2.</summary>
@@ -249,18 +249,18 @@ namespace Lucene.Net.Index
 				(Random())).SetMergePolicy(NewLogMergePolicy());
 			RandomIndexWriter riw = new RandomIndexWriter(Random(), dir, iwc);
 			// add f1
-			Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+			Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 			d.Add(f1);
 			riw.AddDocument(d);
 			// add f2
-			d = new Lucene.Net.Document.Document();
+			d = new Lucene.Net.Documents.Document();
 			d.Add(f2);
 			riw.AddDocument(d);
 			// add a mix of f1's and f2's
 			int numExtraDocs = TestUtil.NextInt(Random(), 1, 1000);
 			for (int i = 0; i < numExtraDocs; i++)
 			{
-				d = new Lucene.Net.Document.Document();
+				d = new Lucene.Net.Documents.Document();
 				d.Add(Random().NextBoolean() ? f1 : f2);
 				riw.AddDocument(d);
 			}
@@ -273,13 +273,13 @@ namespace Lucene.Net.Index
 			NumericDocValues norms2 = GetOnlySegmentReader(ir2).GetNormValues(field);
 			if (norms1 == null)
 			{
-				NUnit.Framework.Assert.IsNull(norms2);
+				IsNull(norms2);
 			}
 			else
 			{
-				for (int docID = 0; docID < ir1.MaxDoc(); docID++)
+				for (int docID = 0; docID < ir1.MaxDoc; docID++)
 				{
-					NUnit.Framework.Assert.AreEqual(norms1.Get(docID), norms2.Get(docID));
+					AreEqual(norms1.Get(docID), norms2.Get(docID));
 				}
 			}
 			ir1.Close();

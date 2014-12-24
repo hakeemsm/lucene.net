@@ -46,8 +46,8 @@ namespace Lucene.Net.Search
 			pq1.Add(new Term("f", "AB"));
 			pq1.Add(new Term("f", "BC"));
 			Query q = pq1.Rewrite(reader);
-			NUnit.Framework.Assert.IsTrue(q is NGramPhraseQuery);
-			NUnit.Framework.Assert.AreSame(pq1, q);
+			IsTrue(q is NGramPhraseQuery);
+			AreSame(pq1, q);
 			pq1 = (NGramPhraseQuery)q;
 			AssertArrayEquals(new Term[] { new Term("f", "AB"), new Term("f", "BC") }, pq1.GetTerms
 				());
@@ -58,8 +58,8 @@ namespace Lucene.Net.Search
 			pq2.Add(new Term("f", "BC"));
 			pq2.Add(new Term("f", "CD"));
 			q = pq2.Rewrite(reader);
-			NUnit.Framework.Assert.IsTrue(q is PhraseQuery);
-			NUnit.Framework.Assert.AreNotSame(pq2, q);
+			IsTrue(q is PhraseQuery);
+			AreNotSame(pq2, q);
 			pq2 = (PhraseQuery)q;
 			AssertArrayEquals(new Term[] { new Term("f", "AB"), new Term("f", "CD") }, pq2.GetTerms
 				());
@@ -73,8 +73,8 @@ namespace Lucene.Net.Search
 			pq3.Add(new Term("f", "EFG"));
 			pq3.Add(new Term("f", "FGH"));
 			q = pq3.Rewrite(reader);
-			NUnit.Framework.Assert.IsTrue(q is PhraseQuery);
-			NUnit.Framework.Assert.AreNotSame(pq3, q);
+			IsTrue(q is PhraseQuery);
+			AreNotSame(pq3, q);
 			pq3 = (PhraseQuery)q;
 			AssertArrayEquals(new Term[] { new Term("f", "ABC"), new Term("f", "DEF"), new Term
 				("f", "FGH") }, pq3.GetTerms());
@@ -86,8 +86,8 @@ namespace Lucene.Net.Search
 			pq4.Add(new Term("f", "CD"));
 			pq4.SetBoost(100.0F);
 			q = pq4.Rewrite(reader);
-			NUnit.Framework.Assert.AreNotSame(pq4, q);
-			NUnit.Framework.Assert.AreEqual(pq4.GetBoost(), q.GetBoost(), 0.1f);
+			AreNotSame(pq4, q);
+			AreEqual(pq4.GetBoost(), q.GetBoost(), 0.1f);
 		}
 	}
 }

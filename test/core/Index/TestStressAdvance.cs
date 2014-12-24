@@ -28,7 +28,7 @@ namespace Lucene.Net.Index
 				Directory dir = NewDirectory();
 				RandomIndexWriter w = new RandomIndexWriter(Random(), dir);
 				ICollection<int> aDocs = new HashSet<int>();
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				Field f = NewStringField("field", string.Empty, Field.Store.NO);
 				doc.Add(f);
@@ -43,14 +43,14 @@ namespace Lucene.Net.Index
 				{
 					if (Random().Next(4) == 3)
 					{
-						f.SetStringValue("a");
+						f.StringValue = "a");
 						aDocs.AddItem(id);
 					}
 					else
 					{
-						f.SetStringValue("b");
+						f.StringValue = "b");
 					}
-					idField.SetStringValue(string.Empty + id);
+					idField.StringValue = string.Empty + id);
 					w.AddDocument(doc);
 					if (VERBOSE)
 					{
@@ -61,7 +61,7 @@ namespace Lucene.Net.Index
 				IList<int> aDocIDs = new AList<int>();
 				IList<int> bDocIDs = new AList<int>();
 				DirectoryReader r = w.GetReader();
-				int[] idToDocID = new int[r.MaxDoc()];
+				int[] idToDocID = new int[r.MaxDoc];
 				for (int docID = 0; docID < idToDocID.Length; docID++)
 				{
 					int id_1 = System.Convert.ToInt32(r.Document(docID).Get("id"));
@@ -82,11 +82,11 @@ namespace Lucene.Net.Index
 					{
 						System.Console.Out.WriteLine("\nTEST: iter=" + iter + " iter2=" + iter2);
 					}
-					NUnit.Framework.Assert.AreEqual(TermsEnum.SeekStatus.FOUND, te.SeekCeil(new BytesRef
+					AreEqual(TermsEnum.SeekStatus.FOUND, te.SeekCeil(new BytesRef
 						("a")));
 					de = TestUtil.Docs(Random(), te, null, de, DocsEnum.FLAG_NONE);
 					TestOne(de, aDocIDs);
-					NUnit.Framework.Assert.AreEqual(TermsEnum.SeekStatus.FOUND, te.SeekCeil(new BytesRef
+					AreEqual(TermsEnum.SeekStatus.FOUND, te.SeekCeil(new BytesRef
 						("b")));
 					de = TestUtil.Docs(Random(), te, null, de, DocsEnum.FLAG_NONE);
 					TestOne(de, bDocIDs);
@@ -140,7 +140,7 @@ namespace Lucene.Net.Index
 						System.Console.Out.WriteLine("  expect docID=" + DocIdSetIterator.NO_MORE_DOCS + 
 							" actual=" + docID);
 					}
-					NUnit.Framework.Assert.AreEqual(DocIdSetIterator.NO_MORE_DOCS, docID);
+					AreEqual(DocIdSetIterator.NO_MORE_DOCS, docID);
 				}
 				else
 				{
@@ -149,8 +149,8 @@ namespace Lucene.Net.Index
 						System.Console.Out.WriteLine("  expect docID=" + expected[upto] + " actual=" + docID
 							);
 					}
-					NUnit.Framework.Assert.IsTrue(docID != DocIdSetIterator.NO_MORE_DOCS);
-					NUnit.Framework.Assert.AreEqual(expected[upto], docID);
+					IsTrue(docID != DocIdSetIterator.NO_MORE_DOCS);
+					AreEqual(expected[upto], docID);
 				}
 			}
 		}

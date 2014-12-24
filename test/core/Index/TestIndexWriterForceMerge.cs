@@ -4,7 +4,7 @@
  * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
@@ -19,7 +19,7 @@ namespace Lucene.Net.Index
 		public virtual void TestPartialMerge()
 		{
 			Directory dir = NewDirectory();
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewStringField("content", "aaa", Field.Store.NO));
 			int incrMin = TEST_NIGHTLY ? 15 : 40;
@@ -51,11 +51,11 @@ namespace Lucene.Net.Index
 				int optSegCount = sis.Size();
 				if (segCount < 3)
 				{
-					NUnit.Framework.Assert.AreEqual(segCount, optSegCount);
+					AreEqual(segCount, optSegCount);
 				}
 				else
 				{
-					NUnit.Framework.Assert.AreEqual(3, optSegCount);
+					AreEqual(3, optSegCount);
 				}
 			}
 			dir.Close();
@@ -65,7 +65,7 @@ namespace Lucene.Net.Index
 		public virtual void TestMaxNumSegments2()
 		{
 			Directory dir = NewDirectory();
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewStringField("content", "aaa", Field.Store.NO));
 			LogDocMergePolicy ldmp = new LogDocMergePolicy();
@@ -94,11 +94,11 @@ namespace Lucene.Net.Index
 				int optSegCount = sis.Size();
 				if (segCount < 7)
 				{
-					NUnit.Framework.Assert.AreEqual(segCount, optSegCount);
+					AreEqual(segCount, optSegCount);
 				}
 				else
 				{
-					NUnit.Framework.Assert.AreEqual("seg: " + segCount, 7, optSegCount);
+					AreEqual("seg: " + segCount, 7, optSegCount);
 				}
 			}
 			writer.Close();
@@ -161,7 +161,7 @@ namespace Lucene.Net.Index
 			writer.ForceMerge(1);
 			writer.Close();
 			long maxDiskUsage = dir.GetMaxUsedSizeInBytes();
-			NUnit.Framework.Assert.IsTrue("forceMerge used too much temporary space: starting usage was "
+			IsTrue("forceMerge used too much temporary space: starting usage was "
 				 + startDiskUsage + " bytes; max temp usage was " + maxDiskUsage + " but should have been "
 				 + (4 * startDiskUsage) + " (= 4X starting usage)", maxDiskUsage <= 4 * startDiskUsage
 				);
@@ -180,7 +180,7 @@ namespace Lucene.Net.Index
 				IndexWriter writer = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig
 					(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetOpenMode(IndexWriterConfig.OpenMode
 					.CREATE).SetMaxBufferedDocs(2)).SetMergePolicy(NewLogMergePolicy(51)));
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(NewStringField("field", "aaa", Field.Store.NO));
 				for (int i = 0; i < 100; i++)
@@ -192,7 +192,7 @@ namespace Lucene.Net.Index
 				{
 					writer.Close();
 					DirectoryReader reader = DirectoryReader.Open(dir);
-					NUnit.Framework.Assert.AreEqual(1, reader.Leaves().Count);
+					AreEqual(1, reader.Leaves().Count);
 					reader.Close();
 				}
 				else
@@ -203,11 +203,11 @@ namespace Lucene.Net.Index
 					writer.AddDocument(doc);
 					writer.Close();
 					DirectoryReader reader = DirectoryReader.Open(dir);
-					NUnit.Framework.Assert.IsTrue(reader.Leaves().Count > 1);
+					IsTrue(reader.Leaves().Count > 1);
 					reader.Close();
 					SegmentInfos infos = new SegmentInfos();
 					infos.Read(dir);
-					NUnit.Framework.Assert.AreEqual(2, infos.Size());
+					AreEqual(2, infos.Size());
 				}
 			}
 			dir.Close();

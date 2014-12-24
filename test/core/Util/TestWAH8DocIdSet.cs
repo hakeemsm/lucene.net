@@ -29,7 +29,7 @@ namespace Lucene.Net.Util
 		public override void AssertEquals(int numBits, BitSet ds1, WAH8DocIdSet ds2)
 		{
 			base.AssertEquals(numBits, ds1, ds2);
-			NUnit.Framework.Assert.AreEqual(ds1.Cardinality(), ds2.Cardinality());
+			AreEqual(ds1.Cardinality(), ds2.Cardinality());
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>

@@ -5,7 +5,7 @@
  */
 
 using System;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -65,11 +65,11 @@ namespace Lucene.Net.Index
 				(DirectoryReader.Open(dir1)), SlowCompositeReaderWrapper.Wrap(DirectoryReader.Open
 				(dir2)));
 			FieldInfos fieldInfos = pr.GetFieldInfos();
-			NUnit.Framework.Assert.AreEqual(4, fieldInfos.Size());
-			NUnit.Framework.Assert.IsNotNull(fieldInfos.FieldInfo("f1"));
-			NUnit.Framework.Assert.IsNotNull(fieldInfos.FieldInfo("f2"));
-			NUnit.Framework.Assert.IsNotNull(fieldInfos.FieldInfo("f3"));
-			NUnit.Framework.Assert.IsNotNull(fieldInfos.FieldInfo("f4"));
+			AreEqual(4, fieldInfos.Size());
+			IsNotNull(fieldInfos.FieldInfo("f1"));
+			IsNotNull(fieldInfos.FieldInfo("f2"));
+			IsNotNull(fieldInfos.FieldInfo("f3"));
+			IsNotNull(fieldInfos.FieldInfo("f4"));
 			pr.Close();
 			dir1.Close();
 			dir2.Close();
@@ -87,11 +87,11 @@ namespace Lucene.Net.Index
 				.Wrap(DirectoryReader.Open(dir1)), ir2 = SlowCompositeReaderWrapper.Wrap(DirectoryReader
 				.Open(dir2)));
 			// check RefCounts
-			NUnit.Framework.Assert.AreEqual(1, ir1.GetRefCount());
-			NUnit.Framework.Assert.AreEqual(1, ir2.GetRefCount());
+			AreEqual(1, ir1.GetRefCount());
+			AreEqual(1, ir2.GetRefCount());
 			pr.Close();
-			NUnit.Framework.Assert.AreEqual(0, ir1.GetRefCount());
-			NUnit.Framework.Assert.AreEqual(0, ir2.GetRefCount());
+			AreEqual(0, ir1.GetRefCount());
+			AreEqual(0, ir2.GetRefCount());
 			dir1.Close();
 			dir2.Close();
 		}
@@ -106,15 +106,15 @@ namespace Lucene.Net.Index
 			// don't close subreaders, so ParallelReader will increment refcounts
 			ParallelAtomicReader pr = new ParallelAtomicReader(false, ir1, ir2);
 			// check RefCounts
-			NUnit.Framework.Assert.AreEqual(2, ir1.GetRefCount());
-			NUnit.Framework.Assert.AreEqual(2, ir2.GetRefCount());
+			AreEqual(2, ir1.GetRefCount());
+			AreEqual(2, ir2.GetRefCount());
 			pr.Close();
-			NUnit.Framework.Assert.AreEqual(1, ir1.GetRefCount());
-			NUnit.Framework.Assert.AreEqual(1, ir2.GetRefCount());
+			AreEqual(1, ir1.GetRefCount());
+			AreEqual(1, ir2.GetRefCount());
 			ir1.Close();
 			ir2.Close();
-			NUnit.Framework.Assert.AreEqual(0, ir1.GetRefCount());
-			NUnit.Framework.Assert.AreEqual(0, ir2.GetRefCount());
+			AreEqual(0, ir1.GetRefCount());
+			AreEqual(0, ir2.GetRefCount());
 			dir1.Close();
 			dir2.Close();
 		}
@@ -131,7 +131,7 @@ namespace Lucene.Net.Index
 			try
 			{
 				pr.Document(0);
-				NUnit.Framework.Assert.Fail("ParallelAtomicReader should be already closed because inner reader was closed!"
+				Fail("ParallelAtomicReader should be already closed because inner reader was closed!"
 					);
 			}
 			catch (AlreadyClosedException)
@@ -152,7 +152,7 @@ namespace Lucene.Net.Index
 			Directory dir2 = NewDirectory();
 			IndexWriter w2 = new IndexWriter(dir2, NewIndexWriterConfig(TEST_VERSION_CURRENT, 
 				new MockAnalyzer(Random())));
-			Lucene.Net.Document.Document d3 = new Lucene.Net.Document.Document(
+			Lucene.Net.Documents.Document d3 = new Lucene.Net.Documents.Document(
 				);
 			d3.Add(NewTextField("f3", "v1", Field.Store.YES));
 			w2.AddDocument(d3);
@@ -162,7 +162,7 @@ namespace Lucene.Net.Index
 			try
 			{
 				new ParallelAtomicReader(ir1, ir2);
-				NUnit.Framework.Assert.Fail("didn't get exptected exception: indexes don't have same number of documents"
+				Fail("didn't get exptected exception: indexes don't have same number of documents"
 					);
 			}
 			catch (ArgumentException)
@@ -173,7 +173,7 @@ namespace Lucene.Net.Index
 			{
 				new ParallelAtomicReader(Random().NextBoolean(), new AtomicReader[] { ir1, ir2 }, 
 					new AtomicReader[] { ir1, ir2 });
-				NUnit.Framework.Assert.Fail("didn't get expected exception: indexes don't have same number of documents"
+				Fail("didn't get expected exception: indexes don't have same number of documents"
 					);
 			}
 			catch (ArgumentException)
@@ -181,8 +181,8 @@ namespace Lucene.Net.Index
 			}
 			// expected exception
 			// check RefCounts
-			NUnit.Framework.Assert.AreEqual(1, ir1.GetRefCount());
-			NUnit.Framework.Assert.AreEqual(1, ir2.GetRefCount());
+			AreEqual(1, ir1.GetRefCount());
+			AreEqual(1, ir2.GetRefCount());
 			ir1.Close();
 			ir2.Close();
 			dir1.Close();
@@ -199,47 +199,47 @@ namespace Lucene.Net.Index
 			// with overlapping
 			ParallelAtomicReader pr = new ParallelAtomicReader(false, new AtomicReader[] { ir1
 				, ir2 }, new AtomicReader[] { ir1 });
-			NUnit.Framework.Assert.AreEqual("v1", pr.Document(0).Get("f1"));
-			NUnit.Framework.Assert.AreEqual("v1", pr.Document(0).Get("f2"));
-			NUnit.Framework.Assert.IsNull(pr.Document(0).Get("f3"));
-			NUnit.Framework.Assert.IsNull(pr.Document(0).Get("f4"));
+			AreEqual("v1", pr.Document(0).Get("f1"));
+			AreEqual("v1", pr.Document(0).Get("f2"));
+			IsNull(pr.Document(0).Get("f3"));
+			IsNull(pr.Document(0).Get("f4"));
 			// check that fields are there
-			NUnit.Framework.Assert.IsNotNull(pr.Terms("f1"));
-			NUnit.Framework.Assert.IsNotNull(pr.Terms("f2"));
-			NUnit.Framework.Assert.IsNotNull(pr.Terms("f3"));
-			NUnit.Framework.Assert.IsNotNull(pr.Terms("f4"));
+			IsNotNull(pr.Terms("f1"));
+			IsNotNull(pr.Terms("f2"));
+			IsNotNull(pr.Terms("f3"));
+			IsNotNull(pr.Terms("f4"));
 			pr.Close();
 			// no stored fields at all
 			pr = new ParallelAtomicReader(false, new AtomicReader[] { ir2 }, new AtomicReader
 				[0]);
-			NUnit.Framework.Assert.IsNull(pr.Document(0).Get("f1"));
-			NUnit.Framework.Assert.IsNull(pr.Document(0).Get("f2"));
-			NUnit.Framework.Assert.IsNull(pr.Document(0).Get("f3"));
-			NUnit.Framework.Assert.IsNull(pr.Document(0).Get("f4"));
+			IsNull(pr.Document(0).Get("f1"));
+			IsNull(pr.Document(0).Get("f2"));
+			IsNull(pr.Document(0).Get("f3"));
+			IsNull(pr.Document(0).Get("f4"));
 			// check that fields are there
-			NUnit.Framework.Assert.IsNull(pr.Terms("f1"));
-			NUnit.Framework.Assert.IsNull(pr.Terms("f2"));
-			NUnit.Framework.Assert.IsNotNull(pr.Terms("f3"));
-			NUnit.Framework.Assert.IsNotNull(pr.Terms("f4"));
+			IsNull(pr.Terms("f1"));
+			IsNull(pr.Terms("f2"));
+			IsNotNull(pr.Terms("f3"));
+			IsNotNull(pr.Terms("f4"));
 			pr.Close();
 			// without overlapping
 			pr = new ParallelAtomicReader(true, new AtomicReader[] { ir2 }, new AtomicReader[
 				] { ir1 });
-			NUnit.Framework.Assert.AreEqual("v1", pr.Document(0).Get("f1"));
-			NUnit.Framework.Assert.AreEqual("v1", pr.Document(0).Get("f2"));
-			NUnit.Framework.Assert.IsNull(pr.Document(0).Get("f3"));
-			NUnit.Framework.Assert.IsNull(pr.Document(0).Get("f4"));
+			AreEqual("v1", pr.Document(0).Get("f1"));
+			AreEqual("v1", pr.Document(0).Get("f2"));
+			IsNull(pr.Document(0).Get("f3"));
+			IsNull(pr.Document(0).Get("f4"));
 			// check that fields are there
-			NUnit.Framework.Assert.IsNull(pr.Terms("f1"));
-			NUnit.Framework.Assert.IsNull(pr.Terms("f2"));
-			NUnit.Framework.Assert.IsNotNull(pr.Terms("f3"));
-			NUnit.Framework.Assert.IsNotNull(pr.Terms("f4"));
+			IsNull(pr.Terms("f1"));
+			IsNull(pr.Terms("f2"));
+			IsNotNull(pr.Terms("f3"));
+			IsNotNull(pr.Terms("f4"));
 			pr.Close();
 			// no main readers
 			try
 			{
 				new ParallelAtomicReader(true, new AtomicReader[0], new AtomicReader[] { ir1 });
-				NUnit.Framework.Assert.Fail("didn't get expected exception: need a non-empty main-reader array"
+				Fail("didn't get expected exception: need a non-empty main-reader array"
 					);
 			}
 			catch (ArgumentException)
@@ -255,18 +255,18 @@ namespace Lucene.Net.Index
 		{
 			ScoreDoc[] parallelHits = parallel.Search(query, null, 1000).scoreDocs;
 			ScoreDoc[] singleHits = single.Search(query, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(parallelHits.Length, singleHits.Length);
+			AreEqual(parallelHits.Length, singleHits.Length);
 			for (int i = 0; i < parallelHits.Length; i++)
 			{
-				NUnit.Framework.Assert.AreEqual(parallelHits[i].score, singleHits[i].score, 0.001f
+				AreEqual(parallelHits[i].score, singleHits[i].score, 0.001f
 					);
-				Lucene.Net.Document.Document docParallel = parallel.Doc(parallelHits[i].doc
+				Lucene.Net.Documents.Document docParallel = parallel.Doc(parallelHits[i].doc
 					);
-				Lucene.Net.Document.Document docSingle = single.Doc(singleHits[i].doc);
-				NUnit.Framework.Assert.AreEqual(docParallel.Get("f1"), docSingle.Get("f1"));
-				NUnit.Framework.Assert.AreEqual(docParallel.Get("f2"), docSingle.Get("f2"));
-				NUnit.Framework.Assert.AreEqual(docParallel.Get("f3"), docSingle.Get("f3"));
-				NUnit.Framework.Assert.AreEqual(docParallel.Get("f4"), docSingle.Get("f4"));
+				Lucene.Net.Documents.Document docSingle = single.Doc(singleHits[i].doc);
+				AreEqual(docParallel.Get("f1"), docSingle.Get("f1"));
+				AreEqual(docParallel.Get("f2"), docSingle.Get("f2"));
+				AreEqual(docParallel.Get("f3"), docSingle.Get("f3"));
+				AreEqual(docParallel.Get("f4"), docSingle.Get("f4"));
 			}
 		}
 
@@ -277,14 +277,14 @@ namespace Lucene.Net.Index
 			dir = NewDirectory();
 			IndexWriter w = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new 
 				MockAnalyzer(random)));
-			Lucene.Net.Document.Document d1 = new Lucene.Net.Document.Document(
+			Lucene.Net.Documents.Document d1 = new Lucene.Net.Documents.Document(
 				);
 			d1.Add(NewTextField("f1", "v1", Field.Store.YES));
 			d1.Add(NewTextField("f2", "v1", Field.Store.YES));
 			d1.Add(NewTextField("f3", "v1", Field.Store.YES));
 			d1.Add(NewTextField("f4", "v1", Field.Store.YES));
 			w.AddDocument(d1);
-			Lucene.Net.Document.Document d2 = new Lucene.Net.Document.Document(
+			Lucene.Net.Documents.Document d2 = new Lucene.Net.Documents.Document(
 				);
 			d2.Add(NewTextField("f1", "v2", Field.Store.YES));
 			d2.Add(NewTextField("f2", "v2", Field.Store.YES));
@@ -315,12 +315,12 @@ namespace Lucene.Net.Index
 			Directory dir1 = NewDirectory();
 			IndexWriter w1 = new IndexWriter(dir1, NewIndexWriterConfig(TEST_VERSION_CURRENT, 
 				new MockAnalyzer(random)));
-			Lucene.Net.Document.Document d1 = new Lucene.Net.Document.Document(
+			Lucene.Net.Documents.Document d1 = new Lucene.Net.Documents.Document(
 				);
 			d1.Add(NewTextField("f1", "v1", Field.Store.YES));
 			d1.Add(NewTextField("f2", "v1", Field.Store.YES));
 			w1.AddDocument(d1);
-			Lucene.Net.Document.Document d2 = new Lucene.Net.Document.Document(
+			Lucene.Net.Documents.Document d2 = new Lucene.Net.Documents.Document(
 				);
 			d2.Add(NewTextField("f1", "v2", Field.Store.YES));
 			d2.Add(NewTextField("f2", "v2", Field.Store.YES));
@@ -335,12 +335,12 @@ namespace Lucene.Net.Index
 			Directory dir2 = NewDirectory();
 			IndexWriter w2 = new IndexWriter(dir2, NewIndexWriterConfig(TEST_VERSION_CURRENT, 
 				new MockAnalyzer(random)));
-			Lucene.Net.Document.Document d3 = new Lucene.Net.Document.Document(
+			Lucene.Net.Documents.Document d3 = new Lucene.Net.Documents.Document(
 				);
 			d3.Add(NewTextField("f3", "v1", Field.Store.YES));
 			d3.Add(NewTextField("f4", "v1", Field.Store.YES));
 			w2.AddDocument(d3);
-			Lucene.Net.Document.Document d4 = new Lucene.Net.Document.Document(
+			Lucene.Net.Documents.Document d4 = new Lucene.Net.Documents.Document(
 				);
 			d4.Add(NewTextField("f3", "v2", Field.Store.YES));
 			d4.Add(NewTextField("f4", "v2", Field.Store.YES));

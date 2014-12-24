@@ -5,7 +5,7 @@
  */
 
 using System.Reflection;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
@@ -30,12 +30,12 @@ namespace Lucene.Net.Index
 		[NUnit.Framework.Test]
 		public virtual void TestFinalSingleton()
 		{
-			NUnit.Framework.Assert.IsTrue(Modifier.IsFinal(typeof(NoDeletionPolicy).GetModifiers
+			IsTrue(Modifier.IsFinal(typeof(NoDeletionPolicy).GetModifiers
 				()));
 			Constructor<object>[] ctors = typeof(NoDeletionPolicy).GetDeclaredConstructors();
-			NUnit.Framework.Assert.AreEqual("expected 1 private ctor only: " + Arrays.ToString
+			AreEqual("expected 1 private ctor only: " + Arrays.ToString
 				(ctors), 1, ctors.Length);
-			NUnit.Framework.Assert.IsTrue("that 1 should be private: " + ctors[0], Modifier.IsPrivate
+			IsTrue("that 1 should be private: " + ctors[0], Modifier.IsPrivate
 				(ctors[0].GetModifiers()));
 		}
 
@@ -58,7 +58,7 @@ namespace Lucene.Net.Index
 				// different class than Object, this will need to change.
 				if (m.DeclaringType != typeof(object))
 				{
-					NUnit.Framework.Assert.IsTrue(m + " is not overridden !", m.DeclaringType == typeof(
+					IsTrue(m + " is not overridden !", m.DeclaringType == typeof(
 						NoDeletionPolicy));
 				}
 			}
@@ -73,12 +73,12 @@ namespace Lucene.Net.Index
 				, new MockAnalyzer(Random())).SetIndexDeletionPolicy(NoDeletionPolicy.INSTANCE));
 			for (int i = 0; i < 10; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(NewTextField("c", "a" + i, Field.Store.YES));
 				writer.AddDocument(doc);
 				writer.Commit();
-				NUnit.Framework.Assert.AreEqual("wrong number of commits !", i + 1, DirectoryReader
+				AreEqual("wrong number of commits !", i + 1, DirectoryReader
 					.ListCommits(dir).Count);
 			}
 			writer.Close();

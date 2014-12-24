@@ -5,7 +5,7 @@
  */
 
 using System;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Codecs;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
@@ -37,21 +37,21 @@ namespace Lucene.Net.Index
 			IndexWriter w = new IndexWriter(dir, conf);
 			for (int i = 0; i < 80; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(NewTextField("content", "aaa " + (i % 4), Field.Store.NO));
 				w.AddDocument(doc);
 			}
-			NUnit.Framework.Assert.AreEqual(80, w.MaxDoc());
-			NUnit.Framework.Assert.AreEqual(80, w.NumDocs());
+			AreEqual(80, w.MaxDoc);
+			AreEqual(80, w.NumDocs());
 			if (VERBOSE)
 			{
 				System.Console.Out.WriteLine("\nTEST: delete docs");
 			}
 			w.DeleteDocuments(new Term("content", "0"));
 			w.ForceMergeDeletes();
-			NUnit.Framework.Assert.AreEqual(80, w.MaxDoc());
-			NUnit.Framework.Assert.AreEqual(60, w.NumDocs());
+			AreEqual(80, w.MaxDoc);
+			AreEqual(60, w.NumDocs());
 			if (VERBOSE)
 			{
 				System.Console.Out.WriteLine("\nTEST: forceMergeDeletes2");
@@ -59,8 +59,8 @@ namespace Lucene.Net.Index
 			((TieredMergePolicy)w.GetConfig().GetMergePolicy()).SetForceMergeDeletesPctAllowed
 				(10.0);
 			w.ForceMergeDeletes();
-			NUnit.Framework.Assert.AreEqual(60, w.MaxDoc());
-			NUnit.Framework.Assert.AreEqual(60, w.NumDocs());
+			AreEqual(60, w.MaxDoc);
+			AreEqual(60, w.NumDocs());
 			w.Close();
 			dir.Close();
 		}
@@ -89,13 +89,13 @@ namespace Lucene.Net.Index
 				int numDocs = TestUtil.NextInt(Random(), 20, 100);
 				for (int i = 0; i < numDocs; i++)
 				{
-					Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 						();
 					doc.Add(NewTextField("content", "aaa " + (i % 4), Field.Store.NO));
 					w.AddDocument(doc);
 					int count = w.GetSegmentCount();
 					maxCount = Math.Max(count, maxCount);
-					NUnit.Framework.Assert.IsTrue("count=" + count + " maxCount=" + maxCount, count >=
+					IsTrue("count=" + count + " maxCount=" + maxCount, count >=
 						 maxCount - 3);
 				}
 				w.Flush(true, true);
@@ -107,7 +107,7 @@ namespace Lucene.Net.Index
 						 + segmentCount + ")");
 				}
 				w.ForceMerge(targetCount);
-				NUnit.Framework.Assert.AreEqual(targetCount, w.GetSegmentCount());
+				AreEqual(targetCount, w.GetSegmentCount());
 				w.Close();
 				dir.Close();
 			}
@@ -127,7 +127,7 @@ namespace Lucene.Net.Index
 			int numDocs = AtLeast(200);
 			for (int i = 0; i < numDocs; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(NewStringField("id", string.Empty + i, Field.Store.NO));
 				doc.Add(NewTextField("content", "aaa " + i, Field.Store.NO));
@@ -135,8 +135,8 @@ namespace Lucene.Net.Index
 			}
 			w.ForceMerge(1);
 			IndexReader r = w.GetReader();
-			NUnit.Framework.Assert.AreEqual(numDocs, r.MaxDoc());
-			NUnit.Framework.Assert.AreEqual(numDocs, r.NumDocs());
+			AreEqual(numDocs, r.MaxDoc);
+			AreEqual(numDocs, r.NumDocs());
 			r.Close();
 			if (VERBOSE)
 			{
@@ -144,13 +144,13 @@ namespace Lucene.Net.Index
 			}
 			w.DeleteDocuments(new Term("id", string.Empty + (42 + 17)));
 			r = w.GetReader();
-			NUnit.Framework.Assert.AreEqual(numDocs, r.MaxDoc());
-			NUnit.Framework.Assert.AreEqual(numDocs - 1, r.NumDocs());
+			AreEqual(numDocs, r.MaxDoc);
+			AreEqual(numDocs - 1, r.NumDocs());
 			r.Close();
 			w.ForceMergeDeletes();
 			r = w.GetReader();
-			NUnit.Framework.Assert.AreEqual(numDocs - 1, r.MaxDoc());
-			NUnit.Framework.Assert.AreEqual(numDocs - 1, r.NumDocs());
+			AreEqual(numDocs - 1, r.MaxDoc);
+			AreEqual(numDocs - 1, r.NumDocs());
 			r.Close();
 			w.Close();
 			dir.Close();
@@ -162,51 +162,51 @@ namespace Lucene.Net.Index
 		{
 			TieredMergePolicy tmp = new TieredMergePolicy();
 			tmp.SetMaxMergedSegmentMB(0.5);
-			NUnit.Framework.Assert.AreEqual(0.5, tmp.GetMaxMergedSegmentMB(), EPSILON);
+			AreEqual(0.5, tmp.GetMaxMergedSegmentMB(), EPSILON);
 			tmp.SetMaxMergedSegmentMB(double.PositiveInfinity);
-			NUnit.Framework.Assert.AreEqual(long.MaxValue / 1024 / 1024., tmp.GetMaxMergedSegmentMB
+			AreEqual(long.MaxValue / 1024 / 1024., tmp.GetMaxMergedSegmentMB
 				(), EPSILON * long.MaxValue);
 			tmp.SetMaxMergedSegmentMB(long.MaxValue / 1024 / 1024.);
-			NUnit.Framework.Assert.AreEqual(long.MaxValue / 1024 / 1024., tmp.GetMaxMergedSegmentMB
+			AreEqual(long.MaxValue / 1024 / 1024., tmp.GetMaxMergedSegmentMB
 				(), EPSILON * long.MaxValue);
 			try
 			{
 				tmp.SetMaxMergedSegmentMB(-2.0);
-				NUnit.Framework.Assert.Fail("Didn't throw IllegalArgumentException");
+				Fail("Didn't throw IllegalArgumentException");
 			}
 			catch (ArgumentException)
 			{
 			}
 			// pass
 			tmp.SetFloorSegmentMB(2.0);
-			NUnit.Framework.Assert.AreEqual(2.0, tmp.GetFloorSegmentMB(), EPSILON);
+			AreEqual(2.0, tmp.GetFloorSegmentMB(), EPSILON);
 			tmp.SetFloorSegmentMB(double.PositiveInfinity);
-			NUnit.Framework.Assert.AreEqual(long.MaxValue / 1024 / 1024., tmp.GetFloorSegmentMB
+			AreEqual(long.MaxValue / 1024 / 1024., tmp.GetFloorSegmentMB
 				(), EPSILON * long.MaxValue);
 			tmp.SetFloorSegmentMB(long.MaxValue / 1024 / 1024.);
-			NUnit.Framework.Assert.AreEqual(long.MaxValue / 1024 / 1024., tmp.GetFloorSegmentMB
+			AreEqual(long.MaxValue / 1024 / 1024., tmp.GetFloorSegmentMB
 				(), EPSILON * long.MaxValue);
 			try
 			{
 				tmp.SetFloorSegmentMB(-2.0);
-				NUnit.Framework.Assert.Fail("Didn't throw IllegalArgumentException");
+				Fail("Didn't throw IllegalArgumentException");
 			}
 			catch (ArgumentException)
 			{
 			}
 			// pass
 			tmp.SetMaxCFSSegmentSizeMB(2.0);
-			NUnit.Framework.Assert.AreEqual(2.0, tmp.GetMaxCFSSegmentSizeMB(), EPSILON);
+			AreEqual(2.0, tmp.GetMaxCFSSegmentSizeMB(), EPSILON);
 			tmp.SetMaxCFSSegmentSizeMB(double.PositiveInfinity);
-			NUnit.Framework.Assert.AreEqual(long.MaxValue / 1024 / 1024., tmp.GetMaxCFSSegmentSizeMB
+			AreEqual(long.MaxValue / 1024 / 1024., tmp.GetMaxCFSSegmentSizeMB
 				(), EPSILON * long.MaxValue);
 			tmp.SetMaxCFSSegmentSizeMB(long.MaxValue / 1024 / 1024.);
-			NUnit.Framework.Assert.AreEqual(long.MaxValue / 1024 / 1024., tmp.GetMaxCFSSegmentSizeMB
+			AreEqual(long.MaxValue / 1024 / 1024., tmp.GetMaxCFSSegmentSizeMB
 				(), EPSILON * long.MaxValue);
 			try
 			{
 				tmp.SetMaxCFSSegmentSizeMB(-2.0);
-				NUnit.Framework.Assert.Fail("Didn't throw IllegalArgumentException");
+				Fail("Didn't throw IllegalArgumentException");
 			}
 			catch (ArgumentException)
 			{
@@ -232,7 +232,7 @@ namespace Lucene.Net.Index
 			IndexWriter w = new IndexWriter(dir, iwc);
 			for (int i = 0; i < 100000; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(NewTextField("id", Random().NextLong() + string.Empty + Random().NextLong
 					(), Field.Store.YES));
@@ -243,7 +243,7 @@ namespace Lucene.Net.Index
 			foreach (AtomicReaderContext ctx in r.Leaves())
 			{
 				int numDocs = ((AtomicReader)ctx.Reader()).NumDocs();
-				NUnit.Framework.Assert.IsTrue("got numDocs=" + numDocs, numDocs == 100 || numDocs
+				IsTrue("got numDocs=" + numDocs, numDocs == 100 || numDocs
 					 == 1000 || numDocs == 10000);
 			}
 			r.Close();

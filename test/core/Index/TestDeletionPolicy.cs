@@ -7,7 +7,7 @@
 using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -28,15 +28,15 @@ namespace Lucene.Net.Index
 			IndexCommit firstCommit = commits[0];
 			long last = SegmentInfos.GenerationFromSegmentsFileName(firstCommit.GetSegmentsFileName
 				());
-			NUnit.Framework.Assert.AreEqual(last, firstCommit.GetGeneration());
+			AreEqual(last, firstCommit.GetGeneration());
 			for (int i = 1; i < commits.Count; i++)
 			{
 				IndexCommit commit = commits[i];
 				long now = SegmentInfos.GenerationFromSegmentsFileName(commit.GetSegmentsFileName
 					());
-				NUnit.Framework.Assert.IsTrue("SegmentInfos commits are out-of-order", now > last
+				IsTrue("SegmentInfos commits are out-of-order", now > last
 					);
-				NUnit.Framework.Assert.AreEqual(now, commit.GetGeneration());
+				AreEqual(now, commit.GetGeneration());
 				last = now;
 			}
 		}
@@ -67,7 +67,7 @@ namespace Lucene.Net.Index
 			{
 				IndexCommit lastCommit = commits[commits.Count - 1];
 				DirectoryReader r = DirectoryReader.Open(this.dir);
-				NUnit.Framework.Assert.AreEqual("lastCommit.segmentCount()=" + lastCommit.GetSegmentCount
+				AreEqual("lastCommit.segmentCount()=" + lastCommit.GetSegmentCount
 					() + " vs IndexReader.segmentCount=" + r.Leaves().Count, r.Leaves().Count, lastCommit
 					.GetSegmentCount());
 				r.Close();
@@ -101,7 +101,7 @@ namespace Lucene.Net.Index
 				foreach (IndexCommit commit in commits)
 				{
 					commit.Delete();
-					NUnit.Framework.Assert.IsTrue(commit.IsDeleted());
+					IsTrue(commit.IsDeleted());
 				}
 			}
 
@@ -320,7 +320,7 @@ namespace Lucene.Net.Index
 					long modTime = long.Parse(sis.GetUserData().Get("commitTime"));
 					oneSecondResolution &= (modTime % 1000) == 0;
 					long leeway = (long)((SECONDS + (oneSecondResolution ? 1.0 : 0.0)) * 1000);
-					NUnit.Framework.Assert.IsTrue("commit point was older than " + SECONDS + " seconds ("
+					IsTrue("commit point was older than " + SECONDS + " seconds ("
 						 + (lastDeleteTime - modTime) + " msec) but did not get deleted ", lastDeleteTime
 						 - modTime <= leeway);
 				}
@@ -383,14 +383,14 @@ namespace Lucene.Net.Index
 					writer.ForceMerge(1);
 					writer.Close();
 				}
-				NUnit.Framework.Assert.AreEqual(needsMerging ? 2 : 1, policy.numOnInit);
+				AreEqual(needsMerging ? 2 : 1, policy.numOnInit);
 				// If we are not auto committing then there should
 				// be exactly 2 commits (one per close above):
-				NUnit.Framework.Assert.AreEqual(1 + (needsMerging ? 1 : 0), policy.numOnCommit);
+				AreEqual(1 + (needsMerging ? 1 : 0), policy.numOnCommit);
 				// Test listCommits
 				ICollection<IndexCommit> commits = DirectoryReader.ListCommits(dir);
 				// 2 from closing writer
-				NUnit.Framework.Assert.AreEqual(1 + (needsMerging ? 1 : 0), commits.Count);
+				AreEqual(1 + (needsMerging ? 1 : 0), commits.Count);
 				// Make sure we can open a reader on each commit:
 				foreach (IndexCommit commit in commits)
 				{
@@ -422,7 +422,7 @@ namespace Lucene.Net.Index
 							(policy));
 						writer.Close();
 						int postCount = dir.ListAll().Length;
-						NUnit.Framework.Assert.IsTrue(postCount < preCount);
+						IsTrue(postCount < preCount);
 					}
 				}
 				dir.Close();
@@ -448,7 +448,7 @@ namespace Lucene.Net.Index
 			}
 			writer.Close();
 			ICollection<IndexCommit> commits = DirectoryReader.ListCommits(dir);
-			NUnit.Framework.Assert.AreEqual(5, commits.Count);
+			AreEqual(5, commits.Count);
 			IndexCommit lastCommit = null;
 			foreach (IndexCommit commit in commits)
 			{
@@ -457,38 +457,38 @@ namespace Lucene.Net.Index
 					lastCommit = commit;
 				}
 			}
-			NUnit.Framework.Assert.IsTrue(lastCommit != null);
+			IsTrue(lastCommit != null);
 			// Now add 1 doc and merge
 			writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random())).SetIndexDeletionPolicy(policy));
 			AddDoc(writer);
-			NUnit.Framework.Assert.AreEqual(11, writer.NumDocs());
+			AreEqual(11, writer.NumDocs());
 			writer.ForceMerge(1);
 			writer.Close();
-			NUnit.Framework.Assert.AreEqual(6, DirectoryReader.ListCommits(dir).Count);
+			AreEqual(6, DirectoryReader.ListCommits(dir).Count);
 			// Now open writer on the commit just before merge:
 			writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random())).SetIndexDeletionPolicy(policy).SetIndexCommit(lastCommit));
-			NUnit.Framework.Assert.AreEqual(10, writer.NumDocs());
+			AreEqual(10, writer.NumDocs());
 			// Should undo our rollback:
 			writer.Rollback();
 			DirectoryReader r = DirectoryReader.Open(dir);
 			// Still merged, still 11 docs
-			NUnit.Framework.Assert.AreEqual(1, r.Leaves().Count);
-			NUnit.Framework.Assert.AreEqual(11, r.NumDocs());
+			AreEqual(1, r.Leaves().Count);
+			AreEqual(11, r.NumDocs());
 			r.Close();
 			writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random())).SetIndexDeletionPolicy(policy).SetIndexCommit(lastCommit));
-			NUnit.Framework.Assert.AreEqual(10, writer.NumDocs());
+			AreEqual(10, writer.NumDocs());
 			// Commits the rollback:
 			writer.Close();
 			// Now 8 because we made another commit
-			NUnit.Framework.Assert.AreEqual(7, DirectoryReader.ListCommits(dir).Count);
+			AreEqual(7, DirectoryReader.ListCommits(dir).Count);
 			r = DirectoryReader.Open(dir);
 			// Not fully merged because we rolled it back, and now only
 			// 10 docs
-			NUnit.Framework.Assert.IsTrue(r.Leaves().Count > 1);
-			NUnit.Framework.Assert.AreEqual(10, r.NumDocs());
+			IsTrue(r.Leaves().Count > 1);
+			AreEqual(10, r.NumDocs());
 			r.Close();
 			// Re-merge
 			writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
@@ -496,25 +496,25 @@ namespace Lucene.Net.Index
 			writer.ForceMerge(1);
 			writer.Close();
 			r = DirectoryReader.Open(dir);
-			NUnit.Framework.Assert.AreEqual(1, r.Leaves().Count);
-			NUnit.Framework.Assert.AreEqual(10, r.NumDocs());
+			AreEqual(1, r.Leaves().Count);
+			AreEqual(10, r.NumDocs());
 			r.Close();
 			// Now open writer on the commit just before merging,
 			// but this time keeping only the last commit:
 			writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random())).SetIndexCommit(lastCommit));
-			NUnit.Framework.Assert.AreEqual(10, writer.NumDocs());
+			AreEqual(10, writer.NumDocs());
 			// Reader still sees fully merged index, because writer
 			// opened on the prior commit has not yet committed:
 			r = DirectoryReader.Open(dir);
-			NUnit.Framework.Assert.AreEqual(1, r.Leaves().Count);
-			NUnit.Framework.Assert.AreEqual(10, r.NumDocs());
+			AreEqual(1, r.Leaves().Count);
+			AreEqual(10, r.NumDocs());
 			r.Close();
 			writer.Close();
 			// Now reader sees not-fully-merged index:
 			r = DirectoryReader.Open(dir);
-			NUnit.Framework.Assert.IsTrue(r.Leaves().Count > 1);
-			NUnit.Framework.Assert.AreEqual(10, r.NumDocs());
+			IsTrue(r.Leaves().Count > 1);
+			AreEqual(10, r.NumDocs());
 			r.Close();
 			dir.Close();
 		}
@@ -549,10 +549,10 @@ namespace Lucene.Net.Index
 					();
 				writer.ForceMerge(1);
 				writer.Close();
-				NUnit.Framework.Assert.AreEqual(2, policy.numOnInit);
+				AreEqual(2, policy.numOnInit);
 				// If we are not auto committing then there should
 				// be exactly 2 commits (one per close above):
-				NUnit.Framework.Assert.AreEqual(2, policy.numOnCommit);
+				AreEqual(2, policy.numOnCommit);
 				// Simplistic check: just verify the index is in fact
 				// readable:
 				IndexReader reader = DirectoryReader.Open(dir);
@@ -588,9 +588,9 @@ namespace Lucene.Net.Index
 					writer.ForceMerge(1);
 					writer.Close();
 				}
-				NUnit.Framework.Assert.IsTrue(policy.numDelete > 0);
-				NUnit.Framework.Assert.AreEqual(N + 1, policy.numOnInit);
-				NUnit.Framework.Assert.AreEqual(N + 1, policy.numOnCommit);
+				IsTrue(policy.numDelete > 0);
+				AreEqual(N + 1, policy.numOnInit);
+				AreEqual(N + 1, policy.numOnCommit);
 				// Simplistic check: just verify only the past N segments_N's still
 				// exist, and, I can open a reader on each:
 				dir.DeleteFile(IndexFileNames.SEGMENTS_GEN);
@@ -603,7 +603,7 @@ namespace Lucene.Net.Index
 						reader.Close();
 						if (i_1 == N)
 						{
-							NUnit.Framework.Assert.Fail("should have failed on commits prior to last " + N);
+							Fail("should have failed on commits prior to last " + N);
 						}
 					}
 					catch (IOException e)
@@ -671,7 +671,7 @@ namespace Lucene.Net.Index
 					IndexReader reader = DirectoryReader.Open(dir);
 					IndexSearcher searcher = NewSearcher(reader);
 					ScoreDoc[] hits = searcher.Search(query, null, 1000).scoreDocs;
-					NUnit.Framework.Assert.AreEqual(16, hits.Length);
+					AreEqual(16, hits.Length);
 					reader.Close();
 					writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 						(Random())).SetOpenMode(IndexWriterConfig.OpenMode.CREATE).SetIndexDeletionPolicy
@@ -682,12 +682,12 @@ namespace Lucene.Net.Index
 					// pending because we opened for "create":
 					writer.Close();
 				}
-				NUnit.Framework.Assert.AreEqual(3 * (N + 1) + 1, policy.numOnInit);
-				NUnit.Framework.Assert.AreEqual(3 * (N + 1) + 1, policy.numOnCommit);
+				AreEqual(3 * (N + 1) + 1, policy.numOnInit);
+				AreEqual(3 * (N + 1) + 1, policy.numOnCommit);
 				IndexReader rwReader = DirectoryReader.Open(dir);
 				IndexSearcher searcher_1 = NewSearcher(rwReader);
 				ScoreDoc[] hits_1 = searcher_1.Search(query, null, 1000).scoreDocs;
-				NUnit.Framework.Assert.AreEqual(0, hits_1.Length);
+				AreEqual(0, hits_1.Length);
 				// Simplistic check: just verify only the past N segments_N's still
 				// exist, and, I can open a reader on each:
 				long gen = SegmentInfos.GetLastCommitGeneration(dir);
@@ -703,7 +703,7 @@ namespace Lucene.Net.Index
 						// count should be.
 						searcher_1 = NewSearcher(reader);
 						hits_1 = searcher_1.Search(query, null, 1000).scoreDocs;
-						NUnit.Framework.Assert.AreEqual(expectedCount, hits_1.Length);
+						AreEqual(expectedCount, hits_1.Length);
 						if (expectedCount == 0)
 						{
 							expectedCount = 16;
@@ -725,7 +725,7 @@ namespace Lucene.Net.Index
 						reader.Close();
 						if (i_1 == N)
 						{
-							NUnit.Framework.Assert.Fail("should have failed on commits before last " + N);
+							Fail("should have failed on commits before last " + N);
 						}
 					}
 					catch (IOException e)
@@ -749,7 +749,7 @@ namespace Lucene.Net.Index
 		/// <exception cref="System.IO.IOException"></exception>
 		private void AddDocWithID(IndexWriter writer, int id)
 		{
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewTextField("content", "aaa", Field.Store.NO));
 			doc.Add(NewStringField("id", string.Empty + id, Field.Store.NO));
@@ -759,7 +759,7 @@ namespace Lucene.Net.Index
 		/// <exception cref="System.IO.IOException"></exception>
 		private void AddDoc(IndexWriter writer)
 		{
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewTextField("content", "aaa", Field.Store.NO));
 			writer.AddDocument(doc);

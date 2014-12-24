@@ -4,8 +4,8 @@
  * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using Lucene.Net.Analysis;
-using Lucene.Net.Analysis.Tokenattributes;
+using Lucene.Net.Test.Analysis;
+using Lucene.Net.Test.Analysis.Tokenattributes;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -90,7 +90,7 @@ namespace Lucene.Net.Index
 			RandomIndexWriter riw = new RandomIndexWriter(Random(), dir, iwc);
 			for (int idx_1 = 0; idx_1 < NUM_DOCS; idx_1++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				string s = isS1.Get(idx_1) ? s1 : s2;
 				Field f = NewTextField("field", s, Field.Store.NO);
@@ -103,9 +103,9 @@ namespace Lucene.Net.Index
 			}
 			r = riw.GetReader();
 			riw.Close();
-			NUnit.Framework.Assert.AreEqual(NUM_DOCS, r.NumDocs());
-			NUnit.Framework.Assert.IsTrue(r.DocFreq(new Term("field", s1)) > 0);
-			NUnit.Framework.Assert.IsTrue(r.DocFreq(new Term("field", s2)) > 0);
+			AreEqual(NUM_DOCS, r.NumDocs());
+			IsTrue(r.DocFreq(new Term("field", s1)) > 0);
+			IsTrue(r.DocFreq(new Term("field", s2)) > 0);
 			int num = AtLeast(1000);
 			for (int iter = 0; iter < num; iter++)
 			{
@@ -163,18 +163,18 @@ namespace Lucene.Net.Index
 						{
 							System.Console.Out.WriteLine("  got docID=" + docID);
 						}
-						NUnit.Framework.Assert.AreEqual(expected, docID);
+						AreEqual(expected, docID);
 						if (docID == DocIdSetIterator.NO_MORE_DOCS)
 						{
 							break;
 						}
 						if (Random().Next(6) == 3)
 						{
-							int freq = postings.Freq();
-							NUnit.Framework.Assert.IsTrue(freq >= 1 && freq <= 4);
+							int freq = postings.Freq;
+							IsTrue(freq >= 1 && freq <= 4);
 							for (int pos = 0; pos < freq; pos++)
 							{
-								NUnit.Framework.Assert.AreEqual(pos, postings.NextPosition());
+								AreEqual(pos, postings.NextPosition());
 								if (Random().NextBoolean())
 								{
 									postings.GetPayload();
@@ -229,18 +229,18 @@ namespace Lucene.Net.Index
 						{
 							System.Console.Out.WriteLine("  got docID=" + docID);
 						}
-						NUnit.Framework.Assert.AreEqual(expected, docID);
+						AreEqual(expected, docID);
 						if (docID == DocIdSetIterator.NO_MORE_DOCS)
 						{
 							break;
 						}
 						if (Random().Next(6) == 3)
 						{
-							int freq = postings.Freq();
-							NUnit.Framework.Assert.IsTrue(freq >= 1 && freq <= 4);
+							int freq = postings.Freq;
+							IsTrue(freq >= 1 && freq <= 4);
 							for (int pos = 0; pos < freq; pos++)
 							{
-								NUnit.Framework.Assert.AreEqual(pos, postings.NextPosition());
+								AreEqual(pos, postings.NextPosition());
 								if (Random().NextBoolean())
 								{
 									postings.GetPayload();
@@ -306,7 +306,7 @@ namespace Lucene.Net.Index
 				ft.SetIndexOptions(options);
 				for (int idx_1 = 0; idx_1 < NUM_DOCS; idx_1++)
 				{
-					Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 						();
 					string s = isS1.Get(idx_1) ? s1 : s2;
 					Field f = NewField("field", s, ft);
@@ -324,9 +324,9 @@ namespace Lucene.Net.Index
 			{
 				r = DirectoryReader.Open(dir);
 			}
-			NUnit.Framework.Assert.AreEqual(NUM_DOCS, r.NumDocs());
-			NUnit.Framework.Assert.IsTrue(r.DocFreq(new Term("field", s1)) > 0);
-			NUnit.Framework.Assert.IsTrue(r.DocFreq(new Term("field", s2)) > 0);
+			AreEqual(NUM_DOCS, r.NumDocs());
+			IsTrue(r.DocFreq(new Term("field", s1)) > 0);
+			IsTrue(r.DocFreq(new Term("field", s2)) > 0);
 			int num = AtLeast(1000);
 			for (int iter = 0; iter < num; iter++)
 			{
@@ -400,15 +400,15 @@ namespace Lucene.Net.Index
 						{
 							System.Console.Out.WriteLine("  got docID=" + docID);
 						}
-						NUnit.Framework.Assert.AreEqual(expected, docID);
+						AreEqual(expected, docID);
 						if (docID == DocIdSetIterator.NO_MORE_DOCS)
 						{
 							break;
 						}
 						if (Random().Next(6) == 3 && postings != null)
 						{
-							int freq = postings.Freq();
-							NUnit.Framework.Assert.IsTrue(freq >= 1 && freq <= 4);
+							int freq = postings.Freq;
+							IsTrue(freq >= 1 && freq <= 4);
 						}
 					}
 					else
@@ -453,15 +453,15 @@ namespace Lucene.Net.Index
 						{
 							System.Console.Out.WriteLine("  got docID=" + docID);
 						}
-						NUnit.Framework.Assert.AreEqual(expected, docID);
+						AreEqual(expected, docID);
 						if (docID == DocIdSetIterator.NO_MORE_DOCS)
 						{
 							break;
 						}
 						if (Random().Next(6) == 3 && postings != null)
 						{
-							int freq = postings.Freq();
-							NUnit.Framework.Assert.IsTrue("got invalid freq=" + freq, freq >= 1 && freq <= 4);
+							int freq = postings.Freq;
+							IsTrue("got invalid freq=" + freq, freq >= 1 && freq <= 4);
 						}
 					}
 				}

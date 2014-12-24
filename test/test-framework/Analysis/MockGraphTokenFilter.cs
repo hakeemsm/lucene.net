@@ -5,6 +5,8 @@
  */
 
 using System;
+using Lucene.Net.Analysis;
+using Lucene.Net.Analysis.Tokenattributes;
 using Lucene.Net.TestFramework.Analysis;
 using Lucene.Net.TestFramework.Analysis.Tokenattributes;
 using Lucene.Net.TestFramework.Util;

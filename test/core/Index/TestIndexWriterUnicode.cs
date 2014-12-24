@@ -5,7 +5,7 @@
  */
 
 using System.Collections.Generic;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
@@ -142,7 +142,7 @@ namespace Lucene.Net.Index
 		private string TermDesc(string s)
 		{
 			string s0;
-			NUnit.Framework.Assert.IsTrue(s.Length <= 2);
+			IsTrue(s.Length <= 2);
 			if (s.Length == 1)
 			{
 				s0 = AsUnicodeChar(s[0]);
@@ -168,23 +168,23 @@ namespace Lucene.Net.Index
 				{
 					break;
 				}
-				NUnit.Framework.Assert.IsTrue(last.CompareTo(term) < 0);
+				IsTrue(last.CompareTo(term) < 0);
 				last.CopyBytes(term);
 				string s = term.Utf8ToString();
-				NUnit.Framework.Assert.IsTrue("term " + TermDesc(s) + " was not added to index (count="
+				IsTrue("term " + TermDesc(s) + " was not added to index (count="
 					 + allTerms.Count + ")", allTerms.Contains(s));
 				seenTerms.AddItem(s);
 			}
 			if (isTop)
 			{
-				NUnit.Framework.Assert.IsTrue(allTerms.Equals(seenTerms));
+				IsTrue(allTerms.Equals(seenTerms));
 			}
 			// Test seeking:
 			Iterator<string> it = seenTerms.Iterator();
 			while (it.HasNext())
 			{
 				BytesRef tr = new BytesRef(it.Next());
-				NUnit.Framework.Assert.AreEqual("seek failed for term=" + TermDesc(tr.Utf8ToString
+				AreEqual("seek failed for term=" + TermDesc(tr.Utf8ToString
 					()), TermsEnum.SeekStatus.FOUND, terms.SeekCeil(tr));
 			}
 		}
@@ -206,17 +206,17 @@ namespace Lucene.Net.Index
 				{
 					byte[] b = Sharpen.Runtime.GetBytesForString(new string(buffer, 0, 20), StandardCharsets
 						.UTF_8);
-					NUnit.Framework.Assert.AreEqual(b.Length, utf8.length);
+					AreEqual(b.Length, utf8.length);
 					for (int i = 0; i < b.Length; i++)
 					{
-						NUnit.Framework.Assert.AreEqual(b[i], utf8.bytes[i]);
+						AreEqual(b[i], utf8.bytes[i]);
 					}
 				}
 				UnicodeUtil.UTF8toUTF16(utf8.bytes, 0, utf8.length, utf16);
-				NUnit.Framework.Assert.AreEqual(utf16.length, 20);
+				AreEqual(utf16.length, 20);
 				for (int i_1 = 0; i_1 < 20; i_1++)
 				{
-					NUnit.Framework.Assert.AreEqual(expected[i_1], utf16.chars[i_1]);
+					AreEqual(expected[i_1], utf16.chars[i_1]);
 				}
 			}
 		}
@@ -250,15 +250,15 @@ namespace Lucene.Net.Index
 				UnicodeUtil.UTF16toUTF8(chars, 0, len, utf8);
 				string s1 = new string(chars, 0, len);
 				string s2 = new string(utf8.bytes, 0, utf8.length, StandardCharsets.UTF_8);
-				NUnit.Framework.Assert.AreEqual("codepoint " + ch, s1, s2);
+				AreEqual("codepoint " + ch, s1, s2);
 				UnicodeUtil.UTF8toUTF16(utf8.bytes, 0, utf8.length, utf16);
-				NUnit.Framework.Assert.AreEqual("codepoint " + ch, s1, new string(utf16.chars, 0, 
+				AreEqual("codepoint " + ch, s1, new string(utf16.chars, 0, 
 					utf16.length));
 				byte[] b = Sharpen.Runtime.GetBytesForString(s1, StandardCharsets.UTF_8);
-				NUnit.Framework.Assert.AreEqual(utf8.length, b.Length);
+				AreEqual(utf8.length, b.Length);
 				for (int j = 0; j < utf8.length; j++)
 				{
-					NUnit.Framework.Assert.AreEqual(utf8.bytes[j], b[j]);
+					AreEqual(utf8.bytes[j], b[j]);
 				}
 			}
 		}
@@ -269,15 +269,15 @@ namespace Lucene.Net.Index
 			Directory d = NewDirectory();
 			IndexWriter w = new IndexWriter(d, NewIndexWriterConfig(TEST_VERSION_CURRENT, new 
 				MockAnalyzer(Random())));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewTextField("field", "a a\uffffb", Field.Store.NO));
 			w.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewTextField("field", "a", Field.Store.NO));
 			w.AddDocument(doc);
 			IndexReader r = w.GetReader();
-			NUnit.Framework.Assert.AreEqual(1, r.DocFreq(new Term("field", "a\uffffb")));
+			AreEqual(1, r.DocFreq(new Term("field", "a\uffffb")));
 			r.Close();
 			w.Close();
 			d.Close();
@@ -290,7 +290,7 @@ namespace Lucene.Net.Index
 			Directory dir = NewDirectory();
 			IndexWriter w = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new 
 				TestIndexWriter.StringSplitAnalyzer()));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			int count = utf8Data.Length / 2;
 			for (int i = 0; i < count; i++)
@@ -300,13 +300,13 @@ namespace Lucene.Net.Index
 			w.AddDocument(doc);
 			w.Close();
 			IndexReader ir = DirectoryReader.Open(dir);
-			Lucene.Net.Document.Document doc2 = ir.Document(0);
+			Lucene.Net.Documents.Document doc2 = ir.Document(0);
 			for (int i_1 = 0; i_1 < count; i_1++)
 			{
-				NUnit.Framework.Assert.AreEqual("field " + i_1 + " was not indexed correctly", 1, 
+				AreEqual("field " + i_1 + " was not indexed correctly", 1, 
 					ir.DocFreq(new Term("f" + i_1, utf8Data[2 * i_1 + 1])));
-				NUnit.Framework.Assert.AreEqual("field " + i_1 + " is incorrect", utf8Data[2 * i_1
-					 + 1], doc2.GetField("f" + i_1).StringValue());
+				AreEqual("field " + i_1 + " is incorrect", utf8Data[2 * i_1
+					 + 1], doc2.GetField("f" + i_1).StringValue = ));
 			}
 			ir.Close();
 			dir.Close();
@@ -320,7 +320,7 @@ namespace Lucene.Net.Index
 			Random rnd = Random();
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(rnd, dir);
-			Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+			Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 			// Single segment
 			Field f = NewStringField("f", string.Empty, Field.Store.NO);
 			d.Add(f);
@@ -351,14 +351,14 @@ namespace Lucene.Net.Index
 					// Surrogate pair
 					chars[0] = (char)GetInt(rnd, UnicodeUtil.UNI_SUR_HIGH_START, UnicodeUtil.UNI_SUR_HIGH_END
 						);
-					NUnit.Framework.Assert.IsTrue(((int)chars[0]) >= UnicodeUtil.UNI_SUR_HIGH_START &&
+					IsTrue(((int)chars[0]) >= UnicodeUtil.UNI_SUR_HIGH_START &&
 						 ((int)chars[0]) <= UnicodeUtil.UNI_SUR_HIGH_END);
 					chars[1] = (char)GetInt(rnd, UnicodeUtil.UNI_SUR_LOW_START, UnicodeUtil.UNI_SUR_LOW_END
 						);
 					s = new string(chars, 0, 2);
 				}
 				allTerms.AddItem(s);
-				f.SetStringValue(s);
+				f.StringValue = s);
 				writer.AddDocument(d);
 				if ((1 + i) % 42 == 0)
 				{

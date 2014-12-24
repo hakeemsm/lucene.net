@@ -6,8 +6,8 @@
 
 using System.IO;
 using NUnit.Framework;
-using Lucene.Net.Analysis;
-using Lucene.Net.Analysis.Tokenattributes;
+using Lucene.Net.Test.Analysis;
+using Lucene.Net.Test.Analysis.Tokenattributes;
 using Lucene.Net.Codecs.Lucene41;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
@@ -70,7 +70,7 @@ namespace Lucene.Net.Index
 			Term term = new Term("test", "a");
 			for (int i = 0; i < 5000; i++)
 			{
-				Lucene.Net.Document.Document d1 = new Lucene.Net.Document.Document(
+				Lucene.Net.Documents.Document d1 = new Lucene.Net.Documents.Document(
 					);
 				d1.Add(NewTextField(term.Field(), term.Text(), Field.Store.NO));
 				writer.AddDocument(d1);
@@ -103,16 +103,16 @@ namespace Lucene.Net.Index
 			tp.Advance(target);
 			if (maxCounter < counter)
 			{
-				NUnit.Framework.Assert.Fail("Too many bytes read: " + counter + " vs " + maxCounter
+				Fail("Too many bytes read: " + counter + " vs " + maxCounter
 					);
 			}
-			NUnit.Framework.Assert.AreEqual("Wrong document " + tp.DocID() + " after skipTo target "
-				 + target, target, tp.DocID());
-			NUnit.Framework.Assert.AreEqual("Frequency is not 1: " + tp.Freq(), 1, tp.Freq());
+			AreEqual("Wrong document " + tp.DocID + " after skipTo target "
+				 + target, target, tp.DocID);
+			AreEqual("Frequency is not 1: " + tp.Freq, 1, tp.Freq);
 			tp.NextPosition();
 			BytesRef b = tp.GetPayload();
-			NUnit.Framework.Assert.AreEqual(1, b.length);
-			NUnit.Framework.Assert.AreEqual("Wrong payload for the target " + target + ": " +
+			AreEqual(1, b.length);
+			AreEqual("Wrong payload for the target " + target + ": " +
 				 b.bytes[b.offset], unchecked((byte)target), b.bytes[b.offset]);
 		}
 
@@ -190,9 +190,9 @@ namespace Lucene.Net.Index
 				this.input.Close();
 			}
 
-			public override long GetFilePointer()
+			public override long FilePointer
 			{
-				return this.input.GetFilePointer();
+				return this.input.FilePointer;
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>

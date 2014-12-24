@@ -5,7 +5,7 @@
  */
 
 using System;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Codecs.Lucene41;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
@@ -30,7 +30,7 @@ namespace Lucene.Net.Index
 			{
 				if (iter == 0)
 				{
-					Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 						();
 					doc.Add(NewTextField("field1", "this is field1", Field.Store.NO));
 					doc.Add(NewTextField("field2", "this is field2", Field.Store.NO));
@@ -47,7 +47,7 @@ namespace Lucene.Net.Index
 				}
 				IndexReader r = w.GetReader();
 				TermsEnum terms = MultiFields.GetTerms(r, "field3").Iterator(null);
-				NUnit.Framework.Assert.AreEqual(TermsEnum.SeekStatus.END, terms.SeekCeil(new BytesRef
+				AreEqual(TermsEnum.SeekStatus.END, terms.SeekCeil(new BytesRef
 					("abc")));
 				r.Close();
 			}
@@ -62,17 +62,17 @@ namespace Lucene.Net.Index
 			IndexWriter w = new IndexWriter(d, NewIndexWriterConfig(TEST_VERSION_CURRENT, new 
 				MockAnalyzer(Random())).SetCodec(TestUtil.AlwaysPostingsFormat(new Lucene41PostingsFormat
 				())));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewTextField("f", "a b c", Field.Store.NO));
 			w.AddDocument(doc);
 			w.ForceMerge(1);
 			DirectoryReader r = w.GetReader();
 			TermsEnum terms = GetOnlySegmentReader(r).Fields().Terms("f").Iterator(null);
-			NUnit.Framework.Assert.IsTrue(terms.Next() != null);
+			IsTrue(terms.Next() != null);
 			try
 			{
-				NUnit.Framework.Assert.AreEqual(0, terms.Ord());
+				AreEqual(0, terms.Ord());
 			}
 			catch (NotSupportedException)
 			{

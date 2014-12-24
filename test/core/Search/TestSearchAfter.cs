@@ -148,7 +148,7 @@ namespace Lucene.Net.Search
 					fields.AddItem(new BinaryDocValuesField("straightbytesdocvalues", new BytesRef(TestUtil
 						.RandomRealisticUnicodeString(Random()))));
 				}
-				Lucene.Net.Document.Document document = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document document = new Lucene.Net.Documents.Document
 					();
 				document.Add(new StoredField("id", string.Empty + i_1));
 				if (VERBOSE)
@@ -240,7 +240,7 @@ namespace Lucene.Net.Search
 		/// <exception cref="System.Exception"></exception>
 		internal virtual void AssertQuery(Query query, Filter filter, Sort sort)
 		{
-			int maxDoc = searcher.GetIndexReader().MaxDoc();
+			int maxDoc = searcher.GetIndexReader().MaxDoc;
 			TopDocs all;
 			int pageSize = TestUtil.NextInt(Random(), 1, maxDoc * 2);
 			if (VERBOSE)
@@ -267,7 +267,7 @@ namespace Lucene.Net.Search
 			}
 			if (VERBOSE)
 			{
-				System.Console.Out.WriteLine("  all.totalHits=" + all.totalHits);
+				System.Console.Out.WriteLine("  all.TotalHits=" + all.TotalHits);
 				int upto = 0;
 				foreach (ScoreDoc scoreDoc in all.scoreDocs)
 				{
@@ -277,7 +277,7 @@ namespace Lucene.Net.Search
 			}
 			int pageStart = 0;
 			ScoreDoc lastBottom = null;
-			while (pageStart < all.totalHits)
+			while (pageStart < all.TotalHits)
 			{
 				TopDocs paged;
 				if (sort == null)
@@ -317,13 +317,13 @@ namespace Lucene.Net.Search
 				pageStart += paged.scoreDocs.Length;
 				lastBottom = paged.scoreDocs[paged.scoreDocs.Length - 1];
 			}
-			NUnit.Framework.Assert.AreEqual(all.scoreDocs.Length, pageStart);
+			AreEqual(all.scoreDocs.Length, pageStart);
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
 		internal virtual void AssertPage(int pageStart, TopDocs all, TopDocs paged)
 		{
-			NUnit.Framework.Assert.AreEqual(all.totalHits, paged.totalHits);
+			AreEqual(all.TotalHits, paged.TotalHits);
 			for (int i = 0; i < paged.scoreDocs.Length; i++)
 			{
 				ScoreDoc sd1 = all.scoreDocs[pageStart + i];
@@ -336,12 +336,12 @@ namespace Lucene.Net.Search
 					System.Console.Out.WriteLine("        actual id=" + searcher.Doc(sd2.doc).Get("id"
 						) + " " + sd2);
 				}
-				NUnit.Framework.Assert.AreEqual(sd1.doc, sd2.doc);
-				NUnit.Framework.Assert.AreEqual(sd1.score, sd2.score, 0f);
+				AreEqual(sd1.doc, sd2.doc);
+				AreEqual(sd1.score, sd2.score, 0f);
 				if (sd1 is FieldDoc)
 				{
-					NUnit.Framework.Assert.IsTrue(sd2 is FieldDoc);
-					NUnit.Framework.Assert.AreEqual(((FieldDoc)sd1).fields, ((FieldDoc)sd2).fields);
+					IsTrue(sd2 is FieldDoc);
+					AreEqual(((FieldDoc)sd1).fields, ((FieldDoc)sd2).fields);
 				}
 			}
 		}

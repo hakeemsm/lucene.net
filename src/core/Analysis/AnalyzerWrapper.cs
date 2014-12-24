@@ -34,6 +34,10 @@ namespace Lucene.Net.Analysis
 			return components;
 		}
 
+		protected internal virtual TextReader WrapReader(string fieldName, TextReader reader)
+		{
+			return reader;
+		}
 		
         public override TokenStreamComponents CreateComponents(string fieldName, TextReader reader)
         {
@@ -52,7 +56,8 @@ namespace Lucene.Net.Analysis
 
         public override System.IO.TextReader InitReader(string fieldName, TextReader reader)
         {
-            return GetWrappedAnalyzer(fieldName).InitReader(fieldName, reader);
+			return GetWrappedAnalyzer(fieldName).InitReader(fieldName, WrapReader(fieldName, 
+				reader));
         }
     }
 }

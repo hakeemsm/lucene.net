@@ -6,7 +6,7 @@
 
 using System;
 using System.IO;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
@@ -63,7 +63,7 @@ namespace Lucene.Net.Index
 					// don't make life difficult though
 					for (int i = 0; i < numDocs; i++)
 					{
-						Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+						Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 							();
 						doc.Add(NewStringField("id", Sharpen.Extensions.ToString(i), Field.Store.NO));
 						doc.Add(new NumericDocValuesField("dv", i));
@@ -88,7 +88,7 @@ namespace Lucene.Net.Index
 							true), Field.Store.NO));
 						// ensure we get some vectors
 						FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
-						ft.SetStoreTermVectors(true);
+						ft.StoreTermVectors = true;
 						doc.Add(NewField("text_vectors", TestUtil.RandomAnalysisString(Random(), 6, true)
 							, ft));
 						if (Random().Next(10) > 0)
@@ -144,7 +144,7 @@ namespace Lucene.Net.Index
 						else
 						{
 							// block docs
-							Lucene.Net.Document.Document doc2 = new Lucene.Net.Document.Document
+							Lucene.Net.Documents.Document doc2 = new Lucene.Net.Documents.Document
 								();
 							doc2.Add(NewStringField("id", Sharpen.Extensions.ToString(-i), Field.Store.NO));
 							doc2.Add(NewTextField("text1", TestUtil.RandomAnalysisString(Random(), 20, true), 

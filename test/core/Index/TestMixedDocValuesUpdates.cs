@@ -7,7 +7,7 @@
 using System.Collections.Generic;
 using System.IO;
 using Com.Carrotsearch.Randomizedtesting.Generators;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
@@ -60,7 +60,7 @@ namespace Lucene.Net.Index
 				//      System.out.println("[" + Thread.currentThread().getName() + "]: round=" + i + ", numDocs=" + numDocs);
 				for (int j = 0; j < numDocs; j++)
 				{
-					Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 						();
 					doc.Add(new StringField("id", "doc-" + docID, Field.Store.NO));
 					doc.Add(new StringField("key", "all", Field.Store.NO));
@@ -140,11 +140,11 @@ namespace Lucene.Net.Index
 				}
 				//      System.out.println("[" + Thread.currentThread().getName() + "]: reopen reader: " + reader);
 				DirectoryReader newReader = DirectoryReader.OpenIfChanged(reader);
-				NUnit.Framework.Assert.IsNotNull(newReader);
+				IsNotNull(newReader);
 				reader.Close();
 				reader = newReader;
 				//      System.out.println("[" + Thread.currentThread().getName() + "]: reopened reader: " + reader);
-				NUnit.Framework.Assert.IsTrue(reader.NumDocs() > 0);
+				IsTrue(reader.NumDocs() > 0);
 				// we delete at most one document per round
 				BytesRef scratch = new BytesRef();
 				foreach (AtomicReaderContext context in reader.Leaves())
@@ -160,15 +160,15 @@ namespace Lucene.Net.Index
 						Bits docsWithField = r.GetDocsWithField(f);
 						if (field_1 < numNDVFields)
 						{
-							NUnit.Framework.Assert.IsNotNull(ndv);
-							NUnit.Framework.Assert.IsNull(bdv);
+							IsNotNull(ndv);
+							IsNull(bdv);
 						}
 						else
 						{
-							NUnit.Framework.Assert.IsNull(ndv);
-							NUnit.Framework.Assert.IsNotNull(bdv);
+							IsNull(ndv);
+							IsNotNull(bdv);
 						}
-						int maxDoc = r.MaxDoc();
+						int maxDoc = r.MaxDoc;
 						for (int doc = 0; doc < maxDoc; doc++)
 						{
 							if (liveDocs == null || liveDocs.Get(doc))
@@ -176,22 +176,22 @@ namespace Lucene.Net.Index
 								//              System.out.println("doc=" + (doc + context.docBase) + " f='" + f + "' vslue=" + getValue(bdv, doc, scratch));
 								if (fieldHasValue[field_1])
 								{
-									NUnit.Framework.Assert.IsTrue(docsWithField.Get(doc));
+									IsTrue(docsWithField.Get(doc));
 									if (field_1 < numNDVFields)
 									{
-										NUnit.Framework.Assert.AreEqual("invalid value for doc=" + doc + ", field=" + f +
+										AreEqual("invalid value for doc=" + doc + ", field=" + f +
 											 ", reader=" + r, fieldValues[field_1], ndv.Get(doc));
 									}
 									else
 									{
-										NUnit.Framework.Assert.AreEqual("invalid value for doc=" + doc + ", field=" + f +
+										AreEqual("invalid value for doc=" + doc + ", field=" + f +
 											 ", reader=" + r, fieldValues[field_1], TestBinaryDocValuesUpdates.GetValue(bdv, 
 											doc, scratch));
 									}
 								}
 								else
 								{
-									NUnit.Framework.Assert.IsFalse(docsWithField.Get(doc));
+									IsFalse(docsWithField.Get(doc));
 								}
 							}
 						}
@@ -214,7 +214,7 @@ namespace Lucene.Net.Index
 			int numDocs = AtLeast(2000);
 			for (int i = 0; i < numDocs; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(new StringField("id", "doc" + i, Field.Store.NO));
 				double group = Random().NextDouble();
@@ -294,11 +294,11 @@ namespace Lucene.Net.Index
 					Bits docsWithBdv = r.GetDocsWithField("f" + i_2);
 					Bits docsWithControl = r.GetDocsWithField("cf" + i_2);
 					Bits liveDocs = r.GetLiveDocs();
-					for (int j = 0; j < r.MaxDoc(); j++)
+					for (int j = 0; j < r.MaxDoc; j++)
 					{
 						if (liveDocs == null || liveDocs.Get(j))
 						{
-							NUnit.Framework.Assert.AreEqual(docsWithBdv.Get(j), docsWithControl.Get(j));
+							AreEqual(docsWithBdv.Get(j), docsWithControl.Get(j));
 							if (docsWithBdv.Get(j))
 							{
 								long ctrlValue = control.Get(j);
@@ -306,7 +306,7 @@ namespace Lucene.Net.Index
 								//              if (ctrlValue != bdvValue) {
 								//                System.out.println("seg=" + r + ", f=f" + i + ", doc=" + j + ", group=" + r.document(j).get("updKey") + ", ctrlValue=" + ctrlValue + ", bdvBytes=" + scratch);
 								//              }
-								NUnit.Framework.Assert.AreEqual(ctrlValue, bdvValue);
+								AreEqual(ctrlValue, bdvValue);
 							}
 						}
 					}
@@ -450,7 +450,7 @@ namespace Lucene.Net.Index
 			int numDocs = AtLeast(10);
 			for (int i = 0; i < numDocs; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(new StringField("id", "doc" + i, Field.Store.NO));
 				long value = Random().Next();
@@ -473,9 +473,9 @@ namespace Lucene.Net.Index
 					AtomicReader r = ((AtomicReader)context.Reader());
 					BinaryDocValues fbdv = r.GetBinaryDocValues("f");
 					NumericDocValues cfndv = r.GetNumericDocValues("cf");
-					for (int j = 0; j < r.MaxDoc(); j++)
+					for (int j = 0; j < r.MaxDoc; j++)
 					{
-						NUnit.Framework.Assert.AreEqual(cfndv.Get(j), TestBinaryDocValuesUpdates.GetValue
+						AreEqual(cfndv.Get(j), TestBinaryDocValuesUpdates.GetValue
 							(fbdv, j, scratch) * 2);
 					}
 				}
@@ -511,7 +511,7 @@ namespace Lucene.Net.Index
 			// build a large index with many BDV fields and update terms
 			for (int i = 0; i < numDocs; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				int numUpdateTerms = TestUtil.NextInt(random, 1, numTerms / 10);
 				for (int j = 0; j < numUpdateTerms; j++)
@@ -554,9 +554,9 @@ namespace Lucene.Net.Index
 					AtomicReader r = ((AtomicReader)context.Reader());
 					BinaryDocValues f = r.GetBinaryDocValues("f" + i_2);
 					NumericDocValues cf = r.GetNumericDocValues("cf" + i_2);
-					for (int j = 0; j < r.MaxDoc(); j++)
+					for (int j = 0; j < r.MaxDoc; j++)
 					{
-						NUnit.Framework.Assert.AreEqual("reader=" + r + ", field=f" + i_2 + ", doc=" + j, 
+						AreEqual("reader=" + r + ", field=f" + i_2 + ", doc=" + j, 
 							cf.Get(j), TestBinaryDocValuesUpdates.GetValue(f, j, scratch) * 2);
 					}
 				}

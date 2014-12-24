@@ -5,7 +5,7 @@
  */
 
 using System.IO;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
@@ -76,20 +76,20 @@ namespace Lucene.Net.Index
 				);
 			c.SetInfoStream(printStreamInfoStream);
 			writer = new IndexWriter(dir, c);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewField("distinctiveFieldName", "aaa ", storedTextType));
 			try
 			{
 				writer.AddDocument(doc);
-				NUnit.Framework.Assert.Fail("Failed to fail.");
+				Fail("Failed to fail.");
 			}
 			catch (TestDocInverterPerFieldErrorInfo.BadNews)
 			{
 				infoPrintStream.Flush();
 				string infoStream = Sharpen.Runtime.GetStringForBytes(infoBytes.ToByteArray(), IOUtils
 					.UTF_8);
-				NUnit.Framework.Assert.IsTrue(infoStream.Contains("distinctiveFieldName"));
+				IsTrue(infoStream.Contains("distinctiveFieldName"));
 			}
 			writer.Close();
 			dir.Close();
@@ -109,7 +109,7 @@ namespace Lucene.Net.Index
 				);
 			c.SetInfoStream(printStreamInfoStream);
 			writer = new IndexWriter(dir, c);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewField("boringFieldName", "aaa ", storedTextType));
 			try
@@ -118,12 +118,12 @@ namespace Lucene.Net.Index
 			}
 			catch (TestDocInverterPerFieldErrorInfo.BadNews)
 			{
-				NUnit.Framework.Assert.Fail("Unwanted exception");
+				Fail("Unwanted exception");
 			}
 			infoPrintStream.Flush();
 			string infoStream = Sharpen.Runtime.GetStringForBytes(infoBytes.ToByteArray(), IOUtils
 				.UTF_8);
-			NUnit.Framework.Assert.IsFalse(infoStream.Contains("boringFieldName"));
+			IsFalse(infoStream.Contains("boringFieldName"));
 			writer.Close();
 			dir.Close();
 		}

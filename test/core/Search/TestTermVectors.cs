@@ -4,7 +4,7 @@
  * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -32,34 +32,34 @@ namespace Lucene.Net.Search
 			//writer.infoStream = System.out;
 			for (int i = 0; i < 1000; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				FieldType ft = new FieldType(TextField.TYPE_STORED);
 				int mod3 = i % 3;
 				int mod2 = i % 2;
 				if (mod2 == 0 && mod3 == 0)
 				{
-					ft.SetStoreTermVectors(true);
-					ft.SetStoreTermVectorOffsets(true);
-					ft.SetStoreTermVectorPositions(true);
+					ft.StoreTermVectors = true;
+					ft.StoreTermVectorOffsets = true;
+					ft.StoreTermVectorPositions = true;
 				}
 				else
 				{
 					if (mod2 == 0)
 					{
-						ft.SetStoreTermVectors(true);
-						ft.SetStoreTermVectorPositions(true);
+						ft.StoreTermVectors = true;
+						ft.StoreTermVectorPositions = true;
 					}
 					else
 					{
 						if (mod3 == 0)
 						{
-							ft.SetStoreTermVectors(true);
-							ft.SetStoreTermVectorOffsets(true);
+							ft.StoreTermVectors = true;
+							ft.StoreTermVectorOffsets = true;
 						}
 						else
 						{
-							ft.SetStoreTermVectors(true);
+							ft.StoreTermVectors = true;
 						}
 					}
 				}
@@ -90,20 +90,20 @@ namespace Lucene.Net.Search
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), directory, NewIndexWriterConfig
 				(TEST_VERSION_CURRENT, new MockAnalyzer(Random(), MockTokenizer.SIMPLE, true)).SetOpenMode
 				(IndexWriterConfig.OpenMode.CREATE));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			FieldType ft2 = new FieldType(TextField.TYPE_STORED);
-			ft2.SetStoreTermVectors(true);
+			ft2.StoreTermVectors = true;
 			FieldType ft3 = new FieldType(TextField.TYPE_STORED);
-			ft3.SetStoreTermVectors(true);
-			ft3.SetStoreTermVectorPositions(true);
+			ft3.StoreTermVectors = true;
+			ft3.StoreTermVectorPositions = true;
 			FieldType ft4 = new FieldType(TextField.TYPE_STORED);
-			ft4.SetStoreTermVectors(true);
-			ft4.SetStoreTermVectorOffsets(true);
+			ft4.StoreTermVectors = true;
+			ft4.StoreTermVectorOffsets = true;
 			FieldType ft5 = new FieldType(TextField.TYPE_STORED);
-			ft5.SetStoreTermVectors(true);
-			ft5.SetStoreTermVectorOffsets(true);
-			ft5.SetStoreTermVectorPositions(true);
+			ft5.StoreTermVectors = true;
+			ft5.StoreTermVectorOffsets = true;
+			ft5.StoreTermVectorPositions = true;
 			doc.Add(NewTextField("field", "one", Field.Store.YES));
 			doc.Add(NewField("field", "one", ft2));
 			doc.Add(NewField("field", "one", ft3));
@@ -115,34 +115,34 @@ namespace Lucene.Net.Search
 			IndexSearcher searcher = NewSearcher(reader);
 			Query query = new TermQuery(new Term("field", "one"));
 			ScoreDoc[] hits = searcher.Search(query, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(1, hits.Length);
+			AreEqual(1, hits.Length);
 			Fields vectors = searcher.reader.GetTermVectors(hits[0].doc);
-			NUnit.Framework.Assert.IsNotNull(vectors);
-			NUnit.Framework.Assert.AreEqual(1, vectors.Size());
+			IsNotNull(vectors);
+			AreEqual(1, vectors.Size());
 			Terms vector = vectors.Terms("field");
-			NUnit.Framework.Assert.IsNotNull(vector);
-			NUnit.Framework.Assert.AreEqual(1, vector.Size());
+			IsNotNull(vector);
+			AreEqual(1, vector.Size());
 			TermsEnum termsEnum = vector.Iterator(null);
-			NUnit.Framework.Assert.IsNotNull(termsEnum.Next());
-			NUnit.Framework.Assert.AreEqual("one", termsEnum.Term().Utf8ToString());
-			NUnit.Framework.Assert.AreEqual(5, termsEnum.TotalTermFreq());
+			IsNotNull(termsEnum.Next());
+			AreEqual("one", termsEnum.Term().Utf8ToString());
+			AreEqual(5, termsEnum.TotalTermFreq);
 			DocsAndPositionsEnum dpEnum = termsEnum.DocsAndPositions(null, null);
-			NUnit.Framework.Assert.IsNotNull(dpEnum);
-			NUnit.Framework.Assert.IsTrue(dpEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
-			NUnit.Framework.Assert.AreEqual(5, dpEnum.Freq());
+			IsNotNull(dpEnum);
+			IsTrue(dpEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
+			AreEqual(5, dpEnum.Freq);
 			for (int i = 0; i < 5; i++)
 			{
-				NUnit.Framework.Assert.AreEqual(i, dpEnum.NextPosition());
+				AreEqual(i, dpEnum.NextPosition());
 			}
 			dpEnum = termsEnum.DocsAndPositions(null, dpEnum);
-			NUnit.Framework.Assert.IsNotNull(dpEnum);
-			NUnit.Framework.Assert.IsTrue(dpEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
-			NUnit.Framework.Assert.AreEqual(5, dpEnum.Freq());
+			IsNotNull(dpEnum);
+			IsTrue(dpEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
+			AreEqual(5, dpEnum.Freq);
 			for (int i_1 = 0; i_1 < 5; i_1++)
 			{
 				dpEnum.NextPosition();
-				NUnit.Framework.Assert.AreEqual(4 * i_1, dpEnum.StartOffset());
-				NUnit.Framework.Assert.AreEqual(4 * i_1 + 3, dpEnum.EndOffset());
+				AreEqual(4 * i_1, dpEnum.StartOffset());
+				AreEqual(4 * i_1 + 3, dpEnum.EndOffset());
 			}
 			reader.Close();
 		}
@@ -162,14 +162,14 @@ namespace Lucene.Net.Search
 			writer.Close();
 		}
 
-		private Lucene.Net.Document.Document CreateDoc()
+		private Lucene.Net.Documents.Document CreateDoc()
 		{
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			FieldType ft = new FieldType(TextField.TYPE_STORED);
-			ft.SetStoreTermVectors(true);
-			ft.SetStoreTermVectorOffsets(true);
-			ft.SetStoreTermVectorPositions(true);
+			ft.StoreTermVectors = true;
+			ft.StoreTermVectorOffsets = true;
+			ft.StoreTermVectorPositions = true;
 			doc.Add(NewField("c", "aaa", ft));
 			return doc;
 		}
@@ -181,7 +181,7 @@ namespace Lucene.Net.Search
 			int numDocs = r.NumDocs();
 			for (int i = 0; i < numDocs; i++)
 			{
-				NUnit.Framework.Assert.IsNotNull("term vectors should not have been null for document "
+				IsNotNull("term vectors should not have been null for document "
 					 + i, r.GetTermVectors(i).Terms("c"));
 			}
 			r.Close();

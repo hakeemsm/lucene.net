@@ -31,7 +31,7 @@ namespace Lucene.Net.Store
 			{
 				if (m.DeclaringType == typeof(Directory))
 				{
-					NUnit.Framework.Assert.IsTrue("method " + m.Name + " not overridden!", exclude.Contains
+					IsTrue("method " + m.Name + " not overridden!", exclude.Contains
 						(m));
 				}
 			}

@@ -4,7 +4,7 @@
  * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -33,17 +33,17 @@ namespace Lucene.Net.Search
 			IndexWriterConfig iwc = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random())).SetSimilarity(sim);
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), directory, iwc);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			Field field = NewTextField("foo", string.Empty, Field.Store.NO);
 			doc.Add(field);
 			Field field2 = NewTextField("bar", string.Empty, Field.Store.NO);
 			doc.Add(field2);
-			field.SetStringValue("quick brown fox");
-			field2.SetStringValue("quick brown fox");
+			field.StringValue = "quick brown fox");
+			field2.StringValue = "quick brown fox");
 			iw.AddDocument(doc);
-			field.SetStringValue("jumps over lazy brown dog");
-			field2.SetStringValue("jumps over lazy brown dog");
+			field.StringValue = "jumps over lazy brown dog");
+			field2.StringValue = "jumps over lazy brown dog");
 			iw.AddDocument(doc);
 			reader = iw.GetReader();
 			iw.Close();
@@ -67,16 +67,16 @@ namespace Lucene.Net.Search
 			AtomicReader slow = SlowCompositeReaderWrapper.Wrap(reader);
 			NumericDocValues fooNorms = slow.GetNormValues("foo");
 			NumericDocValues barNorms = slow.GetNormValues("bar");
-			for (int i = 0; i < slow.MaxDoc(); i++)
+			for (int i = 0; i < slow.MaxDoc; i++)
 			{
-				NUnit.Framework.Assert.IsFalse(fooNorms.Get(i) == barNorms.Get(i));
+				IsFalse(fooNorms.Get(i) == barNorms.Get(i));
 			}
 			// sanity check of searching
 			TopDocs foodocs = searcher.Search(new TermQuery(new Term("foo", "brown")), 10);
-			NUnit.Framework.Assert.IsTrue(foodocs.totalHits > 0);
+			IsTrue(foodocs.TotalHits > 0);
 			TopDocs bardocs = searcher.Search(new TermQuery(new Term("bar", "brown")), 10);
-			NUnit.Framework.Assert.IsTrue(bardocs.totalHits > 0);
-			NUnit.Framework.Assert.IsTrue(foodocs.scoreDocs[0].score < bardocs.scoreDocs[0].score
+			IsTrue(bardocs.TotalHits > 0);
+			IsTrue(foodocs.scoreDocs[0].score < bardocs.scoreDocs[0].score
 				);
 		}
 

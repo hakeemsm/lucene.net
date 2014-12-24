@@ -6,7 +6,7 @@
 
 using System;
 using NUnit.Framework;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
@@ -53,7 +53,7 @@ namespace Lucene.Net.Index
 				customType.SetOmitNorms(true);
 				for (int i = 0; i < 200; i++)
 				{
-					Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+					Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 					d.Add(NewField("id", Sharpen.Extensions.ToString(i), customType));
 					d.Add(NewField("contents", English.IntToEnglish(i), customType));
 					writer.AddDocument(d);
@@ -74,22 +74,22 @@ namespace Lucene.Net.Index
 				{
 					threads[i_3].Join();
 				}
-				NUnit.Framework.Assert.IsTrue(!failed);
+				IsTrue(!failed);
 				int expectedDocCount = (int)((1 + iter) * (200 + 8 * NUM_ITER2 * (NUM_THREADS / 2.0
 					) * (1 + NUM_THREADS)));
-				NUnit.Framework.Assert.AreEqual("index=" + writer.SegString() + " numDocs=" + writer
-					.NumDocs() + " maxDoc=" + writer.MaxDoc() + " config=" + writer.GetConfig(), expectedDocCount
+				AreEqual("index=" + writer.SegString() + " numDocs=" + writer
+					.NumDocs() + " maxDoc=" + writer.MaxDoc + " config=" + writer.GetConfig(), expectedDocCount
 					, writer.NumDocs());
-				NUnit.Framework.Assert.AreEqual("index=" + writer.SegString() + " numDocs=" + writer
-					.NumDocs() + " maxDoc=" + writer.MaxDoc() + " config=" + writer.GetConfig(), expectedDocCount
-					, writer.MaxDoc());
+				AreEqual("index=" + writer.SegString() + " numDocs=" + writer
+					.NumDocs() + " maxDoc=" + writer.MaxDoc + " config=" + writer.GetConfig(), expectedDocCount
+					, writer.MaxDoc);
 				writer.Close();
 				writer = new IndexWriter(directory, ((IndexWriterConfig)NewIndexWriterConfig(TEST_VERSION_CURRENT
 					, ANALYZER).SetOpenMode(IndexWriterConfig.OpenMode.APPEND).SetMaxBufferedDocs(2)
 					));
 				DirectoryReader reader = DirectoryReader.Open(directory);
-				NUnit.Framework.Assert.AreEqual("reader=" + reader, 1, reader.Leaves().Count);
-				NUnit.Framework.Assert.AreEqual(expectedDocCount, reader.NumDocs());
+				AreEqual("reader=" + reader, 1, reader.Leaves().Count);
+				AreEqual(expectedDocCount, reader.NumDocs());
 				reader.Close();
 			}
 			writer.Close();
@@ -116,7 +116,7 @@ namespace Lucene.Net.Index
 						writerFinal.ForceMerge(1, false);
 						for (int k = 0; k < 17 * (1 + iFinal); k++)
 						{
-							Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+							Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 							d.Add(LuceneTestCase.NewField("id", iterFinal + "_" + iFinal + "_" + j + "_" + k, 
 								customType));
 							d.Add(LuceneTestCase.NewField("contents", English.IntToEnglish(iFinal + k), customType

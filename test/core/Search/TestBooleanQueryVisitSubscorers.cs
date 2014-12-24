@@ -5,7 +5,7 @@
  */
 
 using System.Collections.Generic;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -68,13 +68,13 @@ namespace Lucene.Net.Search
 			bq.Add(new TermQuery(new Term(F2, "lucene")), BooleanClause.Occur.SHOULD);
 			bq.Add(new TermQuery(new Term(F2, "search")), BooleanClause.Occur.SHOULD);
 			IDictionary<int, int> tfs = GetDocCounts(searcher, bq);
-			NUnit.Framework.Assert.AreEqual(3, tfs.Count);
+			AreEqual(3, tfs.Count);
 			// 3 documents
-			NUnit.Framework.Assert.AreEqual(3, tfs.Get(0));
+			AreEqual(3, tfs.Get(0));
 			// f1:lucene + f2:lucene + f2:search
-			NUnit.Framework.Assert.AreEqual(2, tfs.Get(1));
+			AreEqual(2, tfs.Get(1));
 			// f2:search + f2:lucene
-			NUnit.Framework.Assert.AreEqual(2, tfs.Get(2));
+			AreEqual(2, tfs.Get(2));
 		}
 
 		// f2:search + f2:lucene
@@ -88,13 +88,13 @@ namespace Lucene.Net.Search
 			bq2.Add(new TermQuery(new Term(F2, "search")), BooleanClause.Occur.SHOULD);
 			bq.Add(bq2, BooleanClause.Occur.SHOULD);
 			IDictionary<int, int> tfs = GetDocCounts(searcher, bq);
-			NUnit.Framework.Assert.AreEqual(3, tfs.Count);
+			AreEqual(3, tfs.Count);
 			// 3 documents
-			NUnit.Framework.Assert.AreEqual(3, tfs.Get(0));
+			AreEqual(3, tfs.Get(0));
 			// f1:lucene + f2:lucene + f2:search
-			NUnit.Framework.Assert.AreEqual(2, tfs.Get(1));
+			AreEqual(2, tfs.Get(1));
 			// f2:search + f2:lucene
-			NUnit.Framework.Assert.AreEqual(2, tfs.Get(2));
+			AreEqual(2, tfs.Get(2));
 		}
 
 		// f2:search + f2:lucene
@@ -105,19 +105,19 @@ namespace Lucene.Net.Search
 			bq.Add(new TermQuery(new Term(F2, "lucene")), BooleanClause.Occur.MUST);
 			bq.Add(new TermQuery(new Term(F2, "is")), BooleanClause.Occur.MUST);
 			IDictionary<int, int> tfs = GetDocCounts(searcher, bq);
-			NUnit.Framework.Assert.AreEqual(3, tfs.Count);
+			AreEqual(3, tfs.Count);
 			// 3 documents
-			NUnit.Framework.Assert.AreEqual(2, tfs.Get(0));
+			AreEqual(2, tfs.Get(0));
 			// f2:lucene + f2:is
-			NUnit.Framework.Assert.AreEqual(3, tfs.Get(1));
+			AreEqual(3, tfs.Get(1));
 			// f2:is + f2:is + f2:lucene
-			NUnit.Framework.Assert.AreEqual(3, tfs.Get(2));
+			AreEqual(3, tfs.Get(2));
 		}
 
 		// f2:is + f2:is + f2:lucene
-		internal static Lucene.Net.Document.Document Doc(string v1, string v2)
+		internal static Lucene.Net.Documents.Document Doc(string v1, string v2)
 		{
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new TextField(F1, v1, Field.Store.YES));
 			doc.Add(new TextField(F2, v2, Field.Store.YES));
@@ -160,9 +160,9 @@ namespace Lucene.Net.Search
 				int freq = 0;
 				foreach (Scorer scorer in tqsSet)
 				{
-					if (doc == scorer.DocID())
+					if (doc == scorer.DocID)
 					{
-						freq += scorer.Freq();
+						freq += scorer.Freq;
 					}
 				}
 				docCounts.Put(doc + docBase, freq);

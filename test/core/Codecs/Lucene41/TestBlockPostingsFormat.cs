@@ -1,24 +1,16 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using Lucene.Net.Codecs;
 using Lucene.Net.Codecs.Lucene41;
-using Lucene.Net.Index;
-using Lucene.Net.Util;
-using Sharpen;
+using Lucene.Net.TestFramework.Index;
+using Lucene.Net.TestFramework.Util;
 
-namespace Lucene.Net.Codecs.Lucene41
+namespace Lucene.Net.Test.Codecs.Lucene41
 {
 	/// <summary>Tests BlockPostingsFormat</summary>
 	public class TestBlockPostingsFormat : BasePostingsFormatTestCase
 	{
-		private readonly Codec codec = TestUtil.AlwaysPostingsFormat(new Lucene41PostingsFormat
-			());
+		private readonly Codec codec = TestUtil.AlwaysPostingsFormat(new Lucene41PostingsFormat());
 
-		protected override Codec GetCodec()
+		protected override Codec Codec
 		{
 			return codec;
 		}

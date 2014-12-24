@@ -19,7 +19,7 @@ using System;
 
 using NUnit.Framework;
 
-using StandardAnalyzer = Lucene.Net.Analysis.Standard.StandardAnalyzer;
+using StandardAnalyzer = Lucene.Net.Test.Analysis.Standard.StandardAnalyzer;
 using Document = Lucene.Net.Documents.Document;
 using Field = Lucene.Net.Documents.Field;
 using Index = Lucene.Net.Documents.Field.Index;
@@ -59,7 +59,7 @@ namespace Lucene.Net.Search
 			Assert.AreEqual(1, hits.TotalHits);
 			hits = searcher.Search(new MatchAllDocsQuery(), new CachingWrapperFilter(qwf), 10
 				);
-			NUnit.Framework.Assert.AreEqual(1, hits.totalHits);
+			AreEqual(1, hits.TotalHits);
 			// should not throw exception with complex primitive query
 			BooleanQuery booleanQuery = new BooleanQuery();
 			booleanQuery.Add(termQuery, Occur.MUST);
@@ -70,15 +70,15 @@ namespace Lucene.Net.Search
 			Assert.AreEqual(1, hits.TotalHits);
 			hits = searcher.Search(new MatchAllDocsQuery(), new CachingWrapperFilter(qwf), 10
 				);
-			NUnit.Framework.Assert.AreEqual(1, hits.totalHits);
+			AreEqual(1, hits.TotalHits);
 			// should not throw exception with non primitive Query (doesn't implement
 			// Query#createWeight)
 			qwf = new QueryWrapperFilter(new FuzzyQuery(new Term("field", "valu")));
 			hits = searcher.Search(new MatchAllDocsQuery(), qwf, 10);
-			NUnit.Framework.Assert.AreEqual(1, hits.totalHits);
+			AreEqual(1, hits.TotalHits);
 			hits = searcher.Search(new MatchAllDocsQuery(), new CachingWrapperFilter(qwf), 10
 				);
-			NUnit.Framework.Assert.AreEqual(1, hits.totalHits);
+			AreEqual(1, hits.TotalHits);
 			// test a query with no hits
 			termQuery = new TermQuery(new Term("field", "not_exist"));
 			qwf = new QueryWrapperFilter(termQuery);
@@ -86,7 +86,7 @@ namespace Lucene.Net.Search
 			Assert.AreEqual(1, hits.TotalHits);
 			hits = searcher.Search(new MatchAllDocsQuery(), new CachingWrapperFilter(qwf), 10
 				);
-			NUnit.Framework.Assert.AreEqual(0, hits.totalHits);
+			AreEqual(0, hits.TotalHits);
 			reader.Close();
 			dir.Close();
 		}
@@ -99,7 +99,7 @@ namespace Lucene.Net.Search
 			ICollection<string> aDocs = new HashSet<string>();
 			for (int i = 0; i < numDocs; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				string v;
 				if (Random().Next(5) == 4)
@@ -127,10 +127,10 @@ namespace Lucene.Net.Search
 			w.Close();
 			TopDocs hits = NewSearcher(r).Search(new MatchAllDocsQuery(), new QueryWrapperFilter
 				(new TermQuery(new Term("field", "a"))), numDocs);
-			NUnit.Framework.Assert.AreEqual(aDocs.Count, hits.totalHits);
+			AreEqual(aDocs.Count, hits.TotalHits);
 			foreach (ScoreDoc sd in hits.scoreDocs)
 			{
-				NUnit.Framework.Assert.IsTrue(aDocs.Contains(r.Document(sd.doc).Get("id")));
+				IsTrue(aDocs.Contains(r.Document(sd.doc).Get("id")));
 			}
 			r.Close();
 			d.Close();
@@ -143,7 +143,7 @@ namespace Lucene.Net.Search
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
 			for (int i = 0; i < 1000; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(NewStringField("field", English.IntToEnglish(i), Field.Store.NO));
 				writer.AddDocument(doc);
@@ -156,7 +156,7 @@ namespace Lucene.Net.Search
 				TermQuery termQuery = new TermQuery(new Term("field", English.IntToEnglish(i_1)));
 				QueryWrapperFilter qwf = new QueryWrapperFilter(termQuery);
 				TopDocs td = searcher.Search(new MatchAllDocsQuery(), qwf, 10);
-				NUnit.Framework.Assert.AreEqual(1, td.totalHits);
+				AreEqual(1, td.TotalHits);
 			}
 			reader.Close();
 			dir.Close();

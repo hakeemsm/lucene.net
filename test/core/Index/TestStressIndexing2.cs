@@ -6,8 +6,8 @@
 
 using System;
 using System.Collections.Generic;
-using Lucene.Net.Analysis;
-using Lucene.Net.Analysis.Tokenattributes;
+using Lucene.Net.Test.Analysis;
+using Lucene.Net.Test.Analysis.Tokenattributes;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -73,7 +73,7 @@ namespace Lucene.Net.Index
 			// mergeFactor=2; maxBufferedDocs=2; Map docs = indexRandom(1, 3, 2, dir1);
 			int maxThreadStates = 1 + Random().Next(10);
 			bool doReaderPooling = Random().NextBoolean();
-			IDictionary<string, Lucene.Net.Document.Document> docs = IndexRandom(5, 3, 
+			IDictionary<string, Lucene.Net.Documents.Document> docs = IndexRandom(5, 3, 
 				100, dir1, maxThreadStates, doReaderPooling);
 			IndexSerial(Random(), docs, dir2);
 			// verifying verify
@@ -114,7 +114,7 @@ namespace Lucene.Net.Index
 						 + " sameFieldOrder=" + sameFieldOrder + " mergeFactor=" + mergeFactor + " maxBufferedDocs="
 						 + maxBufferedDocs);
 				}
-				IDictionary<string, Lucene.Net.Document.Document> docs = IndexRandom(nThreads
+				IDictionary<string, Lucene.Net.Documents.Document> docs = IndexRandom(nThreads
 					, iter, range, dir1, maxThreadStates, doReaderPooling);
 				if (VERBOSE)
 				{
@@ -135,24 +135,24 @@ namespace Lucene.Net.Index
 
 		internal TestStressIndexing2.IndexingThread[] threads;
 
-		private sealed class _IComparer_131 : IComparer<IndexableField>
+		private sealed class _IComparer_131 : IComparer<IIndexableField>
 		{
 			public _IComparer_131()
 			{
 			}
 
-			public int Compare(IndexableField o1, IndexableField o2)
+			public int Compare(IIndexableField o1, IIndexableField o2)
 			{
 				return Sharpen.Runtime.CompareOrdinal(o1.Name(), o2.Name());
 			}
 		}
 
-		internal static IComparer<IndexableField> fieldNameComparator = new _IComparer_131
+		internal static IComparer<IIndexableField> fieldNameComparator = new _IComparer_131
 			();
 
 		public class DocsAndWriter
 		{
-			internal IDictionary<string, Lucene.Net.Document.Document> docs;
+			internal IDictionary<string, Lucene.Net.Documents.Document> docs;
 
 			internal IndexWriter writer;
 			// This test avoids using any extra synchronization in the multiple
@@ -165,8 +165,8 @@ namespace Lucene.Net.Index
 		public virtual TestStressIndexing2.DocsAndWriter IndexRandomIWReader(int nThreads
 			, int iterations, int range, Directory dir)
 		{
-			IDictionary<string, Lucene.Net.Document.Document> docs = new Dictionary<string
-				, Lucene.Net.Document.Document>();
+			IDictionary<string, Lucene.Net.Documents.Document> docs = new Dictionary<string
+				, Lucene.Net.Documents.Document>();
 			IndexWriter w = RandomIndexWriter.MockIndexWriter(dir, ((IndexWriterConfig)((IndexWriterConfig
 				)NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetOpenMode
 				(IndexWriterConfig.OpenMode.CREATE).SetRAMBufferSizeMB(0.1)).SetMaxBufferedDocs(
@@ -214,12 +214,12 @@ namespace Lucene.Net.Index
 
 		/// <exception cref="System.IO.IOException"></exception>
 		/// <exception cref="System.Exception"></exception>
-		public virtual IDictionary<string, Lucene.Net.Document.Document> IndexRandom
+		public virtual IDictionary<string, Lucene.Net.Documents.Document> IndexRandom
 			(int nThreads, int iterations, int range, Directory dir, int maxThreadStates, bool
 			 doReaderPooling)
 		{
-			IDictionary<string, Lucene.Net.Document.Document> docs = new Dictionary<string
-				, Lucene.Net.Document.Document>();
+			IDictionary<string, Lucene.Net.Documents.Document> docs = new Dictionary<string
+				, Lucene.Net.Documents.Document>();
 			IndexWriter w = RandomIndexWriter.MockIndexWriter(dir, ((IndexWriterConfig)((IndexWriterConfig
 				)NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetOpenMode
 				(IndexWriterConfig.OpenMode.CREATE).SetRAMBufferSizeMB(0.1)).SetMaxBufferedDocs(
@@ -264,22 +264,22 @@ namespace Lucene.Net.Index
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		public static void IndexSerial(Random random, IDictionary<string, Lucene.Net.Document.Document
+		public static void IndexSerial(Random random, IDictionary<string, Lucene.Net.Documents.Document
 			> docs, Directory dir)
 		{
 			IndexWriter w = new IndexWriter(dir, LuceneTestCase.NewIndexWriterConfig(random, 
 				TEST_VERSION_CURRENT, new MockAnalyzer(random)).SetMergePolicy(NewLogMergePolicy
 				()));
 			// index all docs in a single thread
-			Iterator<Lucene.Net.Document.Document> iter = docs.Values.Iterator();
+			Iterator<Lucene.Net.Documents.Document> iter = docs.Values.Iterator();
 			while (iter.HasNext())
 			{
-				Lucene.Net.Document.Document d = iter.Next();
-				AList<IndexableField> fields = new AList<IndexableField>();
+				Lucene.Net.Documents.Document d = iter.Next();
+				AList<IIndexableField> fields = new AList<IIndexableField>();
 				Sharpen.Collections.AddAll(fields, d.GetFields());
 				// put fields in same order each time
 				fields.Sort(fieldNameComparator);
-				Lucene.Net.Document.Document d1 = new Lucene.Net.Document.Document(
+				Lucene.Net.Documents.Document d1 = new Lucene.Net.Documents.Document(
 					);
 				for (int i = 0; i < fields.Count; i++)
 				{
@@ -319,9 +319,9 @@ namespace Lucene.Net.Index
 				AtomicReader sub = ((AtomicReader)ctx.Reader());
 				Bits liveDocs = sub.GetLiveDocs();
 				System.Console.Out.WriteLine("  " + ((SegmentReader)sub).GetSegmentInfo());
-				for (int docID = 0; docID < sub.MaxDoc(); docID++)
+				for (int docID = 0; docID < sub.MaxDoc; docID++)
 				{
-					Lucene.Net.Document.Document doc = sub.Document(docID);
+					Lucene.Net.Documents.Document doc = sub.Document(docID);
 					if (liveDocs == null || liveDocs.Get(docID))
 					{
 						System.Console.Out.WriteLine("    docID=" + docID + " id:" + doc.Get("id"));
@@ -350,21 +350,21 @@ namespace Lucene.Net.Index
 			}
 			//HM:revisit 
 			//assert false: "r1.numDocs()=" + r1.numDocs() + " vs r2.numDocs()=" + r2.numDocs();
-			bool hasDeletes = !(r1.MaxDoc() == r2.MaxDoc() && r1.NumDocs() == r1.MaxDoc());
-			int[] r2r1 = new int[r2.MaxDoc()];
+			bool hasDeletes = !(r1.MaxDoc == r2.MaxDoc && r1.NumDocs() == r1.MaxDoc);
+			int[] r2r1 = new int[r2.MaxDoc];
 			// r2 id to r1 id mapping
 			// create mapping from id2 space to id2 based on idField
 			Fields f1 = MultiFields.GetFields(r1);
 			if (f1 == null)
 			{
 				// make sure r2 is empty
-				NUnit.Framework.Assert.IsNull(MultiFields.GetFields(r2));
+				IsNull(MultiFields.GetFields(r2));
 				return;
 			}
 			Terms terms1 = f1.Terms(idField);
 			if (terms1 == null)
 			{
-				NUnit.Framework.Assert.IsTrue(MultiFields.GetFields(r2) == null || MultiFields.GetFields
+				IsTrue(MultiFields.GetFields(r2) == null || MultiFields.GetFields
 					(r2).Terms(idField) == null);
 				return;
 			}
@@ -383,7 +383,7 @@ namespace Lucene.Net.Index
 					docs = TestUtil.Docs(Random(), termsEnum, liveDocs, docs, DocsEnum.FLAG_NONE);
 					while (docs.NextDoc() != DocIdSetIterator.NO_MORE_DOCS)
 					{
-						NUnit.Framework.Assert.Fail("r1 is not empty but r2 is");
+						Fail("r1 is not empty but r2 is");
 					}
 				}
 				return;
@@ -414,17 +414,17 @@ namespace Lucene.Net.Index
 				if (termDocs1.NextDoc() == DocIdSetIterator.NO_MORE_DOCS)
 				{
 					// This doc is deleted and wasn't replaced
-					NUnit.Framework.Assert.IsTrue(termDocs2 == null || termDocs2.NextDoc() == DocIdSetIterator
+					IsTrue(termDocs2 == null || termDocs2.NextDoc() == DocIdSetIterator
 						.NO_MORE_DOCS);
 					continue;
 				}
-				int id1 = termDocs1.DocID();
-				NUnit.Framework.Assert.AreEqual(DocIdSetIterator.NO_MORE_DOCS, termDocs1.NextDoc(
+				int id1 = termDocs1.DocID;
+				AreEqual(DocIdSetIterator.NO_MORE_DOCS, termDocs1.NextDoc(
 					));
-				NUnit.Framework.Assert.IsTrue(termDocs2.NextDoc() != DocIdSetIterator.NO_MORE_DOCS
+				IsTrue(termDocs2.NextDoc() != DocIdSetIterator.NO_MORE_DOCS
 					);
-				int id2 = termDocs2.DocID();
-				NUnit.Framework.Assert.AreEqual(DocIdSetIterator.NO_MORE_DOCS, termDocs2.NextDoc(
+				int id2 = termDocs2.DocID;
+				AreEqual(DocIdSetIterator.NO_MORE_DOCS, termDocs2.NextDoc(
 					));
 				r2r1[id2] = id1;
 				// verify stored fields are equivalent
@@ -458,19 +458,19 @@ namespace Lucene.Net.Index
 						{
 							System.Console.Out.WriteLine("    " + field + ":");
 							Terms terms3 = tv1.Terms(field);
-							NUnit.Framework.Assert.IsNotNull(terms3);
+							IsNotNull(terms3);
 							TermsEnum termsEnum3 = terms3.Iterator(null);
 							BytesRef term2;
 							while ((term2 = termsEnum3.Next()) != null)
 							{
 								System.Console.Out.WriteLine("      " + term2.Utf8ToString() + ": freq=" + termsEnum3
-									.TotalTermFreq());
+									.TotalTermFreq);
 								dpEnum = termsEnum3.DocsAndPositions(null, dpEnum);
 								if (dpEnum != null)
 								{
-									NUnit.Framework.Assert.IsTrue(dpEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
-									int freq = dpEnum.Freq();
-									System.Console.Out.WriteLine("        doc=" + dpEnum.DocID() + " freq=" + freq);
+									IsTrue(dpEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
+									int freq = dpEnum.Freq;
+									System.Console.Out.WriteLine("        doc=" + dpEnum.DocID + " freq=" + freq);
 									for (int posUpto = 0; posUpto < freq; posUpto++)
 									{
 										System.Console.Out.WriteLine("          pos=" + dpEnum.NextPosition());
@@ -479,10 +479,10 @@ namespace Lucene.Net.Index
 								else
 								{
 									dEnum = TestUtil.Docs(Random(), termsEnum3, null, dEnum, DocsEnum.FLAG_FREQS);
-									NUnit.Framework.Assert.IsNotNull(dEnum);
-									NUnit.Framework.Assert.IsTrue(dEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
-									int freq = dEnum.Freq();
-									System.Console.Out.WriteLine("        doc=" + dEnum.DocID() + " freq=" + freq);
+									IsNotNull(dEnum);
+									IsTrue(dEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
+									int freq = dEnum.Freq;
+									System.Console.Out.WriteLine("        doc=" + dEnum.DocID + " freq=" + freq);
 								}
 							}
 						}
@@ -497,19 +497,19 @@ namespace Lucene.Net.Index
 						{
 							System.Console.Out.WriteLine("    " + field + ":");
 							Terms terms3 = tv2.Terms(field);
-							NUnit.Framework.Assert.IsNotNull(terms3);
+							IsNotNull(terms3);
 							TermsEnum termsEnum3 = terms3.Iterator(null);
 							BytesRef term2;
 							while ((term2 = termsEnum3.Next()) != null)
 							{
 								System.Console.Out.WriteLine("      " + term2.Utf8ToString() + ": freq=" + termsEnum3
-									.TotalTermFreq());
+									.TotalTermFreq);
 								dpEnum = termsEnum3.DocsAndPositions(null, dpEnum);
 								if (dpEnum != null)
 								{
-									NUnit.Framework.Assert.IsTrue(dpEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
-									int freq = dpEnum.Freq();
-									System.Console.Out.WriteLine("        doc=" + dpEnum.DocID() + " freq=" + freq);
+									IsTrue(dpEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
+									int freq = dpEnum.Freq;
+									System.Console.Out.WriteLine("        doc=" + dpEnum.DocID + " freq=" + freq);
 									for (int posUpto = 0; posUpto < freq; posUpto++)
 									{
 										System.Console.Out.WriteLine("          pos=" + dpEnum.NextPosition());
@@ -518,10 +518,10 @@ namespace Lucene.Net.Index
 								else
 								{
 									dEnum = TestUtil.Docs(Random(), termsEnum3, null, dEnum, DocsEnum.FLAG_FREQS);
-									NUnit.Framework.Assert.IsNotNull(dEnum);
-									NUnit.Framework.Assert.IsTrue(dEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
-									int freq = dEnum.Freq();
-									System.Console.Out.WriteLine("        doc=" + dEnum.DocID() + " freq=" + freq);
+									IsNotNull(dEnum);
+									IsTrue(dEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
+									int freq = dEnum.Freq;
+									System.Console.Out.WriteLine("        doc=" + dEnum.DocID + " freq=" + freq);
 								}
 							}
 						}
@@ -580,8 +580,8 @@ namespace Lucene.Net.Index
 						);
 					while (docs1.NextDoc() != DocIdSetIterator.NO_MORE_DOCS)
 					{
-						int d = docs1.DocID();
-						int f = docs1.Freq();
+						int d = docs1.DocID;
+						int f = docs1.Freq;
 						info1[len1] = (((long)d) << 32) | f;
 						len1++;
 					}
@@ -621,8 +621,8 @@ namespace Lucene.Net.Index
 						);
 					while (docs2.NextDoc() != DocIdSetIterator.NO_MORE_DOCS)
 					{
-						int d = r2r1[docs2.DocID()];
-						int f = docs2.Freq();
+						int d = r2r1[docs2.DocID];
+						int f = docs2.Freq;
 						info2[len2] = (((long)d) << 32) | f;
 						len2++;
 					}
@@ -631,26 +631,26 @@ namespace Lucene.Net.Index
 						break;
 					}
 				}
-				NUnit.Framework.Assert.AreEqual(len1, len2);
+				AreEqual(len1, len2);
 				if (len1 == 0)
 				{
 					break;
 				}
 				// no more terms
-				NUnit.Framework.Assert.AreEqual(field1, field2);
-				NUnit.Framework.Assert.IsTrue(term1.BytesEquals(term2));
+				AreEqual(field1, field2);
+				IsTrue(term1.BytesEquals(term2));
 				if (!hasDeletes)
 				{
-					NUnit.Framework.Assert.AreEqual(termsEnum1.DocFreq(), termsEnum2.DocFreq());
+					AreEqual(termsEnum1.DocFreq, termsEnum2.DocFreq);
 				}
-				NUnit.Framework.Assert.AreEqual("len1=" + len1 + " len2=" + len2 + " deletes?=" +
+				AreEqual("len1=" + len1 + " len2=" + len2 + " deletes?=" +
 					 hasDeletes, term1, term2);
 				// sort info2 to get it into ascending docid
 				Arrays.Sort(info2, 0, len2);
 				// now compare
 				for (int i = 0; i < len1; i++)
 				{
-					NUnit.Framework.Assert.AreEqual("i=" + i + " len=" + len1 + " d1=" + ((long)(((ulong
+					AreEqual("i=" + i + " len=" + len1 + " d1=" + ((long)(((ulong
 						)info1[i]) >> 32)) + " f1=" + (info1[i] & int.MaxValue) + " d2=" + ((long)(((ulong
 						)info2[i]) >> 32)) + " f2=" + (info2[i] & int.MaxValue) + " field=" + field1 + " term="
 						 + term1.Utf8ToString(), info1[i], info2[i]);
@@ -658,18 +658,18 @@ namespace Lucene.Net.Index
 			}
 		}
 
-		public static void VerifyEquals(Lucene.Net.Document.Document d1, Lucene.Net.Document.Document
+		public static void VerifyEquals(Lucene.Net.Documents.Document d1, Lucene.Net.Documents.Document
 			 d2)
 		{
-			IList<IndexableField> ff1 = d1.GetFields();
-			IList<IndexableField> ff2 = d2.GetFields();
+			IList<IIndexableField> ff1 = d1.GetFields();
+			IList<IIndexableField> ff2 = d2.GetFields();
 			ff1.Sort(fieldNameComparator);
 			ff2.Sort(fieldNameComparator);
-			NUnit.Framework.Assert.AreEqual(ff1 + " : " + ff2, ff1.Count, ff2.Count);
+			AreEqual(ff1 + " : " + ff2, ff1.Count, ff2.Count);
 			for (int i = 0; i < ff1.Count; i++)
 			{
-				IndexableField f1 = ff1[i];
-				IndexableField f2 = ff2[i];
+				IIndexableField f1 = ff1[i];
+				IIndexableField f2 = ff2[i];
 				if (f1.BinaryValue() != null)
 				{
 				}
@@ -677,9 +677,9 @@ namespace Lucene.Net.Index
 				{
 					//HM:revisit 
 					//assert(f2.binaryValue() != null);
-					string s1 = f1.StringValue();
-					string s2 = f2.StringValue();
-					NUnit.Framework.Assert.AreEqual(ff1 + " : " + ff2, s1, s2);
+					string s1 = f1.StringValue = );
+					string s2 = f2.StringValue = );
+					AreEqual(ff1 + " : " + ff2, s1, s2);
 				}
 			}
 		}
@@ -689,20 +689,20 @@ namespace Lucene.Net.Index
 		{
 			if (d1 == null)
 			{
-				NUnit.Framework.Assert.IsTrue(d2 == null || d2.Size() == 0);
+				IsTrue(d2 == null || d2.Size() == 0);
 				return;
 			}
-			NUnit.Framework.Assert.IsTrue(d2 != null);
+			IsTrue(d2 != null);
 			Iterator<string> fieldsEnum2 = d2.Iterator();
 			foreach (string field1 in d1)
 			{
 				string field2 = fieldsEnum2.Next();
-				NUnit.Framework.Assert.AreEqual(field1, field2);
+				AreEqual(field1, field2);
 				Terms terms1 = d1.Terms(field1);
-				NUnit.Framework.Assert.IsNotNull(terms1);
+				IsNotNull(terms1);
 				TermsEnum termsEnum1 = terms1.Iterator(null);
 				Terms terms2 = d2.Terms(field2);
-				NUnit.Framework.Assert.IsNotNull(terms2);
+				IsNotNull(terms2);
 				TermsEnum termsEnum2 = terms2.Iterator(null);
 				DocsAndPositionsEnum dpEnum1 = null;
 				DocsAndPositionsEnum dpEnum2 = null;
@@ -712,72 +712,72 @@ namespace Lucene.Net.Index
 				while ((term1 = termsEnum1.Next()) != null)
 				{
 					BytesRef term2 = termsEnum2.Next();
-					NUnit.Framework.Assert.AreEqual(term1, term2);
-					NUnit.Framework.Assert.AreEqual(termsEnum1.TotalTermFreq(), termsEnum2.TotalTermFreq
+					AreEqual(term1, term2);
+					AreEqual(termsEnum1.TotalTermFreq, termsEnum2.TotalTermFreq
 						());
 					dpEnum1 = termsEnum1.DocsAndPositions(null, dpEnum1);
 					dpEnum2 = termsEnum2.DocsAndPositions(null, dpEnum2);
 					if (dpEnum1 != null)
 					{
-						NUnit.Framework.Assert.IsNotNull(dpEnum2);
+						IsNotNull(dpEnum2);
 						int docID1 = dpEnum1.NextDoc();
 						dpEnum2.NextDoc();
 						// docIDs are not supposed to be equal
 						//int docID2 = dpEnum2.nextDoc();
 						//assertEquals(docID1, docID2);
-						NUnit.Framework.Assert.IsTrue(docID1 != DocIdSetIterator.NO_MORE_DOCS);
-						int freq1 = dpEnum1.Freq();
-						int freq2 = dpEnum2.Freq();
-						NUnit.Framework.Assert.AreEqual(freq1, freq2);
+						IsTrue(docID1 != DocIdSetIterator.NO_MORE_DOCS);
+						int freq1 = dpEnum1.Freq;
+						int freq2 = dpEnum2.Freq;
+						AreEqual(freq1, freq2);
 						OffsetAttribute offsetAtt1 = dpEnum1.Attributes().HasAttribute(typeof(OffsetAttribute
 							)) ? dpEnum1.Attributes().GetAttribute<OffsetAttribute>() : null;
 						OffsetAttribute offsetAtt2 = dpEnum2.Attributes().HasAttribute(typeof(OffsetAttribute
 							)) ? dpEnum2.Attributes().GetAttribute<OffsetAttribute>() : null;
 						if (offsetAtt1 != null)
 						{
-							NUnit.Framework.Assert.IsNotNull(offsetAtt2);
+							IsNotNull(offsetAtt2);
 						}
 						else
 						{
-							NUnit.Framework.Assert.IsNull(offsetAtt2);
+							IsNull(offsetAtt2);
 						}
 						for (int posUpto = 0; posUpto < freq1; posUpto++)
 						{
 							int pos1 = dpEnum1.NextPosition();
 							int pos2 = dpEnum2.NextPosition();
-							NUnit.Framework.Assert.AreEqual(pos1, pos2);
+							AreEqual(pos1, pos2);
 							if (offsetAtt1 != null)
 							{
-								NUnit.Framework.Assert.AreEqual(offsetAtt1.StartOffset(), offsetAtt2.StartOffset(
+								AreEqual(offsetAtt1.StartOffset(), offsetAtt2.StartOffset(
 									));
-								NUnit.Framework.Assert.AreEqual(offsetAtt1.EndOffset(), offsetAtt2.EndOffset());
+								AreEqual(offsetAtt1.EndOffset(), offsetAtt2.EndOffset());
 							}
 						}
-						NUnit.Framework.Assert.AreEqual(DocIdSetIterator.NO_MORE_DOCS, dpEnum1.NextDoc());
-						NUnit.Framework.Assert.AreEqual(DocIdSetIterator.NO_MORE_DOCS, dpEnum2.NextDoc());
+						AreEqual(DocIdSetIterator.NO_MORE_DOCS, dpEnum1.NextDoc());
+						AreEqual(DocIdSetIterator.NO_MORE_DOCS, dpEnum2.NextDoc());
 					}
 					else
 					{
 						dEnum1 = TestUtil.Docs(Random(), termsEnum1, null, dEnum1, DocsEnum.FLAG_FREQS);
 						dEnum2 = TestUtil.Docs(Random(), termsEnum2, null, dEnum2, DocsEnum.FLAG_FREQS);
-						NUnit.Framework.Assert.IsNotNull(dEnum1);
-						NUnit.Framework.Assert.IsNotNull(dEnum2);
+						IsNotNull(dEnum1);
+						IsNotNull(dEnum2);
 						int docID1 = dEnum1.NextDoc();
 						dEnum2.NextDoc();
 						// docIDs are not supposed to be equal
 						//int docID2 = dEnum2.nextDoc();
 						//assertEquals(docID1, docID2);
-						NUnit.Framework.Assert.IsTrue(docID1 != DocIdSetIterator.NO_MORE_DOCS);
-						int freq1 = dEnum1.Freq();
-						int freq2 = dEnum2.Freq();
-						NUnit.Framework.Assert.AreEqual(freq1, freq2);
-						NUnit.Framework.Assert.AreEqual(DocIdSetIterator.NO_MORE_DOCS, dEnum1.NextDoc());
-						NUnit.Framework.Assert.AreEqual(DocIdSetIterator.NO_MORE_DOCS, dEnum2.NextDoc());
+						IsTrue(docID1 != DocIdSetIterator.NO_MORE_DOCS);
+						int freq1 = dEnum1.Freq;
+						int freq2 = dEnum2.Freq;
+						AreEqual(freq1, freq2);
+						AreEqual(DocIdSetIterator.NO_MORE_DOCS, dEnum1.NextDoc());
+						AreEqual(DocIdSetIterator.NO_MORE_DOCS, dEnum2.NextDoc());
 					}
 				}
-				NUnit.Framework.Assert.IsNull(termsEnum2.Next());
+				IsNull(termsEnum2.Next());
 			}
-			NUnit.Framework.Assert.IsFalse(fieldsEnum2.HasNext());
+			IsFalse(fieldsEnum2.HasNext());
 		}
 
 		private class IndexingThread : Sharpen.Thread
@@ -790,8 +790,8 @@ namespace Lucene.Net.Index
 
 			internal int iterations;
 
-			internal IDictionary<string, Lucene.Net.Document.Document> docs = new Dictionary
-				<string, Lucene.Net.Document.Document>();
+			internal IDictionary<string, Lucene.Net.Documents.Document> docs = new Dictionary
+				<string, Lucene.Net.Documents.Document>();
 
 			internal Random r;
 
@@ -903,7 +903,7 @@ namespace Lucene.Net.Index
 			/// <exception cref="System.IO.IOException"></exception>
 			public virtual void IndexDoc()
 			{
-				Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+				Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 				FieldType customType1 = new FieldType(TextField.TYPE_STORED);
 				customType1.SetTokenized(false);
 				customType1.SetOmitNorms(true);
@@ -924,21 +924,21 @@ namespace Lucene.Net.Index
 
 						case 1:
 						{
-							customType.SetStoreTermVectors(true);
+							customType.StoreTermVectors = true;
 							break;
 						}
 
 						case 2:
 						{
-							customType.SetStoreTermVectors(true);
-							customType.SetStoreTermVectorPositions(true);
+							customType.StoreTermVectors = true;
+							customType.StoreTermVectorPositions = true;
 							break;
 						}
 
 						case 3:
 						{
-							customType.SetStoreTermVectors(true);
-							customType.SetStoreTermVectorOffsets(true);
+							customType.StoreTermVectors = true;
+							customType.StoreTermVectorOffsets = true;
 							break;
 						}
 					}
@@ -966,7 +966,7 @@ namespace Lucene.Net.Index
 						case 2:
 						{
 							customType.SetStored(true);
-							customType.SetStoreTermVectors(false);
+							customType.StoreTermVectors = false;
 							customType.SetStoreTermVectorOffsets(false);
 							customType.SetStoreTermVectorPositions(false);
 							fields.AddItem(LuceneTestCase.NewField("f" + this.NextInt(100), this.GetString(0)

@@ -17,7 +17,7 @@ namespace Lucene.Net.Index
 		{
 			PrefixCodedTerms.Builder b = new PrefixCodedTerms.Builder();
 			PrefixCodedTerms pb = b.Finish();
-			NUnit.Framework.Assert.IsFalse(pb.Iterator().HasNext());
+			IsFalse(pb.Iterator().HasNext());
 		}
 
 		public virtual void TestOne()
@@ -27,8 +27,8 @@ namespace Lucene.Net.Index
 			b.Add(term);
 			PrefixCodedTerms pb = b.Finish();
 			Iterator<Term> iterator = pb.Iterator();
-			NUnit.Framework.Assert.IsTrue(iterator.HasNext());
-			NUnit.Framework.Assert.AreEqual(term, iterator.Next());
+			IsTrue(iterator.HasNext());
+			AreEqual(term, iterator.Next());
 		}
 
 		public virtual void TestRandom()
@@ -50,10 +50,10 @@ namespace Lucene.Net.Index
 			Iterator<Term> expected = terms.Iterator();
 			foreach (Term t in pb)
 			{
-				NUnit.Framework.Assert.IsTrue(expected.HasNext());
-				NUnit.Framework.Assert.AreEqual(expected.Next(), t);
+				IsTrue(expected.HasNext());
+				AreEqual(expected.Next(), t);
 			}
-			NUnit.Framework.Assert.IsFalse(expected.HasNext());
+			IsFalse(expected.HasNext());
 		}
 
 		public virtual void TestMergeOne()
@@ -67,10 +67,10 @@ namespace Lucene.Net.Index
 			b2.Add(t2);
 			PrefixCodedTerms pb2 = b2.Finish();
 			Iterator<Term> merged = new MergedIterator<Term>(pb1.Iterator(), pb2.Iterator());
-			NUnit.Framework.Assert.IsTrue(merged.HasNext());
-			NUnit.Framework.Assert.AreEqual(t1, merged.Next());
-			NUnit.Framework.Assert.IsTrue(merged.HasNext());
-			NUnit.Framework.Assert.AreEqual(t2, merged.Next());
+			IsTrue(merged.HasNext());
+			AreEqual(t1, merged.Next());
+			IsTrue(merged.HasNext());
+			AreEqual(t2, merged.Next());
 		}
 
 		public virtual void TestMergeRandom()
@@ -105,10 +105,10 @@ namespace Lucene.Net.Index
 				, new Iterator[0]));
 			while (actual.HasNext())
 			{
-				NUnit.Framework.Assert.IsTrue(expected.HasNext());
-				NUnit.Framework.Assert.AreEqual(expected.Next(), actual.Next());
+				IsTrue(expected.HasNext());
+				AreEqual(expected.Next(), actual.Next());
 			}
-			NUnit.Framework.Assert.IsFalse(expected.HasNext());
+			IsFalse(expected.HasNext());
 		}
 	}
 }

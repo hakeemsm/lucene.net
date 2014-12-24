@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+using Lucene.Net.Analysis.Tokenattributes;
 using NUnit.Framework;
 using Attribute = Lucene.Net.Util.Attribute;
 

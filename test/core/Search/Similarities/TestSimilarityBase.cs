@@ -106,7 +106,7 @@ namespace Lucene.Net.Search.Similarities
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
 			for (int i = 0; i < docs.Length; i++)
 			{
-				Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+				Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 				FieldType ft = new FieldType(TextField.TYPE_STORED);
 				ft.SetIndexed(false);
 				d.Add(NewField(FIELD_ID, Sharpen.Extensions.ToString(i), ft));
@@ -222,12 +222,12 @@ namespace Lucene.Net.Search.Similarities
 				float score = sim.Score(realStats, freq, docLen);
 				float explScore = sim.Explain(realStats, 1, new Explanation(freq, "freq"), docLen
 					).GetValue();
-				NUnit.Framework.Assert.IsFalse("Score infinite: " + sim.ToString(), float.IsInfinite
+				IsFalse("Score infinite: " + sim.ToString(), float.IsInfinite
 					(score));
-				NUnit.Framework.Assert.IsFalse("Score NaN: " + sim.ToString(), float.IsNaN(score)
+				IsFalse("Score NaN: " + sim.ToString(), float.IsNaN(score)
 					);
-				NUnit.Framework.Assert.IsTrue("Score negative: " + sim.ToString(), score >= 0);
-				NUnit.Framework.Assert.AreEqual("score() and explain() return different values: "
+				IsTrue("Score negative: " + sim.ToString(), score >= 0);
+				AreEqual("score() and explain() return different values: "
 					 + sim.ToString(), score, explScore, FLOAT_EPSILON);
 			}
 		}
@@ -676,7 +676,7 @@ namespace Lucene.Net.Search.Similarities
 			BasicStats realStats = (BasicStats)sim.ComputeWeight(stats.GetTotalBoost(), ToCollectionStats
 				(stats), ToTermStats(stats));
 			float score = sim.Score(realStats, FREQ, DOC_LEN);
-			NUnit.Framework.Assert.AreEqual(sim.ToString() + " score not correct.", gold, score
+			AreEqual(sim.ToString() + " score not correct.", gold, score
 				, FLOAT_EPSILON);
 		}
 
@@ -709,7 +709,7 @@ namespace Lucene.Net.Search.Similarities
 			{
 				searcher.SetSimilarity(sim);
 				TopDocs topDocs = searcher.Search(q, 1000);
-				NUnit.Framework.Assert.AreEqual("Failed: " + sim.ToString(), 3, topDocs.totalHits
+				AreEqual("Failed: " + sim.ToString(), 3, topDocs.TotalHits
 					);
 			}
 		}
@@ -728,7 +728,7 @@ namespace Lucene.Net.Search.Similarities
 			{
 				searcher.SetSimilarity(sim);
 				TopDocs topDocs = searcher.Search(q, 1000);
-				NUnit.Framework.Assert.AreEqual("Failed: " + sim.ToString(), "2", reader.Document
+				AreEqual("Failed: " + sim.ToString(), "2", reader.Document
 					(topDocs.scoreDocs[0].doc).Get(FIELD_ID));
 			}
 		}
@@ -754,11 +754,11 @@ namespace Lucene.Net.Search.Similarities
 			state.SetLength(5);
 			state.SetNumOverlap(2);
 			state.SetBoost(3);
-			NUnit.Framework.Assert.AreEqual(expected.ComputeNorm(state), actual.ComputeNorm(state
+			AreEqual(expected.ComputeNorm(state), actual.ComputeNorm(state
 				));
 			expected.SetDiscountOverlaps(true);
 			actual.SetDiscountOverlaps(true);
-			NUnit.Framework.Assert.AreEqual(expected.ComputeNorm(state), actual.ComputeNorm(state
+			AreEqual(expected.ComputeNorm(state), actual.ComputeNorm(state
 				));
 		}
 	}

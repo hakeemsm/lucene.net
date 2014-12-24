@@ -5,7 +5,7 @@
  */
 
 using System;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -56,7 +56,7 @@ namespace Lucene.Net.Index
 			{
 				// tries to write segments_2 but hits fake exc:
 				indexWriter.Commit();
-				NUnit.Framework.Assert.Fail("should have hit CrashingException");
+				Fail("should have hit CrashingException");
 			}
 			catch (TestCrashCausesCorruptIndex.CrashingException)
 			{
@@ -64,7 +64,7 @@ namespace Lucene.Net.Index
 			// expected
 			// writes segments_3
 			indexWriter.Close();
-			NUnit.Framework.Assert.IsFalse(SlowFileExists(realDirectory, "segments_2"));
+			IsFalse(SlowFileExists(realDirectory, "segments_2"));
 			crashAfterCreateOutput.Close();
 		}
 
@@ -83,7 +83,7 @@ namespace Lucene.Net.Index
 			// however, to test the fix, the following lines should pass as well.
 			indexWriter.AddDocument(GetDocument());
 			indexWriter.Close();
-			NUnit.Framework.Assert.IsFalse(SlowFileExists(realDirectory, "segments_2"));
+			IsFalse(SlowFileExists(realDirectory, "segments_2"));
 			realDirectory.Close();
 		}
 
@@ -97,8 +97,8 @@ namespace Lucene.Net.Index
 			IndexSearcher indexSearcher = NewSearcher(indexReader);
 			TopDocs topDocs = indexSearcher.Search(new TermQuery(new Term(TEXT_FIELD, "fleas"
 				)), 10);
-			NUnit.Framework.Assert.IsNotNull(topDocs);
-			NUnit.Framework.Assert.AreEqual(expectedTotalHits, topDocs.totalHits);
+			IsNotNull(topDocs);
+			AreEqual(expectedTotalHits, topDocs.TotalHits);
 			indexReader.Close();
 			realDirectory.Close();
 		}
@@ -107,9 +107,9 @@ namespace Lucene.Net.Index
 
 		/// <summary>Gets a document with content "my dog has fleas".</summary>
 		/// <remarks>Gets a document with content "my dog has fleas".</remarks>
-		private Lucene.Net.Document.Document GetDocument()
+		private Lucene.Net.Documents.Document GetDocument()
 		{
-			Lucene.Net.Document.Document document = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document document = new Lucene.Net.Documents.Document
 				();
 			document.Add(NewTextField(TEXT_FIELD, "my dog has fleas", Field.Store.NO));
 			return document;

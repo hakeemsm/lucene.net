@@ -25,18 +25,18 @@ namespace Lucene.Net.Index
 			ctrl.UpdateStalled(false);
 			Sharpen.Thread[] waitThreads = WaitThreads(AtLeast(1), ctrl);
 			Start(waitThreads);
-			NUnit.Framework.Assert.IsFalse(ctrl.HasBlocked());
-			NUnit.Framework.Assert.IsFalse(ctrl.AnyStalledThreads());
+			IsFalse(ctrl.HasBlocked());
+			IsFalse(ctrl.AnyStalledThreads());
 			Join(waitThreads);
 			// now stall threads and wake them up again
 			ctrl.UpdateStalled(true);
 			waitThreads = WaitThreads(AtLeast(1), ctrl);
 			Start(waitThreads);
 			AwaitState(Sharpen.Thread.State.WAITING, waitThreads);
-			NUnit.Framework.Assert.IsTrue(ctrl.HasBlocked());
-			NUnit.Framework.Assert.IsTrue(ctrl.AnyStalledThreads());
+			IsTrue(ctrl.HasBlocked());
+			IsTrue(ctrl.AnyStalledThreads());
 			ctrl.UpdateStalled(false);
-			NUnit.Framework.Assert.IsFalse(ctrl.AnyStalledThreads());
+			IsFalse(ctrl.AnyStalledThreads());
 			Join(waitThreads);
 		}
 
@@ -135,7 +135,7 @@ namespace Lucene.Net.Index
 			{
 				if (checkPoint.Get())
 				{
-					NUnit.Framework.Assert.IsTrue("timed out waiting for update threads - deadlock?", 
+					IsTrue("timed out waiting for update threads - deadlock?", 
 						sync.updateJoin.Await(10, TimeUnit.SECONDS));
 					if (!exceptions.IsEmpty())
 					{
@@ -143,7 +143,7 @@ namespace Lucene.Net.Index
 						{
 							Sharpen.Runtime.PrintStackTrace(throwable);
 						}
-						NUnit.Framework.Assert.Fail("got exceptions in threads");
+						Fail("got exceptions in threads");
 					}
 					if (ctrl.HasBlocked() && ctrl.IsHealthy())
 					{
@@ -153,8 +153,8 @@ namespace Lucene.Net.Index
 					sync.waiter.CountDown();
 					sync.leftCheckpoint.Await();
 				}
-				NUnit.Framework.Assert.IsFalse(checkPoint.Get());
-				NUnit.Framework.Assert.AreEqual(0, sync.waiter.GetCount());
+				IsFalse(checkPoint.Get());
+				AreEqual(0, sync.waiter.GetCount());
 				if (checkPointProbability >= Random().NextFloat())
 				{
 					sync.Reset(numStallers + numReleasers, numStallers + numReleasers + numWaiters);
@@ -166,7 +166,7 @@ namespace Lucene.Net.Index
 				sync.Reset(numStallers + numReleasers, numStallers + numReleasers + numWaiters);
 				checkPoint.Set(true);
 			}
-			NUnit.Framework.Assert.IsTrue(sync.updateJoin.Await(10, TimeUnit.SECONDS));
+			IsTrue(sync.updateJoin.Await(10, TimeUnit.SECONDS));
 			AssertState(numReleasers, numStallers, numWaiters, threads, ctrl);
 			checkPoint.Set(false);
 			stop.Set(true);
@@ -180,7 +180,7 @@ namespace Lucene.Net.Index
 				{
 					if (threads[i_4].GetState() == Sharpen.Thread.State.WAITING)
 					{
-						NUnit.Framework.Assert.Fail("waiter is not released - anyThreadsStalled: " + ctrl
+						Fail("waiter is not released - anyThreadsStalled: " + ctrl
 							.AnyStalledThreads());
 					}
 				}
@@ -209,7 +209,7 @@ namespace Lucene.Net.Index
 							}
 							else
 							{
-								NUnit.Framework.Assert.Fail("control claims no stalled threads but waiter seems to be blocked "
+								Fail("control claims no stalled threads but waiter seems to be blocked "
 									);
 							}
 						}
@@ -257,7 +257,7 @@ namespace Lucene.Net.Index
 						{
 							try
 							{
-								NUnit.Framework.Assert.IsTrue(sync.Await());
+								IsTrue(sync.Await());
 							}
 							catch (Exception e)
 							{
@@ -318,7 +318,7 @@ namespace Lucene.Net.Index
 							sync.updateJoin.CountDown();
 							try
 							{
-								NUnit.Framework.Assert.IsTrue(sync.Await());
+								IsTrue(sync.Await());
 							}
 							catch (Exception e)
 							{

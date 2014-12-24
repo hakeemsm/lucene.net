@@ -6,7 +6,7 @@
 
 using System;
 using System.Collections.Generic;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -41,151 +41,151 @@ namespace Lucene.Net.Search
 			FuzzyQuery query = new FuzzyQuery(new Term("field", "aaaaa"), FuzzyQuery.defaultMaxEdits
 				, 0);
 			ScoreDoc[] hits = searcher.Search(query, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(3, hits.Length);
+			AreEqual(3, hits.Length);
 			// same with prefix
 			query = new FuzzyQuery(new Term("field", "aaaaa"), FuzzyQuery.defaultMaxEdits, 1);
 			hits = searcher.Search(query, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(3, hits.Length);
+			AreEqual(3, hits.Length);
 			query = new FuzzyQuery(new Term("field", "aaaaa"), FuzzyQuery.defaultMaxEdits, 2);
 			hits = searcher.Search(query, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(3, hits.Length);
+			AreEqual(3, hits.Length);
 			query = new FuzzyQuery(new Term("field", "aaaaa"), FuzzyQuery.defaultMaxEdits, 3);
 			hits = searcher.Search(query, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(3, hits.Length);
+			AreEqual(3, hits.Length);
 			query = new FuzzyQuery(new Term("field", "aaaaa"), FuzzyQuery.defaultMaxEdits, 4);
 			hits = searcher.Search(query, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(2, hits.Length);
+			AreEqual(2, hits.Length);
 			query = new FuzzyQuery(new Term("field", "aaaaa"), FuzzyQuery.defaultMaxEdits, 5);
 			hits = searcher.Search(query, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(1, hits.Length);
+			AreEqual(1, hits.Length);
 			query = new FuzzyQuery(new Term("field", "aaaaa"), FuzzyQuery.defaultMaxEdits, 6);
 			hits = searcher.Search(query, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(1, hits.Length);
+			AreEqual(1, hits.Length);
 			// test scoring
 			query = new FuzzyQuery(new Term("field", "bbbbb"), FuzzyQuery.defaultMaxEdits, 0);
 			hits = searcher.Search(query, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual("3 documents should match", 3, hits.Length);
+			AreEqual("3 documents should match", 3, hits.Length);
 			IList<string> order = Arrays.AsList("bbbbb", "abbbb", "aabbb");
 			for (int i = 0; i < hits.Length; i++)
 			{
 				string term = searcher.Doc(hits[i].doc).Get("field");
 				//System.out.println(hits[i].score);
-				NUnit.Framework.Assert.AreEqual(order[i], term);
+				AreEqual(order[i], term);
 			}
 			// test pq size by supplying maxExpansions=2
 			// This query would normally return 3 documents, because 3 terms match (see above):
 			query = new FuzzyQuery(new Term("field", "bbbbb"), FuzzyQuery.defaultMaxEdits, 0, 
 				2, false);
 			hits = searcher.Search(query, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual("only 2 documents should match", 2, hits.Length);
+			AreEqual("only 2 documents should match", 2, hits.Length);
 			order = Arrays.AsList("bbbbb", "abbbb");
 			for (int i_1 = 0; i_1 < hits.Length; i_1++)
 			{
 				string term = searcher.Doc(hits[i_1].doc).Get("field");
 				//System.out.println(hits[i].score);
-				NUnit.Framework.Assert.AreEqual(order[i_1], term);
+				AreEqual(order[i_1], term);
 			}
 			// not similar enough:
 			query = new FuzzyQuery(new Term("field", "xxxxx"), FuzzyQuery.defaultMaxEdits, 0);
 			hits = searcher.Search(query, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(0, hits.Length);
+			AreEqual(0, hits.Length);
 			query = new FuzzyQuery(new Term("field", "aaccc"), FuzzyQuery.defaultMaxEdits, 0);
 			// edit distance to "aaaaa" = 3
 			hits = searcher.Search(query, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(0, hits.Length);
+			AreEqual(0, hits.Length);
 			// query identical to a word in the index:
 			query = new FuzzyQuery(new Term("field", "aaaaa"), FuzzyQuery.defaultMaxEdits, 0);
 			hits = searcher.Search(query, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(3, hits.Length);
-			NUnit.Framework.Assert.AreEqual(searcher.Doc(hits[0].doc).Get("field"), ("aaaaa")
+			AreEqual(3, hits.Length);
+			AreEqual(searcher.Doc(hits[0].doc).Get("field"), ("aaaaa")
 				);
 			// default allows for up to two edits:
-			NUnit.Framework.Assert.AreEqual(searcher.Doc(hits[1].doc).Get("field"), ("aaaab")
+			AreEqual(searcher.Doc(hits[1].doc).Get("field"), ("aaaab")
 				);
-			NUnit.Framework.Assert.AreEqual(searcher.Doc(hits[2].doc).Get("field"), ("aaabb")
+			AreEqual(searcher.Doc(hits[2].doc).Get("field"), ("aaabb")
 				);
 			// query similar to a word in the index:
 			query = new FuzzyQuery(new Term("field", "aaaac"), FuzzyQuery.defaultMaxEdits, 0);
 			hits = searcher.Search(query, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(3, hits.Length);
-			NUnit.Framework.Assert.AreEqual(searcher.Doc(hits[0].doc).Get("field"), ("aaaaa")
+			AreEqual(3, hits.Length);
+			AreEqual(searcher.Doc(hits[0].doc).Get("field"), ("aaaaa")
 				);
-			NUnit.Framework.Assert.AreEqual(searcher.Doc(hits[1].doc).Get("field"), ("aaaab")
+			AreEqual(searcher.Doc(hits[1].doc).Get("field"), ("aaaab")
 				);
-			NUnit.Framework.Assert.AreEqual(searcher.Doc(hits[2].doc).Get("field"), ("aaabb")
+			AreEqual(searcher.Doc(hits[2].doc).Get("field"), ("aaabb")
 				);
 			// now with prefix
 			query = new FuzzyQuery(new Term("field", "aaaac"), FuzzyQuery.defaultMaxEdits, 1);
 			hits = searcher.Search(query, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(3, hits.Length);
-			NUnit.Framework.Assert.AreEqual(searcher.Doc(hits[0].doc).Get("field"), ("aaaaa")
+			AreEqual(3, hits.Length);
+			AreEqual(searcher.Doc(hits[0].doc).Get("field"), ("aaaaa")
 				);
-			NUnit.Framework.Assert.AreEqual(searcher.Doc(hits[1].doc).Get("field"), ("aaaab")
+			AreEqual(searcher.Doc(hits[1].doc).Get("field"), ("aaaab")
 				);
-			NUnit.Framework.Assert.AreEqual(searcher.Doc(hits[2].doc).Get("field"), ("aaabb")
+			AreEqual(searcher.Doc(hits[2].doc).Get("field"), ("aaabb")
 				);
 			query = new FuzzyQuery(new Term("field", "aaaac"), FuzzyQuery.defaultMaxEdits, 2);
 			hits = searcher.Search(query, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(3, hits.Length);
-			NUnit.Framework.Assert.AreEqual(searcher.Doc(hits[0].doc).Get("field"), ("aaaaa")
+			AreEqual(3, hits.Length);
+			AreEqual(searcher.Doc(hits[0].doc).Get("field"), ("aaaaa")
 				);
-			NUnit.Framework.Assert.AreEqual(searcher.Doc(hits[1].doc).Get("field"), ("aaaab")
+			AreEqual(searcher.Doc(hits[1].doc).Get("field"), ("aaaab")
 				);
-			NUnit.Framework.Assert.AreEqual(searcher.Doc(hits[2].doc).Get("field"), ("aaabb")
+			AreEqual(searcher.Doc(hits[2].doc).Get("field"), ("aaabb")
 				);
 			query = new FuzzyQuery(new Term("field", "aaaac"), FuzzyQuery.defaultMaxEdits, 3);
 			hits = searcher.Search(query, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(3, hits.Length);
-			NUnit.Framework.Assert.AreEqual(searcher.Doc(hits[0].doc).Get("field"), ("aaaaa")
+			AreEqual(3, hits.Length);
+			AreEqual(searcher.Doc(hits[0].doc).Get("field"), ("aaaaa")
 				);
-			NUnit.Framework.Assert.AreEqual(searcher.Doc(hits[1].doc).Get("field"), ("aaaab")
+			AreEqual(searcher.Doc(hits[1].doc).Get("field"), ("aaaab")
 				);
-			NUnit.Framework.Assert.AreEqual(searcher.Doc(hits[2].doc).Get("field"), ("aaabb")
+			AreEqual(searcher.Doc(hits[2].doc).Get("field"), ("aaabb")
 				);
 			query = new FuzzyQuery(new Term("field", "aaaac"), FuzzyQuery.defaultMaxEdits, 4);
 			hits = searcher.Search(query, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(2, hits.Length);
-			NUnit.Framework.Assert.AreEqual(searcher.Doc(hits[0].doc).Get("field"), ("aaaaa")
+			AreEqual(2, hits.Length);
+			AreEqual(searcher.Doc(hits[0].doc).Get("field"), ("aaaaa")
 				);
-			NUnit.Framework.Assert.AreEqual(searcher.Doc(hits[1].doc).Get("field"), ("aaaab")
+			AreEqual(searcher.Doc(hits[1].doc).Get("field"), ("aaaab")
 				);
 			query = new FuzzyQuery(new Term("field", "aaaac"), FuzzyQuery.defaultMaxEdits, 5);
 			hits = searcher.Search(query, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(0, hits.Length);
+			AreEqual(0, hits.Length);
 			query = new FuzzyQuery(new Term("field", "ddddX"), FuzzyQuery.defaultMaxEdits, 0);
 			hits = searcher.Search(query, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(1, hits.Length);
-			NUnit.Framework.Assert.AreEqual(searcher.Doc(hits[0].doc).Get("field"), ("ddddd")
+			AreEqual(1, hits.Length);
+			AreEqual(searcher.Doc(hits[0].doc).Get("field"), ("ddddd")
 				);
 			// now with prefix
 			query = new FuzzyQuery(new Term("field", "ddddX"), FuzzyQuery.defaultMaxEdits, 1);
 			hits = searcher.Search(query, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(1, hits.Length);
-			NUnit.Framework.Assert.AreEqual(searcher.Doc(hits[0].doc).Get("field"), ("ddddd")
+			AreEqual(1, hits.Length);
+			AreEqual(searcher.Doc(hits[0].doc).Get("field"), ("ddddd")
 				);
 			query = new FuzzyQuery(new Term("field", "ddddX"), FuzzyQuery.defaultMaxEdits, 2);
 			hits = searcher.Search(query, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(1, hits.Length);
-			NUnit.Framework.Assert.AreEqual(searcher.Doc(hits[0].doc).Get("field"), ("ddddd")
+			AreEqual(1, hits.Length);
+			AreEqual(searcher.Doc(hits[0].doc).Get("field"), ("ddddd")
 				);
 			query = new FuzzyQuery(new Term("field", "ddddX"), FuzzyQuery.defaultMaxEdits, 3);
 			hits = searcher.Search(query, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(1, hits.Length);
-			NUnit.Framework.Assert.AreEqual(searcher.Doc(hits[0].doc).Get("field"), ("ddddd")
+			AreEqual(1, hits.Length);
+			AreEqual(searcher.Doc(hits[0].doc).Get("field"), ("ddddd")
 				);
 			query = new FuzzyQuery(new Term("field", "ddddX"), FuzzyQuery.defaultMaxEdits, 4);
 			hits = searcher.Search(query, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(1, hits.Length);
-			NUnit.Framework.Assert.AreEqual(searcher.Doc(hits[0].doc).Get("field"), ("ddddd")
+			AreEqual(1, hits.Length);
+			AreEqual(searcher.Doc(hits[0].doc).Get("field"), ("ddddd")
 				);
 			query = new FuzzyQuery(new Term("field", "ddddX"), FuzzyQuery.defaultMaxEdits, 5);
 			hits = searcher.Search(query, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(0, hits.Length);
+			AreEqual(0, hits.Length);
 			// different field = no match:
 			query = new FuzzyQuery(new Term("anotherfield", "ddddX"), FuzzyQuery.defaultMaxEdits
 				, 0);
 			hits = searcher.Search(query, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(0, hits.Length);
+			AreEqual(0, hits.Length);
 			reader.Close();
 			directory.Close();
 		}
@@ -220,7 +220,7 @@ namespace Lucene.Net.Search
 			FuzzyQuery query = new FuzzyQuery(new Term("field", "WEBER"), 2, 1);
 			//query.setRewriteMethod(FuzzyQuery.SCORING_BOOLEAN_QUERY_REWRITE);
 			ScoreDoc[] hits = searcher.Search(query, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(8, hits.Length);
+			AreEqual(8, hits.Length);
 			reader.Close();
 			directory.Close();
 		}
@@ -258,7 +258,7 @@ namespace Lucene.Net.Search
 			IndexSearcher searcher = NewSearcher(mr);
 			FuzzyQuery fq = new FuzzyQuery(new Term("field", "z123456"), 1, 0, 2, false);
 			TopDocs docs = searcher.Search(fq, 2);
-			NUnit.Framework.Assert.AreEqual(5, docs.totalHits);
+			AreEqual(5, docs.TotalHits);
 			// 5 docs, from the a and b's
 			mr.Close();
 			ir1.Close();
@@ -286,13 +286,13 @@ namespace Lucene.Net.Search
 			query.SetRewriteMethod(new MultiTermQuery.TopTermsBoostOnlyBooleanQueryRewrite(50
 				));
 			ScoreDoc[] hits = searcher.Search(query, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(3, hits.Length);
+			AreEqual(3, hits.Length);
 			// normally, 'Lucenne' would be the first result as IDF will skew the score.
-			NUnit.Framework.Assert.AreEqual("Lucene", reader.Document(hits[0].doc).Get("field"
+			AreEqual("Lucene", reader.Document(hits[0].doc).Get("field"
 				));
-			NUnit.Framework.Assert.AreEqual("Lucene", reader.Document(hits[1].doc).Get("field"
+			AreEqual("Lucene", reader.Document(hits[1].doc).Get("field"
 				));
-			NUnit.Framework.Assert.AreEqual("Lucenne", reader.Document(hits[2].doc).Get("field"
+			AreEqual("Lucenne", reader.Document(hits[2].doc).Get("field"
 				));
 			reader.Close();
 			directory.Close();
@@ -324,8 +324,8 @@ namespace Lucene.Net.Search
 			// 3. search
 			IndexSearcher searcher = NewSearcher(r);
 			ScoreDoc[] hits = searcher.Search(q, 10).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(1, hits.Length);
-			NUnit.Framework.Assert.AreEqual("Giga byte", searcher.Doc(hits[0].doc).Get("field"
+			AreEqual(1, hits.Length);
+			AreEqual("Giga byte", searcher.Doc(hits[0].doc).Get("field"
 				));
 			r.Close();
 			index.Close();
@@ -344,16 +344,16 @@ namespace Lucene.Net.Search
 			w.Close();
 			FuzzyQuery q = new FuzzyQuery(new Term("field", "fouba"), 2);
 			ScoreDoc[] hits = searcher.Search(q, 10).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(1, hits.Length);
-			NUnit.Framework.Assert.AreEqual("foobar", searcher.Doc(hits[0].doc).Get("field"));
+			AreEqual(1, hits.Length);
+			AreEqual("foobar", searcher.Doc(hits[0].doc).Get("field"));
 			q = new FuzzyQuery(new Term("field", "foubara"), 2);
 			hits = searcher.Search(q, 10).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(1, hits.Length);
-			NUnit.Framework.Assert.AreEqual("foobar", searcher.Doc(hits[0].doc).Get("field"));
+			AreEqual(1, hits.Length);
+			AreEqual("foobar", searcher.Doc(hits[0].doc).Get("field"));
 			try
 			{
 				q = new FuzzyQuery(new Term("field", "t"), 3);
-				NUnit.Framework.Assert.Fail();
+				Fail();
 			}
 			catch (ArgumentException)
 			{
@@ -366,7 +366,7 @@ namespace Lucene.Net.Search
 		/// <exception cref="System.IO.IOException"></exception>
 		private void AddDoc(string text, RandomIndexWriter writer)
 		{
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewTextField("field", text, Field.Store.YES));
 			writer.AddDocument(doc);

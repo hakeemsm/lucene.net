@@ -70,11 +70,11 @@ namespace Lucene.Net.Util
 		public virtual void TestAgainstMainVersionConstant()
 		{
 			Version[] values = Version.Values();
-			NUnit.Framework.Assert.IsTrue(values.Length >= 2);
+			IsTrue(values.Length >= 2);
 			string mainVersionWithoutAlphaBeta = Constants.MainVersionWithoutAlphaBeta();
 			Version mainVersionParsed = VersionHelper.ParseLeniently(mainVersionWithoutAlphaBeta
 				);
-			NUnit.Framework.Assert.AreSame("Constant one before last must be the same as the parsed LUCENE_MAIN_VERSION (without alpha/beta) constant: "
+			AreSame("Constant one before last must be the same as the parsed LUCENE_MAIN_VERSION (without alpha/beta) constant: "
 				 + mainVersionWithoutAlphaBeta, mainVersionParsed, values[values.Length - 2]);
 		}
     }

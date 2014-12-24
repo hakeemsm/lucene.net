@@ -7,7 +7,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
@@ -32,7 +32,7 @@ namespace Lucene.Net.Search
 			//System.out.println("bytesToIndex=" + charsToIndex);
 			while (charsIndexed < charsToIndex)
 			{
-				Lucene.Net.Document.Document doc = docs.NextDoc();
+				Lucene.Net.Documents.Document doc = docs.NextDoc();
 				charsIndexed += doc.Get("body").Length;
 				w.AddDocument(doc);
 			}
@@ -48,7 +48,7 @@ namespace Lucene.Net.Search
 			{
 				termCount++;
 			}
-			NUnit.Framework.Assert.IsTrue(termCount > 0);
+			IsTrue(termCount > 0);
 			// Target ~10 terms to search:
 			double chance = 10.0 / termCount;
 			termsEnum = terms.Iterator(termsEnum);
@@ -107,14 +107,14 @@ namespace Lucene.Net.Search
 						{
 							TopDocs actual = s.Search(new TermQuery(new Term("body", ent.Key)), 100);
 							TopDocs expected = ent.Value;
-							NUnit.Framework.Assert.AreEqual(expected.totalHits, actual.totalHits);
-							NUnit.Framework.Assert.AreEqual("query=" + ent.Key.Utf8ToString(), expected.scoreDocs
+							AreEqual(expected.TotalHits, actual.TotalHits);
+							AreEqual("query=" + ent.Key.Utf8ToString(), expected.scoreDocs
 								.Length, actual.scoreDocs.Length);
 							for (int hit = 0; hit < expected.scoreDocs.Length; hit++)
 							{
-								NUnit.Framework.Assert.AreEqual(expected.scoreDocs[hit].doc, actual.scoreDocs[hit
+								AreEqual(expected.scoreDocs[hit].doc, actual.scoreDocs[hit
 									].doc);
-								NUnit.Framework.Assert.IsTrue(expected.scoreDocs[hit].score == actual.scoreDocs[hit
+								IsTrue(expected.scoreDocs[hit].score == actual.scoreDocs[hit
 									].score);
 							}
 						}

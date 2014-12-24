@@ -6,7 +6,7 @@
 
 using System;
 using System.IO;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
@@ -60,7 +60,7 @@ namespace Lucene.Net.Index
 					failed = true;
 				}
 			}
-			NUnit.Framework.Assert.IsFalse(failed);
+			IsFalse(failed);
 			writer.Close();
 			dir.Close();
 		}
@@ -94,7 +94,7 @@ namespace Lucene.Net.Index
 				Random random = LuceneTestCase.Random();
 				try
 				{
-					Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 						();
 					doc.Add(new TextField("id", "1", Field.Store.NO));
 					writer.AddDocument(doc);
@@ -213,7 +213,7 @@ namespace Lucene.Net.Index
 								System.Console.Out.WriteLine("Thread: " + Sharpen.Thread.CurrentThread() + " Reader: "
 									 + reader + " isCurrent:" + current);
 							}
-							NUnit.Framework.Assert.IsFalse(current);
+							IsFalse(current);
 						}
 						catch (Exception e)
 						{

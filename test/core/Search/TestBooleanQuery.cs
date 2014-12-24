@@ -7,7 +7,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -42,7 +42,7 @@ namespace Lucene.Net.Search
 			nested2.Add(new TermQuery(new Term("field", "nestedvalue2")), BooleanClause.Occur
 				.SHOULD);
 			bq2.Add(nested2, BooleanClause.Occur.SHOULD);
-			NUnit.Framework.Assert.AreEqual(bq1, bq2);
+			AreEqual(bq1, bq2);
 		}
 
 		public virtual void TestException()
@@ -50,7 +50,7 @@ namespace Lucene.Net.Search
 			try
 			{
 				BooleanQuery.SetMaxClauseCount(0);
-				NUnit.Framework.Assert.Fail();
+				Fail();
 			}
 			catch (ArgumentException)
 			{
@@ -64,7 +64,7 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter w = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewTextField("field", "a b c d", Field.Store.NO));
 			w.AddDocument(doc);
@@ -81,7 +81,7 @@ namespace Lucene.Net.Search
 			subQuery.SetBoost(0);
 			q.Add(subQuery, BooleanClause.Occur.SHOULD);
 			float score2 = s.Search(q, 10).GetMaxScore();
-			NUnit.Framework.Assert.AreEqual(score * .5F, score2, 1e-6);
+			AreEqual(score * .5F, score2, 1e-6);
 			// LUCENE-2617: make sure that a clause not in the index still contributes to the score via coord factor
 			BooleanQuery qq = ((BooleanQuery)q.Clone());
 			PhraseQuery phrase = new PhraseQuery();
@@ -90,28 +90,28 @@ namespace Lucene.Net.Search
 			phrase.SetBoost(0);
 			qq.Add(phrase, BooleanClause.Occur.SHOULD);
 			score2 = s.Search(qq, 10).GetMaxScore();
-			NUnit.Framework.Assert.AreEqual(score * (1 / 3F), score2, 1e-6);
+			AreEqual(score * (1 / 3F), score2, 1e-6);
 			// now test BooleanScorer2
 			subQuery = new TermQuery(new Term("field", "b"));
 			subQuery.SetBoost(0);
 			q.Add(subQuery, BooleanClause.Occur.MUST);
 			score2 = s.Search(q, 10).GetMaxScore();
-			NUnit.Framework.Assert.AreEqual(score * (2 / 3F), score2, 1e-6);
+			AreEqual(score * (2 / 3F), score2, 1e-6);
 			// PhraseQuery w/ no terms added returns a null scorer
 			PhraseQuery pq = new PhraseQuery();
 			q.Add(pq, BooleanClause.Occur.SHOULD);
-			NUnit.Framework.Assert.AreEqual(1, s.Search(q, 10).totalHits);
+			AreEqual(1, s.Search(q, 10).TotalHits);
 			// A required clause which returns null scorer should return null scorer to
 			// IndexSearcher.
 			q = new BooleanQuery();
 			pq = new PhraseQuery();
 			q.Add(new TermQuery(new Term("field", "a")), BooleanClause.Occur.SHOULD);
 			q.Add(pq, BooleanClause.Occur.MUST);
-			NUnit.Framework.Assert.AreEqual(0, s.Search(q, 10).totalHits);
+			AreEqual(0, s.Search(q, 10).TotalHits);
 			DisjunctionMaxQuery dmq = new DisjunctionMaxQuery(1.0f);
 			dmq.Add(new TermQuery(new Term("field", "a")));
 			dmq.Add(pq);
-			NUnit.Framework.Assert.AreEqual(1, s.Search(dmq, 10).totalHits);
+			AreEqual(1, s.Search(dmq, 10).TotalHits);
 			r.Close();
 			w.Close();
 			dir.Close();
@@ -122,7 +122,7 @@ namespace Lucene.Net.Search
 		{
 			Directory dir1 = NewDirectory();
 			RandomIndexWriter iw1 = new RandomIndexWriter(Random(), dir1);
-			Lucene.Net.Document.Document doc1 = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc1 = new Lucene.Net.Documents.Document
 				();
 			doc1.Add(NewTextField("field", "foo bar", Field.Store.NO));
 			iw1.AddDocument(doc1);
@@ -130,7 +130,7 @@ namespace Lucene.Net.Search
 			iw1.Close();
 			Directory dir2 = NewDirectory();
 			RandomIndexWriter iw2 = new RandomIndexWriter(Random(), dir2);
-			Lucene.Net.Document.Document doc2 = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc2 = new Lucene.Net.Documents.Document
 				();
 			doc2.Add(NewTextField("field", "foo baz", Field.Store.NO));
 			iw2.AddDocument(doc2);
@@ -144,7 +144,7 @@ namespace Lucene.Net.Search
 			query.Add(wildcardQuery, BooleanClause.Occur.MUST_NOT);
 			MultiReader multireader = new MultiReader(reader1, reader2);
 			IndexSearcher searcher = NewSearcher(multireader);
-			NUnit.Framework.Assert.AreEqual(0, searcher.Search(query, 10).totalHits);
+			AreEqual(0, searcher.Search(query, 10).TotalHits);
 			ExecutorService es = Executors.NewCachedThreadPool(new NamedThreadFactory("NRT search threads"
 				));
 			searcher = new IndexSearcher(multireader, es);
@@ -152,7 +152,7 @@ namespace Lucene.Net.Search
 			{
 				System.Console.Out.WriteLine("rewritten form: " + searcher.Rewrite(query));
 			}
-			NUnit.Framework.Assert.AreEqual(0, searcher.Search(query, 10).totalHits);
+			AreEqual(0, searcher.Search(query, 10).TotalHits);
 			es.Shutdown();
 			es.AwaitTermination(1, TimeUnit.SECONDS);
 			multireader.Close();
@@ -191,7 +191,7 @@ namespace Lucene.Net.Search
 				{
 					contents += " f";
 				}
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(new TextField("field", contents, Field.Store.NO));
 				w.AddDocument(doc);
@@ -229,7 +229,7 @@ namespace Lucene.Net.Search
 				IList<ScoreDoc> hits = new AList<ScoreDoc>();
 				while (scorer.NextDoc() != DocIdSetIterator.NO_MORE_DOCS)
 				{
-					hits.AddItem(new ScoreDoc(scorer.DocID(), scorer.Score()));
+					hits.AddItem(new ScoreDoc(scorer.DocID, scorer.Score()));
 				}
 				if (VERBOSE)
 				{
@@ -266,14 +266,14 @@ namespace Lucene.Net.Search
 						}
 						if (nextUpto == hits.Count)
 						{
-							NUnit.Framework.Assert.AreEqual(DocIdSetIterator.NO_MORE_DOCS, nextDoc);
+							AreEqual(DocIdSetIterator.NO_MORE_DOCS, nextDoc);
 						}
 						else
 						{
 							ScoreDoc hit = hits[nextUpto];
-							NUnit.Framework.Assert.AreEqual(hit.doc, nextDoc);
+							AreEqual(hit.doc, nextDoc);
 							// Test for precise float equality:
-							NUnit.Framework.Assert.IsTrue("doc " + hit.doc + " has wrong score: expected=" + 
+							IsTrue("doc " + hit.doc + " has wrong score: expected=" + 
 								hit.score + " actual=" + scorer.Score(), hit.score == scorer.Score());
 						}
 						upto = nextUpto;
@@ -296,7 +296,7 @@ namespace Lucene.Net.Search
 				);
 			IndexWriter writer = new IndexWriter(directory, config);
 			string FIELD = "content";
-			Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+			Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 			d.Add(new TextField(FIELD, "clockwork orange", Field.Store.YES));
 			writer.AddDocument(d);
 			writer.Close();
@@ -315,9 +315,9 @@ namespace Lucene.Net.Search
 				System.Console.Out.WriteLine(scoreDoc.doc);
 			}
 			indexReader.Close();
-			NUnit.Framework.Assert.AreEqual("Bug in boolean query composed of span queries", 
+			AreEqual("Bug in boolean query composed of span queries", 
 				failed, false);
-			NUnit.Framework.Assert.AreEqual("Bug in boolean query composed of span queries", 
+			AreEqual("Bug in boolean query composed of span queries", 
 				hits, 1);
 			directory.Close();
 		}
@@ -328,7 +328,7 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter w = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewTextField("field", "some text here", Field.Store.NO));
 			w.AddDocument(doc);
@@ -355,7 +355,7 @@ namespace Lucene.Net.Search
 			protected override void Search(IList<AtomicReaderContext> leaves, Weight weight, 
 				Collector collector)
 			{
-				NUnit.Framework.Assert.AreEqual(-1, collector.GetType().Name.IndexOf("OutOfOrder"
+				AreEqual(-1, collector.GetType().Name.IndexOf("OutOfOrder"
 					));
 				base.Search(leaves, weight, collector);
 			}

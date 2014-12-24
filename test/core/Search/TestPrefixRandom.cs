@@ -4,7 +4,7 @@
  * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Codecs;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
@@ -39,7 +39,7 @@ namespace Lucene.Net.Search
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir, ((IndexWriterConfig
 				)NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(Random(), MockTokenizer
 				.KEYWORD, false)).SetMaxBufferedDocs(TestUtil.NextInt(Random(), 50, 1000))));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			Field field = NewStringField("field", string.Empty, Field.Store.NO);
 			doc.Add(field);
@@ -49,7 +49,7 @@ namespace Lucene.Net.Search
 			int num = codec.Equals("Lucene3x") ? 200 * RANDOM_MULTIPLIER : AtLeast(1000);
 			for (int i = 0; i < num; i++)
 			{
-				field.SetStringValue(TestUtil.RandomUnicodeString(Random(), 10));
+				field.StringValue = TestUtil.RandomUnicodeString(Random(), 10));
 				writer.AddDocument(doc);
 			}
 			reader = writer.GetReader();

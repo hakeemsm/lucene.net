@@ -44,7 +44,7 @@ namespace Lucene.Net.Util.Packed
 				return this.doc;
 			}
 
-			public override int DocID()
+			public override int DocID
 			{
 				return this.doc;
 			}

@@ -9,8 +9,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using NUnit.Framework;
-using Lucene.Net.Analysis;
-using Lucene.Net.Analysis.Tokenattributes;
+using Lucene.Net.Test.Analysis;
+using Lucene.Net.Test.Analysis.Tokenattributes;
 using Lucene.Net.Codecs;
 using Lucene.Net.Codecs.Simpletext;
 using Lucene.Net.Document;
@@ -40,7 +40,7 @@ namespace Lucene.Net.Index
 			try
 			{
 				IndexWriterConfig.SetDefaultWriteLockTimeout(2000);
-				NUnit.Framework.Assert.AreEqual(2000, IndexWriterConfig.GetDefaultWriteLockTimeout
+				AreEqual(2000, IndexWriterConfig.GetDefaultWriteLockTimeout
 					());
 				writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 					(Random())));
@@ -54,7 +54,7 @@ namespace Lucene.Net.Index
 			{
 				AddDocWithIndex(writer, i);
 			}
-			NUnit.Framework.Assert.AreEqual(100, writer.MaxDoc());
+			AreEqual(100, writer.MaxDoc);
 			writer.Close();
 			// delete 40 documents
 			writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
@@ -65,27 +65,27 @@ namespace Lucene.Net.Index
 			}
 			writer.Close();
 			reader = DirectoryReader.Open(dir);
-			NUnit.Framework.Assert.AreEqual(60, reader.NumDocs());
+			AreEqual(60, reader.NumDocs());
 			reader.Close();
 			// merge the index down and check that the new doc count is correct
 			writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random())));
-			NUnit.Framework.Assert.AreEqual(60, writer.NumDocs());
+			AreEqual(60, writer.NumDocs());
 			writer.ForceMerge(1);
-			NUnit.Framework.Assert.AreEqual(60, writer.MaxDoc());
-			NUnit.Framework.Assert.AreEqual(60, writer.NumDocs());
+			AreEqual(60, writer.MaxDoc);
+			AreEqual(60, writer.NumDocs());
 			writer.Close();
 			// check that the index reader gives the same numbers.
 			reader = DirectoryReader.Open(dir);
-			NUnit.Framework.Assert.AreEqual(60, reader.MaxDoc());
-			NUnit.Framework.Assert.AreEqual(60, reader.NumDocs());
+			AreEqual(60, reader.MaxDoc);
+			AreEqual(60, reader.NumDocs());
 			reader.Close();
 			// make sure opening a new index for create over
 			// this existing one works correctly:
 			writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random())).SetOpenMode(IndexWriterConfig.OpenMode.CREATE));
-			NUnit.Framework.Assert.AreEqual(0, writer.MaxDoc());
-			NUnit.Framework.Assert.AreEqual(0, writer.NumDocs());
+			AreEqual(0, writer.MaxDoc);
+			AreEqual(0, writer.NumDocs());
 			writer.Close();
 			dir.Close();
 		}
@@ -93,7 +93,7 @@ namespace Lucene.Net.Index
 		/// <exception cref="System.IO.IOException"></exception>
 		internal static void AddDoc(IndexWriter writer)
 		{
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewTextField("content", "aaa", Field.Store.NO));
 			writer.AddDocument(doc);
@@ -102,7 +102,7 @@ namespace Lucene.Net.Index
 		/// <exception cref="System.IO.IOException"></exception>
 		internal static void AddDocWithIndex(IndexWriter writer, int index)
 		{
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewField("content", "aaa " + index, storedTextType));
 			doc.Add(NewField("id", string.Empty + index, storedTextType));
@@ -120,7 +120,7 @@ namespace Lucene.Net.Index
 			Arrays.Sort(endFiles);
 			if (!Arrays.Equals(startFiles, endFiles))
 			{
-				NUnit.Framework.Assert.Fail(message + ": before delete:\n    " + ArrayToString(startFiles
+				Fail(message + ": before delete:\n    " + ArrayToString(startFiles
 					) + "\n  after delete:\n    " + ArrayToString(endFiles));
 			}
 		}
@@ -153,16 +153,16 @@ namespace Lucene.Net.Index
 			writer.Close();
 			// now open reader:
 			IndexReader reader = DirectoryReader.Open(dir);
-			NUnit.Framework.Assert.AreEqual("should be one document", reader.NumDocs(), 1);
+			AreEqual("should be one document", reader.NumDocs(), 1);
 			// now open index for create:
 			writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random())).SetOpenMode(IndexWriterConfig.OpenMode.CREATE));
-			NUnit.Framework.Assert.AreEqual("should be zero documents", writer.MaxDoc(), 0);
+			AreEqual("should be zero documents", writer.MaxDoc, 0);
 			AddDoc(writer);
 			writer.Close();
-			NUnit.Framework.Assert.AreEqual("should be one document", reader.NumDocs(), 1);
+			AreEqual("should be one document", reader.NumDocs(), 1);
 			IndexReader reader2 = DirectoryReader.Open(dir);
-			NUnit.Framework.Assert.AreEqual("should be one document", reader2.NumDocs(), 1);
+			AreEqual("should be one document", reader2.NumDocs(), 1);
 			reader.Close();
 			reader2.Close();
 			dir.Close();
@@ -181,7 +181,7 @@ namespace Lucene.Net.Index
 			try
 			{
 				AddDoc(writer);
-				NUnit.Framework.Assert.Fail("did not hit AlreadyClosedException");
+				Fail("did not hit AlreadyClosedException");
 			}
 			catch (AlreadyClosedException)
 			{
@@ -199,16 +199,16 @@ namespace Lucene.Net.Index
 			writer.Commit();
 			writer.Close();
 			IndexReader reader = DirectoryReader.Open(dir);
-			NUnit.Framework.Assert.AreEqual(0, reader.MaxDoc());
-			NUnit.Framework.Assert.AreEqual(0, reader.NumDocs());
+			AreEqual(0, reader.MaxDoc);
+			AreEqual(0, reader.NumDocs());
 			reader.Close();
 			writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random())).SetOpenMode(IndexWriterConfig.OpenMode.APPEND));
 			writer.Commit();
 			writer.Close();
 			reader = DirectoryReader.Open(dir);
-			NUnit.Framework.Assert.AreEqual(0, reader.MaxDoc());
-			NUnit.Framework.Assert.AreEqual(0, reader.NumDocs());
+			AreEqual(0, reader.MaxDoc);
+			AreEqual(0, reader.NumDocs());
 			reader.Close();
 			dir.Close();
 		}
@@ -221,7 +221,7 @@ namespace Lucene.Net.Index
 				(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMaxBufferedDocs(10)));
 			for (int j = 0; j < 100; j++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(NewField("a" + j, "aaa" + j, storedTextType));
 				doc.Add(NewField("b" + j, "aaa" + j, storedTextType));
@@ -233,19 +233,19 @@ namespace Lucene.Net.Index
 			}
 			writer.Close();
 			IndexReader reader = DirectoryReader.Open(dir);
-			NUnit.Framework.Assert.AreEqual(100, reader.MaxDoc());
-			NUnit.Framework.Assert.AreEqual(100, reader.NumDocs());
+			AreEqual(100, reader.MaxDoc);
+			AreEqual(100, reader.NumDocs());
 			for (int j_1 = 0; j_1 < 100; j_1++)
 			{
-				NUnit.Framework.Assert.AreEqual(1, reader.DocFreq(new Term("a" + j_1, "aaa" + j_1
+				AreEqual(1, reader.DocFreq(new Term("a" + j_1, "aaa" + j_1
 					)));
-				NUnit.Framework.Assert.AreEqual(1, reader.DocFreq(new Term("b" + j_1, "aaa" + j_1
+				AreEqual(1, reader.DocFreq(new Term("b" + j_1, "aaa" + j_1
 					)));
-				NUnit.Framework.Assert.AreEqual(1, reader.DocFreq(new Term("c" + j_1, "aaa" + j_1
+				AreEqual(1, reader.DocFreq(new Term("c" + j_1, "aaa" + j_1
 					)));
-				NUnit.Framework.Assert.AreEqual(1, reader.DocFreq(new Term("d" + j_1, "aaa")));
-				NUnit.Framework.Assert.AreEqual(1, reader.DocFreq(new Term("e" + j_1, "aaa")));
-				NUnit.Framework.Assert.AreEqual(1, reader.DocFreq(new Term("f" + j_1, "aaa")));
+				AreEqual(1, reader.DocFreq(new Term("d" + j_1, "aaa")));
+				AreEqual(1, reader.DocFreq(new Term("e" + j_1, "aaa")));
+				AreEqual(1, reader.DocFreq(new Term("f" + j_1, "aaa")));
 			}
 			reader.Close();
 			dir.Close();
@@ -261,14 +261,14 @@ namespace Lucene.Net.Index
 			int lastNumFile = dir.ListAll().Length;
 			for (int j = 0; j < 9; j++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(NewField("field", "aaa" + j, storedTextType));
 				writer.AddDocument(doc);
 				int numFile = dir.ListAll().Length;
 				// Verify that with a tiny RAM buffer we see new
 				// segment after every doc
-				NUnit.Framework.Assert.IsTrue(numFile > lastNumFile);
+				IsTrue(numFile > lastNumFile);
 				lastNumFile = numFile;
 			}
 			writer.Close();
@@ -288,7 +288,7 @@ namespace Lucene.Net.Index
 			int lastFlushCount = -1;
 			for (int j = 1; j < 52; j++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(new Field("field", "aaa" + j, storedTextType));
 				writer.AddDocument(doc);
@@ -303,13 +303,13 @@ namespace Lucene.Net.Index
 					if (j < 10)
 					{
 						// No new files should be created
-						NUnit.Framework.Assert.AreEqual(flushCount, lastFlushCount);
+						AreEqual(flushCount, lastFlushCount);
 					}
 					else
 					{
 						if (10 == j)
 						{
-							NUnit.Framework.Assert.IsTrue(flushCount > lastFlushCount);
+							IsTrue(flushCount > lastFlushCount);
 							lastFlushCount = flushCount;
 							writer.GetConfig().SetRAMBufferSizeMB(0.000001);
 							writer.GetConfig().SetMaxBufferedDocs(IndexWriterConfig.DISABLE_AUTO_FLUSH);
@@ -318,7 +318,7 @@ namespace Lucene.Net.Index
 						{
 							if (j < 20)
 							{
-								NUnit.Framework.Assert.IsTrue(flushCount > lastFlushCount);
+								IsTrue(flushCount > lastFlushCount);
 								lastFlushCount = flushCount;
 							}
 							else
@@ -333,7 +333,7 @@ namespace Lucene.Net.Index
 								{
 									if (j < 30)
 									{
-										NUnit.Framework.Assert.AreEqual(flushCount, lastFlushCount);
+										AreEqual(flushCount, lastFlushCount);
 									}
 									else
 									{
@@ -346,7 +346,7 @@ namespace Lucene.Net.Index
 										{
 											if (j < 40)
 											{
-												NUnit.Framework.Assert.IsTrue(flushCount > lastFlushCount);
+												IsTrue(flushCount > lastFlushCount);
 												lastFlushCount = flushCount;
 											}
 											else
@@ -361,7 +361,7 @@ namespace Lucene.Net.Index
 												{
 													if (j < 50)
 													{
-														NUnit.Framework.Assert.AreEqual(flushCount, lastFlushCount);
+														AreEqual(flushCount, lastFlushCount);
 														writer.GetConfig().SetMaxBufferedDocs(10);
 														writer.GetConfig().SetRAMBufferSizeMB(IndexWriterConfig.DISABLE_AUTO_FLUSH);
 													}
@@ -369,7 +369,7 @@ namespace Lucene.Net.Index
 													{
 														if (50 == j)
 														{
-															NUnit.Framework.Assert.IsTrue(flushCount > lastFlushCount);
+															IsTrue(flushCount > lastFlushCount);
 														}
 													}
 												}
@@ -397,7 +397,7 @@ namespace Lucene.Net.Index
 			writer.GetConfig().SetRAMBufferSizeMB(IndexWriterConfig.DISABLE_AUTO_FLUSH);
 			for (int j = 1; j < 52; j++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(new Field("field", "aaa" + j, storedTextType));
 				writer.AddDocument(doc);
@@ -417,13 +417,13 @@ namespace Lucene.Net.Index
 					if (j_1 < 10)
 					{
 						// No new files should be created
-						NUnit.Framework.Assert.AreEqual(flushCount, lastFlushCount);
+						AreEqual(flushCount, lastFlushCount);
 					}
 					else
 					{
 						if (10 == j_1)
 						{
-							NUnit.Framework.Assert.IsTrue(string.Empty + j_1, flushCount > lastFlushCount);
+							IsTrue(string.Empty + j_1, flushCount > lastFlushCount);
 							lastFlushCount = flushCount;
 							writer.GetConfig().SetRAMBufferSizeMB(0.000001);
 							writer.GetConfig().SetMaxBufferedDeleteTerms(1);
@@ -432,7 +432,7 @@ namespace Lucene.Net.Index
 						{
 							if (j_1 < 20)
 							{
-								NUnit.Framework.Assert.IsTrue(flushCount > lastFlushCount);
+								IsTrue(flushCount > lastFlushCount);
 								lastFlushCount = flushCount;
 							}
 							else
@@ -448,7 +448,7 @@ namespace Lucene.Net.Index
 								{
 									if (j_1 < 30)
 									{
-										NUnit.Framework.Assert.AreEqual(flushCount, lastFlushCount);
+										AreEqual(flushCount, lastFlushCount);
 									}
 									else
 									{
@@ -463,7 +463,7 @@ namespace Lucene.Net.Index
 										{
 											if (j_1 < 40)
 											{
-												NUnit.Framework.Assert.IsTrue(flushCount > lastFlushCount);
+												IsTrue(flushCount > lastFlushCount);
 												lastFlushCount = flushCount;
 											}
 											else
@@ -478,7 +478,7 @@ namespace Lucene.Net.Index
 												{
 													if (j_1 < 50)
 													{
-														NUnit.Framework.Assert.AreEqual(flushCount, lastFlushCount);
+														AreEqual(flushCount, lastFlushCount);
 														writer.GetConfig().SetMaxBufferedDeleteTerms(10);
 														writer.GetConfig().SetRAMBufferSizeMB(IndexWriterConfig.DISABLE_AUTO_FLUSH);
 													}
@@ -486,7 +486,7 @@ namespace Lucene.Net.Index
 													{
 														if (50 == j_1)
 														{
-															NUnit.Framework.Assert.IsTrue(flushCount > lastFlushCount);
+															IsTrue(flushCount > lastFlushCount);
 														}
 													}
 												}
@@ -516,7 +516,7 @@ namespace Lucene.Net.Index
 				// Posting instances)
 				for (int j = 0; j < 100; j++)
 				{
-					Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 						();
 					for (int k = 0; k < 100; k++)
 					{
@@ -529,7 +529,7 @@ namespace Lucene.Net.Index
 				// occurs (heavy on byte blocks)
 				for (int j_1 = 0; j_1 < 100; j_1++)
 				{
-					Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 						();
 					doc.Add(NewField("field", "aaa aaa aaa aaa aaa aaa aaa aaa aaa aaa", storedTextType
 						));
@@ -547,7 +547,7 @@ namespace Lucene.Net.Index
 						b.Append(x);
 					}
 					string longTerm = b.ToString();
-					Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 						();
 					doc.Add(NewField("field", longTerm, storedTextType));
 					writer.AddDocument(doc);
@@ -556,9 +556,9 @@ namespace Lucene.Net.Index
 			writer.Close();
 			IndexReader reader = DirectoryReader.Open(dir);
 			IndexSearcher searcher = NewSearcher(reader);
-			int totalHits = searcher.Search(new TermQuery(new Term("field", "aaa")), null, 1)
-				.totalHits;
-			NUnit.Framework.Assert.AreEqual(n * 100, totalHits);
+			int TotalHits = searcher.Search(new TermQuery(new Term("field", "aaa")), null, 1)
+				.TotalHits;
+			AreEqual(n * 100, TotalHits);
 			reader.Close();
 			dir.Close();
 		}
@@ -574,7 +574,7 @@ namespace Lucene.Net.Index
 			customType.SetOmitNorms(true);
 			for (int j = 0; j < 10; j++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				Field f = null;
 				if (j != 8)
@@ -593,7 +593,7 @@ namespace Lucene.Net.Index
 			IndexReader reader = DirectoryReader.Open(dir);
 			IndexSearcher searcher = NewSearcher(reader);
 			ScoreDoc[] hits = searcher.Search(new TermQuery(searchTerm), null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(10, hits.Length);
+			AreEqual(10, hits.Length);
 			reader.Close();
 			writer = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig(TEST_VERSION_CURRENT
 				, new MockAnalyzer(Random())).SetOpenMode(IndexWriterConfig.OpenMode.CREATE).SetMaxBufferedDocs
@@ -601,7 +601,7 @@ namespace Lucene.Net.Index
 			// Enable norms for only 1 doc, post flush
 			for (int j_1 = 0; j_1 < 27; j_1++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				Field f = null;
 				if (j_1 != 26)
@@ -619,7 +619,7 @@ namespace Lucene.Net.Index
 			reader = DirectoryReader.Open(dir);
 			searcher = NewSearcher(reader);
 			hits = searcher.Search(new TermQuery(searchTerm), null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(27, hits.Length);
+			AreEqual(27, hits.Length);
 			reader.Close();
 			reader = DirectoryReader.Open(dir);
 			reader.Close();
@@ -641,24 +641,24 @@ namespace Lucene.Net.Index
 				b.Append(" a a a a a a a a");
 				b.Append(" a a a a a a a a");
 			}
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			FieldType customType = new FieldType(TextField.TYPE_STORED);
-			customType.SetStoreTermVectors(true);
-			customType.SetStoreTermVectorPositions(true);
-			customType.SetStoreTermVectorOffsets(true);
+			customType.StoreTermVectors = true;
+			customType.StoreTermVectorPositions = true;
+			customType.StoreTermVectorOffsets = true;
 			doc.Add(NewField("field", b.ToString(), customType));
 			writer.AddDocument(doc);
 			writer.Close();
 			IndexReader reader = DirectoryReader.Open(dir);
-			NUnit.Framework.Assert.AreEqual(1, reader.MaxDoc());
-			NUnit.Framework.Assert.AreEqual(1, reader.NumDocs());
+			AreEqual(1, reader.MaxDoc);
+			AreEqual(1, reader.NumDocs());
 			Term t = new Term("field", "a");
-			NUnit.Framework.Assert.AreEqual(1, reader.DocFreq(t));
+			AreEqual(1, reader.DocFreq(t));
 			DocsEnum td = TestUtil.Docs(Random(), reader, "field", new BytesRef("a"), MultiFields
 				.GetLiveDocs(reader), null, DocsEnum.FLAG_FREQS);
 			td.NextDoc();
-			NUnit.Framework.Assert.AreEqual(128 * 1024, td.Freq());
+			AreEqual(128 * 1024, td.Freq);
 			reader.Close();
 			dir.Close();
 		}
@@ -683,7 +683,7 @@ namespace Lucene.Net.Index
 			IndexReader reader = DirectoryReader.Open(dir);
 			IndexSearcher searcher = NewSearcher(reader);
 			ScoreDoc[] hits = searcher.Search(new TermQuery(searchTerm), null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual("did not get right number of hits", 100, hits.Length
+			AreEqual("did not get right number of hits", 100, hits.Length
 				);
 			reader.Close();
 			writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
@@ -719,12 +719,12 @@ namespace Lucene.Net.Index
 			IndexWriter writer = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig
 				(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMaxBufferedDocs(2)).SetMergePolicy
 				(NewLogMergePolicy(10)));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			FieldType customType = new FieldType(TextField.TYPE_STORED);
-			customType.SetStoreTermVectors(true);
-			customType.SetStoreTermVectorPositions(true);
-			customType.SetStoreTermVectorOffsets(true);
+			customType.StoreTermVectors = true;
+			customType.StoreTermVectorPositions = true;
+			customType.StoreTermVectorOffsets = true;
 			doc.Add(NewField("field", "aaa", customType));
 			for (int i = 0; i < 19; i++)
 			{
@@ -736,7 +736,7 @@ namespace Lucene.Net.Index
 			sis.Read(dir);
 			// Since we flushed w/o allowing merging we should now
 			// have 10 segments
-			NUnit.Framework.Assert.AreEqual(10, sis.Size());
+			AreEqual(10, sis.Size());
 			dir.Close();
 		}
 
@@ -748,12 +748,12 @@ namespace Lucene.Net.Index
 			Directory dir = NewDirectory();
 			IndexWriter writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT
 				, new MockAnalyzer(Random())));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			FieldType customType = new FieldType(TextField.TYPE_STORED);
-			customType.SetStoreTermVectors(true);
-			customType.SetStoreTermVectorPositions(true);
-			customType.SetStoreTermVectorOffsets(true);
+			customType.StoreTermVectors = true;
+			customType.StoreTermVectorPositions = true;
+			customType.StoreTermVectorOffsets = true;
 			doc.Add(NewField("field", "aaa", customType));
 			writer.AddDocument(doc);
 			writer.Commit();
@@ -761,10 +761,10 @@ namespace Lucene.Net.Index
 			{
 				System.Console.Out.WriteLine("\nTEST: now add empty doc");
 			}
-			writer.AddDocument(new Lucene.Net.Document.Document());
+			writer.AddDocument(new Lucene.Net.Documents.Document());
 			writer.Close();
 			IndexReader reader = DirectoryReader.Open(dir);
-			NUnit.Framework.Assert.AreEqual(2, reader.NumDocs());
+			AreEqual(2, reader.NumDocs());
 			reader.Close();
 			dir.Close();
 		}
@@ -785,10 +785,10 @@ namespace Lucene.Net.Index
 			Directory dir = NewDirectory();
 			IndexWriter iw = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, 
 				new MockAnalyzer(Random())));
-			Lucene.Net.Document.Document document = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document document = new Lucene.Net.Documents.Document
 				();
 			FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
-			customType.SetStoreTermVectors(true);
+			customType.StoreTermVectors = true;
 			document.Add(NewField("tvtest", string.Empty, customType));
 			iw.AddDocument(document);
 			iw.Close();
@@ -808,10 +808,10 @@ namespace Lucene.Net.Index
 					());
 				((LogMergePolicy)conf.GetMergePolicy()).SetMergeFactor(2);
 				IndexWriter iw = new IndexWriter(dir, conf);
-				Lucene.Net.Document.Document document = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document document = new Lucene.Net.Documents.Document
 					();
 				FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
-				customType.SetStoreTermVectors(true);
+				customType.StoreTermVectors = true;
 				document.Add(NewField("tvtest", "a b c", customType));
 				Sharpen.Thread.CurrentThread().SetPriority(Sharpen.Thread.MAX_PRIORITY);
 				for (int i = 0; i < 4; i++)
@@ -843,7 +843,7 @@ namespace Lucene.Net.Index
 				//LogMergePolicy lmp = (LogMergePolicy) writer.getConfig().getMergePolicy();
 				//lmp.setMergeFactor(2);
 				//lmp.setNoCFSRatio(0.0);
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				string contents = "aa bb cc dd ee ff gg hh ii jj kk";
 				FieldType customType = new FieldType(TextField.TYPE_STORED);
@@ -893,7 +893,7 @@ namespace Lucene.Net.Index
 			Directory dir = NewDirectory();
 			IndexWriter writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT
 				, new MockAnalyzer(Random())));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			StringBuilder b = new StringBuilder();
 			for (int i = 0; i < 10000; i++)
@@ -906,7 +906,7 @@ namespace Lucene.Net.Index
 			writer.Close();
 			IndexReader reader = DirectoryReader.Open(dir);
 			Term t = new Term("field", "x");
-			NUnit.Framework.Assert.AreEqual(1, reader.DocFreq(t));
+			AreEqual(1, reader.DocFreq(t));
 			reader.Close();
 			dir.Close();
 		}
@@ -918,7 +918,7 @@ namespace Lucene.Net.Index
 			Directory dir = NewDirectory();
 			IndexWriter writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT
 				, new MockAnalyzer(Random())));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewTextField(string.Empty, "a b c", Field.Store.NO));
 			writer.AddDocument(doc);
@@ -932,7 +932,7 @@ namespace Lucene.Net.Index
 			Directory dir = NewDirectory();
 			IndexWriter writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT
 				, new MockAnalyzer(Random())));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewTextField(string.Empty, "a b c", Field.Store.NO));
 			writer.AddDocument(doc);
@@ -940,10 +940,10 @@ namespace Lucene.Net.Index
 			DirectoryReader reader = DirectoryReader.Open(dir);
 			AtomicReader subreader = GetOnlySegmentReader(reader);
 			TermsEnum te = subreader.Fields().Terms(string.Empty).Iterator(null);
-			NUnit.Framework.Assert.AreEqual(new BytesRef("a"), te.Next());
-			NUnit.Framework.Assert.AreEqual(new BytesRef("b"), te.Next());
-			NUnit.Framework.Assert.AreEqual(new BytesRef("c"), te.Next());
-			NUnit.Framework.Assert.IsNull(te.Next());
+			AreEqual(new BytesRef("a"), te.Next());
+			AreEqual(new BytesRef("b"), te.Next());
+			AreEqual(new BytesRef("c"), te.Next());
+			IsNull(te.Next());
 			reader.Close();
 			dir.Close();
 		}
@@ -954,7 +954,7 @@ namespace Lucene.Net.Index
 			Directory dir = NewDirectory();
 			IndexWriter writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT
 				, new MockAnalyzer(Random())));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewStringField(string.Empty, string.Empty, Field.Store.NO));
 			doc.Add(NewStringField(string.Empty, "a", Field.Store.NO));
@@ -965,11 +965,11 @@ namespace Lucene.Net.Index
 			DirectoryReader reader = DirectoryReader.Open(dir);
 			AtomicReader subreader = GetOnlySegmentReader(reader);
 			TermsEnum te = subreader.Fields().Terms(string.Empty).Iterator(null);
-			NUnit.Framework.Assert.AreEqual(new BytesRef(string.Empty), te.Next());
-			NUnit.Framework.Assert.AreEqual(new BytesRef("a"), te.Next());
-			NUnit.Framework.Assert.AreEqual(new BytesRef("b"), te.Next());
-			NUnit.Framework.Assert.AreEqual(new BytesRef("c"), te.Next());
-			NUnit.Framework.Assert.IsNull(te.Next());
+			AreEqual(new BytesRef(string.Empty), te.Next());
+			AreEqual(new BytesRef("a"), te.Next());
+			AreEqual(new BytesRef("b"), te.Next());
+			AreEqual(new BytesRef("c"), te.Next());
+			IsNull(te.Next());
 			reader.Close();
 			dir.Close();
 		}
@@ -1003,23 +1003,23 @@ namespace Lucene.Net.Index
 			Directory dir = NewDirectory();
 			TestIndexWriter.MockIndexWriter w = new TestIndexWriter.MockIndexWriter(dir, NewIndexWriterConfig
 				(TEST_VERSION_CURRENT, new MockAnalyzer(Random())));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			FieldType customType = new FieldType(TextField.TYPE_STORED);
 			doc.Add(NewField("field", "a field", customType));
 			w.AddDocument(doc);
 			w.Commit();
-			NUnit.Framework.Assert.IsTrue(w.beforeWasCalled);
-			NUnit.Framework.Assert.IsTrue(w.afterWasCalled);
+			IsTrue(w.beforeWasCalled);
+			IsTrue(w.afterWasCalled);
 			w.beforeWasCalled = false;
 			w.afterWasCalled = false;
 			w.DeleteDocuments(new Term("field", "field"));
 			w.Commit();
-			NUnit.Framework.Assert.IsTrue(w.beforeWasCalled);
-			NUnit.Framework.Assert.IsTrue(w.afterWasCalled);
+			IsTrue(w.beforeWasCalled);
+			IsTrue(w.afterWasCalled);
 			w.Close();
 			IndexReader ir = DirectoryReader.Open(dir);
-			NUnit.Framework.Assert.AreEqual(0, ir.NumDocs());
+			AreEqual(0, ir.NumDocs());
 			ir.Close();
 			dir.Close();
 		}
@@ -1032,13 +1032,13 @@ namespace Lucene.Net.Index
 			Directory dir = NewDirectory();
 			IndexWriter w = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new 
 				MockAnalyzer(Random())));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new TextField("field", tokens));
 			try
 			{
 				w.AddDocument(doc);
-				NUnit.Framework.Assert.Fail("did not hit expected exception");
+				Fail("did not hit expected exception");
 			}
 			catch (ArgumentException)
 			{
@@ -1089,11 +1089,11 @@ namespace Lucene.Net.Index
 			analyzer.SetPositionIncrementGap(100);
 			IndexWriter w = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer
 				));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
-			customType.SetStoreTermVectors(true);
-			customType.SetStoreTermVectorPositions(true);
+			customType.StoreTermVectors = true;
+			customType.StoreTermVectorPositions = true;
 			Field f = NewField("field", string.Empty, customType);
 			Field f2 = NewField("field", "crunch man", customType);
 			doc.Add(f);
@@ -1103,19 +1103,19 @@ namespace Lucene.Net.Index
 			IndexReader r = DirectoryReader.Open(dir);
 			Terms tpv = r.GetTermVectors(0).Terms("field");
 			TermsEnum termsEnum = tpv.Iterator(null);
-			NUnit.Framework.Assert.IsNotNull(termsEnum.Next());
+			IsNotNull(termsEnum.Next());
 			DocsAndPositionsEnum dpEnum = termsEnum.DocsAndPositions(null, null);
-			NUnit.Framework.Assert.IsNotNull(dpEnum);
-			NUnit.Framework.Assert.IsTrue(dpEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
-			NUnit.Framework.Assert.AreEqual(1, dpEnum.Freq());
-			NUnit.Framework.Assert.AreEqual(100, dpEnum.NextPosition());
-			NUnit.Framework.Assert.IsNotNull(termsEnum.Next());
+			IsNotNull(dpEnum);
+			IsTrue(dpEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
+			AreEqual(1, dpEnum.Freq);
+			AreEqual(100, dpEnum.NextPosition());
+			IsNotNull(termsEnum.Next());
 			dpEnum = termsEnum.DocsAndPositions(null, dpEnum);
-			NUnit.Framework.Assert.IsNotNull(dpEnum);
-			NUnit.Framework.Assert.IsTrue(dpEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
-			NUnit.Framework.Assert.AreEqual(1, dpEnum.Freq());
-			NUnit.Framework.Assert.AreEqual(101, dpEnum.NextPosition());
-			NUnit.Framework.Assert.IsNull(termsEnum.Next());
+			IsNotNull(dpEnum);
+			IsTrue(dpEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
+			AreEqual(1, dpEnum.Freq);
+			AreEqual(101, dpEnum.NextPosition());
+			IsNull(termsEnum.Next());
 			r.Close();
 			dir.Close();
 		}
@@ -1126,12 +1126,12 @@ namespace Lucene.Net.Index
 			Directory dir = NewDirectory();
 			IndexWriter writer = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig
 				(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMaxBufferedDocs(2)));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			FieldType customType = new FieldType(TextField.TYPE_STORED);
-			customType.SetStoreTermVectors(true);
-			customType.SetStoreTermVectorPositions(true);
-			customType.SetStoreTermVectorOffsets(true);
+			customType.StoreTermVectors = true;
+			customType.StoreTermVectorPositions = true;
+			customType.StoreTermVectorOffsets = true;
 			doc.Add(NewField("content", "aaa bbb ccc ddd eee fff ggg hhh iii", customType));
 			writer.AddDocument(doc);
 			writer.AddDocument(doc);
@@ -1147,7 +1147,7 @@ namespace Lucene.Net.Index
 			writer.AddIndexes(r1, r1);
 			writer.Close();
 			IndexReader r3 = DirectoryReader.Open(dir);
-			NUnit.Framework.Assert.AreEqual(5, r3.NumDocs());
+			AreEqual(5, r3.NumDocs());
 			r3.Close();
 			r1.Close();
 			dir2.Close();
@@ -1177,7 +1177,7 @@ namespace Lucene.Net.Index
 				IndexWriterConfig conf = LuceneTestCase.NewIndexWriterConfig(this.random, LuceneTestCase
 					.TEST_VERSION_CURRENT, new MockAnalyzer(this.random));
 				IndexWriter w = new IndexWriter(this.adder, conf);
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(LuceneTestCase.NewStringField(this.random, "id", "500", Field.Store.NO));
 				doc.Add(LuceneTestCase.NewField(this.random, "field", "some prepackaged text contents"
@@ -1194,7 +1194,7 @@ namespace Lucene.Net.Index
 					doc.Add(new SortedSetDocValuesField("sortedsetdv", new BytesRef("two")));
 				}
 				w.AddDocument(doc);
-				doc = new Lucene.Net.Document.Document();
+				doc = new Lucene.Net.Documents.Document();
 				doc.Add(LuceneTestCase.NewStringField(this.random, "id", "501", Field.Store.NO));
 				doc.Add(LuceneTestCase.NewField(this.random, "field", "some more contents", TestIndexWriter
 					.storedTextType));
@@ -1244,7 +1244,7 @@ namespace Lucene.Net.Index
 								this.random, LuceneTestCase.TEST_VERSION_CURRENT, new MockAnalyzer(this.random))
 								.SetMaxBufferedDocs(2));
 							w = new IndexWriter(dir, conf);
-							Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+							Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 								();
 							Field idField = LuceneTestCase.NewStringField(this.random, "id", string.Empty, Field.Store
 								.NO);
@@ -1271,14 +1271,14 @@ namespace Lucene.Net.Index
 							}
 							for (int i = 0; i < 100; i++)
 							{
-								idField.SetStringValue(Sharpen.Extensions.ToString(i));
+								idField.StringValue = Sharpen.Extensions.ToString(i));
 								if (LuceneTestCase.DefaultCodecSupportsDocValues())
 								{
-									binaryDVField.SetBytesValue(new BytesRef(idField.StringValue()));
+									binaryDVField.SetBytesValue(new BytesRef(idField.StringValue = )));
 									numericDVField.SetLongValue(i);
-									sortedDVField.SetBytesValue(new BytesRef(idField.StringValue()));
+									sortedDVField.SetBytesValue(new BytesRef(idField.StringValue = )));
 								}
-								sortedSetDVField.SetBytesValue(new BytesRef(idField.StringValue()));
+								sortedSetDVField.SetBytesValue(new BytesRef(idField.StringValue = )));
 								int action = this.random.Next(100);
 								if (action == 17)
 								{
@@ -1294,7 +1294,7 @@ namespace Lucene.Net.Index
 									{
 										if (action % 2 == 0)
 										{
-											w.UpdateDocument(new Term("id", idField.StringValue()), doc);
+											w.UpdateDocument(new Term("id", idField.StringValue = )), doc);
 										}
 										else
 										{
@@ -1308,9 +1308,9 @@ namespace Lucene.Net.Index
 									try
 									{
 										r = DirectoryReader.Open(w, this.random.NextBoolean());
-										if (this.random.NextBoolean() && r.MaxDoc() > 0)
+										if (this.random.NextBoolean() && r.MaxDoc > 0)
 										{
-											int docid = this.random.Next(r.MaxDoc());
+											int docid = this.random.Next(r.MaxDoc);
 											w.TryDeleteDocument(r, docid);
 										}
 									}
@@ -1352,7 +1352,7 @@ namespace Lucene.Net.Index
 						System.Console.Out.WriteLine("TEST: got interrupt");
 						Sharpen.Runtime.PrintStackTrace(re, System.Console.Out);
 						Exception e = re.InnerException;
-						NUnit.Framework.Assert.IsTrue(e is Exception);
+						IsTrue(e is Exception);
 						if (this.finish)
 						{
 							break;
@@ -1440,7 +1440,7 @@ namespace Lucene.Net.Index
 			// up front... else we can see a false failure if 2nd
 			// interrupt arrives while class loader is trying to
 			// init this class (in servicing a first interrupt):
-			NUnit.Framework.Assert.IsTrue(new ThreadInterruptedException(new Exception()).InnerException
+			IsTrue(new ThreadInterruptedException(new Exception()).InnerException
 				 is Exception);
 			// issue 300 interrupts to child thread
 			int numInterrupts = AtLeast(300);
@@ -1462,7 +1462,7 @@ namespace Lucene.Net.Index
 			}
 			t.finish = true;
 			t.Join();
-			NUnit.Framework.Assert.IsFalse(t.failed);
+			IsFalse(t.failed);
 		}
 
 		/// <summary>testThreadInterruptDeadlock but with 2 indexer threads</summary>
@@ -1481,7 +1481,7 @@ namespace Lucene.Net.Index
 			// up front... else we can see a false failure if 2nd
 			// interrupt arrives while class loader is trying to
 			// init this class (in servicing a first interrupt):
-			NUnit.Framework.Assert.IsTrue(new ThreadInterruptedException(new Exception()).InnerException
+			IsTrue(new ThreadInterruptedException(new Exception()).InnerException
 				 is Exception);
 			// issue 300 interrupts to child thread
 			int numInterrupts = AtLeast(300);
@@ -1506,8 +1506,8 @@ namespace Lucene.Net.Index
 			t2.finish = true;
 			t1.Join();
 			t2.Join();
-			NUnit.Framework.Assert.IsFalse(t1.failed);
-			NUnit.Framework.Assert.IsFalse(t2.failed);
+			IsFalse(t1.failed);
+			IsFalse(t2.failed);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -1521,7 +1521,7 @@ namespace Lucene.Net.Index
 			{
 				b[i] = unchecked((byte)(i + 77));
 			}
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			FieldType customType = new FieldType(StoredField.TYPE);
 			customType.SetTokenized(true);
@@ -1554,38 +1554,38 @@ namespace Lucene.Net.Index
 			// force segment merge.
 			w.Close();
 			IndexReader ir = DirectoryReader.Open(dir);
-			Lucene.Net.Document.Document doc2 = ir.Document(0);
-			IndexableField f3 = doc2.GetField("binary");
+			Lucene.Net.Documents.Document doc2 = ir.Document(0);
+			IIndexableField f3 = doc2.GetField("binary");
 			b = f3.BinaryValue().bytes;
-			NUnit.Framework.Assert.IsTrue(b != null);
-			NUnit.Framework.Assert.AreEqual(17, b.Length, 17);
-			NUnit.Framework.Assert.AreEqual(87, b[0]);
-			NUnit.Framework.Assert.IsTrue(ir.Document(0).GetField("binary").BinaryValue() != 
+			IsTrue(b != null);
+			AreEqual(17, b.Length, 17);
+			AreEqual(87, b[0]);
+			IsTrue(ir.Document(0).GetField("binary").BinaryValue() != 
 				null);
-			NUnit.Framework.Assert.IsTrue(ir.Document(1).GetField("binary").BinaryValue() != 
+			IsTrue(ir.Document(1).GetField("binary").BinaryValue() != 
 				null);
-			NUnit.Framework.Assert.IsTrue(ir.Document(2).GetField("binary").BinaryValue() != 
+			IsTrue(ir.Document(2).GetField("binary").BinaryValue() != 
 				null);
-			NUnit.Framework.Assert.AreEqual("value", ir.Document(0).Get("string"));
-			NUnit.Framework.Assert.AreEqual("value", ir.Document(1).Get("string"));
-			NUnit.Framework.Assert.AreEqual("value", ir.Document(2).Get("string"));
+			AreEqual("value", ir.Document(0).Get("string"));
+			AreEqual("value", ir.Document(1).Get("string"));
+			AreEqual("value", ir.Document(2).Get("string"));
 			// test that the terms were indexed.
-			NUnit.Framework.Assert.IsTrue(TestUtil.Docs(Random(), ir, "binary", new BytesRef(
+			IsTrue(TestUtil.Docs(Random(), ir, "binary", new BytesRef(
 				"doc1field1"), null, null, DocsEnum.FLAG_NONE).NextDoc() != DocIdSetIterator.NO_MORE_DOCS
 				);
-			NUnit.Framework.Assert.IsTrue(TestUtil.Docs(Random(), ir, "binary", new BytesRef(
+			IsTrue(TestUtil.Docs(Random(), ir, "binary", new BytesRef(
 				"doc2field1"), null, null, DocsEnum.FLAG_NONE).NextDoc() != DocIdSetIterator.NO_MORE_DOCS
 				);
-			NUnit.Framework.Assert.IsTrue(TestUtil.Docs(Random(), ir, "binary", new BytesRef(
+			IsTrue(TestUtil.Docs(Random(), ir, "binary", new BytesRef(
 				"doc3field1"), null, null, DocsEnum.FLAG_NONE).NextDoc() != DocIdSetIterator.NO_MORE_DOCS
 				);
-			NUnit.Framework.Assert.IsTrue(TestUtil.Docs(Random(), ir, "string", new BytesRef(
+			IsTrue(TestUtil.Docs(Random(), ir, "string", new BytesRef(
 				"doc1field2"), null, null, DocsEnum.FLAG_NONE).NextDoc() != DocIdSetIterator.NO_MORE_DOCS
 				);
-			NUnit.Framework.Assert.IsTrue(TestUtil.Docs(Random(), ir, "string", new BytesRef(
+			IsTrue(TestUtil.Docs(Random(), ir, "string", new BytesRef(
 				"doc2field2"), null, null, DocsEnum.FLAG_NONE).NextDoc() != DocIdSetIterator.NO_MORE_DOCS
 				);
-			NUnit.Framework.Assert.IsTrue(TestUtil.Docs(Random(), ir, "string", new BytesRef(
+			IsTrue(TestUtil.Docs(Random(), ir, "string", new BytesRef(
 				"doc3field2"), null, null, DocsEnum.FLAG_NONE).NextDoc() != DocIdSetIterator.NO_MORE_DOCS
 				);
 			ir.Close();
@@ -1598,7 +1598,7 @@ namespace Lucene.Net.Index
 			Directory dir = NewDirectory();
 			IndexWriter writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT
 				, new MockAnalyzer(Random())));
-			writer.AddDocument(new Lucene.Net.Document.Document());
+			writer.AddDocument(new Lucene.Net.Documents.Document());
 			writer.Close();
 			dir.Close();
 		}
@@ -1617,7 +1617,7 @@ namespace Lucene.Net.Index
 			{
 				s.Append(' ').Append(i);
 			}
-			Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+			Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 			Field f = NewTextField("field", s.ToString(), Field.Store.NO);
 			d.Add(f);
 			w.AddDocument(d);
@@ -1627,11 +1627,11 @@ namespace Lucene.Net.Index
 			while (t.Next() != null)
 			{
 				DocsEnum docs = TestUtil.Docs(Random(), t, null, null, DocsEnum.FLAG_NONE);
-				NUnit.Framework.Assert.AreEqual(0, docs.NextDoc());
-				NUnit.Framework.Assert.AreEqual(DocIdSetIterator.NO_MORE_DOCS, docs.NextDoc());
+				AreEqual(0, docs.NextDoc());
+				AreEqual(DocIdSetIterator.NO_MORE_DOCS, docs.NextDoc());
 				count++;
 			}
-			NUnit.Framework.Assert.AreEqual(300, count);
+			AreEqual(300, count);
 			r.Close();
 			w.Close();
 			dir.Close();
@@ -1651,7 +1651,7 @@ namespace Lucene.Net.Index
 				IndexWriter w = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig(TEST_VERSION_CURRENT
 					, new MockAnalyzer(Random())).SetMergePolicy(mergePolicy).SetUseCompoundFile(true
 					)));
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(NewTextField("field", "go", Field.Store.NO));
 				w.AddDocument(doc);
@@ -1670,20 +1670,20 @@ namespace Lucene.Net.Index
 				IList<string> files = new AList<string>(Arrays.AsList(dir.ListAll()));
 				// RAMDir won't have a write.lock, but fs dirs will:
 				files.Remove("write.lock");
-				NUnit.Framework.Assert.IsTrue(files.Contains("_0.cfs"));
-				NUnit.Framework.Assert.IsTrue(files.Contains("_0.cfe"));
-				NUnit.Framework.Assert.IsTrue(files.Contains("_0.si"));
+				IsTrue(files.Contains("_0.cfs"));
+				IsTrue(files.Contains("_0.cfe"));
+				IsTrue(files.Contains("_0.si"));
 				if (iter == 1)
 				{
 					// we run a full commit so there should be a segments file etc.
-					NUnit.Framework.Assert.IsTrue(files.Contains("segments_1"));
-					NUnit.Framework.Assert.IsTrue(files.Contains("segments.gen"));
-					NUnit.Framework.Assert.AreEqual(files.ToString(), files.Count, 5);
+					IsTrue(files.Contains("segments_1"));
+					IsTrue(files.Contains("segments.gen"));
+					AreEqual(files.ToString(), files.Count, 5);
 				}
 				else
 				{
 					// this is an NRT reopen - no segments files yet
-					NUnit.Framework.Assert.AreEqual(files.ToString(), files.Count, 3);
+					AreEqual(files.ToString(), files.Count, 3);
 				}
 				w.AddDocument(doc);
 				w.ForceMerge(1);
@@ -1692,34 +1692,34 @@ namespace Lucene.Net.Index
 					w.Commit();
 				}
 				IndexReader r2 = DirectoryReader.OpenIfChanged(r);
-				NUnit.Framework.Assert.IsNotNull(r2);
-				NUnit.Framework.Assert.IsTrue(r != r2);
+				IsNotNull(r2);
+				IsTrue(r != r2);
 				files = Arrays.AsList(dir.ListAll());
 				// NOTE: here we rely on "Windows" behavior, ie, even
 				// though IW wanted to delete _0.cfs since it was
 				// merged away, because we have a reader open
 				// against this file, it should still be here:
-				NUnit.Framework.Assert.IsTrue(files.Contains("_0.cfs"));
+				IsTrue(files.Contains("_0.cfs"));
 				// forceMerge created this
 				//assertTrue(files.contains("_2.cfs"));
 				w.DeleteUnusedFiles();
 				files = Arrays.AsList(dir.ListAll());
 				// r still holds this file open
-				NUnit.Framework.Assert.IsTrue(files.Contains("_0.cfs"));
+				IsTrue(files.Contains("_0.cfs"));
 				//assertTrue(files.contains("_2.cfs"));
 				r.Close();
 				if (iter == 0)
 				{
 					// on closing NRT reader, it calls writer.deleteUnusedFiles
 					files = Arrays.AsList(dir.ListAll());
-					NUnit.Framework.Assert.IsFalse(files.Contains("_0.cfs"));
+					IsFalse(files.Contains("_0.cfs"));
 				}
 				else
 				{
 					// now writer can remove it
 					w.DeleteUnusedFiles();
 					files = Arrays.AsList(dir.ListAll());
-					NUnit.Framework.Assert.IsFalse(files.Contains("_0.cfs"));
+					IsFalse(files.Contains("_0.cfs"));
 				}
 				//assertTrue(files.contains("_2.cfs"));
 				w.Close();
@@ -1740,28 +1740,28 @@ namespace Lucene.Net.Index
 			SnapshotDeletionPolicy sdp = (SnapshotDeletionPolicy)writer.GetConfig().GetIndexDeletionPolicy
 				();
 			// First commit
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			FieldType customType = new FieldType(TextField.TYPE_STORED);
-			customType.SetStoreTermVectors(true);
-			customType.SetStoreTermVectorPositions(true);
-			customType.SetStoreTermVectorOffsets(true);
+			customType.StoreTermVectors = true;
+			customType.StoreTermVectorPositions = true;
+			customType.StoreTermVectorOffsets = true;
 			doc.Add(NewField("c", "val", customType));
 			writer.AddDocument(doc);
 			writer.Commit();
-			NUnit.Framework.Assert.AreEqual(1, DirectoryReader.ListCommits(dir).Count);
+			AreEqual(1, DirectoryReader.ListCommits(dir).Count);
 			// Keep that commit
 			IndexCommit id = sdp.Snapshot();
 			// Second commit - now KeepOnlyLastCommit cannot delete the prev commit.
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewField("c", "val", customType));
 			writer.AddDocument(doc);
 			writer.Commit();
-			NUnit.Framework.Assert.AreEqual(2, DirectoryReader.ListCommits(dir).Count);
+			AreEqual(2, DirectoryReader.ListCommits(dir).Count);
 			// Should delete the unreferenced commit
 			sdp.Release(id);
 			writer.DeleteUnusedFiles();
-			NUnit.Framework.Assert.AreEqual(1, DirectoryReader.ListCommits(dir).Count);
+			AreEqual(1, DirectoryReader.ListCommits(dir).Count);
 			writer.Close();
 			dir.Close();
 		}
@@ -1798,20 +1798,20 @@ namespace Lucene.Net.Index
 			int extraFileCount;
 			if (files.Length == 1)
 			{
-				NUnit.Framework.Assert.IsTrue(files[0].EndsWith("write.lock"));
+				IsTrue(files[0].EndsWith("write.lock"));
 				extraFileCount = 1;
 			}
 			else
 			{
-				NUnit.Framework.Assert.AreEqual(0, files.Length);
+				AreEqual(0, files.Length);
 				extraFileCount = 0;
 			}
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			FieldType customType = new FieldType(TextField.TYPE_STORED);
-			customType.SetStoreTermVectors(true);
-			customType.SetStoreTermVectorPositions(true);
-			customType.SetStoreTermVectorOffsets(true);
+			customType.StoreTermVectors = true;
+			customType.StoreTermVectorPositions = true;
+			customType.StoreTermVectorOffsets = true;
 			// create as many files as possible
 			doc.Add(NewField("c", "val", customType));
 			writer.AddDocument(doc);
@@ -1826,24 +1826,24 @@ namespace Lucene.Net.Index
 					++computedExtraFileCount;
 				}
 			}
-			NUnit.Framework.Assert.AreEqual("only the stored and term vector files should exist in the directory"
+			AreEqual("only the stored and term vector files should exist in the directory"
 				, extraFileCount, computedExtraFileCount);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewField("c", "val", customType));
 			writer.AddDocument(doc);
 			// The second document should cause a flush.
-			NUnit.Framework.Assert.IsTrue("flush should have occurred and files should have been created"
+			IsTrue("flush should have occurred and files should have been created"
 				, dir.ListAll().Length > 5 + extraFileCount);
 			// After rollback, IW should remove all files
 			writer.Rollback();
 			string[] allFiles = dir.ListAll();
-			NUnit.Framework.Assert.IsTrue("no files should exist in the directory after rollback"
+			IsTrue("no files should exist in the directory after rollback"
 				, allFiles.Length == 0 || Arrays.Equals(allFiles, new string[] { IndexWriter.WRITE_LOCK_NAME
 				 }));
 			// Since we rolled-back above, that close should be a no-op
 			writer.Close();
 			allFiles = dir.ListAll();
-			NUnit.Framework.Assert.IsTrue("expected a no-op close after IW.rollback()", allFiles
+			IsTrue("expected a no-op close after IW.rollback()", allFiles
 				.Length == 0 || Arrays.Equals(allFiles, new string[] { IndexWriter.WRITE_LOCK_NAME
 				 }));
 			dir.Close();
@@ -1856,12 +1856,12 @@ namespace Lucene.Net.Index
 			dir.SetLockFactory(NoLockFactory.GetNoLockFactory());
 			IndexWriter w = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig(TEST_VERSION_CURRENT
 				, new MockAnalyzer(Random())).SetMaxBufferedDocs(2)));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			FieldType customType = new FieldType(TextField.TYPE_STORED);
-			customType.SetStoreTermVectors(true);
-			customType.SetStoreTermVectorPositions(true);
-			customType.SetStoreTermVectorOffsets(true);
+			customType.StoreTermVectors = true;
+			customType.StoreTermVectorPositions = true;
+			customType.StoreTermVectorOffsets = true;
 			doc.Add(NewField("c", "val", customType));
 			w.AddDocument(doc);
 			w.AddDocument(doc);
@@ -1896,7 +1896,7 @@ namespace Lucene.Net.Index
 			customType3.SetOmitNorms(true);
 			for (int i = 0; i < 2; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(new Field("id", Sharpen.Extensions.ToString(i) + BIG, customType3));
 				doc.Add(new Field("str", Sharpen.Extensions.ToString(i) + BIG, customType2));
@@ -1911,7 +1911,7 @@ namespace Lucene.Net.Index
 			foreach (AtomicReaderContext ctx in r0.Leaves())
 			{
 				SegmentReader sr = (SegmentReader)((AtomicReader)ctx.Reader());
-				NUnit.Framework.Assert.IsFalse(sr.GetFieldInfos().HasVectors());
+				IsFalse(sr.GetFieldInfos().HasVectors());
 			}
 			r0.Close();
 			dir.Close();
@@ -1989,7 +1989,7 @@ namespace Lucene.Net.Index
 				());
 			char[] chars = new char[DocumentsWriterPerThread.MAX_TERM_LENGTH_UTF8];
 			Arrays.Fill(chars, 'x');
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			string bigTerm = new string(chars);
 			BytesRef bigTermBytesRef = new BytesRef(bigTerm);
@@ -1999,14 +1999,14 @@ namespace Lucene.Net.Index
 			try
 			{
 				w.AddDocument(doc);
-				NUnit.Framework.Assert.Fail("should have hit exception");
+				Fail("should have hit exception");
 			}
 			catch (ArgumentException)
 			{
 			}
 			// expected
 			// Make sure we can add another normal document
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(new TextField("content", "abc bbb ccc", Field.Store.NO));
 			w.AddDocument(doc);
 			// So we remove the deleted doc:
@@ -2014,41 +2014,41 @@ namespace Lucene.Net.Index
 			IndexReader reader = w.GetReader();
 			w.Close();
 			// Make sure all terms < max size were indexed
-			NUnit.Framework.Assert.AreEqual(1, reader.DocFreq(new Term("content", "abc")));
-			NUnit.Framework.Assert.AreEqual(1, reader.DocFreq(new Term("content", "bbb")));
-			NUnit.Framework.Assert.AreEqual(0, reader.DocFreq(new Term("content", "term")));
+			AreEqual(1, reader.DocFreq(new Term("content", "abc")));
+			AreEqual(1, reader.DocFreq(new Term("content", "bbb")));
+			AreEqual(0, reader.DocFreq(new Term("content", "term")));
 			// Make sure the doc that has the massive term is NOT in
 			// the index:
-			NUnit.Framework.Assert.AreEqual("document with wicked long term is in the index!"
+			AreEqual("document with wicked long term is in the index!"
 				, 1, reader.NumDocs());
 			reader.Close();
 			dir.Close();
 			dir = NewDirectory();
 			// Make sure we can add a document with exactly the
 			// maximum length term, and search on that term:
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
 			customType.SetTokenized(false);
 			Field contentField = new Field("content", string.Empty, customType);
 			doc.Add(contentField);
 			w = new RandomIndexWriter(Random(), dir);
-			contentField.SetStringValue("other");
+			contentField.StringValue = "other");
 			w.AddDocument(doc);
-			contentField.SetStringValue("term");
+			contentField.StringValue = "term");
 			w.AddDocument(doc);
-			contentField.SetStringValue(bigTerm);
+			contentField.StringValue = bigTerm);
 			w.AddDocument(doc);
-			contentField.SetStringValue("zzz");
+			contentField.StringValue = "zzz");
 			w.AddDocument(doc);
 			reader = w.GetReader();
 			w.Close();
-			NUnit.Framework.Assert.AreEqual(1, reader.DocFreq(new Term("content", bigTerm)));
+			AreEqual(1, reader.DocFreq(new Term("content", bigTerm)));
 			SortedDocValues dti = FieldCache.DEFAULT.GetTermsIndex(SlowCompositeReaderWrapper
 				.Wrap(reader), "content", Random().NextFloat() * PackedInts.FAST);
-			NUnit.Framework.Assert.AreEqual(4, dti.GetValueCount());
+			AreEqual(4, dti.GetValueCount());
 			BytesRef br = new BytesRef();
 			dti.LookupOrd(2, br);
-			NUnit.Framework.Assert.AreEqual(bigTermBytesRef, br);
+			AreEqual(bigTermBytesRef, br);
 			reader.Close();
 			dir.Close();
 		}
@@ -2063,7 +2063,7 @@ namespace Lucene.Net.Index
 			iwc.SetTermIndexInterval(1);
 			iwc.SetReaderTermsIndexDivisor(1);
 			IndexWriter writer = new IndexWriter(dir, iwc);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewTextField(string.Empty, "a b c", Field.Store.NO));
 			writer.AddDocument(doc);
@@ -2077,7 +2077,7 @@ namespace Lucene.Net.Index
 			Directory d = new MockDirectoryWrapper(Random(), new RAMDirectory());
 			IndexWriter w = new IndexWriter(d, new IndexWriterConfig(TEST_VERSION_CURRENT, new 
 				MockAnalyzer(Random())));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			for (int i = 0; i < 20; i++)
 			{
@@ -2091,7 +2091,7 @@ namespace Lucene.Net.Index
 				w.Commit();
 				// Make sure we accumulate no files except for empty
 				// segments_N and segments.gen:
-				NUnit.Framework.Assert.IsTrue(d.ListAll().Length <= 2);
+				IsTrue(d.ListAll().Length <= 2);
 			}
 			w.Close();
 			d.Close();
@@ -2103,7 +2103,7 @@ namespace Lucene.Net.Index
 			Directory d = new MockDirectoryWrapper(Random(), new RAMDirectory());
 			IndexWriter w = new IndexWriter(d, new IndexWriterConfig(TEST_VERSION_CURRENT, new 
 				MockAnalyzer(Random())));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewStringField("id", "0", Field.Store.YES));
 			w.AddDocument(doc);
@@ -2141,7 +2141,7 @@ namespace Lucene.Net.Index
 			{
 				new RandomIndexWriter(Random(), d, NewIndexWriterConfig(TEST_VERSION_CURRENT, null
 					).SetWriteLockTimeout(100));
-				NUnit.Framework.Assert.Fail("should not be able to create another writer");
+				Fail("should not be able to create another writer");
 			}
 			catch (LockObtainFailedException)
 			{
@@ -2161,12 +2161,12 @@ namespace Lucene.Net.Index
 			docsAndFreqs.SetIndexOptions(FieldInfo.IndexOptions.DOCS_AND_FREQS);
 			FieldType docsOnly = new FieldType(TextField.TYPE_NOT_STORED);
 			docsOnly.SetIndexOptions(FieldInfo.IndexOptions.DOCS_ONLY);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new Field("field", "a b c", docsAndFreqs));
 			w.AddDocument(doc);
 			w.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(new Field("field", "a b c", docsOnly));
 			w.AddDocument(doc);
 			w.Close();
@@ -2179,9 +2179,9 @@ namespace Lucene.Net.Index
 			Directory dir = NewDirectory();
 			IndexWriter w = new IndexWriter(dir, new IndexWriterConfig(TEST_VERSION_CURRENT, 
 				new MockAnalyzer(Random())));
-			IList<Lucene.Net.Document.Document> docs = new AList<Lucene.Net.Document.Document
+			IList<Lucene.Net.Documents.Document> docs = new AList<Lucene.Net.Documents.Document
 				>();
-			docs.AddItem(new Lucene.Net.Document.Document());
+			docs.AddItem(new Lucene.Net.Documents.Document());
 			w.UpdateDocuments(new Term("foo", "bar"), docs.AsIterable());
 			w.Close();
 			dir.Close();
@@ -2198,7 +2198,7 @@ namespace Lucene.Net.Index
 			try
 			{
 				w.Close();
-				NUnit.Framework.Assert.Fail("should have hit exception");
+				Fail("should have hit exception");
 			}
 			catch (InvalidOperationException)
 			{
@@ -2207,7 +2207,7 @@ namespace Lucene.Net.Index
 			w.Commit();
 			w.Close();
 			IndexReader r = DirectoryReader.Open(dir);
-			NUnit.Framework.Assert.AreEqual(0, r.MaxDoc());
+			AreEqual(0, r.MaxDoc);
 			r.Close();
 			dir.Close();
 		}
@@ -2221,7 +2221,7 @@ namespace Lucene.Net.Index
 				new MockAnalyzer(Random())));
 			w.PrepareCommit();
 			w.Rollback();
-			NUnit.Framework.Assert.IsFalse(DirectoryReader.IndexExists(dir));
+			IsFalse(DirectoryReader.IndexExists(dir));
 			dir.Close();
 		}
 
@@ -2233,12 +2233,12 @@ namespace Lucene.Net.Index
 			IndexWriter w = new IndexWriter(dir, new IndexWriterConfig(TEST_VERSION_CURRENT, 
 				new MockAnalyzer(Random())));
 			w.Commit();
-			w.AddDocument(new Lucene.Net.Document.Document());
+			w.AddDocument(new Lucene.Net.Documents.Document());
 			w.PrepareCommit();
 			w.Rollback();
-			NUnit.Framework.Assert.IsTrue(DirectoryReader.IndexExists(dir));
+			IsTrue(DirectoryReader.IndexExists(dir));
 			IndexReader r = DirectoryReader.Open(dir);
-			NUnit.Framework.Assert.AreEqual(0, r.MaxDoc());
+			AreEqual(0, r.MaxDoc);
 			r.Close();
 			dir.Close();
 		}
@@ -2250,12 +2250,12 @@ namespace Lucene.Net.Index
 			Directory dir = NewDirectory();
 			IndexWriter w = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer
 				));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			FieldType customType = new FieldType(StringField.TYPE_NOT_STORED);
-			customType.SetStoreTermVectors(true);
-			customType.SetStoreTermVectorPositions(true);
-			customType.SetStoreTermVectorOffsets(true);
+			customType.StoreTermVectors = true;
+			customType.StoreTermVectorPositions = true;
+			customType.StoreTermVectorOffsets = true;
 			Field f = NewField("field", "abcd", customType);
 			doc.Add(f);
 			doc.Add(f);
@@ -2298,7 +2298,7 @@ namespace Lucene.Net.Index
 			Directory dir = NewDirectory();
 			IndexWriter iw = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, 
 				new MockAnalyzer(Random())));
-			iw.AddDocument(new Lucene.Net.Document.Document());
+			iw.AddDocument(new Lucene.Net.Documents.Document());
 			iw.Close();
 			try
 			{
@@ -2308,7 +2308,7 @@ namespace Lucene.Net.Index
 				@out.Close();
 				new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(
 					Random()))).Close();
-				NUnit.Framework.Assert.IsTrue(SlowFileExists(dir, "myrandomfile"));
+				IsTrue(SlowFileExists(dir, "myrandomfile"));
 			}
 			finally
 			{
@@ -2323,7 +2323,7 @@ namespace Lucene.Net.Index
 			Directory dir = NewDirectory();
 			Analyzer a = new _Analyzer_2010();
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir, a);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new TextField("body", "just a", Field.Store.NO));
 			doc.Add(new TextField("body", "test of gaps", Field.Store.NO));
@@ -2335,7 +2335,7 @@ namespace Lucene.Net.Index
 			pq.Add(new Term("body", "just"), 0);
 			pq.Add(new Term("body", "test"), 2);
 			// body:"just ? test"
-			NUnit.Framework.Assert.AreEqual(1, @is.Search(pq, 5).totalHits);
+			AreEqual(1, @is.Search(pq, 5).TotalHits);
 			ir.Close();
 			dir.Close();
 		}
@@ -2366,7 +2366,7 @@ namespace Lucene.Net.Index
 				);
 			Analyzer a = new _Analyzer_2040(secondSet);
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir, a);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new TextField("body", "just a foobar", Field.Store.NO));
 			doc.Add(new TextField("body", "test of gaps", Field.Store.NO));
@@ -2378,7 +2378,7 @@ namespace Lucene.Net.Index
 			pq.Add(new Term("body", "just"), 0);
 			pq.Add(new Term("body", "test"), 3);
 			// body:"just ? ? test"
-			NUnit.Framework.Assert.AreEqual(1, @is.Search(pq, 5).totalHits);
+			AreEqual(1, @is.Search(pq, 5).TotalHits);
 			ir.Close();
 			dir.Close();
 		}
@@ -2418,12 +2418,12 @@ namespace Lucene.Net.Index
 				@out.Close();
 				new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(
 					Random()))).Close();
-				NUnit.Framework.Assert.IsTrue(SlowFileExists(dir, "_a.frq"));
+				IsTrue(SlowFileExists(dir, "_a.frq"));
 				IndexWriter iw = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, 
 					new MockAnalyzer(Random())));
-				iw.AddDocument(new Lucene.Net.Document.Document());
+				iw.AddDocument(new Lucene.Net.Documents.Document());
 				iw.Close();
-				NUnit.Framework.Assert.IsFalse(SlowFileExists(dir, "_a.frq"));
+				IsFalse(SlowFileExists(dir, "_a.frq"));
 			}
 			finally
 			{
@@ -2452,7 +2452,7 @@ namespace Lucene.Net.Index
 				int docCount = 0;
 				while (w.GetFlushCount() == startFlushCount)
 				{
-					Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 						();
 					for (int i = 0; i < 10; i++)
 					{
@@ -2470,7 +2470,7 @@ namespace Lucene.Net.Index
 				{
 					firstDocCount = docCount;
 				}
-				NUnit.Framework.Assert.IsTrue("flushed after too few docs: first segment flushed at docCount="
+				IsTrue("flushed after too few docs: first segment flushed at docCount="
 					 + firstDocCount + ", but current segment flushed after docCount=" + docCount + 
 					"; iter=" + iter, ((float)docCount) / firstDocCount > 0.9);
 				if (upto > 5000)
@@ -2498,7 +2498,7 @@ namespace Lucene.Net.Index
 			writer.SetCommitData(new _Dictionary_2145());
 			writer.Commit();
 			DirectoryReader r = DirectoryReader.Open(dir);
-			NUnit.Framework.Assert.AreEqual("value", r.GetIndexCommit().GetUserData().Get("key"
+			AreEqual("value", r.GetIndexCommit().GetUserData().Get("key"
 				));
 			r.Close();
 			// now check setCommitData and prepareCommit/commit sequence
@@ -2508,14 +2508,14 @@ namespace Lucene.Net.Index
 			writer.Commit();
 			// should commit the first commitData only, per protocol
 			r = DirectoryReader.Open(dir);
-			NUnit.Framework.Assert.AreEqual("value1", r.GetIndexCommit().GetUserData().Get("key"
+			AreEqual("value1", r.GetIndexCommit().GetUserData().Get("key"
 				));
 			r.Close();
 			// now should commit the second commitData - there was a bug where 
 			// IndexWriter.finishCommit overrode the second commitData
 			writer.Commit();
 			r = DirectoryReader.Open(dir);
-			NUnit.Framework.Assert.AreEqual("IndexWriter.finishCommit may have overridden the second commitData"
+			AreEqual("IndexWriter.finishCommit may have overridden the second commitData"
 				, "value2", r.GetIndexCommit().GetUserData().Get("key"));
 			r.Close();
 			writer.Close();
@@ -2560,12 +2560,12 @@ namespace Lucene.Net.Index
 			IndexWriter writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT
 				, null));
 			writer.SetCommitData(new _Dictionary_2184());
-			NUnit.Framework.Assert.AreEqual("value", writer.GetCommitData().Get("key"));
+			AreEqual("value", writer.GetCommitData().Get("key"));
 			writer.Close();
 			// validate that it's also visible when opening a new IndexWriter
 			writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, null).SetOpenMode
 				(IndexWriterConfig.OpenMode.APPEND));
-			NUnit.Framework.Assert.AreEqual("value", writer.GetCommitData().Get("key"));
+			AreEqual("value", writer.GetCommitData().Get("key"));
 			writer.Close();
 			dir.Close();
 		}
@@ -2589,7 +2589,7 @@ namespace Lucene.Net.Index
 			// add 3 good docs
 			for (int i = 0; i < 3; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(new StringField("id", Sharpen.Extensions.ToString(i), Field.Store.NO));
 				iw.AddDocument(doc);
@@ -2597,18 +2597,18 @@ namespace Lucene.Net.Index
 			// add broken doc
 			try
 			{
-				Lucene.Net.Document.Document broke = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document broke = new Lucene.Net.Documents.Document
 					();
 				broke.Add(NewTextField("test", "broken", Field.Store.NO));
 				iw.AddDocument(broke);
-				NUnit.Framework.Assert.Fail();
+				Fail();
 			}
 			catch (ArgumentNullException)
 			{
 			}
 			// ensure good docs are still ok
 			IndexReader ir = iw.GetReader();
-			NUnit.Framework.Assert.AreEqual(3, ir.NumDocs());
+			AreEqual(3, ir.NumDocs());
 			ir.Close();
 			iw.Close();
 			dir.Close();
@@ -2622,7 +2622,7 @@ namespace Lucene.Net.Index
 			// add 3 good docs
 			for (int i = 0; i < 3; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(new StringField("id", Sharpen.Extensions.ToString(i), Field.Store.NO));
 				iw.AddDocument(doc);
@@ -2631,14 +2631,14 @@ namespace Lucene.Net.Index
 			try
 			{
 				iw.AddDocument(null);
-				NUnit.Framework.Assert.Fail();
+				Fail();
 			}
 			catch (ArgumentNullException)
 			{
 			}
 			// ensure good docs are still ok
 			IndexReader ir = iw.GetReader();
-			NUnit.Framework.Assert.AreEqual(3, ir.NumDocs());
+			AreEqual(3, ir.NumDocs());
 			ir.Close();
 			iw.Close();
 			dir.Close();
@@ -2652,7 +2652,7 @@ namespace Lucene.Net.Index
 			// add 3 good docs
 			for (int i = 0; i < 3; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(new StringField("id", Sharpen.Extensions.ToString(i), Field.Store.NO));
 				iw.AddDocument(doc);
@@ -2661,14 +2661,14 @@ namespace Lucene.Net.Index
 			try
 			{
 				iw.AddDocuments(null);
-				NUnit.Framework.Assert.Fail();
+				Fail();
 			}
 			catch (ArgumentNullException)
 			{
 			}
 			// ensure good docs are still ok
 			IndexReader ir = iw.GetReader();
-			NUnit.Framework.Assert.AreEqual(3, ir.NumDocs());
+			AreEqual(3, ir.NumDocs());
 			ir.Close();
 			iw.Close();
 			dir.Close();
@@ -2690,7 +2690,7 @@ namespace Lucene.Net.Index
 				for (int j = 0; j < numDocs; j++)
 				{
 					string id = Sharpen.Extensions.ToString(docId++);
-					IList<IndexableField> fields = new AList<IndexableField>();
+					IList<IIndexableField> fields = new AList<IIndexableField>();
 					fields.AddItem(new StringField("id", id, Field.Store.YES));
 					fields.AddItem(new StringField("foo", TestUtil.RandomSimpleString(Random()), Field.Store
 						.NO));
@@ -2698,13 +2698,13 @@ namespace Lucene.Net.Index
 					bool success = false;
 					try
 					{
-						w.AddDocument(new TestIndexWriter.RandomFailingIterable<IndexableField>(fields, Random
+						w.AddDocument(new TestIndexWriter.RandomFailingIterable<IIndexableField>(fields, Random
 							()));
 						success = true;
 					}
 					catch (RuntimeException e)
 					{
-						NUnit.Framework.Assert.AreEqual("boom", e.Message);
+						AreEqual("boom", e.Message);
 					}
 					finally
 					{
@@ -2717,22 +2717,22 @@ namespace Lucene.Net.Index
 				}
 			}
 			DirectoryReader reader = w.GetReader();
-			NUnit.Framework.Assert.AreEqual(docCount, reader.NumDocs());
+			AreEqual(docCount, reader.NumDocs());
 			IList<AtomicReaderContext> leaves = reader.Leaves();
 			foreach (AtomicReaderContext atomicReaderContext in leaves)
 			{
 				AtomicReader ar = ((AtomicReader)atomicReaderContext.Reader());
 				Bits liveDocs = ar.GetLiveDocs();
-				int maxDoc = ar.MaxDoc();
+				int maxDoc = ar.MaxDoc;
 				for (int i_1 = 0; i_1 < maxDoc; i_1++)
 				{
 					if (liveDocs == null || liveDocs.Get(i_1))
 					{
-						NUnit.Framework.Assert.IsTrue(liveIds.Remove(ar.Document(i_1).Get("id")));
+						IsTrue(liveIds.Remove(ar.Document(i_1).Get("id")));
 					}
 				}
 			}
-			NUnit.Framework.Assert.IsTrue(liveIds.IsEmpty());
+			IsTrue(liveIds.IsEmpty());
 			w.Close();
 			IOUtils.Close(reader, dir);
 		}
@@ -2749,13 +2749,13 @@ namespace Lucene.Net.Index
 			ICollection<string> liveIds = new HashSet<string>();
 			for (int i = 0; i < iters; i++)
 			{
-				IList<Iterable<IndexableField>> docs = new AList<Iterable<IndexableField>>();
+				IList<Iterable<IIndexableField>> docs = new AList<Iterable<IIndexableField>>();
 				FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
 				FieldType idFt = new FieldType(TextField.TYPE_STORED);
 				int numDocs = AtLeast(4);
 				for (int j = 0; j < numDocs; j++)
 				{
-					Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 						();
 					doc.Add(NewField("id", string.Empty + (docId++), idFt));
 					doc.Add(NewField("foo", TestUtil.RandomSimpleString(Random()), ft));
@@ -2764,43 +2764,43 @@ namespace Lucene.Net.Index
 				bool success = false;
 				try
 				{
-					w.AddDocuments(new TestIndexWriter.RandomFailingIterable<Iterable<IndexableField>
+					w.AddDocuments(new TestIndexWriter.RandomFailingIterable<Iterable<IIndexableField>
 						>(docs, Random()));
 					success = true;
 				}
 				catch (RuntimeException e)
 				{
-					NUnit.Framework.Assert.AreEqual("boom", e.Message);
+					AreEqual("boom", e.Message);
 				}
 				finally
 				{
 					if (success)
 					{
 						docCount += docs.Count;
-						foreach (Iterable<IndexableField> indexDocument in docs)
+						foreach (Iterable<IIndexableField> indexDocument in docs)
 						{
-							liveIds.AddItem(((Lucene.Net.Document.Document)indexDocument).Get("id"));
+							liveIds.AddItem(((Lucene.Net.Documents.Document)indexDocument).Get("id"));
 						}
 					}
 				}
 			}
 			DirectoryReader reader = w.GetReader();
-			NUnit.Framework.Assert.AreEqual(docCount, reader.NumDocs());
+			AreEqual(docCount, reader.NumDocs());
 			IList<AtomicReaderContext> leaves = reader.Leaves();
 			foreach (AtomicReaderContext atomicReaderContext in leaves)
 			{
 				AtomicReader ar = ((AtomicReader)atomicReaderContext.Reader());
 				Bits liveDocs = ar.GetLiveDocs();
-				int maxDoc = ar.MaxDoc();
+				int maxDoc = ar.MaxDoc;
 				for (int i_1 = 0; i_1 < maxDoc; i_1++)
 				{
 					if (liveDocs == null || liveDocs.Get(i_1))
 					{
-						NUnit.Framework.Assert.IsTrue(liveIds.Remove(ar.Document(i_1).Get("id")));
+						IsTrue(liveIds.Remove(ar.Document(i_1).Get("id")));
 					}
 				}
 			}
-			NUnit.Framework.Assert.IsTrue(liveIds.IsEmpty());
+			IsTrue(liveIds.IsEmpty());
 			IOUtils.Close(reader, w, dir);
 		}
 
@@ -2817,26 +2817,26 @@ namespace Lucene.Net.Index
 			catch (Exception e)
 			{
 				//HM:revisit 
-				NUnit.Framework.Assert.IsNotNull(e.Message);
-				NUnit.Framework.Assert.AreEqual("boom", e.Message);
+				IsNotNull(e.Message);
+				AreEqual("boom", e.Message);
 			}
 			w.Close();
 			IOUtils.Close(dir);
 		}
 
-		private sealed class _Iterable_2373 : Iterable<Lucene.Net.Document.Document
+		private sealed class _Iterable_2373 : Iterable<Lucene.Net.Documents.Document
 			>
 		{
 			public _Iterable_2373()
 			{
 			}
 
-			public override Iterator<Lucene.Net.Document.Document> Iterator()
+			public override Iterator<Lucene.Net.Documents.Document> Iterator()
 			{
 				return new _Iterator_2376();
 			}
 
-			private sealed class _Iterator_2376 : Iterator<Lucene.Net.Document.Document
+			private sealed class _Iterator_2376 : Iterator<Lucene.Net.Documents.Document
 				>
 			{
 				public _Iterator_2376()
@@ -2848,7 +2848,7 @@ namespace Lucene.Net.Index
 					return true;
 				}
 
-				public override Lucene.Net.Document.Document Next()
+				public override Lucene.Net.Documents.Document Next()
 				{
 					throw new RuntimeException("boom");
 				}
@@ -2960,7 +2960,7 @@ namespace Lucene.Net.Index
 					}
 					if (mode != 0)
 					{
-						NUnit.Framework.Assert.Fail("expected exception");
+						Fail("expected exception");
 					}
 				}
 				catch (IOException ioe)
@@ -2991,46 +2991,46 @@ namespace Lucene.Net.Index
 			Directory dir = NewDirectory();
 			IndexWriter writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT
 				, new MockAnalyzer(Random())));
-			NUnit.Framework.Assert.IsTrue(writer.HasUncommittedChanges());
+			IsTrue(writer.HasUncommittedChanges());
 			// this will be true because a commit will create an empty index
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewTextField("myfield", "a b c", Field.Store.NO));
 			writer.AddDocument(doc);
-			NUnit.Framework.Assert.IsTrue(writer.HasUncommittedChanges());
+			IsTrue(writer.HasUncommittedChanges());
 			// Must commit, waitForMerges, commit again, to be
 			// certain that hasUncommittedChanges returns false:
 			writer.Commit();
 			writer.WaitForMerges();
 			writer.Commit();
-			NUnit.Framework.Assert.IsFalse(writer.HasUncommittedChanges());
+			IsFalse(writer.HasUncommittedChanges());
 			writer.AddDocument(doc);
-			NUnit.Framework.Assert.IsTrue(writer.HasUncommittedChanges());
+			IsTrue(writer.HasUncommittedChanges());
 			writer.Commit();
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("id", "xyz", Field.Store.YES));
 			writer.AddDocument(doc);
-			NUnit.Framework.Assert.IsTrue(writer.HasUncommittedChanges());
+			IsTrue(writer.HasUncommittedChanges());
 			// Must commit, waitForMerges, commit again, to be
 			// certain that hasUncommittedChanges returns false:
 			writer.Commit();
 			writer.WaitForMerges();
 			writer.Commit();
-			NUnit.Framework.Assert.IsFalse(writer.HasUncommittedChanges());
+			IsFalse(writer.HasUncommittedChanges());
 			writer.DeleteDocuments(new Term("id", "xyz"));
-			NUnit.Framework.Assert.IsTrue(writer.HasUncommittedChanges());
+			IsTrue(writer.HasUncommittedChanges());
 			// Must commit, waitForMerges, commit again, to be
 			// certain that hasUncommittedChanges returns false:
 			writer.Commit();
 			writer.WaitForMerges();
 			writer.Commit();
-			NUnit.Framework.Assert.IsFalse(writer.HasUncommittedChanges());
+			IsFalse(writer.HasUncommittedChanges());
 			writer.Close();
 			writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random())));
-			NUnit.Framework.Assert.IsFalse(writer.HasUncommittedChanges());
+			IsFalse(writer.HasUncommittedChanges());
 			writer.AddDocument(doc);
-			NUnit.Framework.Assert.IsTrue(writer.HasUncommittedChanges());
+			IsTrue(writer.HasUncommittedChanges());
 			writer.Close();
 			dir.Close();
 		}
@@ -3093,7 +3093,7 @@ namespace Lucene.Net.Index
 			IndexWriterConfig iwc = new IndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random()));
 			IndexWriter w = new IndexWriter(dir, iwc);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new TextField("a", "foo", Field.Store.NO));
 			w.AddDocument(doc);
@@ -3105,7 +3105,7 @@ namespace Lucene.Net.Index
 			IndexReader r = w.GetReader();
 			w.Close();
 			// Make sure document was not (incorrectly) deleted:
-			NUnit.Framework.Assert.AreEqual(1, r.NumDocs());
+			AreEqual(1, r.NumDocs());
 			r.Close();
 			dir.Close();
 		}
@@ -3128,7 +3128,7 @@ namespace Lucene.Net.Index
 			lmp.SetMergeFactor(2);
 			iwc.SetMergePolicy(lmp);
 			RandomIndexWriter w = new RandomIndexWriter(Random(), dir, iwc);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new TextField("a", "foo", Field.Store.NO));
 			w.AddDocument(doc);

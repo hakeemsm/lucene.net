@@ -5,7 +5,7 @@
  */
 
 using System.Collections.Generic;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -36,7 +36,7 @@ namespace Lucene.Net.Index
 				ICollection<int> deleted = new HashSet<int>();
 				IList<BytesRef> terms = new AList<BytesRef>();
 				int numDocs = TestUtil.NextInt(Random(), 1, 100 * RANDOM_MULTIPLIER);
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				Field f = NewStringField("field", string.Empty, Field.Store.NO);
 				doc.Add(f);
@@ -56,7 +56,7 @@ namespace Lucene.Net.Index
 						// re-use existing term
 						BytesRef term = terms[Random().Next(terms.Count)];
 						docs.Get(term).AddItem(i);
-						f.SetStringValue(term.Utf8ToString());
+						f.StringValue = term.Utf8ToString());
 					}
 					else
 					{
@@ -69,9 +69,9 @@ namespace Lucene.Net.Index
 						docs.Get(term).AddItem(i);
 						terms.AddItem(term);
 						uniqueTerms.AddItem(term);
-						f.SetStringValue(s);
+						f.StringValue = s);
 					}
-					id.SetStringValue(string.Empty + i);
+					id.StringValue = string.Empty + i);
 					w.AddDocument(doc);
 					if (Random().Next(4) == 1)
 					{
@@ -119,7 +119,7 @@ namespace Lucene.Net.Index
 				Bits liveDocs = MultiFields.GetLiveDocs(reader);
 				foreach (int delDoc in deleted)
 				{
-					NUnit.Framework.Assert.IsFalse(liveDocs.Get(delDoc));
+					IsFalse(liveDocs.Get(delDoc));
 				}
 				for (int i_1 = 0; i_1 < 100; i_1++)
 				{
@@ -131,15 +131,15 @@ namespace Lucene.Net.Index
 					}
 					DocsEnum docsEnum = TestUtil.Docs(Random(), reader, "field", term, liveDocs, null
 						, DocsEnum.FLAG_NONE);
-					NUnit.Framework.Assert.IsNotNull(docsEnum);
+					IsNotNull(docsEnum);
 					foreach (int docID in docs.Get(term))
 					{
 						if (!deleted.Contains(docID))
 						{
-							NUnit.Framework.Assert.AreEqual(docID, docsEnum.NextDoc());
+							AreEqual(docID, docsEnum.NextDoc());
 						}
 					}
-					NUnit.Framework.Assert.AreEqual(DocIdSetIterator.NO_MORE_DOCS, docsEnum.NextDoc()
+					AreEqual(DocIdSetIterator.NO_MORE_DOCS, docsEnum.NextDoc()
 						);
 				}
 				reader.Close();
@@ -153,7 +153,7 @@ namespace Lucene.Net.Index
 			Directory dir = NewDirectory();
 			IndexWriter w = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new 
 				MockAnalyzer(Random())));
-			Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+			Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 			d.Add(NewStringField("f", "j", Field.Store.NO));
 			w.AddDocument(d);
 			w.Commit();
@@ -164,8 +164,8 @@ namespace Lucene.Net.Index
 				.FLAG_NONE);
 			DocsEnum d2 = TestUtil.Docs(Random(), r, "f", new BytesRef("j"), null, null, DocsEnum
 				.FLAG_NONE);
-			NUnit.Framework.Assert.AreEqual(0, d1.NextDoc());
-			NUnit.Framework.Assert.AreEqual(0, d2.NextDoc());
+			AreEqual(0, d1.NextDoc());
+			AreEqual(0, d2.NextDoc());
 			r.Close();
 			dir.Close();
 		}
@@ -176,7 +176,7 @@ namespace Lucene.Net.Index
 			Directory dir = NewDirectory();
 			IndexWriter w = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new 
 				MockAnalyzer(Random())));
-			Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+			Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 			d.Add(NewStringField("f", "j", Field.Store.NO));
 			w.AddDocument(d);
 			w.Commit();
@@ -184,9 +184,9 @@ namespace Lucene.Net.Index
 			IndexReader r = w.GetReader();
 			w.Close();
 			DocsEnum de = MultiFields.GetTermDocsEnum(r, null, "f", new BytesRef("j"));
-			NUnit.Framework.Assert.AreEqual(0, de.NextDoc());
-			NUnit.Framework.Assert.AreEqual(1, de.NextDoc());
-			NUnit.Framework.Assert.AreEqual(DocIdSetIterator.NO_MORE_DOCS, de.NextDoc());
+			AreEqual(0, de.NextDoc());
+			AreEqual(1, de.NextDoc());
+			AreEqual(DocIdSetIterator.NO_MORE_DOCS, de.NextDoc());
 			r.Close();
 			dir.Close();
 		}

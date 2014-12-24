@@ -5,7 +5,7 @@
  */
 
 using System.Collections.Generic;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
@@ -36,7 +36,7 @@ namespace Lucene.Net.Store
 			DirectoryReader r = null;
 			for (int docCount = 0; docCount < numDocs; docCount++)
 			{
-				Lucene.Net.Document.Document doc = docs.NextDoc();
+				Lucene.Net.Documents.Document doc = docs.NextDoc();
 				ids.AddItem(new BytesRef(doc.Get("docid")));
 				w.AddDocument(doc);
 				if (Random().Next(20) == 17)
@@ -54,7 +54,7 @@ namespace Lucene.Net.Store
 							r = r2;
 						}
 					}
-					NUnit.Framework.Assert.AreEqual(1 + docCount, r.NumDocs());
+					AreEqual(1 + docCount, r.NumDocs());
 					IndexSearcher s = NewSearcher(r);
 					// Just make sure search can run; we can't 
 					//HM:revisit 
@@ -63,7 +63,7 @@ namespace Lucene.Net.Store
 					TopDocs hits = s.Search(new TermQuery(new Term("body", "the")), 10);
 				}
 			}
-			// System.out.println("tot hits " + hits.totalHits);
+			// System.out.println("tot hits " + hits.TotalHits);
 			if (r != null)
 			{
 				r.Close();
@@ -75,11 +75,11 @@ namespace Lucene.Net.Store
 			{
 				System.Console.Out.WriteLine("FAIL: cached file " + file + " remains after sync");
 			}
-			NUnit.Framework.Assert.AreEqual(0, cachedFiles.Length);
+			AreEqual(0, cachedFiles.Length);
 			r = DirectoryReader.Open(dir);
 			foreach (BytesRef id in ids)
 			{
-				NUnit.Framework.Assert.AreEqual(1, r.DocFreq(new Term("docid", id)));
+				AreEqual(1, r.DocFreq(new Term("docid", id)));
 			}
 			r.Close();
 			cachedDir.Close();
@@ -104,7 +104,7 @@ namespace Lucene.Net.Store
 			Directory dir = new NRTCachingDirectory(NewDirectory(), 2.0, 25.0);
 			dir.CreateOutput("foo.txt", IOContext.DEFAULT).Close();
 			dir.DeleteFile("foo.txt");
-			NUnit.Framework.Assert.AreEqual(0, dir.ListAll().Length);
+			AreEqual(0, dir.ListAll().Length);
 			dir.Close();
 		}
 
@@ -118,7 +118,7 @@ namespace Lucene.Net.Store
 			try
 			{
 				DirectoryReader.Open(dir);
-				NUnit.Framework.Assert.Fail("did not hit expected exception");
+				Fail("did not hit expected exception");
 			}
 			catch (NoSuchDirectoryException)
 			{
@@ -137,8 +137,8 @@ namespace Lucene.Net.Store
 			try
 			{
 				dir.CreateOutput(name, NewIOContext(Random())).Close();
-				NUnit.Framework.Assert.IsTrue(SlowFileExists(dir, name));
-				NUnit.Framework.Assert.IsTrue(Arrays.AsList(dir.ListAll()).Contains(name));
+				IsTrue(SlowFileExists(dir, name));
+				IsTrue(Arrays.AsList(dir.ListAll()).Contains(name));
 			}
 			finally
 			{
@@ -157,13 +157,13 @@ namespace Lucene.Net.Store
 			IndexOutput @out = csw.CreateOutput("d.xyz", NewIOContext(Random()));
 			@out.WriteInt(0);
 			@out.Close();
-			NUnit.Framework.Assert.AreEqual(1, csw.ListAll().Length);
-			NUnit.Framework.Assert.AreEqual("d.xyz", csw.ListAll()[0]);
+			AreEqual(1, csw.ListAll().Length);
+			AreEqual("d.xyz", csw.ListAll()[0]);
 			csw.Close();
 			CompoundFileDirectory cfr = new CompoundFileDirectory(newDir, "d.cfs", NewIOContext
 				(Random()), false);
-			NUnit.Framework.Assert.AreEqual(1, cfr.ListAll().Length);
-			NUnit.Framework.Assert.AreEqual("d.xyz", cfr.ListAll()[0]);
+			AreEqual(1, cfr.ListAll().Length);
+			AreEqual("d.xyz", cfr.ListAll()[0]);
 			cfr.Close();
 			newDir.Close();
 		}

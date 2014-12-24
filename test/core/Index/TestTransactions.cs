@@ -6,7 +6,7 @@
 
 using System;
 using System.IO;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
@@ -170,10 +170,10 @@ namespace Lucene.Net.Index
 			{
 				// Add 10 docs:
 				FieldType customType = new FieldType(StringField.TYPE_NOT_STORED);
-				customType.SetStoreTermVectors(true);
+				customType.StoreTermVectors = true;
 				for (int j = 0; j < 10; j++)
 				{
-					Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+					Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 					int n = LuceneTestCase.Random().Next();
 					d.Add(LuceneTestCase.NewField("id", Sharpen.Extensions.ToString(this.nextID++), customType
 						));
@@ -255,7 +255,7 @@ namespace Lucene.Net.Index
 				, new MockAnalyzer(Random())));
 			for (int j = 0; j < 7; j++)
 			{
-				Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+				Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 				int n = Random().Next();
 				d.Add(NewTextField("contents", English.IntToEnglish(n), Field.Store.NO));
 				writer.AddDocument(d);
@@ -303,7 +303,7 @@ namespace Lucene.Net.Index
 			}
 			for (int i_1 = 0; i_1 < numThread; i_1++)
 			{
-				NUnit.Framework.Assert.IsTrue(!threads[i_1].failed);
+				IsTrue(!threads[i_1].failed);
 			}
 			dir1.Close();
 			dir2.Close();

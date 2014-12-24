@@ -6,7 +6,7 @@
 
 using System;
 using NUnit.Framework;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -42,20 +42,20 @@ namespace Lucene.Net.Search
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), directory, NewIndexWriterConfig
 				(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMergePolicy(NewLogMergePolicy
 				()));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewTextField("field", "one two three four five", Field.Store.YES));
 			doc.Add(NewTextField("sorter", "b", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewTextField("field", "one two three four", Field.Store.YES));
 			doc.Add(NewTextField("sorter", "d", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewTextField("field", "one two three y", Field.Store.YES));
 			doc.Add(NewTextField("sorter", "a", Field.Store.YES));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewTextField("field", "one two x", Field.Store.YES));
 			doc.Add(NewTextField("sorter", "c", Field.Store.YES));
 			writer.AddDocument(doc);
@@ -125,33 +125,33 @@ namespace Lucene.Net.Search
 			Query filteredquery = new FilteredQuery(query, filter, RandomFilterStrategy(Random
 				(), useRandomAccess));
 			ScoreDoc[] hits = searcher.Search(filteredquery, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(1, hits.Length);
-			NUnit.Framework.Assert.AreEqual(1, hits[0].doc);
+			AreEqual(1, hits.Length);
+			AreEqual(1, hits[0].doc);
 			QueryUtils.Check(Random(), filteredquery, searcher);
 			hits = searcher.Search(filteredquery, null, 1000, new Sort(new SortField("sorter"
 				, SortField.Type.STRING))).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(1, hits.Length);
-			NUnit.Framework.Assert.AreEqual(1, hits[0].doc);
+			AreEqual(1, hits.Length);
+			AreEqual(1, hits[0].doc);
 			filteredquery = new FilteredQuery(new TermQuery(new Term("field", "one")), filter
 				, RandomFilterStrategy(Random(), useRandomAccess));
 			hits = searcher.Search(filteredquery, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(2, hits.Length);
+			AreEqual(2, hits.Length);
 			QueryUtils.Check(Random(), filteredquery, searcher);
 			filteredquery = new FilteredQuery(new MatchAllDocsQuery(), filter, RandomFilterStrategy
 				(Random(), useRandomAccess));
 			hits = searcher.Search(filteredquery, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(2, hits.Length);
+			AreEqual(2, hits.Length);
 			QueryUtils.Check(Random(), filteredquery, searcher);
 			filteredquery = new FilteredQuery(new TermQuery(new Term("field", "x")), filter, 
 				RandomFilterStrategy(Random(), useRandomAccess));
 			hits = searcher.Search(filteredquery, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(1, hits.Length);
-			NUnit.Framework.Assert.AreEqual(3, hits[0].doc);
+			AreEqual(1, hits.Length);
+			AreEqual(3, hits[0].doc);
 			QueryUtils.Check(Random(), filteredquery, searcher);
 			filteredquery = new FilteredQuery(new TermQuery(new Term("field", "y")), filter, 
 				RandomFilterStrategy(Random(), useRandomAccess));
 			hits = searcher.Search(filteredquery, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(0, hits.Length);
+			AreEqual(0, hits.Length);
 			QueryUtils.Check(Random(), filteredquery, searcher);
 			// test boost
 			Filter f = NewStaticFilterA();
@@ -169,8 +169,8 @@ namespace Lucene.Net.Search
 			bq2.Add(filteredquery, BooleanClause.Occur.MUST);
 			bq2.Add(new TermQuery(new Term("field", "five")), BooleanClause.Occur.MUST);
 			AssertScoreEquals(bq1, bq2);
-			NUnit.Framework.Assert.AreEqual(boost, filteredquery.GetBoost(), 0);
-			NUnit.Framework.Assert.AreEqual(1.0f, tq.GetBoost(), 0);
+			AreEqual(boost, filteredquery.GetBoost(), 0);
+			AreEqual(1.0f, tq.GetBoost(), 0);
 		}
 
 		// the boost value of the underlying query shouldn't have changed 
@@ -189,7 +189,7 @@ namespace Lucene.Net.Search
 			public override DocIdSet GetDocIdSet(AtomicReaderContext context, Bits acceptDocs
 				)
 			{
-				NUnit.Framework.Assert.IsNull("acceptDocs should be null, as we have an index without deletions"
+				IsNull("acceptDocs should be null, as we have an index without deletions"
 					, acceptDocs);
 				BitSet bitset = new BitSet(5);
 				bitset.Set(0, 5);
@@ -204,10 +204,10 @@ namespace Lucene.Net.Search
 		{
 			ScoreDoc[] hits1 = searcher.Search(q1, null, 1000).scoreDocs;
 			ScoreDoc[] hits2 = searcher.Search(q2, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(hits1.Length, hits2.Length);
+			AreEqual(hits1.Length, hits2.Length);
 			for (int i = 0; i < hits1.Length; i++)
 			{
-				NUnit.Framework.Assert.AreEqual(hits1[i].score, hits2[i].score, 0.000001f);
+				AreEqual(hits1[i].score, hits2[i].score, 0.000001f);
 			}
 		}
 
@@ -227,7 +227,7 @@ namespace Lucene.Net.Search
 			Query filteredquery = new FilteredQuery(rq, filter, RandomFilterStrategy(Random()
 				, useRandomAccess));
 			ScoreDoc[] hits = searcher.Search(filteredquery, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(2, hits.Length);
+			AreEqual(2, hits.Length);
 			QueryUtils.Check(Random(), filteredquery, searcher);
 		}
 
@@ -251,7 +251,7 @@ namespace Lucene.Net.Search
 				(1), RandomFilterStrategy(Random(), useRandomAccess));
 			bq.Add(query, BooleanClause.Occur.MUST);
 			ScoreDoc[] hits = searcher.Search(bq, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(0, hits.Length);
+			AreEqual(0, hits.Length);
 			QueryUtils.Check(Random(), query, searcher);
 		}
 
@@ -275,7 +275,7 @@ namespace Lucene.Net.Search
 				(1), RandomFilterStrategy(Random(), useRandomAccess));
 			bq.Add(query, BooleanClause.Occur.SHOULD);
 			ScoreDoc[] hits = searcher.Search(bq, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(2, hits.Length);
+			AreEqual(2, hits.Length);
 			QueryUtils.Check(Random(), query, searcher);
 		}
 
@@ -299,7 +299,7 @@ namespace Lucene.Net.Search
 			bq.Add(new TermQuery(new Term("field", "one")), BooleanClause.Occur.SHOULD);
 			bq.Add(new TermQuery(new Term("field", "two")), BooleanClause.Occur.SHOULD);
 			ScoreDoc[] hits = searcher.Search(query, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(1, hits.Length);
+			AreEqual(1, hits.Length);
 			QueryUtils.Check(Random(), query, searcher);
 		}
 
@@ -321,14 +321,14 @@ namespace Lucene.Net.Search
 				TermQuery(new Term("field", "four")))), RandomFilterStrategy(Random(), useRandomAccess
 				));
 			ScoreDoc[] hits = searcher.Search(query, 10).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(2, hits.Length);
+			AreEqual(2, hits.Length);
 			QueryUtils.Check(Random(), query, searcher);
 			// one more:
 			query = new FilteredQuery(query, new CachingWrapperFilter(new QueryWrapperFilter(
 				new TermQuery(new Term("field", "five")))), RandomFilterStrategy(Random(), useRandomAccess
 				));
 			hits = searcher.Search(query, 10).scoreDocs;
-			NUnit.Framework.Assert.AreEqual(1, hits.Length);
+			AreEqual(1, hits.Length);
 			QueryUtils.Check(Random(), query, searcher);
 		}
 
@@ -336,9 +336,9 @@ namespace Lucene.Net.Search
 		public virtual void TestEqualsHashcode()
 		{
 			// some tests before, if the used queries and filters work:
-			NUnit.Framework.Assert.AreEqual(new PrefixFilter(new Term("field", "o")), new PrefixFilter
+			AreEqual(new PrefixFilter(new Term("field", "o")), new PrefixFilter
 				(new Term("field", "o")));
-			NUnit.Framework.Assert.IsFalse(new PrefixFilter(new Term("field", "a")).Equals(new 
+			IsFalse(new PrefixFilter(new Term("field", "a")).Equals(new 
 				PrefixFilter(new Term("field", "o"))));
 			QueryUtils.CheckHashEquals(new TermQuery(new Term("field", "one")));
 			QueryUtils.CheckUnequal(new TermQuery(new Term("field", "one")), new TermQuery(new 
@@ -360,7 +360,7 @@ namespace Lucene.Net.Search
 			try
 			{
 				new FilteredQuery(null, null);
-				NUnit.Framework.Assert.Fail("Should throw IllegalArgumentException");
+				Fail("Should throw IllegalArgumentException");
 			}
 			catch (ArgumentException)
 			{
@@ -369,7 +369,7 @@ namespace Lucene.Net.Search
 			try
 			{
 				new FilteredQuery(new TermQuery(new Term("field", "one")), null);
-				NUnit.Framework.Assert.Fail("Should throw IllegalArgumentException");
+				Fail("Should throw IllegalArgumentException");
 			}
 			catch (ArgumentException)
 			{
@@ -378,7 +378,7 @@ namespace Lucene.Net.Search
 			try
 			{
 				new FilteredQuery(null, new PrefixFilter(new Term("field", "o")));
-				NUnit.Framework.Assert.Fail("Should throw IllegalArgumentException");
+				Fail("Should throw IllegalArgumentException");
 			}
 			catch (ArgumentException)
 			{
@@ -402,23 +402,23 @@ namespace Lucene.Net.Search
 			fq.GetQuery().SetBoost(innerBoost);
 			// check the class and boosts of rewritten query
 			Query rewritten = searcher.Rewrite(fq);
-			NUnit.Framework.Assert.IsTrue("is not instance of " + clazz.FullName, clazz.IsInstanceOfType
+			IsTrue("is not instance of " + clazz.FullName, clazz.IsInstanceOfType
 				(rewritten));
 			if (rewritten is FilteredQuery)
 			{
-				NUnit.Framework.Assert.AreEqual(boost, rewritten.GetBoost(), 1.E-5f);
-				NUnit.Framework.Assert.AreEqual(innerBoost, ((FilteredQuery)rewritten).GetQuery()
+				AreEqual(boost, rewritten.GetBoost(), 1.E-5f);
+				AreEqual(innerBoost, ((FilteredQuery)rewritten).GetQuery()
 					.GetBoost(), 1.E-5f);
-				NUnit.Framework.Assert.AreEqual(fq.GetFilterStrategy(), ((FilteredQuery)rewritten
+				AreEqual(fq.GetFilterStrategy(), ((FilteredQuery)rewritten
 					).GetFilterStrategy());
 			}
 			else
 			{
-				NUnit.Framework.Assert.AreEqual(boost * innerBoost, rewritten.GetBoost(), 1.E-5f);
+				AreEqual(boost * innerBoost, rewritten.GetBoost(), 1.E-5f);
 			}
 			// check that the original query was not modified
-			NUnit.Framework.Assert.AreEqual(boost, fq.GetBoost(), 1.E-5f);
-			NUnit.Framework.Assert.AreEqual(innerBoost, fq.GetQuery().GetBoost(), 1.E-5f);
+			AreEqual(boost, fq.GetBoost(), 1.E-5f);
+			AreEqual(innerBoost, fq.GetQuery().GetBoost(), 1.E-5f);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -435,7 +435,7 @@ namespace Lucene.Net.Search
 			FilteredQuery.FilterStrategy randomFilterStrategy = RandomFilterStrategy();
 			FilteredQuery filteredQuery = new FilteredQuery(new TermQuery(new Term("field", "one"
 				)), new PrefixFilter(new Term("field", "o")), randomFilterStrategy);
-			NUnit.Framework.Assert.AreSame(randomFilterStrategy, filteredQuery.GetFilterStrategy
+			AreSame(randomFilterStrategy, filteredQuery.GetFilterStrategy
 				());
 		}
 
@@ -471,7 +471,7 @@ namespace Lucene.Net.Search
 			int totalDocsWithZero = 0;
 			for (int i = 0; i < numDocs; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				int num = Random().Next(5);
 				if (num == 0)
@@ -488,7 +488,7 @@ namespace Lucene.Net.Search
 				(), FilteredQuery.QUERY_FIRST_FILTER_STRATEGY);
 			// no docs -- return null
 			TopDocs search = searcher.Search(query, 10);
-			NUnit.Framework.Assert.AreEqual(totalDocsWithZero, search.totalHits);
+			AreEqual(totalDocsWithZero, search.TotalHits);
 			IOUtils.Close(reader, writer, directory);
 		}
 
@@ -509,7 +509,7 @@ namespace Lucene.Net.Search
 				{
 					return null;
 				}
-				BitSet bitSet = new BitSet(reader.MaxDoc());
+				BitSet bitSet = new BitSet(reader.MaxDoc);
 				int d;
 				while ((d = termDocsEnum.NextDoc()) != DocsEnum.NO_MORE_DOCS)
 				{
@@ -546,7 +546,7 @@ namespace Lucene.Net.Search
 
 					public override bool Get(int index)
 					{
-						NUnit.Framework.Assert.IsTrue("filter was called for a non-matching doc", bitSet.
+						IsTrue("filter was called for a non-matching doc", bitSet.
 							Get(index));
 						return bitSet.Get(index);
 					}
@@ -562,7 +562,7 @@ namespace Lucene.Net.Search
 				/// <exception cref="System.IO.IOException"></exception>
 				public override DocIdSetIterator Iterator()
 				{
-					NUnit.Framework.Assert.IsTrue("iterator should not be called if bitset is present"
+					IsTrue("iterator should not be called if bitset is present"
 						, nullBitset);
 					return reader.TermDocsEnum(new Term("field", "0"));
 				}
@@ -585,7 +585,7 @@ namespace Lucene.Net.Search
 			int totalDocsWithZero = 0;
 			for (int i = 0; i < numDocs; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				int num = Random().Next(10);
 				if (num == 0)
@@ -605,7 +605,7 @@ namespace Lucene.Net.Search
 				);
 			// if filterFirst, we can use random here since bits are null
 			TopDocs search = searcher.Search(query, 10);
-			NUnit.Framework.Assert.AreEqual(totalDocsWithZero, search.totalHits);
+			AreEqual(totalDocsWithZero, search.TotalHits);
 			IOUtils.Close(reader, writer, directory);
 		}
 
@@ -664,22 +664,22 @@ namespace Lucene.Net.Search
 					/// <exception cref="System.IO.IOException"></exception>
 					public override int NextDoc()
 					{
-						NUnit.Framework.Assert.IsTrue("queryFirst: " + queryFirst + " advanced: " + this.
+						IsTrue("queryFirst: " + queryFirst + " advanced: " + this.
 							advanceCalled + " next: " + this.nextCalled, this.nextCalled || this.advanceCalled
 							 ^ !queryFirst);
 						this.nextCalled = true;
 						return termDocsEnum.NextDoc();
 					}
 
-					public override int DocID()
+					public override int DocID
 					{
-						return termDocsEnum.DocID();
+						return termDocsEnum.DocID;
 					}
 
 					/// <exception cref="System.IO.IOException"></exception>
 					public override int Advance(int target)
 					{
-						NUnit.Framework.Assert.IsTrue("queryFirst: " + queryFirst + " advanced: " + this.
+						IsTrue("queryFirst: " + queryFirst + " advanced: " + this.
 							advanceCalled + " next: " + this.nextCalled, this.advanceCalled || this.nextCalled
 							 ^ queryFirst);
 						this.advanceCalled = true;

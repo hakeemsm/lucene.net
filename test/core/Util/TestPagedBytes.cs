@@ -131,7 +131,7 @@ namespace Lucene.Net.Test.Util
 						read += chunk;
 					}
 				}
-				NUnit.Framework.Assert.IsTrue(Arrays.Equals(answer, verify));
+				IsTrue(Arrays.Equals(answer, verify));
 				BytesRef slice = new BytesRef();
 				for (int iter2 = 0; iter2 < 100; iter2++)
 				{
@@ -140,7 +140,7 @@ namespace Lucene.Net.Test.Util
 					reader.FillSlice(slice, pos, len);
 					for (int byteUpto = 0; byteUpto < len; byteUpto++)
 					{
-						NUnit.Framework.Assert.AreEqual(answer[pos + byteUpto], slice.bytes[slice.offset 
+						AreEqual(answer[pos + byteUpto], slice.bytes[slice.offset 
 							+ byteUpto]);
 					}
 				}

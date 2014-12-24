@@ -1,86 +1,80 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
+using System.Collections.Generic;
 using System.Text;
 using Lucene.Net.Analysis;
 using Lucene.Net.Codecs;
-using Lucene.Net.Codecs.Lucene40;
-using Lucene.Net.Document;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
+using Lucene.Net.Randomized.Generators;
 using Lucene.Net.Store;
-using Lucene.Net.Util;
-using Sharpen;
+using Lucene.Net.Support;
+using Lucene.Net.TestFramework.Util;
+using NUnit.Framework;
 
-namespace Lucene.Net.Codecs.Lucene40
+namespace Lucene.Net.Test.Codecs.Lucene40
 {
+    [TestFixture]
 	public class TestLucene40PostingsReader : LuceneTestCase
 	{
-		internal static readonly string terms = new string[100];
+		internal static readonly string[] terms = new string[100];
 
 		static TestLucene40PostingsReader()
 		{
 			for (int i = 0; i < terms.Length; i++)
 			{
-				terms[i] = Sharpen.Extensions.ToString(i + 1);
+				terms[i] = (i + 1).ToString();
 			}
 		}
 
-		[NUnit.Framework.BeforeClass]
-		public static void BeforeClass()
+		[SetUp]
+		public void Setup()
 		{
 			OLD_FORMAT_IMPERSONATION_IS_ACTIVE = true;
 		}
 
 		// explicitly instantiates ancient codec
 		/// <summary>tests terms with different probabilities of being in the document.</summary>
-		/// <remarks>
-		/// tests terms with different probabilities of being in the document.
-		/// depends heavily on term vectors cross-check at checkIndex
-		/// </remarks>
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestPostings()
 		{
 			Directory dir = NewFSDirectory(CreateTempDir("postings"));
-			IndexWriterConfig iwc = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
-				(Random()));
+			IndexWriterConfig iwc = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(Random()));
 			iwc.SetCodec(Codec.ForName("Lucene40"));
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir, iwc);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
-				();
+			var doc = new Lucene.Net.Documents.Document();
 			// id field
-			FieldType idType = new FieldType(StringField.TYPE_NOT_STORED);
-			idType.SetStoreTermVectors(true);
-			Field idField = new Field("id", string.Empty, idType);
+			FieldType idType = new FieldType(StringField.TYPE_NOT_STORED) {StoreTermVectors = true};
+		    Field idField = new Field("id", string.Empty, idType);
 			doc.Add(idField);
 			// title field: short text field
-			FieldType titleType = new FieldType(TextField.TYPE_NOT_STORED);
-			titleType.SetStoreTermVectors(true);
-			titleType.SetStoreTermVectorPositions(true);
-			titleType.SetStoreTermVectorOffsets(true);
-			titleType.SetIndexOptions(IndexOptions());
-			Field titleField = new Field("title", string.Empty, titleType);
+			var titleType = new FieldType(TextField.TYPE_NOT_STORED)
+			{
+			    StoreTermVectors = true,
+			    StoreTermVectorPositions = true,
+			    StoreTermVectorOffsets = true,
+			    IndexOptions = IndexOptions()
+			};
+		    Field titleField = new Field("title", string.Empty, titleType);
 			doc.Add(titleField);
 			// body field: long text field
-			FieldType bodyType = new FieldType(TextField.TYPE_NOT_STORED);
-			bodyType.SetStoreTermVectors(true);
-			bodyType.SetStoreTermVectorPositions(true);
-			bodyType.SetStoreTermVectorOffsets(true);
-			bodyType.SetIndexOptions(IndexOptions());
-			Field bodyField = new Field("body", string.Empty, bodyType);
+			var bodyType = new FieldType(TextField.TYPE_NOT_STORED)
+			{
+			    StoreTermVectors = true,
+			    StoreTermVectorPositions = true,
+			    StoreTermVectorOffsets = true,
+			    IndexOptions = IndexOptions()
+			};
+		    Field bodyField = new Field("body", string.Empty, bodyType);
 			doc.Add(bodyField);
 			int numDocs = AtLeast(1000);
 			for (int i = 0; i < numDocs; i++)
 			{
-				idField.SetStringValue(Sharpen.Extensions.ToString(i));
-				titleField.SetStringValue(FieldValue(1));
-				bodyField.SetStringValue(FieldValue(3));
+				idField.StringValue = i.ToString();
+				titleField.StringValue = FieldValue(1);
+				bodyField.StringValue = FieldValue(3);
 				iw.AddDocument(doc);
 				if (Random().Next(20) == 0)
 				{
-					iw.DeleteDocuments(new Term("id", Sharpen.Extensions.ToString(i)));
+					iw.DeleteDocuments(new Term("id", i.ToString()));
 				}
 			}
 			if (Random().NextBoolean())
@@ -89,7 +83,7 @@ namespace Lucene.Net.Codecs.Lucene40
 				iw.DeleteDocuments(new Term("title", terms[Random().Next(terms.Length)]));
 			}
 			iw.Close();
-			dir.Close();
+			dir.Dispose();
 		}
 
 		// checkindex
@@ -122,7 +116,7 @@ namespace Lucene.Net.Codecs.Lucene40
 
 		internal virtual string FieldValue(int maxTF)
 		{
-			AList<string> shuffled = new AList<string>();
+			var shuffled = new List<string>();
 			StringBuilder sb = new StringBuilder();
 			int i = Random().Next(terms.Length);
 			while (i < terms.Length)
@@ -134,7 +128,7 @@ namespace Lucene.Net.Codecs.Lucene40
 				}
 				i++;
 			}
-			Collections.Shuffle(shuffled, Random());
+			shuffled.Shuffle(Random());
 			foreach (string term in shuffled)
 			{
 				sb.Append(term);

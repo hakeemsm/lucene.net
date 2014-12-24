@@ -33,12 +33,12 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter w = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewStringField("id", "0", Field.Store.YES));
 			doc.Add(NewTextField("field", "wizard the the the the the oz", Field.Store.NO));
 			w.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("id", "1", Field.Store.YES));
 			// 1 extra token, but wizard and oz are close;
 			doc.Add(NewTextField("field", "wizard oz the the the the the the", Field.Store.NO
@@ -53,10 +53,10 @@ namespace Lucene.Net.Search
 			IndexSearcher searcher = GetSearcher(r);
 			searcher.SetSimilarity(new DefaultSimilarity());
 			TopDocs hits = searcher.Search(bq, 10);
-			NUnit.Framework.Assert.AreEqual(2, hits.totalHits);
-			NUnit.Framework.Assert.AreEqual("0", searcher.Doc(hits.scoreDocs[0].doc).Get("id"
+			AreEqual(2, hits.TotalHits);
+			AreEqual("0", searcher.Doc(hits.scoreDocs[0].doc).Get("id"
 				));
-			NUnit.Framework.Assert.AreEqual("1", searcher.Doc(hits.scoreDocs[1].doc).Get("id"
+			AreEqual("1", searcher.Doc(hits.scoreDocs[1].doc).Get("id"
 				));
 			// Now, resort using PhraseQuery:
 			PhraseQuery pq = new PhraseQuery();
@@ -65,10 +65,10 @@ namespace Lucene.Net.Search
 			pq.Add(new Term("field", "oz"));
 			TopDocs hits2 = QueryRescorer.Rescore(searcher, hits, pq, 2.0, 10);
 			// Resorting changed the order:
-			NUnit.Framework.Assert.AreEqual(2, hits2.totalHits);
-			NUnit.Framework.Assert.AreEqual("1", searcher.Doc(hits2.scoreDocs[0].doc).Get("id"
+			AreEqual(2, hits2.TotalHits);
+			AreEqual("1", searcher.Doc(hits2.scoreDocs[0].doc).Get("id"
 				));
-			NUnit.Framework.Assert.AreEqual("0", searcher.Doc(hits2.scoreDocs[1].doc).Get("id"
+			AreEqual("0", searcher.Doc(hits2.scoreDocs[1].doc).Get("id"
 				));
 			// Resort using SpanNearQuery:
 			SpanTermQuery t1 = new SpanTermQuery(new Term("field", "wizard"));
@@ -76,10 +76,10 @@ namespace Lucene.Net.Search
 			SpanNearQuery snq = new SpanNearQuery(new SpanQuery[] { t1, t2 }, 0, true);
 			TopDocs hits3 = QueryRescorer.Rescore(searcher, hits, snq, 2.0, 10);
 			// Resorting changed the order:
-			NUnit.Framework.Assert.AreEqual(2, hits3.totalHits);
-			NUnit.Framework.Assert.AreEqual("1", searcher.Doc(hits3.scoreDocs[0].doc).Get("id"
+			AreEqual(2, hits3.TotalHits);
+			AreEqual("1", searcher.Doc(hits3.scoreDocs[0].doc).Get("id"
 				));
-			NUnit.Framework.Assert.AreEqual("0", searcher.Doc(hits3.scoreDocs[1].doc).Get("id"
+			AreEqual("0", searcher.Doc(hits3.scoreDocs[1].doc).Get("id"
 				));
 			r.Close();
 			dir.Close();
@@ -90,12 +90,12 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter w = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewStringField("id", "0", Field.Store.YES));
 			doc.Add(NewTextField("field", "wizard the the the the the oz", Field.Store.NO));
 			w.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("id", "1", Field.Store.YES));
 			// 1 extra token, but wizard and oz are close;
 			doc.Add(NewTextField("field", "wizard oz the the the the the the", Field.Store.NO
@@ -109,10 +109,10 @@ namespace Lucene.Net.Search
 			bq.Add(new TermQuery(new Term("field", "oz")), BooleanClause.Occur.SHOULD);
 			IndexSearcher searcher = GetSearcher(r);
 			TopDocs hits = searcher.Search(bq, 10);
-			NUnit.Framework.Assert.AreEqual(2, hits.totalHits);
-			NUnit.Framework.Assert.AreEqual("0", searcher.Doc(hits.scoreDocs[0].doc).Get("id"
+			AreEqual(2, hits.TotalHits);
+			AreEqual("0", searcher.Doc(hits.scoreDocs[0].doc).Get("id"
 				));
-			NUnit.Framework.Assert.AreEqual("1", searcher.Doc(hits.scoreDocs[1].doc).Get("id"
+			AreEqual("1", searcher.Doc(hits.scoreDocs[1].doc).Get("id"
 				));
 			// Now, resort using PhraseQuery, but with an
 			// opposite-world combine:
@@ -122,10 +122,10 @@ namespace Lucene.Net.Search
 			pq.Add(new Term("field", "oz"));
 			TopDocs hits2 = new _QueryRescorer_146(pq).Rescore(searcher, hits, 10);
 			// Resorting didn't change the order:
-			NUnit.Framework.Assert.AreEqual(2, hits2.totalHits);
-			NUnit.Framework.Assert.AreEqual("0", searcher.Doc(hits2.scoreDocs[0].doc).Get("id"
+			AreEqual(2, hits2.TotalHits);
+			AreEqual("0", searcher.Doc(hits2.scoreDocs[0].doc).Get("id"
 				));
-			NUnit.Framework.Assert.AreEqual("1", searcher.Doc(hits2.scoreDocs[1].doc).Get("id"
+			AreEqual("1", searcher.Doc(hits2.scoreDocs[1].doc).Get("id"
 				));
 			r.Close();
 			dir.Close();
@@ -154,12 +154,12 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter w = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewStringField("id", "0", Field.Store.YES));
 			doc.Add(NewTextField("field", "wizard the the the the the oz", Field.Store.NO));
 			w.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("id", "1", Field.Store.YES));
 			// 1 extra token, but wizard and oz are close;
 			doc.Add(NewTextField("field", "wizard oz the the the the the the", Field.Store.NO
@@ -173,10 +173,10 @@ namespace Lucene.Net.Search
 			bq.Add(new TermQuery(new Term("field", "oz")), BooleanClause.Occur.SHOULD);
 			IndexSearcher searcher = GetSearcher(r);
 			TopDocs hits = searcher.Search(bq, 10);
-			NUnit.Framework.Assert.AreEqual(2, hits.totalHits);
-			NUnit.Framework.Assert.AreEqual("0", searcher.Doc(hits.scoreDocs[0].doc).Get("id"
+			AreEqual(2, hits.TotalHits);
+			AreEqual("0", searcher.Doc(hits.scoreDocs[0].doc).Get("id"
 				));
-			NUnit.Framework.Assert.AreEqual("1", searcher.Doc(hits.scoreDocs[1].doc).Get("id"
+			AreEqual("1", searcher.Doc(hits.scoreDocs[1].doc).Get("id"
 				));
 			// Now, resort using PhraseQuery:
 			PhraseQuery pq = new PhraseQuery();
@@ -185,31 +185,31 @@ namespace Lucene.Net.Search
 			Rescorer rescorer = new _QueryRescorer_198(pq);
 			TopDocs hits2 = rescorer.Rescore(searcher, hits, 10);
 			// Resorting changed the order:
-			NUnit.Framework.Assert.AreEqual(2, hits2.totalHits);
-			NUnit.Framework.Assert.AreEqual("1", searcher.Doc(hits2.scoreDocs[0].doc).Get("id"
+			AreEqual(2, hits2.TotalHits);
+			AreEqual("1", searcher.Doc(hits2.scoreDocs[0].doc).Get("id"
 				));
-			NUnit.Framework.Assert.AreEqual("0", searcher.Doc(hits2.scoreDocs[1].doc).Get("id"
+			AreEqual("0", searcher.Doc(hits2.scoreDocs[1].doc).Get("id"
 				));
 			int docID = hits2.scoreDocs[0].doc;
 			Explanation explain = rescorer.Explain(searcher, searcher.Explain(bq, docID), docID
 				);
 			string s = explain.ToString();
-			NUnit.Framework.Assert.IsTrue(s.Contains("TestQueryRescorer$"));
-			NUnit.Framework.Assert.IsTrue(s.Contains("combined first and second pass score"));
-			NUnit.Framework.Assert.IsTrue(s.Contains("first pass score"));
-			NUnit.Framework.Assert.IsTrue(s.Contains("= second pass score"));
-			NUnit.Framework.Assert.AreEqual(hits2.scoreDocs[0].score, explain.GetValue(), 0.0f
+			IsTrue(s.Contains("TestQueryRescorer$"));
+			IsTrue(s.Contains("combined first and second pass score"));
+			IsTrue(s.Contains("first pass score"));
+			IsTrue(s.Contains("= second pass score"));
+			AreEqual(hits2.scoreDocs[0].score, explain.GetValue(), 0.0f
 				);
 			docID = hits2.scoreDocs[1].doc;
 			explain = rescorer.Explain(searcher, searcher.Explain(bq, docID), docID);
 			s = explain.ToString();
-			NUnit.Framework.Assert.IsTrue(s.Contains("TestQueryRescorer$"));
-			NUnit.Framework.Assert.IsTrue(s.Contains("combined first and second pass score"));
-			NUnit.Framework.Assert.IsTrue(s.Contains("first pass score"));
-			NUnit.Framework.Assert.IsTrue(s.Contains("no second pass score"));
-			NUnit.Framework.Assert.IsFalse(s.Contains("= second pass score"));
-			NUnit.Framework.Assert.IsTrue(s.Contains("NON-MATCH"));
-			NUnit.Framework.Assert.AreEqual(hits2.scoreDocs[1].score, explain.GetValue(), 0.0f
+			IsTrue(s.Contains("TestQueryRescorer$"));
+			IsTrue(s.Contains("combined first and second pass score"));
+			IsTrue(s.Contains("first pass score"));
+			IsTrue(s.Contains("no second pass score"));
+			IsFalse(s.Contains("= second pass score"));
+			IsTrue(s.Contains("NON-MATCH"));
+			AreEqual(hits2.scoreDocs[1].score, explain.GetValue(), 0.0f
 				);
 			r.Close();
 			dir.Close();
@@ -238,12 +238,12 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter w = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewStringField("id", "0", Field.Store.YES));
 			doc.Add(NewTextField("field", "wizard the the the the the oz", Field.Store.NO));
 			w.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("id", "1", Field.Store.YES));
 			// 1 extra token, but wizard and oz are close;
 			doc.Add(NewTextField("field", "wizard oz the the the the the the", Field.Store.NO
@@ -257,10 +257,10 @@ namespace Lucene.Net.Search
 			bq.Add(new TermQuery(new Term("field", "oz")), BooleanClause.Occur.SHOULD);
 			IndexSearcher searcher = GetSearcher(r);
 			TopDocs hits = searcher.Search(bq, 10);
-			NUnit.Framework.Assert.AreEqual(2, hits.totalHits);
-			NUnit.Framework.Assert.AreEqual("0", searcher.Doc(hits.scoreDocs[0].doc).Get("id"
+			AreEqual(2, hits.TotalHits);
+			AreEqual("0", searcher.Doc(hits.scoreDocs[0].doc).Get("id"
 				));
-			NUnit.Framework.Assert.AreEqual("1", searcher.Doc(hits.scoreDocs[1].doc).Get("id"
+			AreEqual("1", searcher.Doc(hits.scoreDocs[1].doc).Get("id"
 				));
 			// Now, resort using PhraseQuery, no slop:
 			PhraseQuery pq = new PhraseQuery();
@@ -268,10 +268,10 @@ namespace Lucene.Net.Search
 			pq.Add(new Term("field", "oz"));
 			TopDocs hits2 = QueryRescorer.Rescore(searcher, hits, pq, 2.0, 10);
 			// Resorting changed the order:
-			NUnit.Framework.Assert.AreEqual(2, hits2.totalHits);
-			NUnit.Framework.Assert.AreEqual("1", searcher.Doc(hits2.scoreDocs[0].doc).Get("id"
+			AreEqual(2, hits2.TotalHits);
+			AreEqual("1", searcher.Doc(hits2.scoreDocs[0].doc).Get("id"
 				));
-			NUnit.Framework.Assert.AreEqual("0", searcher.Doc(hits2.scoreDocs[1].doc).Get("id"
+			AreEqual("0", searcher.Doc(hits2.scoreDocs[1].doc).Get("id"
 				));
 			// Resort using SpanNearQuery:
 			SpanTermQuery t1 = new SpanTermQuery(new Term("field", "wizard"));
@@ -279,10 +279,10 @@ namespace Lucene.Net.Search
 			SpanNearQuery snq = new SpanNearQuery(new SpanQuery[] { t1, t2 }, 0, true);
 			TopDocs hits3 = QueryRescorer.Rescore(searcher, hits, snq, 2.0, 10);
 			// Resorting changed the order:
-			NUnit.Framework.Assert.AreEqual(2, hits3.totalHits);
-			NUnit.Framework.Assert.AreEqual("1", searcher.Doc(hits3.scoreDocs[0].doc).Get("id"
+			AreEqual(2, hits3.TotalHits);
+			AreEqual("1", searcher.Doc(hits3.scoreDocs[0].doc).Get("id"
 				));
-			NUnit.Framework.Assert.AreEqual("0", searcher.Doc(hits3.scoreDocs[1].doc).Get("id"
+			AreEqual("0", searcher.Doc(hits3.scoreDocs[1].doc).Get("id"
 				));
 			r.Close();
 			dir.Close();
@@ -298,7 +298,7 @@ namespace Lucene.Net.Search
 			int maxValue = TestUtil.NextInt(Random(), 10, 1000000);
 			for (int i = 0; i < numDocs; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(NewStringField("id", string.Empty + i, Field.Store.YES));
 				int numTokens = TestUtil.NextInt(Random(), 1, 10);
@@ -339,7 +339,7 @@ namespace Lucene.Net.Search
 					fail = true;
 				}
 			}
-			NUnit.Framework.Assert.IsFalse(fail);
+			IsFalse(fail);
 			r.Close();
 			dir.Close();
 		}
@@ -460,12 +460,12 @@ namespace Lucene.Net.Search
 
 					internal int docID;
 
-					public override int DocID()
+					public override int DocID
 					{
 						return this.docID;
 					}
 
-					public override int Freq()
+					public override int Freq
 					{
 						return 1;
 					}
@@ -478,7 +478,7 @@ namespace Lucene.Net.Search
 					public override int NextDoc()
 					{
 						this.docID++;
-						if (this.docID >= ((AtomicReader)context.Reader()).MaxDoc())
+						if (this.docID >= ((AtomicReader)context.Reader()).MaxDoc)
 						{
 							return DocIdSetIterator.NO_MORE_DOCS;
 						}

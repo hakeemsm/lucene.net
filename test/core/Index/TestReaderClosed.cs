@@ -4,7 +4,7 @@
  * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -28,7 +28,7 @@ namespace Lucene.Net.Index
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir, ((IndexWriterConfig
 				)NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(Random(), MockTokenizer
 				.KEYWORD, false)).SetMaxBufferedDocs(TestUtil.NextInt(Random(), 50, 1000))));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			Field field = NewStringField("field", string.Empty, Field.Store.NO);
 			doc.Add(field);
@@ -37,7 +37,7 @@ namespace Lucene.Net.Index
 			int num = AtLeast(10);
 			for (int i = 0; i < num; i++)
 			{
-				field.SetStringValue(TestUtil.RandomUnicodeString(Random(), 10));
+				field.StringValue = TestUtil.RandomUnicodeString(Random(), 10));
 				writer.AddDocument(doc);
 			}
 			reader = writer.GetReader();
@@ -47,7 +47,7 @@ namespace Lucene.Net.Index
 		/// <exception cref="System.Exception"></exception>
 		public virtual void Test()
 		{
-			NUnit.Framework.Assert.IsTrue(reader.GetRefCount() > 0);
+			IsTrue(reader.GetRefCount() > 0);
 			IndexSearcher searcher = NewSearcher(reader);
 			TermRangeQuery query = TermRangeQuery.NewStringRange("field", "a", "z", true, true
 				);
@@ -67,7 +67,7 @@ namespace Lucene.Net.Index
 		/// <exception cref="System.Exception"></exception>
 		public virtual void TestReaderChaining()
 		{
-			NUnit.Framework.Assert.IsTrue(reader.GetRefCount() > 0);
+			IsTrue(reader.GetRefCount() > 0);
 			IndexReader wrappedReader = SlowCompositeReaderWrapper.Wrap(reader);
 			wrappedReader = new ParallelAtomicReader((AtomicReader)wrappedReader);
 			IndexSearcher searcher = NewSearcher(wrappedReader);
@@ -82,7 +82,7 @@ namespace Lucene.Net.Index
 			}
 			catch (AlreadyClosedException ace)
 			{
-				NUnit.Framework.Assert.AreEqual("this IndexReader cannot be used anymore as one of its child readers was closed"
+				AreEqual("this IndexReader cannot be used anymore as one of its child readers was closed"
 					, ace.Message);
 			}
 			finally

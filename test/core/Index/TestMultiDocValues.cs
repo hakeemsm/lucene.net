@@ -19,7 +19,7 @@ namespace Lucene.Net.Index
 		public virtual void TestNumerics()
 		{
 			Directory dir = NewDirectory();
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			Field field = new NumericDocValuesField("numbers", 0);
 			doc.Add(field);
@@ -46,7 +46,7 @@ namespace Lucene.Net.Index
 			NumericDocValues single = merged.GetNumericDocValues("numbers");
 			for (int i_1 = 0; i_1 < numDocs; i_1++)
 			{
-				NUnit.Framework.Assert.AreEqual(single.Get(i_1), multi.Get(i_1));
+				AreEqual(single.Get(i_1), multi.Get(i_1));
 			}
 			ir.Close();
 			ir2.Close();
@@ -57,7 +57,7 @@ namespace Lucene.Net.Index
 		public virtual void TestBinary()
 		{
 			Directory dir = NewDirectory();
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			BytesRef @ref = new BytesRef();
 			Field field = new BinaryDocValuesField("bytes", @ref);
@@ -89,7 +89,7 @@ namespace Lucene.Net.Index
 			{
 				single.Get(i_1, expected);
 				multi.Get(i_1, actual);
-				NUnit.Framework.Assert.AreEqual(expected, actual);
+				AreEqual(expected, actual);
 			}
 			ir.Close();
 			ir2.Close();
@@ -100,7 +100,7 @@ namespace Lucene.Net.Index
 		public virtual void TestSorted()
 		{
 			Directory dir = NewDirectory();
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			BytesRef @ref = new BytesRef();
 			Field field = new SortedDocValuesField("bytes", @ref);
@@ -115,7 +115,7 @@ namespace Lucene.Net.Index
 				@ref.CopyChars(TestUtil.RandomUnicodeString(Random()));
 				if (DefaultCodecSupportsDocsWithField() && Random().Next(7) == 0)
 				{
-					iw.AddDocument(new Lucene.Net.Document.Document());
+					iw.AddDocument(new Lucene.Net.Documents.Document());
 				}
 				iw.AddDocument(doc);
 				if (Random().Next(17) == 0)
@@ -130,17 +130,17 @@ namespace Lucene.Net.Index
 			iw.Close();
 			SortedDocValues multi = MultiDocValues.GetSortedValues(ir, "bytes");
 			SortedDocValues single = merged.GetSortedDocValues("bytes");
-			NUnit.Framework.Assert.AreEqual(single.GetValueCount(), multi.GetValueCount());
+			AreEqual(single.GetValueCount(), multi.GetValueCount());
 			BytesRef actual = new BytesRef();
 			BytesRef expected = new BytesRef();
 			for (int i_1 = 0; i_1 < numDocs; i_1++)
 			{
 				// check ord
-				NUnit.Framework.Assert.AreEqual(single.GetOrd(i_1), multi.GetOrd(i_1));
+				AreEqual(single.GetOrd(i_1), multi.GetOrd(i_1));
 				// check value
 				single.Get(i_1, expected);
 				multi.Get(i_1, actual);
-				NUnit.Framework.Assert.AreEqual(expected, actual);
+				AreEqual(expected, actual);
 			}
 			ir.Close();
 			ir2.Close();
@@ -152,7 +152,7 @@ namespace Lucene.Net.Index
 		public virtual void TestSortedWithLotsOfDups()
 		{
 			Directory dir = NewDirectory();
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			BytesRef @ref = new BytesRef();
 			Field field = new SortedDocValuesField("bytes", @ref);
@@ -178,17 +178,17 @@ namespace Lucene.Net.Index
 			iw.Close();
 			SortedDocValues multi = MultiDocValues.GetSortedValues(ir, "bytes");
 			SortedDocValues single = merged.GetSortedDocValues("bytes");
-			NUnit.Framework.Assert.AreEqual(single.GetValueCount(), multi.GetValueCount());
+			AreEqual(single.GetValueCount(), multi.GetValueCount());
 			BytesRef actual = new BytesRef();
 			BytesRef expected = new BytesRef();
 			for (int i_1 = 0; i_1 < numDocs; i_1++)
 			{
 				// check ord
-				NUnit.Framework.Assert.AreEqual(single.GetOrd(i_1), multi.GetOrd(i_1));
+				AreEqual(single.GetOrd(i_1), multi.GetOrd(i_1));
 				// check ord value
 				single.Get(i_1, expected);
 				multi.Get(i_1, actual);
-				NUnit.Framework.Assert.AreEqual(expected, actual);
+				AreEqual(expected, actual);
 			}
 			ir.Close();
 			ir2.Close();
@@ -207,7 +207,7 @@ namespace Lucene.Net.Index
 			int numDocs = AtLeast(500);
 			for (int i = 0; i < numDocs; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				int numValues = Random().Next(5);
 				for (int j = 0; j < numValues; j++)
@@ -230,11 +230,11 @@ namespace Lucene.Net.Index
 			SortedSetDocValues single = merged.GetSortedSetDocValues("bytes");
 			if (multi == null)
 			{
-				NUnit.Framework.Assert.IsNull(single);
+				IsNull(single);
 			}
 			else
 			{
-				NUnit.Framework.Assert.AreEqual(single.GetValueCount(), multi.GetValueCount());
+				AreEqual(single.GetValueCount(), multi.GetValueCount());
 				BytesRef actual = new BytesRef();
 				BytesRef expected = new BytesRef();
 				// check values
@@ -242,7 +242,7 @@ namespace Lucene.Net.Index
 				{
 					single.LookupOrd(i_1, expected);
 					multi.LookupOrd(i_1, actual);
-					NUnit.Framework.Assert.AreEqual(expected, actual);
+					AreEqual(expected, actual);
 				}
 				// check ord list
 				for (int i_2 = 0; i_2 < numDocs; i_2++)
@@ -258,10 +258,10 @@ namespace Lucene.Net.Index
 					int upto = 0;
 					while ((ord = multi.NextOrd()) != SortedSetDocValues.NO_MORE_ORDS)
 					{
-						NUnit.Framework.Assert.AreEqual(expectedList[upto], ord);
+						AreEqual(expectedList[upto], ord);
 						upto++;
 					}
-					NUnit.Framework.Assert.AreEqual(expectedList.Count, upto);
+					AreEqual(expectedList.Count, upto);
 				}
 			}
 			ir.Close();
@@ -282,7 +282,7 @@ namespace Lucene.Net.Index
 			int numDocs = AtLeast(500);
 			for (int i = 0; i < numDocs; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				int numValues = Random().Next(5);
 				for (int j = 0; j < numValues; j++)
@@ -305,11 +305,11 @@ namespace Lucene.Net.Index
 			SortedSetDocValues single = merged.GetSortedSetDocValues("bytes");
 			if (multi == null)
 			{
-				NUnit.Framework.Assert.IsNull(single);
+				IsNull(single);
 			}
 			else
 			{
-				NUnit.Framework.Assert.AreEqual(single.GetValueCount(), multi.GetValueCount());
+				AreEqual(single.GetValueCount(), multi.GetValueCount());
 				BytesRef actual = new BytesRef();
 				BytesRef expected = new BytesRef();
 				// check values
@@ -317,7 +317,7 @@ namespace Lucene.Net.Index
 				{
 					single.LookupOrd(i_1, expected);
 					multi.LookupOrd(i_1, actual);
-					NUnit.Framework.Assert.AreEqual(expected, actual);
+					AreEqual(expected, actual);
 				}
 				// check ord list
 				for (int i_2 = 0; i_2 < numDocs; i_2++)
@@ -333,10 +333,10 @@ namespace Lucene.Net.Index
 					int upto = 0;
 					while ((ord = multi.NextOrd()) != SortedSetDocValues.NO_MORE_ORDS)
 					{
-						NUnit.Framework.Assert.AreEqual(expectedList[upto], ord);
+						AreEqual(expectedList[upto], ord);
 						upto++;
 					}
-					NUnit.Framework.Assert.AreEqual(expectedList.Count, upto);
+					AreEqual(expectedList.Count, upto);
 				}
 			}
 			ir.Close();
@@ -357,7 +357,7 @@ namespace Lucene.Net.Index
 			int numDocs = AtLeast(500);
 			for (int i = 0; i < numDocs; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				if (Random().Next(4) >= 0)
 				{
@@ -379,22 +379,22 @@ namespace Lucene.Net.Index
 			Bits single = merged.GetDocsWithField("numbers");
 			if (multi == null)
 			{
-				NUnit.Framework.Assert.IsNull(single);
+				IsNull(single);
 			}
 			else
 			{
-				NUnit.Framework.Assert.AreEqual(single.Length(), multi.Length());
+				AreEqual(single.Length(), multi.Length());
 				for (int i_1 = 0; i_1 < numDocs; i_1++)
 				{
-					NUnit.Framework.Assert.AreEqual(single.Get(i_1), multi.Get(i_1));
+					AreEqual(single.Get(i_1), multi.Get(i_1));
 				}
 			}
 			multi = MultiDocValues.GetDocsWithField(ir, "numbersAlways");
 			single = merged.GetDocsWithField("numbersAlways");
-			NUnit.Framework.Assert.AreEqual(single.Length(), multi.Length());
+			AreEqual(single.Length(), multi.Length());
 			for (int i_2 = 0; i_2 < numDocs; i_2++)
 			{
-				NUnit.Framework.Assert.AreEqual(single.Get(i_2), multi.Get(i_2));
+				AreEqual(single.Get(i_2), multi.Get(i_2));
 			}
 			ir.Close();
 			ir2.Close();

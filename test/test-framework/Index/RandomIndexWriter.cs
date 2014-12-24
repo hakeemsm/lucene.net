@@ -25,16 +25,18 @@ public class RandomIndexWriter : IDisposable {
   private Codec codec; // sugar
 
   // Randomly calls Thread.yield so we mixup thread scheduling
-  private class MockIndexWriter : IndexWriter {
+  private class MockIndexWriter : IndexWriter 
+  {
 
     private Random r;
 
-    public MockIndexWriter(Random r, Directory dir, IndexWriterConfig conf) : base(dir, conf) {
+    public MockIndexWriter(Random r, Directory dir, IndexWriterConfig conf) : base(dir, conf) 
+    {
       // TODO: this should be solved in a different way; Random should not be shared (!).
-      this.r = new Random(r.nextLong());
+      this.r = new Random(r.NextLong());
     }
 
-    override bool testPoint(String name) {
+      protected override bool TestPoint(String name) {
       if (r.nextInt(4) == 2)
         Thread.yield();
       return true;
@@ -43,18 +45,18 @@ public class RandomIndexWriter : IDisposable {
 
   /** create a RandomIndexWriter with a random config: Uses TEST_VERSION_CURRENT and MockAnalyzer */
   public RandomIndexWriter(Random r, Directory dir):
-    this(r, dir, LuceneTestCase.newIndexWriterConfig(r, LuceneTestCase.TEST_VERSION_CURRENT, new MockAnalyzer(r)))
+    this(r, dir, LuceneTestCase.NewIndexWriterConfig(r, LuceneTestCase.TEST_VERSION_CURRENT, new MockAnalyzer(r)))
   {
   }
   
   /** create a RandomIndexWriter with a random config: Uses TEST_VERSION_CURRENT */
   public RandomIndexWriter(Random r, Directory dir, Analyzer a) {
-    this(r, dir, LuceneTestCase.newIndexWriterConfig(r, LuceneTestCase.TEST_VERSION_CURRENT, a));
+    this(r, dir, LuceneTestCase.NewIndexWriterConfig(r, LuceneTestCase.TEST_VERSION_CURRENT, a));
   }
   
   /** create a RandomIndexWriter with a random config */
   public RandomIndexWriter(Random r, Directory dir, Version v, Analyzer a) {
-    this(r, dir, LuceneTestCase.newIndexWriterConfig(r, v, a));
+    this(r, dir, LuceneTestCase.NewIndexWriterConfig(r, v, a));
   }
   
   /** create a RandomIndexWriter with the provided config */
@@ -84,7 +86,7 @@ public class RandomIndexWriter : IDisposable {
 			AddDocument(doc, w.GetAnalyzer());
   }
 
-		public virtual void AddDocument<T>(Iterable<T> doc, Analyzer a) where T:IndexableField
+		public virtual void AddDocument<T>(IEnumerable<T> doc, Analyzer a) where T:IIndexableField
 		{
 			LuceneTestCase.MaybeChangeLiveIndexWriterConfig(r, w.GetConfig());
 			if (r.Next(5) == 3)
@@ -167,8 +169,7 @@ public class RandomIndexWriter : IDisposable {
     }
     }
   
-		public virtual void AddDocuments<_T0>(Iterable<_T0> docs) where _T0:Iterable<IndexableField
-			>
+		public virtual void AddDocuments<_T0>(Iterable<_T0> docs) where _T0:Iterable<IIndexableField>
 		{
 			LuceneTestCase.MaybeChangeLiveIndexWriterConfig(r, w.GetConfig());
     w.AddDocuments(docs);
@@ -357,6 +358,7 @@ public class RandomIndexWriter : IDisposable {
   }
 
 		public virtual DirectoryReader GetReader(bool applyDeletions)
+        {
 			LuceneTestCase.MaybeChangeLiveIndexWriterConfig(r, w.GetConfig());
     getReaderCalled = true;
 			if (r.Next(20) == 2)
@@ -458,11 +460,11 @@ public class RandomIndexWriter : IDisposable {
 
 		/// <summary>
 		/// Simple interface that is executed for each <tt>TP</tt>
-		/// <see cref="Lucene.Net.TestFramework.Util.InfoStream">Lucene.Net.TestFramework.Util.InfoStream</see>
+		/// <see cref="InfoStream">Lucene.Net.TestFramework.Util.InfoStream</see>
 		/// component
 		/// message. See also
-		/// <see cref="RandomIndexWriter.MockIndexWriter(Lucene.Net.TestFramework.Store.Directory, IndexWriterConfig, TestPoint)
-		/// 	">RandomIndexWriter.MockIndexWriter(Lucene.Net.TestFramework.Store.Directory, IndexWriterConfig, TestPoint)
+		/// <see cref="RandomIndexWriter.MockIndexWriter(Directory, IndexWriterConfig, TestPoint)
+		/// 	">RandomIndexWriter.MockIndexWriter(Directory, IndexWriterConfig, TestPoint)
 		/// 	</see>
 		/// </summary>
 		public interface TestPoint

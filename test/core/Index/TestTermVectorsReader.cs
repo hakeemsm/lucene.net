@@ -6,8 +6,8 @@
 
 using System;
 using System.IO;
-using Lucene.Net.Analysis;
-using Lucene.Net.Analysis.Tokenattributes;
+using Lucene.Net.Test.Analysis;
+using Lucene.Net.Test.Analysis.Tokenattributes;
 using Lucene.Net.Codecs;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
@@ -93,34 +93,34 @@ namespace Lucene.Net.Index
 				)NewIndexWriterConfig(TEST_VERSION_CURRENT, new TestTermVectorsReader.MyAnalyzer
 				(this)).SetMaxBufferedDocs(-1)).SetMergePolicy(NewLogMergePolicy(false, 10)).SetUseCompoundFile
 				(false)));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			for (int i_1 = 0; i_1 < testFields.Length; i_1++)
 			{
 				FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
 				if (testFieldsStorePos[i_1] && testFieldsStoreOff[i_1])
 				{
-					customType.SetStoreTermVectors(true);
-					customType.SetStoreTermVectorPositions(true);
-					customType.SetStoreTermVectorOffsets(true);
+					customType.StoreTermVectors = true;
+					customType.StoreTermVectorPositions = true;
+					customType.StoreTermVectorOffsets = true;
 				}
 				else
 				{
 					if (testFieldsStorePos[i_1] && !testFieldsStoreOff[i_1])
 					{
-						customType.SetStoreTermVectors(true);
-						customType.SetStoreTermVectorPositions(true);
+						customType.StoreTermVectors = true;
+						customType.StoreTermVectorPositions = true;
 					}
 					else
 					{
 						if (!testFieldsStorePos[i_1] && testFieldsStoreOff[i_1])
 						{
-							customType.SetStoreTermVectors(true);
-							customType.SetStoreTermVectorOffsets(true);
+							customType.StoreTermVectors = true;
+							customType.StoreTermVectorOffsets = true;
 						}
 						else
 						{
-							customType.SetStoreTermVectors(true);
+							customType.StoreTermVectors = true;
 						}
 					}
 				}
@@ -225,7 +225,7 @@ namespace Lucene.Net.Index
 			foreach (AtomicReaderContext ctx in reader.Leaves())
 			{
 				SegmentReader sr = (SegmentReader)((AtomicReader)ctx.Reader());
-				NUnit.Framework.Assert.IsTrue(sr.GetFieldInfos().HasVectors());
+				IsTrue(sr.GetFieldInfos().HasVectors());
 			}
 			reader.Close();
 		}
@@ -238,18 +238,18 @@ namespace Lucene.Net.Index
 			for (int j = 0; j < 5; j++)
 			{
 				Terms vector = reader.Get(j).Terms(testFields[0]);
-				NUnit.Framework.Assert.IsNotNull(vector);
-				NUnit.Framework.Assert.AreEqual(testTerms.Length, vector.Size());
+				IsNotNull(vector);
+				AreEqual(testTerms.Length, vector.Size());
 				TermsEnum termsEnum = vector.Iterator(null);
 				for (int i = 0; i < testTerms.Length; i++)
 				{
 					BytesRef text = termsEnum.Next();
-					NUnit.Framework.Assert.IsNotNull(text);
+					IsNotNull(text);
 					string term = text.Utf8ToString();
 					//System.out.println("Term: " + term);
-					NUnit.Framework.Assert.AreEqual(testTerms[i], term);
+					AreEqual(testTerms[i], term);
 				}
-				NUnit.Framework.Assert.IsNull(termsEnum.Next());
+				IsNull(termsEnum.Next());
 			}
 			reader.Close();
 		}
@@ -262,27 +262,27 @@ namespace Lucene.Net.Index
 			for (int j = 0; j < 5; j++)
 			{
 				Terms vector = reader.Get(j).Terms(testFields[0]);
-				NUnit.Framework.Assert.IsNotNull(vector);
-				NUnit.Framework.Assert.AreEqual(testTerms.Length, vector.Size());
+				IsNotNull(vector);
+				AreEqual(testTerms.Length, vector.Size());
 				TermsEnum termsEnum = vector.Iterator(null);
 				DocsEnum docsEnum = null;
 				for (int i = 0; i < testTerms.Length; i++)
 				{
 					BytesRef text = termsEnum.Next();
-					NUnit.Framework.Assert.IsNotNull(text);
+					IsNotNull(text);
 					string term = text.Utf8ToString();
 					//System.out.println("Term: " + term);
-					NUnit.Framework.Assert.AreEqual(testTerms[i], term);
+					AreEqual(testTerms[i], term);
 					docsEnum = TestUtil.Docs(Random(), termsEnum, null, docsEnum, DocsEnum.FLAG_NONE);
-					NUnit.Framework.Assert.IsNotNull(docsEnum);
-					int doc = docsEnum.DocID();
-					NUnit.Framework.Assert.AreEqual(-1, doc);
-					NUnit.Framework.Assert.IsTrue(docsEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS
+					IsNotNull(docsEnum);
+					int doc = docsEnum.DocID;
+					AreEqual(-1, doc);
+					IsTrue(docsEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS
 						);
-					NUnit.Framework.Assert.AreEqual(DocIdSetIterator.NO_MORE_DOCS, docsEnum.NextDoc()
+					AreEqual(DocIdSetIterator.NO_MORE_DOCS, docsEnum.NextDoc()
 						);
 				}
-				NUnit.Framework.Assert.IsNull(termsEnum.Next());
+				IsNull(termsEnum.Next());
 			}
 			reader.Close();
 		}
@@ -294,58 +294,58 @@ namespace Lucene.Net.Index
 				, seg.info, fieldInfos, NewIOContext(Random()));
 			BytesRef[] terms;
 			Terms vector = reader.Get(0).Terms(testFields[0]);
-			NUnit.Framework.Assert.IsNotNull(vector);
-			NUnit.Framework.Assert.AreEqual(testTerms.Length, vector.Size());
+			IsNotNull(vector);
+			AreEqual(testTerms.Length, vector.Size());
 			TermsEnum termsEnum = vector.Iterator(null);
 			DocsAndPositionsEnum dpEnum = null;
 			for (int i = 0; i < testTerms.Length; i++)
 			{
 				BytesRef text = termsEnum.Next();
-				NUnit.Framework.Assert.IsNotNull(text);
+				IsNotNull(text);
 				string term = text.Utf8ToString();
 				//System.out.println("Term: " + term);
-				NUnit.Framework.Assert.AreEqual(testTerms[i], term);
+				AreEqual(testTerms[i], term);
 				dpEnum = termsEnum.DocsAndPositions(null, dpEnum);
-				NUnit.Framework.Assert.IsNotNull(dpEnum);
-				int doc = dpEnum.DocID();
-				NUnit.Framework.Assert.AreEqual(-1, doc);
-				NUnit.Framework.Assert.IsTrue(dpEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
-				NUnit.Framework.Assert.AreEqual(dpEnum.Freq(), positions[i].Length);
+				IsNotNull(dpEnum);
+				int doc = dpEnum.DocID;
+				AreEqual(-1, doc);
+				IsTrue(dpEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
+				AreEqual(dpEnum.Freq, positions[i].Length);
 				for (int j = 0; j < positions[i].Length; j++)
 				{
-					NUnit.Framework.Assert.AreEqual(positions[i][j], dpEnum.NextPosition());
+					AreEqual(positions[i][j], dpEnum.NextPosition());
 				}
-				NUnit.Framework.Assert.AreEqual(DocIdSetIterator.NO_MORE_DOCS, dpEnum.NextDoc());
+				AreEqual(DocIdSetIterator.NO_MORE_DOCS, dpEnum.NextDoc());
 				dpEnum = termsEnum.DocsAndPositions(null, dpEnum);
-				doc = dpEnum.DocID();
-				NUnit.Framework.Assert.AreEqual(-1, doc);
-				NUnit.Framework.Assert.IsTrue(dpEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
-				NUnit.Framework.Assert.IsNotNull(dpEnum);
-				NUnit.Framework.Assert.AreEqual(dpEnum.Freq(), positions[i].Length);
+				doc = dpEnum.DocID;
+				AreEqual(-1, doc);
+				IsTrue(dpEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
+				IsNotNull(dpEnum);
+				AreEqual(dpEnum.Freq, positions[i].Length);
 				for (int j_1 = 0; j_1 < positions[i].Length; j_1++)
 				{
-					NUnit.Framework.Assert.AreEqual(positions[i][j_1], dpEnum.NextPosition());
-					NUnit.Framework.Assert.AreEqual(j_1 * 10, dpEnum.StartOffset());
-					NUnit.Framework.Assert.AreEqual(j_1 * 10 + testTerms[i].Length, dpEnum.EndOffset(
+					AreEqual(positions[i][j_1], dpEnum.NextPosition());
+					AreEqual(j_1 * 10, dpEnum.StartOffset());
+					AreEqual(j_1 * 10 + testTerms[i].Length, dpEnum.EndOffset(
 						));
 				}
-				NUnit.Framework.Assert.AreEqual(DocIdSetIterator.NO_MORE_DOCS, dpEnum.NextDoc());
+				AreEqual(DocIdSetIterator.NO_MORE_DOCS, dpEnum.NextDoc());
 			}
 			Terms freqVector = reader.Get(0).Terms(testFields[1]);
 			//no pos, no offset
-			NUnit.Framework.Assert.IsNotNull(freqVector);
-			NUnit.Framework.Assert.AreEqual(testTerms.Length, freqVector.Size());
+			IsNotNull(freqVector);
+			AreEqual(testTerms.Length, freqVector.Size());
 			termsEnum = freqVector.Iterator(null);
-			NUnit.Framework.Assert.IsNotNull(termsEnum);
+			IsNotNull(termsEnum);
 			for (int i_1 = 0; i_1 < testTerms.Length; i_1++)
 			{
 				BytesRef text = termsEnum.Next();
-				NUnit.Framework.Assert.IsNotNull(text);
+				IsNotNull(text);
 				string term = text.Utf8ToString();
 				//System.out.println("Term: " + term);
-				NUnit.Framework.Assert.AreEqual(testTerms[i_1], term);
-				NUnit.Framework.Assert.IsNotNull(termsEnum.Docs(null, null));
-				NUnit.Framework.Assert.IsNull(termsEnum.DocsAndPositions(null, null));
+				AreEqual(testTerms[i_1], term);
+				IsNotNull(termsEnum.Docs(null, null));
+				IsNull(termsEnum.DocsAndPositions(null, null));
 			}
 			// no pos
 			reader.Close();
@@ -357,38 +357,38 @@ namespace Lucene.Net.Index
 			TermVectorsReader reader = Codec.GetDefault().TermVectorsFormat().VectorsReader(dir
 				, seg.info, fieldInfos, NewIOContext(Random()));
 			Terms vector = reader.Get(0).Terms(testFields[0]);
-			NUnit.Framework.Assert.IsNotNull(vector);
+			IsNotNull(vector);
 			TermsEnum termsEnum = vector.Iterator(null);
-			NUnit.Framework.Assert.IsNotNull(termsEnum);
-			NUnit.Framework.Assert.AreEqual(testTerms.Length, vector.Size());
+			IsNotNull(termsEnum);
+			AreEqual(testTerms.Length, vector.Size());
 			DocsAndPositionsEnum dpEnum = null;
 			for (int i = 0; i < testTerms.Length; i++)
 			{
 				BytesRef text = termsEnum.Next();
-				NUnit.Framework.Assert.IsNotNull(text);
+				IsNotNull(text);
 				string term = text.Utf8ToString();
-				NUnit.Framework.Assert.AreEqual(testTerms[i], term);
+				AreEqual(testTerms[i], term);
 				dpEnum = termsEnum.DocsAndPositions(null, dpEnum);
-				NUnit.Framework.Assert.IsNotNull(dpEnum);
-				NUnit.Framework.Assert.IsTrue(dpEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
-				NUnit.Framework.Assert.AreEqual(dpEnum.Freq(), positions[i].Length);
+				IsNotNull(dpEnum);
+				IsTrue(dpEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
+				AreEqual(dpEnum.Freq, positions[i].Length);
 				for (int j = 0; j < positions[i].Length; j++)
 				{
-					NUnit.Framework.Assert.AreEqual(positions[i][j], dpEnum.NextPosition());
+					AreEqual(positions[i][j], dpEnum.NextPosition());
 				}
-				NUnit.Framework.Assert.AreEqual(DocIdSetIterator.NO_MORE_DOCS, dpEnum.NextDoc());
+				AreEqual(DocIdSetIterator.NO_MORE_DOCS, dpEnum.NextDoc());
 				dpEnum = termsEnum.DocsAndPositions(null, dpEnum);
-				NUnit.Framework.Assert.IsTrue(dpEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
-				NUnit.Framework.Assert.IsNotNull(dpEnum);
-				NUnit.Framework.Assert.AreEqual(dpEnum.Freq(), positions[i].Length);
+				IsTrue(dpEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
+				IsNotNull(dpEnum);
+				AreEqual(dpEnum.Freq, positions[i].Length);
 				for (int j_1 = 0; j_1 < positions[i].Length; j_1++)
 				{
-					NUnit.Framework.Assert.AreEqual(positions[i][j_1], dpEnum.NextPosition());
-					NUnit.Framework.Assert.AreEqual(j_1 * 10, dpEnum.StartOffset());
-					NUnit.Framework.Assert.AreEqual(j_1 * 10 + testTerms[i].Length, dpEnum.EndOffset(
+					AreEqual(positions[i][j_1], dpEnum.NextPosition());
+					AreEqual(j_1 * 10, dpEnum.StartOffset());
+					AreEqual(j_1 * 10 + testTerms[i].Length, dpEnum.EndOffset(
 						));
 				}
-				NUnit.Framework.Assert.AreEqual(DocIdSetIterator.NO_MORE_DOCS, dpEnum.NextDoc());
+				AreEqual(DocIdSetIterator.NO_MORE_DOCS, dpEnum.NextDoc());
 			}
 			reader.Close();
 		}
@@ -399,68 +399,68 @@ namespace Lucene.Net.Index
 			Directory dir = NewDirectory();
 			RandomIndexWriter w = new RandomIndexWriter(Random(), dir);
 			FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
-			ft.SetStoreTermVectors(true);
-			ft.SetStoreTermVectorPayloads(true);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			ft.StoreTermVectors = true;
+			ft.StoreTermVectorPayloads = true;
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new Field("field", "value", ft));
 			try
 			{
 				w.AddDocument(doc);
-				NUnit.Framework.Assert.Fail("did not hit exception");
+				Fail("did not hit exception");
 			}
 			catch (ArgumentException iae)
 			{
 				// Expected
-				NUnit.Framework.Assert.AreEqual("cannot index term vector payloads without term vector positions (field=\"field\")"
+				AreEqual("cannot index term vector payloads without term vector positions (field=\"field\")"
 					, iae.Message);
 			}
 			ft = new FieldType(TextField.TYPE_NOT_STORED);
-			ft.SetStoreTermVectors(false);
-			ft.SetStoreTermVectorOffsets(true);
-			doc = new Lucene.Net.Document.Document();
+			ft.StoreTermVectors = false;
+			ft.StoreTermVectorOffsets = true;
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(new Field("field", "value", ft));
 			try
 			{
 				w.AddDocument(doc);
-				NUnit.Framework.Assert.Fail("did not hit exception");
+				Fail("did not hit exception");
 			}
 			catch (ArgumentException iae)
 			{
 				// Expected
-				NUnit.Framework.Assert.AreEqual("cannot index term vector offsets when term vectors are not indexed (field=\"field\")"
+				AreEqual("cannot index term vector offsets when term vectors are not indexed (field=\"field\")"
 					, iae.Message);
 			}
 			ft = new FieldType(TextField.TYPE_NOT_STORED);
-			ft.SetStoreTermVectors(false);
-			ft.SetStoreTermVectorPositions(true);
-			doc = new Lucene.Net.Document.Document();
+			ft.StoreTermVectors = false;
+			ft.StoreTermVectorPositions = true;
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(new Field("field", "value", ft));
 			try
 			{
 				w.AddDocument(doc);
-				NUnit.Framework.Assert.Fail("did not hit exception");
+				Fail("did not hit exception");
 			}
 			catch (ArgumentException iae)
 			{
 				// Expected
-				NUnit.Framework.Assert.AreEqual("cannot index term vector positions when term vectors are not indexed (field=\"field\")"
+				AreEqual("cannot index term vector positions when term vectors are not indexed (field=\"field\")"
 					, iae.Message);
 			}
 			ft = new FieldType(TextField.TYPE_NOT_STORED);
-			ft.SetStoreTermVectors(false);
-			ft.SetStoreTermVectorPayloads(true);
-			doc = new Lucene.Net.Document.Document();
+			ft.StoreTermVectors = false;
+			ft.StoreTermVectorPayloads = true;
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(new Field("field", "value", ft));
 			try
 			{
 				w.AddDocument(doc);
-				NUnit.Framework.Assert.Fail("did not hit exception");
+				Fail("did not hit exception");
 			}
 			catch (ArgumentException iae)
 			{
 				// Expected
-				NUnit.Framework.Assert.AreEqual("cannot index term vector payloads when term vectors are not indexed (field=\"field\")"
+				AreEqual("cannot index term vector payloads when term vectors are not indexed (field=\"field\")"
 					, iae.Message);
 			}
 			w.Close();

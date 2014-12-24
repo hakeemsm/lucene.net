@@ -30,7 +30,7 @@ namespace Lucene.Net.Test.Util.Automaton
 			ICollection<IntsRef> result = SpecialOperations.GetFiniteStrings(a, limit);
 			if (testRecursive)
 			{
-				NUnit.Framework.Assert.AreEqual(AutomatonTestUtil.GetFiniteStringsRecursive(a, limit
+				AreEqual(AutomatonTestUtil.GetFiniteStringsRecursive(a, limit
 					), result);
 			}
 			return result;
@@ -59,14 +59,14 @@ namespace Lucene.Net.Test.Util.Automaton
 			Lucene.Net.Util.Automaton.Automaton a = BasicOperations.Union(BasicAutomata
 				.MakeString(bigString1), BasicAutomata.MakeString(bigString2));
 			ICollection<IntsRef> strings = GetFiniteStrings(a, -1, false);
-			NUnit.Framework.Assert.AreEqual(2, strings.Count);
+			AreEqual(2, strings.Count);
 			IntsRef scratch = new IntsRef();
 			Lucene.Net.Util.Fst.Util.ToUTF32(bigString1.ToCharArray(), 0, bigString1.Length
 				, scratch);
-			NUnit.Framework.Assert.IsTrue(strings.Contains(scratch));
+			IsTrue(strings.Contains(scratch));
 			Lucene.Net.Util.Fst.Util.ToUTF32(bigString2.ToCharArray(), 0, bigString2.Length
 				, scratch);
-			NUnit.Framework.Assert.IsTrue(strings.Contains(scratch));
+			IsTrue(strings.Contains(scratch));
 		}
 		public virtual void TestRandomFiniteStrings1()
 		{
@@ -151,7 +151,7 @@ namespace Lucene.Net.Test.Util.Automaton
 					System.Console.Out.WriteLine("  i=" + i_1 + " string=" + ToString(x[i_1]) + " actual="
 						 + ToString(y[i_1]));
 				}
-				NUnit.Framework.Assert.Fail("wrong strings found");
+				Fail("wrong strings found");
 			}
 		}
 
@@ -174,7 +174,7 @@ namespace Lucene.Net.Test.Util.Automaton
 			{
 				SpecialOperations.GetFiniteStrings(new RegExp("abc.*", RegExp.NONE).ToAutomaton()
 					, -1);
-				NUnit.Framework.Assert.Fail("did not hit exception");
+				Fail("did not hit exception");
 			}
 			catch (ArgumentException)
 			{
@@ -202,7 +202,7 @@ namespace Lucene.Net.Test.Util.Automaton
 					// NOTE: cannot do this, because the method is not
 					// guaranteed to detect cycles when you have a limit
 					//assertTrue(SpecialOperations.isFinite(a));
-					NUnit.Framework.Assert.IsFalse(SpecialOperations.IsFinite(a));
+					IsFalse(SpecialOperations.IsFinite(a));
 				}
 			}
 		}
@@ -214,7 +214,7 @@ namespace Lucene.Net.Test.Util.Automaton
 			try
 			{
 				SpecialOperations.GetFiniteStrings(a, -7);
-				NUnit.Framework.Assert.Fail("did not hit exception");
+				Fail("did not hit exception");
 			}
 			catch (ArgumentException)
 			{
@@ -229,7 +229,7 @@ namespace Lucene.Net.Test.Util.Automaton
 			try
 			{
 				SpecialOperations.GetFiniteStrings(a, 0);
-				NUnit.Framework.Assert.Fail("did not hit exception");
+				Fail("did not hit exception");
 			}
 			catch (ArgumentException)
 			{
@@ -241,20 +241,20 @@ namespace Lucene.Net.Test.Util.Automaton
 		{
 			ICollection<IntsRef> result = SpecialOperations.GetFiniteStrings(BasicAutomata.MakeString
 				("foobar"), -1);
-			NUnit.Framework.Assert.AreEqual(1, result.Count);
+			AreEqual(1, result.Count);
 			IntsRef scratch = new IntsRef();
 			Lucene.Net.Util.Fst.Util.ToUTF32("foobar".ToCharArray(), 0, 6, scratch);
-			NUnit.Framework.Assert.IsTrue(result.Contains(scratch));
+			IsTrue(result.Contains(scratch));
 		}
 
 		public virtual void TestSingletonLimit1()
 		{
 			ICollection<IntsRef> result = SpecialOperations.GetFiniteStrings(BasicAutomata.MakeString
 				("foobar"), 1);
-			NUnit.Framework.Assert.AreEqual(1, result.Count);
+			AreEqual(1, result.Count);
 			IntsRef scratch = new IntsRef();
 			Lucene.Net.Util.Fst.Util.ToUTF32("foobar".ToCharArray(), 0, 6, scratch);
-			NUnit.Framework.Assert.IsTrue(result.Contains(scratch));
+			IsTrue(result.Contains(scratch));
 		}
     }
 }

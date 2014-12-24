@@ -64,16 +64,16 @@ namespace Lucene.Net.Util
 					int key = hash.Add(@ref);
 					if (key < 0)
 					{
-						NUnit.Framework.Assert.AreEqual(hash.Size(), count);
+						AreEqual(hash.Size(), count);
 					}
 					else
 					{
-						NUnit.Framework.Assert.AreEqual(hash.Size(), count + 1);
+						AreEqual(hash.Size(), count + 1);
 					}
 					if (i % mod == 0)
 					{
 						hash.Clear();
-						NUnit.Framework.Assert.AreEqual(0, hash.Size());
+						AreEqual(0, hash.Size());
 						hash.Reinit();
 					}
 				}
@@ -108,24 +108,24 @@ namespace Lucene.Net.Util
 					int key = hash.Add(@ref);
 					if (key >= 0)
 					{
-						NUnit.Framework.Assert.IsNull(strings.Put(str, Sharpen.Extensions.ValueOf(key)));
-						NUnit.Framework.Assert.AreEqual(uniqueCount, key);
+						IsNull(strings.Put(str, Sharpen.Extensions.ValueOf(key)));
+						AreEqual(uniqueCount, key);
 						uniqueCount++;
-						NUnit.Framework.Assert.AreEqual(hash.Size(), count + 1);
+						AreEqual(hash.Size(), count + 1);
 					}
 					else
 					{
-						NUnit.Framework.Assert.IsTrue((-key) - 1 < count);
-						NUnit.Framework.Assert.AreEqual(hash.Size(), count);
+						IsTrue((-key) - 1 < count);
+						AreEqual(hash.Size(), count);
 					}
 				}
 				foreach (KeyValuePair<string, int> entry in strings.EntrySet())
 				{
 					@ref.CopyChars(entry.Key);
-					NUnit.Framework.Assert.AreEqual(@ref, hash.Get(entry.Value, scratch));
+					AreEqual(@ref, hash.Get(entry.Value, scratch));
 				}
 				hash.Clear();
-				NUnit.Framework.Assert.AreEqual(0, hash.Size());
+				AreEqual(0, hash.Size());
 				hash.Reinit();
 			}
 		}
@@ -157,27 +157,27 @@ namespace Lucene.Net.Util
 					int key = hash.Add(@ref);
 					if (key < 0)
 					{
-						NUnit.Framework.Assert.IsTrue(bits.Get((-key) - 1));
+						IsTrue(bits.Get((-key) - 1));
 					}
 					else
 					{
-						NUnit.Framework.Assert.IsFalse(bits.Get(key));
+						IsFalse(bits.Get(key));
 						bits.Set(key);
 						numEntries++;
 					}
 				}
-				NUnit.Framework.Assert.AreEqual(hash.Size(), bits.Cardinality());
-				NUnit.Framework.Assert.AreEqual(numEntries, bits.Cardinality());
-				NUnit.Framework.Assert.AreEqual(numEntries, hash.Size());
+				AreEqual(hash.Size(), bits.Cardinality());
+				AreEqual(numEntries, bits.Cardinality());
+				AreEqual(numEntries, hash.Size());
 				int[] compact = hash.Compact();
-				NUnit.Framework.Assert.IsTrue(numEntries < compact.Length);
+				IsTrue(numEntries < compact.Length);
 				for (int i_1 = 0; i_1 < numEntries; i_1++)
 				{
 					bits.Set(compact[i_1], false);
 				}
-				NUnit.Framework.Assert.AreEqual(0, bits.Cardinality());
+				AreEqual(0, bits.Cardinality());
 				hash.Clear();
-				NUnit.Framework.Assert.AreEqual(0, hash.Size());
+				AreEqual(0, hash.Size());
 				hash.Reinit();
 			}
 		}
@@ -211,16 +211,16 @@ namespace Lucene.Net.Util
 				// We use the UTF-16 comparator here, because we need to be able to
 				// compare to native String.compareTo() [UTF-16]:
 				int[] sort = hash.Sort(BytesRef.GetUTF8SortedAsUTF16Comparator());
-				NUnit.Framework.Assert.IsTrue(strings.Count < sort.Length);
+				IsTrue(strings.Count < sort.Length);
 				int i_1 = 0;
 				BytesRef scratch = new BytesRef();
 				foreach (string @string in strings)
 				{
 					@ref.CopyChars(@string);
-					NUnit.Framework.Assert.AreEqual(@ref, hash.Get(sort[i_1++], scratch));
+					AreEqual(@ref, hash.Get(sort[i_1++], scratch));
 				}
 				hash.Clear();
-				NUnit.Framework.Assert.AreEqual(0, hash.Size());
+				AreEqual(0, hash.Size());
 				hash.Reinit();
 			}
 		}
@@ -253,23 +253,23 @@ namespace Lucene.Net.Util
 					int key = hash.Add(@ref);
 					if (key >= 0)
 					{
-						NUnit.Framework.Assert.IsTrue(strings.AddItem(str));
-						NUnit.Framework.Assert.AreEqual(uniqueCount, key);
-						NUnit.Framework.Assert.AreEqual(hash.Size(), count + 1);
+						IsTrue(strings.AddItem(str));
+						AreEqual(uniqueCount, key);
+						AreEqual(hash.Size(), count + 1);
 						uniqueCount++;
 					}
 					else
 					{
-						NUnit.Framework.Assert.IsFalse(strings.AddItem(str));
-						NUnit.Framework.Assert.IsTrue((-key) - 1 < count);
-						NUnit.Framework.Assert.AreEqual(str, hash.Get((-key) - 1, scratch).Utf8ToString()
+						IsFalse(strings.AddItem(str));
+						IsTrue((-key) - 1 < count);
+						AreEqual(str, hash.Get((-key) - 1, scratch).Utf8ToString()
 							);
-						NUnit.Framework.Assert.AreEqual(count, hash.Size());
+						AreEqual(count, hash.Size());
 					}
 				}
 				AssertAllIn(strings, hash);
 				hash.Clear();
-				NUnit.Framework.Assert.AreEqual(0, hash.Size());
+				AreEqual(0, hash.Size());
 				hash.Reinit();
 			}
 		}
@@ -300,23 +300,23 @@ namespace Lucene.Net.Util
 					if (key >= 0)
 					{
 						// string found in hash
-						NUnit.Framework.Assert.IsFalse(strings.AddItem(str));
-						NUnit.Framework.Assert.IsTrue(key < count);
-						NUnit.Framework.Assert.AreEqual(str, hash.Get(key, scratch).Utf8ToString());
-						NUnit.Framework.Assert.AreEqual(count, hash.Size());
+						IsFalse(strings.AddItem(str));
+						IsTrue(key < count);
+						AreEqual(str, hash.Get(key, scratch).Utf8ToString());
+						AreEqual(count, hash.Size());
 					}
 					else
 					{
 						key = hash.Add(@ref);
-						NUnit.Framework.Assert.IsTrue(strings.AddItem(str));
-						NUnit.Framework.Assert.AreEqual(uniqueCount, key);
-						NUnit.Framework.Assert.AreEqual(hash.Size(), count + 1);
+						IsTrue(strings.AddItem(str));
+						AreEqual(uniqueCount, key);
+						AreEqual(hash.Size(), count + 1);
 						uniqueCount++;
 					}
 				}
 				AssertAllIn(strings, hash);
 				hash.Clear();
-				NUnit.Framework.Assert.AreEqual(0, hash.Size());
+				AreEqual(0, hash.Size());
 				hash.Reinit();
 			}
 		}
@@ -333,13 +333,13 @@ namespace Lucene.Net.Util
 				@ref.length = sizes[i];
 				try
 				{
-					NUnit.Framework.Assert.AreEqual(i, hash.Add(@ref));
+					AreEqual(i, hash.Add(@ref));
 				}
 				catch (BytesRefHash.MaxBytesLengthExceededException e)
 				{
 					if (i < sizes.Length - 1)
 					{
-						NUnit.Framework.Assert.Fail("unexpected exception at size: " + sizes[i]);
+						Fail("unexpected exception at size: " + sizes[i]);
 					}
 					throw;
 				}
@@ -375,26 +375,26 @@ namespace Lucene.Net.Util
 					int key = hash.Add(@ref);
 					if (key >= 0)
 					{
-						NUnit.Framework.Assert.IsTrue(strings.AddItem(str));
-						NUnit.Framework.Assert.AreEqual(uniqueCount, key);
-						NUnit.Framework.Assert.AreEqual(hash.Size(), count + 1);
+						IsTrue(strings.AddItem(str));
+						AreEqual(uniqueCount, key);
+						AreEqual(hash.Size(), count + 1);
 						int offsetKey = offsetHash.AddByPoolOffset(hash.ByteStart(key));
-						NUnit.Framework.Assert.AreEqual(uniqueCount, offsetKey);
-						NUnit.Framework.Assert.AreEqual(offsetHash.Size(), count + 1);
+						AreEqual(uniqueCount, offsetKey);
+						AreEqual(offsetHash.Size(), count + 1);
 						uniqueCount++;
 					}
 					else
 					{
-						NUnit.Framework.Assert.IsFalse(strings.AddItem(str));
-						NUnit.Framework.Assert.IsTrue((-key) - 1 < count);
-						NUnit.Framework.Assert.AreEqual(str, hash.Get((-key) - 1, scratch).Utf8ToString()
+						IsFalse(strings.AddItem(str));
+						IsTrue((-key) - 1 < count);
+						AreEqual(str, hash.Get((-key) - 1, scratch).Utf8ToString()
 							);
-						NUnit.Framework.Assert.AreEqual(count, hash.Size());
+						AreEqual(count, hash.Size());
 						int offsetKey = offsetHash.AddByPoolOffset(hash.ByteStart((-key) - 1));
-						NUnit.Framework.Assert.IsTrue((-offsetKey) - 1 < count);
-						NUnit.Framework.Assert.AreEqual(str, hash.Get((-offsetKey) - 1, scratch).Utf8ToString
+						IsTrue((-offsetKey) - 1 < count);
+						AreEqual(str, hash.Get((-offsetKey) - 1, scratch).Utf8ToString
 							());
-						NUnit.Framework.Assert.AreEqual(count, hash.Size());
+						AreEqual(count, hash.Size());
 					}
 				}
 				AssertAllIn(strings, hash);
@@ -403,12 +403,12 @@ namespace Lucene.Net.Util
 					@ref.CopyChars(@string);
 					int key = hash.Add(@ref);
 					BytesRef bytesRef = offsetHash.Get((-key) - 1, scratch);
-					NUnit.Framework.Assert.AreEqual(@ref, bytesRef);
+					AreEqual(@ref, bytesRef);
 				}
 				hash.Clear();
-				NUnit.Framework.Assert.AreEqual(0, hash.Size());
+				AreEqual(0, hash.Size());
 				offsetHash.Clear();
-				NUnit.Framework.Assert.AreEqual(0, offsetHash.Size());
+				AreEqual(0, offsetHash.Size());
 				hash.Reinit();
 				// init for the next round
 				offsetHash.Reinit();
@@ -425,10 +425,10 @@ namespace Lucene.Net.Util
 				@ref.CopyChars(@string);
 				int key = hash.Add(@ref);
 				// add again to check duplicates
-				NUnit.Framework.Assert.AreEqual(@string, hash.Get((-key) - 1, scratch).Utf8ToString
+				AreEqual(@string, hash.Get((-key) - 1, scratch).Utf8ToString
 					());
-				NUnit.Framework.Assert.AreEqual(count, hash.Size());
-				NUnit.Framework.Assert.IsTrue("key: " + key + " count: " + count + " string: " + 
+				AreEqual(count, hash.Size());
+				IsTrue("key: " + key + " count: " + count + " string: " + 
 					@string, key < count);
 			}
 		}

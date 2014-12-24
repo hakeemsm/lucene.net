@@ -6,7 +6,7 @@
 
 using System;
 using System.Collections.Generic;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Codecs;
 using Lucene.Net.Codecs.Lucene3x;
 using Lucene.Net.Document;
@@ -16,7 +16,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Codecs.Lucene3x
+namespace Lucene.Net.Test.Codecs.Lucene3x
 {
 	public class TestTermInfosReaderIndex : LuceneTestCase
 	{

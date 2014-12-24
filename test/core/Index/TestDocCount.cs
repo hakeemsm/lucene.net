@@ -37,9 +37,9 @@ namespace Lucene.Net.Index
 			dir.Close();
 		}
 
-		private Lucene.Net.Document.Document Doc()
+		private Lucene.Net.Documents.Document Doc()
 		{
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			int numFields = TestUtil.NextInt(Random(), 1, 10);
 			for (int i = 0; i < numFields; i++)
@@ -65,18 +65,18 @@ namespace Lucene.Net.Index
 				{
 					continue;
 				}
-				int docCount = terms.GetDocCount();
-				FixedBitSet visited = new FixedBitSet(ir.MaxDoc());
+				int docCount = terms.DocCount;
+				FixedBitSet visited = new FixedBitSet(ir.MaxDoc);
 				TermsEnum te = terms.Iterator(null);
 				while (te.Next() != null)
 				{
 					DocsEnum de = TestUtil.Docs(Random(), te, null, null, DocsEnum.FLAG_NONE);
 					while (de.NextDoc() != DocIdSetIterator.NO_MORE_DOCS)
 					{
-						visited.Set(de.DocID());
+						visited.Set(de.DocID);
 					}
 				}
-				NUnit.Framework.Assert.AreEqual(visited.Cardinality(), docCount);
+				AreEqual(visited.Cardinality(), docCount);
 			}
 		}
 	}

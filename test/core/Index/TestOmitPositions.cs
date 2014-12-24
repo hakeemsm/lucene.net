@@ -4,7 +4,7 @@
  * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -22,7 +22,7 @@ namespace Lucene.Net.Index
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter w = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
 			ft.SetIndexOptions(FieldInfo.IndexOptions.DOCS_AND_FREQS);
@@ -34,13 +34,13 @@ namespace Lucene.Net.Index
 			}
 			IndexReader reader = w.GetReader();
 			w.Close();
-			NUnit.Framework.Assert.IsNull(MultiFields.GetTermPositionsEnum(reader, null, "foo"
+			IsNull(MultiFields.GetTermPositionsEnum(reader, null, "foo"
 				, new BytesRef("test")));
 			DocsEnum de = TestUtil.Docs(Random(), reader, "foo", new BytesRef("test"), null, 
 				null, DocsEnum.FLAG_FREQS);
 			while (de.NextDoc() != DocIdSetIterator.NO_MORE_DOCS)
 			{
-				NUnit.Framework.Assert.AreEqual(2, de.Freq());
+				AreEqual(2, de.Freq);
 			}
 			reader.Close();
 			dir.Close();
@@ -55,7 +55,7 @@ namespace Lucene.Net.Index
 			Analyzer analyzer = new MockAnalyzer(Random());
 			IndexWriter writer = new IndexWriter(ram, NewIndexWriterConfig(TEST_VERSION_CURRENT
 				, analyzer));
-			Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+			Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 			// f1,f2,f3: docs only
 			FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
 			ft.SetIndexOptions(FieldInfo.IndexOptions.DOCS_ONLY);
@@ -87,7 +87,7 @@ namespace Lucene.Net.Index
 			writer.ForceMerge(1);
 			// now we add another document which has docs-only for f1, f4, f7, docs/freqs for f2, f5, f8, 
 			// and docs/freqs/positions for f3, f6, f9
-			d = new Lucene.Net.Document.Document();
+			d = new Lucene.Net.Documents.Document();
 			// f1,f4,f7: docs only
 			f1 = NewField("f1", "This field has docs only", ft);
 			d.Add(f1);
@@ -117,31 +117,31 @@ namespace Lucene.Net.Index
 			SegmentReader reader = GetOnlySegmentReader(DirectoryReader.Open(ram));
 			FieldInfos fi = reader.GetFieldInfos();
 			// docs + docs = docs
-			NUnit.Framework.Assert.AreEqual(FieldInfo.IndexOptions.DOCS_ONLY, fi.FieldInfo("f1"
+			AreEqual(FieldInfo.IndexOptions.DOCS_ONLY, fi.FieldInfo("f1"
 				).GetIndexOptions());
 			// docs + docs/freqs = docs
-			NUnit.Framework.Assert.AreEqual(FieldInfo.IndexOptions.DOCS_ONLY, fi.FieldInfo("f2"
+			AreEqual(FieldInfo.IndexOptions.DOCS_ONLY, fi.FieldInfo("f2"
 				).GetIndexOptions());
 			// docs + docs/freqs/pos = docs
-			NUnit.Framework.Assert.AreEqual(FieldInfo.IndexOptions.DOCS_ONLY, fi.FieldInfo("f3"
+			AreEqual(FieldInfo.IndexOptions.DOCS_ONLY, fi.FieldInfo("f3"
 				).GetIndexOptions());
 			// docs/freqs + docs = docs
-			NUnit.Framework.Assert.AreEqual(FieldInfo.IndexOptions.DOCS_ONLY, fi.FieldInfo("f4"
+			AreEqual(FieldInfo.IndexOptions.DOCS_ONLY, fi.FieldInfo("f4"
 				).GetIndexOptions());
 			// docs/freqs + docs/freqs = docs/freqs
-			NUnit.Framework.Assert.AreEqual(FieldInfo.IndexOptions.DOCS_AND_FREQS, fi.FieldInfo
+			AreEqual(FieldInfo.IndexOptions.DOCS_AND_FREQS, fi.FieldInfo
 				("f5").GetIndexOptions());
 			// docs/freqs + docs/freqs/pos = docs/freqs
-			NUnit.Framework.Assert.AreEqual(FieldInfo.IndexOptions.DOCS_AND_FREQS, fi.FieldInfo
+			AreEqual(FieldInfo.IndexOptions.DOCS_AND_FREQS, fi.FieldInfo
 				("f6").GetIndexOptions());
 			// docs/freqs/pos + docs = docs
-			NUnit.Framework.Assert.AreEqual(FieldInfo.IndexOptions.DOCS_ONLY, fi.FieldInfo("f7"
+			AreEqual(FieldInfo.IndexOptions.DOCS_ONLY, fi.FieldInfo("f7"
 				).GetIndexOptions());
 			// docs/freqs/pos + docs/freqs = docs/freqs
-			NUnit.Framework.Assert.AreEqual(FieldInfo.IndexOptions.DOCS_AND_FREQS, fi.FieldInfo
+			AreEqual(FieldInfo.IndexOptions.DOCS_AND_FREQS, fi.FieldInfo
 				("f8").GetIndexOptions());
 			// docs/freqs/pos + docs/freqs/pos = docs/freqs/pos
-			NUnit.Framework.Assert.AreEqual(FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS
+			AreEqual(FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS
 				, fi.FieldInfo("f9").GetIndexOptions());
 			reader.Close();
 			ram.Close();
@@ -153,8 +153,8 @@ namespace Lucene.Net.Index
 			string[] files = dir.ListAll();
 			for (int i = 0; i < files.Length; i++)
 			{
-				NUnit.Framework.Assert.IsFalse(files[i].EndsWith(".prx"));
-				NUnit.Framework.Assert.IsFalse(files[i].EndsWith(".pos"));
+				IsFalse(files[i].EndsWith(".prx"));
+				IsFalse(files[i].EndsWith(".pos"));
 			}
 		}
 
@@ -170,7 +170,7 @@ namespace Lucene.Net.Index
 			LogMergePolicy lmp = (LogMergePolicy)writer.GetConfig().GetMergePolicy();
 			lmp.SetMergeFactor(2);
 			lmp.SetNoCFSRatio(0.0);
-			Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+			Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 			FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
 			ft.SetIndexOptions(FieldInfo.IndexOptions.DOCS_AND_FREQS);
 			Field f1 = NewField("f1", "This field has term freqs", ft);
@@ -182,7 +182,7 @@ namespace Lucene.Net.Index
 			writer.Commit();
 			AssertNoPrx(ram);
 			// now add some documents with positions, and check there is no prox after optimization
-			d = new Lucene.Net.Document.Document();
+			d = new Lucene.Net.Documents.Document();
 			f1 = NewTextField("f1", "This field has positions", Field.Store.NO);
 			d.Add(f1);
 			for (int i_1 = 0; i_1 < 30; i_1++)
@@ -208,7 +208,7 @@ namespace Lucene.Net.Index
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir);
 			for (int i = 0; i < 20; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				if (i < 19 && Random().NextBoolean())
 				{
@@ -233,9 +233,9 @@ namespace Lucene.Net.Index
 			}
 			DirectoryReader ir = iw.GetReader();
 			FieldInfos fis = MultiFields.GetMergedFieldInfos(ir);
-			NUnit.Framework.Assert.AreEqual(FieldInfo.IndexOptions.DOCS_AND_FREQS, fis.FieldInfo
+			AreEqual(FieldInfo.IndexOptions.DOCS_AND_FREQS, fis.FieldInfo
 				("foo").GetIndexOptions());
-			NUnit.Framework.Assert.IsFalse(fis.FieldInfo("foo").HasPayloads());
+			IsFalse(fis.FieldInfo("foo").HasPayloads());
 			iw.Close();
 			ir.Close();
 			dir.Close();

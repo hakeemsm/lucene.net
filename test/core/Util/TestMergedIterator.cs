@@ -21,16 +21,16 @@ namespace Lucene.Net.Util
 		public virtual void TestMergeEmpty()
 		{
 			Iterator<int> merged = new MergedIterator<int>();
-			NUnit.Framework.Assert.IsFalse(merged.HasNext());
+			IsFalse(merged.HasNext());
 			merged = new MergedIterator<int>(new AList<int>().Iterator());
-			NUnit.Framework.Assert.IsFalse(merged.HasNext());
+			IsFalse(merged.HasNext());
 			Iterator<int>[] itrs = new Iterator[Random().Next(100)];
 			for (int i = 0; i < itrs.Length; i++)
 			{
 				itrs[i] = new AList<int>().Iterator();
 			}
 			merged = new MergedIterator<int>(itrs);
-			NUnit.Framework.Assert.IsFalse(merged.HasNext());
+			IsFalse(merged.HasNext());
 		}
 
 		public virtual void TestNoDupsRemoveDups()
@@ -141,10 +141,10 @@ namespace Lucene.Net.Util
 			Iterator<int> expectedItr = expected.Iterator();
 			while (expectedItr.HasNext())
 			{
-				NUnit.Framework.Assert.IsTrue(mergedItr.HasNext());
-				NUnit.Framework.Assert.AreEqual(expectedItr.Next(), mergedItr.Next());
+				IsTrue(mergedItr.HasNext());
+				AreEqual(expectedItr.Next(), mergedItr.Next());
 			}
-			NUnit.Framework.Assert.IsFalse(mergedItr.HasNext());
+			IsFalse(mergedItr.HasNext());
 		}
 	}
 }

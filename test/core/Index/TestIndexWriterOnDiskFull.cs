@@ -6,7 +6,7 @@
 
 using System;
 using System.IO;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Codecs;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
@@ -180,10 +180,10 @@ namespace Lucene.Net.Index
 			// Make sure starting index seems to be working properly:
 			Term searchTerm = new Term("content", "aaa");
 			IndexReader reader = DirectoryReader.Open(startDir);
-			NUnit.Framework.Assert.AreEqual("first docFreq", 57, reader.DocFreq(searchTerm));
+			AreEqual("first docFreq", 57, reader.DocFreq(searchTerm));
 			IndexSearcher searcher = NewSearcher(reader);
 			ScoreDoc[] hits = searcher.Search(new TermQuery(searchTerm), null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual("first number of hits", 57, hits.Length);
+			AreEqual("first number of hits", 57, hits.Length);
 			reader.Close();
 			// Iterate with larger and larger amounts of free
 			// disk space.  With little free disk space,
@@ -368,7 +368,7 @@ namespace Lucene.Net.Index
 							if (1 == x)
 							{
 								Sharpen.Runtime.PrintStackTrace(e, System.Console.Out);
-								NUnit.Framework.Assert.Fail(methodName + " hit IOException after disk space was freed up"
+								Fail(methodName + " hit IOException after disk space was freed up"
 									);
 							}
 						}
@@ -391,7 +391,7 @@ namespace Lucene.Net.Index
 						catch (IOException e)
 						{
 							Sharpen.Runtime.PrintStackTrace(e, System.Console.Out);
-							NUnit.Framework.Assert.Fail(testName + ": exception when creating IndexReader: " 
+							Fail(testName + ": exception when creating IndexReader: " 
 								+ e);
 						}
 						int result = reader.DocFreq(searchTerm);
@@ -399,7 +399,7 @@ namespace Lucene.Net.Index
 						{
 							if (result != START_COUNT)
 							{
-								NUnit.Framework.Assert.Fail(testName + ": method did not throw exception but docFreq('aaa') is "
+								Fail(testName + ": method did not throw exception but docFreq('aaa') is "
 									 + result + " instead of expected " + START_COUNT);
 							}
 						}
@@ -410,7 +410,7 @@ namespace Lucene.Net.Index
 							if (result != START_COUNT && result != END_COUNT)
 							{
 								Sharpen.Runtime.PrintStackTrace(err, System.Console.Out);
-								NUnit.Framework.Assert.Fail(testName + ": method did throw exception but docFreq('aaa') is "
+								Fail(testName + ": method did throw exception but docFreq('aaa') is "
 									 + result + " instead of expected " + START_COUNT + " or " + END_COUNT);
 							}
 						}
@@ -422,14 +422,14 @@ namespace Lucene.Net.Index
 						catch (IOException e)
 						{
 							Sharpen.Runtime.PrintStackTrace(e, System.Console.Out);
-							NUnit.Framework.Assert.Fail(testName + ": exception when searching: " + e);
+							Fail(testName + ": exception when searching: " + e);
 						}
 						int result2 = hits.Length;
 						if (success)
 						{
 							if (result2 != result)
 							{
-								NUnit.Framework.Assert.Fail(testName + ": method did not throw exception but hits.length for search on term 'aaa' is "
+								Fail(testName + ": method did not throw exception but hits.length for search on term 'aaa' is "
 									 + result2 + " instead of expected " + result);
 							}
 						}
@@ -440,7 +440,7 @@ namespace Lucene.Net.Index
 							if (result2 != result)
 							{
 								Sharpen.Runtime.PrintStackTrace(err, System.Console.Out);
-								NUnit.Framework.Assert.Fail(testName + ": method did throw exception but hits.length for search on term 'aaa' is "
+								Fail(testName + ": method did throw exception but hits.length for search on term 'aaa' is "
 									 + result2 + " instead of expected " + result);
 							}
 						}
@@ -464,7 +464,7 @@ namespace Lucene.Net.Index
 						// Javadocs state that temp free Directory space
 						// required is at most 2X total input size of
 						// indices so let's make sure:
-						NUnit.Framework.Assert.IsTrue("max free Directory space required exceeded 1X the total input index sizes during "
+						IsTrue("max free Directory space required exceeded 1X the total input index sizes during "
 							 + methodName + ": max temp usage = " + (dir.GetMaxUsedSizeInBytes() - startDiskUsage
 							) + " bytes vs limit=" + (2 * (startDiskUsage + inputDiskUsage)) + "; starting disk usage = "
 							 + startDiskUsage + " bytes; " + "input index disk usage = " + inputDiskUsage + 
@@ -536,7 +536,7 @@ namespace Lucene.Net.Index
 				(true).SetMergePolicy(NewLogMergePolicy(2)));
 			// we can do this because we add/delete/add (and dont merge to "nothing")
 			w.SetKeepFullyDeletedSegments(true);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewTextField("f", "doctor who", Field.Store.NO));
 			w.AddDocument(doc);
@@ -551,12 +551,12 @@ namespace Lucene.Net.Index
 			try
 			{
 				w.Commit();
-				NUnit.Framework.Assert.Fail("fake disk full IOExceptions not hit");
+				Fail("fake disk full IOExceptions not hit");
 			}
 			catch (IOException)
 			{
 				// expected
-				NUnit.Framework.Assert.IsTrue(ftdm.didFail1 || ftdm.didFail2);
+				IsTrue(ftdm.didFail1 || ftdm.didFail2);
 			}
 			TestUtil.CheckIndex(dir);
 			ftdm.ClearDoFail();
@@ -576,14 +576,14 @@ namespace Lucene.Net.Index
 				(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMaxBufferedDocs(2)).SetMergeScheduler
 				(new ConcurrentMergeScheduler()));
 			dir.SetMaxSizeInBytes(Math.Max(1, dir.GetRecomputedActualSizeInBytes()));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			FieldType customType = new FieldType(TextField.TYPE_STORED);
 			doc.Add(NewField("field", "aaa bbb ccc ddd eee fff ggg hhh iii jjj", customType));
 			try
 			{
 				writer.AddDocument(doc);
-				NUnit.Framework.Assert.Fail("did not hit disk full");
+				Fail("did not hit disk full");
 			}
 			catch (IOException)
 			{
@@ -592,7 +592,7 @@ namespace Lucene.Net.Index
 			try
 			{
 				writer.AddDocument(doc);
-				NUnit.Framework.Assert.Fail("did not hit disk full");
+				Fail("did not hit disk full");
 			}
 			catch (IOException)
 			{
@@ -600,7 +600,7 @@ namespace Lucene.Net.Index
 			try
 			{
 				writer.Close(false);
-				NUnit.Framework.Assert.Fail("did not hit disk full");
+				Fail("did not hit disk full");
 			}
 			catch (IOException)
 			{
@@ -617,7 +617,7 @@ namespace Lucene.Net.Index
 		/// <exception cref="System.IO.IOException"></exception>
 		private void AddDoc(IndexWriter writer)
 		{
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewTextField("content", "aaa", Field.Store.NO));
 			if (DefaultCodecSupportsDocValues())
@@ -630,7 +630,7 @@ namespace Lucene.Net.Index
 		/// <exception cref="System.IO.IOException"></exception>
 		private void AddDocWithIndex(IndexWriter writer, int index)
 		{
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewTextField("content", "aaa " + index, Field.Store.NO));
 			doc.Add(NewTextField("id", string.Empty + index, Field.Store.NO));

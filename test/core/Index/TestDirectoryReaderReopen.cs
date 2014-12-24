@@ -7,7 +7,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -120,7 +120,7 @@ namespace Lucene.Net.Index
 				{
 					for (int j = 0; j < M; j++)
 					{
-						Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+						Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 							();
 						doc.Add(NewField("id", i + "_" + j, customType));
 						doc.Add(NewField("id2", i + "_" + j, customType2));
@@ -130,10 +130,10 @@ namespace Lucene.Net.Index
 						{
 							int k = i - 1;
 							int n = j + k * M;
-							Lucene.Net.Document.Document prevItereationDoc = reader.Document(n);
-							NUnit.Framework.Assert.IsNotNull(prevItereationDoc);
+							Lucene.Net.Documents.Document prevItereationDoc = reader.Document(n);
+							IsNotNull(prevItereationDoc);
 							string id = prevItereationDoc.Get("id");
-							NUnit.Framework.Assert.AreEqual(k + "_" + j, id);
+							AreEqual(k + "_" + j, id);
 						}
 					}
 					iwriter.Commit();
@@ -171,7 +171,7 @@ namespace Lucene.Net.Index
 			// verify that reopen() does not return a new reader instance
 			// in case the index has no changes
 			TestDirectoryReaderReopen.ReaderCouple couple = RefreshReader(index2, false);
-			NUnit.Framework.Assert.IsTrue(couple.refreshedReader == index2);
+			IsTrue(couple.refreshedReader == index2);
 			couple = RefreshReader(index2, test, 0, true);
 			index1.Close();
 			index1 = couple.newReader;
@@ -270,7 +270,7 @@ namespace Lucene.Net.Index
 					{
 						string msg = "Error occurred in thread " + threads[i_3].GetName() + ":\n" + threads
 							[i_3].error.Message;
-						NUnit.Framework.Assert.Fail(msg);
+						Fail(msg);
 					}
 				}
 			}
@@ -355,7 +355,7 @@ namespace Lucene.Net.Index
 						}
 						IndexSearcher searcher = LuceneTestCase.NewSearcher(refreshed);
 						ScoreDoc[] hits = searcher.Search(new TermQuery(new Term("field1", "a" + rnd.Next
-							(refreshed.MaxDoc()))), null, 1000).scoreDocs;
+							(refreshed.MaxDoc))), null, 1000).scoreDocs;
 						if (hits.Length > 0)
 						{
 							searcher.Doc(hits[0].doc);
@@ -513,7 +513,7 @@ namespace Lucene.Net.Index
 				{
 					if (refreshed == reader)
 					{
-						NUnit.Framework.Assert.Fail("No new DirectoryReader instance created during refresh."
+						Fail("No new DirectoryReader instance created during refresh."
 							);
 					}
 				}
@@ -521,7 +521,7 @@ namespace Lucene.Net.Index
 				{
 					if (refreshed != reader)
 					{
-						NUnit.Framework.Assert.Fail("New DirectoryReader instance created during refresh even though index had no changes."
+						Fail("New DirectoryReader instance created during refresh even though index had no changes."
 							);
 					}
 				}
@@ -552,20 +552,20 @@ namespace Lucene.Net.Index
 			DirectoryReader r = DirectoryReader.Open(dir);
 			if (multiSegment)
 			{
-				NUnit.Framework.Assert.IsTrue(r.Leaves().Count > 1);
+				IsTrue(r.Leaves().Count > 1);
 			}
 			else
 			{
-				NUnit.Framework.Assert.IsTrue(r.Leaves().Count == 1);
+				IsTrue(r.Leaves().Count == 1);
 			}
 			r.Close();
 		}
 
-		public static Lucene.Net.Document.Document CreateDocument(int n, int numFields
+		public static Lucene.Net.Documents.Document CreateDocument(int n, int numFields
 			)
 		{
 			StringBuilder sb = new StringBuilder();
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			sb.Append("a");
 			sb.Append(n);
@@ -639,7 +639,7 @@ namespace Lucene.Net.Index
 
 		internal static void AssertReaderClosed(IndexReader reader, bool checkSubReaders)
 		{
-			NUnit.Framework.Assert.AreEqual(0, reader.GetRefCount());
+			AreEqual(0, reader.GetRefCount());
 			if (checkSubReaders && reader is CompositeReader)
 			{
 				// we cannot use reader context here, as reader is
@@ -682,7 +682,7 @@ namespace Lucene.Net.Index
 				()).SetMaxBufferedDocs(-1)).SetMergePolicy(NewLogMergePolicy(10)));
 			for (int i = 0; i < 4; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(NewStringField("id", string.Empty + i, Field.Store.NO));
 				writer.AddDocument(doc);
@@ -701,13 +701,13 @@ namespace Lucene.Net.Index
 			}
 			writer.Close();
 			DirectoryReader r = DirectoryReader.Open(dir);
-			NUnit.Framework.Assert.AreEqual(0, r.NumDocs());
+			AreEqual(0, r.NumDocs());
 			ICollection<IndexCommit> commits = DirectoryReader.ListCommits(dir);
 			foreach (IndexCommit commit in commits)
 			{
 				DirectoryReader r2 = DirectoryReader.OpenIfChanged(r, commit);
-				NUnit.Framework.Assert.IsNotNull(r2);
-				NUnit.Framework.Assert.IsTrue(r2 != r);
+				IsNotNull(r2);
+				IsTrue(r2 != r);
 				IDictionary<string, string> s = commit.GetUserData();
 				int v;
 				if (s.Count == 0)
@@ -721,11 +721,11 @@ namespace Lucene.Net.Index
 				}
 				if (v < 4)
 				{
-					NUnit.Framework.Assert.AreEqual(1 + v, r2.NumDocs());
+					AreEqual(1 + v, r2.NumDocs());
 				}
 				else
 				{
-					NUnit.Framework.Assert.AreEqual(7 - v, r2.NumDocs());
+					AreEqual(7 - v, r2.NumDocs());
 				}
 				r.Close();
 				r = r2;
@@ -741,20 +741,20 @@ namespace Lucene.Net.Index
 			// Can't use RIW because it randomly commits:
 			IndexWriter w = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new 
 				MockAnalyzer(Random())));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewStringField("field", "value", Field.Store.NO));
 			w.AddDocument(doc);
 			w.Commit();
 			IList<IndexCommit> commits = DirectoryReader.ListCommits(dir);
-			NUnit.Framework.Assert.AreEqual(1, commits.Count);
+			AreEqual(1, commits.Count);
 			w.AddDocument(doc);
 			DirectoryReader r = DirectoryReader.Open(w, true);
-			NUnit.Framework.Assert.AreEqual(2, r.NumDocs());
+			AreEqual(2, r.NumDocs());
 			IndexReader r2 = DirectoryReader.OpenIfChanged(r, commits[0]);
-			NUnit.Framework.Assert.IsNotNull(r2);
+			IsNotNull(r2);
 			r.Close();
-			NUnit.Framework.Assert.AreEqual(1, r2.NumDocs());
+			AreEqual(1, r2.NumDocs());
 			w.Close();
 			r2.Close();
 			dir.Close();

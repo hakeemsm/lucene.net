@@ -7,7 +7,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
@@ -40,7 +40,7 @@ namespace Lucene.Net.Index
 		protected internal virtual void CheckSnapshotExists(Directory dir, IndexCommit c)
 		{
 			string segFileName = c.GetSegmentsFileName();
-			NUnit.Framework.Assert.IsTrue("segments file not found in directory: " + segFileName
+			IsTrue("segments file not found in directory: " + segFileName
 				, SlowFileExists(dir, segFileName));
 		}
 
@@ -51,7 +51,7 @@ namespace Lucene.Net.Index
 			IndexReader reader = DirectoryReader.Open(commit);
 			try
 			{
-				NUnit.Framework.Assert.AreEqual(expectedMaxDoc, reader.MaxDoc());
+				AreEqual(expectedMaxDoc, reader.MaxDoc);
 			}
 			finally
 			{
@@ -69,7 +69,7 @@ namespace Lucene.Net.Index
 			for (int i = 0; i < numSnapshots; i++)
 			{
 				// create dummy document to trigger commit.
-				writer.AddDocument(new Lucene.Net.Document.Document());
+				writer.AddDocument(new Lucene.Net.Documents.Document());
 				writer.Commit();
 				snapshots.AddItem(sdp.Snapshot());
 			}
@@ -92,12 +92,12 @@ namespace Lucene.Net.Index
 				CheckSnapshotExists(dir, snapshot);
 				if (checkIndexCommitSame)
 				{
-					NUnit.Framework.Assert.AreSame(snapshot, sdp.GetIndexCommit(snapshot.GetGeneration
+					AreSame(snapshot, sdp.GetIndexCommit(snapshot.GetGeneration
 						()));
 				}
 				else
 				{
-					NUnit.Framework.Assert.AreEqual(snapshot.GetGeneration(), sdp.GetIndexCommit(snapshot
+					AreEqual(snapshot.GetGeneration(), sdp.GetIndexCommit(snapshot
 						.GetGeneration()).GetGeneration());
 				}
 			}
@@ -125,7 +125,7 @@ namespace Lucene.Net.Index
 			try
 			{
 				dp.Snapshot();
-				NUnit.Framework.Assert.Fail("did not hit exception");
+				Fail("did not hit exception");
 			}
 			catch (InvalidOperationException)
 			{
@@ -147,12 +147,12 @@ namespace Lucene.Net.Index
 			// Add one more document to force writer to commit a
 			// final segment, so deletion policy has a chance to
 			// delete again:
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			FieldType customType = new FieldType(TextField.TYPE_STORED);
-			customType.SetStoreTermVectors(true);
-			customType.SetStoreTermVectorPositions(true);
-			customType.SetStoreTermVectorOffsets(true);
+			customType.StoreTermVectors = true;
+			customType.StoreTermVectorPositions = true;
+			customType.StoreTermVectorOffsets = true;
 			doc.Add(NewField("content", "aaa", customType));
 			writer.AddDocument(doc);
 			// Make sure we don't have any leftover files in the
@@ -172,12 +172,12 @@ namespace Lucene.Net.Index
 
 			public override void Run()
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				FieldType customType = new FieldType(TextField.TYPE_STORED);
-				customType.SetStoreTermVectors(true);
-				customType.SetStoreTermVectorPositions(true);
-				customType.SetStoreTermVectorOffsets(true);
+				customType.StoreTermVectors = true;
+				customType.StoreTermVectorPositions = true;
+				customType.StoreTermVectorOffsets = true;
 				doc.Add(LuceneTestCase.NewField("content", "aaa", customType));
 				do
 				{
@@ -190,7 +190,7 @@ namespace Lucene.Net.Index
 						catch (Exception t)
 						{
 							Sharpen.Runtime.PrintStackTrace(t, System.Console.Out);
-							NUnit.Framework.Assert.Fail("addDocument failed");
+							Fail("addDocument failed");
 						}
 						if (i % 2 == 0)
 						{
@@ -315,8 +315,8 @@ namespace Lucene.Net.Index
 				();
 			PrepareIndexAndSnapshots(sdp, writer, numSnapshots);
 			writer.Close();
-			NUnit.Framework.Assert.AreEqual(numSnapshots, sdp.GetSnapshots().Count);
-			NUnit.Framework.Assert.AreEqual(numSnapshots, sdp.GetSnapshotCount());
+			AreEqual(numSnapshots, sdp.GetSnapshots().Count);
+			AreEqual(numSnapshots, sdp.GetSnapshotCount());
 			AssertSnapshotExists(dir, sdp, numSnapshots, true);
 			// open a reader on a snapshot - should succeed.
 			DirectoryReader.Open(snapshots[0]).Close();
@@ -327,7 +327,7 @@ namespace Lucene.Net.Index
 			writer = new IndexWriter(dir, GetConfig(Random(), sdp));
 			writer.DeleteUnusedFiles();
 			writer.Close();
-			NUnit.Framework.Assert.AreEqual("no snapshots should exist", 1, DirectoryReader.ListCommits
+			AreEqual("no snapshots should exist", 1, DirectoryReader.ListCommits
 				(dir).Count);
 			dir.Close();
 		}
@@ -358,14 +358,14 @@ namespace Lucene.Net.Index
 				t_1.Join();
 			}
 			// Do one last commit, so that after we release all snapshots, we stay w/ one commit
-			writer.AddDocument(new Lucene.Net.Document.Document());
+			writer.AddDocument(new Lucene.Net.Documents.Document());
 			writer.Commit();
 			for (int i_1 = 0; i_1 < threads.Length; i_1++)
 			{
 				sdp.Release(snapshots[i_1]);
 				writer.DeleteUnusedFiles();
 			}
-			NUnit.Framework.Assert.AreEqual(1, DirectoryReader.ListCommits(dir).Count);
+			AreEqual(1, DirectoryReader.ListCommits(dir).Count);
 			writer.Close();
 			dir.Close();
 		}
@@ -385,7 +385,7 @@ namespace Lucene.Net.Index
 			{
 				try
 				{
-					writer.AddDocument(new Lucene.Net.Document.Document());
+					writer.AddDocument(new Lucene.Net.Documents.Document());
 					writer.Commit();
 					snapshots[finalI] = sdp.Snapshot();
 				}
@@ -424,7 +424,7 @@ namespace Lucene.Net.Index
 			writer.Close();
 			// but 'snapshot1' files will still exist (need to release snapshot before they can be deleted).
 			string segFileName = snapshots[1].GetSegmentsFileName();
-			NUnit.Framework.Assert.IsTrue("snapshot files should exist in the directory: " + 
+			IsTrue("snapshot files should exist in the directory: " + 
 				segFileName, SlowFileExists(dir, segFileName));
 			dir.Close();
 		}
@@ -441,14 +441,14 @@ namespace Lucene.Net.Index
 			PrepareIndexAndSnapshots(sdp, writer, 1);
 			// Create another commit - we must do that, because otherwise the "snapshot"
 			// files will still remain in the index, since it's the last commit.
-			writer.AddDocument(new Lucene.Net.Document.Document());
+			writer.AddDocument(new Lucene.Net.Documents.Document());
 			writer.Commit();
 			// Release
 			string segFileName = snapshots[0].GetSegmentsFileName();
 			sdp.Release(snapshots[0]);
 			writer.DeleteUnusedFiles();
 			writer.Close();
-			NUnit.Framework.Assert.IsFalse("segments file should not be found in dirctory: " 
+			IsFalse("segments file should not be found in dirctory: " 
 				+ segFileName, SlowFileExists(dir, segFileName));
 			dir.Close();
 		}
@@ -462,14 +462,14 @@ namespace Lucene.Net.Index
 				));
 			SnapshotDeletionPolicy sdp = (SnapshotDeletionPolicy)writer.GetConfig().GetIndexDeletionPolicy
 				();
-			writer.AddDocument(new Lucene.Net.Document.Document());
+			writer.AddDocument(new Lucene.Net.Documents.Document());
 			writer.Commit();
 			IndexCommit s1 = sdp.Snapshot();
 			IndexCommit s2 = sdp.Snapshot();
-			NUnit.Framework.Assert.AreSame(s1, s2);
+			AreSame(s1, s2);
 			// should be the same instance
 			// create another commit
-			writer.AddDocument(new Lucene.Net.Document.Document());
+			writer.AddDocument(new Lucene.Net.Documents.Document());
 			writer.Commit();
 			// release "s1" should not delete "s2"
 			sdp.Release(s1);
@@ -490,16 +490,16 @@ namespace Lucene.Net.Index
 				));
 			SnapshotDeletionPolicy sdp = (SnapshotDeletionPolicy)writer.GetConfig().GetIndexDeletionPolicy
 				();
-			writer.AddDocument(new Lucene.Net.Document.Document());
+			writer.AddDocument(new Lucene.Net.Documents.Document());
 			writer.Commit();
 			IndexCommit s1 = sdp.Snapshot();
 			// create another commit, not snapshotted.
-			writer.AddDocument(new Lucene.Net.Document.Document());
+			writer.AddDocument(new Lucene.Net.Documents.Document());
 			writer.Close();
 			// open a new writer w/ KeepOnlyLastCommit policy, so it will delete "s1"
 			// commit.
 			new IndexWriter(dir, GetConfig(Random(), null)).Close();
-			NUnit.Framework.Assert.IsFalse("snapshotted commit should not exist", SlowFileExists
+			IsFalse("snapshotted commit should not exist", SlowFileExists
 				(dir, s1.GetSegmentsFileName()));
 			dir.Close();
 		}

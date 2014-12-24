@@ -18,7 +18,7 @@ namespace Lucene.Net.Store
 			c.Update(1);
 			c.Update(2);
 			c.Update(3);
-			NUnit.Framework.Assert.AreEqual(1438416925L, c.GetValue());
+			AreEqual(1438416925L, c.GetValue());
 		}
 
 		public virtual void TestRandom()
@@ -61,12 +61,12 @@ namespace Lucene.Net.Store
 					case 3:
 					{
 						// getValue()
-						NUnit.Framework.Assert.AreEqual(c1.GetValue(), c2.GetValue());
+						AreEqual(c1.GetValue(), c2.GetValue());
 						break;
 					}
 				}
 			}
-			NUnit.Framework.Assert.AreEqual(c1.GetValue(), c2.GetValue());
+			AreEqual(c1.GetValue(), c2.GetValue());
 		}
 	}
 }

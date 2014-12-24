@@ -7,8 +7,8 @@
 using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
-using Lucene.Net.Analysis;
-using Lucene.Net.Analysis.Tokenattributes;
+using Lucene.Net.Test.Analysis;
+using Lucene.Net.Test.Analysis.Tokenattributes;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -90,7 +90,7 @@ namespace Lucene.Net.Search.Spans
 			//writer.infoStream = System.out;
 			for (int i = 0; i < 2000; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(NewTextField("field", English.IntToEnglish(i), Field.Store.YES));
 				writer.AddDocument(doc);
@@ -209,8 +209,8 @@ namespace Lucene.Net.Search.Spans
 				);
 			CheckHits(query, new int[] { 77, 177, 277, 377, 477, 577, 677, 777, 877, 977, 1077
 				, 1177, 1277, 1377, 1477, 1577, 1677, 1777, 1877, 1977 });
-			NUnit.Framework.Assert.IsTrue(searcher.Explain(query, 77).GetValue() > 0.0f);
-			NUnit.Framework.Assert.IsTrue(searcher.Explain(query, 977).GetValue() > 0.0f);
+			IsTrue(searcher.Explain(query, 77).GetValue() > 0.0f);
+			IsTrue(searcher.Explain(query, 977).GetValue() > 0.0f);
 			QueryUtils.Check(term1);
 			QueryUtils.Check(term2);
 			QueryUtils.CheckUnequal(term1, term2);
@@ -272,8 +272,8 @@ namespace Lucene.Net.Search.Spans
 			SpanNotQuery query = new SpanNotQuery(near, term3);
 			CheckHits(query, new int[] { 801, 821, 831, 851, 861, 871, 881, 891, 1801, 1821, 
 				1831, 1851, 1861, 1871, 1881, 1891 });
-			NUnit.Framework.Assert.IsTrue(searcher.Explain(query, 801).GetValue() > 0.0f);
-			NUnit.Framework.Assert.IsTrue(searcher.Explain(query, 891).GetValue() > 0.0f);
+			IsTrue(searcher.Explain(query, 801).GetValue() > 0.0f);
+			IsTrue(searcher.Explain(query, 891).GetValue() > 0.0f);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -288,8 +288,8 @@ namespace Lucene.Net.Search.Spans
 			SpanNotQuery query = new SpanNotQuery(near, or);
 			CheckHits(query, new int[] { 801, 821, 831, 851, 861, 871, 881, 891, 1801, 1821, 
 				1831, 1851, 1861, 1871, 1881, 1891 });
-			NUnit.Framework.Assert.IsTrue(searcher.Explain(query, 801).GetValue() > 0.0f);
-			NUnit.Framework.Assert.IsTrue(searcher.Explain(query, 891).GetValue() > 0.0f);
+			IsTrue(searcher.Explain(query, 801).GetValue() > 0.0f);
+			IsTrue(searcher.Explain(query, 891).GetValue() > 0.0f);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -306,8 +306,8 @@ namespace Lucene.Net.Search.Spans
 			SpanNotQuery query = new SpanNotQuery(near, or);
 			CheckHits(query, new int[] { 801, 821, 831, 851, 871, 891, 1801, 1821, 1831, 1851
 				, 1871, 1891 });
-			NUnit.Framework.Assert.IsTrue(searcher.Explain(query, 801).GetValue() > 0.0f);
-			NUnit.Framework.Assert.IsTrue(searcher.Explain(query, 891).GetValue() > 0.0f);
+			IsTrue(searcher.Explain(query, 801).GetValue() > 0.0f);
+			IsTrue(searcher.Explain(query, 891).GetValue() > 0.0f);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -324,8 +324,8 @@ namespace Lucene.Net.Search.Spans
 			SpanNotQuery query = new SpanNotQuery(near, exclude);
 			CheckHits(query, new int[] { 801, 821, 831, 851, 861, 871, 881, 891, 1801, 1821, 
 				1831, 1851, 1861, 1871, 1881, 1891 });
-			NUnit.Framework.Assert.IsTrue(searcher.Explain(query, 801).GetValue() > 0.0f);
-			NUnit.Framework.Assert.IsTrue(searcher.Explain(query, 891).GetValue() > 0.0f);
+			IsTrue(searcher.Explain(query, 801).GetValue() > 0.0f);
+			IsTrue(searcher.Explain(query, 891).GetValue() > 0.0f);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -363,8 +363,8 @@ namespace Lucene.Net.Search.Spans
 			SpanNotQuery query = new SpanNotQuery(near, term3, 1, 1);
 			CheckHits(query, new int[] { 840, 842, 843, 844, 845, 846, 847, 848, 849, 1840, 1842
 				, 1843, 1844, 1845, 1846, 1847, 1848, 1849 });
-			NUnit.Framework.Assert.IsTrue(searcher.Explain(query, 840).GetValue() > 0.0f);
-			NUnit.Framework.Assert.IsTrue(searcher.Explain(query, 1842).GetValue() > 0.0f);
+			IsTrue(searcher.Explain(query, 840).GetValue() > 0.0f);
+			IsTrue(searcher.Explain(query, 1842).GetValue() > 0.0f);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -377,8 +377,8 @@ namespace Lucene.Net.Search.Spans
 			SpanTermQuery term3 = new SpanTermQuery(new Term("field", "one"));
 			SpanNotQuery query = new SpanNotQuery(near, term3, 2, 0);
 			CheckHits(query, new int[] { 840, 841, 842, 843, 844, 845, 846, 847, 848, 849 });
-			NUnit.Framework.Assert.IsTrue(searcher.Explain(query, 840).GetValue() > 0.0f);
-			NUnit.Framework.Assert.IsTrue(searcher.Explain(query, 849).GetValue() > 0.0f);
+			IsTrue(searcher.Explain(query, 840).GetValue() > 0.0f);
+			IsTrue(searcher.Explain(query, 849).GetValue() > 0.0f);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -394,8 +394,8 @@ namespace Lucene.Net.Search.Spans
 			SpanNotQuery query = new SpanNotQuery(near, or);
 			CheckHits(query, new int[] { 801, 821, 831, 851, 861, 871, 881, 891, 1801, 1821, 
 				1831, 1851, 1861, 1871, 1881, 1891 });
-			NUnit.Framework.Assert.IsTrue(searcher.Explain(query, 801).GetValue() > 0.0f);
-			NUnit.Framework.Assert.IsTrue(searcher.Explain(query, 891).GetValue() > 0.0f);
+			IsTrue(searcher.Explain(query, 801).GetValue() > 0.0f);
+			IsTrue(searcher.Explain(query, 891).GetValue() > 0.0f);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -410,8 +410,8 @@ namespace Lucene.Net.Search.Spans
 			SpanTermQuery exclude = new SpanTermQuery(new Term("field", "one"));
 			SpanNotQuery query = new SpanNotQuery(near, exclude, 4, 1);
 			CheckHits(query, new int[] { 42, 242, 342, 442, 542, 642, 742, 842, 942 });
-			NUnit.Framework.Assert.IsTrue(searcher.Explain(query, 242).GetValue() > 0.0f);
-			NUnit.Framework.Assert.IsTrue(searcher.Explain(query, 942).GetValue() > 0.0f);
+			IsTrue(searcher.Explain(query, 242).GetValue() > 0.0f);
+			IsTrue(searcher.Explain(query, 942).GetValue() > 0.0f);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -427,8 +427,8 @@ namespace Lucene.Net.Search.Spans
 				558, 559, 560, 561, 562, 563, 564, 565, 566, 567, 568, 569, 570, 571, 572, 573, 
 				574, 575, 576, 577, 578, 579, 580, 581, 582, 583, 584, 585, 586, 587, 588, 589, 
 				590, 591, 592, 593, 594, 595, 596, 597, 598, 599 });
-			NUnit.Framework.Assert.IsTrue(searcher.Explain(query, 5).GetValue() > 0.0f);
-			NUnit.Framework.Assert.IsTrue(searcher.Explain(query, 599).GetValue() > 0.0f);
+			IsTrue(searcher.Explain(query, 5).GetValue() > 0.0f);
+			IsTrue(searcher.Explain(query, 599).GetValue() > 0.0f);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -439,8 +439,8 @@ namespace Lucene.Net.Search.Spans
 			SpanTermQuery term1 = new SpanTermQuery(new Term("field", "five"));
 			query = new SpanPositionRangeQuery(term1, 1, 2);
 			CheckHits(query, new int[] { 25, 35, 45, 55, 65, 75, 85, 95 });
-			NUnit.Framework.Assert.IsTrue(searcher.Explain(query, 25).GetValue() > 0.0f);
-			NUnit.Framework.Assert.IsTrue(searcher.Explain(query, 95).GetValue() > 0.0f);
+			IsTrue(searcher.Explain(query, 25).GetValue() > 0.0f);
+			IsTrue(searcher.Explain(query, 95).GetValue() > 0.0f);
 			query = new SpanPositionRangeQuery(term1, 0, 1);
 			CheckHits(query, new int[] { 5, 500, 501, 502, 503, 504, 505, 506, 507, 508, 509, 
 				510, 511, 512, 513, 514, 515, 516, 517, 518, 519, 520, 521, 522, 523, 524, 525, 
@@ -468,7 +468,7 @@ namespace Lucene.Net.Search.Spans
 				, 1565, 1575, 1585, 1595, 1625, 1635, 1645, 1655, 1665, 1675, 1685, 1695, 1725, 
 				1735, 1745, 1755, 1765, 1775, 1785, 1795, 1825, 1835, 1845, 1855, 1865, 1875, 1885
 				, 1895, 1925, 1935, 1945, 1955, 1965, 1975, 1985, 1995 });
-			NUnit.Framework.Assert.IsTrue(searcher.Explain(query, 1125).GetValue() > 0.0f);
+			IsTrue(searcher.Explain(query, 1125).GetValue() > 0.0f);
 			SpanTermQuery term2 = new SpanTermQuery(new Term("field", "hundred"));
 			SpanNearQuery snq;
 			SpanQuery[] clauses;
@@ -569,8 +569,8 @@ namespace Lucene.Net.Search.Spans
 				547, 633, 647, 733, 747, 833, 847, 933, 947, 1033, 1047, 1133, 1147, 1233, 1247, 
 				1333, 1347, 1433, 1447, 1533, 1547, 1633, 1647, 1733, 1747, 1833, 1847, 1933, 1947
 				 });
-			NUnit.Framework.Assert.IsTrue(searcher.Explain(query, 33).GetValue() > 0.0f);
-			NUnit.Framework.Assert.IsTrue(searcher.Explain(query, 947).GetValue() > 0.0f);
+			IsTrue(searcher.Explain(query, 33).GetValue() > 0.0f);
+			IsTrue(searcher.Explain(query, 947).GetValue() > 0.0f);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -588,7 +588,7 @@ namespace Lucene.Net.Search.Spans
 			SpanNearQuery query = new SpanNearQuery(new SpanQuery[] { near1, near2 }, 0, true
 				);
 			CheckHits(query, new int[] { 333, 1333 });
-			NUnit.Framework.Assert.IsTrue(searcher.Explain(query, 333).GetValue() > 0.0f);
+			IsTrue(searcher.Explain(query, 333).GetValue() > 0.0f);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -643,14 +643,14 @@ namespace Lucene.Net.Search.Spans
 				(), t1);
 			Lucene.Net.Search.Spans.Spans s2 = MultiSpansWrapper.Wrap(searcher.GetTopReaderContext
 				(), t2);
-			NUnit.Framework.Assert.IsTrue(s1.Next());
-			NUnit.Framework.Assert.IsTrue(s2.Next());
+			IsTrue(s1.Next());
+			IsTrue(s2.Next());
 			bool hasMore = true;
 			do
 			{
 				hasMore = SkipToAccoringToJavaDocs(s1, s1.Doc() + 1);
-				NUnit.Framework.Assert.AreEqual(hasMore, s2.SkipTo(s2.Doc() + 1));
-				NUnit.Framework.Assert.AreEqual(s1.Doc(), s2.Doc());
+				AreEqual(hasMore, s2.SkipTo(s2.Doc() + 1));
+				AreEqual(s1.Doc(), s2.Doc());
 			}
 			while (hasMore);
 		}

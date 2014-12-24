@@ -5,7 +5,7 @@
  */
 
 using System.IO;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -52,7 +52,7 @@ namespace Lucene.Net.Search
 			IndexSearcher s = new IndexSearcher(r);
 			TotalHitCountCollector c = new TotalHitCountCollector();
 			s.Search(q, c);
-			NUnit.Framework.Assert.AreEqual(q.ToString(), expected, c.GetTotalHits());
+			AreEqual(q.ToString(), expected, c.GetTotalHits());
 			r.Close();
 			d.Close();
 		}
@@ -85,7 +85,7 @@ namespace Lucene.Net.Search
 				.NextInt(Random(), 100, 1000))).SetMergePolicy(NewLogMergePolicy()));
 			foreach (string s in vals)
 			{
-				Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+				Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 				d.Add(NewTextField(FIELD, s, Field.Store.YES));
 				writer.AddDocument(d);
 			}

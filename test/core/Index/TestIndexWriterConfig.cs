@@ -7,7 +7,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Codecs;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
@@ -42,50 +42,50 @@ namespace Lucene.Net.Index
 		{
 			IndexWriterConfig conf = new IndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random()));
-			NUnit.Framework.Assert.AreEqual(typeof(MockAnalyzer), conf.GetAnalyzer().GetType(
+			AreEqual(typeof(MockAnalyzer), conf.GetAnalyzer().GetType(
 				));
-			NUnit.Framework.Assert.IsNull(conf.GetIndexCommit());
-			NUnit.Framework.Assert.AreEqual(typeof(KeepOnlyLastCommitDeletionPolicy), conf.GetIndexDeletionPolicy
+			IsNull(conf.GetIndexCommit());
+			AreEqual(typeof(KeepOnlyLastCommitDeletionPolicy), conf.GetIndexDeletionPolicy
 				().GetType());
-			NUnit.Framework.Assert.AreEqual(typeof(ConcurrentMergeScheduler), conf.GetMergeScheduler
+			AreEqual(typeof(ConcurrentMergeScheduler), conf.GetMergeScheduler
 				().GetType());
-			NUnit.Framework.Assert.AreEqual(IndexWriterConfig.OpenMode.CREATE_OR_APPEND, conf
+			AreEqual(IndexWriterConfig.OpenMode.CREATE_OR_APPEND, conf
 				.GetOpenMode());
 			// we don't need to 
 			//HM:revisit 
 			//assert this, it should be unspecified
-			NUnit.Framework.Assert.IsTrue(IndexSearcher.GetDefaultSimilarity() == conf.GetSimilarity
+			IsTrue(IndexSearcher.GetDefaultSimilarity() == conf.GetSimilarity
 				());
-			NUnit.Framework.Assert.AreEqual(IndexWriterConfig.DEFAULT_TERM_INDEX_INTERVAL, conf
+			AreEqual(IndexWriterConfig.DEFAULT_TERM_INDEX_INTERVAL, conf
 				.GetTermIndexInterval());
-			NUnit.Framework.Assert.AreEqual(IndexWriterConfig.GetDefaultWriteLockTimeout(), conf
+			AreEqual(IndexWriterConfig.GetDefaultWriteLockTimeout(), conf
 				.GetWriteLockTimeout());
-			NUnit.Framework.Assert.AreEqual(IndexWriterConfig.WRITE_LOCK_TIMEOUT, IndexWriterConfig
+			AreEqual(IndexWriterConfig.WRITE_LOCK_TIMEOUT, IndexWriterConfig
 				.GetDefaultWriteLockTimeout());
-			NUnit.Framework.Assert.AreEqual(IndexWriterConfig.DEFAULT_MAX_BUFFERED_DELETE_TERMS
+			AreEqual(IndexWriterConfig.DEFAULT_MAX_BUFFERED_DELETE_TERMS
 				, conf.GetMaxBufferedDeleteTerms());
-			NUnit.Framework.Assert.AreEqual(IndexWriterConfig.DEFAULT_RAM_BUFFER_SIZE_MB, conf
+			AreEqual(IndexWriterConfig.DEFAULT_RAM_BUFFER_SIZE_MB, conf
 				.GetRAMBufferSizeMB(), 0.0);
-			NUnit.Framework.Assert.AreEqual(IndexWriterConfig.DEFAULT_MAX_BUFFERED_DOCS, conf
+			AreEqual(IndexWriterConfig.DEFAULT_MAX_BUFFERED_DOCS, conf
 				.GetMaxBufferedDocs());
-			NUnit.Framework.Assert.AreEqual(IndexWriterConfig.DEFAULT_READER_POOLING, conf.GetReaderPooling
+			AreEqual(IndexWriterConfig.DEFAULT_READER_POOLING, conf.GetReaderPooling
 				());
-			NUnit.Framework.Assert.IsTrue(DocumentsWriterPerThread.defaultIndexingChain == conf
+			IsTrue(DocumentsWriterPerThread.defaultIndexingChain == conf
 				.GetIndexingChain());
-			NUnit.Framework.Assert.IsNull(conf.GetMergedSegmentWarmer());
-			NUnit.Framework.Assert.AreEqual(IndexWriterConfig.DEFAULT_READER_TERMS_INDEX_DIVISOR
+			IsNull(conf.GetMergedSegmentWarmer());
+			AreEqual(IndexWriterConfig.DEFAULT_READER_TERMS_INDEX_DIVISOR
 				, conf.GetReaderTermsIndexDivisor());
-			NUnit.Framework.Assert.AreEqual(typeof(TieredMergePolicy), conf.GetMergePolicy().
+			AreEqual(typeof(TieredMergePolicy), conf.GetMergePolicy().
 				GetType());
-			NUnit.Framework.Assert.AreEqual(typeof(DocumentsWriterPerThreadPool), conf.GetIndexerThreadPool
+			AreEqual(typeof(DocumentsWriterPerThreadPool), conf.GetIndexerThreadPool
 				().GetType());
-			NUnit.Framework.Assert.AreEqual(typeof(FlushByRamOrCountsPolicy), conf.GetFlushPolicy
+			AreEqual(typeof(FlushByRamOrCountsPolicy), conf.GetFlushPolicy
 				().GetType());
-			NUnit.Framework.Assert.AreEqual(IndexWriterConfig.DEFAULT_RAM_PER_THREAD_HARD_LIMIT_MB
+			AreEqual(IndexWriterConfig.DEFAULT_RAM_PER_THREAD_HARD_LIMIT_MB
 				, conf.GetRAMPerThreadHardLimitMB());
-			NUnit.Framework.Assert.AreEqual(Codec.GetDefault(), conf.GetCodec());
-			NUnit.Framework.Assert.AreEqual(InfoStream.GetDefault(), conf.GetInfoStream());
-			NUnit.Framework.Assert.AreEqual(IndexWriterConfig.DEFAULT_USE_COMPOUND_FILE_SYSTEM
+			AreEqual(Codec.GetDefault(), conf.Codec);
+			AreEqual(InfoStream.GetDefault(), conf.GetInfoStream());
+			AreEqual(IndexWriterConfig.DEFAULT_USE_COMPOUND_FILE_SYSTEM
 				, conf.GetUseCompoundFile());
 			// Sanity check - validate that all getters are covered.
 			ICollection<string> getters = new HashSet<string>();
@@ -119,7 +119,7 @@ namespace Lucene.Net.Index
 			{
 				if (m.DeclaringType == typeof(IndexWriterConfig) && m.Name.StartsWith("get"))
 				{
-					NUnit.Framework.Assert.IsTrue("method " + m.Name + " is not tested for defaults", 
+					IsTrue("method " + m.Name + " is not tested for defaults", 
 						getters.Contains(m.Name));
 				}
 			}
@@ -150,14 +150,14 @@ namespace Lucene.Net.Index
 					}
 					else
 					{
-						NUnit.Framework.Assert.AreEqual("method " + m.Name + " does not return IndexWriterConfig"
+						AreEqual("method " + m.Name + " does not return IndexWriterConfig"
 							, typeof(IndexWriterConfig), m.ReturnType);
 					}
 				}
 			}
 			foreach (string setter in liveSetters)
 			{
-				NUnit.Framework.Assert.IsTrue("setter method not overridden by IndexWriterConfig: "
+				IsTrue("setter method not overridden by IndexWriterConfig: "
 					 + setter, allSetters.Contains(setter));
 			}
 		}
@@ -173,8 +173,8 @@ namespace Lucene.Net.Index
 			// this should fail
 			try
 			{
-				NUnit.Framework.Assert.IsNotNull(new RandomIndexWriter(Random(), dir, conf));
-				NUnit.Framework.Assert.Fail("should have hit AlreadySetException");
+				IsNotNull(new RandomIndexWriter(Random(), dir, conf));
+				Fail("should have hit AlreadySetException");
 			}
 			catch (SetOnce.AlreadySetException)
 			{
@@ -183,9 +183,9 @@ namespace Lucene.Net.Index
 			// also cloning it won't help, after it has been used already
 			try
 			{
-				NUnit.Framework.Assert.IsNotNull(new RandomIndexWriter(Random(), dir, conf.Clone(
+				IsNotNull(new RandomIndexWriter(Random(), dir, conf.Clone(
 					)));
-				NUnit.Framework.Assert.Fail("should have hit AlreadySetException");
+				Fail("should have hit AlreadySetException");
 			}
 			catch (SetOnce.AlreadySetException)
 			{
@@ -219,9 +219,9 @@ namespace Lucene.Net.Index
 			{
 				if (m_1.Name.StartsWith("get") && !Modifier.IsStatic(m_1.GetModifiers()))
 				{
-					NUnit.Framework.Assert.AreEqual("method " + m_1.Name + " not overrided by IndexWriterConfig"
+					AreEqual("method " + m_1.Name + " not overrided by IndexWriterConfig"
 						, typeof(IndexWriterConfig), m_1.DeclaringType);
-					NUnit.Framework.Assert.IsTrue("method " + m_1.Name + " not declared on LiveIndexWriterConfig"
+					IsTrue("method " + m_1.Name + " not declared on LiveIndexWriterConfig"
 						, liveGetters.Contains(m_1.Name));
 				}
 			}
@@ -232,20 +232,20 @@ namespace Lucene.Net.Index
 		public virtual void TestConstants()
 		{
 			// Tests that the values of the constants does not change
-			NUnit.Framework.Assert.AreEqual(1000, IndexWriterConfig.WRITE_LOCK_TIMEOUT);
-			NUnit.Framework.Assert.AreEqual(32, IndexWriterConfig.DEFAULT_TERM_INDEX_INTERVAL
+			AreEqual(1000, IndexWriterConfig.WRITE_LOCK_TIMEOUT);
+			AreEqual(32, IndexWriterConfig.DEFAULT_TERM_INDEX_INTERVAL
 				);
-			NUnit.Framework.Assert.AreEqual(-1, IndexWriterConfig.DISABLE_AUTO_FLUSH);
-			NUnit.Framework.Assert.AreEqual(IndexWriterConfig.DISABLE_AUTO_FLUSH, IndexWriterConfig
+			AreEqual(-1, IndexWriterConfig.DISABLE_AUTO_FLUSH);
+			AreEqual(IndexWriterConfig.DISABLE_AUTO_FLUSH, IndexWriterConfig
 				.DEFAULT_MAX_BUFFERED_DELETE_TERMS);
-			NUnit.Framework.Assert.AreEqual(IndexWriterConfig.DISABLE_AUTO_FLUSH, IndexWriterConfig
+			AreEqual(IndexWriterConfig.DISABLE_AUTO_FLUSH, IndexWriterConfig
 				.DEFAULT_MAX_BUFFERED_DOCS);
-			NUnit.Framework.Assert.AreEqual(16.0, IndexWriterConfig.DEFAULT_RAM_BUFFER_SIZE_MB
+			AreEqual(16.0, IndexWriterConfig.DEFAULT_RAM_BUFFER_SIZE_MB
 				, 0.0);
-			NUnit.Framework.Assert.AreEqual(false, IndexWriterConfig.DEFAULT_READER_POOLING);
-			NUnit.Framework.Assert.AreEqual(true, IndexWriterConfig.DEFAULT_USE_COMPOUND_FILE_SYSTEM
+			AreEqual(false, IndexWriterConfig.DEFAULT_READER_POOLING);
+			AreEqual(true, IndexWriterConfig.DEFAULT_USE_COMPOUND_FILE_SYSTEM
 				);
-			NUnit.Framework.Assert.AreEqual(DirectoryReader.DEFAULT_TERMS_INDEX_DIVISOR, IndexWriterConfig
+			AreEqual(DirectoryReader.DEFAULT_TERMS_INDEX_DIVISOR, IndexWriterConfig
 				.DEFAULT_READER_TERMS_INDEX_DIVISOR);
 		}
 
@@ -277,7 +277,7 @@ namespace Lucene.Net.Index
 				{
 					continue;
 				}
-				NUnit.Framework.Assert.IsTrue(f.Name + " not found in toString", str.IndexOf(f.Name
+				IsTrue(f.Name + " not found in toString", str.IndexOf(f.Name
 					) != -1);
 			}
 		}
@@ -292,29 +292,29 @@ namespace Lucene.Net.Index
 			// Make sure parameters that can't be reused are cloned
 			IndexDeletionPolicy delPolicy = conf.delPolicy;
 			IndexDeletionPolicy delPolicyClone = clone.delPolicy;
-			NUnit.Framework.Assert.IsTrue(delPolicy.GetType() == delPolicyClone.GetType() && 
+			IsTrue(delPolicy.GetType() == delPolicyClone.GetType() && 
 				(delPolicy != delPolicyClone || delPolicy.Clone() == delPolicyClone.Clone()));
 			FlushPolicy flushPolicy = conf.flushPolicy;
 			FlushPolicy flushPolicyClone = clone.flushPolicy;
-			NUnit.Framework.Assert.IsTrue(flushPolicy.GetType() == flushPolicyClone.GetType()
+			IsTrue(flushPolicy.GetType() == flushPolicyClone.GetType()
 				 && (flushPolicy != flushPolicyClone || flushPolicy.Clone() == flushPolicyClone.
 				Clone()));
 			DocumentsWriterPerThreadPool pool = conf.indexerThreadPool;
 			DocumentsWriterPerThreadPool poolClone = clone.indexerThreadPool;
-			NUnit.Framework.Assert.IsTrue(pool.GetType() == poolClone.GetType() && (pool != poolClone
+			IsTrue(pool.GetType() == poolClone.GetType() && (pool != poolClone
 				 || pool.Clone() == poolClone.Clone()));
 			MergePolicy mergePolicy = conf.mergePolicy;
 			MergePolicy mergePolicyClone = clone.mergePolicy;
-			NUnit.Framework.Assert.IsTrue(mergePolicy.GetType() == mergePolicyClone.GetType()
+			IsTrue(mergePolicy.GetType() == mergePolicyClone.GetType()
 				 && (mergePolicy != mergePolicyClone || mergePolicy.Clone() == mergePolicyClone.
 				Clone()));
 			MergeScheduler mergeSched = conf.mergeScheduler;
 			MergeScheduler mergeSchedClone = clone.mergeScheduler;
-			NUnit.Framework.Assert.IsTrue(mergeSched.GetType() == mergeSchedClone.GetType() &&
+			IsTrue(mergeSched.GetType() == mergeSchedClone.GetType() &&
 				 (mergeSched != mergeSchedClone || mergeSched.Clone() == mergeSchedClone.Clone()
 				));
 			conf.SetMergeScheduler(new SerialMergeScheduler());
-			NUnit.Framework.Assert.AreEqual(typeof(ConcurrentMergeScheduler), clone.GetMergeScheduler
+			AreEqual(typeof(ConcurrentMergeScheduler), clone.GetMergeScheduler
 				().GetType());
 		}
 
@@ -325,30 +325,30 @@ namespace Lucene.Net.Index
 			IndexWriterConfig conf = new IndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random()));
 			// Test IndexDeletionPolicy
-			NUnit.Framework.Assert.AreEqual(typeof(KeepOnlyLastCommitDeletionPolicy), conf.GetIndexDeletionPolicy
+			AreEqual(typeof(KeepOnlyLastCommitDeletionPolicy), conf.GetIndexDeletionPolicy
 				().GetType());
 			conf.SetIndexDeletionPolicy(new SnapshotDeletionPolicy(null));
-			NUnit.Framework.Assert.AreEqual(typeof(SnapshotDeletionPolicy), conf.GetIndexDeletionPolicy
+			AreEqual(typeof(SnapshotDeletionPolicy), conf.GetIndexDeletionPolicy
 				().GetType());
 			try
 			{
 				conf.SetIndexDeletionPolicy(null);
-				NUnit.Framework.Assert.Fail();
+				Fail();
 			}
 			catch (ArgumentException)
 			{
 			}
 			// ok
 			// Test MergeScheduler
-			NUnit.Framework.Assert.AreEqual(typeof(ConcurrentMergeScheduler), conf.GetMergeScheduler
+			AreEqual(typeof(ConcurrentMergeScheduler), conf.GetMergeScheduler
 				().GetType());
 			conf.SetMergeScheduler(new SerialMergeScheduler());
-			NUnit.Framework.Assert.AreEqual(typeof(SerialMergeScheduler), conf.GetMergeScheduler
+			AreEqual(typeof(SerialMergeScheduler), conf.GetMergeScheduler
 				().GetType());
 			try
 			{
 				conf.SetMergeScheduler(null);
-				NUnit.Framework.Assert.Fail();
+				Fail();
 			}
 			catch (ArgumentException)
 			{
@@ -358,30 +358,30 @@ namespace Lucene.Net.Index
 			// we shouldnt 
 			//HM:revisit 
 			//assert what the default is, just that its not null.
-			NUnit.Framework.Assert.IsTrue(IndexSearcher.GetDefaultSimilarity() == conf.GetSimilarity
+			IsTrue(IndexSearcher.GetDefaultSimilarity() == conf.GetSimilarity
 				());
 			conf.SetSimilarity(new TestIndexWriterConfig.MySimilarity());
-			NUnit.Framework.Assert.AreEqual(typeof(TestIndexWriterConfig.MySimilarity), conf.
+			AreEqual(typeof(TestIndexWriterConfig.MySimilarity), conf.
 				GetSimilarity().GetType());
 			try
 			{
 				conf.SetSimilarity(null);
-				NUnit.Framework.Assert.Fail();
+				Fail();
 			}
 			catch (ArgumentException)
 			{
 			}
 			// ok
 			// Test IndexingChain
-			NUnit.Framework.Assert.IsTrue(DocumentsWriterPerThread.defaultIndexingChain == conf
+			IsTrue(DocumentsWriterPerThread.defaultIndexingChain == conf
 				.GetIndexingChain());
 			conf.SetIndexingChain(new TestIndexWriterConfig.MyIndexingChain());
-			NUnit.Framework.Assert.AreEqual(typeof(TestIndexWriterConfig.MyIndexingChain), conf
+			AreEqual(typeof(TestIndexWriterConfig.MyIndexingChain), conf
 				.GetIndexingChain().GetType());
 			try
 			{
 				conf.SetIndexingChain(null);
-				NUnit.Framework.Assert.Fail();
+				Fail();
 			}
 			catch (ArgumentException)
 			{
@@ -390,7 +390,7 @@ namespace Lucene.Net.Index
 			try
 			{
 				conf.SetMaxBufferedDeleteTerms(0);
-				NUnit.Framework.Assert.Fail("should not have succeeded to set maxBufferedDeleteTerms to 0"
+				Fail("should not have succeeded to set maxBufferedDeleteTerms to 0"
 					);
 			}
 			catch (ArgumentException)
@@ -400,7 +400,7 @@ namespace Lucene.Net.Index
 			try
 			{
 				conf.SetMaxBufferedDocs(1);
-				NUnit.Framework.Assert.Fail("should not have succeeded to set maxBufferedDocs to 1"
+				Fail("should not have succeeded to set maxBufferedDocs to 1"
 					);
 			}
 			catch (ArgumentException)
@@ -413,7 +413,7 @@ namespace Lucene.Net.Index
 				conf.SetMaxBufferedDocs(4);
 				conf.SetRAMBufferSizeMB(IndexWriterConfig.DISABLE_AUTO_FLUSH);
 				conf.SetMaxBufferedDocs(IndexWriterConfig.DISABLE_AUTO_FLUSH);
-				NUnit.Framework.Assert.Fail("should not have succeeded to disable maxBufferedDocs when ramBufferSizeMB is disabled as well"
+				Fail("should not have succeeded to disable maxBufferedDocs when ramBufferSizeMB is disabled as well"
 					);
 			}
 			catch (ArgumentException)
@@ -425,7 +425,7 @@ namespace Lucene.Net.Index
 			try
 			{
 				conf.SetRAMBufferSizeMB(IndexWriterConfig.DISABLE_AUTO_FLUSH);
-				NUnit.Framework.Assert.Fail("should not have succeeded to disable ramBufferSizeMB when maxBufferedDocs is disabled as well"
+				Fail("should not have succeeded to disable ramBufferSizeMB when maxBufferedDocs is disabled as well"
 					);
 			}
 			catch (ArgumentException)
@@ -436,7 +436,7 @@ namespace Lucene.Net.Index
 			try
 			{
 				conf.SetReaderTermsIndexDivisor(0);
-				NUnit.Framework.Assert.Fail("should not have succeeded to set termsIndexDivisor to 0"
+				Fail("should not have succeeded to set termsIndexDivisor to 0"
 					);
 			}
 			catch (ArgumentException)
@@ -448,7 +448,7 @@ namespace Lucene.Net.Index
 			try
 			{
 				conf.SetReaderTermsIndexDivisor(-2);
-				NUnit.Framework.Assert.Fail("should not have succeeded to set termsIndexDivisor to < -1"
+				Fail("should not have succeeded to set termsIndexDivisor to < -1"
 					);
 			}
 			catch (ArgumentException)
@@ -458,7 +458,7 @@ namespace Lucene.Net.Index
 			try
 			{
 				conf.SetRAMPerThreadHardLimitMB(2048);
-				NUnit.Framework.Assert.Fail("should not have succeeded to set RAMPerThreadHardLimitMB to >= 2048"
+				Fail("should not have succeeded to set RAMPerThreadHardLimitMB to >= 2048"
 					);
 			}
 			catch (ArgumentException)
@@ -468,7 +468,7 @@ namespace Lucene.Net.Index
 			try
 			{
 				conf.SetRAMPerThreadHardLimitMB(0);
-				NUnit.Framework.Assert.Fail("should not have succeeded to set RAMPerThreadHardLimitMB to 0"
+				Fail("should not have succeeded to set RAMPerThreadHardLimitMB to 0"
 					);
 			}
 			catch (ArgumentException)
@@ -476,15 +476,15 @@ namespace Lucene.Net.Index
 			}
 			// this is expected
 			// Test MergePolicy
-			NUnit.Framework.Assert.AreEqual(typeof(TieredMergePolicy), conf.GetMergePolicy().
+			AreEqual(typeof(TieredMergePolicy), conf.GetMergePolicy().
 				GetType());
 			conf.SetMergePolicy(new LogDocMergePolicy());
-			NUnit.Framework.Assert.AreEqual(typeof(LogDocMergePolicy), conf.GetMergePolicy().
+			AreEqual(typeof(LogDocMergePolicy), conf.GetMergePolicy().
 				GetType());
 			try
 			{
 				conf.SetMergePolicy(null);
-				NUnit.Framework.Assert.Fail();
+				Fail();
 			}
 			catch (ArgumentException)
 			{
@@ -505,12 +505,12 @@ namespace Lucene.Net.Index
 			IndexWriter w = new IndexWriter(dir, iwc);
 			// Change to true:
 			w.GetConfig().SetUseCompoundFile(true);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewStringField("field", "foo", Field.Store.NO));
 			w.AddDocument(doc);
 			w.Commit();
-			NUnit.Framework.Assert.IsTrue("Expected CFS after commit", w.NewestSegment().info
+			IsTrue("Expected CFS after commit", w.NewestSegment().info
 				.GetUseCompoundFile());
 			doc.Add(NewStringField("field", "foo", Field.Store.NO));
 			w.AddDocument(doc);
@@ -518,7 +518,7 @@ namespace Lucene.Net.Index
 			w.ForceMerge(1);
 			w.Commit();
 			// no compound files after merge
-			NUnit.Framework.Assert.IsFalse("Expected Non-CFS after merge", w.NewestSegment().
+			IsFalse("Expected Non-CFS after merge", w.NewestSegment().
 				info.GetUseCompoundFile());
 			MergePolicy lmp = w.GetConfig().GetMergePolicy();
 			lmp.SetNoCFSRatio(1.0);
@@ -526,7 +526,7 @@ namespace Lucene.Net.Index
 			w.AddDocument(doc);
 			w.ForceMerge(1);
 			w.Commit();
-			NUnit.Framework.Assert.IsTrue("Expected CFS after merge", w.NewestSegment().info.
+			IsTrue("Expected CFS after merge", w.NewestSegment().info.
 				GetUseCompoundFile());
 			w.Close();
 			dir.Close();

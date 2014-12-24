@@ -1,4 +1,5 @@
 using Lucene.Net.Codecs.Lucene3x;
+using Lucene.Net.Codecs.Lucene3x.TestFramework;
 
 namespace Lucene.Net.Codecs.Lucene3x
 {

@@ -5,7 +5,7 @@
  */
 
 using System.Collections.Generic;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -19,10 +19,10 @@ namespace Lucene.Net.Search.Spans
 {
 	public class TestFieldMaskingSpanQuery : LuceneTestCase
 	{
-		protected internal static Lucene.Net.Document.Document Doc(Lucene.Net.Document.Field
+		protected internal static Lucene.Net.Documents.Document Doc(Lucene.Net.Document.Field
 			[] fields)
 		{
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			for (int i = 0; i < fields.Length; i++)
 			{
@@ -99,7 +99,7 @@ namespace Lucene.Net.Search.Spans
 			QueryUtils.CheckEqual(q, qr);
 			ICollection<Term> terms = new HashSet<Term>();
 			qr.ExtractTerms(terms);
-			NUnit.Framework.Assert.AreEqual(1, terms.Count);
+			AreEqual(1, terms.Count);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -112,7 +112,7 @@ namespace Lucene.Net.Search.Spans
 			QueryUtils.CheckUnequal(q, qr);
 			ICollection<Term> terms = new HashSet<Term>();
 			qr.ExtractTerms(terms);
-			NUnit.Framework.Assert.AreEqual(2, terms.Count);
+			AreEqual(2, terms.Count);
 		}
 
 		private sealed class _SpanTermQuery_149 : SpanTermQuery
@@ -139,7 +139,7 @@ namespace Lucene.Net.Search.Spans
 			QueryUtils.CheckEqual(q, qr);
 			HashSet<Term> set = new HashSet<Term>();
 			qr.ExtractTerms(set);
-			NUnit.Framework.Assert.AreEqual(2, set.Count);
+			AreEqual(2, set.Count);
 		}
 
 		public virtual void TestEquality1()
@@ -232,25 +232,25 @@ namespace Lucene.Net.Search.Spans
 			Check(q, new int[] { 0, 1, 2, 3, 4 });
 			Lucene.Net.Search.Spans.Spans span = MultiSpansWrapper.Wrap(searcher.GetTopReaderContext
 				(), q);
-			NUnit.Framework.Assert.AreEqual(true, span.Next());
-			NUnit.Framework.Assert.AreEqual(S(0, 0, 1), S(span));
-			NUnit.Framework.Assert.AreEqual(true, span.Next());
-			NUnit.Framework.Assert.AreEqual(S(1, 0, 1), S(span));
-			NUnit.Framework.Assert.AreEqual(true, span.Next());
-			NUnit.Framework.Assert.AreEqual(S(1, 1, 2), S(span));
-			NUnit.Framework.Assert.AreEqual(true, span.Next());
-			NUnit.Framework.Assert.AreEqual(S(2, 0, 1), S(span));
-			NUnit.Framework.Assert.AreEqual(true, span.Next());
-			NUnit.Framework.Assert.AreEqual(S(2, 1, 2), S(span));
-			NUnit.Framework.Assert.AreEqual(true, span.Next());
-			NUnit.Framework.Assert.AreEqual(S(2, 2, 3), S(span));
-			NUnit.Framework.Assert.AreEqual(true, span.Next());
-			NUnit.Framework.Assert.AreEqual(S(3, 0, 1), S(span));
-			NUnit.Framework.Assert.AreEqual(true, span.Next());
-			NUnit.Framework.Assert.AreEqual(S(4, 0, 1), S(span));
-			NUnit.Framework.Assert.AreEqual(true, span.Next());
-			NUnit.Framework.Assert.AreEqual(S(4, 1, 2), S(span));
-			NUnit.Framework.Assert.AreEqual(false, span.Next());
+			AreEqual(true, span.Next());
+			AreEqual(S(0, 0, 1), S(span));
+			AreEqual(true, span.Next());
+			AreEqual(S(1, 0, 1), S(span));
+			AreEqual(true, span.Next());
+			AreEqual(S(1, 1, 2), S(span));
+			AreEqual(true, span.Next());
+			AreEqual(S(2, 0, 1), S(span));
+			AreEqual(true, span.Next());
+			AreEqual(S(2, 1, 2), S(span));
+			AreEqual(true, span.Next());
+			AreEqual(S(2, 2, 3), S(span));
+			AreEqual(true, span.Next());
+			AreEqual(S(3, 0, 1), S(span));
+			AreEqual(true, span.Next());
+			AreEqual(S(4, 0, 1), S(span));
+			AreEqual(true, span.Next());
+			AreEqual(S(4, 1, 2), S(span));
+			AreEqual(false, span.Next());
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -268,10 +268,10 @@ namespace Lucene.Net.Search.Spans
 				(), qB);
 			while (spanA.Next())
 			{
-				NUnit.Framework.Assert.IsTrue("spanB not still going", spanB.Next());
-				NUnit.Framework.Assert.AreEqual("spanA not equal spanB", S(spanA), S(spanB));
+				IsTrue("spanB not still going", spanB.Next());
+				AreEqual("spanA not equal spanB", S(spanA), S(spanB));
 			}
-			NUnit.Framework.Assert.IsTrue("spanB still going even tough spanA is done", !(spanB
+			IsTrue("spanB still going even tough spanA is done", !(spanB
 				.Next()));
 		}
 
@@ -289,17 +289,17 @@ namespace Lucene.Net.Search.Spans
 			Check(q, new int[] { 0, 1, 2, 3 });
 			Lucene.Net.Search.Spans.Spans span = MultiSpansWrapper.Wrap(searcher.GetTopReaderContext
 				(), q);
-			NUnit.Framework.Assert.AreEqual(true, span.Next());
-			NUnit.Framework.Assert.AreEqual(S(0, 0, 1), S(span));
-			NUnit.Framework.Assert.AreEqual(true, span.Next());
-			NUnit.Framework.Assert.AreEqual(S(1, 1, 2), S(span));
-			NUnit.Framework.Assert.AreEqual(true, span.Next());
-			NUnit.Framework.Assert.AreEqual(S(2, 0, 1), S(span));
-			NUnit.Framework.Assert.AreEqual(true, span.Next());
-			NUnit.Framework.Assert.AreEqual(S(2, 2, 3), S(span));
-			NUnit.Framework.Assert.AreEqual(true, span.Next());
-			NUnit.Framework.Assert.AreEqual(S(3, 0, 1), S(span));
-			NUnit.Framework.Assert.AreEqual(false, span.Next());
+			AreEqual(true, span.Next());
+			AreEqual(S(0, 0, 1), S(span));
+			AreEqual(true, span.Next());
+			AreEqual(S(1, 1, 2), S(span));
+			AreEqual(true, span.Next());
+			AreEqual(S(2, 0, 1), S(span));
+			AreEqual(true, span.Next());
+			AreEqual(S(2, 2, 3), S(span));
+			AreEqual(true, span.Next());
+			AreEqual(S(3, 0, 1), S(span));
+			AreEqual(false, span.Next());
 		}
 
 		public virtual string S(Lucene.Net.Search.Spans.Spans span)

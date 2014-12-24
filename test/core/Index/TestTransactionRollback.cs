@@ -5,7 +5,7 @@
  */
 
 using System.Collections.Generic;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
@@ -81,7 +81,7 @@ namespace Lucene.Net.Index
 			//Perhaps not the most efficient approach but meets our
 			//needs here.
 			Bits liveDocs = MultiFields.GetLiveDocs(r);
-			for (int i = 0; i < r.MaxDoc(); i++)
+			for (int i = 0; i < r.MaxDoc; i++)
 			{
 				if (liveDocs == null || liveDocs.Get(i))
 				{
@@ -89,14 +89,14 @@ namespace Lucene.Net.Index
 					if (sval != null)
 					{
 						int val = System.Convert.ToInt32(sval);
-						NUnit.Framework.Assert.IsTrue("Did not expect document #" + val, expecteds.Get(val
+						IsTrue("Did not expect document #" + val, expecteds.Get(val
 							));
 						expecteds.Set(val, false);
 					}
 				}
 			}
 			r.Close();
-			NUnit.Framework.Assert.AreEqual("Should have 0 docs remaining ", 0, expecteds.Cardinality
+			AreEqual("Should have 0 docs remaining ", 0, expecteds.Cardinality
 				());
 		}
 
@@ -111,7 +111,7 @@ namespace Lucene.Net.Index
 				MockAnalyzer(Random())).SetIndexDeletionPolicy(sdp));
 			for (int currentRecordId = 1; currentRecordId <= 100; currentRecordId++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(NewTextField(FIELD_RECORD_ID, string.Empty + currentRecordId, Field.Store
 					.YES));
@@ -208,7 +208,7 @@ namespace Lucene.Net.Index
 					Random())).SetIndexDeletionPolicy(new TestTransactionRollback.DeleteLastCommitPolicy
 					(this))).Close();
 				IndexReader r = DirectoryReader.Open(dir);
-				NUnit.Framework.Assert.AreEqual(100, r.NumDocs());
+				AreEqual(100, r.NumDocs());
 				r.Close();
 			}
 		}

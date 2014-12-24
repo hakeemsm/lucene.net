@@ -14,7 +14,7 @@ namespace Lucene.Net.Index
 {
 	public class TestFieldInfos : LuceneTestCase
 	{
-		private Lucene.Net.Document.Document testDoc = new Lucene.Net.Document.Document
+		private Lucene.Net.Documents.Document testDoc = new Lucene.Net.Documents.Document
 			();
 
 		//import org.cnlp.utils.properties.ResourceBundleHelper;
@@ -30,18 +30,18 @@ namespace Lucene.Net.Index
 			)
 		{
 			//Positive test of FieldInfos
-			NUnit.Framework.Assert.IsTrue(testDoc != null);
+			IsTrue(testDoc != null);
 			FieldInfos.Builder builder = new FieldInfos.Builder();
-			foreach (IndexableField field in testDoc)
+			foreach (IIndexableField field in testDoc)
 			{
 				builder.AddOrUpdate(field.Name(), field.FieldType());
 			}
 			FieldInfos fieldInfos = builder.Finish();
 			//Since the complement is stored as well in the fields map
-			NUnit.Framework.Assert.IsTrue(fieldInfos.Size() == DocHelper.all.Count);
+			IsTrue(fieldInfos.Size() == DocHelper.all.Count);
 			//this is all b/c we are using the no-arg constructor
 			IndexOutput output = dir.CreateOutput(filename, NewIOContext(Random()));
-			NUnit.Framework.Assert.IsTrue(output != null);
+			IsTrue(output != null);
 			//Use a RAMOutputStream
 			FieldInfosWriter writer = Codec.GetDefault().FieldInfosFormat().GetFieldInfosWriter
 				();
@@ -65,22 +65,22 @@ namespace Lucene.Net.Index
 			Directory dir = NewDirectory();
 			FieldInfos fieldInfos = CreateAndWriteFieldInfos(dir, name);
 			FieldInfos readIn = ReadFieldInfos(dir, name);
-			NUnit.Framework.Assert.IsTrue(fieldInfos.Size() == readIn.Size());
+			IsTrue(fieldInfos.Size() == readIn.Size());
 			FieldInfo info = readIn.FieldInfo("textField1");
-			NUnit.Framework.Assert.IsTrue(info != null);
-			NUnit.Framework.Assert.IsTrue(info.HasVectors() == false);
-			NUnit.Framework.Assert.IsTrue(info.OmitsNorms() == false);
+			IsTrue(info != null);
+			IsTrue(info.HasVectors() == false);
+			IsTrue(info.OmitsNorms() == false);
 			info = readIn.FieldInfo("textField2");
-			NUnit.Framework.Assert.IsTrue(info != null);
-			NUnit.Framework.Assert.IsTrue(info.OmitsNorms() == false);
+			IsTrue(info != null);
+			IsTrue(info.OmitsNorms() == false);
 			info = readIn.FieldInfo("textField3");
-			NUnit.Framework.Assert.IsTrue(info != null);
-			NUnit.Framework.Assert.IsTrue(info.HasVectors() == false);
-			NUnit.Framework.Assert.IsTrue(info.OmitsNorms() == true);
+			IsTrue(info != null);
+			IsTrue(info.HasVectors() == false);
+			IsTrue(info.OmitsNorms() == true);
 			info = readIn.FieldInfo("omitNorms");
-			NUnit.Framework.Assert.IsTrue(info != null);
-			NUnit.Framework.Assert.IsTrue(info.HasVectors() == false);
-			NUnit.Framework.Assert.IsTrue(info.OmitsNorms() == true);
+			IsTrue(info != null);
+			IsTrue(info.HasVectors() == false);
+			IsTrue(info.OmitsNorms() == true);
 			dir.Close();
 		}
 
@@ -97,13 +97,13 @@ namespace Lucene.Net.Index
 
 		private void AssertReadOnly(FieldInfos readOnly, FieldInfos modifiable)
 		{
-			NUnit.Framework.Assert.AreEqual(modifiable.Size(), readOnly.Size());
+			AreEqual(modifiable.Size(), readOnly.Size());
 			// 
 			//HM:revisit 
 			//assert we can iterate
 			foreach (FieldInfo fi in readOnly)
 			{
-				NUnit.Framework.Assert.AreEqual(fi.name, modifiable.FieldInfo(fi.number).name);
+				AreEqual(fi.name, modifiable.FieldInfo(fi.number).name);
 			}
 		}
 	}

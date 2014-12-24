@@ -34,13 +34,13 @@ namespace Lucene.Net.Search
 			RegexpQuery a1 = new RegexpQuery(new Term(fieldName, "[aA]"), RegExp.NONE);
 			RegexpQuery a2 = new RegexpQuery(new Term(fieldName, "[aA]"), RegExp.NONE);
 			RegexpQuery b = new RegexpQuery(new Term(fieldName, "[bB]"), RegExp.NONE);
-			NUnit.Framework.Assert.AreEqual(a1, a2);
-			NUnit.Framework.Assert.IsFalse(a1.Equals(b));
+			AreEqual(a1, a2);
+			IsFalse(a1.Equals(b));
 			a1.SetRewriteMethod(new FieldCacheRewriteMethod());
 			a2.SetRewriteMethod(new FieldCacheRewriteMethod());
 			b.SetRewriteMethod(new FieldCacheRewriteMethod());
-			NUnit.Framework.Assert.AreEqual(a1, a2);
-			NUnit.Framework.Assert.IsFalse(a1.Equals(b));
+			AreEqual(a1, a2);
+			IsFalse(a1.Equals(b));
 			QueryUtils.Check(a1);
 		}
 	}

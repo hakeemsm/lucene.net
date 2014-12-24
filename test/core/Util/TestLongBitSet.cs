@@ -18,7 +18,7 @@ namespace Lucene.Net.Util
 			{
 				if (a.Get(i) != b.Get(i))
 				{
-					NUnit.Framework.Assert.Fail("mismatch: BitSet=[" + i + "]=" + a.Get(i));
+					Fail("mismatch: BitSet=[" + i + "]=" + a.Get(i));
 				}
 			}
 		}
@@ -31,7 +31,7 @@ namespace Lucene.Net.Util
 			{
 				aa = a.NextSetBit(aa + 1);
 				bb = bb < b.Length() - 1 ? b.NextSetBit(bb + 1) : -1;
-				NUnit.Framework.Assert.AreEqual(aa, bb);
+				AreEqual(aa, bb);
 			}
 			while (aa >= 0);
 		}
@@ -70,7 +70,7 @@ namespace Lucene.Net.Util
 						}
 					}
 				}
-				NUnit.Framework.Assert.AreEqual(aa, bb);
+				AreEqual(aa, bb);
 			}
 			while (aa >= 0);
 		}
@@ -106,13 +106,13 @@ namespace Lucene.Net.Util
 						b.Flip(idx, idx + 1);
 						bool val2 = b.Get(idx);
 						bool val = b.GetAndSet(idx);
-						NUnit.Framework.Assert.IsTrue(val2 == val);
-						NUnit.Framework.Assert.IsTrue(b.Get(idx));
+						IsTrue(val2 == val);
+						IsTrue(b.Get(idx));
 						if (!val)
 						{
 							b.Clear(idx);
 						}
-						NUnit.Framework.Assert.IsTrue(b.Get(idx) == val);
+						IsTrue(b.Get(idx) == val);
 					}
 				}
 				// test that the various ways of accessing the bits are equivalent
@@ -146,7 +146,7 @@ namespace Lucene.Net.Util
 				DoPrevSetBit(aa, bb);
 				if (b0 != null && b0.Length() <= b.Length())
 				{
-					NUnit.Framework.Assert.AreEqual(a.Cardinality(), b.Cardinality());
+					AreEqual(a.Cardinality(), b.Cardinality());
 					BitSet a_and = (BitSet)a.Clone();
 					a_and.And(a0);
 					BitSet a_or = (BitSet)a.Clone();
@@ -156,7 +156,7 @@ namespace Lucene.Net.Util
 					BitSet a_andn = (BitSet)a.Clone();
 					a_andn.AndNot(a0);
 					LongBitSet b_and = b.Clone();
-					NUnit.Framework.Assert.AreEqual(b, b_and);
+					AreEqual(b, b_and);
 					b_and.And(b0);
 					LongBitSet b_or = b.Clone();
 					b_or.Or(b0);
@@ -164,12 +164,12 @@ namespace Lucene.Net.Util
 					b_xor.Xor(b0);
 					LongBitSet b_andn = b.Clone();
 					b_andn.AndNot(b0);
-					NUnit.Framework.Assert.AreEqual(a0.Cardinality(), b0.Cardinality());
-					NUnit.Framework.Assert.AreEqual(a_or.Cardinality(), b_or.Cardinality());
-					NUnit.Framework.Assert.AreEqual(a_and.Cardinality(), b_and.Cardinality());
-					NUnit.Framework.Assert.AreEqual(a_or.Cardinality(), b_or.Cardinality());
-					NUnit.Framework.Assert.AreEqual(a_xor.Cardinality(), b_xor.Cardinality());
-					NUnit.Framework.Assert.AreEqual(a_andn.Cardinality(), b_andn.Cardinality());
+					AreEqual(a0.Cardinality(), b0.Cardinality());
+					AreEqual(a_or.Cardinality(), b_or.Cardinality());
+					AreEqual(a_and.Cardinality(), b_and.Cardinality());
+					AreEqual(a_or.Cardinality(), b_or.Cardinality());
+					AreEqual(a_xor.Cardinality(), b_xor.Cardinality());
+					AreEqual(a_andn.Cardinality(), b_andn.Cardinality());
 				}
 				a0 = a;
 				b0 = b;
@@ -192,23 +192,23 @@ namespace Lucene.Net.Util
 			int numBits = Random().Next(2000) + 1;
 			LongBitSet b1 = new LongBitSet(numBits);
 			LongBitSet b2 = new LongBitSet(numBits);
-			NUnit.Framework.Assert.IsTrue(b1.Equals(b2));
-			NUnit.Framework.Assert.IsTrue(b2.Equals(b1));
+			IsTrue(b1.Equals(b2));
+			IsTrue(b2.Equals(b1));
 			for (int iter = 0; iter < 10 * RANDOM_MULTIPLIER; iter++)
 			{
 				int idx = Random().Next(numBits);
 				if (!b1.Get(idx))
 				{
 					b1.Set(idx);
-					NUnit.Framework.Assert.IsFalse(b1.Equals(b2));
-					NUnit.Framework.Assert.IsFalse(b2.Equals(b1));
+					IsFalse(b1.Equals(b2));
+					IsFalse(b2.Equals(b1));
 					b2.Set(idx);
-					NUnit.Framework.Assert.IsTrue(b1.Equals(b2));
-					NUnit.Framework.Assert.IsTrue(b2.Equals(b1));
+					IsTrue(b1.Equals(b2));
+					IsTrue(b2.Equals(b1));
 				}
 			}
 			// try different type of object
-			NUnit.Framework.Assert.IsFalse(b1.Equals(new object()));
+			IsFalse(b1.Equals(new object()));
 		}
 
 		public virtual void TestHashCodeEquals()
@@ -217,19 +217,19 @@ namespace Lucene.Net.Util
 			int numBits = Random().Next(2000) + 1;
 			LongBitSet b1 = new LongBitSet(numBits);
 			LongBitSet b2 = new LongBitSet(numBits);
-			NUnit.Framework.Assert.IsTrue(b1.Equals(b2));
-			NUnit.Framework.Assert.IsTrue(b2.Equals(b1));
+			IsTrue(b1.Equals(b2));
+			IsTrue(b2.Equals(b1));
 			for (int iter = 0; iter < 10 * RANDOM_MULTIPLIER; iter++)
 			{
 				int idx = Random().Next(numBits);
 				if (!b1.Get(idx))
 				{
 					b1.Set(idx);
-					NUnit.Framework.Assert.IsFalse(b1.Equals(b2));
-					NUnit.Framework.Assert.IsFalse(b1.GetHashCode() == b2.GetHashCode());
+					IsFalse(b1.Equals(b2));
+					IsFalse(b1.GetHashCode() == b2.GetHashCode());
 					b2.Set(idx);
-					NUnit.Framework.Assert.AreEqual(b1, b2);
-					NUnit.Framework.Assert.AreEqual(b1.GetHashCode(), b2.GetHashCode());
+					AreEqual(b1, b2);
+					AreEqual(b1.GetHashCode(), b2.GetHashCode());
 				}
 			}
 		}
@@ -241,15 +241,15 @@ namespace Lucene.Net.Util
 			{
 				LongBitSet b1 = new LongBitSet(numBits);
 				LongBitSet b2 = new LongBitSet(numBits);
-				NUnit.Framework.Assert.IsTrue(b1.Equals(b2));
-				NUnit.Framework.Assert.AreEqual(b1.GetHashCode(), b2.GetHashCode());
-				NUnit.Framework.Assert.AreEqual(0, b1.Cardinality());
+				IsTrue(b1.Equals(b2));
+				AreEqual(b1.GetHashCode(), b2.GetHashCode());
+				AreEqual(0, b1.Cardinality());
 				if (numBits > 0)
 				{
 					b1.Set(0, numBits);
-					NUnit.Framework.Assert.AreEqual(numBits, b1.Cardinality());
+					AreEqual(numBits, b1.Cardinality());
 					b1.Flip(0, numBits);
-					NUnit.Framework.Assert.AreEqual(0, b1.Cardinality());
+					AreEqual(0, b1.Cardinality());
 				}
 			}
 		}
@@ -327,25 +327,25 @@ namespace Lucene.Net.Util
 			bits.Set(4);
 			LongBitSet newBits = LongBitSet.EnsureCapacity(bits, 8);
 			// grow within the word
-			NUnit.Framework.Assert.IsTrue(newBits.Get(1));
-			NUnit.Framework.Assert.IsTrue(newBits.Get(4));
+			IsTrue(newBits.Get(1));
+			IsTrue(newBits.Get(4));
 			newBits.Clear(1);
 			// we align to 64-bits, so even though it shouldn't have, it re-allocated a long[1]
-			NUnit.Framework.Assert.IsTrue(bits.Get(1));
-			NUnit.Framework.Assert.IsFalse(newBits.Get(1));
+			IsTrue(bits.Get(1));
+			IsFalse(newBits.Get(1));
 			newBits.Set(1);
 			newBits = LongBitSet.EnsureCapacity(newBits, newBits.Length() - 2);
 			// reuse
-			NUnit.Framework.Assert.IsTrue(newBits.Get(1));
+			IsTrue(newBits.Get(1));
 			bits.Set(1);
 			newBits = LongBitSet.EnsureCapacity(bits, 72);
 			// grow beyond one word
-			NUnit.Framework.Assert.IsTrue(newBits.Get(1));
-			NUnit.Framework.Assert.IsTrue(newBits.Get(4));
+			IsTrue(newBits.Get(1));
+			IsTrue(newBits.Get(4));
 			newBits.Clear(1);
 			// we grew the long[], so it's not shared
-			NUnit.Framework.Assert.IsTrue(bits.Get(1));
-			NUnit.Framework.Assert.IsFalse(newBits.Get(1));
+			IsTrue(bits.Get(1));
+			IsFalse(newBits.Get(1));
 		}
 	}
 }

@@ -125,48 +125,48 @@ namespace Lucene.Net.Index
 		/// <exception cref="System.IO.IOException"></exception>
 		private void CheckReads<_T0>(DataInput @is, Type<_T0> expectedEx) where _T0:Exception
 		{
-			NUnit.Framework.Assert.AreEqual(128, @is.ReadVInt());
-			NUnit.Framework.Assert.AreEqual(16383, @is.ReadVInt());
-			NUnit.Framework.Assert.AreEqual(16384, @is.ReadVInt());
-			NUnit.Framework.Assert.AreEqual(16385, @is.ReadVInt());
-			NUnit.Framework.Assert.AreEqual(int.MaxValue, @is.ReadVInt());
-			NUnit.Framework.Assert.AreEqual(-1, @is.ReadVInt());
-			NUnit.Framework.Assert.AreEqual((long)int.MaxValue, @is.ReadVLong());
-			NUnit.Framework.Assert.AreEqual(long.MaxValue, @is.ReadVLong());
-			NUnit.Framework.Assert.AreEqual("Lucene", @is.ReadString());
-			NUnit.Framework.Assert.AreEqual("\u00BF", @is.ReadString());
-			NUnit.Framework.Assert.AreEqual("Lu\u00BFce\u00BFne", @is.ReadString());
-			NUnit.Framework.Assert.AreEqual("\u2620", @is.ReadString());
-			NUnit.Framework.Assert.AreEqual("Lu\u2620ce\u2620ne", @is.ReadString());
-			NUnit.Framework.Assert.AreEqual("\uD834\uDD1E", @is.ReadString());
-			NUnit.Framework.Assert.AreEqual("\uD834\uDD1E\uD834\uDD60", @is.ReadString());
-			NUnit.Framework.Assert.AreEqual("Lu\uD834\uDD1Ece\uD834\uDD60ne", @is.ReadString(
+			AreEqual(128, @is.ReadVInt());
+			AreEqual(16383, @is.ReadVInt());
+			AreEqual(16384, @is.ReadVInt());
+			AreEqual(16385, @is.ReadVInt());
+			AreEqual(int.MaxValue, @is.ReadVInt());
+			AreEqual(-1, @is.ReadVInt());
+			AreEqual((long)int.MaxValue, @is.ReadVLong());
+			AreEqual(long.MaxValue, @is.ReadVLong());
+			AreEqual("Lucene", @is.ReadString());
+			AreEqual("\u00BF", @is.ReadString());
+			AreEqual("Lu\u00BFce\u00BFne", @is.ReadString());
+			AreEqual("\u2620", @is.ReadString());
+			AreEqual("Lu\u2620ce\u2620ne", @is.ReadString());
+			AreEqual("\uD834\uDD1E", @is.ReadString());
+			AreEqual("\uD834\uDD1E\uD834\uDD60", @is.ReadString());
+			AreEqual("Lu\uD834\uDD1Ece\uD834\uDD60ne", @is.ReadString(
 				));
-			NUnit.Framework.Assert.AreEqual("\u0000", @is.ReadString());
-			NUnit.Framework.Assert.AreEqual("Lu\u0000ce\u0000ne", @is.ReadString());
+			AreEqual("\u0000", @is.ReadString());
+			AreEqual("Lu\u0000ce\u0000ne", @is.ReadString());
 			try
 			{
 				@is.ReadVInt();
-				NUnit.Framework.Assert.Fail("Should throw " + expectedEx.FullName);
+				Fail("Should throw " + expectedEx.FullName);
 			}
 			catch (Exception e)
 			{
-				NUnit.Framework.Assert.IsTrue(e.Message.StartsWith("Invalid vInt"));
-				NUnit.Framework.Assert.IsTrue(expectedEx.IsInstanceOfType(e));
+				IsTrue(e.Message.StartsWith("Invalid vInt"));
+				IsTrue(expectedEx.IsInstanceOfType(e));
 			}
-			NUnit.Framework.Assert.AreEqual(1, @is.ReadVInt());
+			AreEqual(1, @is.ReadVInt());
 			// guard value
 			try
 			{
 				@is.ReadVLong();
-				NUnit.Framework.Assert.Fail("Should throw " + expectedEx.FullName);
+				Fail("Should throw " + expectedEx.FullName);
 			}
 			catch (Exception e)
 			{
-				NUnit.Framework.Assert.IsTrue(e.Message.StartsWith("Invalid vLong"));
-				NUnit.Framework.Assert.IsTrue(expectedEx.IsInstanceOfType(e));
+				IsTrue(e.Message.StartsWith("Invalid vLong"));
+				IsTrue(expectedEx.IsInstanceOfType(e));
 			}
-			NUnit.Framework.Assert.AreEqual(1L, @is.ReadVLong());
+			AreEqual(1L, @is.ReadVLong());
 		}
 
 		// guard value
@@ -175,10 +175,10 @@ namespace Lucene.Net.Index
 		{
 			for (int i = 0; i < COUNT; i++)
 			{
-				NUnit.Framework.Assert.AreEqual(INTS[i], @is.ReadVInt());
-				NUnit.Framework.Assert.AreEqual(INTS[i], @is.ReadInt());
-				NUnit.Framework.Assert.AreEqual(LONGS[i], @is.ReadVLong());
-				NUnit.Framework.Assert.AreEqual(LONGS[i], @is.ReadLong());
+				AreEqual(INTS[i], @is.ReadVInt());
+				AreEqual(INTS[i], @is.ReadInt());
+				AreEqual(LONGS[i], @is.ReadVLong());
+				AreEqual(LONGS[i], @is.ReadLong());
 			}
 		}
 

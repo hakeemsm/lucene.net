@@ -13,7 +13,7 @@ namespace Lucene.Net.Util
 	{
 		private void TstRank(long x)
 		{
-			NUnit.Framework.Assert.AreEqual("rank(" + x + ")", long.BitCount(x), BroadWord.BitCount
+			AreEqual("rank(" + x + ")", long.BitCount(x), BroadWord.BitCount
 				(x));
 		}
 
@@ -29,9 +29,9 @@ namespace Lucene.Net.Util
 
 		private void TstSelect(long x, int r, int exp)
 		{
-			NUnit.Framework.Assert.AreEqual("selectNaive(" + x + "," + r + ")", exp, BroadWord
+			AreEqual("selectNaive(" + x + "," + r + ")", exp, BroadWord
 				.SelectNaive(x, r));
-			NUnit.Framework.Assert.AreEqual("select(" + x + "," + r + ")", exp, BroadWord.Select
+			AreEqual("select(" + x + "," + r + ")", exp, BroadWord.Select
 				(x, r));
 		}
 
@@ -96,7 +96,7 @@ namespace Lucene.Net.Util
 				// 1000000 for real perf test
 				for (int i = 0; i < 64; i++)
 				{
-					NUnit.Framework.Assert.AreEqual(i, BroadWord.Select(unchecked((long)(0xFFFFFFFFFFFFFFFFL
+					AreEqual(i, BroadWord.Select(unchecked((long)(0xFFFFFFFFFFFFFFFFL
 						)), i + 1));
 				}
 			}
@@ -109,7 +109,7 @@ namespace Lucene.Net.Util
 				// real perftest: 1000000
 				for (int i = 0; i < 64; i++)
 				{
-					NUnit.Framework.Assert.AreEqual(i, BroadWord.SelectNaive(unchecked((long)(0xFFFFFFFFFFFFFFFFL
+					AreEqual(i, BroadWord.SelectNaive(unchecked((long)(0xFFFFFFFFFFFFFFFFL
 						)), i + 1));
 				}
 			}
@@ -124,7 +124,7 @@ namespace Lucene.Net.Util
 				{
 					long ii = i * BroadWord.L8_L;
 					long jj = j * BroadWord.L8_L;
-					NUnit.Framework.Assert.AreEqual(ToStringUtils.LongHex(ii) + " < " + ToStringUtils
+					AreEqual(ToStringUtils.LongHex(ii) + " < " + ToStringUtils
 						.LongHex(jj), ToStringUtils.LongHex((i < j) ? (unchecked((long)(0x80L)) * BroadWord
 						.L8_L) : unchecked((long)(0x0L))), ToStringUtils.LongHex(BroadWord.SmallerUpTo7_8
 						(ii, jj)));
@@ -141,7 +141,7 @@ namespace Lucene.Net.Util
 				{
 					long ii = i * BroadWord.L8_L;
 					long jj = j * BroadWord.L8_L;
-					NUnit.Framework.Assert.AreEqual(ToStringUtils.LongHex(ii) + " < " + ToStringUtils
+					AreEqual(ToStringUtils.LongHex(ii) + " < " + ToStringUtils
 						.LongHex(jj), ToStringUtils.LongHex((i < j) ? (unchecked((long)(0x80L)) * BroadWord
 						.L8_L) : unchecked((long)(0x0L))), ToStringUtils.LongHex(BroadWord.Smalleru_8(ii
 						, jj)));
@@ -155,7 +155,7 @@ namespace Lucene.Net.Util
 			for (long i = unchecked((long)(0x0L)); i <= unchecked((long)(0xFFL)); i++)
 			{
 				long ii = i * BroadWord.L8_L;
-				NUnit.Framework.Assert.AreEqual(ToStringUtils.LongHex(ii) + " <> 0", ToStringUtils
+				AreEqual(ToStringUtils.LongHex(ii) + " <> 0", ToStringUtils
 					.LongHex((i != 0L) ? (unchecked((long)(0x80L)) * BroadWord.L8_L) : unchecked((long
 					)(0x0L))), ToStringUtils.LongHex(BroadWord.NotEquals0_8(ii)));
 			}

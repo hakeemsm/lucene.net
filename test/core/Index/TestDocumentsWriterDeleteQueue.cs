@@ -46,7 +46,7 @@ namespace Lucene.Net.Index
 				if (Random().Next(20) == 0 || j == ids.Length - 1)
 				{
 					queue.UpdateSlice(slice1);
-					NUnit.Framework.Assert.IsTrue(slice1.IsTailItem(term));
+					IsTrue(slice1.IsTailItem(term));
 					slice1.Apply(bd1, j);
 					AssertAllBetween(last1, j, bd1, ids);
 					last1 = j + 1;
@@ -54,15 +54,15 @@ namespace Lucene.Net.Index
 				if (Random().Next(10) == 5 || j == ids.Length - 1)
 				{
 					queue.UpdateSlice(slice2);
-					NUnit.Framework.Assert.IsTrue(slice2.IsTailItem(term));
+					IsTrue(slice2.IsTailItem(term));
 					slice2.Apply(bd2, j);
 					AssertAllBetween(last2, j, bd2, ids);
 					last2 = j + 1;
 				}
-				NUnit.Framework.Assert.AreEqual(j + 1, queue.NumGlobalTermDeletes());
+				AreEqual(j + 1, queue.NumGlobalTermDeletes());
 			}
-			NUnit.Framework.Assert.AreEqual(uniqueValues, bd1.terms.Keys);
-			NUnit.Framework.Assert.AreEqual(uniqueValues, bd2.terms.Keys);
+			AreEqual(uniqueValues, bd1.terms.Keys);
+			AreEqual(uniqueValues, bd2.terms.Keys);
 			HashSet<Term> frozenSet = new HashSet<Term>();
 			foreach (Term t in queue.FreezeGlobalBuffer(null).TermsIterable())
 			{
@@ -70,8 +70,8 @@ namespace Lucene.Net.Index
 				bytesRef.CopyBytes(t.bytes);
 				frozenSet.AddItem(new Term(t.field, bytesRef));
 			}
-			NUnit.Framework.Assert.AreEqual(uniqueValues, frozenSet);
-			NUnit.Framework.Assert.AreEqual("num deletes must be 0 after freeze", 0, queue.NumGlobalTermDeletes
+			AreEqual(uniqueValues, frozenSet);
+			AreEqual("num deletes must be 0 after freeze", 0, queue.NumGlobalTermDeletes
 				());
 		}
 
@@ -80,7 +80,7 @@ namespace Lucene.Net.Index
 		{
 			for (int i = start; i <= end; i++)
 			{
-				NUnit.Framework.Assert.AreEqual(Sharpen.Extensions.ValueOf(end), deletes.terms.Get
+				AreEqual(Sharpen.Extensions.ValueOf(end), deletes.terms.Get
 					(new Term("id", ids[i].ToString())));
 			}
 		}
@@ -88,9 +88,9 @@ namespace Lucene.Net.Index
 		public virtual void TestClear()
 		{
 			DocumentsWriterDeleteQueue queue = new DocumentsWriterDeleteQueue();
-			NUnit.Framework.Assert.IsFalse(queue.AnyChanges());
+			IsFalse(queue.AnyChanges());
 			queue.Clear();
-			NUnit.Framework.Assert.IsFalse(queue.AnyChanges());
+			IsFalse(queue.AnyChanges());
 			int size = 200 + Random().Next(500) * RANDOM_MULTIPLIER;
 			int termsSinceFreeze = 0;
 			int queriesSinceFreeze = 0;
@@ -107,12 +107,12 @@ namespace Lucene.Net.Index
 					queue.AddDelete(term);
 					termsSinceFreeze++;
 				}
-				NUnit.Framework.Assert.IsTrue(queue.AnyChanges());
+				IsTrue(queue.AnyChanges());
 				if (Random().Next(10) == 0)
 				{
 					queue.Clear();
 					queue.TryApplyGlobalSlice();
-					NUnit.Framework.Assert.IsFalse(queue.AnyChanges());
+					IsFalse(queue.AnyChanges());
 				}
 			}
 		}
@@ -136,16 +136,16 @@ namespace Lucene.Net.Index
 					queue.AddDelete(term);
 					termsSinceFreeze++;
 				}
-				NUnit.Framework.Assert.IsTrue(queue.AnyChanges());
+				IsTrue(queue.AnyChanges());
 				if (Random().Next(5) == 0)
 				{
 					FrozenBufferedUpdates freezeGlobalBuffer = queue.FreezeGlobalBuffer(null);
-					NUnit.Framework.Assert.AreEqual(termsSinceFreeze, freezeGlobalBuffer.termCount);
-					NUnit.Framework.Assert.AreEqual(queriesSinceFreeze, freezeGlobalBuffer.queries.Length
+					AreEqual(termsSinceFreeze, freezeGlobalBuffer.termCount);
+					AreEqual(queriesSinceFreeze, freezeGlobalBuffer.queries.Length
 						);
 					queriesSinceFreeze = 0;
 					termsSinceFreeze = 0;
-					NUnit.Framework.Assert.IsFalse(queue.AnyChanges());
+					IsFalse(queue.AnyChanges());
 				}
 			}
 		}
@@ -166,14 +166,14 @@ namespace Lucene.Net.Index
 			t.Start();
 			t.Join();
 			Lock.Unlock();
-			NUnit.Framework.Assert.IsTrue("changes in del queue but not in slice yet", queue.
+			IsTrue("changes in del queue but not in slice yet", queue.
 				AnyChanges());
 			queue.TryApplyGlobalSlice();
-			NUnit.Framework.Assert.IsTrue("changes in global buffer", queue.AnyChanges());
+			IsTrue("changes in global buffer", queue.AnyChanges());
 			FrozenBufferedUpdates freezeGlobalBuffer = queue.FreezeGlobalBuffer(null);
-			NUnit.Framework.Assert.IsTrue(freezeGlobalBuffer.Any());
-			NUnit.Framework.Assert.AreEqual(1, freezeGlobalBuffer.termCount);
-			NUnit.Framework.Assert.IsFalse("all changes applied", queue.AnyChanges());
+			IsTrue(freezeGlobalBuffer.Any());
+			AreEqual(1, freezeGlobalBuffer.termCount);
+			IsFalse("all changes applied", queue.AnyChanges());
 		}
 
 		private sealed class _Thread_156 : Sharpen.Thread
@@ -225,7 +225,7 @@ namespace Lucene.Net.Index
 				queue.UpdateSlice(slice);
 				BufferedUpdates deletes = updateThread.deletes;
 				slice.Apply(deletes, BufferedUpdates.MAX_INT);
-				NUnit.Framework.Assert.AreEqual(uniqueValues, deletes.terms.Keys);
+				AreEqual(uniqueValues, deletes.terms.Keys);
 			}
 			queue.TryApplyGlobalSlice();
 			ICollection<Term> frozenSet = new HashSet<Term>();
@@ -235,10 +235,10 @@ namespace Lucene.Net.Index
 				bytesRef.CopyBytes(t.bytes);
 				frozenSet.AddItem(new Term(t.field, bytesRef));
 			}
-			NUnit.Framework.Assert.AreEqual("num deletes must be 0 after freeze", 0, queue.NumGlobalTermDeletes
+			AreEqual("num deletes must be 0 after freeze", 0, queue.NumGlobalTermDeletes
 				());
-			NUnit.Framework.Assert.AreEqual(uniqueValues.Count, frozenSet.Count);
-			NUnit.Framework.Assert.AreEqual(uniqueValues, frozenSet);
+			AreEqual(uniqueValues.Count, frozenSet.Count);
+			AreEqual(uniqueValues, frozenSet);
 		}
 
 		private class UpdateThread : Sharpen.Thread
@@ -281,7 +281,7 @@ namespace Lucene.Net.Index
 				{
 					Term term = new Term("id", ids[i].ToString());
 					queue.Add(term, slice);
-					NUnit.Framework.Assert.IsTrue(slice.IsTailItem(term));
+					IsTrue(slice.IsTailItem(term));
 					slice.Apply(deletes, BufferedUpdates.MAX_INT);
 				}
 			}

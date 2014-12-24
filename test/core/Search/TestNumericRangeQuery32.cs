@@ -5,7 +5,7 @@
  */
 
 using System;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -68,7 +68,7 @@ namespace Lucene.Net.Search
 			IntField ascfield8 = new IntField("ascfield8", 0, unstoredInt8);
 			IntField ascfield4 = new IntField("ascfield4", 0, unstoredInt4);
 			IntField ascfield2 = new IntField("ascfield2", 0, unstoredInt2);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			// add fields, that have a distance to test general functionality
 			doc.Add(field8);
@@ -167,13 +167,13 @@ namespace Lucene.Net.Search
 					}
 				}
 				ScoreDoc[] sd = topDocs.scoreDocs;
-				NUnit.Framework.Assert.IsNotNull(sd);
-				NUnit.Framework.Assert.AreEqual("Score doc count" + type, count, sd.Length);
-				Lucene.Net.Document.Document doc = searcher.Doc(sd[0].doc);
-				NUnit.Framework.Assert.AreEqual("First doc" + type, 2 * distance + startOffset, doc
+				IsNotNull(sd);
+				AreEqual("Score doc count" + type, count, sd.Length);
+				Lucene.Net.Documents.Document doc = searcher.Doc(sd[0].doc);
+				AreEqual("First doc" + type, 2 * distance + startOffset, doc
 					.GetField(field).NumericValue());
 				doc = searcher.Doc(sd[sd.Length - 1].doc);
-				NUnit.Framework.Assert.AreEqual("Last doc" + type, (1 + count) * distance + startOffset
+				AreEqual("Last doc" + type, (1 + count) * distance + startOffset
 					, doc.GetField(field).NumericValue());
 			}
 		}
@@ -207,13 +207,13 @@ namespace Lucene.Net.Search
 				(reader).GetContext());
 			NumericRangeFilter<int> f = NumericRangeFilter.NewIntRange("field8", 8, 1000, -1000
 				, true, true);
-			NUnit.Framework.Assert.IsNull("A inverse range should return the null instance", 
+			IsNull("A inverse range should return the null instance", 
 				f.GetDocIdSet(context, ((AtomicReader)context.Reader()).GetLiveDocs()));
 			f = NumericRangeFilter.NewIntRange("field8", 8, int.MaxValue, null, false, false);
-			NUnit.Framework.Assert.IsNull("A exclusive range starting with Integer.MAX_VALUE should return the null instance"
+			IsNull("A exclusive range starting with Integer.MAX_VALUE should return the null instance"
 				, f.GetDocIdSet(context, ((AtomicReader)context.Reader()).GetLiveDocs()));
 			f = NumericRangeFilter.NewIntRange("field8", 8, null, int.MinValue, false, false);
-			NUnit.Framework.Assert.IsNull("A exclusive range ending with Integer.MIN_VALUE should return the null instance"
+			IsNull("A exclusive range ending with Integer.MIN_VALUE should return the null instance"
 				, f.GetDocIdSet(context, ((AtomicReader)context.Reader()).GetLiveDocs()));
 		}
 
@@ -225,8 +225,8 @@ namespace Lucene.Net.Search
 				, true, true);
 			TopDocs topDocs = searcher.Search(q, noDocs);
 			ScoreDoc[] sd = topDocs.scoreDocs;
-			NUnit.Framework.Assert.IsNotNull(sd);
-			NUnit.Framework.Assert.AreEqual("Score doc count", 1, sd.Length);
+			IsNotNull(sd);
+			AreEqual("Score doc count", 1, sd.Length);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -239,24 +239,24 @@ namespace Lucene.Net.Search
 				, upper, true, true);
 			TopDocs topDocs = searcher.Search(q, null, noDocs, Sort.INDEXORDER);
 			ScoreDoc[] sd = topDocs.scoreDocs;
-			NUnit.Framework.Assert.IsNotNull(sd);
-			NUnit.Framework.Assert.AreEqual("Score doc count", count, sd.Length);
-			Lucene.Net.Document.Document doc = searcher.Doc(sd[0].doc);
-			NUnit.Framework.Assert.AreEqual("First doc", startOffset, doc.GetField(field).NumericValue
+			IsNotNull(sd);
+			AreEqual("Score doc count", count, sd.Length);
+			Lucene.Net.Documents.Document doc = searcher.Doc(sd[0].doc);
+			AreEqual("First doc", startOffset, doc.GetField(field).NumericValue
 				());
 			doc = searcher.Doc(sd[sd.Length - 1].doc);
-			NUnit.Framework.Assert.AreEqual("Last doc", (count - 1) * distance + startOffset, 
+			AreEqual("Last doc", (count - 1) * distance + startOffset, 
 				doc.GetField(field).NumericValue());
 			q = NumericRangeQuery.NewIntRange(field, precisionStep, null, upper, false, true);
 			topDocs = searcher.Search(q, null, noDocs, Sort.INDEXORDER);
 			sd = topDocs.scoreDocs;
-			NUnit.Framework.Assert.IsNotNull(sd);
-			NUnit.Framework.Assert.AreEqual("Score doc count", count, sd.Length);
+			IsNotNull(sd);
+			AreEqual("Score doc count", count, sd.Length);
 			doc = searcher.Doc(sd[0].doc);
-			NUnit.Framework.Assert.AreEqual("First doc", startOffset, doc.GetField(field).NumericValue
+			AreEqual("First doc", startOffset, doc.GetField(field).NumericValue
 				());
 			doc = searcher.Doc(sd[sd.Length - 1].doc);
-			NUnit.Framework.Assert.AreEqual("Last doc", (count - 1) * distance + startOffset, 
+			AreEqual("Last doc", (count - 1) * distance + startOffset, 
 				doc.GetField(field).NumericValue());
 		}
 
@@ -291,24 +291,24 @@ namespace Lucene.Net.Search
 				, null, true, true);
 			TopDocs topDocs = searcher.Search(q, null, noDocs, Sort.INDEXORDER);
 			ScoreDoc[] sd = topDocs.scoreDocs;
-			NUnit.Framework.Assert.IsNotNull(sd);
-			NUnit.Framework.Assert.AreEqual("Score doc count", noDocs - count, sd.Length);
-			Lucene.Net.Document.Document doc = searcher.Doc(sd[0].doc);
-			NUnit.Framework.Assert.AreEqual("First doc", count * distance + startOffset, doc.
+			IsNotNull(sd);
+			AreEqual("Score doc count", noDocs - count, sd.Length);
+			Lucene.Net.Documents.Document doc = searcher.Doc(sd[0].doc);
+			AreEqual("First doc", count * distance + startOffset, doc.
 				GetField(field).NumericValue());
 			doc = searcher.Doc(sd[sd.Length - 1].doc);
-			NUnit.Framework.Assert.AreEqual("Last doc", (noDocs - 1) * distance + startOffset
+			AreEqual("Last doc", (noDocs - 1) * distance + startOffset
 				, doc.GetField(field).NumericValue());
 			q = NumericRangeQuery.NewIntRange(field, precisionStep, lower, null, true, false);
 			topDocs = searcher.Search(q, null, noDocs, Sort.INDEXORDER);
 			sd = topDocs.scoreDocs;
-			NUnit.Framework.Assert.IsNotNull(sd);
-			NUnit.Framework.Assert.AreEqual("Score doc count", noDocs - count, sd.Length);
+			IsNotNull(sd);
+			AreEqual("Score doc count", noDocs - count, sd.Length);
 			doc = searcher.Doc(sd[0].doc);
-			NUnit.Framework.Assert.AreEqual("First doc", count * distance + startOffset, doc.
+			AreEqual("First doc", count * distance + startOffset, doc.
 				GetField(field).NumericValue());
 			doc = searcher.Doc(sd[sd.Length - 1].doc);
-			NUnit.Framework.Assert.AreEqual("Last doc", (noDocs - 1) * distance + startOffset
+			AreEqual("Last doc", (noDocs - 1) * distance + startOffset
 				, doc.GetField(field).NumericValue());
 		}
 
@@ -340,22 +340,22 @@ namespace Lucene.Net.Search
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir, NewIndexWriterConfig
 				(TEST_VERSION_CURRENT, new MockAnalyzer(Random())));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new FloatField("float", float.NegativeInfinity, Field.Store.NO));
 			doc.Add(new IntField("int", int.MinValue, Field.Store.NO));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(new FloatField("float", float.PositiveInfinity, Field.Store.NO));
 			doc.Add(new IntField("int", int.MaxValue, Field.Store.NO));
 			writer.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(new FloatField("float", 0.0f, Field.Store.NO));
 			doc.Add(new IntField("int", 0, Field.Store.NO));
 			writer.AddDocument(doc);
 			foreach (float f in TestNumericUtils.FLOAT_NANs)
 			{
-				doc = new Lucene.Net.Document.Document();
+				doc = new Lucene.Net.Documents.Document();
 				doc.Add(new FloatField("float", f, Field.Store.NO));
 				writer.AddDocument(doc);
 			}
@@ -364,34 +364,34 @@ namespace Lucene.Net.Search
 			IndexSearcher s = NewSearcher(r);
 			Query q = NumericRangeQuery.NewIntRange("int", null, null, true, true);
 			TopDocs topDocs = s.Search(q, 10);
-			NUnit.Framework.Assert.AreEqual("Score doc count", 3, topDocs.scoreDocs.Length);
+			AreEqual("Score doc count", 3, topDocs.scoreDocs.Length);
 			q = NumericRangeQuery.NewIntRange("int", null, null, false, false);
 			topDocs = s.Search(q, 10);
-			NUnit.Framework.Assert.AreEqual("Score doc count", 3, topDocs.scoreDocs.Length);
+			AreEqual("Score doc count", 3, topDocs.scoreDocs.Length);
 			q = NumericRangeQuery.NewIntRange("int", int.MinValue, int.MaxValue, true, true);
 			topDocs = s.Search(q, 10);
-			NUnit.Framework.Assert.AreEqual("Score doc count", 3, topDocs.scoreDocs.Length);
+			AreEqual("Score doc count", 3, topDocs.scoreDocs.Length);
 			q = NumericRangeQuery.NewIntRange("int", int.MinValue, int.MaxValue, false, false
 				);
 			topDocs = s.Search(q, 10);
-			NUnit.Framework.Assert.AreEqual("Score doc count", 1, topDocs.scoreDocs.Length);
+			AreEqual("Score doc count", 1, topDocs.scoreDocs.Length);
 			q = NumericRangeQuery.NewFloatRange("float", null, null, true, true);
 			topDocs = s.Search(q, 10);
-			NUnit.Framework.Assert.AreEqual("Score doc count", 3, topDocs.scoreDocs.Length);
+			AreEqual("Score doc count", 3, topDocs.scoreDocs.Length);
 			q = NumericRangeQuery.NewFloatRange("float", null, null, false, false);
 			topDocs = s.Search(q, 10);
-			NUnit.Framework.Assert.AreEqual("Score doc count", 3, topDocs.scoreDocs.Length);
+			AreEqual("Score doc count", 3, topDocs.scoreDocs.Length);
 			q = NumericRangeQuery.NewFloatRange("float", float.NegativeInfinity, float.PositiveInfinity
 				, true, true);
 			topDocs = s.Search(q, 10);
-			NUnit.Framework.Assert.AreEqual("Score doc count", 3, topDocs.scoreDocs.Length);
+			AreEqual("Score doc count", 3, topDocs.scoreDocs.Length);
 			q = NumericRangeQuery.NewFloatRange("float", float.NegativeInfinity, float.PositiveInfinity
 				, false, false);
 			topDocs = s.Search(q, 10);
-			NUnit.Framework.Assert.AreEqual("Score doc count", 1, topDocs.scoreDocs.Length);
+			AreEqual("Score doc count", 1, topDocs.scoreDocs.Length);
 			q = NumericRangeQuery.NewFloatRange("float", float.NaN, float.NaN, true, true);
 			topDocs = s.Search(q, 10);
-			NUnit.Framework.Assert.AreEqual("Score doc count", TestNumericUtils.FLOAT_NANs.Length
+			AreEqual("Score doc count", TestNumericUtils.FLOAT_NANs.Length
 				, topDocs.scoreDocs.Length);
 			r.Close();
 			dir.Close();
@@ -426,8 +426,8 @@ namespace Lucene.Net.Search
 				TermRangeQuery cq = new TermRangeQuery(field, lowerBytes, upperBytes, true, true);
 				TopDocs tTopDocs = searcher.Search(tq, 1);
 				TopDocs cTopDocs = searcher.Search(cq, 1);
-				NUnit.Framework.Assert.AreEqual("Returned count for NumericRangeQuery and TermRangeQuery must be equal"
-					, cTopDocs.totalHits, tTopDocs.totalHits);
+				AreEqual("Returned count for NumericRangeQuery and TermRangeQuery must be equal"
+					, cTopDocs.TotalHits, tTopDocs.TotalHits);
 				totalTermCountT += termCountT = CountTerms(tq);
 				totalTermCountC += termCountC = CountTerms(cq);
 				CheckTermCounts(precisionStep, termCountT, termCountC);
@@ -437,8 +437,8 @@ namespace Lucene.Net.Search
 				cq = new TermRangeQuery(field, lowerBytes, upperBytes, false, false);
 				tTopDocs = searcher.Search(tq, 1);
 				cTopDocs = searcher.Search(cq, 1);
-				NUnit.Framework.Assert.AreEqual("Returned count for NumericRangeQuery and TermRangeQuery must be equal"
-					, cTopDocs.totalHits, tTopDocs.totalHits);
+				AreEqual("Returned count for NumericRangeQuery and TermRangeQuery must be equal"
+					, cTopDocs.TotalHits, tTopDocs.TotalHits);
 				totalTermCountT += termCountT = CountTerms(tq);
 				totalTermCountC += termCountC = CountTerms(cq);
 				CheckTermCounts(precisionStep, termCountT, termCountC);
@@ -448,8 +448,8 @@ namespace Lucene.Net.Search
 				cq = new TermRangeQuery(field, lowerBytes, upperBytes, false, true);
 				tTopDocs = searcher.Search(tq, 1);
 				cTopDocs = searcher.Search(cq, 1);
-				NUnit.Framework.Assert.AreEqual("Returned count for NumericRangeQuery and TermRangeQuery must be equal"
-					, cTopDocs.totalHits, tTopDocs.totalHits);
+				AreEqual("Returned count for NumericRangeQuery and TermRangeQuery must be equal"
+					, cTopDocs.TotalHits, tTopDocs.TotalHits);
 				totalTermCountT += termCountT = CountTerms(tq);
 				totalTermCountC += termCountC = CountTerms(cq);
 				CheckTermCounts(precisionStep, termCountT, termCountC);
@@ -459,8 +459,8 @@ namespace Lucene.Net.Search
 				cq = new TermRangeQuery(field, lowerBytes, upperBytes, true, false);
 				tTopDocs = searcher.Search(tq, 1);
 				cTopDocs = searcher.Search(cq, 1);
-				NUnit.Framework.Assert.AreEqual("Returned count for NumericRangeQuery and TermRangeQuery must be equal"
-					, cTopDocs.totalHits, tTopDocs.totalHits);
+				AreEqual("Returned count for NumericRangeQuery and TermRangeQuery must be equal"
+					, cTopDocs.TotalHits, tTopDocs.TotalHits);
 				totalTermCountT += termCountT = CountTerms(tq);
 				totalTermCountC += termCountC = CountTerms(cq);
 				CheckTermCounts(precisionStep, termCountT, termCountC);
@@ -487,16 +487,16 @@ namespace Lucene.Net.Search
 			// test empty enum
 			//HM:revisit 
 			//assert lower < upper;
-			NUnit.Framework.Assert.IsTrue(0 < CountTerms(NumericRangeQuery.NewIntRange("field4"
+			IsTrue(0 < CountTerms(NumericRangeQuery.NewIntRange("field4"
 				, 4, lower, upper, true, true)));
-			NUnit.Framework.Assert.AreEqual(0, CountTerms(NumericRangeQuery.NewIntRange("field4"
+			AreEqual(0, CountTerms(NumericRangeQuery.NewIntRange("field4"
 				, 4, upper, lower, true, true)));
 			// test empty enum outside of bounds
 			lower = distance * noDocs + startOffset;
 			upper = 2 * lower;
 			//HM:revisit 
 			//assert lower < upper;
-			NUnit.Framework.Assert.AreEqual(0, CountTerms(NumericRangeQuery.NewIntRange("field4"
+			AreEqual(0, CountTerms(NumericRangeQuery.NewIntRange("field4"
 				, 4, lower, upper, true, true)));
 		}
 
@@ -509,7 +509,7 @@ namespace Lucene.Net.Search
 				return 0;
 			}
 			TermsEnum termEnum = q.GetTermsEnum(terms);
-			NUnit.Framework.Assert.IsNotNull(termEnum);
+			IsNotNull(termEnum);
 			int count = 0;
 			BytesRef cur;
 			BytesRef last = null;
@@ -518,7 +518,7 @@ namespace Lucene.Net.Search
 				count++;
 				if (last != null)
 				{
-					NUnit.Framework.Assert.IsTrue(last.CompareTo(cur) < 0);
+					IsTrue(last.CompareTo(cur) < 0);
 				}
 				last = BytesRef.DeepCopyOf(cur);
 			}
@@ -531,12 +531,12 @@ namespace Lucene.Net.Search
 		{
 			if (precisionStep == int.MaxValue)
 			{
-				NUnit.Framework.Assert.AreEqual("Number of terms should be equal for unlimited precStep"
+				AreEqual("Number of terms should be equal for unlimited precStep"
 					, termCountC, termCountT);
 			}
 			else
 			{
-				NUnit.Framework.Assert.IsTrue("Number of terms for NRQ should be <= compared to classical TRQ"
+				IsTrue("Number of terms for NRQ should be <= compared to classical TRQ"
 					, termCountT <= termCountC);
 			}
 		}
@@ -589,26 +589,26 @@ namespace Lucene.Net.Search
 				Query tq = NumericRangeQuery.NewIntRange(field, precisionStep, lower, upper, true
 					, true);
 				TopDocs tTopDocs = searcher.Search(tq, 1);
-				NUnit.Framework.Assert.AreEqual("Returned count of range query must be equal to inclusive range length"
-					, upper - lower + 1, tTopDocs.totalHits);
+				AreEqual("Returned count of range query must be equal to inclusive range length"
+					, upper - lower + 1, tTopDocs.TotalHits);
 				// test exclusive range
 				tq = NumericRangeQuery.NewIntRange(field, precisionStep, lower, upper, false, false
 					);
 				tTopDocs = searcher.Search(tq, 1);
-				NUnit.Framework.Assert.AreEqual("Returned count of range query must be equal to exclusive range length"
-					, Math.Max(upper - lower - 1, 0), tTopDocs.totalHits);
+				AreEqual("Returned count of range query must be equal to exclusive range length"
+					, Math.Max(upper - lower - 1, 0), tTopDocs.TotalHits);
 				// test left exclusive range
 				tq = NumericRangeQuery.NewIntRange(field, precisionStep, lower, upper, false, true
 					);
 				tTopDocs = searcher.Search(tq, 1);
-				NUnit.Framework.Assert.AreEqual("Returned count of range query must be equal to half exclusive range length"
-					, upper - lower, tTopDocs.totalHits);
+				AreEqual("Returned count of range query must be equal to half exclusive range length"
+					, upper - lower, tTopDocs.TotalHits);
 				// test right exclusive range
 				tq = NumericRangeQuery.NewIntRange(field, precisionStep, lower, upper, true, false
 					);
 				tTopDocs = searcher.Search(tq, 1);
-				NUnit.Framework.Assert.AreEqual("Returned count of range query must be equal to half exclusive range length"
-					, upper - lower, tTopDocs.totalHits);
+				AreEqual("Returned count of range query must be equal to half exclusive range length"
+					, upper - lower, tTopDocs.TotalHits);
 			}
 		}
 
@@ -643,13 +643,13 @@ namespace Lucene.Net.Search
 			Query tq = NumericRangeQuery.NewFloatRange(field, precisionStep, NumericUtils.SortableIntToFloat
 				(lower), NumericUtils.SortableIntToFloat(upper), true, true);
 			TopDocs tTopDocs = searcher.Search(tq, 1);
-			NUnit.Framework.Assert.AreEqual("Returned count of range query must be equal to inclusive range length"
-				, upper - lower + 1, tTopDocs.totalHits);
+			AreEqual("Returned count of range query must be equal to inclusive range length"
+				, upper - lower + 1, tTopDocs.TotalHits);
 			Filter tf = NumericRangeFilter.NewFloatRange(field, precisionStep, NumericUtils.SortableIntToFloat
 				(lower), NumericUtils.SortableIntToFloat(upper), true, true);
 			tTopDocs = searcher.Search(new MatchAllDocsQuery(), tf, 1);
-			NUnit.Framework.Assert.AreEqual("Returned count of range filter must be equal to inclusive range length"
-				, upper - lower + 1, tTopDocs.totalHits);
+			AreEqual("Returned count of range filter must be equal to inclusive range length"
+				, upper - lower + 1, tTopDocs.TotalHits);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -694,17 +694,17 @@ namespace Lucene.Net.Search
 					, true);
 				TopDocs topDocs = searcher.Search(tq, null, noDocs, new Sort(new SortField(field, 
 					SortField.Type.INT, true)));
-				if (topDocs.totalHits == 0)
+				if (topDocs.TotalHits == 0)
 				{
 					continue;
 				}
 				ScoreDoc[] sd = topDocs.scoreDocs;
-				NUnit.Framework.Assert.IsNotNull(sd);
+				IsNotNull(sd);
 				int last = searcher.Doc(sd[0].doc).GetField(field).NumericValue();
 				for (int j = 1; j < sd.Length; j++)
 				{
 					int act = searcher.Doc(sd[j].doc).GetField(field).NumericValue();
-					NUnit.Framework.Assert.IsTrue("Docs should be sorted backwards", last > act);
+					IsTrue("Docs should be sorted backwards", last > act);
 					last = act;
 				}
 			}
@@ -764,8 +764,8 @@ namespace Lucene.Net.Search
 			// the following produces a hash collision, because Long and Integer have the same hashcode, so only test equality:
 			Query q1 = NumericRangeQuery.NewIntRange("test14", 4, 10, 20, true, true);
 			Query q2 = NumericRangeQuery.NewLongRange("test14", 4, 10L, 20L, true, true);
-			NUnit.Framework.Assert.IsFalse(q1.Equals(q2));
-			NUnit.Framework.Assert.IsFalse(q2.Equals(q1));
+			IsFalse(q1.Equals(q2));
+			IsFalse(q2.Equals(q1));
 		}
 	}
 }

@@ -4,7 +4,7 @@
  * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
@@ -23,7 +23,7 @@ namespace Lucene.Net.Index
 			RandomIndexWriter rw = new RandomIndexWriter(Random(), dir);
 			for (int i = 0; i < 5; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(NewStringField("pk", Sharpen.Extensions.ToString(i), Field.Store.YES));
 				rw.AddDocument(doc);
@@ -35,7 +35,7 @@ namespace Lucene.Net.Index
 				.APPEND));
 			for (int i_1 = 0; i_1 < 3; i_1++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				string value = Sharpen.Extensions.ToString(i_1);
 				doc.Add(NewStringField("pk", value, Field.Store.YES));
@@ -44,7 +44,7 @@ namespace Lucene.Net.Index
 			}
 			w.Rollback();
 			IndexReader r = DirectoryReader.Open(dir);
-			NUnit.Framework.Assert.AreEqual("index should contain same number of docs post rollback"
+			AreEqual("index should contain same number of docs post rollback"
 				, 5, r.NumDocs());
 			r.Close();
 			dir.Close();

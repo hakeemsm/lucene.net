@@ -55,7 +55,7 @@ namespace Lucene.Net.Store
 			try
 			{
 				one.ReadVInt();
-				NUnit.Framework.Assert.Fail("Must throw AlreadyClosedException");
+				Fail("Must throw AlreadyClosedException");
 			}
 			catch (AlreadyClosedException)
 			{
@@ -64,7 +64,7 @@ namespace Lucene.Net.Store
 			try
 			{
 				two.ReadVInt();
-				NUnit.Framework.Assert.Fail("Must throw AlreadyClosedException");
+				Fail("Must throw AlreadyClosedException");
 			}
 			catch (AlreadyClosedException)
 			{
@@ -73,7 +73,7 @@ namespace Lucene.Net.Store
 			try
 			{
 				three.ReadVInt();
-				NUnit.Framework.Assert.Fail("Must throw AlreadyClosedException");
+				Fail("Must throw AlreadyClosedException");
 			}
 			catch (AlreadyClosedException)
 			{
@@ -98,17 +98,17 @@ namespace Lucene.Net.Store
 			IndexInput three = ((IndexInput)two.Clone());
 			// clone of clone
 			two.Close();
-			NUnit.Framework.Assert.AreEqual(5, one.ReadVInt());
+			AreEqual(5, one.ReadVInt());
 			try
 			{
 				two.ReadVInt();
-				NUnit.Framework.Assert.Fail("Must throw AlreadyClosedException");
+				Fail("Must throw AlreadyClosedException");
 			}
 			catch (AlreadyClosedException)
 			{
 			}
 			// pass
-			NUnit.Framework.Assert.AreEqual(5, three.ReadVInt());
+			AreEqual(5, three.ReadVInt());
 			one.Close();
 			three.Close();
 			mmapDir.Close();
@@ -134,7 +134,7 @@ namespace Lucene.Net.Store
 			try
 			{
 				one.ReadInt();
-				NUnit.Framework.Assert.Fail("Must throw AlreadyClosedException");
+				Fail("Must throw AlreadyClosedException");
 			}
 			catch (AlreadyClosedException)
 			{
@@ -143,7 +143,7 @@ namespace Lucene.Net.Store
 			try
 			{
 				two.ReadInt();
-				NUnit.Framework.Assert.Fail("Must throw AlreadyClosedException");
+				Fail("Must throw AlreadyClosedException");
 			}
 			catch (AlreadyClosedException)
 			{
@@ -152,7 +152,7 @@ namespace Lucene.Net.Store
 			try
 			{
 				three.ReadInt();
-				NUnit.Framework.Assert.Fail("Must throw AlreadyClosedException");
+				Fail("Must throw AlreadyClosedException");
 			}
 			catch (AlreadyClosedException)
 			{
@@ -161,7 +161,7 @@ namespace Lucene.Net.Store
 			try
 			{
 				four.ReadInt();
-				NUnit.Framework.Assert.Fail("Must throw AlreadyClosedException");
+				Fail("Must throw AlreadyClosedException");
 			}
 			catch (AlreadyClosedException)
 			{
@@ -192,16 +192,16 @@ namespace Lucene.Net.Store
 			try
 			{
 				one.ReadInt();
-				NUnit.Framework.Assert.Fail("Must throw AlreadyClosedException");
+				Fail("Must throw AlreadyClosedException");
 			}
 			catch (AlreadyClosedException)
 			{
 			}
 			// pass
-			NUnit.Framework.Assert.AreEqual(2, two.ReadInt());
+			AreEqual(2, two.ReadInt());
 			// reopen a new slice "one":
 			one = slicer.OpenSlice("first int", 0, 4);
-			NUnit.Framework.Assert.AreEqual(1, one.ReadInt());
+			AreEqual(1, one.ReadInt());
 			one.Close();
 			two.Close();
 			slicer.Close();
@@ -258,7 +258,7 @@ namespace Lucene.Net.Store
 				IndexInput ii = mmapDir.OpenInput("bytes", NewIOContext(Random()));
 				byte[] actual = new byte[1 << i];
 				ii.ReadBytes(actual, 0, actual.Length);
-				NUnit.Framework.Assert.AreEqual(new BytesRef(bytes), new BytesRef(actual));
+				AreEqual(new BytesRef(bytes), new BytesRef(actual));
 				ii.Seek(1 << i);
 				ii.Close();
 				mmapDir.Close();
@@ -282,7 +282,7 @@ namespace Lucene.Net.Store
 				IndexInput ii = slicer.OpenSlice("full slice", 0, bytes.Length);
 				byte[] actual = new byte[1 << i];
 				ii.ReadBytes(actual, 0, actual.Length);
-				NUnit.Framework.Assert.AreEqual(new BytesRef(bytes), new BytesRef(actual));
+				AreEqual(new BytesRef(bytes), new BytesRef(actual));
 				ii.Seek(1 << i);
 				ii.Close();
 				slicer.Close();
@@ -307,7 +307,7 @@ namespace Lucene.Net.Store
 				byte[] actual = new byte[1 << (i + 1)];
 				// first read all bytes
 				ii.ReadBytes(actual, 0, actual.Length);
-				NUnit.Framework.Assert.AreEqual(new BytesRef(bytes), new BytesRef(actual));
+				AreEqual(new BytesRef(bytes), new BytesRef(actual));
 				for (int sliceStart = 0; sliceStart < bytes.Length; sliceStart++)
 				{
 					for (int sliceLength = 0; sliceLength < bytes.Length - sliceStart; sliceLength++)
@@ -315,7 +315,7 @@ namespace Lucene.Net.Store
 						byte[] slice = new byte[sliceLength];
 						ii.Seek(sliceStart);
 						ii.ReadBytes(slice, 0, slice.Length);
-						NUnit.Framework.Assert.AreEqual(new BytesRef(bytes, sliceStart, sliceLength), new 
+						AreEqual(new BytesRef(bytes, sliceStart, sliceLength), new 
 							BytesRef(slice));
 					}
 				}
@@ -344,7 +344,7 @@ namespace Lucene.Net.Store
 				// first read all bytes
 				ii.ReadBytes(actual, 0, actual.Length);
 				ii.Close();
-				NUnit.Framework.Assert.AreEqual(new BytesRef(bytes), new BytesRef(actual));
+				AreEqual(new BytesRef(bytes), new BytesRef(actual));
 				Directory.IndexInputSlicer slicer = mmapDir.CreateSlicer("bytes", NewIOContext(Random
 					()));
 				for (int sliceStart = 0; sliceStart < bytes.Length; sliceStart++)
@@ -355,7 +355,7 @@ namespace Lucene.Net.Store
 						IndexInput input = slicer.OpenSlice("bytesSlice", sliceStart, slice.Length);
 						input.ReadBytes(slice, 0, slice.Length);
 						input.Close();
-						NUnit.Framework.Assert.AreEqual(new BytesRef(bytes, sliceStart, sliceLength), new 
+						AreEqual(new BytesRef(bytes, sliceStart, sliceLength), new 
 							BytesRef(slice));
 					}
 				}
@@ -388,7 +388,7 @@ namespace Lucene.Net.Store
 			RandomIndexWriter writer = new RandomIndexWriter(random, dir, NewIndexWriterConfig
 				(TEST_VERSION_CURRENT, new MockAnalyzer(random)).SetMergePolicy(NewLogMergePolicy
 				()));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			Field docid = NewStringField("docid", "0", Field.Store.YES);
 			Field junk = NewStringField("junk", string.Empty, Field.Store.YES);
@@ -397,8 +397,8 @@ namespace Lucene.Net.Store
 			int numDocs = 100;
 			for (int i = 0; i < numDocs; i++)
 			{
-				docid.SetStringValue(string.Empty + i);
-				junk.SetStringValue(TestUtil.RandomUnicodeString(random));
+				docid.StringValue = string.Empty + i);
+				junk.StringValue = TestUtil.RandomUnicodeString(random));
 				writer.AddDocument(doc);
 			}
 			IndexReader reader = writer.GetReader();
@@ -407,7 +407,7 @@ namespace Lucene.Net.Store
 			for (int i_1 = 0; i_1 < numAsserts; i_1++)
 			{
 				int docID = random.Next(numDocs);
-				NUnit.Framework.Assert.AreEqual(string.Empty + docID, reader.Document(docID).Get(
+				AreEqual(string.Empty + docID, reader.Document(docID).Get(
 					"docid"));
 			}
 			reader.Close();

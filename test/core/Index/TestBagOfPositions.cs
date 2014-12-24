@@ -7,7 +7,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
@@ -79,7 +79,7 @@ namespace Lucene.Net.Index
 			{
 				fieldType.SetIndexOptions(FieldInfo.IndexOptions.DOCS_AND_FREQS);
 				// we dont actually need positions
-				fieldType.SetStoreTermVectors(true);
+				fieldType.StoreTermVectors = true;
 			}
 			else
 			{
@@ -97,7 +97,7 @@ namespace Lucene.Net.Index
 			for (int threadID = 0; threadID < threadCount; threadID++)
 			{
 				Random threadRandom = new Random(Random().NextLong());
-				Lucene.Net.Document.Document document = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document document = new Lucene.Net.Documents.Document
 					();
 				Field field = new Field("field", string.Empty, fieldType);
 				document.Add(field);
@@ -112,17 +112,17 @@ namespace Lucene.Net.Index
 			}
 			iw.ForceMerge(1);
 			DirectoryReader ir = iw.GetReader();
-			NUnit.Framework.Assert.AreEqual(1, ir.Leaves().Count);
+			AreEqual(1, ir.Leaves().Count);
 			AtomicReader air = ((AtomicReader)ir.Leaves()[0].Reader());
 			Terms terms = air.Terms("field");
 			// numTerms-1 because there cannot be a term 0 with 0 postings:
-			NUnit.Framework.Assert.AreEqual(numTerms - 1, terms.Size());
+			AreEqual(numTerms - 1, terms.Size());
 			TermsEnum termsEnum = terms.Iterator(null);
 			BytesRef term_1;
 			while ((term_1 = termsEnum.Next()) != null)
 			{
 				int value = System.Convert.ToInt32(term_1.Utf8ToString());
-				NUnit.Framework.Assert.AreEqual(value, termsEnum.TotalTermFreq());
+				AreEqual(value, termsEnum.TotalTermFreq);
 			}
 			// don't really need to check more than this, as CheckIndex
 			// will verify that totalTermFreq == total number of positions seen
@@ -135,7 +135,7 @@ namespace Lucene.Net.Index
 		private sealed class _Thread_104 : Sharpen.Thread
 		{
 			public _Thread_104(CountDownLatch startingGun, ConcurrentLinkedQueue<string> postings
-				, Random threadRandom, int maxTermsPerDoc, Field field, RandomIndexWriter iw, Lucene.Net.Document.Document
+				, Random threadRandom, int maxTermsPerDoc, Field field, RandomIndexWriter iw, Lucene.Net.Documents.Document
 				 document)
 			{
 				this.startingGun = startingGun;
@@ -166,7 +166,7 @@ namespace Lucene.Net.Index
 							text.Append(' ');
 							text.Append(token);
 						}
-						field.SetStringValue(text.ToString());
+						field.StringValue = text.ToString());
 						iw.AddDocument(document);
 					}
 				}
@@ -188,7 +188,7 @@ namespace Lucene.Net.Index
 
 			private readonly RandomIndexWriter iw;
 
-			private readonly Lucene.Net.Document.Document document;
+			private readonly Lucene.Net.Documents.Document document;
 		}
 	}
 }

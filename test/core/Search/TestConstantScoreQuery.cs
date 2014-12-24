@@ -46,7 +46,7 @@ namespace Lucene.Net.Search
 			int[] count = new int[1];
 			searcher.Search(q, new _Collector_53(scorerClassName, innerScorerClassName, expectedScore
 				, count));
-			NUnit.Framework.Assert.AreEqual("invalid number of results", 1, count[0]);
+			AreEqual("invalid number of results", 1, count[0]);
 		}
 
 		private sealed class _Collector_53 : Collector
@@ -65,13 +65,13 @@ namespace Lucene.Net.Search
 			public override void SetScorer(Scorer scorer)
 			{
 				this.scorer = scorer;
-				NUnit.Framework.Assert.AreEqual("Scorer is implemented by wrong class", scorerClassName
+				AreEqual("Scorer is implemented by wrong class", scorerClassName
 					, scorer.GetType().FullName);
 				if (innerScorerClassName != null && scorer is ConstantScoreQuery.ConstantScorer)
 				{
 					ConstantScoreQuery.ConstantScorer innerScorer = (ConstantScoreQuery.ConstantScorer
 						)scorer;
-					NUnit.Framework.Assert.AreEqual("inner Scorer is implemented by wrong class", innerScorerClassName
+					AreEqual("inner Scorer is implemented by wrong class", innerScorerClassName
 						, innerScorer.docIdSetIterator.GetType().FullName);
 				}
 			}
@@ -79,7 +79,7 @@ namespace Lucene.Net.Search
 			/// <exception cref="System.IO.IOException"></exception>
 			public override void Collect(int doc)
 			{
-				NUnit.Framework.Assert.AreEqual("Score differs from expected", expectedScore, this
+				AreEqual("Score differs from expected", expectedScore, this
 					.scorer.Score(), 0);
 				count[0]++;
 			}
@@ -112,7 +112,7 @@ namespace Lucene.Net.Search
 			{
 				directory = NewDirectory();
 				RandomIndexWriter writer = new RandomIndexWriter(Random(), directory);
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(NewStringField("field", "term", Field.Store.NO));
 				writer.AddDocument(doc);
@@ -172,11 +172,11 @@ namespace Lucene.Net.Search
 		{
 			Directory d = NewDirectory();
 			RandomIndexWriter w = new RandomIndexWriter(Random(), d);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewStringField("field", "a", Field.Store.NO));
 			w.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("field", "b", Field.Store.NO));
 			w.AddDocument(doc);
 			IndexReader r = w.GetReader();
@@ -185,12 +185,12 @@ namespace Lucene.Net.Search
 				Term("field", "b"))));
 			Query query = new ConstantScoreQuery(filterB);
 			IndexSearcher s = NewSearcher(r);
-			NUnit.Framework.Assert.AreEqual(1, s.Search(query, filterB, 1).totalHits);
+			AreEqual(1, s.Search(query, filterB, 1).TotalHits);
 			// Query for field:b, Filter field:b
 			Filter filterA = new CachingWrapperFilter(new QueryWrapperFilter(new TermQuery(new 
 				Term("field", "a"))));
 			query = new ConstantScoreQuery(filterA);
-			NUnit.Framework.Assert.AreEqual(0, s.Search(query, filterB, 1).totalHits);
+			AreEqual(0, s.Search(query, filterB, 1).TotalHits);
 			// Query field:b, Filter field:a
 			r.Close();
 			d.Close();
@@ -203,7 +203,7 @@ namespace Lucene.Net.Search
 		{
 			Directory d = NewDirectory();
 			RandomIndexWriter w = new RandomIndexWriter(Random(), d);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewStringField("field", "a", Field.Store.NO));
 			w.AddDocument(doc);
@@ -218,8 +218,8 @@ namespace Lucene.Net.Search
 			s.Search(new ConstantScoreQuery(filter), new TotalHitCountCollector());
 			// check the rewrite
 			Query rewritten = new ConstantScoreQuery(filter).Rewrite(r);
-			NUnit.Framework.Assert.IsTrue(rewritten is ConstantScoreQuery);
-			NUnit.Framework.Assert.IsTrue(((ConstantScoreQuery)rewritten).GetQuery() is AssertingQuery
+			IsTrue(rewritten is ConstantScoreQuery);
+			IsTrue(((ConstantScoreQuery)rewritten).GetQuery() is AssertingQuery
 				);
 			r.Close();
 			d.Close();

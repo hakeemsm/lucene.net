@@ -19,8 +19,8 @@ using System;
 
 using NUnit.Framework;
 
-using SimpleAnalyzer = Lucene.Net.Analysis.SimpleAnalyzer;
-using WhitespaceAnalyzer = Lucene.Net.Analysis.WhitespaceAnalyzer;
+using SimpleAnalyzer = Lucene.Net.Test.Analysis.SimpleAnalyzer;
+using WhitespaceAnalyzer = Lucene.Net.Test.Analysis.WhitespaceAnalyzer;
 using Document = Lucene.Net.Documents.Document;
 using Field = Lucene.Net.Documents.Field;
 using Index = Lucene.Net.Documents.Field.Index;
@@ -115,8 +115,8 @@ namespace Lucene.Net.Search
             wq.RewriteMethod = MultiTermQuery.SCORING_BOOLEAN_QUERY_REWRITE;
             AssertMatches(searcher, wq, 0);
 			Query q = searcher.Rewrite(wq);
-			NUnit.Framework.Assert.IsTrue(q is BooleanQuery);
-			NUnit.Framework.Assert.AreEqual(0, ((BooleanQuery)q).Clauses().Count);
+			IsTrue(q is BooleanQuery);
+			AreEqual(0, ((BooleanQuery)q).Clauses().Count);
 			reader.Close();
 			indexStore.Close();
         }
@@ -137,11 +137,11 @@ namespace Lucene.Net.Search
             AssertMatches(searcher, wq, 2);
 
 			Terms terms = MultiFields.GetTerms(searcher.GetIndexReader(), "field");
-			NUnit.Framework.Assert.IsTrue(wq.GetTermsEnum(terms) is PrefixTermsEnum);
+			IsTrue(wq.GetTermsEnum(terms) is PrefixTermsEnum);
 			wq = new WildcardQuery(new Term("field", "*"));
 			AssertMatches(searcher, wq, 2);
-			NUnit.Framework.Assert.IsFalse(wq.GetTermsEnum(terms) is PrefixTermsEnum);
-			NUnit.Framework.Assert.IsFalse(wq.GetTermsEnum(terms).GetType().Name.Contains("AutomatonTermsEnum"
+			IsFalse(wq.GetTermsEnum(terms) is PrefixTermsEnum);
+			IsFalse(wq.GetTermsEnum(terms).GetType().Name.Contains("AutomatonTermsEnum"
 				));
 			reader.Close();
 			indexStore.Close();
@@ -349,7 +349,7 @@ namespace Lucene.Net.Search
 					System.Console.Out.WriteLine("matchAll: q=" + q + " " + q.GetType().FullName);
 				}
 				ScoreDoc[] hits = searcher.Search(q, null, 1000).scoreDocs;
-				NUnit.Framework.Assert.AreEqual(docs.Length, hits.Length);
+				AreEqual(docs.Length, hits.Length);
 			}
 			
 			// test queries that must find none
@@ -361,7 +361,7 @@ namespace Lucene.Net.Search
 						);
 				}
 				ScoreDoc[] hits = searcher.Search(q_1, null, 1000).scoreDocs;
-				NUnit.Framework.Assert.AreEqual(0, hits.Length);
+				AreEqual(0, hits.Length);
 			}
 			
 			// test queries that must be prefix queries and must find only one doc
@@ -376,8 +376,8 @@ namespace Lucene.Net.Search
 							 + q_2.GetType().FullName);
 					}
 					ScoreDoc[] hits = searcher.Search(q_2, null, 1000).scoreDocs;
-					NUnit.Framework.Assert.AreEqual(1, hits.Length);
-					NUnit.Framework.Assert.AreEqual(i_1, hits[0].doc);
+					AreEqual(1, hits.Length);
+					AreEqual(i_1, hits[0].doc);
 				}
 			}
 			
@@ -393,8 +393,8 @@ namespace Lucene.Net.Search
 							 + q_2.GetType().FullName);
 					}
 					ScoreDoc[] hits = searcher.Search(q_2, null, 1000).scoreDocs;
-					NUnit.Framework.Assert.AreEqual(1, hits.Length);
-					NUnit.Framework.Assert.AreEqual(i_2, hits[0].doc);
+					AreEqual(1, hits.Length);
+					AreEqual(i_2, hits[0].doc);
 				}
 			}
 			

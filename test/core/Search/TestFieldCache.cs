@@ -8,7 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -57,7 +57,7 @@ namespace Lucene.Net.Search
 			}
 			for (int i = 0; i < NUM_DOCS; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(NewStringField("theLong", (theLong--).ToString(), Field.Store.NO));
 				doc.Add(NewStringField("theDouble", (theDouble--).ToString(), Field.Store.NO));
@@ -121,7 +121,7 @@ namespace Lucene.Net.Search
 				cache.SetInfoStream(new TextWriter(bos, false, IOUtils.UTF_8));
 				cache.GetDoubles(reader, "theDouble", false);
 				cache.GetFloats(reader, "theDouble", false);
-				NUnit.Framework.Assert.IsTrue(bos.ToString(IOUtils.UTF_8).IndexOf("WARNING") != -
+				IsTrue(bos.ToString(IOUtils.UTF_8).IndexOf("WARNING") != -
 					1);
 			}
 			finally
@@ -137,101 +137,101 @@ namespace Lucene.Net.Search
 			FieldCache cache = FieldCache.DEFAULT;
 			FieldCache.Doubles doubles = cache.GetDoubles(reader, "theDouble", Random().NextBoolean
 				());
-			NUnit.Framework.Assert.AreSame("Second request to cache return same array", doubles
+			AreSame("Second request to cache return same array", doubles
 				, cache.GetDoubles(reader, "theDouble", Random().NextBoolean()));
-			NUnit.Framework.Assert.AreSame("Second request with explicit parser return same array"
+			AreSame("Second request with explicit parser return same array"
 				, doubles, cache.GetDoubles(reader, "theDouble", FieldCache.DEFAULT_DOUBLE_PARSER
 				, Random().NextBoolean()));
 			for (int i = 0; i < NUM_DOCS; i++)
 			{
-				NUnit.Framework.Assert.IsTrue(doubles.Get(i) + " does not equal: " + (double.MaxValue
+				IsTrue(doubles.Get(i) + " does not equal: " + (double.MaxValue
 					 - i), doubles.Get(i) == (double.MaxValue - i));
 			}
 			FieldCache.Longs longs = cache.GetLongs(reader, "theLong", Random().NextBoolean()
 				);
-			NUnit.Framework.Assert.AreSame("Second request to cache return same array", longs
+			AreSame("Second request to cache return same array", longs
 				, cache.GetLongs(reader, "theLong", Random().NextBoolean()));
-			NUnit.Framework.Assert.AreSame("Second request with explicit parser return same array"
+			AreSame("Second request with explicit parser return same array"
 				, longs, cache.GetLongs(reader, "theLong", FieldCache.DEFAULT_LONG_PARSER, Random
 				().NextBoolean()));
 			for (int i_1 = 0; i_1 < NUM_DOCS; i_1++)
 			{
-				NUnit.Framework.Assert.IsTrue(longs.Get(i_1) + " does not equal: " + (long.MaxValue
+				IsTrue(longs.Get(i_1) + " does not equal: " + (long.MaxValue
 					 - i_1) + " i=" + i_1, longs.Get(i_1) == (long.MaxValue - i_1));
 			}
 			FieldCache.Bytes bytes = cache.GetBytes(reader, "theByte", Random().NextBoolean()
 				);
-			NUnit.Framework.Assert.AreSame("Second request to cache return same array", bytes
+			AreSame("Second request to cache return same array", bytes
 				, cache.GetBytes(reader, "theByte", Random().NextBoolean()));
-			NUnit.Framework.Assert.AreSame("Second request with explicit parser return same array"
+			AreSame("Second request with explicit parser return same array"
 				, bytes, cache.GetBytes(reader, "theByte", FieldCache.DEFAULT_BYTE_PARSER, Random
 				().NextBoolean()));
 			for (int i_2 = 0; i_2 < NUM_DOCS; i_2++)
 			{
-				NUnit.Framework.Assert.IsTrue(bytes.Get(i_2) + " does not equal: " + (byte.MaxValue
+				IsTrue(bytes.Get(i_2) + " does not equal: " + (byte.MaxValue
 					 - i_2), bytes.Get(i_2) == unchecked((byte)(byte.MaxValue - i_2)));
 			}
 			FieldCache.Shorts shorts = cache.GetShorts(reader, "theShort", Random().NextBoolean
 				());
-			NUnit.Framework.Assert.AreSame("Second request to cache return same array", shorts
+			AreSame("Second request to cache return same array", shorts
 				, cache.GetShorts(reader, "theShort", Random().NextBoolean()));
-			NUnit.Framework.Assert.AreSame("Second request with explicit parser return same array"
+			AreSame("Second request with explicit parser return same array"
 				, shorts, cache.GetShorts(reader, "theShort", FieldCache.DEFAULT_SHORT_PARSER, Random
 				().NextBoolean()));
 			for (int i_3 = 0; i_3 < NUM_DOCS; i_3++)
 			{
-				NUnit.Framework.Assert.IsTrue(shorts.Get(i_3) + " does not equal: " + (short.MaxValue
+				IsTrue(shorts.Get(i_3) + " does not equal: " + (short.MaxValue
 					 - i_3), shorts.Get(i_3) == (short)(short.MaxValue - i_3));
 			}
 			FieldCache.Ints ints = cache.GetInts(reader, "theInt", Random().NextBoolean());
-			NUnit.Framework.Assert.AreSame("Second request to cache return same array", ints, 
+			AreSame("Second request to cache return same array", ints, 
 				cache.GetInts(reader, "theInt", Random().NextBoolean()));
-			NUnit.Framework.Assert.AreSame("Second request with explicit parser return same array"
+			AreSame("Second request with explicit parser return same array"
 				, ints, cache.GetInts(reader, "theInt", FieldCache.DEFAULT_INT_PARSER, Random().
 				NextBoolean()));
 			for (int i_4 = 0; i_4 < NUM_DOCS; i_4++)
 			{
-				NUnit.Framework.Assert.IsTrue(ints.Get(i_4) + " does not equal: " + (int.MaxValue
+				IsTrue(ints.Get(i_4) + " does not equal: " + (int.MaxValue
 					 - i_4), ints.Get(i_4) == (int.MaxValue - i_4));
 			}
 			FieldCache.Floats floats = cache.GetFloats(reader, "theFloat", Random().NextBoolean
 				());
-			NUnit.Framework.Assert.AreSame("Second request to cache return same array", floats
+			AreSame("Second request to cache return same array", floats
 				, cache.GetFloats(reader, "theFloat", Random().NextBoolean()));
-			NUnit.Framework.Assert.AreSame("Second request with explicit parser return same array"
+			AreSame("Second request with explicit parser return same array"
 				, floats, cache.GetFloats(reader, "theFloat", FieldCache.DEFAULT_FLOAT_PARSER, Random
 				().NextBoolean()));
 			for (int i_5 = 0; i_5 < NUM_DOCS; i_5++)
 			{
-				NUnit.Framework.Assert.IsTrue(floats.Get(i_5) + " does not equal: " + (float.MaxValue
+				IsTrue(floats.Get(i_5) + " does not equal: " + (float.MaxValue
 					 - i_5), floats.Get(i_5) == (float.MaxValue - i_5));
 			}
 			Bits docsWithField = cache.GetDocsWithField(reader, "theLong");
-			NUnit.Framework.Assert.AreSame("Second request to cache return same array", docsWithField
+			AreSame("Second request to cache return same array", docsWithField
 				, cache.GetDocsWithField(reader, "theLong"));
-			NUnit.Framework.Assert.IsTrue("docsWithField(theLong) must be class Bits.MatchAllBits"
+			IsTrue("docsWithField(theLong) must be class Bits.MatchAllBits"
 				, docsWithField is Bits.MatchAllBits);
-			NUnit.Framework.Assert.IsTrue("docsWithField(theLong) Size: " + docsWithField.Length
+			IsTrue("docsWithField(theLong) Size: " + docsWithField.Length
 				() + " is not: " + NUM_DOCS, docsWithField.Length() == NUM_DOCS);
 			for (int i_6 = 0; i_6 < docsWithField.Length(); i_6++)
 			{
-				NUnit.Framework.Assert.IsTrue(docsWithField.Get(i_6));
+				IsTrue(docsWithField.Get(i_6));
 			}
 			docsWithField = cache.GetDocsWithField(reader, "sparse");
-			NUnit.Framework.Assert.AreSame("Second request to cache return same array", docsWithField
+			AreSame("Second request to cache return same array", docsWithField
 				, cache.GetDocsWithField(reader, "sparse"));
-			NUnit.Framework.Assert.IsFalse("docsWithField(sparse) must not be class Bits.MatchAllBits"
+			IsFalse("docsWithField(sparse) must not be class Bits.MatchAllBits"
 				, docsWithField is Bits.MatchAllBits);
-			NUnit.Framework.Assert.IsTrue("docsWithField(sparse) Size: " + docsWithField.Length
+			IsTrue("docsWithField(sparse) Size: " + docsWithField.Length
 				() + " is not: " + NUM_DOCS, docsWithField.Length() == NUM_DOCS);
 			for (int i_7 = 0; i_7 < docsWithField.Length(); i_7++)
 			{
-				NUnit.Framework.Assert.AreEqual(i_7 % 2 == 0, docsWithField.Get(i_7));
+				AreEqual(i_7 % 2 == 0, docsWithField.Get(i_7));
 			}
 			// getTermsIndex
 			SortedDocValues termsIndex = cache.GetTermsIndex(reader, "theRandomUnicodeString"
 				);
-			NUnit.Framework.Assert.AreSame("Second request to cache return same array", termsIndex
+			AreSame("Second request to cache return same array", termsIndex
 				, cache.GetTermsIndex(reader, "theRandomUnicodeString"));
 			BytesRef br = new BytesRef();
 			for (int i_8 = 0; i_8 < NUM_DOCS; i_8++)
@@ -248,7 +248,7 @@ namespace Lucene.Net.Search
 					term = br;
 				}
 				string s = term == null ? null : term.Utf8ToString();
-				NUnit.Framework.Assert.IsTrue("for doc " + i_8 + ": " + s + " does not equal: " +
+				IsTrue("for doc " + i_8 + ": " + s + " does not equal: " +
 					 unicodeStrings[i_8], unicodeStrings[i_8] == null || unicodeStrings[i_8].Equals(
 					s));
 			}
@@ -260,7 +260,7 @@ namespace Lucene.Net.Search
 				BytesRef val1 = tenum.Next();
 				termsIndex.LookupOrd(i_9, val);
 				// System.out.println("i="+i);
-				NUnit.Framework.Assert.AreEqual(val, val1);
+				AreEqual(val, val1);
 			}
 			// seek the enum around (note this isn't a great test here)
 			int num = AtLeast(100);
@@ -268,20 +268,20 @@ namespace Lucene.Net.Search
 			{
 				int k = Random().Next(nTerms);
 				termsIndex.LookupOrd(k, val);
-				NUnit.Framework.Assert.AreEqual(TermsEnum.SeekStatus.FOUND, tenum.SeekCeil(val));
-				NUnit.Framework.Assert.AreEqual(val, tenum.Term());
+				AreEqual(TermsEnum.SeekStatus.FOUND, tenum.SeekCeil(val));
+				AreEqual(val, tenum.Term());
 			}
 			for (int i_11 = 0; i_11 < nTerms; i_11++)
 			{
 				termsIndex.LookupOrd(i_11, val);
-				NUnit.Framework.Assert.AreEqual(TermsEnum.SeekStatus.FOUND, tenum.SeekCeil(val));
-				NUnit.Framework.Assert.AreEqual(val, tenum.Term());
+				AreEqual(TermsEnum.SeekStatus.FOUND, tenum.SeekCeil(val));
+				AreEqual(val, tenum.Term());
 			}
 			// test bad field
 			termsIndex = cache.GetTermsIndex(reader, "bogusfield");
 			// getTerms
 			BinaryDocValues terms = cache.GetTerms(reader, "theRandomUnicodeString", true);
-			NUnit.Framework.Assert.AreSame("Second request to cache return same array", terms
+			AreSame("Second request to cache return same array", terms
 				, cache.GetTerms(reader, "theRandomUnicodeString", true));
 			Bits bits = cache.GetDocsWithField(reader, "theRandomUnicodeString");
 			for (int i_12 = 0; i_12 < NUM_DOCS; i_12++)
@@ -297,7 +297,7 @@ namespace Lucene.Net.Search
 					term = br;
 				}
 				string s = term == null ? null : term.Utf8ToString();
-				NUnit.Framework.Assert.IsTrue("for doc " + i_12 + ": " + s + " does not equal: " 
+				IsTrue("for doc " + i_12 + ": " + s + " does not equal: " 
 					+ unicodeStrings[i_12], unicodeStrings[i_12] == null || unicodeStrings[i_12].Equals
 					(s));
 			}
@@ -309,7 +309,7 @@ namespace Lucene.Net.Search
 			int numEntries = cache.GetCacheEntries().Length;
 			// ask for it again, and check that we didnt create any additional entries:
 			termOrds = cache.GetDocTermOrds(reader, "theRandomUnicodeMultiValuedField");
-			NUnit.Framework.Assert.AreEqual(numEntries, cache.GetCacheEntries().Length);
+			AreEqual(numEntries, cache.GetCacheEntries().Length);
 			for (int i_13 = 0; i_13 < NUM_DOCS; i_13++)
 			{
 				termOrds.SetDocument(i_13);
@@ -328,14 +328,14 @@ namespace Lucene.Net.Search
 					//assert ord != SortedSetDocValues.NO_MORE_ORDS;
 					BytesRef scratch = new BytesRef();
 					termOrds.LookupOrd(ord, scratch);
-					NUnit.Framework.Assert.AreEqual(v, scratch);
+					AreEqual(v, scratch);
 				}
-				NUnit.Framework.Assert.AreEqual(SortedSetDocValues.NO_MORE_ORDS, termOrds.NextOrd
+				AreEqual(SortedSetDocValues.NO_MORE_ORDS, termOrds.NextOrd
 					());
 			}
 			// test bad field
 			termOrds = cache.GetDocTermOrds(reader, "bogusfield");
-			NUnit.Framework.Assert.IsTrue(termOrds.GetValueCount() == 0);
+			IsTrue(termOrds.GetValueCount() == 0);
 			FieldCache.DEFAULT.PurgeByCacheKey(reader.GetCoreCacheKey());
 		}
 
@@ -382,30 +382,30 @@ namespace Lucene.Net.Search
 		{
 			FieldCache cache = FieldCache.DEFAULT;
 			cache.PurgeAllCaches();
-			NUnit.Framework.Assert.AreEqual(0, cache.GetCacheEntries().Length);
+			AreEqual(0, cache.GetCacheEntries().Length);
 			cache.GetDoubles(reader, "theDouble", true);
 			// The double[] takes two slots (one w/ null parser, one
 			// w/ real parser), and docsWithField should also
 			// have been populated:
-			NUnit.Framework.Assert.AreEqual(3, cache.GetCacheEntries().Length);
+			AreEqual(3, cache.GetCacheEntries().Length);
 			Bits bits = cache.GetDocsWithField(reader, "theDouble");
 			// No new entries should appear:
-			NUnit.Framework.Assert.AreEqual(3, cache.GetCacheEntries().Length);
-			NUnit.Framework.Assert.IsTrue(bits is Bits.MatchAllBits);
+			AreEqual(3, cache.GetCacheEntries().Length);
+			IsTrue(bits is Bits.MatchAllBits);
 			FieldCache.Ints ints = cache.GetInts(reader, "sparse", true);
-			NUnit.Framework.Assert.AreEqual(6, cache.GetCacheEntries().Length);
+			AreEqual(6, cache.GetCacheEntries().Length);
 			Bits docsWithField = cache.GetDocsWithField(reader, "sparse");
-			NUnit.Framework.Assert.AreEqual(6, cache.GetCacheEntries().Length);
+			AreEqual(6, cache.GetCacheEntries().Length);
 			for (int i = 0; i < docsWithField.Length(); i++)
 			{
 				if (i % 2 == 0)
 				{
-					NUnit.Framework.Assert.IsTrue(docsWithField.Get(i));
-					NUnit.Framework.Assert.AreEqual(i, ints.Get(i));
+					IsTrue(docsWithField.Get(i));
+					AreEqual(i, ints.Get(i));
 				}
 				else
 				{
-					NUnit.Framework.Assert.IsFalse(docsWithField.Get(i));
+					IsFalse(docsWithField.Get(i));
 				}
 			}
 			FieldCache.Ints numInts = cache.GetInts(reader, "numInt", Random().NextBoolean());
@@ -414,12 +414,12 @@ namespace Lucene.Net.Search
 			{
 				if (i_1 % 2 == 0)
 				{
-					NUnit.Framework.Assert.IsTrue(docsWithField.Get(i_1));
-					NUnit.Framework.Assert.AreEqual(i_1, numInts.Get(i_1));
+					IsTrue(docsWithField.Get(i_1));
+					AreEqual(i_1, numInts.Get(i_1));
 				}
 				else
 				{
-					NUnit.Framework.Assert.IsFalse(docsWithField.Get(i_1));
+					IsFalse(docsWithField.Get(i_1));
 				}
 			}
 		}
@@ -447,7 +447,7 @@ namespace Lucene.Net.Search
 			{
 				threads[threadIDX_1].Join();
 			}
-			NUnit.Framework.Assert.IsFalse(failed.Get());
+			IsFalse(failed.Get());
 		}
 
 		private sealed class _Runnable_394 : Runnable
@@ -503,7 +503,7 @@ namespace Lucene.Net.Search
 								Bits docsWithField = cache.GetDocsWithField(TestFieldCache.reader, "sparse");
 								for (int i = 0; i < docsWithField.Length(); i++)
 								{
-									NUnit.Framework.Assert.AreEqual(i % 2 == 0, docsWithField.Get(i));
+									AreEqual(i % 2 == 0, docsWithField.Get(i));
 								}
 							}
 							else
@@ -514,12 +514,12 @@ namespace Lucene.Net.Search
 								{
 									if (i % 2 == 0)
 									{
-										NUnit.Framework.Assert.IsTrue(docsWithField.Get(i));
-										NUnit.Framework.Assert.AreEqual(i, ints.Get(i));
+										IsTrue(docsWithField.Get(i));
+										AreEqual(i, ints.Get(i));
 									}
 									else
 									{
-										NUnit.Framework.Assert.IsFalse(docsWithField.Get(i));
+										IsFalse(docsWithField.Get(i));
 									}
 								}
 							}
@@ -552,7 +552,7 @@ namespace Lucene.Net.Search
 			Directory dir = NewDirectory();
 			IndexWriterConfig iwc = NewIndexWriterConfig(TEST_VERSION_CURRENT, null);
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir, iwc);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new BinaryDocValuesField("binary", new BytesRef("binary value")));
 			doc.Add(new SortedDocValuesField("sorted", new BytesRef("sorted value")));
@@ -573,18 +573,18 @@ namespace Lucene.Net.Search
 			try
 			{
 				FieldCache.DEFAULT.GetInts(ar, "binary", false);
-				NUnit.Framework.Assert.Fail();
+				Fail();
 			}
 			catch (InvalidOperationException)
 			{
 			}
 			BinaryDocValues binary = FieldCache.DEFAULT.GetTerms(ar, "binary", true);
 			binary.Get(0, scratch);
-			NUnit.Framework.Assert.AreEqual("binary value", scratch.Utf8ToString());
+			AreEqual("binary value", scratch.Utf8ToString());
 			try
 			{
 				FieldCache.DEFAULT.GetTermsIndex(ar, "binary");
-				NUnit.Framework.Assert.Fail();
+				Fail();
 			}
 			catch (InvalidOperationException)
 			{
@@ -592,7 +592,7 @@ namespace Lucene.Net.Search
 			try
 			{
 				FieldCache.DEFAULT.GetDocTermOrds(ar, "binary");
-				NUnit.Framework.Assert.Fail();
+				Fail();
 			}
 			catch (InvalidOperationException)
 			{
@@ -600,18 +600,18 @@ namespace Lucene.Net.Search
 			try
 			{
 				new DocTermOrds(ar, null, "binary");
-				NUnit.Framework.Assert.Fail();
+				Fail();
 			}
 			catch (InvalidOperationException)
 			{
 			}
 			Bits bits = FieldCache.DEFAULT.GetDocsWithField(ar, "binary");
-			NUnit.Framework.Assert.IsTrue(bits.Get(0));
+			IsTrue(bits.Get(0));
 			// Sorted type: can be retrieved via getTerms(), getTermsIndex(), getDocTermOrds()
 			try
 			{
 				FieldCache.DEFAULT.GetInts(ar, "sorted", false);
-				NUnit.Framework.Assert.Fail();
+				Fail();
 			}
 			catch (InvalidOperationException)
 			{
@@ -619,34 +619,34 @@ namespace Lucene.Net.Search
 			try
 			{
 				new DocTermOrds(ar, null, "sorted");
-				NUnit.Framework.Assert.Fail();
+				Fail();
 			}
 			catch (InvalidOperationException)
 			{
 			}
 			binary = FieldCache.DEFAULT.GetTerms(ar, "sorted", true);
 			binary.Get(0, scratch);
-			NUnit.Framework.Assert.AreEqual("sorted value", scratch.Utf8ToString());
+			AreEqual("sorted value", scratch.Utf8ToString());
 			SortedDocValues sorted = FieldCache.DEFAULT.GetTermsIndex(ar, "sorted");
-			NUnit.Framework.Assert.AreEqual(0, sorted.GetOrd(0));
-			NUnit.Framework.Assert.AreEqual(1, sorted.GetValueCount());
+			AreEqual(0, sorted.GetOrd(0));
+			AreEqual(1, sorted.GetValueCount());
 			sorted.Get(0, scratch);
-			NUnit.Framework.Assert.AreEqual("sorted value", scratch.Utf8ToString());
+			AreEqual("sorted value", scratch.Utf8ToString());
 			SortedSetDocValues sortedSet = FieldCache.DEFAULT.GetDocTermOrds(ar, "sorted");
 			sortedSet.SetDocument(0);
-			NUnit.Framework.Assert.AreEqual(0, sortedSet.NextOrd());
-			NUnit.Framework.Assert.AreEqual(SortedSetDocValues.NO_MORE_ORDS, sortedSet.NextOrd
+			AreEqual(0, sortedSet.NextOrd());
+			AreEqual(SortedSetDocValues.NO_MORE_ORDS, sortedSet.NextOrd
 				());
-			NUnit.Framework.Assert.AreEqual(1, sortedSet.GetValueCount());
+			AreEqual(1, sortedSet.GetValueCount());
 			bits = FieldCache.DEFAULT.GetDocsWithField(ar, "sorted");
-			NUnit.Framework.Assert.IsTrue(bits.Get(0));
+			IsTrue(bits.Get(0));
 			// Numeric type: can be retrieved via getInts() and so on
 			FieldCache.Ints numeric = FieldCache.DEFAULT.GetInts(ar, "numeric", false);
-			NUnit.Framework.Assert.AreEqual(42, numeric.Get(0));
+			AreEqual(42, numeric.Get(0));
 			try
 			{
 				FieldCache.DEFAULT.GetTerms(ar, "numeric", true);
-				NUnit.Framework.Assert.Fail();
+				Fail();
 			}
 			catch (InvalidOperationException)
 			{
@@ -654,7 +654,7 @@ namespace Lucene.Net.Search
 			try
 			{
 				FieldCache.DEFAULT.GetTermsIndex(ar, "numeric");
-				NUnit.Framework.Assert.Fail();
+				Fail();
 			}
 			catch (InvalidOperationException)
 			{
@@ -662,7 +662,7 @@ namespace Lucene.Net.Search
 			try
 			{
 				FieldCache.DEFAULT.GetDocTermOrds(ar, "numeric");
-				NUnit.Framework.Assert.Fail();
+				Fail();
 			}
 			catch (InvalidOperationException)
 			{
@@ -670,20 +670,20 @@ namespace Lucene.Net.Search
 			try
 			{
 				new DocTermOrds(ar, null, "numeric");
-				NUnit.Framework.Assert.Fail();
+				Fail();
 			}
 			catch (InvalidOperationException)
 			{
 			}
 			bits = FieldCache.DEFAULT.GetDocsWithField(ar, "numeric");
-			NUnit.Framework.Assert.IsTrue(bits.Get(0));
+			IsTrue(bits.Get(0));
 			// SortedSet type: can be retrieved via getDocTermOrds() 
 			if (DefaultCodecSupportsSortedSet())
 			{
 				try
 				{
 					FieldCache.DEFAULT.GetInts(ar, "sortedset", false);
-					NUnit.Framework.Assert.Fail();
+					Fail();
 				}
 				catch (InvalidOperationException)
 				{
@@ -691,7 +691,7 @@ namespace Lucene.Net.Search
 				try
 				{
 					FieldCache.DEFAULT.GetTerms(ar, "sortedset", true);
-					NUnit.Framework.Assert.Fail();
+					Fail();
 				}
 				catch (InvalidOperationException)
 				{
@@ -699,7 +699,7 @@ namespace Lucene.Net.Search
 				try
 				{
 					FieldCache.DEFAULT.GetTermsIndex(ar, "sortedset");
-					NUnit.Framework.Assert.Fail();
+					Fail();
 				}
 				catch (InvalidOperationException)
 				{
@@ -707,20 +707,20 @@ namespace Lucene.Net.Search
 				try
 				{
 					new DocTermOrds(ar, null, "sortedset");
-					NUnit.Framework.Assert.Fail();
+					Fail();
 				}
 				catch (InvalidOperationException)
 				{
 				}
 				sortedSet = FieldCache.DEFAULT.GetDocTermOrds(ar, "sortedset");
 				sortedSet.SetDocument(0);
-				NUnit.Framework.Assert.AreEqual(0, sortedSet.NextOrd());
-				NUnit.Framework.Assert.AreEqual(1, sortedSet.NextOrd());
-				NUnit.Framework.Assert.AreEqual(SortedSetDocValues.NO_MORE_ORDS, sortedSet.NextOrd
+				AreEqual(0, sortedSet.NextOrd());
+				AreEqual(1, sortedSet.NextOrd());
+				AreEqual(SortedSetDocValues.NO_MORE_ORDS, sortedSet.NextOrd
 					());
-				NUnit.Framework.Assert.AreEqual(2, sortedSet.GetValueCount());
+				AreEqual(2, sortedSet.GetValueCount());
 				bits = FieldCache.DEFAULT.GetDocsWithField(ar, "sortedset");
-				NUnit.Framework.Assert.IsTrue(bits.Get(0));
+				IsTrue(bits.Get(0));
 			}
 			ir.Close();
 			dir.Close();
@@ -731,7 +731,7 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			iw.AddDocument(doc);
 			DirectoryReader ir = iw.GetReader();
@@ -739,35 +739,35 @@ namespace Lucene.Net.Search
 			AtomicReader ar = GetOnlySegmentReader(ir);
 			FieldCache cache = FieldCache.DEFAULT;
 			cache.PurgeAllCaches();
-			NUnit.Framework.Assert.AreEqual(0, cache.GetCacheEntries().Length);
+			AreEqual(0, cache.GetCacheEntries().Length);
 			FieldCache.Bytes bytes = cache.GetBytes(ar, "bogusbytes", true);
-			NUnit.Framework.Assert.AreEqual(0, bytes.Get(0));
+			AreEqual(0, bytes.Get(0));
 			FieldCache.Shorts shorts = cache.GetShorts(ar, "bogusshorts", true);
-			NUnit.Framework.Assert.AreEqual(0, shorts.Get(0));
+			AreEqual(0, shorts.Get(0));
 			FieldCache.Ints ints = cache.GetInts(ar, "bogusints", true);
-			NUnit.Framework.Assert.AreEqual(0, ints.Get(0));
+			AreEqual(0, ints.Get(0));
 			FieldCache.Longs longs = cache.GetLongs(ar, "boguslongs", true);
-			NUnit.Framework.Assert.AreEqual(0, longs.Get(0));
+			AreEqual(0, longs.Get(0));
 			FieldCache.Floats floats = cache.GetFloats(ar, "bogusfloats", true);
-			NUnit.Framework.Assert.AreEqual(0, floats.Get(0), 0.0f);
+			AreEqual(0, floats.Get(0), 0.0f);
 			FieldCache.Doubles doubles = cache.GetDoubles(ar, "bogusdoubles", true);
-			NUnit.Framework.Assert.AreEqual(0, doubles.Get(0), 0.0D);
+			AreEqual(0, doubles.Get(0), 0.0D);
 			BytesRef scratch = new BytesRef();
 			BinaryDocValues binaries = cache.GetTerms(ar, "bogusterms", true);
 			binaries.Get(0, scratch);
-			NUnit.Framework.Assert.AreEqual(0, scratch.length);
+			AreEqual(0, scratch.length);
 			SortedDocValues sorted = cache.GetTermsIndex(ar, "bogustermsindex");
-			NUnit.Framework.Assert.AreEqual(-1, sorted.GetOrd(0));
+			AreEqual(-1, sorted.GetOrd(0));
 			sorted.Get(0, scratch);
-			NUnit.Framework.Assert.AreEqual(0, scratch.length);
+			AreEqual(0, scratch.length);
 			SortedSetDocValues sortedSet = cache.GetDocTermOrds(ar, "bogusmultivalued");
 			sortedSet.SetDocument(0);
-			NUnit.Framework.Assert.AreEqual(SortedSetDocValues.NO_MORE_ORDS, sortedSet.NextOrd
+			AreEqual(SortedSetDocValues.NO_MORE_ORDS, sortedSet.NextOrd
 				());
 			Bits bits = cache.GetDocsWithField(ar, "bogusbits");
-			NUnit.Framework.Assert.IsFalse(bits.Get(0));
+			IsFalse(bits.Get(0));
 			// check that we cached nothing
-			NUnit.Framework.Assert.AreEqual(0, cache.GetCacheEntries().Length);
+			AreEqual(0, cache.GetCacheEntries().Length);
 			ir.Close();
 			dir.Close();
 		}
@@ -777,7 +777,7 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new StoredField("bogusbytes", "bogus"));
 			doc.Add(new StoredField("bogusshorts", "bogus"));
@@ -795,35 +795,35 @@ namespace Lucene.Net.Search
 			AtomicReader ar = GetOnlySegmentReader(ir);
 			FieldCache cache = FieldCache.DEFAULT;
 			cache.PurgeAllCaches();
-			NUnit.Framework.Assert.AreEqual(0, cache.GetCacheEntries().Length);
+			AreEqual(0, cache.GetCacheEntries().Length);
 			FieldCache.Bytes bytes = cache.GetBytes(ar, "bogusbytes", true);
-			NUnit.Framework.Assert.AreEqual(0, bytes.Get(0));
+			AreEqual(0, bytes.Get(0));
 			FieldCache.Shorts shorts = cache.GetShorts(ar, "bogusshorts", true);
-			NUnit.Framework.Assert.AreEqual(0, shorts.Get(0));
+			AreEqual(0, shorts.Get(0));
 			FieldCache.Ints ints = cache.GetInts(ar, "bogusints", true);
-			NUnit.Framework.Assert.AreEqual(0, ints.Get(0));
+			AreEqual(0, ints.Get(0));
 			FieldCache.Longs longs = cache.GetLongs(ar, "boguslongs", true);
-			NUnit.Framework.Assert.AreEqual(0, longs.Get(0));
+			AreEqual(0, longs.Get(0));
 			FieldCache.Floats floats = cache.GetFloats(ar, "bogusfloats", true);
-			NUnit.Framework.Assert.AreEqual(0, floats.Get(0), 0.0f);
+			AreEqual(0, floats.Get(0), 0.0f);
 			FieldCache.Doubles doubles = cache.GetDoubles(ar, "bogusdoubles", true);
-			NUnit.Framework.Assert.AreEqual(0, doubles.Get(0), 0.0D);
+			AreEqual(0, doubles.Get(0), 0.0D);
 			BytesRef scratch = new BytesRef();
 			BinaryDocValues binaries = cache.GetTerms(ar, "bogusterms", true);
 			binaries.Get(0, scratch);
-			NUnit.Framework.Assert.AreEqual(0, scratch.length);
+			AreEqual(0, scratch.length);
 			SortedDocValues sorted = cache.GetTermsIndex(ar, "bogustermsindex");
-			NUnit.Framework.Assert.AreEqual(-1, sorted.GetOrd(0));
+			AreEqual(-1, sorted.GetOrd(0));
 			sorted.Get(0, scratch);
-			NUnit.Framework.Assert.AreEqual(0, scratch.length);
+			AreEqual(0, scratch.length);
 			SortedSetDocValues sortedSet = cache.GetDocTermOrds(ar, "bogusmultivalued");
 			sortedSet.SetDocument(0);
-			NUnit.Framework.Assert.AreEqual(SortedSetDocValues.NO_MORE_ORDS, sortedSet.NextOrd
+			AreEqual(SortedSetDocValues.NO_MORE_ORDS, sortedSet.NextOrd
 				());
 			Bits bits = cache.GetDocsWithField(ar, "bogusbits");
-			NUnit.Framework.Assert.IsFalse(bits.Get(0));
+			IsFalse(bits.Get(0));
 			// check that we cached nothing
-			NUnit.Framework.Assert.AreEqual(0, cache.GetCacheEntries().Length);
+			AreEqual(0, cache.GetCacheEntries().Length);
 			ir.Close();
 			dir.Close();
 		}
@@ -837,7 +837,7 @@ namespace Lucene.Net.Search
 				(Random()));
 			cfg.SetMergePolicy(NewLogMergePolicy());
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir, cfg);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			LongField field = new LongField("f", 0L, Field.Store.YES);
 			doc.Add(field);
@@ -876,7 +876,7 @@ namespace Lucene.Net.Search
 				if (v == 0 && Random().NextBoolean())
 				{
 					// missing
-					iw.AddDocument(new Lucene.Net.Document.Document());
+					iw.AddDocument(new Lucene.Net.Documents.Document());
 				}
 				else
 				{
@@ -890,7 +890,7 @@ namespace Lucene.Net.Search
 				, "f", false);
 			for (int i_1 = 0; i_1 < values.Length; ++i_1)
 			{
-				NUnit.Framework.Assert.AreEqual(values[i_1], longs.Get(i_1));
+				AreEqual(values[i_1], longs.Get(i_1));
 			}
 			reader.Close();
 			iw.Close();
@@ -906,7 +906,7 @@ namespace Lucene.Net.Search
 				(Random()));
 			cfg.SetMergePolicy(NewLogMergePolicy());
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir, cfg);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			IntField field = new IntField("f", 0, Field.Store.YES);
 			doc.Add(field);
@@ -945,7 +945,7 @@ namespace Lucene.Net.Search
 				if (v == 0 && Random().NextBoolean())
 				{
 					// missing
-					iw.AddDocument(new Lucene.Net.Document.Document());
+					iw.AddDocument(new Lucene.Net.Documents.Document());
 				}
 				else
 				{
@@ -959,7 +959,7 @@ namespace Lucene.Net.Search
 				, false);
 			for (int i_1 = 0; i_1 < values.Length; ++i_1)
 			{
-				NUnit.Framework.Assert.AreEqual(values[i_1], ints.Get(i_1));
+				AreEqual(values[i_1], ints.Get(i_1));
 			}
 			reader.Close();
 			iw.Close();

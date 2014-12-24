@@ -16,10 +16,12 @@
  */
 
 using System;
+using Lucene.Net.Analysis;
+using Lucene.Net.Index;
 using Lucene.Net.Support;
 using NUnit.Framework;
 
-using StandardAnalyzer = Lucene.Net.Analysis.Standard.StandardAnalyzer;
+using StandardAnalyzer = Lucene.Net.Test.Analysis.Standard.StandardAnalyzer;
 using Document = Lucene.Net.Documents.Document;
 using Field = Lucene.Net.Documents.Field;
 using IndexWriter = Lucene.Net.Index.IndexWriter;

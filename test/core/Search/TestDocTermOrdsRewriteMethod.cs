@@ -5,7 +5,7 @@
  */
 
 using System.Collections.Generic;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -43,7 +43,7 @@ namespace Lucene.Net.Search
 			int num = AtLeast(200);
 			for (int i = 0; i < num; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(NewStringField("id", Sharpen.Extensions.ToString(i), Field.Store.NO));
 				int numTerms = Random().Next(4);
@@ -127,13 +127,13 @@ namespace Lucene.Net.Search
 			RegexpQuery a1 = new RegexpQuery(new Term(fieldName, "[aA]"), RegExp.NONE);
 			RegexpQuery a2 = new RegexpQuery(new Term(fieldName, "[aA]"), RegExp.NONE);
 			RegexpQuery b = new RegexpQuery(new Term(fieldName, "[bB]"), RegExp.NONE);
-			NUnit.Framework.Assert.AreEqual(a1, a2);
-			NUnit.Framework.Assert.IsFalse(a1.Equals(b));
+			AreEqual(a1, a2);
+			IsFalse(a1.Equals(b));
 			a1.SetRewriteMethod(new DocTermOrdsRewriteMethod());
 			a2.SetRewriteMethod(new DocTermOrdsRewriteMethod());
 			b.SetRewriteMethod(new DocTermOrdsRewriteMethod());
-			NUnit.Framework.Assert.AreEqual(a1, a2);
-			NUnit.Framework.Assert.IsFalse(a1.Equals(b));
+			AreEqual(a1, a2);
+			IsFalse(a1.Equals(b));
 			QueryUtils.Check(a1);
 		}
 	}

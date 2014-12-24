@@ -19,7 +19,7 @@ using System;
 
 using NUnit.Framework;
 
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.QueryParsers;
@@ -40,7 +40,7 @@ namespace Lucene.Net
 		{
 			Query q = new TermQuery(new Term("foo", "bar"));
 			q.SetBoost(-42f);
-			NUnit.Framework.Assert.AreEqual(-42f, q.GetBoost(), 0.0f);
+			AreEqual(-42f, q.GetBoost(), 0.0f);
 			Directory directory = NewDirectory();
 			try
 			{
@@ -49,7 +49,7 @@ namespace Lucene.Net
 				IndexWriter writer = new IndexWriter(directory, conf);
 				try
 				{
-					Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+					Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 					d.Add(NewTextField("foo", "bar", Field.Store.YES));
 					writer.AddDocument(d);
 				}
@@ -62,13 +62,13 @@ namespace Lucene.Net
 				{
 					IndexSearcher searcher = NewSearcher(reader);
 					ScoreDoc[] hits = searcher.Search(q, null, 1000).scoreDocs;
-					NUnit.Framework.Assert.AreEqual(1, hits.Length);
-					NUnit.Framework.Assert.IsTrue("score is not negative: " + hits[0].score, hits[0].
+					AreEqual(1, hits.Length);
+					IsTrue("score is not negative: " + hits[0].score, hits[0].
 						score < 0);
 					Explanation explain = searcher.Explain(q, hits[0].doc);
-					NUnit.Framework.Assert.AreEqual("score doesn't match explanation", hits[0].score, 
+					AreEqual("score doesn't match explanation", hits[0].score, 
 						explain.GetValue(), 0.001f);
-					NUnit.Framework.Assert.IsTrue("explain doesn't think doc is a match", explain.IsMatch
+					IsTrue("explain doesn't think doc is a match", explain.IsMatch
 						());
 				}
 				finally

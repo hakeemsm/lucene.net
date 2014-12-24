@@ -20,10 +20,10 @@ namespace Lucene.Net.Util
 
 		public virtual void TestLuceneMainVersionConstant()
 		{
-			NUnit.Framework.Assert.IsTrue("LUCENE_MAIN_VERSION does not follow pattern: 'x.y' (stable release) or 'x.y.0.z' (alpha/beta version)"
+			IsTrue("LUCENE_MAIN_VERSION does not follow pattern: 'x.y' (stable release) or 'x.y.0.z' (alpha/beta version)"
 				 + GetVersionDetails(), Constants.LUCENE_MAIN_VERSION.Matches("\\d+\\.\\d+(|\\.0\\.\\d+)"
 				));
-			NUnit.Framework.Assert.IsTrue("LUCENE_VERSION does not start with LUCENE_MAIN_VERSION (without alpha/beta marker)"
+			IsTrue("LUCENE_VERSION does not start with LUCENE_MAIN_VERSION (without alpha/beta marker)"
 				 + GetVersionDetails(), Constants.LUCENE_VERSION.StartsWith(Constants.MainVersionWithoutAlphaBeta
 				()));
 		}
@@ -38,7 +38,7 @@ namespace Lucene.Net.Util
 			version = version.ReplaceAll("-.*$", string.Empty);
 			string versionConstant = Constants.LUCENE_VERSION.ReplaceAll("-.*$", string.Empty
 				);
-			NUnit.Framework.Assert.IsTrue("LUCENE_VERSION should share the same prefix with lucene.version test property ('"
+			IsTrue("LUCENE_VERSION should share the same prefix with lucene.version test property ('"
 				 + version + "')." + GetVersionDetails(), versionConstant.StartsWith(version) ||
 				 version.StartsWith(versionConstant));
 		}

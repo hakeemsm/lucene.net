@@ -55,7 +55,7 @@ namespace Lucene.Net.Codecs.Asserting.TestFramework
 				return fields == null ? null : new AssertingAtomicReader.AssertingFields(fields);
 			}
 
-			public override TermVectorsReader Clone()
+			public override object Clone()
 			{
 				return new AssertingTermVectorsReader(@in.Clone());
 			}

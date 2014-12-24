@@ -48,7 +48,7 @@ namespace Lucene.Net.Index
 			public virtual void PrepareCommit(IDictionary<string, string> commitData)
 			{
 				this.prepareCommitData = commitData;
-				NUnit.Framework.Assert.IsFalse("commit should not have been called before all prepareCommit were"
+				IsFalse("commit should not have been called before all prepareCommit were"
 					, commitCalled);
 				if (failOnPrepare)
 				{
@@ -137,7 +137,7 @@ namespace Lucene.Net.Index
 				// if any failure happened, ensure that rollback was called on all.
 				foreach (TestTwoPhaseCommitTool.TwoPhaseCommitImpl tpc in objects)
 				{
-					NUnit.Framework.Assert.IsTrue("rollback was not called while a failure occurred during the 2-phase commit"
+					IsTrue("rollback was not called while a failure occurred during the 2-phase commit"
 						, tpc.rollbackCalled);
 				}
 			}

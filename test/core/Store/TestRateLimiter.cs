@@ -27,9 +27,9 @@ namespace Lucene.Net.Store
 			}
 			// fire up 3 * 4 MB 
 			long convert = TimeUnit.MILLISECONDS.Convert(pause, TimeUnit.NANOSECONDS);
-			NUnit.Framework.Assert.IsTrue("we should sleep less than 2 seconds but did: " + convert
+			IsTrue("we should sleep less than 2 seconds but did: " + convert
 				 + " millis", convert < 2000l);
-			NUnit.Framework.Assert.IsTrue("we should sleep at least 1 second but did only: " 
+			IsTrue("we should sleep at least 1 second but did only: " 
 				+ convert + " millis", convert > 1000l);
 		}
 
@@ -60,7 +60,7 @@ namespace Lucene.Net.Store
 			//HM:revisit 
 			//assert that it never exceeds the max, so slow jenkins doesn't trip:
 			double ratio = actualMBPerSec / targetMBPerSec;
-			NUnit.Framework.Assert.IsTrue("targetMBPerSec=" + targetMBPerSec + " actualMBPerSec="
+			IsTrue("targetMBPerSec=" + targetMBPerSec + " actualMBPerSec="
 				 + actualMBPerSec, ratio >= 0.9 && ratio <= 1.1);
 		}
 

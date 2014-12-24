@@ -4,7 +4,7 @@
  * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
@@ -29,7 +29,7 @@ namespace Lucene.Net.Index
 				(IndexWriterConfig.DISABLE_AUTO_FLUSH)).SetRAMBufferSizeMB(256.0)).SetMergeScheduler
 				(new ConcurrentMergeScheduler()).SetMergePolicy(NewLogMergePolicy(false, 10)).SetOpenMode
 				(IndexWriterConfig.OpenMode.CREATE));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			byte[] bytes = new byte[2];
 			BytesRef data = new BytesRef(bytes);
@@ -57,12 +57,12 @@ namespace Lucene.Net.Index
 				AtomicReader reader = ((AtomicReader)context.Reader());
 				BytesRef scratch = new BytesRef();
 				BinaryDocValues dv = reader.GetSortedDocValues("dv");
-				for (int i_1 = 0; i_1 < reader.MaxDoc(); i_1++)
+				for (int i_1 = 0; i_1 < reader.MaxDoc; i_1++)
 				{
 					bytes[0] = unchecked((byte)(expectedValue >> 8));
 					bytes[1] = unchecked((byte)expectedValue);
 					dv.Get(i_1, scratch);
-					NUnit.Framework.Assert.AreEqual(data, scratch);
+					AreEqual(data, scratch);
 					expectedValue++;
 				}
 			}
@@ -84,7 +84,7 @@ namespace Lucene.Net.Index
 				(IndexWriterConfig.DISABLE_AUTO_FLUSH)).SetRAMBufferSizeMB(256.0)).SetMergeScheduler
 				(new ConcurrentMergeScheduler()).SetMergePolicy(NewLogMergePolicy(false, 10)).SetOpenMode
 				(IndexWriterConfig.OpenMode.CREATE));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			byte[] bytes = new byte[4];
 			BytesRef data = new BytesRef(bytes);
@@ -114,7 +114,7 @@ namespace Lucene.Net.Index
 				AtomicReader reader = ((AtomicReader)context.Reader());
 				BytesRef scratch = new BytesRef();
 				BinaryDocValues dv = reader.GetSortedDocValues("dv");
-				for (int i_1 = 0; i_1 < reader.MaxDoc(); i_1++)
+				for (int i_1 = 0; i_1 < reader.MaxDoc; i_1++)
 				{
 					bytes[0] = unchecked((byte)(counter >> 24));
 					bytes[1] = unchecked((byte)(counter >> 16));
@@ -122,7 +122,7 @@ namespace Lucene.Net.Index
 					bytes[3] = unchecked((byte)counter);
 					counter++;
 					dv.Get(i_1, scratch);
-					NUnit.Framework.Assert.AreEqual(data, scratch);
+					AreEqual(data, scratch);
 				}
 			}
 			r.Close();

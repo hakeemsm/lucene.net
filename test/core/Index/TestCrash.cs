@@ -4,7 +4,7 @@
  * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
@@ -35,7 +35,7 @@ namespace Lucene.Net.Index
 			{
 				writer.Commit();
 			}
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewTextField("content", "aaa", Field.Store.NO));
 			doc.Add(NewTextField("id", "0", Field.Store.NO));
@@ -71,7 +71,7 @@ namespace Lucene.Net.Index
 			dir.SetAssertNoUnrefencedFilesOnClose(false);
 			Crash(writer);
 			IndexReader reader = DirectoryReader.Open(dir);
-			NUnit.Framework.Assert.IsTrue(reader.NumDocs() < 157);
+			IsTrue(reader.NumDocs() < 157);
 			reader.Close();
 			// Make a new dir, copying from the crashed dir, and
 			// open IW on it, to confirm IW "recovers" after a
@@ -101,7 +101,7 @@ namespace Lucene.Net.Index
 			writer = InitIndex(Random(), dir, false);
 			writer.Close();
 			IndexReader reader = DirectoryReader.Open(dir);
-			NUnit.Framework.Assert.IsTrue(reader.NumDocs() < 314);
+			IsTrue(reader.NumDocs() < 314);
 			reader.Close();
 			// Make a new dir, copying from the crashed dir, and
 			// open IW on it, to confirm IW "recovers" after a
@@ -122,10 +122,10 @@ namespace Lucene.Net.Index
 			dir.SetAssertNoUnrefencedFilesOnClose(false);
 			writer.Close();
 			writer = InitIndex(Random(), dir, false);
-			NUnit.Framework.Assert.AreEqual(314, writer.MaxDoc());
+			AreEqual(314, writer.MaxDoc);
 			Crash(writer);
 			IndexReader reader = DirectoryReader.Open(dir);
-			NUnit.Framework.Assert.IsTrue(reader.NumDocs() >= 157);
+			IsTrue(reader.NumDocs() >= 157);
 			reader.Close();
 			// Make a new dir, copying from the crashed dir, and
 			// open IW on it, to confirm IW "recovers" after a
@@ -144,7 +144,7 @@ namespace Lucene.Net.Index
 			writer.Close();
 			dir.Crash();
 			IndexReader reader = DirectoryReader.Open(dir);
-			NUnit.Framework.Assert.AreEqual(157, reader.NumDocs());
+			AreEqual(157, reader.NumDocs());
 			reader.Close();
 			dir.Close();
 		}
@@ -157,7 +157,7 @@ namespace Lucene.Net.Index
 			writer.Close(false);
 			dir.Crash();
 			IndexReader reader = DirectoryReader.Open(dir);
-			NUnit.Framework.Assert.AreEqual(157, reader.NumDocs());
+			AreEqual(157, reader.NumDocs());
 			reader.Close();
 			dir.Close();
 		}

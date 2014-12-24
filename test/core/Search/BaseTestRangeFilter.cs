@@ -6,7 +6,7 @@
 
 using System.Text;
 using NUnit.Framework;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -120,7 +120,7 @@ namespace Lucene.Net.Search
 		private static IndexReader Build(Random random, BaseTestRangeFilter.TestIndex index
 			)
 		{
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			Field idField = NewStringField(random, "id", string.Empty, Field.Store.YES);
 			Field randField = NewStringField(random, "rand", string.Empty, Field.Store.YES);
@@ -139,7 +139,7 @@ namespace Lucene.Net.Search
 				int maxCount = 0;
 				for (int d = minId; d <= maxId; d++)
 				{
-					idField.SetStringValue(Pad(d));
+					idField.StringValue = Pad(d));
 					int r = index.allowNegativeRandomInts ? random.Next() : random.Next(int.MaxValue);
 					if (index.maxR < r)
 					{
@@ -165,8 +165,8 @@ namespace Lucene.Net.Search
 							minCount++;
 						}
 					}
-					randField.SetStringValue(Pad(r));
-					bodyField.SetStringValue("body");
+					randField.StringValue = Pad(r));
+					bodyField.StringValue = "body");
 					writer.AddDocument(doc);
 				}
 				if (minCount == 1 && maxCount == 1)
@@ -196,8 +196,8 @@ namespace Lucene.Net.Search
 				string aa = Pad(a);
 				string bb = Pad(b);
 				string label = a + ":" + aa + " vs " + b + ":" + bb;
-				NUnit.Framework.Assert.AreEqual("length of " + label, aa.Length, bb.Length);
-				NUnit.Framework.Assert.IsTrue("compare less than " + label, Sharpen.Runtime.CompareOrdinal
+				AreEqual("length of " + label, aa.Length, bb.Length);
+				IsTrue("compare less than " + label, Sharpen.Runtime.CompareOrdinal
 					(aa, bb) < 0);
 			}
 		}

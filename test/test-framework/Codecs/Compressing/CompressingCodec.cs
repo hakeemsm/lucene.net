@@ -1,9 +1,13 @@
 using System;
+using Lucene.Net.Codecs;
+using Lucene.Net.Codecs.Compressing;
 using Lucene.Net.Codecs.Compressing.Dummy;
+using Lucene.Net.Codecs.Compressing.Dummy.TestFramework;
+using Lucene.Net.Codecs.Compressing.TestFramework;
 using Lucene.Net.Codecs.Lucene46;
 using Lucene.Net.Randomized.Generators;
 
-namespace Lucene.Net.Codecs.Compressing.TestFramework
+namespace Lucene.Net.TestFramework.Codecs.Compressing
 {
 	/// <summary>
 	/// A codec that uses
@@ -56,7 +60,7 @@ namespace Lucene.Net.Codecs.Compressing.TestFramework
 		/// that is using an empty segment
 		/// suffix
 		/// </summary>
-		public static Lucene.Net.Codecs.Compressing.CompressingCodec RandomInstance
+		public static CompressingCodec RandomInstance
 			(Random random)
 		{
 			return RandomInstance(random, RandomInts.RandomIntBetween(random, 1, 500), false);

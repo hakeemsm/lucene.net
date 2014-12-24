@@ -6,7 +6,7 @@
 
 using System;
 using System.Collections.Generic;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Codecs;
 using Lucene.Net.Codecs.Lucene46;
 using Lucene.Net.Document;
@@ -42,19 +42,19 @@ namespace Lucene.Net.Index
 			startingGun.CountDown();
 			startDone.Await();
 			IndexReader r = DirectoryReader.Open(w, true);
-			NUnit.Framework.Assert.AreEqual(2, r.NumDocs());
+			AreEqual(2, r.NumDocs());
 			int numSegments = r.Leaves().Count;
 			// 1 segment if the threads ran sequentially, else 2:
-			NUnit.Framework.Assert.IsTrue(numSegments <= 2);
+			IsTrue(numSegments <= 2);
 			r.Close();
 			middleGun.CountDown();
 			threads[0].Join();
 			finalGun.CountDown();
 			threads[1].Join();
 			r = DirectoryReader.Open(w, true);
-			NUnit.Framework.Assert.AreEqual(4, r.NumDocs());
+			AreEqual(4, r.NumDocs());
 			// Both threads should have shared a single thread state since they did not try to index concurrently:
-			NUnit.Framework.Assert.AreEqual(1 + numSegments, r.Leaves().Count);
+			AreEqual(1 + numSegments, r.Leaves().Count);
 			r.Close();
 			w.Close();
 			dir.Close();
@@ -78,7 +78,7 @@ namespace Lucene.Net.Index
 				try
 				{
 					startingGun.Await();
-					Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 						();
 					doc.Add(LuceneTestCase.NewTextField("field", "here is some text", Field.Store.NO)
 						);
@@ -136,7 +136,7 @@ namespace Lucene.Net.Index
 				this.maxThreadCountPerIter = maxThreadCountPerIter;
 				this.indexingCount = indexingCount;
 				r = DirectoryReader.Open(w, true);
-				NUnit.Framework.Assert.AreEqual(0, r.Leaves().Count);
+				AreEqual(0, r.Leaves().Count);
 				SetNextIterThreadCount();
 			}
 
@@ -146,7 +146,7 @@ namespace Lucene.Net.Index
 				{
 					int oldSegmentCount = r.Leaves().Count;
 					DirectoryReader r2 = DirectoryReader.OpenIfChanged(r);
-					NUnit.Framework.Assert.IsNotNull(r2);
+					IsNotNull(r2);
 					r.Close();
 					r = r2;
 					int maxThreadStates = w.GetConfig().GetMaxThreadStates();
@@ -158,7 +158,7 @@ namespace Lucene.Net.Index
 							 + " newSegCount=" + r2.Leaves().Count + " maxExpected=" + maxExpectedSegments);
 					}
 					// NOTE: it won't necessarily be ==, in case some threads were strangely scheduled and never conflicted with one another (should be uncommon...?):
-					NUnit.Framework.Assert.IsTrue(r.Leaves().Count <= maxExpectedSegments);
+					IsTrue(r.Leaves().Count <= maxExpectedSegments);
 					SetNextIterThreadCount();
 				}
 				catch (Exception e)
@@ -257,7 +257,7 @@ namespace Lucene.Net.Index
 								System.Console.Out.WriteLine("TEST: " + Sharpen.Thread.CurrentThread().GetName() 
 									+ ": do index");
 							}
-							Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+							Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 								();
 							doc.Add(new TextField("field", "here is some text that is a bit longer than normal trivial text"
 								, Field.Store.NO));
@@ -331,7 +331,7 @@ namespace Lucene.Net.Index
 				try
 				{
 					startingGun.Await();
-					Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 						();
 					doc.Add(new TextField("field", "here is some text that is a bit longer than normal trivial text"
 						, Field.Store.NO));
@@ -385,7 +385,7 @@ namespace Lucene.Net.Index
 			// docs flushed.  If the writer incorrectly holds onto previously indexed docs forever then this will run forever:
 			while (thread0Count < 1000 || thread1Count < 1000)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(NewStringField("field", "threadIDmain", Field.Store.NO));
 				w.AddDocument(doc);
@@ -435,7 +435,7 @@ namespace Lucene.Net.Index
 					startingGun.Await();
 					for (int j = 0; j < 1000; j++)
 					{
-						Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+						Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 							();
 						doc.Add(LuceneTestCase.NewStringField("field", "threadID" + threadID, Field.Store
 							.NO));

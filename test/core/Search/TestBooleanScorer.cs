@@ -28,7 +28,7 @@ namespace Lucene.Net.Search
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), directory);
 			for (int i = 0; i < values.Length; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(NewStringField(FIELD, values[i], Field.Store.YES));
 				writer.AddDocument(doc);
@@ -45,7 +45,7 @@ namespace Lucene.Net.Search
 			query.Add(new TermQuery(new Term(FIELD, "9")), BooleanClause.Occur.MUST_NOT);
 			IndexSearcher indexSearcher = NewSearcher(ir);
 			ScoreDoc[] hits = indexSearcher.Search(query, null, 1000).scoreDocs;
-			NUnit.Framework.Assert.AreEqual("Number of matched documents", 2, hits.Length);
+			AreEqual("Number of matched documents", 2, hits.Length);
 			ir.Close();
 			directory.Close();
 		}
@@ -72,8 +72,8 @@ namespace Lucene.Net.Search
 				.EmptyList<BulkScorer>(), scorers.Length);
 			IList<int> hits = new AList<int>();
 			bs.Score(new _Collector_104(hits));
-			NUnit.Framework.Assert.AreEqual("should have only 1 hit", 1, hits.Count);
-			NUnit.Framework.Assert.AreEqual("hit should have been docID=3000", 3000, hits[0]);
+			AreEqual("should have only 1 hit", 1, hits.Count);
+			AreEqual("hit should have been docID=3000", 3000, hits[0]);
 			ir.Close();
 			directory.Close();
 		}
@@ -136,12 +136,12 @@ namespace Lucene.Net.Search
 		{
 			Directory d = NewDirectory();
 			RandomIndexWriter w = new RandomIndexWriter(Random(), d);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new TextField("field", "0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33"
 				, Field.Store.NO));
 			w.AddDocument(doc);
-			doc = new Lucene.Net.Document.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(new TextField("field", "33", Field.Store.NO));
 			w.AddDocument(doc);
 			IndexReader r = w.GetReader();
@@ -159,7 +159,7 @@ namespace Lucene.Net.Search
 			int[] count = new int[1];
 			s.Search(q, new _Collector_155(count));
 			// Make sure we got BooleanScorer:
-			NUnit.Framework.Assert.AreEqual(1, count[0]);
+			AreEqual(1, count[0]);
 			r.Close();
 			d.Close();
 		}
@@ -174,7 +174,7 @@ namespace Lucene.Net.Search
 			public override void SetScorer(Scorer scorer)
 			{
 				Type clazz = scorer.GetType();
-				NUnit.Framework.Assert.AreEqual("Scorer is implemented by wrong class", typeof(FakeScorer
+				AreEqual("Scorer is implemented by wrong class", typeof(FakeScorer
 					).FullName, clazz.FullName);
 			}
 
@@ -278,7 +278,7 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter w = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewTextField("field", "doctors are people who prescribe medicines of which they know little, to cure diseases of which they know less, in human beings of whom they know nothing"
 				, Field.Store.NO));
@@ -293,7 +293,7 @@ namespace Lucene.Net.Search
 			q2.Add(q1, BooleanClause.Occur.SHOULD);
 			q2.Add(new TestBooleanScorer.CrazyMustUseBulkScorerQuery(), BooleanClause.Occur.SHOULD
 				);
-			NUnit.Framework.Assert.AreEqual(1, s.Search(q2, 10).totalHits);
+			AreEqual(1, s.Search(q2, 10).TotalHits);
 			r.Close();
 			dir.Close();
 		}

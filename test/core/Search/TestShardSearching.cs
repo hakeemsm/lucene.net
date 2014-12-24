@@ -141,7 +141,7 @@ namespace Lucene.Net.Search
 									 + subVersion);
 							}
 							subs[nodeID] = sub.GetIndexReader();
-							docCount += subs[nodeID].MaxDoc();
+							docCount += subs[nodeID].MaxDoc;
 						}
 					}
 					catch (ShardSearchingTestBase.SearcherExpiredException see)
@@ -186,7 +186,7 @@ namespace Lucene.Net.Search
 						}
 						if (VERBOSE)
 						{
-							System.Console.Out.WriteLine("  maxDoc=" + mockReader.MaxDoc());
+							System.Console.Out.WriteLine("  maxDoc=" + mockReader.MaxDoc);
 						}
 						if (terms != null)
 						{
@@ -368,21 +368,21 @@ namespace Lucene.Net.Search
 			int numNodes = shardSearcher.nodeVersions.Length;
 			int[] @base = new int[numNodes];
 			IList<IndexReaderContext> subs = mockSearcher.GetTopReaderContext().Children();
-			NUnit.Framework.Assert.AreEqual(numNodes, subs.Count);
+			AreEqual(numNodes, subs.Count);
 			for (int nodeID = 0; nodeID < numNodes; nodeID++)
 			{
 				@base[nodeID] = subs[nodeID].docBaseInParent;
 			}
 			if (VERBOSE)
 			{
-				System.Console.Out.WriteLine("  single searcher: " + hits.totalHits + " totalHits maxScore="
+				System.Console.Out.WriteLine("  single searcher: " + hits.TotalHits + " TotalHits maxScore="
 					 + hits.GetMaxScore());
 				for (int i = 0; i < hits.scoreDocs.Length; i++)
 				{
 					ScoreDoc sd = hits.scoreDocs[i];
 					System.Console.Out.WriteLine("    doc=" + sd.doc + " score=" + sd.score);
 				}
-				System.Console.Out.WriteLine("  shard searcher: " + shardHits.totalHits + " totalHits maxScore="
+				System.Console.Out.WriteLine("  shard searcher: " + shardHits.TotalHits + " TotalHits maxScore="
 					 + shardHits.GetMaxScore());
 				for (int i_1 = 0; i_1 < shardHits.scoreDocs.Length; i_1++)
 				{
@@ -407,7 +407,7 @@ namespace Lucene.Net.Search
 			bool moreHits;
 			ScoreDoc bottomHit;
 			ScoreDoc bottomHitShards;
-			if (numHitsPaged < hits.totalHits)
+			if (numHitsPaged < hits.TotalHits)
 			{
 				// More hits to page through
 				moreHits = true;
@@ -430,7 +430,7 @@ namespace Lucene.Net.Search
 			}
 			else
 			{
-				NUnit.Framework.Assert.AreEqual(hits.totalHits, numHitsPaged);
+				AreEqual(hits.TotalHits, numHitsPaged);
 				bottomHit = null;
 				bottomHitShards = null;
 				moreHits = false;

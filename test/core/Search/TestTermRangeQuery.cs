@@ -19,10 +19,10 @@ using System;
 using Lucene.Net.Test.Analysis.TokenAttributes;
 using NUnit.Framework;
 
-using Analyzer = Lucene.Net.Analysis.Analyzer;
-using TokenStream = Lucene.Net.Analysis.TokenStream;
-using Tokenizer = Lucene.Net.Analysis.Tokenizer;
-using WhitespaceAnalyzer = Lucene.Net.Analysis.WhitespaceAnalyzer;
+using Analyzer = Lucene.Net.Test.Analysis.Analyzer;
+using TokenStream = Lucene.Net.Test.Analysis.TokenStream;
+using Tokenizer = Lucene.Net.Test.Analysis.Tokenizer;
+using WhitespaceAnalyzer = Lucene.Net.Test.Analysis.WhitespaceAnalyzer;
 using Document = Lucene.Net.Documents.Document;
 using Field = Lucene.Net.Documents.Field;
 using IndexWriter = Lucene.Net.Index.IndexWriter;
@@ -109,21 +109,21 @@ namespace Lucene.Net.Search
 			IndexSearcher searcher = NewSearcher(reader);
 			TermRangeQuery query = new TermRangeQuery("content", null, null, true, true);
 			Terms terms = MultiFields.GetTerms(searcher.GetIndexReader(), "content");
-			NUnit.Framework.Assert.IsFalse(query.GetTermsEnum(terms) is TermRangeTermsEnum);
-			NUnit.Framework.Assert.AreEqual(4, searcher.Search(query, null, 1000).scoreDocs.Length
+			IsFalse(query.GetTermsEnum(terms) is TermRangeTermsEnum);
+			AreEqual(4, searcher.Search(query, null, 1000).scoreDocs.Length
 				);
 			query = new TermRangeQuery("content", null, null, false, false);
-			NUnit.Framework.Assert.IsFalse(query.GetTermsEnum(terms) is TermRangeTermsEnum);
-			NUnit.Framework.Assert.AreEqual(4, searcher.Search(query, null, 1000).scoreDocs.Length
+			IsFalse(query.GetTermsEnum(terms) is TermRangeTermsEnum);
+			AreEqual(4, searcher.Search(query, null, 1000).scoreDocs.Length
 				);
 			query = TermRangeQuery.NewStringRange("content", string.Empty, null, true, false);
-			NUnit.Framework.Assert.IsFalse(query.GetTermsEnum(terms) is TermRangeTermsEnum);
-			NUnit.Framework.Assert.AreEqual(4, searcher.Search(query, null, 1000).scoreDocs.Length
+			IsFalse(query.GetTermsEnum(terms) is TermRangeTermsEnum);
+			AreEqual(4, searcher.Search(query, null, 1000).scoreDocs.Length
 				);
 			// and now anothe one
 			query = TermRangeQuery.NewStringRange("content", "B", null, true, false);
-			NUnit.Framework.Assert.IsTrue(query.GetTermsEnum(terms) is TermRangeTermsEnum);
-			NUnit.Framework.Assert.AreEqual(3, searcher.Search(query, null, 1000).scoreDocs.Length
+			IsTrue(query.GetTermsEnum(terms) is TermRangeTermsEnum);
+			AreEqual(3, searcher.Search(query, null, 1000).scoreDocs.Length
 				);
 			reader.Close();
 		}
@@ -154,18 +154,18 @@ namespace Lucene.Net.Search
 			query.SetRewriteMethod(new MultiTermQuery.TopTermsScoringBooleanQueryRewrite(50));
 			BooleanQuery bq = (BooleanQuery)searcher.Rewrite(query);
 			ICollection<string> allowedTerms = AsSet(terms);
-			NUnit.Framework.Assert.AreEqual(allowedTerms.Count, bq.Clauses().Count);
+			AreEqual(allowedTerms.Count, bq.Clauses().Count);
 			foreach (BooleanClause c in bq.Clauses())
 			{
-				NUnit.Framework.Assert.IsTrue(c.GetQuery() is TermQuery);
+				IsTrue(c.GetQuery() is TermQuery);
 				TermQuery tq = (TermQuery)c.GetQuery();
 				string term = tq.GetTerm().Text();
-				NUnit.Framework.Assert.IsTrue("invalid term: " + term, allowedTerms.Contains(term
+				IsTrue("invalid term: " + term, allowedTerms.Contains(term
 					));
 				allowedTerms.Remove(term);
 			}
 			// remove to fail on double terms
-			NUnit.Framework.Assert.AreEqual(0, allowedTerms.Count);
+			AreEqual(0, allowedTerms.Count);
 		}
         [Test]
 		public virtual void  TestEqualsHashcode()

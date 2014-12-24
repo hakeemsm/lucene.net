@@ -5,7 +5,7 @@
  */
 
 using System;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
@@ -51,7 +51,7 @@ namespace Lucene.Net.Index
 					noOverMerge = true;
 				}
 			}
-			NUnit.Framework.Assert.IsTrue(noOverMerge);
+			IsTrue(noOverMerge);
 			writer.Close();
 			dir.Close();
 		}
@@ -191,7 +191,7 @@ namespace Lucene.Net.Index
 			writer.WaitForMerges();
 			writer.Commit();
 			CheckInvariants(writer);
-			NUnit.Framework.Assert.AreEqual(10, writer.MaxDoc());
+			AreEqual(10, writer.MaxDoc);
 			writer.Close();
 			dir.Close();
 		}
@@ -199,7 +199,7 @@ namespace Lucene.Net.Index
 		/// <exception cref="System.IO.IOException"></exception>
 		private void AddDoc(IndexWriter writer)
 		{
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewTextField("content", "aaa", Field.Store.NO));
 			writer.AddDocument(doc);
@@ -214,7 +214,7 @@ namespace Lucene.Net.Index
 			int maxMergeDocs = ((LogMergePolicy)writer.GetConfig().GetMergePolicy()).GetMaxMergeDocs
 				();
 			int ramSegmentCount = writer.GetNumBufferedDocuments();
-			NUnit.Framework.Assert.IsTrue(ramSegmentCount < maxBufferedDocs);
+			IsTrue(ramSegmentCount < maxBufferedDocs);
 			int lowerBound = -1;
 			int upperBound = maxBufferedDocs;
 			int numSegments = 0;
@@ -222,7 +222,7 @@ namespace Lucene.Net.Index
 			for (int i = segmentCount - 1; i >= 0; i--)
 			{
 				int docCount = writer.GetDocCount(i);
-				NUnit.Framework.Assert.IsTrue("docCount=" + docCount + " lowerBound=" + lowerBound
+				IsTrue("docCount=" + docCount + " lowerBound=" + lowerBound
 					 + " upperBound=" + upperBound + " i=" + i + " segmentCount=" + segmentCount + " index="
 					 + writer.SegString() + " config=" + writer.GetConfig(), docCount > lowerBound);
 				if (docCount <= upperBound)
@@ -233,7 +233,7 @@ namespace Lucene.Net.Index
 				{
 					if (upperBound * mergeFactor <= maxMergeDocs)
 					{
-						NUnit.Framework.Assert.IsTrue("maxMergeDocs=" + maxMergeDocs + "; numSegments=" +
+						IsTrue("maxMergeDocs=" + maxMergeDocs + "; numSegments=" +
 							 numSegments + "; upperBound=" + upperBound + "; mergeFactor=" + mergeFactor + "; segs="
 							 + writer.SegString() + " config=" + writer.GetConfig(), numSegments < mergeFactor
 							);
@@ -249,7 +249,7 @@ namespace Lucene.Net.Index
 			}
 			if (upperBound * mergeFactor <= maxMergeDocs)
 			{
-				NUnit.Framework.Assert.IsTrue(numSegments < mergeFactor);
+				IsTrue(numSegments < mergeFactor);
 			}
 		}
 
@@ -264,17 +264,17 @@ namespace Lucene.Net.Index
 		private void AssertSetters(MergePolicy lmp)
 		{
 			lmp.SetMaxCFSSegmentSizeMB(2.0);
-			NUnit.Framework.Assert.AreEqual(2.0, lmp.GetMaxCFSSegmentSizeMB(), EPSILON);
+			AreEqual(2.0, lmp.GetMaxCFSSegmentSizeMB(), EPSILON);
 			lmp.SetMaxCFSSegmentSizeMB(double.PositiveInfinity);
-			NUnit.Framework.Assert.AreEqual(long.MaxValue / 1024 / 1024., lmp.GetMaxCFSSegmentSizeMB
+			AreEqual(long.MaxValue / 1024 / 1024., lmp.GetMaxCFSSegmentSizeMB
 				(), EPSILON * long.MaxValue);
 			lmp.SetMaxCFSSegmentSizeMB(long.MaxValue / 1024 / 1024.);
-			NUnit.Framework.Assert.AreEqual(long.MaxValue / 1024 / 1024., lmp.GetMaxCFSSegmentSizeMB
+			AreEqual(long.MaxValue / 1024 / 1024., lmp.GetMaxCFSSegmentSizeMB
 				(), EPSILON * long.MaxValue);
 			try
 			{
 				lmp.SetMaxCFSSegmentSizeMB(-2.0);
-				NUnit.Framework.Assert.Fail("Didn't throw IllegalArgumentException");
+				Fail("Didn't throw IllegalArgumentException");
 			}
 			catch (ArgumentException)
 			{

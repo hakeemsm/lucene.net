@@ -8,7 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -32,7 +32,7 @@ namespace Lucene.Net.Index
 			int numDocs = AtLeast(100);
 			for (int i = 0; i < numDocs; i++)
 			{
-				Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+				Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 				long number = Random().NextLong();
 				d.Add(new NumericDocValuesField("number", number));
 				BytesRef bytes = new BytesRef(TestUtil.RandomRealisticUnicodeString(Random()));
@@ -47,7 +47,7 @@ namespace Lucene.Net.Index
 			w.ForceMerge(1);
 			IndexReader r = w.GetReader();
 			w.Close();
-			NUnit.Framework.Assert.AreEqual(1, r.Leaves().Count);
+			AreEqual(1, r.Leaves().Count);
 			AtomicReader ar = ((AtomicReader)r.Leaves()[0].Reader());
 			int numThreads = TestUtil.NextInt(Random(), 2, 5);
 			IList<Sharpen.Thread> threads = new AList<Sharpen.Thread>();
@@ -105,50 +105,50 @@ namespace Lucene.Net.Index
 						{
 							case 0:
 							{
-								NUnit.Framework.Assert.AreEqual(unchecked((byte)numbers[docID]), FieldCache.DEFAULT
+								AreEqual(unchecked((byte)numbers[docID]), FieldCache.DEFAULT
 									.GetBytes(ar, "number", false).Get(docID));
 								break;
 							}
 
 							case 1:
 							{
-								NUnit.Framework.Assert.AreEqual((short)numbers[docID], FieldCache.DEFAULT.GetShorts
+								AreEqual((short)numbers[docID], FieldCache.DEFAULT.GetShorts
 									(ar, "number", false).Get(docID));
 								break;
 							}
 
 							case 2:
 							{
-								NUnit.Framework.Assert.AreEqual((int)numbers[docID], FieldCache.DEFAULT.GetInts(ar
+								AreEqual((int)numbers[docID], FieldCache.DEFAULT.GetInts(ar
 									, "number", false).Get(docID));
 								break;
 							}
 
 							case 3:
 							{
-								NUnit.Framework.Assert.AreEqual(numbers[docID], FieldCache.DEFAULT.GetLongs(ar, "number"
+								AreEqual(numbers[docID], FieldCache.DEFAULT.GetLongs(ar, "number"
 									, false).Get(docID));
 								break;
 							}
 
 							case 4:
 							{
-								NUnit.Framework.Assert.AreEqual(Sharpen.Runtime.IntBitsToFloat((int)numbers[docID
+								AreEqual(Sharpen.Runtime.IntBitsToFloat((int)numbers[docID
 									]), FieldCache.DEFAULT.GetFloats(ar, "number", false).Get(docID), 0.0f);
 								break;
 							}
 
 							case 5:
 							{
-								NUnit.Framework.Assert.AreEqual(double.LongBitsToDouble(numbers[docID]), FieldCache
+								AreEqual(double.LongBitsToDouble(numbers[docID]), FieldCache
 									.DEFAULT.GetDoubles(ar, "number", false).Get(docID), 0.0);
 								break;
 							}
 						}
 						bdv.Get(docID, scratch);
-						NUnit.Framework.Assert.AreEqual(binary[docID], scratch);
+						AreEqual(binary[docID], scratch);
 						sdv.Get(docID, scratch2);
-						NUnit.Framework.Assert.AreEqual(sorted[docID], scratch2);
+						AreEqual(sorted[docID], scratch2);
 					}
 				}
 				catch (Exception e)
@@ -213,7 +213,7 @@ namespace Lucene.Net.Index
 				{
 					System.Console.Out.WriteLine("  " + numDocs + ": s=" + s);
 				}
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(new SortedDocValuesField("stringdv", br));
 				doc.Add(new NumericDocValuesField("id", numDocs));
@@ -264,7 +264,7 @@ namespace Lucene.Net.Index
 				{
 					stringDVDirect = sr.GetSortedDocValues("stringdv");
 					docIDToID = sr.GetNumericDocValues("id");
-					NUnit.Framework.Assert.IsNotNull(stringDVDirect);
+					IsNotNull(stringDVDirect);
 				}
 				catch (IOException ioe)
 				{
@@ -277,9 +277,9 @@ namespace Lucene.Net.Index
 					BytesRef scratch = new BytesRef();
 					for (int iter = 0; iter < 100; iter++)
 					{
-						int docID = random.Next(sr.MaxDoc());
+						int docID = random.Next(sr.MaxDoc);
 						source.Get(docID, scratch);
-						NUnit.Framework.Assert.AreEqual(docValues[(int)docIDToID.Get(docID)], scratch);
+						AreEqual(docValues[(int)docIDToID.Get(docID)], scratch);
 					}
 				}
 			}

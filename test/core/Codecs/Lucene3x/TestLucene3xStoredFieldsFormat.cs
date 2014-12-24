@@ -7,10 +7,11 @@
 using Lucene.Net.Codecs;
 using Lucene.Net.Codecs.Lucene3x;
 using Lucene.Net.Index;
+using Lucene.Net.TestFramework.Index;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Codecs.Lucene3x
+namespace Lucene.Net.Test.Codecs.Lucene3x
 {
 	public class TestLucene3xStoredFieldsFormat : BaseStoredFieldsFormatTestCase
 	{

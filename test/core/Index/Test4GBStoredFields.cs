@@ -5,7 +5,7 @@
  */
 
 using Com.Carrotsearch.Randomizedtesting.Generators;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
@@ -38,7 +38,7 @@ namespace Lucene.Net.Index
 				// 1 petabyte:
 				((LogByteSizeMergePolicy)mp).SetMaxMergeMB(1024 * 1024 * 1024);
 			}
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			FieldType ft = new FieldType();
 			ft.SetIndexed(false);
@@ -85,12 +85,12 @@ namespace Lucene.Net.Index
 				}
 			}
 			DirectoryReader rd = DirectoryReader.Open(dir);
-			Lucene.Net.Document.Document sd = rd.Document(numDocs - 1);
-			NUnit.Framework.Assert.IsNotNull(sd);
-			NUnit.Framework.Assert.AreEqual(1, sd.GetFields().Count);
+			Lucene.Net.Documents.Document sd = rd.Document(numDocs - 1);
+			IsNotNull(sd);
+			AreEqual(1, sd.GetFields().Count);
 			BytesRef valueRef = sd.GetBinaryValue("fld");
-			NUnit.Framework.Assert.IsNotNull(valueRef);
-			NUnit.Framework.Assert.AreEqual(new BytesRef(value), valueRef);
+			IsNotNull(valueRef);
+			AreEqual(new BytesRef(value), valueRef);
 			rd.Close();
 			dir.Close();
 		}

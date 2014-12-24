@@ -6,8 +6,10 @@
 
 using System;
 using System.Collections.Generic;
+using Lucene.Net.Randomized.Generators;
 using Lucene.Net.TestFramework.Util;
 using Lucene.Net.TestFramework.Util.Automaton;
+using Lucene.Net.Util;
 using Lucene.Net.Util.Automaton;
 using Sharpen;
 
@@ -408,7 +410,7 @@ namespace Lucene.Net.TestFramework.Util.Automaton
 		}
 
 		/// <summary>return a random NFA/DFA for testing</summary>
-		public static Lucene.Net.TestFramework.Util.Automaton.Automaton RandomAutomaton(Random random
+		public static Lucene.Net.Util.Automaton.Automaton RandomAutomaton(Random random
 			)
 		{
 			// get two random Automata from regexps

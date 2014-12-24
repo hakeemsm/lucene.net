@@ -6,7 +6,7 @@
 
 using System;
 using System.Collections.Generic;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -67,19 +67,19 @@ namespace Lucene.Net.Search
 			searcher.Search(newq, null, topCollector);
 			TopDocs topDocs = topCollector.TopDocs(0, 10);
 			int nDocsReturned = topDocs.scoreDocs.Length;
-			NUnit.Framework.Assert.AreEqual(4, nDocsReturned);
+			AreEqual(4, nDocsReturned);
 			// 0 & 3 were elevated
-			NUnit.Framework.Assert.AreEqual(0, topDocs.scoreDocs[0].doc);
-			NUnit.Framework.Assert.AreEqual(3, topDocs.scoreDocs[1].doc);
+			AreEqual(0, topDocs.scoreDocs[0].doc);
+			AreEqual(3, topDocs.scoreDocs[1].doc);
 			if (reversed)
 			{
-				NUnit.Framework.Assert.AreEqual(2, topDocs.scoreDocs[2].doc);
-				NUnit.Framework.Assert.AreEqual(1, topDocs.scoreDocs[3].doc);
+				AreEqual(2, topDocs.scoreDocs[2].doc);
+				AreEqual(1, topDocs.scoreDocs[3].doc);
 			}
 			else
 			{
-				NUnit.Framework.Assert.AreEqual(1, topDocs.scoreDocs[2].doc);
-				NUnit.Framework.Assert.AreEqual(2, topDocs.scoreDocs[3].doc);
+				AreEqual(1, topDocs.scoreDocs[2].doc);
+				AreEqual(2, topDocs.scoreDocs[3].doc);
 			}
 		}
 
@@ -97,9 +97,9 @@ namespace Lucene.Net.Search
 			return q;
 		}
 
-		private Lucene.Net.Document.Document Adoc(string[] vals)
+		private Lucene.Net.Documents.Document Adoc(string[] vals)
 		{
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			for (int i = 0; i < vals.Length - 2; i += 2)
 			{

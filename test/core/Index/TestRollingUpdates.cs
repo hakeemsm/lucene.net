@@ -5,7 +5,7 @@
  */
 
 using System;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Codecs;
 using Lucene.Net.Codecs.Memory;
 using Lucene.Net.Document;
@@ -53,7 +53,7 @@ namespace Lucene.Net.Index
 			// TODO: sometimes update ids not in order...
 			for (int docIter = 0; docIter < numUpdates; docIter++)
 			{
-				Lucene.Net.Document.Document doc = docs.NextDoc();
+				Lucene.Net.Documents.Document doc = docs.NextDoc();
 				string myID = string.Empty + id;
 				if (id == SIZE - 1)
 				{
@@ -67,13 +67,13 @@ namespace Lucene.Net.Index
 				{
 					System.Console.Out.WriteLine("  docIter=" + docIter + " id=" + id);
 				}
-				((Field)doc.GetField("docid")).SetStringValue(myID);
+				((Field)doc.GetField("docid")).StringValue = myID);
 				Term idTerm = new Term("docid", myID);
 				bool doUpdate;
 				if (s != null && updateCount < SIZE)
 				{
 					TopDocs hits = s.Search(new TermQuery(idTerm), 1);
-					NUnit.Framework.Assert.AreEqual(1, hits.totalHits);
+					AreEqual(1, hits.TotalHits);
 					doUpdate = !w.TryDeleteDocument(r, hits.scoreDocs[0].doc);
 					if (VERBOSE)
 					{
@@ -124,7 +124,7 @@ namespace Lucene.Net.Index
 					{
 						s = null;
 					}
-					NUnit.Framework.Assert.IsTrue("applyDeletions=" + applyDeletions + " r.numDocs()="
+					IsTrue("applyDeletions=" + applyDeletions + " r.numDocs()="
 						 + r.NumDocs() + " vs SIZE=" + SIZE, !applyDeletions || r.NumDocs() == SIZE);
 					updateCount = 0;
 				}
@@ -134,7 +134,7 @@ namespace Lucene.Net.Index
 				r.Close();
 			}
 			w.Commit();
-			NUnit.Framework.Assert.AreEqual(SIZE, w.NumDocs());
+			AreEqual(SIZE, w.NumDocs());
 			w.Close();
 			TestIndexWriter.AssertNoUnreferencedFiles(dir, "leftover files after rolling updates"
 				);
@@ -155,7 +155,7 @@ namespace Lucene.Net.Index
 					totalBytes2 += dir.FileLength(fileName);
 				}
 			}
-			NUnit.Framework.Assert.AreEqual(totalBytes2, totalBytes);
+			AreEqual(totalBytes2, totalBytes);
 			dir.Close();
 		}
 
@@ -184,7 +184,7 @@ namespace Lucene.Net.Index
 				w.Close();
 			}
 			IndexReader open = DirectoryReader.Open(dir);
-			NUnit.Framework.Assert.AreEqual(1, open.NumDocs());
+			AreEqual(1, open.NumDocs());
 			open.Close();
 			docs.Close();
 			dir.Close();
@@ -212,7 +212,7 @@ namespace Lucene.Net.Index
 					DirectoryReader open = null;
 					for (int i = 0; i < num; i++)
 					{
-						Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+						Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 							();
 						// docs.nextDoc();
 						doc.Add(NewStringField("id", "test", Field.Store.NO));
@@ -229,8 +229,8 @@ namespace Lucene.Net.Index
 								open.Close();
 								open = reader;
 							}
-							NUnit.Framework.Assert.AreEqual("iter: " + i + " numDocs: " + open.NumDocs() + " del: "
-								 + open.NumDeletedDocs() + " max: " + open.MaxDoc(), 1, open.NumDocs());
+							AreEqual("iter: " + i + " numDocs: " + open.NumDocs() + " del: "
+								 + open.NumDeletedDocs() + " max: " + open.MaxDoc, 1, open.NumDocs());
 						}
 					}
 					if (open != null)

@@ -6,7 +6,7 @@
 
 using System;
 using Org.Apache.Lucene;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Util;
 using Sharpen;
 
@@ -53,7 +53,7 @@ namespace Org.Apache.Lucene
 			{
 			}
 			// expected
-			NUnit.Framework.Assert.IsFalse("TestTokenStream3 should fail assertion", doFail);
+			IsFalse("TestTokenStream3 should fail assertion", doFail);
 		}
 	}
 }

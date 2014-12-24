@@ -6,8 +6,8 @@
 
 using System;
 using System.Collections.Generic;
-using Lucene.Net.Analysis;
-using Lucene.Net.Analysis.Tokenattributes;
+using Lucene.Net.Test.Analysis;
+using Lucene.Net.Test.Analysis.Tokenattributes;
 using Lucene.Net.Codecs;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
@@ -182,7 +182,7 @@ namespace Lucene.Net.Index
 					// 1 petabyte:
 					((LogByteSizeMergePolicy)mp).SetMaxMergeMB(1024 * 1024 * 1024);
 				}
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				Test2BTerms.MyTokenStream ts = new Test2BTerms.MyTokenStream(Random(), TERMS_PER_DOC
 					);
@@ -225,7 +225,7 @@ namespace Lucene.Net.Index
 			System.Console.Out.WriteLine("TEST: now CheckIndex...");
 			CheckIndex.Status status = TestUtil.CheckIndex(dir);
 			long tc = status.segmentInfos[0].termIndexStatus.termCount;
-			NUnit.Framework.Assert.IsTrue("count " + tc + " is not > " + int.MaxValue, tc > int.MaxValue
+			IsTrue("count " + tc + " is not > " + int.MaxValue, tc > int.MaxValue
 				);
 			dir.Close();
 			System.Console.Out.WriteLine("TEST: done!");
@@ -265,7 +265,7 @@ namespace Lucene.Net.Index
 				BytesRef term = terms[Random().Next(terms.Count)];
 				System.Console.Out.WriteLine("TEST: search " + term);
 				long t0 = Runtime.CurrentTimeMillis();
-				int count = s.Search(new TermQuery(new Term("field", term)), 1).totalHits;
+				int count = s.Search(new TermQuery(new Term("field", term)), 1).TotalHits;
 				if (count <= 0)
 				{
 					System.Console.Out.WriteLine("  FAILED: count=" + count);
@@ -287,7 +287,7 @@ namespace Lucene.Net.Index
 					failed = true;
 				}
 			}
-			NUnit.Framework.Assert.IsFalse(failed);
+			IsFalse(failed);
 		}
 	}
 }

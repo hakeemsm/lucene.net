@@ -91,7 +91,7 @@ namespace Lucene.Net.Index
 				System.Console.Out.WriteLine("OBD files: " + openDeletedFiles_1);
 			}
 			anyOpenDelFiles |= openDeletedFiles_1.Count > 0;
-			NUnit.Framework.Assert.IsFalse("saw non-zero open-but-deleted count", anyOpenDelFiles
+			IsFalse("saw non-zero open-but-deleted count", anyOpenDelFiles
 				);
 		}
 

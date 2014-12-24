@@ -17,10 +17,10 @@ namespace Lucene.Net.Store
 		{
 			byte[] bytes = new byte[] { 1, 65 };
 			ByteArrayDataInput @in = new ByteArrayDataInput(bytes);
-			NUnit.Framework.Assert.AreEqual("A", @in.ReadString());
+			AreEqual("A", @in.ReadString());
 			bytes = new byte[] { 1, 1, 65 };
 			@in.Reset(bytes, 1, 2);
-			NUnit.Framework.Assert.AreEqual("A", @in.ReadString());
+			AreEqual("A", @in.ReadString());
 		}
 	}
 }

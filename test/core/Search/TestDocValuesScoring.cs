@@ -29,7 +29,7 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			Field field = NewTextField("foo", string.Empty, Field.Store.NO);
 			doc.Add(field);
@@ -37,13 +37,13 @@ namespace Lucene.Net.Search
 			doc.Add(dvField);
 			Field field2 = NewTextField("bar", string.Empty, Field.Store.NO);
 			doc.Add(field2);
-			field.SetStringValue("quick brown fox");
-			field2.SetStringValue("quick brown fox");
+			field.StringValue = "quick brown fox");
+			field2.StringValue = "quick brown fox");
 			dvField.SetFloatValue(2f);
 			// boost x2
 			iw.AddDocument(doc);
-			field.SetStringValue("jumps over lazy brown dog");
-			field2.SetStringValue("jumps over lazy brown dog");
+			field.StringValue = "jumps over lazy brown dog");
+			field2.StringValue = "jumps over lazy brown dog");
 			dvField.SetFloatValue(4f);
 			// boost x4
 			iw.AddDocument(doc);
@@ -61,10 +61,10 @@ namespace Lucene.Net.Search
 			QueryUtils.Check(Random(), tq, searcher2);
 			TopDocs noboost = searcher1.Search(tq, 10);
 			TopDocs boost = searcher2.Search(tq, 10);
-			NUnit.Framework.Assert.AreEqual(1, noboost.totalHits);
-			NUnit.Framework.Assert.AreEqual(1, boost.totalHits);
+			AreEqual(1, noboost.TotalHits);
+			AreEqual(1, boost.TotalHits);
 			//System.out.println(searcher2.explain(tq, boost.scoreDocs[0].doc));
-			NUnit.Framework.Assert.AreEqual(boost.scoreDocs[0].score, noboost.scoreDocs[0].score
+			AreEqual(boost.scoreDocs[0].score, noboost.scoreDocs[0].score
 				 * 2f, SCORE_EPSILON);
 			// this query matches only the second document, which should have 4x the score.
 			tq = new TermQuery(new Term("foo", "jumps"));
@@ -72,9 +72,9 @@ namespace Lucene.Net.Search
 			QueryUtils.Check(Random(), tq, searcher2);
 			noboost = searcher1.Search(tq, 10);
 			boost = searcher2.Search(tq, 10);
-			NUnit.Framework.Assert.AreEqual(1, noboost.totalHits);
-			NUnit.Framework.Assert.AreEqual(1, boost.totalHits);
-			NUnit.Framework.Assert.AreEqual(boost.scoreDocs[0].score, noboost.scoreDocs[0].score
+			AreEqual(1, noboost.TotalHits);
+			AreEqual(1, boost.TotalHits);
+			AreEqual(boost.scoreDocs[0].score, noboost.scoreDocs[0].score
 				 * 4f, SCORE_EPSILON);
 			// search on on field bar just for kicks, nothing should happen, since we setup
 			// our sim provider to only use foo_boost for field foo.
@@ -83,9 +83,9 @@ namespace Lucene.Net.Search
 			QueryUtils.Check(Random(), tq, searcher2);
 			noboost = searcher1.Search(tq, 10);
 			boost = searcher2.Search(tq, 10);
-			NUnit.Framework.Assert.AreEqual(1, noboost.totalHits);
-			NUnit.Framework.Assert.AreEqual(1, boost.totalHits);
-			NUnit.Framework.Assert.AreEqual(boost.scoreDocs[0].score, noboost.scoreDocs[0].score
+			AreEqual(1, noboost.TotalHits);
+			AreEqual(1, boost.TotalHits);
+			AreEqual(boost.scoreDocs[0].score, noboost.scoreDocs[0].score
 				, SCORE_EPSILON);
 			ir.Close();
 			dir.Close();

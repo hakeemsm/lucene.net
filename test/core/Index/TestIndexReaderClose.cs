@@ -6,7 +6,7 @@
 
 using System;
 using System.Collections.Generic;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
 using Lucene.Net.Util;
@@ -56,23 +56,23 @@ namespace Lucene.Net.Index
 				try
 				{
 					reader.Close();
-					NUnit.Framework.Assert.Fail("expected Exception");
+					Fail("expected Exception");
 				}
 				catch (InvalidOperationException ex)
 				{
 					if (throwOnClose)
 					{
-						NUnit.Framework.Assert.AreEqual("BOOM!", ex.Message);
+						AreEqual("BOOM!", ex.Message);
 					}
 					else
 					{
-						NUnit.Framework.Assert.AreEqual("GRRRRRRRRRRRR!", ex.Message);
+						AreEqual("GRRRRRRRRRRRR!", ex.Message);
 					}
 				}
 				try
 				{
 					reader.Fields();
-					NUnit.Framework.Assert.Fail("we are closed");
+					Fail("we are closed");
 				}
 				catch (AlreadyClosedException)
 				{
@@ -82,7 +82,7 @@ namespace Lucene.Net.Index
 					reader.Close();
 				}
 				// call it again
-				NUnit.Framework.Assert.AreEqual(0, count.Get());
+				AreEqual(0, count.Get());
 				wrap.Close();
 				dir.Close();
 			}

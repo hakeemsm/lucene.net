@@ -22,8 +22,8 @@ namespace Lucene.Net.Index
 			Directory dir = NewDirectory();
 			IndexCommit ic1 = new _IndexCommit_34(dir);
 			IndexCommit ic2 = new _IndexCommit_45(dir);
-			NUnit.Framework.Assert.AreEqual(ic1, ic2);
-			NUnit.Framework.Assert.AreEqual("hash codes are not equals", ic1.GetHashCode(), ic2
+			AreEqual(ic1, ic2);
+			AreEqual("hash codes are not equals", ic1.GetHashCode(), ic2
 				.GetHashCode());
 			dir.Close();
 		}

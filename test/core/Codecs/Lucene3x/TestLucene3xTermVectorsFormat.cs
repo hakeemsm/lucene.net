@@ -1,17 +1,8 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System.Collections.Generic;
 using Lucene.Net.Codecs;
-using Lucene.Net.Codecs.Lucene3x;
-using Lucene.Net.Index;
-using Lucene.Net.Util;
-using Sharpen;
+using Lucene.Net.TestFramework.Index;
 
-namespace Lucene.Net.Codecs.Lucene3x
+namespace Lucene.Net.Test.Codecs.Lucene3x
 {
 	public class TestLucene3xTermVectorsFormat : BaseTermVectorsFormatTestCase
 	{

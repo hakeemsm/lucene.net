@@ -22,7 +22,7 @@ namespace Lucene.Net.Search
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), indexStore);
 			for (int i = 0; i < 5; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(new StringField("string", "a" + i, Field.Store.NO));
 				doc.Add(new StringField("string", "b" + i, Field.Store.NO));
@@ -33,7 +33,7 @@ namespace Lucene.Net.Search
 			IndexSearcher searcher = NewSearcher(reader);
 			TotalHitCountCollector c = new TotalHitCountCollector();
 			searcher.Search(new MatchAllDocsQuery(), null, c);
-			NUnit.Framework.Assert.AreEqual(5, c.GetTotalHits());
+			AreEqual(5, c.GetTotalHits());
 			reader.Close();
 			indexStore.Close();
 		}

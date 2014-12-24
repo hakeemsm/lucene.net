@@ -17,7 +17,7 @@ namespace Lucene.Net.Util.Packed
 			long upperBound = -1L;
 			foreach (long value in values)
 			{
-				NUnit.Framework.Assert.IsTrue(value >= upperBound);
+				IsTrue(value >= upperBound);
 				// test data ok
 				upperBound = value;
 			}
@@ -36,12 +36,12 @@ namespace Lucene.Net.Util.Packed
 			long nextValue = efd.NextValue();
 			foreach (long expValue in values)
 			{
-				NUnit.Framework.Assert.IsFalse("nextValue at end too early", EliasFanoDecoder.NO_MORE_VALUES
+				IsFalse("nextValue at end too early", EliasFanoDecoder.NO_MORE_VALUES
 					 == nextValue);
-				NUnit.Framework.Assert.AreEqual(expValue, nextValue);
+				AreEqual(expValue, nextValue);
 				nextValue = efd.NextValue();
 			}
-			NUnit.Framework.Assert.AreEqual(EliasFanoDecoder.NO_MORE_VALUES, nextValue);
+			AreEqual(EliasFanoDecoder.NO_MORE_VALUES, nextValue);
 		}
 
 		private static void TstDecodeAllPrev(long[] values, EliasFanoDecoder efd)
@@ -50,11 +50,11 @@ namespace Lucene.Net.Util.Packed
 			for (int i = values.Length - 1; i >= 0; i--)
 			{
 				long previousValue = efd.PreviousValue();
-				NUnit.Framework.Assert.IsFalse("previousValue at end too early", EliasFanoDecoder
+				IsFalse("previousValue at end too early", EliasFanoDecoder
 					.NO_MORE_VALUES == previousValue);
-				NUnit.Framework.Assert.AreEqual(values[i], previousValue);
+				AreEqual(values[i], previousValue);
 			}
-			NUnit.Framework.Assert.AreEqual(EliasFanoDecoder.NO_MORE_VALUES, efd.PreviousValue
+			AreEqual(EliasFanoDecoder.NO_MORE_VALUES, efd.PreviousValue
 				());
 		}
 
@@ -69,16 +69,16 @@ namespace Lucene.Net.Util.Packed
 				if (expValue > previousValue)
 				{
 					long advanceValue = efd.AdvanceToValue(expValue);
-					NUnit.Framework.Assert.IsFalse("advanceValue at end too early", EliasFanoDecoder.
+					IsFalse("advanceValue at end too early", EliasFanoDecoder.
 						NO_MORE_VALUES == advanceValue);
-					NUnit.Framework.Assert.AreEqual(expValue, advanceValue);
-					NUnit.Framework.Assert.AreEqual(index, efd.CurrentIndex());
+					AreEqual(expValue, advanceValue);
+					AreEqual(index, efd.CurrentIndex());
 					previousValue = expValue;
 				}
 				index++;
 			}
 			long advanceValue_1 = efd.AdvanceToValue(previousValue + 1);
-			NUnit.Framework.Assert.AreEqual("at end", EliasFanoDecoder.NO_MORE_VALUES, advanceValue_1
+			AreEqual("at end", EliasFanoDecoder.NO_MORE_VALUES, advanceValue_1
 				);
 		}
 
@@ -98,10 +98,10 @@ namespace Lucene.Net.Util.Packed
 				if (expValue >= mm)
 				{
 					long advanceValue = efd.AdvanceToValue(mm);
-					NUnit.Framework.Assert.IsFalse("advanceValue at end too early", EliasFanoDecoder.
+					IsFalse("advanceValue at end too early", EliasFanoDecoder.
 						NO_MORE_VALUES == advanceValue);
-					NUnit.Framework.Assert.AreEqual(expValue, advanceValue);
-					NUnit.Framework.Assert.AreEqual(index, efd.CurrentIndex());
+					AreEqual(expValue, advanceValue);
+					AreEqual(index, efd.CurrentIndex());
 					previousValue = expValue;
 					do
 					{
@@ -112,7 +112,7 @@ namespace Lucene.Net.Util.Packed
 				index++;
 			}
 			long advanceValue_1 = efd.AdvanceToValue(mm);
-			NUnit.Framework.Assert.AreEqual(EliasFanoDecoder.NO_MORE_VALUES, advanceValue_1);
+			AreEqual(EliasFanoDecoder.NO_MORE_VALUES, advanceValue_1);
 		}
 
 		private static void TstDecodeBackToMultiples(long[] values, EliasFanoDecoder efd, 
@@ -126,7 +126,7 @@ namespace Lucene.Net.Util.Packed
 			if (index < 0)
 			{
 				long advanceValue = efd.BackToValue(0);
-				NUnit.Framework.Assert.AreEqual(EliasFanoDecoder.NO_MORE_VALUES, advanceValue);
+				AreEqual(EliasFanoDecoder.NO_MORE_VALUES, advanceValue);
 				return;
 			}
 			// empty values, nothing to go back to/from
@@ -141,10 +141,10 @@ namespace Lucene.Net.Util.Packed
 				if (expValue <= mm)
 				{
 					long backValue = efd.BackToValue(mm);
-					NUnit.Framework.Assert.IsFalse("backToValue at end too early", EliasFanoDecoder.NO_MORE_VALUES
+					IsFalse("backToValue at end too early", EliasFanoDecoder.NO_MORE_VALUES
 						 == backValue);
-					NUnit.Framework.Assert.AreEqual(expValue, backValue);
-					NUnit.Framework.Assert.AreEqual(index, efd.CurrentIndex());
+					AreEqual(expValue, backValue);
+					AreEqual(index, efd.CurrentIndex());
 					previousValue = expValue;
 					do
 					{
@@ -155,17 +155,17 @@ namespace Lucene.Net.Util.Packed
 				index--;
 			}
 			long backValue_1 = efd.BackToValue(mm);
-			NUnit.Framework.Assert.AreEqual(EliasFanoDecoder.NO_MORE_VALUES, backValue_1);
+			AreEqual(EliasFanoDecoder.NO_MORE_VALUES, backValue_1);
 		}
 
 		private static void TstEqual(string mes, long[] exp, long[] act)
 		{
-			NUnit.Framework.Assert.AreEqual(mes + ".length", exp.Length, act.Length);
+			AreEqual(mes + ".length", exp.Length, act.Length);
 			for (int i = 0; i < exp.Length; i++)
 			{
 				if (exp[i] != act[i])
 				{
-					NUnit.Framework.Assert.Fail(mes + "[" + i + "] " + exp[i] + " != " + act[i]);
+					Fail(mes + "[" + i + "] " + exp[i] + " != " + act[i]);
 				}
 			}
 		}
@@ -289,14 +289,14 @@ namespace Lucene.Net.Util.Packed
 				);
 			EliasFanoEncoder efEncoder2 = MakeEncoder(values, EliasFanoEncoder.DEFAULT_INDEX_INTERVAL
 				);
-			NUnit.Framework.Assert.AreEqual(efEncoder1, efEncoder2);
-			NUnit.Framework.Assert.AreEqual(efEncoder1.GetHashCode(), efEncoder2.GetHashCode(
+			AreEqual(efEncoder1, efEncoder2);
+			AreEqual(efEncoder1.GetHashCode(), efEncoder2.GetHashCode(
 				));
 			EliasFanoEncoder efEncoder3 = MakeEncoder(new long[] { 1, 2, 3 }, EliasFanoEncoder
 				.DEFAULT_INDEX_INTERVAL);
-			NUnit.Framework.Assert.IsFalse(efEncoder1.Equals(efEncoder3));
-			NUnit.Framework.Assert.IsFalse(efEncoder3.Equals(efEncoder1));
-			NUnit.Framework.Assert.IsFalse(efEncoder1.GetHashCode() == efEncoder3.GetHashCode
+			IsFalse(efEncoder1.Equals(efEncoder3));
+			IsFalse(efEncoder3.Equals(efEncoder1));
+			IsFalse(efEncoder1.GetHashCode() == efEncoder3.GetHashCode
 				());
 		}
 
@@ -392,7 +392,7 @@ namespace Lucene.Net.Util.Packed
 			long[] indexLongs = new long[] { 3 };
 			// high bits 1001
 			EliasFanoEncoder efEncVI = TstEFVI(twoLongs, indexInterval, indexLongs);
-			NUnit.Framework.Assert.AreEqual(2, efEncVI.GetDecoder().AdvanceToValue(2));
+			AreEqual(2, efEncVI.GetDecoder().AdvanceToValue(2));
 		}
 
 		public virtual void TestIndexAdvanceToAfterLast()
@@ -402,7 +402,7 @@ namespace Lucene.Net.Util.Packed
 			long[] indexLongs = new long[] { 3 };
 			// high bits 1001
 			EliasFanoEncoder efEncVI = TstEFVI(twoLongs, indexInterval, indexLongs);
-			NUnit.Framework.Assert.AreEqual(EliasFanoDecoder.NO_MORE_VALUES, efEncVI.GetDecoder
+			AreEqual(EliasFanoDecoder.NO_MORE_VALUES, efEncVI.GetDecoder
 				().AdvanceToValue(3));
 		}
 
@@ -413,7 +413,7 @@ namespace Lucene.Net.Util.Packed
 			long[] indexLongs = new long[] { 3 };
 			// high bits 1001
 			EliasFanoEncoder efEncVI = TstEFVI(twoLongs, indexInterval, indexLongs);
-			NUnit.Framework.Assert.AreEqual(0, efEncVI.GetDecoder().AdvanceToValue(0));
+			AreEqual(0, efEncVI.GetDecoder().AdvanceToValue(0));
 		}
 
 		public virtual void TestTwoIndexEntries()
@@ -424,9 +424,9 @@ namespace Lucene.Net.Util.Packed
 			// high bits 0b10101010101
 			EliasFanoEncoder efEncVI = TstEFVI(twoLongs, indexInterval, indexLongs);
 			EliasFanoDecoder efDecVI = efEncVI.GetDecoder();
-			NUnit.Framework.Assert.AreEqual("advance 0", 0, efDecVI.AdvanceToValue(0));
-			NUnit.Framework.Assert.AreEqual("advance 5", 5, efDecVI.AdvanceToValue(5));
-			NUnit.Framework.Assert.AreEqual("advance 6", EliasFanoDecoder.NO_MORE_VALUES, efDecVI
+			AreEqual("advance 0", 0, efDecVI.AdvanceToValue(0));
+			AreEqual("advance 5", 5, efDecVI.AdvanceToValue(5));
+			AreEqual("advance 6", EliasFanoDecoder.NO_MORE_VALUES, efDecVI
 				.AdvanceToValue(5));
 		}
 
@@ -440,7 +440,7 @@ namespace Lucene.Net.Util.Packed
 			// high bits 0b 0001 0000 0101 1010
 			EliasFanoEncoder efEncVI = TstEFVI(values, indexInterval, indexLongs);
 			EliasFanoDecoder efDecVI = efEncVI.GetDecoder();
-			NUnit.Framework.Assert.AreEqual("advance 22", 32, efDecVI.AdvanceToValue(22));
+			AreEqual("advance 22", 32, efDecVI.AdvanceToValue(22));
 		}
 
 		public virtual void TestExample2b()
@@ -453,8 +453,8 @@ namespace Lucene.Net.Util.Packed
 			// high bits 0b 0001 0000 0101 1010
 			EliasFanoEncoder efEncVI = TstEFVI(values, indexInterval, indexLongs);
 			EliasFanoDecoder efDecVI = efEncVI.GetDecoder();
-			NUnit.Framework.Assert.AreEqual("initial next", 5, efDecVI.NextValue());
-			NUnit.Framework.Assert.AreEqual("advance 22", 32, efDecVI.AdvanceToValue(22));
+			AreEqual("initial next", 5, efDecVI.NextValue());
+			AreEqual("advance 22", 32, efDecVI.AdvanceToValue(22));
 		}
 
 		public virtual void TestExample2NoIndex1()
@@ -467,7 +467,7 @@ namespace Lucene.Net.Util.Packed
 			// high bits 0b 0001 0000 0101 1010
 			EliasFanoEncoder efEncVI = TstEFVI(values, indexInterval, indexLongs);
 			EliasFanoDecoder efDecVI = efEncVI.GetDecoder();
-			NUnit.Framework.Assert.AreEqual("advance 22", 32, efDecVI.AdvanceToValue(22));
+			AreEqual("advance 22", 32, efDecVI.AdvanceToValue(22));
 		}
 
 		public virtual void TestExample2NoIndex2()
@@ -480,8 +480,8 @@ namespace Lucene.Net.Util.Packed
 			// high bits 0b 0001 0000 0101 1010
 			EliasFanoEncoder efEncVI = TstEFVI(values, indexInterval, indexLongs);
 			EliasFanoDecoder efDecVI = efEncVI.GetDecoder();
-			NUnit.Framework.Assert.AreEqual("initial next", 5, efDecVI.NextValue());
-			NUnit.Framework.Assert.AreEqual("advance 22", 32, efDecVI.AdvanceToValue(22));
+			AreEqual("initial next", 5, efDecVI.NextValue());
+			AreEqual("advance 22", 32, efDecVI.AdvanceToValue(22));
 		}
 	}
 }

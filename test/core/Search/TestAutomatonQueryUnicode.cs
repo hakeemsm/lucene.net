@@ -40,7 +40,7 @@ namespace Lucene.Net.Search
 			base.SetUp();
 			directory = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), directory);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			Field titleField = NewTextField("title", "some title", Field.Store.NO);
 			Field field = NewTextField(FN, string.Empty, Field.Store.NO);
@@ -48,31 +48,31 @@ namespace Lucene.Net.Search
 			doc.Add(titleField);
 			doc.Add(field);
 			doc.Add(footerField);
-			field.SetStringValue("\uD866\uDF05abcdef");
+			field.StringValue = "\uD866\uDF05abcdef");
 			writer.AddDocument(doc);
-			field.SetStringValue("\uD866\uDF06ghijkl");
+			field.StringValue = "\uD866\uDF06ghijkl");
 			writer.AddDocument(doc);
 			// this sorts before the previous two in UTF-8/UTF-32, but after in UTF-16!!!
-			field.SetStringValue("\uFB94mnopqr");
+			field.StringValue = "\uFB94mnopqr");
 			writer.AddDocument(doc);
-			field.SetStringValue("\uFB95stuvwx");
+			field.StringValue = "\uFB95stuvwx");
 			// this one too.
 			writer.AddDocument(doc);
-			field.SetStringValue("a\uFFFCbc");
+			field.StringValue = "a\uFFFCbc");
 			writer.AddDocument(doc);
-			field.SetStringValue("a\uFFFDbc");
+			field.StringValue = "a\uFFFDbc");
 			writer.AddDocument(doc);
-			field.SetStringValue("a\uFFFEbc");
+			field.StringValue = "a\uFFFEbc");
 			writer.AddDocument(doc);
-			field.SetStringValue("a\uFB94bc");
+			field.StringValue = "a\uFB94bc");
 			writer.AddDocument(doc);
-			field.SetStringValue("bacadaba");
+			field.StringValue = "bacadaba");
 			writer.AddDocument(doc);
-			field.SetStringValue("\uFFFD");
+			field.StringValue = "\uFFFD");
 			writer.AddDocument(doc);
-			field.SetStringValue("\uFFFD\uD866\uDF05");
+			field.StringValue = "\uFFFD\uD866\uDF05");
 			writer.AddDocument(doc);
-			field.SetStringValue("\uFFFD\uFFFD");
+			field.StringValue = "\uFFFD\uFFFD");
 			writer.AddDocument(doc);
 			reader = writer.GetReader();
 			searcher = NewSearcher(reader);
@@ -95,7 +95,7 @@ namespace Lucene.Net.Search
 		/// <exception cref="System.IO.IOException"></exception>
 		private int AutomatonQueryNrHits(AutomatonQuery query)
 		{
-			return searcher.Search(query, 5).totalHits;
+			return searcher.Search(query, 5).TotalHits;
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -104,13 +104,13 @@ namespace Lucene.Net.Search
 		{
 			AutomatonQuery query = new AutomatonQuery(NewTerm("bogus"), automaton);
 			query.SetRewriteMethod(MultiTermQuery.SCORING_BOOLEAN_QUERY_REWRITE);
-			NUnit.Framework.Assert.AreEqual(expected, AutomatonQueryNrHits(query));
+			AreEqual(expected, AutomatonQueryNrHits(query));
 			query.SetRewriteMethod(MultiTermQuery.CONSTANT_SCORE_FILTER_REWRITE);
-			NUnit.Framework.Assert.AreEqual(expected, AutomatonQueryNrHits(query));
+			AreEqual(expected, AutomatonQueryNrHits(query));
 			query.SetRewriteMethod(MultiTermQuery.CONSTANT_SCORE_BOOLEAN_QUERY_REWRITE);
-			NUnit.Framework.Assert.AreEqual(expected, AutomatonQueryNrHits(query));
+			AreEqual(expected, AutomatonQueryNrHits(query));
 			query.SetRewriteMethod(MultiTermQuery.CONSTANT_SCORE_AUTO_REWRITE_DEFAULT);
-			NUnit.Framework.Assert.AreEqual(expected, AutomatonQueryNrHits(query));
+			AreEqual(expected, AutomatonQueryNrHits(query));
 		}
 
 		/// <summary>Test that AutomatonQuery interacts with lucene's sort order correctly.</summary>

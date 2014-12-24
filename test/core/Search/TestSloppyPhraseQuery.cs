@@ -19,7 +19,7 @@ using System;
 
 using NUnit.Framework;
 
-using WhitespaceAnalyzer = Lucene.Net.Analysis.WhitespaceAnalyzer;
+using WhitespaceAnalyzer = Lucene.Net.Test.Analysis.WhitespaceAnalyzer;
 using Document = Lucene.Net.Documents.Document;
 using Field = Lucene.Net.Documents.Field;
 using IndexWriter = Lucene.Net.Index.IndexWriter;
@@ -46,10 +46,10 @@ namespace Lucene.Net.Search
 		private static readonly Document DOC_3_B = MakeDocument("X " + S_1 + " A Y N N N N " + S_1 + " A Y");
 		private static readonly Document DOC_4 = MakeDocument("A A X A X B A X B B A A X B A A");
 		
-		private static readonly Lucene.Net.Document.Document DOC_5_3 = MakeDocument
+		private static readonly Lucene.Net.Documents.Document DOC_5_3 = MakeDocument
 			("H H H X X X H H H X X X H H H");
 
-		private static readonly Lucene.Net.Document.Document DOC_5_4 = MakeDocument
+		private static readonly Lucene.Net.Documents.Document DOC_5_4 = MakeDocument
 			("H H H H");
 		private static readonly PhraseQuery QUERY_1 = MakePhraseQuery(S_1);
 		private static readonly PhraseQuery QUERY_2 = MakePhraseQuery(S_2);
@@ -164,8 +164,8 @@ namespace Lucene.Net.Search
 			TestSloppyPhraseQuery.MaxFreqCollector c = new TestSloppyPhraseQuery.MaxFreqCollector
 				();
 			searcher.Search(query, c);
-			NUnit.Framework.Assert.AreEqual("slop: " + slop + "  query: " + query + "  doc: "
-				 + doc + "  Wrong number of hits", expectedNumResults, c.totalHits);
+			AreEqual("slop: " + slop + "  query: " + query + "  doc: "
+				 + doc + "  Wrong number of hits", expectedNumResults, c.TotalHits);
 			writer.Close();
 
 			reader.Close();
@@ -199,7 +199,7 @@ namespace Lucene.Net.Search
 		{
 			internal float max;
 
-			internal int totalHits;
+			internal int TotalHits;
 
 			internal Scorer scorer;
 
@@ -212,8 +212,8 @@ namespace Lucene.Net.Search
 			/// <exception cref="System.IO.IOException"></exception>
 			public override void Collect(int doc)
 			{
-				totalHits++;
-				max = Math.Max(max, scorer.Freq());
+				TotalHits++;
+				max = Math.Max(max, scorer.Freq);
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
@@ -252,8 +252,8 @@ namespace Lucene.Net.Search
 			/// <exception cref="System.IO.IOException"></exception>
 			public override void Collect(int doc)
 			{
-				NUnit.Framework.Assert.IsFalse(float.IsInfinite(this.scorer.Freq()));
-				NUnit.Framework.Assert.IsFalse(float.IsInfinite(this.scorer.Score()));
+				IsFalse(float.IsInfinite(this.scorer.Freq));
+				IsFalse(float.IsInfinite(this.scorer.Score()));
 			}
 
 			public override void SetNextReader(AtomicReaderContext context)
@@ -275,16 +275,16 @@ namespace Lucene.Net.Search
 			FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
 			customType.SetOmitNorms(true);
 			Field f = new Field("lyrics", string.Empty, customType);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(f);
-			f.SetStringValue("drug drug");
+			f.StringValue = "drug drug");
 			iw.AddDocument(doc);
-			f.SetStringValue("drug druggy drug");
+			f.StringValue = "drug druggy drug");
 			iw.AddDocument(doc);
-			f.SetStringValue("drug druggy druggy drug");
+			f.StringValue = "drug druggy druggy drug");
 			iw.AddDocument(doc);
-			f.SetStringValue("drug druggy drug druggy drug");
+			f.StringValue = "drug druggy drug druggy drug");
 			iw.AddDocument(doc);
 			IndexReader ir = iw.GetReader();
 			iw.Close();
@@ -294,11 +294,11 @@ namespace Lucene.Net.Search
 			pq.Add(new Term("lyrics", "drug"), 1);
 			pq.Add(new Term("lyrics", "drug"), 4);
 			pq.SetSlop(0);
-			NUnit.Framework.Assert.AreEqual(0, @is.Search(pq, 4).totalHits);
+			AreEqual(0, @is.Search(pq, 4).TotalHits);
 			pq.SetSlop(1);
-			NUnit.Framework.Assert.AreEqual(3, @is.Search(pq, 4).totalHits);
+			AreEqual(3, @is.Search(pq, 4).TotalHits);
 			pq.SetSlop(2);
-			NUnit.Framework.Assert.AreEqual(4, @is.Search(pq, 4).totalHits);
+			AreEqual(4, @is.Search(pq, 4).TotalHits);
 			ir.Close();
 			dir.Close();
 		}
@@ -310,7 +310,7 @@ namespace Lucene.Net.Search
 			string document = "drug druggy drug drug drug";
 			Directory dir = NewDirectory();
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewField("lyrics", document, new FieldType(TextField.TYPE_NOT_STORED)));
 			iw.AddDocument(doc);
@@ -343,7 +343,7 @@ namespace Lucene.Net.Search
 				 + "Drug drug druggy " + "Need sensation like my baby";
 			Directory dir = NewDirectory();
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewField("lyrics", document, new FieldType(TextField.TYPE_NOT_STORED)));
 			iw.AddDocument(doc);

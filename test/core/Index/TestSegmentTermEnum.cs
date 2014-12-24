@@ -5,7 +5,7 @@
  */
 
 using System;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Codecs.Lucene41;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
@@ -69,9 +69,9 @@ namespace Lucene.Net.Index
 			writer.Close();
 			SegmentReader reader = GetOnlySegmentReader(DirectoryReader.Open(dir));
 			TermsEnum terms = reader.Fields().Terms("content").Iterator(null);
-			NUnit.Framework.Assert.IsNotNull(terms.Next());
-			NUnit.Framework.Assert.AreEqual("aaa", terms.Term().Utf8ToString());
-			NUnit.Framework.Assert.IsNotNull(terms.Next());
+			IsNotNull(terms.Next());
+			AreEqual("aaa", terms.Term().Utf8ToString());
+			IsNotNull(terms.Next());
 			long ordB;
 			try
 			{
@@ -83,10 +83,10 @@ namespace Lucene.Net.Index
 				reader.Close();
 				return;
 			}
-			NUnit.Framework.Assert.AreEqual("bbb", terms.Term().Utf8ToString());
-			NUnit.Framework.Assert.IsNull(terms.Next());
+			AreEqual("bbb", terms.Term().Utf8ToString());
+			IsNull(terms.Next());
 			terms.SeekExact(ordB);
-			NUnit.Framework.Assert.AreEqual("bbb", terms.Term().Utf8ToString());
+			AreEqual("bbb", terms.Term().Utf8ToString());
 			reader.Close();
 		}
 
@@ -101,37 +101,37 @@ namespace Lucene.Net.Index
 			// 
 			//HM:revisit 
 			//assert that term is 'aaa'
-			NUnit.Framework.Assert.AreEqual("aaa", termEnum.Term().Utf8ToString());
-			NUnit.Framework.Assert.AreEqual(200, termEnum.DocFreq());
+			AreEqual("aaa", termEnum.Term().Utf8ToString());
+			AreEqual(200, termEnum.DocFreq);
 			// go to the second term (bbb)
 			termEnum.Next();
 			// 
 			//HM:revisit 
 			//assert that term is 'bbb'
-			NUnit.Framework.Assert.AreEqual("bbb", termEnum.Term().Utf8ToString());
-			NUnit.Framework.Assert.AreEqual(100, termEnum.DocFreq());
+			AreEqual("bbb", termEnum.Term().Utf8ToString());
+			AreEqual(100, termEnum.DocFreq);
 			// create enumeration of terms after term 'aaa',
 			// including 'aaa'
 			termEnum.SeekCeil(new BytesRef("aaa"));
 			// 
 			//HM:revisit 
 			//assert that term is 'aaa'
-			NUnit.Framework.Assert.AreEqual("aaa", termEnum.Term().Utf8ToString());
-			NUnit.Framework.Assert.AreEqual(200, termEnum.DocFreq());
+			AreEqual("aaa", termEnum.Term().Utf8ToString());
+			AreEqual(200, termEnum.DocFreq);
 			// go to term 'bbb'
 			termEnum.Next();
 			// 
 			//HM:revisit 
 			//assert that term is 'bbb'
-			NUnit.Framework.Assert.AreEqual("bbb", termEnum.Term().Utf8ToString());
-			NUnit.Framework.Assert.AreEqual(100, termEnum.DocFreq());
+			AreEqual("bbb", termEnum.Term().Utf8ToString());
+			AreEqual(100, termEnum.DocFreq);
 			reader.Close();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
 		private void AddDoc(IndexWriter writer, string value)
 		{
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewTextField("content", value, Field.Store.NO));
 			writer.AddDocument(doc);

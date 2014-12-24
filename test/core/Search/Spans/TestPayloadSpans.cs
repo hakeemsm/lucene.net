@@ -6,8 +6,8 @@
 
 using System.Collections.Generic;
 using System.IO;
-using Lucene.Net.Analysis;
-using Lucene.Net.Analysis.Tokenattributes;
+using Lucene.Net.Test.Analysis;
+using Lucene.Net.Test.Analysis.Tokenattributes;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -48,11 +48,11 @@ namespace Lucene.Net.Search.Spans
 			Lucene.Net.Search.Spans.Spans spans;
 			stq = new SpanTermQuery(new Term(PayloadHelper.FIELD, "seventy"));
 			spans = MultiSpansWrapper.Wrap(indexReader.GetContext(), stq);
-			NUnit.Framework.Assert.IsTrue("spans is null and it shouldn't be", spans != null);
+			IsTrue("spans is null and it shouldn't be", spans != null);
 			CheckSpans(spans, 100, 1, 1, 1);
 			stq = new SpanTermQuery(new Term(PayloadHelper.NO_PAYLOAD_FIELD, "seventy"));
 			spans = MultiSpansWrapper.Wrap(indexReader.GetContext(), stq);
-			NUnit.Framework.Assert.IsTrue("spans is null and it shouldn't be", spans != null);
+			IsTrue("spans is null and it shouldn't be", spans != null);
 			CheckSpans(spans, 100, 0, 0, 0);
 		}
 
@@ -91,7 +91,7 @@ namespace Lucene.Net.Search.Spans
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), directory, NewIndexWriterConfig
 				(TEST_VERSION_CURRENT, new TestPayloadSpans.PayloadAnalyzer(this)).SetSimilarity
 				(similarity));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewTextField(PayloadHelper.FIELD, "one two three one four three", Field.Store
 				.YES));
@@ -111,7 +111,7 @@ namespace Lucene.Net.Search.Spans
 			IndexSearcher searcher = GetSearcher();
 			stq = new SpanTermQuery(new Term(PayloadHelper.FIELD, "mark"));
 			spans = MultiSpansWrapper.Wrap(searcher.GetTopReaderContext(), stq);
-			NUnit.Framework.Assert.IsTrue("spans is null and it shouldn't be", spans != null);
+			IsTrue("spans is null and it shouldn't be", spans != null);
 			CheckSpans(spans, 0, null);
 			SpanQuery[] clauses = new SpanQuery[3];
 			clauses[0] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "rr"));
@@ -119,14 +119,14 @@ namespace Lucene.Net.Search.Spans
 			clauses[2] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "xx"));
 			SpanNearQuery spanNearQuery = new SpanNearQuery(clauses, 12, false);
 			spans = MultiSpansWrapper.Wrap(searcher.GetTopReaderContext(), spanNearQuery);
-			NUnit.Framework.Assert.IsTrue("spans is null and it shouldn't be", spans != null);
+			IsTrue("spans is null and it shouldn't be", spans != null);
 			CheckSpans(spans, 2, new int[] { 3, 3 });
 			clauses[0] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "xx"));
 			clauses[1] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "rr"));
 			clauses[2] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "yy"));
 			spanNearQuery = new SpanNearQuery(clauses, 6, true);
 			spans = MultiSpansWrapper.Wrap(searcher.GetTopReaderContext(), spanNearQuery);
-			NUnit.Framework.Assert.IsTrue("spans is null and it shouldn't be", spans != null);
+			IsTrue("spans is null and it shouldn't be", spans != null);
 			CheckSpans(spans, 1, new int[] { 3 });
 			clauses = new SpanQuery[2];
 			clauses[0] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "xx"));
@@ -140,7 +140,7 @@ namespace Lucene.Net.Search.Spans
 			// yy within 6 of xx within 6 of rr
 			spans = MultiSpansWrapper.Wrap(searcher.GetTopReaderContext(), nestedSpanNearQuery
 				);
-			NUnit.Framework.Assert.IsTrue("spans is null and it shouldn't be", spans != null);
+			IsTrue("spans is null and it shouldn't be", spans != null);
 			CheckSpans(spans, 2, new int[] { 3, 3 });
 			closeIndexReader.Close();
 			directory.Close();
@@ -166,7 +166,7 @@ namespace Lucene.Net.Search.Spans
 			SpanNearQuery nestedSpanNearQuery = new SpanNearQuery(clauses3, 6, false);
 			spans = MultiSpansWrapper.Wrap(searcher.GetTopReaderContext(), nestedSpanNearQuery
 				);
-			NUnit.Framework.Assert.IsTrue("spans is null and it shouldn't be", spans != null);
+			IsTrue("spans is null and it shouldn't be", spans != null);
 			CheckSpans(spans, 1, new int[] { 3 });
 			closeIndexReader.Close();
 			directory.Close();
@@ -198,7 +198,7 @@ namespace Lucene.Net.Search.Spans
 			SpanNearQuery nestedSpanNearQuery = new SpanNearQuery(clauses3, 6, false);
 			spans = MultiSpansWrapper.Wrap(searcher.GetTopReaderContext(), nestedSpanNearQuery
 				);
-			NUnit.Framework.Assert.IsTrue("spans is null and it shouldn't be", spans != null);
+			IsTrue("spans is null and it shouldn't be", spans != null);
 			CheckSpans(spans, 2, new int[] { 8, 8 });
 			closeIndexReader.Close();
 			directory.Close();
@@ -210,7 +210,7 @@ namespace Lucene.Net.Search.Spans
 			Directory directory = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), directory, NewIndexWriterConfig
 				(TEST_VERSION_CURRENT, new TestPayloadSpans.TestPayloadAnalyzer(this)));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new TextField("content", new StringReader("a b c d e f g h i j a k")));
 			writer.AddDocument(doc);
@@ -236,9 +236,9 @@ namespace Lucene.Net.Search.Spans
 					}
 				}
 			}
-			NUnit.Framework.Assert.AreEqual(2, payloadSet.Count);
-			NUnit.Framework.Assert.IsTrue(payloadSet.Contains("a:Noise:10"));
-			NUnit.Framework.Assert.IsTrue(payloadSet.Contains("k:Noise:11"));
+			AreEqual(2, payloadSet.Count);
+			IsTrue(payloadSet.Contains("a:Noise:10"));
+			IsTrue(payloadSet.Contains("k:Noise:11"));
 			reader.Close();
 			directory.Close();
 		}
@@ -249,7 +249,7 @@ namespace Lucene.Net.Search.Spans
 			Directory directory = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), directory, NewIndexWriterConfig
 				(TEST_VERSION_CURRENT, new TestPayloadSpans.TestPayloadAnalyzer(this)));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new TextField("content", new StringReader("a b a d k f a h i k a k")));
 			writer.AddDocument(doc);
@@ -275,9 +275,9 @@ namespace Lucene.Net.Search.Spans
 					}
 				}
 			}
-			NUnit.Framework.Assert.AreEqual(2, payloadSet.Count);
-			NUnit.Framework.Assert.IsTrue(payloadSet.Contains("a:Noise:10"));
-			NUnit.Framework.Assert.IsTrue(payloadSet.Contains("k:Noise:11"));
+			AreEqual(2, payloadSet.Count);
+			IsTrue(payloadSet.Contains("a:Noise:10"));
+			IsTrue(payloadSet.Contains("k:Noise:11"));
 			reader.Close();
 			directory.Close();
 		}
@@ -288,7 +288,7 @@ namespace Lucene.Net.Search.Spans
 			Directory directory = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), directory, NewIndexWriterConfig
 				(TEST_VERSION_CURRENT, new TestPayloadSpans.TestPayloadAnalyzer(this)));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new TextField("content", new StringReader("j k a l f k k p a t a k l k t a"
 				)));
@@ -315,7 +315,7 @@ namespace Lucene.Net.Search.Spans
 					}
 				}
 			}
-			NUnit.Framework.Assert.AreEqual(2, payloadSet.Count);
+			AreEqual(2, payloadSet.Count);
 			if (VERBOSE)
 			{
 				foreach (string payload in payloadSet)
@@ -323,8 +323,8 @@ namespace Lucene.Net.Search.Spans
 					System.Console.Out.WriteLine("match:" + payload);
 				}
 			}
-			NUnit.Framework.Assert.IsTrue(payloadSet.Contains("a:Noise:10"));
-			NUnit.Framework.Assert.IsTrue(payloadSet.Contains("k:Noise:11"));
+			IsTrue(payloadSet.Contains("a:Noise:10"));
+			IsTrue(payloadSet.Contains("k:Noise:11"));
 			reader.Close();
 			directory.Close();
 		}
@@ -336,7 +336,7 @@ namespace Lucene.Net.Search.Spans
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), directory, NewIndexWriterConfig
 				(TEST_VERSION_CURRENT, new TestPayloadSpans.PayloadAnalyzer(this)).SetSimilarity
 				(similarity));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewTextField(PayloadHelper.FIELD, "xx rr yy mm  pp", Field.Store.YES));
 			writer.AddDocument(doc);
@@ -362,7 +362,7 @@ namespace Lucene.Net.Search.Spans
 		private void CheckSpans(Lucene.Net.Search.Spans.Spans spans, int expectedNumSpans
 			, int expectedNumPayloads, int expectedPayloadLength, int expectedFirstByte)
 		{
-			NUnit.Framework.Assert.IsTrue("spans is null and it shouldn't be", spans != null);
+			IsTrue("spans is null and it shouldn't be", spans != null);
 			//each position match should have a span associated with it, since there is just one underlying term query, there should
 			//only be one entry in the span
 			int seen = 0;
@@ -371,32 +371,32 @@ namespace Lucene.Net.Search.Spans
 				//if we expect payloads, then isPayloadAvailable should be true
 				if (expectedNumPayloads > 0)
 				{
-					NUnit.Framework.Assert.IsTrue("isPayloadAvailable is not returning the correct value: "
+					IsTrue("isPayloadAvailable is not returning the correct value: "
 						 + spans.IsPayloadAvailable() + " and it should be: " + (expectedNumPayloads > 0
 						), spans.IsPayloadAvailable() == true);
 				}
 				else
 				{
-					NUnit.Framework.Assert.IsTrue("isPayloadAvailable should be false", spans.IsPayloadAvailable
+					IsTrue("isPayloadAvailable should be false", spans.IsPayloadAvailable
 						() == false);
 				}
 				//See payload helper, for the PayloadHelper.FIELD field, there is a single byte payload at every token
 				if (spans.IsPayloadAvailable())
 				{
 					ICollection<byte[]> payload = spans.GetPayload();
-					NUnit.Framework.Assert.IsTrue("payload Size: " + payload.Count + " is not: " + expectedNumPayloads
+					IsTrue("payload Size: " + payload.Count + " is not: " + expectedNumPayloads
 						, payload.Count == expectedNumPayloads);
 					foreach (byte[] thePayload in payload)
 					{
-						NUnit.Framework.Assert.IsTrue("payload[0] Size: " + thePayload.Length + " is not: "
+						IsTrue("payload[0] Size: " + thePayload.Length + " is not: "
 							 + expectedPayloadLength, thePayload.Length == expectedPayloadLength);
-						NUnit.Framework.Assert.IsTrue(thePayload[0] + " does not equal: " + expectedFirstByte
+						IsTrue(thePayload[0] + " does not equal: " + expectedFirstByte
 							, thePayload[0] == expectedFirstByte);
 					}
 				}
 				seen++;
 			}
-			NUnit.Framework.Assert.IsTrue(seen + " does not equal: " + expectedNumSpans, seen
+			IsTrue(seen + " does not equal: " + expectedNumSpans, seen
 				 == expectedNumSpans);
 		}
 
@@ -410,10 +410,10 @@ namespace Lucene.Net.Search.Spans
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), directory, NewIndexWriterConfig
 				(TEST_VERSION_CURRENT, new TestPayloadSpans.PayloadAnalyzer(this)).SetSimilarity
 				(similarity));
-			Lucene.Net.Document.Document doc = null;
+			Lucene.Net.Documents.Document doc = null;
 			for (int i = 0; i < docs.Length; i++)
 			{
-				doc = new Lucene.Net.Document.Document();
+				doc = new Lucene.Net.Documents.Document();
 				string docText = docs[i];
 				doc.Add(NewTextField(PayloadHelper.FIELD, docText, Field.Store.YES));
 				writer.AddDocument(doc);
@@ -447,16 +447,16 @@ namespace Lucene.Net.Search.Spans
 								 + spans.End() + " " + new string(bytes, StandardCharsets.UTF_8));
 						}
 					}
-					NUnit.Framework.Assert.AreEqual(numPayloads[cnt], payload.Count);
+					AreEqual(numPayloads[cnt], payload.Count);
 				}
 				else
 				{
-					NUnit.Framework.Assert.IsFalse("Expected spans:" + numPayloads[cnt] + " found: 0"
+					IsFalse("Expected spans:" + numPayloads[cnt] + " found: 0"
 						, numPayloads.Length > 0 && numPayloads[cnt] > 0);
 				}
 				cnt++;
 			}
-			NUnit.Framework.Assert.AreEqual(numSpans, cnt);
+			AreEqual(numSpans, cnt);
 		}
 
 		internal sealed class PayloadAnalyzer : Analyzer

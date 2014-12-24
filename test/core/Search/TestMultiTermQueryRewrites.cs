@@ -4,7 +4,7 @@
  * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -49,7 +49,7 @@ namespace Lucene.Net.Search
 				(Random()));
 			for (int i = 0; i < 10; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(NewStringField("data", Sharpen.Extensions.ToString(i), Field.Store.NO));
 				writer.AddDocument(doc);
@@ -113,7 +113,7 @@ namespace Lucene.Net.Search
 				act = ExtractTerm(clause.GetQuery());
 				if (last != null)
 				{
-					NUnit.Framework.Assert.IsTrue("sort order of terms in BQ violated", last.CompareTo
+					IsTrue("sort order of terms in BQ violated", last.CompareTo
 						(act) < 0);
 				}
 				last = act;
@@ -135,9 +135,9 @@ namespace Lucene.Net.Search
 				System.Console.Out.WriteLine("multi segment: " + q2);
 				System.Console.Out.WriteLine("multi segment with duplicates: " + q3);
 			}
-			NUnit.Framework.Assert.AreEqual("The multi-segment case must produce same rewritten query"
+			AreEqual("The multi-segment case must produce same rewritten query"
 				, q1, q2);
-			NUnit.Framework.Assert.AreEqual("The multi-segment case with duplicates must produce same rewritten query"
+			AreEqual("The multi-segment case with duplicates must produce same rewritten query"
 				, q1, q3);
 			CheckBooleanQueryOrder(q1);
 			CheckBooleanQueryOrder(q2);
@@ -166,7 +166,7 @@ namespace Lucene.Net.Search
 			foreach (BooleanClause clause in bq.Clauses())
 			{
 				TermQuery mtq = (TermQuery)clause.GetQuery();
-				NUnit.Framework.Assert.AreEqual("Parallel sorting of boosts in rewrite mode broken"
+				AreEqual("Parallel sorting of boosts in rewrite mode broken"
 					, float.ParseFloat(mtq.GetTerm().Text()), mtq.GetBoost(), 0);
 			}
 		}
@@ -186,9 +186,9 @@ namespace Lucene.Net.Search
 				System.Console.Out.WriteLine("multi segment: " + q2);
 				System.Console.Out.WriteLine("multi segment with duplicates: " + q3);
 			}
-			NUnit.Framework.Assert.AreEqual("The multi-segment case must produce same rewritten query"
+			AreEqual("The multi-segment case must produce same rewritten query"
 				, q1, q2);
-			NUnit.Framework.Assert.AreEqual("The multi-segment case with duplicates must produce same rewritten query"
+			AreEqual("The multi-segment case with duplicates must produce same rewritten query"
 				, q1, q3);
 			CheckBooleanQueryBoosts((BooleanQuery)q1);
 			CheckBooleanQueryBoosts((BooleanQuery)q2);
@@ -250,14 +250,14 @@ namespace Lucene.Net.Search
 			try
 			{
 				multiSearcherDupls.Rewrite(mtq);
-				NUnit.Framework.Assert.Fail("Should throw BooleanQuery.TooManyClauses");
+				Fail("Should throw BooleanQuery.TooManyClauses");
 			}
 			catch (BooleanQuery.TooManyClauses e)
 			{
 				//  Maybe remove this 
 				//HM:revisit 
 				//assert in later versions, when internal API changes:
-				NUnit.Framework.Assert.AreEqual("Should throw BooleanQuery.TooManyClauses with a stacktrace containing checkMaxClauseCount()"
+				AreEqual("Should throw BooleanQuery.TooManyClauses with a stacktrace containing checkMaxClauseCount()"
 					, "checkMaxClauseCount", e.GetStackTrace()[0].GetMethodName());
 			}
 			finally

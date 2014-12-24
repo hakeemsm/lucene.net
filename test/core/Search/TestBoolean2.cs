@@ -5,7 +5,7 @@
  */
 
 using System;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -52,7 +52,7 @@ namespace Lucene.Net.Search
 				()));
 			for (int i = 0; i < docFields.Length; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(NewTextField(field, docFields[i], Field.Store.NO));
 				writer.AddDocument(doc);
@@ -82,7 +82,7 @@ namespace Lucene.Net.Search
 					.DEFAULT));
 				RandomIndexWriter w = new RandomIndexWriter(Random(), dir2);
 				w.AddIndexes(copy);
-				docCount = w.MaxDoc();
+				docCount = w.MaxDoc;
 				w.Close();
 				mulFactor *= 2;
 			}
@@ -90,14 +90,14 @@ namespace Lucene.Net.Search
 			RandomIndexWriter w_1 = new RandomIndexWriter(Random(), dir2, ((IndexWriterConfig
 				)NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMaxBufferedDocs
 				(TestUtil.NextInt(Random(), 50, 1000))));
-			Lucene.Net.Document.Document doc_1 = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc_1 = new Lucene.Net.Documents.Document
 				();
 			doc_1.Add(NewTextField("field2", "xxx", Field.Store.NO));
 			for (int i_1 = 0; i_1 < NUM_EXTRA_DOCS / 2; i_1++)
 			{
 				w_1.AddDocument(doc_1);
 			}
-			doc_1 = new Lucene.Net.Document.Document();
+			doc_1 = new Lucene.Net.Documents.Document();
 			doc_1.Add(NewTextField("field2", "big bad bug", Field.Store.NO));
 			for (int i_2 = 0; i_2 < NUM_EXTRA_DOCS / 2; i_2++)
 			{
@@ -136,8 +136,8 @@ namespace Lucene.Net.Search
 			collector = TopScoreDocCollector.Create(1000, true);
 			searcher.Search(query, null, collector);
 			ScoreDoc[] hits2 = collector.TopDocs().scoreDocs;
-			NUnit.Framework.Assert.AreEqual(mulFactor * collector.totalHits, bigSearcher.Search
-				(query, 1).totalHits);
+			AreEqual(mulFactor * collector.TotalHits, bigSearcher.Search
+				(query, 1).TotalHits);
 			CheckHits.CheckHitsQuery(query, hits1, hits2, expDocNrs);
 		}
 
@@ -325,8 +325,8 @@ namespace Lucene.Net.Search
 					q3.Add(q1, BooleanClause.Occur.SHOULD);
 					q3.Add(new PrefixQuery(new Term("field2", "b")), BooleanClause.Occur.SHOULD);
 					TopDocs hits4 = bigSearcher.Search(q3, 1);
-					NUnit.Framework.Assert.AreEqual(mulFactor * collector.totalHits + NUM_EXTRA_DOCS 
-						/ 2, hits4.totalHits);
+					AreEqual(mulFactor * collector.TotalHits + NUM_EXTRA_DOCS 
+						/ 2, hits4.TotalHits);
 				}
 			}
 			catch (Exception e)

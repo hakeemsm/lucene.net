@@ -19,8 +19,8 @@ using System;
 
 using NUnit.Framework;
 
-using Analyzer = Lucene.Net.Analysis.Analyzer;
-using StandardAnalyzer = Lucene.Net.Analysis.Standard.StandardAnalyzer;
+using Analyzer = Lucene.Net.Test.Analysis.Analyzer;
+using StandardAnalyzer = Lucene.Net.Test.Analysis.Standard.StandardAnalyzer;
 using Document = Lucene.Net.Documents.Document;
 using Field = Lucene.Net.Documents.Field;
 using IndexReader = Lucene.Net.Index.IndexReader;

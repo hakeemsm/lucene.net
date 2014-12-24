@@ -19,7 +19,7 @@ using System;
 using Lucene.Net.Support;
 using NUnit.Framework;
 
-using WhitespaceAnalyzer = Lucene.Net.Analysis.WhitespaceAnalyzer;
+using WhitespaceAnalyzer = Lucene.Net.Test.Analysis.WhitespaceAnalyzer;
 using Document = Lucene.Net.Documents.Document;
 using Field = Lucene.Net.Documents.Field;
 using IndexReader = Lucene.Net.Index.IndexReader;
@@ -269,7 +269,7 @@ namespace Lucene.Net.Store
 				IndexSearcher searcher = NewSearcher(reader);
 				ScoreDoc[] hits = searcher.Search(new TermQuery(bbb), null, 1000).scoreDocs;
 				dir.TweakBufferSizes();
-				NUnit.Framework.Assert.AreEqual(36, hits.Length);
+				AreEqual(36, hits.Length);
 				reader.Close();
 				dir.TweakBufferSizes();
 				writer.DeleteDocuments(new Term("id", "4"));

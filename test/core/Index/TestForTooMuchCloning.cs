@@ -5,7 +5,7 @@
  */
 
 using System.Text;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -40,7 +40,7 @@ namespace Lucene.Net.Index
 					sb.Append(TestUtil.RandomRealisticUnicodeString(Random()));
 					sb.Append(' ');
 				}
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(new TextField("field", sb.ToString(), Field.Store.NO));
 				w.AddDocument(doc);
@@ -49,7 +49,7 @@ namespace Lucene.Net.Index
 			w.Close();
 			int cloneCount = dir.GetInputCloneCount();
 			//System.out.println("merge clone count=" + cloneCount);
-			NUnit.Framework.Assert.IsTrue("too many calls to IndexInput.clone during merging: "
+			IsTrue("too many calls to IndexInput.clone during merging: "
 				 + dir.GetInputCloneCount(), cloneCount < 500);
 			IndexSearcher s = NewSearcher(r);
 			// MTQ that matches all terms so the AUTO_REWRITE should
@@ -57,10 +57,10 @@ namespace Lucene.Net.Index
 			// across all terms;
 			TopDocs hits = s.Search(new TermRangeQuery("field", new BytesRef(), new BytesRef(
 				"\uFFFF"), true, true), 10);
-			NUnit.Framework.Assert.IsTrue(hits.totalHits > 0);
+			IsTrue(hits.TotalHits > 0);
 			int queryCloneCount = dir.GetInputCloneCount() - cloneCount;
 			//System.out.println("query clone count=" + queryCloneCount);
-			NUnit.Framework.Assert.IsTrue("too many calls to IndexInput.clone during TermRangeQuery: "
+			IsTrue("too many calls to IndexInput.clone during TermRangeQuery: "
 				 + queryCloneCount, queryCloneCount < 50);
 			r.Close();
 			dir.Close();

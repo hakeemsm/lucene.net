@@ -31,12 +31,12 @@ namespace Lucene.Net.Search
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
-			public override int Freq()
+			public override int Freq
 			{
 				return 0;
 			}
 
-			public override int DocID()
+			public override int DocID
 			{
 				return 0;
 			}
@@ -126,7 +126,7 @@ namespace Lucene.Net.Search
 
 			public override void Collect(int doc)
 			{
-				NUnit.Framework.Assert.AreEqual(this.prevDocID + 1, doc);
+				AreEqual(this.prevDocID + 1, doc);
 				this.prevDocID = doc;
 			}
 
@@ -147,12 +147,12 @@ namespace Lucene.Net.Search
 			{
 				cc.Collect(i);
 			}
-			NUnit.Framework.Assert.IsFalse("CachingCollector should not be cached due to low memory limit"
+			IsFalse("CachingCollector should not be cached due to low memory limit"
 				, cc.IsCached());
 			try
 			{
 				cc.Replay(new TestCachingCollector.NoOpCollector(false));
-				NUnit.Framework.Assert.Fail("replay should fail if CachingCollector is not cached"
+				Fail("replay should fail if CachingCollector is not cached"
 					);
 			}
 			catch (InvalidOperationException)
@@ -192,7 +192,7 @@ namespace Lucene.Net.Search
 			{
 				cc.Replay(new TestCachingCollector.NoOpCollector(false));
 				// this call should fail
-				NUnit.Framework.Assert.Fail("should have failed if an in-order Collector was given to replay(), "
+				Fail("should have failed if an in-order Collector was given to replay(), "
 					 + "while CachingCollector was initialized with out-of-order collection");
 			}
 			catch (ArgumentException)
@@ -218,10 +218,10 @@ namespace Lucene.Net.Search
 				{
 					cc.Collect(i);
 				}
-				NUnit.Framework.Assert.IsTrue(cc.IsCached());
+				IsTrue(cc.IsCached());
 				// The 151's document should terminate caching
 				cc.Collect(numDocs);
-				NUnit.Framework.Assert.IsFalse(cc.IsCached());
+				IsFalse(cc.IsCached());
 			}
 		}
 
@@ -235,7 +235,7 @@ namespace Lucene.Net.Search
 				cc.SetNextReader(null);
 				cc.SetScorer(new TestCachingCollector.MockScorer());
 				cc.Collect(0);
-				NUnit.Framework.Assert.IsTrue(cc.IsCached());
+				IsTrue(cc.IsCached());
 				cc.Replay(new TestCachingCollector.NoOpCollector(true));
 			}
 		}

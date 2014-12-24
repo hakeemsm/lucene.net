@@ -28,7 +28,7 @@ namespace Lucene.Net.Index
 				bytes.bytes[0] = unchecked((byte)i);
 				bytes.bytes[1] = unchecked((byte)(255 - i));
 				bytes.length = 2;
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				FieldType customType = new FieldType();
 				customType.SetStored(true);
@@ -45,8 +45,8 @@ namespace Lucene.Net.Index
 				bytes.bytes[1] = unchecked((byte)(255 - i_1));
 				bytes.length = 2;
 				TopDocs docs = @is.Search(new TermQuery(new Term("bytes", bytes)), 5);
-				NUnit.Framework.Assert.AreEqual(1, docs.totalHits);
-				NUnit.Framework.Assert.AreEqual(string.Empty + i_1, @is.Doc(docs.scoreDocs[0].doc
+				AreEqual(1, docs.TotalHits);
+				AreEqual(string.Empty + i_1, @is.Doc(docs.scoreDocs[0].doc
 					).Get("id"));
 			}
 			ir.Close();
@@ -57,7 +57,7 @@ namespace Lucene.Net.Index
 		{
 			Term term = new Term("foo", new BytesRef(new byte[] { unchecked((byte)unchecked((
 				int)(0xff))), unchecked((byte)unchecked((int)(0xfe))) }));
-			NUnit.Framework.Assert.AreEqual("foo:[ff fe]", term.ToString());
+			AreEqual("foo:[ff fe]", term.ToString());
 		}
 	}
 }

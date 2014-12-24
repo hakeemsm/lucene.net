@@ -1,11 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Runtime.Serialization;
 using System.Text;
 using System.Text.RegularExpressions;
-using Lucene.Net;
-using Lucene.Net.Analysis;
 using Lucene.Net.Analysis.Tokenattributes;
 using Lucene.Net.Support;
 using Lucene.Net.TestFramework.Util;
@@ -280,6 +276,7 @@ namespace Lucene.Net.Test.Analysis.TokenAttributes
 			private readonly string longTestString;
 		}
 
+        [Test]
 		public virtual void TestNonCharSequenceAppend()
 		{
 			ICharTermAttribute t = new CharTermAttribute();
@@ -300,6 +297,7 @@ namespace Lucene.Net.Test.Analysis.TokenAttributes
 				t.ToString());
 		}
 
+        [Test]
 		public virtual void TestExceptions()
 		{
 			ICharTermAttribute t = new CharTermAttribute();

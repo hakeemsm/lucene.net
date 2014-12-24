@@ -4,7 +4,7 @@
  * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
@@ -24,7 +24,7 @@ namespace Lucene.Net.Index
 				Directory dir = NewDirectory();
 				IndexWriter writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT
 					, new MockAnalyzer(Random())).SetMergePolicy(NoMergePolicy.COMPOUND_FILES));
-				Lucene.Net.Document.Document d1 = new Lucene.Net.Document.Document(
+				Lucene.Net.Documents.Document d1 = new Lucene.Net.Documents.Document(
 					);
 				d1.Add(new StringField("f1", "first field", Field.Store.YES));
 				d1.Add(new StringField("f2", "second field", Field.Store.YES));
@@ -39,10 +39,10 @@ namespace Lucene.Net.Index
 				{
 					writer.Commit();
 				}
-				Lucene.Net.Document.Document d2 = new Lucene.Net.Document.Document(
+				Lucene.Net.Documents.Document d2 = new Lucene.Net.Documents.Document(
 					);
 				FieldType customType2 = new FieldType(TextField.TYPE_STORED);
-				customType2.SetStoreTermVectors(true);
+				customType2.StoreTermVectors = true;
 				d2.Add(new TextField("f2", "second field", Field.Store.NO));
 				d2.Add(new Field("f1", "first field", customType2));
 				d2.Add(new TextField("f3", "third field", Field.Store.NO));
@@ -51,27 +51,27 @@ namespace Lucene.Net.Index
 				writer.Close();
 				SegmentInfos sis = new SegmentInfos();
 				sis.Read(dir);
-				NUnit.Framework.Assert.AreEqual(2, sis.Size());
+				AreEqual(2, sis.Size());
 				FieldInfos fis1 = SegmentReader.ReadFieldInfos(sis.Info(0));
 				FieldInfos fis2 = SegmentReader.ReadFieldInfos(sis.Info(1));
-				NUnit.Framework.Assert.AreEqual("f1", fis1.FieldInfo(0).name);
-				NUnit.Framework.Assert.AreEqual("f2", fis1.FieldInfo(1).name);
-				NUnit.Framework.Assert.AreEqual("f1", fis2.FieldInfo(0).name);
-				NUnit.Framework.Assert.AreEqual("f2", fis2.FieldInfo(1).name);
-				NUnit.Framework.Assert.AreEqual("f3", fis2.FieldInfo(2).name);
-				NUnit.Framework.Assert.AreEqual("f4", fis2.FieldInfo(3).name);
+				AreEqual("f1", fis1.FieldInfo(0).name);
+				AreEqual("f2", fis1.FieldInfo(1).name);
+				AreEqual("f1", fis2.FieldInfo(0).name);
+				AreEqual("f2", fis2.FieldInfo(1).name);
+				AreEqual("f3", fis2.FieldInfo(2).name);
+				AreEqual("f4", fis2.FieldInfo(3).name);
 				writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 					(Random())));
 				writer.ForceMerge(1);
 				writer.Close();
 				sis = new SegmentInfos();
 				sis.Read(dir);
-				NUnit.Framework.Assert.AreEqual(1, sis.Size());
+				AreEqual(1, sis.Size());
 				FieldInfos fis3 = SegmentReader.ReadFieldInfos(sis.Info(0));
-				NUnit.Framework.Assert.AreEqual("f1", fis3.FieldInfo(0).name);
-				NUnit.Framework.Assert.AreEqual("f2", fis3.FieldInfo(1).name);
-				NUnit.Framework.Assert.AreEqual("f3", fis3.FieldInfo(2).name);
-				NUnit.Framework.Assert.AreEqual("f4", fis3.FieldInfo(3).name);
+				AreEqual("f1", fis3.FieldInfo(0).name);
+				AreEqual("f2", fis3.FieldInfo(1).name);
+				AreEqual("f3", fis3.FieldInfo(2).name);
+				AreEqual("f4", fis3.FieldInfo(3).name);
 				dir.Close();
 			}
 		}
@@ -84,7 +84,7 @@ namespace Lucene.Net.Index
 			Directory dir2 = NewDirectory();
 			IndexWriter writer = new IndexWriter(dir1, NewIndexWriterConfig(TEST_VERSION_CURRENT
 				, new MockAnalyzer(Random())).SetMergePolicy(NoMergePolicy.COMPOUND_FILES));
-			Lucene.Net.Document.Document d1 = new Lucene.Net.Document.Document(
+			Lucene.Net.Documents.Document d1 = new Lucene.Net.Documents.Document(
 				);
 			d1.Add(new TextField("f1", "first field", Field.Store.YES));
 			d1.Add(new TextField("f2", "second field", Field.Store.YES));
@@ -92,10 +92,10 @@ namespace Lucene.Net.Index
 			writer.Close();
 			writer = new IndexWriter(dir2, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random())).SetMergePolicy(NoMergePolicy.COMPOUND_FILES));
-			Lucene.Net.Document.Document d2 = new Lucene.Net.Document.Document(
+			Lucene.Net.Documents.Document d2 = new Lucene.Net.Documents.Document(
 				);
 			FieldType customType2 = new FieldType(TextField.TYPE_STORED);
-			customType2.SetStoreTermVectors(true);
+			customType2.StoreTermVectors = true;
 			d2.Add(new TextField("f2", "second field", Field.Store.YES));
 			d2.Add(new Field("f1", "first field", customType2));
 			d2.Add(new TextField("f3", "third field", Field.Store.YES));
@@ -108,16 +108,16 @@ namespace Lucene.Net.Index
 			writer.Close();
 			SegmentInfos sis = new SegmentInfos();
 			sis.Read(dir1);
-			NUnit.Framework.Assert.AreEqual(2, sis.Size());
+			AreEqual(2, sis.Size());
 			FieldInfos fis1 = SegmentReader.ReadFieldInfos(sis.Info(0));
 			FieldInfos fis2 = SegmentReader.ReadFieldInfos(sis.Info(1));
-			NUnit.Framework.Assert.AreEqual("f1", fis1.FieldInfo(0).name);
-			NUnit.Framework.Assert.AreEqual("f2", fis1.FieldInfo(1).name);
+			AreEqual("f1", fis1.FieldInfo(0).name);
+			AreEqual("f2", fis1.FieldInfo(1).name);
 			// make sure the ordering of the "external" segment is preserved
-			NUnit.Framework.Assert.AreEqual("f2", fis2.FieldInfo(0).name);
-			NUnit.Framework.Assert.AreEqual("f1", fis2.FieldInfo(1).name);
-			NUnit.Framework.Assert.AreEqual("f3", fis2.FieldInfo(2).name);
-			NUnit.Framework.Assert.AreEqual("f4", fis2.FieldInfo(3).name);
+			AreEqual("f2", fis2.FieldInfo(0).name);
+			AreEqual("f1", fis2.FieldInfo(1).name);
+			AreEqual("f3", fis2.FieldInfo(2).name);
+			AreEqual("f4", fis2.FieldInfo(3).name);
 			dir1.Close();
 			dir2.Close();
 		}
@@ -132,43 +132,43 @@ namespace Lucene.Net.Index
 				{
 					IndexWriter writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT
 						, new MockAnalyzer(Random())).SetMergePolicy(NoMergePolicy.NO_COMPOUND_FILES));
-					Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+					Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 					d.Add(new TextField("f1", "d1 first field", Field.Store.YES));
 					d.Add(new TextField("f2", "d1 second field", Field.Store.YES));
 					writer.AddDocument(d);
 					writer.Close();
 					SegmentInfos sis = new SegmentInfos();
 					sis.Read(dir);
-					NUnit.Framework.Assert.AreEqual(1, sis.Size());
+					AreEqual(1, sis.Size());
 					FieldInfos fis1 = SegmentReader.ReadFieldInfos(sis.Info(0));
-					NUnit.Framework.Assert.AreEqual("f1", fis1.FieldInfo(0).name);
-					NUnit.Framework.Assert.AreEqual("f2", fis1.FieldInfo(1).name);
+					AreEqual("f1", fis1.FieldInfo(0).name);
+					AreEqual("f2", fis1.FieldInfo(1).name);
 				}
 				{
 					IndexWriter writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT
 						, new MockAnalyzer(Random())).SetMergePolicy(Random().NextBoolean() ? NoMergePolicy
 						.NO_COMPOUND_FILES : NoMergePolicy.COMPOUND_FILES));
-					Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+					Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 					d.Add(new TextField("f1", "d2 first field", Field.Store.YES));
 					d.Add(new StoredField("f3", new byte[] { 1, 2, 3 }));
 					writer.AddDocument(d);
 					writer.Close();
 					SegmentInfos sis = new SegmentInfos();
 					sis.Read(dir);
-					NUnit.Framework.Assert.AreEqual(2, sis.Size());
+					AreEqual(2, sis.Size());
 					FieldInfos fis1 = SegmentReader.ReadFieldInfos(sis.Info(0));
 					FieldInfos fis2 = SegmentReader.ReadFieldInfos(sis.Info(1));
-					NUnit.Framework.Assert.AreEqual("f1", fis1.FieldInfo(0).name);
-					NUnit.Framework.Assert.AreEqual("f2", fis1.FieldInfo(1).name);
-					NUnit.Framework.Assert.AreEqual("f1", fis2.FieldInfo(0).name);
-					NUnit.Framework.Assert.IsNull(fis2.FieldInfo(1));
-					NUnit.Framework.Assert.AreEqual("f3", fis2.FieldInfo(2).name);
+					AreEqual("f1", fis1.FieldInfo(0).name);
+					AreEqual("f2", fis1.FieldInfo(1).name);
+					AreEqual("f1", fis2.FieldInfo(0).name);
+					IsNull(fis2.FieldInfo(1));
+					AreEqual("f3", fis2.FieldInfo(2).name);
 				}
 				{
 					IndexWriter writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT
 						, new MockAnalyzer(Random())).SetMergePolicy(Random().NextBoolean() ? NoMergePolicy
 						.NO_COMPOUND_FILES : NoMergePolicy.COMPOUND_FILES));
-					Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+					Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 					d.Add(new TextField("f1", "d3 first field", Field.Store.YES));
 					d.Add(new TextField("f2", "d3 second field", Field.Store.YES));
 					d.Add(new StoredField("f3", new byte[] { 1, 2, 3, 4, 5 }));
@@ -176,18 +176,18 @@ namespace Lucene.Net.Index
 					writer.Close();
 					SegmentInfos sis = new SegmentInfos();
 					sis.Read(dir);
-					NUnit.Framework.Assert.AreEqual(3, sis.Size());
+					AreEqual(3, sis.Size());
 					FieldInfos fis1 = SegmentReader.ReadFieldInfos(sis.Info(0));
 					FieldInfos fis2 = SegmentReader.ReadFieldInfos(sis.Info(1));
 					FieldInfos fis3 = SegmentReader.ReadFieldInfos(sis.Info(2));
-					NUnit.Framework.Assert.AreEqual("f1", fis1.FieldInfo(0).name);
-					NUnit.Framework.Assert.AreEqual("f2", fis1.FieldInfo(1).name);
-					NUnit.Framework.Assert.AreEqual("f1", fis2.FieldInfo(0).name);
-					NUnit.Framework.Assert.IsNull(fis2.FieldInfo(1));
-					NUnit.Framework.Assert.AreEqual("f3", fis2.FieldInfo(2).name);
-					NUnit.Framework.Assert.AreEqual("f1", fis3.FieldInfo(0).name);
-					NUnit.Framework.Assert.AreEqual("f2", fis3.FieldInfo(1).name);
-					NUnit.Framework.Assert.AreEqual("f3", fis3.FieldInfo(2).name);
+					AreEqual("f1", fis1.FieldInfo(0).name);
+					AreEqual("f2", fis1.FieldInfo(1).name);
+					AreEqual("f1", fis2.FieldInfo(0).name);
+					IsNull(fis2.FieldInfo(1));
+					AreEqual("f3", fis2.FieldInfo(2).name);
+					AreEqual("f1", fis3.FieldInfo(0).name);
+					AreEqual("f2", fis3.FieldInfo(1).name);
+					AreEqual("f3", fis3.FieldInfo(2).name);
 				}
 				{
 					IndexWriter writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT
@@ -206,11 +206,11 @@ namespace Lucene.Net.Index
 				writer_1.Close();
 				SegmentInfos sis_1 = new SegmentInfos();
 				sis_1.Read(dir);
-				NUnit.Framework.Assert.AreEqual(1, sis_1.Size());
+				AreEqual(1, sis_1.Size());
 				FieldInfos fis1_1 = SegmentReader.ReadFieldInfos(sis_1.Info(0));
-				NUnit.Framework.Assert.AreEqual("f1", fis1_1.FieldInfo(0).name);
-				NUnit.Framework.Assert.AreEqual("f2", fis1_1.FieldInfo(1).name);
-				NUnit.Framework.Assert.AreEqual("f3", fis1_1.FieldInfo(2).name);
+				AreEqual("f1", fis1_1.FieldInfo(0).name);
+				AreEqual("f2", fis1_1.FieldInfo(1).name);
+				AreEqual("f3", fis1_1.FieldInfo(2).name);
 				dir.Close();
 			}
 		}
@@ -235,7 +235,7 @@ namespace Lucene.Net.Index
 				, new MockAnalyzer(Random())));
 			for (int i_1 = 0; i_1 < NUM_DOCS; i_1++)
 			{
-				Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+				Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 				for (int j = 0; j < docs[i_1].Length; j++)
 				{
 					d.Add(GetField(docs[i_1][j]));
@@ -252,8 +252,8 @@ namespace Lucene.Net.Index
 				foreach (FieldInfo fi in fis)
 				{
 					Field expected = GetField(System.Convert.ToInt32(fi.name));
-					NUnit.Framework.Assert.AreEqual(expected.FieldType().Indexed(), fi.IsIndexed());
-					NUnit.Framework.Assert.AreEqual(expected.FieldType().StoreTermVectors(), fi.HasVectors
+					AreEqual(expected.FieldType().Indexed(), fi.IsIndexed());
+					AreEqual(expected.FieldType().StoreTermVectors(), fi.HasVectors
 						());
 				}
 			}
@@ -271,52 +271,52 @@ namespace Lucene.Net.Index
 			customType3.SetTokenized(false);
 			FieldType customType4 = new FieldType(TextField.TYPE_NOT_STORED);
 			customType4.SetTokenized(false);
-			customType4.SetStoreTermVectors(true);
-			customType4.SetStoreTermVectorOffsets(true);
+			customType4.StoreTermVectors = true;
+			customType4.StoreTermVectorOffsets = true;
 			FieldType customType5 = new FieldType(TextField.TYPE_NOT_STORED);
-			customType5.SetStoreTermVectors(true);
-			customType5.SetStoreTermVectorOffsets(true);
+			customType5.StoreTermVectors = true;
+			customType5.StoreTermVectorOffsets = true;
 			FieldType customType6 = new FieldType(TextField.TYPE_STORED);
 			customType6.SetTokenized(false);
-			customType6.SetStoreTermVectors(true);
-			customType6.SetStoreTermVectorOffsets(true);
+			customType6.StoreTermVectors = true;
+			customType6.StoreTermVectorOffsets = true;
 			FieldType customType7 = new FieldType(TextField.TYPE_NOT_STORED);
 			customType7.SetTokenized(false);
-			customType7.SetStoreTermVectors(true);
-			customType7.SetStoreTermVectorOffsets(true);
+			customType7.StoreTermVectors = true;
+			customType7.StoreTermVectorOffsets = true;
 			FieldType customType8 = new FieldType(TextField.TYPE_STORED);
 			customType8.SetTokenized(false);
-			customType8.SetStoreTermVectors(true);
-			customType8.SetStoreTermVectorPositions(true);
+			customType8.StoreTermVectors = true;
+			customType8.StoreTermVectorPositions = true;
 			FieldType customType9 = new FieldType(TextField.TYPE_NOT_STORED);
-			customType9.SetStoreTermVectors(true);
-			customType9.SetStoreTermVectorPositions(true);
+			customType9.StoreTermVectors = true;
+			customType9.StoreTermVectorPositions = true;
 			FieldType customType10 = new FieldType(TextField.TYPE_STORED);
 			customType10.SetTokenized(false);
-			customType10.SetStoreTermVectors(true);
-			customType10.SetStoreTermVectorPositions(true);
+			customType10.StoreTermVectors = true;
+			customType10.StoreTermVectorPositions = true;
 			FieldType customType11 = new FieldType(TextField.TYPE_NOT_STORED);
 			customType11.SetTokenized(false);
-			customType11.SetStoreTermVectors(true);
-			customType11.SetStoreTermVectorPositions(true);
+			customType11.StoreTermVectors = true;
+			customType11.StoreTermVectorPositions = true;
 			FieldType customType12 = new FieldType(TextField.TYPE_STORED);
-			customType12.SetStoreTermVectors(true);
-			customType12.SetStoreTermVectorOffsets(true);
-			customType12.SetStoreTermVectorPositions(true);
+			customType12.StoreTermVectors = true;
+			customType12.StoreTermVectorOffsets = true;
+			customType12.StoreTermVectorPositions = true;
 			FieldType customType13 = new FieldType(TextField.TYPE_NOT_STORED);
-			customType13.SetStoreTermVectors(true);
-			customType13.SetStoreTermVectorOffsets(true);
-			customType13.SetStoreTermVectorPositions(true);
+			customType13.StoreTermVectors = true;
+			customType13.StoreTermVectorOffsets = true;
+			customType13.StoreTermVectorPositions = true;
 			FieldType customType14 = new FieldType(TextField.TYPE_STORED);
 			customType14.SetTokenized(false);
-			customType14.SetStoreTermVectors(true);
-			customType14.SetStoreTermVectorOffsets(true);
-			customType14.SetStoreTermVectorPositions(true);
+			customType14.StoreTermVectors = true;
+			customType14.StoreTermVectorOffsets = true;
+			customType14.StoreTermVectorPositions = true;
 			FieldType customType15 = new FieldType(TextField.TYPE_NOT_STORED);
 			customType15.SetTokenized(false);
-			customType15.SetStoreTermVectors(true);
-			customType15.SetStoreTermVectorOffsets(true);
-			customType15.SetStoreTermVectorPositions(true);
+			customType15.StoreTermVectors = true;
+			customType15.StoreTermVectorOffsets = true;
+			customType15.StoreTermVectorPositions = true;
 			switch (mode)
 			{
 				case 0:

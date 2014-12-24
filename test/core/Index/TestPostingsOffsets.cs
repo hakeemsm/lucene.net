@@ -6,7 +6,7 @@
 
 using System;
 using System.Collections.Generic;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -35,14 +35,14 @@ namespace Lucene.Net.Index
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter w = new RandomIndexWriter(Random(), dir, iwc);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
 			ft.SetIndexOptions(FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS
 				);
 			if (Random().NextBoolean())
 			{
-				ft.SetStoreTermVectors(true);
+				ft.StoreTermVectors = true;
 				ft.SetStoreTermVectorPositions(Random().NextBoolean());
 				ft.SetStoreTermVectorOffsets(Random().NextBoolean());
 			}
@@ -54,32 +54,32 @@ namespace Lucene.Net.Index
 			w.Close();
 			DocsAndPositionsEnum dp = MultiFields.GetTermPositionsEnum(r, null, "content", new 
 				BytesRef("a"));
-			NUnit.Framework.Assert.IsNotNull(dp);
-			NUnit.Framework.Assert.AreEqual(0, dp.NextDoc());
-			NUnit.Framework.Assert.AreEqual(2, dp.Freq());
-			NUnit.Framework.Assert.AreEqual(0, dp.NextPosition());
-			NUnit.Framework.Assert.AreEqual(0, dp.StartOffset());
-			NUnit.Framework.Assert.AreEqual(6, dp.EndOffset());
-			NUnit.Framework.Assert.AreEqual(2, dp.NextPosition());
-			NUnit.Framework.Assert.AreEqual(9, dp.StartOffset());
-			NUnit.Framework.Assert.AreEqual(17, dp.EndOffset());
-			NUnit.Framework.Assert.AreEqual(DocIdSetIterator.NO_MORE_DOCS, dp.NextDoc());
+			IsNotNull(dp);
+			AreEqual(0, dp.NextDoc());
+			AreEqual(2, dp.Freq);
+			AreEqual(0, dp.NextPosition());
+			AreEqual(0, dp.StartOffset());
+			AreEqual(6, dp.EndOffset());
+			AreEqual(2, dp.NextPosition());
+			AreEqual(9, dp.StartOffset());
+			AreEqual(17, dp.EndOffset());
+			AreEqual(DocIdSetIterator.NO_MORE_DOCS, dp.NextDoc());
 			dp = MultiFields.GetTermPositionsEnum(r, null, "content", new BytesRef("b"));
-			NUnit.Framework.Assert.IsNotNull(dp);
-			NUnit.Framework.Assert.AreEqual(0, dp.NextDoc());
-			NUnit.Framework.Assert.AreEqual(1, dp.Freq());
-			NUnit.Framework.Assert.AreEqual(1, dp.NextPosition());
-			NUnit.Framework.Assert.AreEqual(8, dp.StartOffset());
-			NUnit.Framework.Assert.AreEqual(9, dp.EndOffset());
-			NUnit.Framework.Assert.AreEqual(DocIdSetIterator.NO_MORE_DOCS, dp.NextDoc());
+			IsNotNull(dp);
+			AreEqual(0, dp.NextDoc());
+			AreEqual(1, dp.Freq);
+			AreEqual(1, dp.NextPosition());
+			AreEqual(8, dp.StartOffset());
+			AreEqual(9, dp.EndOffset());
+			AreEqual(DocIdSetIterator.NO_MORE_DOCS, dp.NextDoc());
 			dp = MultiFields.GetTermPositionsEnum(r, null, "content", new BytesRef("c"));
-			NUnit.Framework.Assert.IsNotNull(dp);
-			NUnit.Framework.Assert.AreEqual(0, dp.NextDoc());
-			NUnit.Framework.Assert.AreEqual(1, dp.Freq());
-			NUnit.Framework.Assert.AreEqual(3, dp.NextPosition());
-			NUnit.Framework.Assert.AreEqual(19, dp.StartOffset());
-			NUnit.Framework.Assert.AreEqual(50, dp.EndOffset());
-			NUnit.Framework.Assert.AreEqual(DocIdSetIterator.NO_MORE_DOCS, dp.NextDoc());
+			IsNotNull(dp);
+			AreEqual(0, dp.NextDoc());
+			AreEqual(1, dp.Freq);
+			AreEqual(3, dp.NextPosition());
+			AreEqual(19, dp.StartOffset());
+			AreEqual(50, dp.EndOffset());
+			AreEqual(DocIdSetIterator.NO_MORE_DOCS, dp.NextDoc());
 			r.Close();
 			dir.Close();
 		}
@@ -111,14 +111,14 @@ namespace Lucene.Net.Index
 				);
 			if (Random().NextBoolean())
 			{
-				ft.SetStoreTermVectors(true);
+				ft.StoreTermVectors = true;
 				ft.SetStoreTermVectorOffsets(Random().NextBoolean());
 				ft.SetStoreTermVectorPositions(Random().NextBoolean());
 			}
 			int numDocs = AtLeast(500);
 			for (int i = 0; i < numDocs; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(new Field("numbers", English.IntToEnglish(i), ft));
 				doc.Add(new Field("oddeven", (i % 2) == 0 ? "even" : "odd", ft));
@@ -137,7 +137,7 @@ namespace Lucene.Net.Index
 				while ((doc = dp.NextDoc()) != DocIdSetIterator.NO_MORE_DOCS)
 				{
 					string storedNumbers = reader.Document(doc).Get("numbers");
-					int freq = dp.Freq();
+					int freq = dp.Freq;
 					for (int i_1 = 0; i_1 < freq; i_1++)
 					{
 						dp.NextPosition();
@@ -148,14 +148,14 @@ namespace Lucene.Net.Index
 						//HM:revisit 
 						//assert end >= 0 && end >= start;
 						// check that the offsets correspond to the term in the src text
-						NUnit.Framework.Assert.IsTrue(Sharpen.Runtime.Substring(storedNumbers, start, end
+						IsTrue(Sharpen.Runtime.Substring(storedNumbers, start, end
 							).Equals(term));
 						if (withPayloads)
 						{
 							// check that we have a payload and it starts with "pos"
-							NUnit.Framework.Assert.IsNotNull(dp.GetPayload());
+							IsNotNull(dp.GetPayload());
 							BytesRef payload = dp.GetPayload();
-							NUnit.Framework.Assert.IsTrue(payload.Utf8ToString().StartsWith("pos:"));
+							IsTrue(payload.Utf8ToString().StartsWith("pos:"));
 						}
 					}
 				}
@@ -169,8 +169,8 @@ namespace Lucene.Net.Index
 				DocsAndPositionsEnum dp = MultiFields.GetTermPositionsEnum(reader, null, "numbers"
 					, new BytesRef("hundred"));
 				int doc = dp.Advance(num);
-				NUnit.Framework.Assert.AreEqual(num, doc);
-				int freq = dp.Freq();
+				AreEqual(num, doc);
+				int freq = dp.Freq;
 				for (int i_1 = 0; i_1 < freq; i_1++)
 				{
 					string storedNumbers = reader.Document(doc).Get("numbers");
@@ -182,14 +182,14 @@ namespace Lucene.Net.Index
 					//HM:revisit 
 					//assert end >= 0 && end >= start;
 					// check that the offsets correspond to the term in the src text
-					NUnit.Framework.Assert.IsTrue(Sharpen.Runtime.Substring(storedNumbers, start, end
+					IsTrue(Sharpen.Runtime.Substring(storedNumbers, start, end
 						).Equals("hundred"));
 					if (withPayloads)
 					{
 						// check that we have a payload and it starts with "pos"
-						NUnit.Framework.Assert.IsNotNull(dp.GetPayload());
+						IsNotNull(dp.GetPayload());
 						BytesRef payload = dp.GetPayload();
-						NUnit.Framework.Assert.IsTrue(payload.Utf8ToString().StartsWith("pos:"));
+						IsTrue(payload.Utf8ToString().StartsWith("pos:"));
 					}
 				}
 			}
@@ -199,8 +199,8 @@ namespace Lucene.Net.Index
 			{
 				DocsEnum dp = MultiFields.GetTermDocsEnum(reader, null, "id", new BytesRef(string.Empty
 					 + i_2), 0);
-				NUnit.Framework.Assert.AreEqual(i_2, dp.NextDoc());
-				NUnit.Framework.Assert.AreEqual(DocIdSetIterator.NO_MORE_DOCS, dp.NextDoc());
+				AreEqual(i_2, dp.NextDoc());
+				AreEqual(DocIdSetIterator.NO_MORE_DOCS, dp.NextDoc());
 			}
 			reader.Close();
 			dir.Close();
@@ -223,13 +223,13 @@ namespace Lucene.Net.Index
 				);
 			if (Random().NextBoolean())
 			{
-				ft.SetStoreTermVectors(true);
+				ft.StoreTermVectors = true;
 				ft.SetStoreTermVectorOffsets(Random().NextBoolean());
 				ft.SetStoreTermVectorPositions(Random().NextBoolean());
 			}
 			for (int docCount = 0; docCount < numDocs; docCount++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(new IntField("id", docCount, Field.Store.NO));
 				IList<Token> tokens = new AList<Token>();
@@ -312,53 +312,53 @@ namespace Lucene.Net.Index
 					if (termsEnum.SeekExact(new BytesRef(term)))
 					{
 						docs = termsEnum.Docs(null, docs);
-						NUnit.Framework.Assert.IsNotNull(docs);
+						IsNotNull(docs);
 						int doc;
 						//System.out.println("    doc/freq");
 						while ((doc = docs.NextDoc()) != DocIdSetIterator.NO_MORE_DOCS)
 						{
 							IList<Token> expected = actualTokens.Get(term).Get(docIDToID.Get(doc));
 							//System.out.println("      doc=" + docIDToID.get(doc) + " docID=" + doc + " " + expected.size() + " freq");
-							NUnit.Framework.Assert.IsNotNull(expected);
-							NUnit.Framework.Assert.AreEqual(expected.Count, docs.Freq());
+							IsNotNull(expected);
+							AreEqual(expected.Count, docs.Freq);
 						}
 						// explicitly exclude offsets here
 						docsAndPositions = termsEnum.DocsAndPositions(null, docsAndPositions, DocsAndPositionsEnum
 							.FLAG_PAYLOADS);
-						NUnit.Framework.Assert.IsNotNull(docsAndPositions);
+						IsNotNull(docsAndPositions);
 						//System.out.println("    doc/freq/pos");
 						while ((doc = docsAndPositions.NextDoc()) != DocIdSetIterator.NO_MORE_DOCS)
 						{
 							IList<Token> expected = actualTokens.Get(term).Get(docIDToID.Get(doc));
 							//System.out.println("      doc=" + docIDToID.get(doc) + " " + expected.size() + " freq");
-							NUnit.Framework.Assert.IsNotNull(expected);
-							NUnit.Framework.Assert.AreEqual(expected.Count, docsAndPositions.Freq());
+							IsNotNull(expected);
+							AreEqual(expected.Count, docsAndPositions.Freq);
 							foreach (Token token in expected)
 							{
 								int pos = System.Convert.ToInt32(token.Type());
 								//System.out.println("        pos=" + pos);
-								NUnit.Framework.Assert.AreEqual(pos, docsAndPositions.NextPosition());
+								AreEqual(pos, docsAndPositions.NextPosition());
 							}
 						}
 						docsAndPositionsAndOffsets = termsEnum.DocsAndPositions(null, docsAndPositions);
-						NUnit.Framework.Assert.IsNotNull(docsAndPositionsAndOffsets);
+						IsNotNull(docsAndPositionsAndOffsets);
 						//System.out.println("    doc/freq/pos/offs");
 						while ((doc = docsAndPositionsAndOffsets.NextDoc()) != DocIdSetIterator.NO_MORE_DOCS
 							)
 						{
 							IList<Token> expected = actualTokens.Get(term).Get(docIDToID.Get(doc));
 							//System.out.println("      doc=" + docIDToID.get(doc) + " " + expected.size() + " freq");
-							NUnit.Framework.Assert.IsNotNull(expected);
-							NUnit.Framework.Assert.AreEqual(expected.Count, docsAndPositionsAndOffsets.Freq()
+							IsNotNull(expected);
+							AreEqual(expected.Count, docsAndPositionsAndOffsets.Freq
 								);
 							foreach (Token token in expected)
 							{
 								int pos = System.Convert.ToInt32(token.Type());
 								//System.out.println("        pos=" + pos);
-								NUnit.Framework.Assert.AreEqual(pos, docsAndPositionsAndOffsets.NextPosition());
-								NUnit.Framework.Assert.AreEqual(token.StartOffset(), docsAndPositionsAndOffsets.StartOffset
+								AreEqual(pos, docsAndPositionsAndOffsets.NextPosition());
+								AreEqual(token.StartOffset(), docsAndPositionsAndOffsets.StartOffset
 									());
-								NUnit.Framework.Assert.AreEqual(token.EndOffset(), docsAndPositionsAndOffsets.EndOffset
+								AreEqual(token.EndOffset(), docsAndPositionsAndOffsets.EndOffset
 									());
 							}
 						}
@@ -377,7 +377,7 @@ namespace Lucene.Net.Index
 			RandomIndexWriter riw = new RandomIndexWriter(Random(), dir, iwc);
 			for (int i = 0; i < 100; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				// ensure at least one doc is indexed with offsets
 				if (i < 99 && Random().Next(2) == 0)
@@ -396,9 +396,9 @@ namespace Lucene.Net.Index
 					if (Random().NextBoolean())
 					{
 						// store some term vectors for the checkindex cross-check
-						ft.SetStoreTermVectors(true);
-						ft.SetStoreTermVectorPositions(true);
-						ft.SetStoreTermVectorOffsets(true);
+						ft.StoreTermVectors = true;
+						ft.StoreTermVectorPositions = true;
+						ft.StoreTermVectorOffsets = true;
 					}
 					doc.Add(new Field("foo", "bar", ft));
 				}
@@ -407,7 +407,7 @@ namespace Lucene.Net.Index
 			CompositeReader ir = riw.GetReader();
 			AtomicReader slow = SlowCompositeReaderWrapper.Wrap(ir);
 			FieldInfos fis = slow.GetFieldInfos();
-			NUnit.Framework.Assert.AreEqual(FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS
+			AreEqual(FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS
 				, fis.FieldInfo("foo").GetIndexOptions());
 			slow.Close();
 			ir.Close();
@@ -420,12 +420,12 @@ namespace Lucene.Net.Index
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			FieldType customType3 = new FieldType(TextField.TYPE_STORED);
-			customType3.SetStoreTermVectors(true);
-			customType3.SetStoreTermVectorPositions(true);
-			customType3.SetStoreTermVectorOffsets(true);
+			customType3.StoreTermVectors = true;
+			customType3.StoreTermVectorPositions = true;
+			customType3.StoreTermVectorOffsets = true;
 			customType3.SetIndexOptions(FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS
 				);
 			doc.Add(new Field("content3", "here is more content with aaa aaa aaa", customType3
@@ -445,7 +445,7 @@ namespace Lucene.Net.Index
 			try
 			{
 				CheckTokens(new Token[] { MakeToken("foo", 1, -1, -1) });
-				NUnit.Framework.Assert.Fail();
+				Fail();
 			}
 			catch (ArgumentException)
 			{
@@ -459,7 +459,7 @@ namespace Lucene.Net.Index
 			try
 			{
 				CheckTokens(new Token[] { MakeToken("foo", 1, 1, 0) });
-				NUnit.Framework.Assert.Fail();
+				Fail();
 			}
 			catch (ArgumentException)
 			{
@@ -474,7 +474,7 @@ namespace Lucene.Net.Index
 			{
 				CheckTokens(new Token[] { MakeToken("foo", 1, 0, 3), MakeToken("foo", 1, 4, 7), MakeToken
 					("foo", 0, 3, 6) });
-				NUnit.Framework.Assert.Fail();
+				Fail();
 			}
 			catch (ArgumentException)
 			{
@@ -495,7 +495,7 @@ namespace Lucene.Net.Index
 			Directory dir = NewDirectory();
 			IndexWriter iw = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, 
 				null));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			Token t1 = new Token("foo", 0, int.MaxValue - 500);
 			if (Random().NextBoolean())
@@ -508,9 +508,9 @@ namespace Lucene.Net.Index
 			ft.SetIndexOptions(FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS
 				);
 			// store some term vectors for the checkindex cross-check
-			ft.SetStoreTermVectors(true);
-			ft.SetStoreTermVectorPositions(true);
-			ft.SetStoreTermVectorOffsets(true);
+			ft.StoreTermVectors = true;
+			ft.StoreTermVectorPositions = true;
+			ft.StoreTermVectorOffsets = true;
 			Field field = new Field("foo", tokenStream, ft);
 			doc.Add(field);
 			iw.AddDocument(doc);
@@ -531,10 +531,10 @@ namespace Lucene.Net.Index
 				ft.SetIndexOptions(FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS
 					);
 				// store some term vectors for the checkindex cross-check
-				ft.SetStoreTermVectors(true);
-				ft.SetStoreTermVectorPositions(true);
-				ft.SetStoreTermVectorOffsets(true);
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				ft.StoreTermVectors = true;
+				ft.StoreTermVectorPositions = true;
+				ft.StoreTermVectorOffsets = true;
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(new Field("body", new CannedTokenStream(tokens), ft));
 				riw.AddDocument(doc);

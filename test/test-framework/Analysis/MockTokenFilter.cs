@@ -12,7 +12,8 @@ namespace Lucene.Net.Analysis
  *  <li>Use a regex like <code>.{12,}</code> to act like a lengthfilter
  * </ul>
  */
-    internal class MockTokenFilter : TokenFilter
+
+    public class MockTokenFilter : TokenFilter
     {
         /** Empty set of stopwords */
 

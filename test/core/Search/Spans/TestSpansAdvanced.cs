@@ -5,7 +5,7 @@
  */
 
 using System;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -76,7 +76,7 @@ namespace Lucene.Net.Search.Spans
 		protected internal virtual void AddDocument(RandomIndexWriter writer, string id, 
 			string text)
 		{
-			Lucene.Net.Document.Document document = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document document = new Lucene.Net.Documents.Document
 				();
 			document.Add(NewStringField(FIELD_ID, id, Field.Store.YES));
 			document.Add(NewTextField(FIELD_TEXT, text, Field.Store.YES));
@@ -123,15 +123,15 @@ namespace Lucene.Net.Search.Spans
 			// hits normalizes and throws things off if one score is greater than 1.0
 			TopDocs topdocs = s.Search(query, null, 10000);
 			// did we get the hits we expected
-			NUnit.Framework.Assert.AreEqual(expectedIds.Length, topdocs.totalHits);
-			for (int i = 0; i < topdocs.totalHits; i++)
+			AreEqual(expectedIds.Length, topdocs.TotalHits);
+			for (int i = 0; i < topdocs.TotalHits; i++)
 			{
 				// System.out.println(i + " exp: " + expectedIds[i]);
 				// System.out.println(i + " field: " + hits.doc(i).get(FIELD_ID));
 				int id = topdocs.scoreDocs[i].doc;
 				float score = topdocs.scoreDocs[i].score;
-				Lucene.Net.Document.Document doc = s.Doc(id);
-				NUnit.Framework.Assert.AreEqual(expectedIds[i], doc.Get(FIELD_ID));
+				Lucene.Net.Documents.Document doc = s.Doc(id);
+				AreEqual(expectedIds[i], doc.Get(FIELD_ID));
 				bool scoreEq = Math.Abs(expectedScores[i] - score) < tolerance;
 				if (!scoreEq)
 				{
@@ -139,8 +139,8 @@ namespace Lucene.Net.Search.Spans
 						 + ", actual " + score);
 					System.Console.Out.WriteLine(s.Explain(query, id));
 				}
-				NUnit.Framework.Assert.AreEqual(expectedScores[i], score, tolerance);
-				NUnit.Framework.Assert.AreEqual(s.Explain(query, id).GetValue(), score, tolerance
+				AreEqual(expectedScores[i], score, tolerance);
+				AreEqual(s.Explain(query, id).GetValue(), score, tolerance
 					);
 			}
 		}

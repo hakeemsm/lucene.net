@@ -28,7 +28,7 @@ namespace Lucene.Net.Search
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir);
 			for (int i = 0; i < 100; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(NewStringField("field", Sharpen.Extensions.ToString(i), Field.Store.NO));
 				doc.Add(NewStringField("field2", bool.ToString(i % 2 == 0), Field.Store.NO));
@@ -106,14 +106,14 @@ namespace Lucene.Net.Search
 			// LUCENE-5128: ensure we get a meaningful message if searchAfter exceeds maxDoc
 			Directory dir = NewDirectory();
 			RandomIndexWriter w = new RandomIndexWriter(Random(), dir);
-			w.AddDocument(new Lucene.Net.Document.Document());
+			w.AddDocument(new Lucene.Net.Documents.Document());
 			IndexReader r = w.GetReader();
 			w.Close();
 			IndexSearcher s = new IndexSearcher(r);
 			try
 			{
-				s.SearchAfter(new ScoreDoc(r.MaxDoc(), 0.54f), new MatchAllDocsQuery(), 10);
-				NUnit.Framework.Assert.Fail("should have hit IllegalArgumentException when searchAfter exceeds maxDoc"
+				s.SearchAfter(new ScoreDoc(r.MaxDoc, 0.54f), new MatchAllDocsQuery(), 10);
+				Fail("should have hit IllegalArgumentException when searchAfter exceeds maxDoc"
 					);
 			}
 			catch (ArgumentException)

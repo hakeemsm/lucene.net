@@ -4,7 +4,7 @@
  * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
@@ -29,7 +29,7 @@ namespace Lucene.Net.Index
 				(IndexWriterConfig.DISABLE_AUTO_FLUSH)).SetRAMBufferSizeMB(256.0)).SetMergeScheduler
 				(new ConcurrentMergeScheduler()).SetMergePolicy(NewLogMergePolicy(false, 10)).SetOpenMode
 				(IndexWriterConfig.OpenMode.CREATE));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			NumericDocValuesField dvField = new NumericDocValuesField("dv", 0);
 			doc.Add(dvField);
@@ -53,9 +53,9 @@ namespace Lucene.Net.Index
 			{
 				AtomicReader reader = ((AtomicReader)context.Reader());
 				NumericDocValues dv = reader.GetNumericDocValues("dv");
-				for (int i_1 = 0; i_1 < reader.MaxDoc(); i_1++)
+				for (int i_1 = 0; i_1 < reader.MaxDoc; i_1++)
 				{
-					NUnit.Framework.Assert.AreEqual(expectedValue, dv.Get(i_1));
+					AreEqual(expectedValue, dv.Get(i_1));
 					expectedValue++;
 				}
 			}

@@ -1,26 +1,23 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using Lucene.Net.Codecs;
 using Lucene.Net.Codecs.Lucene45;
-using Lucene.Net.Index;
-using Lucene.Net.Util;
-using Sharpen;
+using Lucene.Net.TestFramework.Index;
+using Lucene.Net.TestFramework.Util;
 
-namespace Lucene.Net.Codecs.Lucene45
+namespace Lucene.Net.Test.Codecs.Lucene45
 {
 	/// <summary>Tests Lucene45DocValuesFormat</summary>
 	public class TestLucene45DocValuesFormat : BaseCompressingDocValuesFormatTestCase
 	{
-		private readonly Codec codec = TestUtil.AlwaysDocValuesFormat(new Lucene45DocValuesFormat
-			());
+		private readonly Codec codec = TestUtil.AlwaysDocValuesFormat(new Lucene45DocValuesFormat());
 
-		protected override Codec GetCodec()
+		protected override Codec Codec
 		{
 			return codec;
 		}
+
+	    protected override void AddRandomFields(Documents.Document doc)
+	    {
+	        throw new System.NotImplementedException();
+	    }
 	}
 }

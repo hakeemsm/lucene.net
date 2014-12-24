@@ -4,7 +4,7 @@
  * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
 using Lucene.Net.Util;
@@ -20,7 +20,7 @@ namespace Lucene.Net.Index
 			Directory directory = NewDirectory();
 			IndexWriter writer = new IndexWriter(directory, NewIndexWriterConfig(TEST_VERSION_CURRENT
 				, new MockAnalyzer(Random())));
-			NUnit.Framework.Assert.IsNull(writer.NewestSegment());
+			IsNull(writer.NewestSegment());
 			writer.Close();
 			directory.Close();
 		}

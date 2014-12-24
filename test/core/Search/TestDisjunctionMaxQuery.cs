@@ -19,7 +19,7 @@ using System;
 
 using NUnit.Framework;
 
-using WhitespaceAnalyzer = Lucene.Net.Analysis.WhitespaceAnalyzer;
+using WhitespaceAnalyzer = Lucene.Net.Test.Analysis.WhitespaceAnalyzer;
 using Document = Lucene.Net.Documents.Document;
 using Field = Lucene.Net.Documents.Field;
 using IndexReader = Lucene.Net.Index.IndexReader;
@@ -163,14 +163,14 @@ namespace Lucene.Net.Search
 			dq.Add(Tq("dek", "DOES_NOT_EXIST"));
 			
 			QueryUtils.Check(Random(), dq, s);
-			NUnit.Framework.Assert.IsTrue(s.GetTopReaderContext() is AtomicReaderContext);
+			IsTrue(s.GetTopReaderContext() is AtomicReaderContext);
 			Weight dw = s.CreateNormalizedWeight(dq);
 			AtomicReaderContext context = (AtomicReaderContext)s.GetTopReaderContext();
 			Scorer ds = dw.Scorer(context, ((AtomicReader)context.Reader()).GetLiveDocs());
 			bool skipOk = ds.Advance(3) != DocIdSetIterator.NO_MORE_DOCS;
 			if (skipOk)
 			{
-				Assert.Fail("firsttime skipTo found a match? ... " + r.Document(ds.DocID()).Get("id"));
+				Assert.Fail("firsttime skipTo found a match? ... " + r.Document(ds.DocID).Get("id"));
 			}
 		}
 		
@@ -180,14 +180,14 @@ namespace Lucene.Net.Search
 			DisjunctionMaxQuery dq = new DisjunctionMaxQuery(0.0f);
 			dq.Add(Tq("dek", "albino"));
 			dq.Add(Tq("dek", "DOES_NOT_EXIST"));
-			NUnit.Framework.Assert.IsTrue(s.GetTopReaderContext() is AtomicReaderContext);
+			IsTrue(s.GetTopReaderContext() is AtomicReaderContext);
 			QueryUtils.Check(Random(), dq, s);
 			
 			Weight dw = s.CreateNormalizedWeight(dq);
 			AtomicReaderContext context = (AtomicReaderContext)s.GetTopReaderContext();
 			Scorer ds = dw.Scorer(context, ((AtomicReader)context.Reader()).GetLiveDocs());
 			Assert.IsTrue(ds.Advance(3) != DocIdSetIterator.NO_MORE_DOCS, "firsttime skipTo found no match");
-			Assert.AreEqual("d4", r.Document(ds.DocID()).Get("id"), "found wrong docid");
+			Assert.AreEqual("d4", r.Document(ds.DocID).Get("id"), "found wrong docid");
 		}
 		
 		[Test]
@@ -505,7 +505,7 @@ namespace Lucene.Net.Search
 				);
 			IndexWriter writer = new IndexWriter(directory, config);
 			string FIELD = "content";
-			Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+			Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 			d.Add(new TextField(FIELD, "clockwork orange", Field.Store.YES));
 			writer.AddDocument(d);
 			writer.Close();
@@ -524,7 +524,7 @@ namespace Lucene.Net.Search
 				System.Console.Out.WriteLine(scoreDoc.doc);
 			}
 			indexReader.Close();
-			NUnit.Framework.Assert.AreEqual(hits, 1);
+			AreEqual(hits, 1);
 			directory.Close();
 		}
 		

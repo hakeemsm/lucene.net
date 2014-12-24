@@ -1,26 +1,21 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
+using System;
+using System.Collections.Generic;
 using Lucene.Net.Codecs;
-using Lucene.Net.Codecs.Perfield;
-using Lucene.Net.Index;
-using Sharpen;
+using Lucene.Net.Support;
+using Lucene.Net.TestFramework.Index;
+using Lucene.Net.TestFramework.Util;
 
-namespace Lucene.Net.Codecs.Perfield
+namespace Lucene.Net.Test.Codecs.Perfield
 {
 	/// <summary>Basic tests of PerFieldPostingsFormat</summary>
 	public class TestPerFieldPostingsFormat : BasePostingsFormatTestCase
 	{
-		protected override Codec GetCodec()
+		protected override Codec Codec
 		{
-			return new RandomCodec(new Random(Random().NextLong()), Collections.EmptySet<string
-				>());
+			return new RandomCodec(new Random(Random().NextInt(0,int.MaxValue)), new List<string>());
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		
 		public override void TestMergeStability()
 		{
 			AssumeTrue("The MockRandom PF randomizes content on the fly, so we can't check it"

@@ -28,16 +28,16 @@ namespace Lucene.Net.Test.Util
 				IList<int> list2 = new AList<int>(list1);
 				CollectionUtil.IntroSort(list1);
 				list2.Sort();
-				NUnit.Framework.Assert.AreEqual(list2, list1);
+				AreEqual(list2, list1);
 				list1 = CreateRandomList(2000);
 				list2 = new AList<int>(list1);
 				CollectionUtil.IntroSort(list1, Sharpen.Collections.ReverseOrder());
 				list2.Sort(Sharpen.Collections.ReverseOrder());
-				NUnit.Framework.Assert.AreEqual(list2, list1);
+				AreEqual(list2, list1);
 				// reverse back, so we can test that completely backwards sorted array (worst case) is working:
 				CollectionUtil.IntroSort(list1);
 				list2.Sort();
-				NUnit.Framework.Assert.AreEqual(list2, list1);
+				AreEqual(list2, list1);
 			}
 		}
 		public virtual void TestTimSort()
@@ -48,16 +48,16 @@ namespace Lucene.Net.Test.Util
 				IList<int> list2 = new AList<int>(list1);
 				CollectionUtil.TimSort(list1);
 				list2.Sort();
-				NUnit.Framework.Assert.AreEqual(list2, list1);
+				AreEqual(list2, list1);
 				list1 = CreateRandomList(2000);
 				list2 = new AList<int>(list1);
 				CollectionUtil.TimSort(list1, Sharpen.Collections.ReverseOrder());
 				list2.Sort(Sharpen.Collections.ReverseOrder());
-				NUnit.Framework.Assert.AreEqual(list2, list1);
+				AreEqual(list2, list1);
 				// reverse back, so we can test that completely backwards sorted array (worst case) is working:
 				CollectionUtil.TimSort(list1);
 				list2.Sort();
-				NUnit.Framework.Assert.AreEqual(list2, list1);
+				AreEqual(list2, list1);
 			}
 		}
         [Test]

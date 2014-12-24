@@ -6,7 +6,7 @@
 
 using System;
 using System.IO;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Util;
 using Sharpen;
@@ -36,7 +36,7 @@ namespace Lucene.Net.Document
 				TrySetShortValue(field);
 				TrySetStringValue(field);
 				TrySetTokenStreamValue(field);
-				NUnit.Framework.Assert.AreEqual(6d, field.NumericValue(), 0.0d);
+				AreEqual(6d, field.NumericValue(), 0.0d);
 			}
 		}
 
@@ -57,7 +57,7 @@ namespace Lucene.Net.Document
 			TrySetShortValue(field);
 			TrySetStringValue(field);
 			TrySetTokenStreamValue(field);
-			NUnit.Framework.Assert.AreEqual(6d, double.LongBitsToDouble(field.NumericValue())
+			AreEqual(6d, double.LongBitsToDouble(field.NumericValue())
 				, 0.0d);
 		}
 
@@ -78,7 +78,7 @@ namespace Lucene.Net.Document
 			TrySetShortValue(field);
 			TrySetStringValue(field);
 			TrySetTokenStreamValue(field);
-			NUnit.Framework.Assert.AreEqual(6f, Sharpen.Runtime.IntBitsToFloat(field.NumericValue
+			AreEqual(6f, Sharpen.Runtime.IntBitsToFloat(field.NumericValue
 				()), 0.0f);
 		}
 
@@ -102,7 +102,7 @@ namespace Lucene.Net.Document
 				TrySetShortValue(field);
 				TrySetStringValue(field);
 				TrySetTokenStreamValue(field);
-				NUnit.Framework.Assert.AreEqual(6f, field.NumericValue(), 0.0f);
+				AreEqual(6f, field.NumericValue(), 0.0f);
 			}
 		}
 
@@ -126,7 +126,7 @@ namespace Lucene.Net.Document
 				TrySetShortValue(field);
 				TrySetStringValue(field);
 				TrySetTokenStreamValue(field);
-				NUnit.Framework.Assert.AreEqual(6, field.NumericValue());
+				AreEqual(6, field.NumericValue());
 			}
 		}
 
@@ -147,7 +147,7 @@ namespace Lucene.Net.Document
 			TrySetShortValue(field);
 			TrySetStringValue(field);
 			TrySetTokenStreamValue(field);
-			NUnit.Framework.Assert.AreEqual(6L, field.NumericValue());
+			AreEqual(6L, field.NumericValue());
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -170,7 +170,7 @@ namespace Lucene.Net.Document
 				TrySetShortValue(field);
 				TrySetStringValue(field);
 				TrySetTokenStreamValue(field);
-				NUnit.Framework.Assert.AreEqual(6L, field.NumericValue());
+				AreEqual(6L, field.NumericValue());
 			}
 		}
 
@@ -191,7 +191,7 @@ namespace Lucene.Net.Document
 			TrySetShortValue(field);
 			TrySetStringValue(field);
 			TrySetTokenStreamValue(field);
-			NUnit.Framework.Assert.AreEqual(new BytesRef("baz"), field.BinaryValue());
+			AreEqual(new BytesRef("baz"), field.BinaryValue());
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -211,7 +211,7 @@ namespace Lucene.Net.Document
 			TrySetShortValue(field);
 			TrySetStringValue(field);
 			TrySetTokenStreamValue(field);
-			NUnit.Framework.Assert.AreEqual(new BytesRef("baz"), field.BinaryValue());
+			AreEqual(new BytesRef("baz"), field.BinaryValue());
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -231,9 +231,9 @@ namespace Lucene.Net.Document
 				TrySetLongValue(field);
 				TrySetReaderValue(field);
 				TrySetShortValue(field);
-				field.SetStringValue("baz");
+				field.StringValue = "baz");
 				TrySetTokenStreamValue(field);
-				NUnit.Framework.Assert.AreEqual("baz", field.StringValue());
+				AreEqual("baz", field.StringValue = ));
 			}
 		}
 
@@ -254,10 +254,10 @@ namespace Lucene.Net.Document
 				TrySetLongValue(field);
 				TrySetReaderValue(field);
 				TrySetShortValue(field);
-				field.SetStringValue("baz");
+				field.StringValue = "baz");
 				field.SetTokenStream(new CannedTokenStream(new Token("foo", 0, 3)));
-				NUnit.Framework.Assert.AreEqual("baz", field.StringValue());
-				NUnit.Framework.Assert.AreEqual(5f, field.Boost(), 0f);
+				AreEqual("baz", field.StringValue = ));
+				AreEqual(5f, field.Boost(), 0f);
 			}
 		}
 
@@ -277,8 +277,8 @@ namespace Lucene.Net.Document
 			TrySetShortValue(field);
 			TrySetStringValue(field);
 			field.SetTokenStream(new CannedTokenStream(new Token("foo", 0, 3)));
-			NUnit.Framework.Assert.IsNotNull(field.ReaderValue());
-			NUnit.Framework.Assert.AreEqual(5f, field.Boost(), 0f);
+			IsNotNull(field.ReaderValue());
+			AreEqual(5f, field.Boost(), 0f);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -303,7 +303,7 @@ namespace Lucene.Net.Document
 				TrySetShortValue(field);
 				TrySetStringValue(field);
 				TrySetTokenStreamValue(field);
-				NUnit.Framework.Assert.AreEqual(new BytesRef("baz"), field.BinaryValue());
+				AreEqual(new BytesRef("baz"), field.BinaryValue());
 			}
 		}
 
@@ -321,9 +321,9 @@ namespace Lucene.Net.Document
 			TrySetLongValue(field);
 			TrySetReaderValue(field);
 			TrySetShortValue(field);
-			field.SetStringValue("baz");
+			field.StringValue = "baz");
 			TrySetTokenStreamValue(field);
-			NUnit.Framework.Assert.AreEqual("baz", field.StringValue());
+			AreEqual("baz", field.StringValue = ));
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -342,7 +342,7 @@ namespace Lucene.Net.Document
 			TrySetShortValue(field);
 			TrySetStringValue(field);
 			TrySetTokenStreamValue(field);
-			NUnit.Framework.Assert.AreEqual(5, field.NumericValue());
+			AreEqual(5, field.NumericValue());
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -361,7 +361,7 @@ namespace Lucene.Net.Document
 			TrySetShortValue(field);
 			TrySetStringValue(field);
 			TrySetTokenStreamValue(field);
-			NUnit.Framework.Assert.AreEqual(5D, field.NumericValue(), 0.0D);
+			AreEqual(5D, field.NumericValue(), 0.0D);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -380,7 +380,7 @@ namespace Lucene.Net.Document
 			TrySetShortValue(field);
 			TrySetStringValue(field);
 			TrySetTokenStreamValue(field);
-			NUnit.Framework.Assert.AreEqual(5f, field.NumericValue(), 0.0f);
+			AreEqual(5f, field.NumericValue(), 0.0f);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -399,7 +399,7 @@ namespace Lucene.Net.Document
 			TrySetShortValue(field);
 			TrySetStringValue(field);
 			TrySetTokenStreamValue(field);
-			NUnit.Framework.Assert.AreEqual(5L, field.NumericValue());
+			AreEqual(5L, field.NumericValue());
 		}
 
 		private void TrySetByteValue(Field f)
@@ -407,7 +407,7 @@ namespace Lucene.Net.Document
 			try
 			{
 				f.SetByteValue(unchecked((byte)10));
-				NUnit.Framework.Assert.Fail();
+				Fail();
 			}
 			catch (ArgumentException)
 			{
@@ -420,7 +420,7 @@ namespace Lucene.Net.Document
 			try
 			{
 				f.SetBytesValue(new byte[] { 5, 5 });
-				NUnit.Framework.Assert.Fail();
+				Fail();
 			}
 			catch (ArgumentException)
 			{
@@ -433,7 +433,7 @@ namespace Lucene.Net.Document
 			try
 			{
 				f.SetBytesValue(new BytesRef("bogus"));
-				NUnit.Framework.Assert.Fail();
+				Fail();
 			}
 			catch (ArgumentException)
 			{
@@ -446,7 +446,7 @@ namespace Lucene.Net.Document
 			try
 			{
 				f.SetDoubleValue(double.MaxValue);
-				NUnit.Framework.Assert.Fail();
+				Fail();
 			}
 			catch (ArgumentException)
 			{
@@ -459,7 +459,7 @@ namespace Lucene.Net.Document
 			try
 			{
 				f.SetIntValue(int.MaxValue);
-				NUnit.Framework.Assert.Fail();
+				Fail();
 			}
 			catch (ArgumentException)
 			{
@@ -472,7 +472,7 @@ namespace Lucene.Net.Document
 			try
 			{
 				f.SetLongValue(long.MaxValue);
-				NUnit.Framework.Assert.Fail();
+				Fail();
 			}
 			catch (ArgumentException)
 			{
@@ -485,7 +485,7 @@ namespace Lucene.Net.Document
 			try
 			{
 				f.SetFloatValue(float.MaxValue);
-				NUnit.Framework.Assert.Fail();
+				Fail();
 			}
 			catch (ArgumentException)
 			{
@@ -498,7 +498,7 @@ namespace Lucene.Net.Document
 			try
 			{
 				f.SetReaderValue(new StringReader("BOO!"));
-				NUnit.Framework.Assert.Fail();
+				Fail();
 			}
 			catch (ArgumentException)
 			{
@@ -511,7 +511,7 @@ namespace Lucene.Net.Document
 			try
 			{
 				f.SetShortValue(short.MaxValue);
-				NUnit.Framework.Assert.Fail();
+				Fail();
 			}
 			catch (ArgumentException)
 			{
@@ -523,8 +523,8 @@ namespace Lucene.Net.Document
 		{
 			try
 			{
-				f.SetStringValue("BOO!");
-				NUnit.Framework.Assert.Fail();
+				f.StringValue = "BOO!");
+				Fail();
 			}
 			catch (ArgumentException)
 			{
@@ -537,7 +537,7 @@ namespace Lucene.Net.Document
 			try
 			{
 				f.SetTokenStream(new CannedTokenStream(new Token("foo", 0, 3)));
-				NUnit.Framework.Assert.Fail();
+				Fail();
 			}
 			catch (ArgumentException)
 			{
@@ -550,7 +550,7 @@ namespace Lucene.Net.Document
 			try
 			{
 				f.SetBoost(5.0f);
-				NUnit.Framework.Assert.Fail();
+				Fail();
 			}
 			catch (ArgumentException)
 			{

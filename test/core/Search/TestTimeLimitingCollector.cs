@@ -5,7 +5,7 @@
  */
 
 using System;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -106,7 +106,7 @@ namespace Lucene.Net.Search
 		/// <exception cref="System.IO.IOException"></exception>
 		private void Add(string value, RandomIndexWriter iw)
 		{
-			Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+			Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 			d.Add(NewTextField(FIELD_NAME, value, Field.Store.NO));
 			iw.AddDocument(d);
 		}
@@ -142,10 +142,10 @@ namespace Lucene.Net.Search
 			catch (Exception e)
 			{
 				Sharpen.Runtime.PrintStackTrace(e);
-				NUnit.Framework.Assert.IsTrue("Unexpected exception: " + e, false);
+				IsTrue("Unexpected exception: " + e, false);
 			}
 			//==fail
-			NUnit.Framework.Assert.AreEqual("Wrong number of results!", totalResults, totalTLCResults
+			AreEqual("Wrong number of results!", totalResults, totalTLCResults
 				);
 		}
 
@@ -189,31 +189,31 @@ namespace Lucene.Net.Search
 			}
 			catch (Exception e)
 			{
-				NUnit.Framework.Assert.IsTrue("Unexpected exception: " + e, false);
+				IsTrue("Unexpected exception: " + e, false);
 			}
 			//==fail
 			// must get exception
-			NUnit.Framework.Assert.IsNotNull("Timeout expected!", timoutException);
+			IsNotNull("Timeout expected!", timoutException);
 			// greediness affect last doc collected
 			int exceptionDoc = timoutException.GetLastDocCollected();
 			int lastCollected = myHc.GetLastDocCollected();
-			NUnit.Framework.Assert.IsTrue("doc collected at timeout must be > 0!", exceptionDoc
+			IsTrue("doc collected at timeout must be > 0!", exceptionDoc
 				 > 0);
 			if (greedy)
 			{
-				NUnit.Framework.Assert.IsTrue("greedy=" + greedy + " exceptionDoc=" + exceptionDoc
+				IsTrue("greedy=" + greedy + " exceptionDoc=" + exceptionDoc
 					 + " != lastCollected=" + lastCollected, exceptionDoc == lastCollected);
-				NUnit.Framework.Assert.IsTrue("greedy, but no hits found!", myHc.HitCount() > 0);
+				IsTrue("greedy, but no hits found!", myHc.HitCount() > 0);
 			}
 			else
 			{
-				NUnit.Framework.Assert.IsTrue("greedy=" + greedy + " exceptionDoc=" + exceptionDoc
+				IsTrue("greedy=" + greedy + " exceptionDoc=" + exceptionDoc
 					 + " not > lastCollected=" + lastCollected, exceptionDoc > lastCollected);
 			}
 			// verify that elapsed time at exception is within valid limits
-			NUnit.Framework.Assert.AreEqual(timoutException.GetTimeAllowed(), TIME_ALLOWED);
+			AreEqual(timoutException.GetTimeAllowed(), TIME_ALLOWED);
 			// a) Not too early
-			NUnit.Framework.Assert.IsTrue("elapsed=" + timoutException.GetTimeElapsed() + " <= (allowed-resolution)="
+			IsTrue("elapsed=" + timoutException.GetTimeElapsed() + " <= (allowed-resolution)="
 				 + (TIME_ALLOWED - counterThread.GetResolution()), timoutException.GetTimeElapsed
 				() > TIME_ALLOWED - counterThread.GetResolution());
 			// b) Not too late.
@@ -261,17 +261,17 @@ namespace Lucene.Net.Search
 				long resolution = 20 * TimeLimitingCollector.TimerThread.DEFAULT_RESOLUTION;
 				//400
 				counterThread.SetResolution(resolution);
-				NUnit.Framework.Assert.AreEqual(resolution, counterThread.GetResolution());
+				AreEqual(resolution, counterThread.GetResolution());
 				DoTestTimeout(false, true);
 				// decrease much and test
 				resolution = 5;
 				counterThread.SetResolution(resolution);
-				NUnit.Framework.Assert.AreEqual(resolution, counterThread.GetResolution());
+				AreEqual(resolution, counterThread.GetResolution());
 				DoTestTimeout(false, true);
 				// return to default and test
 				resolution = TimeLimitingCollector.TimerThread.DEFAULT_RESOLUTION;
 				counterThread.SetResolution(resolution);
-				NUnit.Framework.Assert.AreEqual(resolution, counterThread.GetResolution());
+				AreEqual(resolution, counterThread.GetResolution());
 				DoTestTimeout(false, true);
 			}
 			finally
@@ -314,7 +314,7 @@ namespace Lucene.Net.Search
 			{
 				threadArray[i_2].Join();
 			}
-			NUnit.Framework.Assert.AreEqual("some threads failed!", N_THREADS, success.Cardinality
+			AreEqual("some threads failed!", N_THREADS, success.Cardinality
 				());
 		}
 

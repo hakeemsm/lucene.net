@@ -5,7 +5,7 @@
  */
 
 using Org.Apache.Lucene;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Codecs;
 using Lucene.Net.Codecs.Lucene46;
 using Lucene.Net.Document;
@@ -66,7 +66,7 @@ namespace Org.Apache.Lucene
 			IndexWriter w = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new 
 				MockAnalyzer(Random())).SetCodec(new TestExternalCodecs.CustomPerFieldCodec()).SetMergePolicy
 				(NewLogMergePolicy(3)));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			// uses default codec:
 			doc.Add(NewTextField("field1", "this field uses the standard codec as the test", 
@@ -79,7 +79,7 @@ namespace Org.Apache.Lucene
 			doc.Add(idField);
 			for (int i = 0; i < NUM_DOCS; i++)
 			{
-				idField.SetStringValue(string.Empty + i);
+				idField.StringValue = string.Empty + i);
 				w.AddDocument(doc);
 				if ((i + 1) % 10 == 0)
 				{
@@ -92,12 +92,12 @@ namespace Org.Apache.Lucene
 			}
 			w.DeleteDocuments(new Term("id", "77"));
 			IndexReader r = DirectoryReader.Open(w, true);
-			NUnit.Framework.Assert.AreEqual(NUM_DOCS - 1, r.NumDocs());
+			AreEqual(NUM_DOCS - 1, r.NumDocs());
 			IndexSearcher s = NewSearcher(r);
-			NUnit.Framework.Assert.AreEqual(NUM_DOCS - 1, s.Search(new TermQuery(new Term("field1"
-				, "standard")), 1).totalHits);
-			NUnit.Framework.Assert.AreEqual(NUM_DOCS - 1, s.Search(new TermQuery(new Term("field2"
-				, "pulsing")), 1).totalHits);
+			AreEqual(NUM_DOCS - 1, s.Search(new TermQuery(new Term("field1"
+				, "standard")), 1).TotalHits);
+			AreEqual(NUM_DOCS - 1, s.Search(new TermQuery(new Term("field2"
+				, "pulsing")), 1).TotalHits);
 			r.Close();
 			if (VERBOSE)
 			{
@@ -114,19 +114,19 @@ namespace Org.Apache.Lucene
 				System.Console.Out.WriteLine("\nTEST: now open reader");
 			}
 			r = DirectoryReader.Open(w, true);
-			NUnit.Framework.Assert.AreEqual(NUM_DOCS - 2, r.MaxDoc());
-			NUnit.Framework.Assert.AreEqual(NUM_DOCS - 2, r.NumDocs());
+			AreEqual(NUM_DOCS - 2, r.MaxDoc);
+			AreEqual(NUM_DOCS - 2, r.NumDocs());
 			s = NewSearcher(r);
-			NUnit.Framework.Assert.AreEqual(NUM_DOCS - 2, s.Search(new TermQuery(new Term("field1"
-				, "standard")), 1).totalHits);
-			NUnit.Framework.Assert.AreEqual(NUM_DOCS - 2, s.Search(new TermQuery(new Term("field2"
-				, "pulsing")), 1).totalHits);
-			NUnit.Framework.Assert.AreEqual(1, s.Search(new TermQuery(new Term("id", "76")), 
-				1).totalHits);
-			NUnit.Framework.Assert.AreEqual(0, s.Search(new TermQuery(new Term("id", "77")), 
-				1).totalHits);
-			NUnit.Framework.Assert.AreEqual(0, s.Search(new TermQuery(new Term("id", "44")), 
-				1).totalHits);
+			AreEqual(NUM_DOCS - 2, s.Search(new TermQuery(new Term("field1"
+				, "standard")), 1).TotalHits);
+			AreEqual(NUM_DOCS - 2, s.Search(new TermQuery(new Term("field2"
+				, "pulsing")), 1).TotalHits);
+			AreEqual(1, s.Search(new TermQuery(new Term("id", "76")), 
+				1).TotalHits);
+			AreEqual(0, s.Search(new TermQuery(new Term("id", "77")), 
+				1).TotalHits);
+			AreEqual(0, s.Search(new TermQuery(new Term("id", "44")), 
+				1).TotalHits);
 			if (VERBOSE)
 			{
 				System.Console.Out.WriteLine("\nTEST: now close NRT reader");

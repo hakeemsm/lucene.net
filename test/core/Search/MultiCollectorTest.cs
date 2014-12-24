@@ -57,7 +57,7 @@ namespace Lucene.Net.Search
 			try
 			{
 				MultiCollector.Wrap(null, null);
-				NUnit.Framework.Assert.Fail("only null collectors should not be supported");
+				Fail("only null collectors should not be supported");
 			}
 			catch (ArgumentException)
 			{
@@ -67,8 +67,8 @@ namespace Lucene.Net.Search
 			// doesn't, an NPE would be thrown.
 			Collector c = MultiCollector.Wrap(new MultiCollectorTest.DummyCollector(), null, 
 				new MultiCollectorTest.DummyCollector());
-			NUnit.Framework.Assert.IsTrue(c is MultiCollector);
-			NUnit.Framework.Assert.IsTrue(c.AcceptsDocsOutOfOrder());
+			IsTrue(c is MultiCollector);
+			IsTrue(c.AcceptsDocsOutOfOrder());
 			c.Collect(1);
 			c.SetNextReader(null);
 			c.SetScorer(null);
@@ -80,8 +80,8 @@ namespace Lucene.Net.Search
 		{
 			// Tests that if a single Collector is input, it is returned (and not MultiCollector).
 			MultiCollectorTest.DummyCollector dc = new MultiCollectorTest.DummyCollector();
-			NUnit.Framework.Assert.AreSame(dc, MultiCollector.Wrap(dc));
-			NUnit.Framework.Assert.AreSame(dc, MultiCollector.Wrap(dc, null));
+			AreSame(dc, MultiCollector.Wrap(dc));
+			AreSame(dc, MultiCollector.Wrap(dc, null));
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -95,16 +95,16 @@ namespace Lucene.Net.Search
 				 { new MultiCollectorTest.DummyCollector(), new MultiCollectorTest.DummyCollector
 				() };
 			Collector c = MultiCollector.Wrap(dcs);
-			NUnit.Framework.Assert.IsTrue(c.AcceptsDocsOutOfOrder());
+			IsTrue(c.AcceptsDocsOutOfOrder());
 			c.Collect(1);
 			c.SetNextReader(null);
 			c.SetScorer(null);
 			foreach (MultiCollectorTest.DummyCollector dc in dcs)
 			{
-				NUnit.Framework.Assert.IsTrue(dc.acceptsDocsOutOfOrderCalled);
-				NUnit.Framework.Assert.IsTrue(dc.collectCalled);
-				NUnit.Framework.Assert.IsTrue(dc.setNextReaderCalled);
-				NUnit.Framework.Assert.IsTrue(dc.setScorerCalled);
+				IsTrue(dc.acceptsDocsOutOfOrderCalled);
+				IsTrue(dc.collectCalled);
+				IsTrue(dc.setNextReaderCalled);
+				IsTrue(dc.setScorerCalled);
 			}
 		}
 	}

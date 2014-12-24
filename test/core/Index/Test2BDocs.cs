@@ -23,7 +23,7 @@ namespace Lucene.Net.Index
 			dir = NewFSDirectory(CreateTempDir("2Bdocs"));
 			IndexWriter iw = new IndexWriter(dir, new IndexWriterConfig(TEST_VERSION_CURRENT, 
 				null));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			for (int i = 0; i < 262144; i++)
 			{
@@ -50,7 +50,7 @@ namespace Lucene.Net.Index
 			try
 			{
 				new MultiReader(subReaders);
-				NUnit.Framework.Assert.Fail();
+				Fail();
 			}
 			catch (ArgumentException)
 			{
@@ -65,7 +65,7 @@ namespace Lucene.Net.Index
 			Directory dir2 = NewFSDirectory(CreateTempDir("2BDocs2"));
 			IndexWriter iw = new IndexWriter(dir2, new IndexWriterConfig(TEST_VERSION_CURRENT
 				, null));
-			Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			for (int i = 0; i < 262143; i++)
 			{
@@ -78,8 +78,8 @@ namespace Lucene.Net.Index
 			Arrays.Fill(subReaders, ir);
 			subReaders[subReaders.Length - 1] = ir2;
 			MultiReader mr = new MultiReader(subReaders);
-			NUnit.Framework.Assert.AreEqual(int.MaxValue, mr.MaxDoc());
-			NUnit.Framework.Assert.AreEqual(int.MaxValue, mr.NumDocs());
+			AreEqual(int.MaxValue, mr.MaxDoc);
+			AreEqual(int.MaxValue, mr.NumDocs());
 			ir.Close();
 			ir2.Close();
 			dir2.Close();

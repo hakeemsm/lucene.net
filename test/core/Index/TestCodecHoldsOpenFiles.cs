@@ -23,7 +23,7 @@ namespace Lucene.Net.Index
 			int numDocs = AtLeast(100);
 			for (int i = 0; i < numDocs; i++)
 			{
-				Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(NewField("foo", "bar", TextField.TYPE_NOT_STORED));
 				w.AddDocument(doc);

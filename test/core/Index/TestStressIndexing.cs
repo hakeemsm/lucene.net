@@ -5,7 +5,7 @@
  */
 
 using System;
-using Lucene.Net.Analysis;
+using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
@@ -92,7 +92,7 @@ namespace Lucene.Net.Index
 				// Add 10 docs:
 				for (int j = 0; j < 10; j++)
 				{
-					Lucene.Net.Document.Document d = new Lucene.Net.Document.Document();
+					Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 					int n = LuceneTestCase.Random().Next();
 					d.Add(LuceneTestCase.NewStringField("id", Sharpen.Extensions.ToString(this.nextID
 						++), Field.Store.YES));
@@ -172,7 +172,7 @@ namespace Lucene.Net.Index
 			modifier.Close();
 			for (int i_1 = 0; i_1 < numThread; i_1++)
 			{
-				NUnit.Framework.Assert.IsTrue(!threads[i_1].failed);
+				IsTrue(!threads[i_1].failed);
 			}
 		}
 

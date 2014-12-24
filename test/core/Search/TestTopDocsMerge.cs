@@ -88,7 +88,7 @@ namespace Lucene.Net.Search
 				}
 				for (int docIDX = 0; docIDX < numDocs; docIDX++)
 				{
-					Lucene.Net.Document.Document doc = new Lucene.Net.Document.Document
+					Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 						();
 					doc.Add(NewStringField("string", TestUtil.RandomRealisticUnicodeString(Random()), 
 						Field.Store.NO));
@@ -147,7 +147,7 @@ namespace Lucene.Net.Search
 					AtomicReaderContext leave = compCTX.Leaves()[searcherIDX];
 					subSearchers[searcherIDX] = new TestTopDocsMerge.ShardSearcher(leave, compCTX);
 					docStarts[searcherIDX] = docBase;
-					docBase += ((AtomicReader)leave.Reader()).MaxDoc();
+					docBase += ((AtomicReader)leave.Reader()).MaxDoc;
 				}
 			}
 			IList<SortField> sortFields = new AList<SortField>();
@@ -215,7 +215,7 @@ namespace Lucene.Net.Search
 						}
 						else
 						{
-							topHits = new TopDocs(tempTopHits.totalHits, new ScoreDoc[0], tempTopHits.GetMaxScore
+							topHits = new TopDocs(tempTopHits.TotalHits, new ScoreDoc[0], tempTopHits.GetMaxScore
 								());
 						}
 					}
@@ -247,7 +247,7 @@ namespace Lucene.Net.Search
 						}
 						else
 						{
-							topHits = new TopDocs(tempTopHits.totalHits, new ScoreDoc[0], tempTopHits.GetMaxScore
+							topHits = new TopDocs(tempTopHits.TotalHits, new ScoreDoc[0], tempTopHits.GetMaxScore
 								());
 						}
 					}
@@ -262,7 +262,7 @@ namespace Lucene.Net.Search
 					{
 						System.Console.Out.WriteLine("from=" + from + " size=" + size);
 					}
-					System.Console.Out.WriteLine("  top search: " + topHits.totalHits + " totalHits; hits="
+					System.Console.Out.WriteLine("  top search: " + topHits.TotalHits + " TotalHits; hits="
 						 + (topHits.scoreDocs == null ? "null" : topHits.scoreDocs.Length + " maxScore="
 						 + topHits.GetMaxScore()));
 					if (topHits.scoreDocs != null)
@@ -295,7 +295,7 @@ namespace Lucene.Net.Search
 					shardHits[shardIDX] = subHits;
 					if (VERBOSE)
 					{
-						System.Console.Out.WriteLine("  shard=" + shardIDX + " " + subHits.totalHits + " totalHits hits="
+						System.Console.Out.WriteLine("  shard=" + shardIDX + " " + subHits.TotalHits + " TotalHits hits="
 							 + (subHits.scoreDocs == null ? "null" : subHits.scoreDocs.Length));
 						if (subHits.scoreDocs != null)
 						{
@@ -322,7 +322,7 @@ namespace Lucene.Net.Search
 					for (int hitIDX = 0; hitIDX < mergedHits.scoreDocs.Length; hitIDX++)
 					{
 						ScoreDoc sd = mergedHits.scoreDocs[hitIDX];
-						NUnit.Framework.Assert.AreEqual("doc=" + sd.doc + " wrong shard", ReaderUtil.SubIndex
+						AreEqual("doc=" + sd.doc + " wrong shard", ReaderUtil.SubIndex
 							(sd.doc, docStarts), sd.shardIndex);
 					}
 				}
