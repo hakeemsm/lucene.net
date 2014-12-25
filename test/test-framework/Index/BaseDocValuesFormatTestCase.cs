@@ -1,23 +1,16 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using System.Collections.Generic;
+using Lucene.Net.Analysis;
+using Lucene.Net.Codecs;
+using Lucene.Net.Codecs.Lucene42;
 using Lucene.Net.Documents;
+using Lucene.Net.Index;
+using Lucene.Net.Randomized.Generators;
+using Lucene.Net.Search;
+using Lucene.Net.Store;
+using Lucene.Net.Support;
 using Lucene.Net.Util;
-using NUnit.Framework;
-using Lucene.Net.TestFramework.Analysis;
-using Lucene.NetCodecs;
-using Lucene.NetCodecs.Lucene42;
-using Lucene.NetDocument;
-using Lucene.Net.TestFramework.Index;
-using Lucene.Net.TestFramework.Search;
-using Lucene.Net.TestFramework.Store;
 using Lucene.Net.TestFramework.Util;
-using Sharpen;
 
 namespace Lucene.Net.TestFramework.Index
 {
@@ -33,7 +26,7 @@ namespace Lucene.Net.TestFramework.Index
 	/// </remarks>
 	public abstract class BaseDocValuesFormatTestCase : BaseIndexFileFormatTestCase
 	{
-		protected internal override void AddRandomFields(Lucene.NetDocument.Document
+		protected internal override void AddRandomFields(Lucene.Net.Documents.Document
 			 doc)
 		{
 			if (Usually())
@@ -60,8 +53,7 @@ namespace Lucene.Net.TestFramework.Index
 		{
 			Directory directory = NewDirectory();
 			RandomIndexWriter iwriter = new RandomIndexWriter(Random(), directory);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
-				();
+			var doc = new Document();
 			string longTerm = "longtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongterm";
 			string text = "This is the text to be indexed. " + longTerm;
 			doc.Add(NewTextField("fieldname", text, Field.Store.YES));
@@ -72,24 +64,24 @@ namespace Lucene.Net.TestFramework.Index
 			IndexReader ireader = DirectoryReader.Open(directory);
 			// read-only=true
 			IndexSearcher isearcher = new IndexSearcher(ireader);
-			NUnit.Framework.Assert.AreEqual(1, isearcher.Search(new TermQuery(new Term("fieldname"
-				, longTerm)), 1).totalHits);
+			AreEqual(1, isearcher.Search(new TermQuery(new Term("fieldname"
+				, longTerm)), 1).TotalHits);
 			Query query = new TermQuery(new Term("fieldname", "text"));
 			TopDocs hits = isearcher.Search(query, null, 1);
-			NUnit.Framework.Assert.AreEqual(1, hits.totalHits);
+			AreEqual(1, hits.TotalHits);
 			// Iterate through the results:
-			for (int i = 0; i < hits.scoreDocs.Length; i++)
+			for (int i = 0; i < hits.ScoreDocs.Length; i++)
 			{
-				Lucene.NetDocument.Document hitDoc = isearcher.Doc(hits.scoreDocs[i].doc);
-				NUnit.Framework.Assert.AreEqual(text, hitDoc.Get("fieldname"));
+				Lucene.Net.Documents.Document hitDoc = isearcher.Doc(hits.ScoreDocs[i].Doc);
+				AreEqual(text, hitDoc.Get("fieldname"));
 				 
-				//assert ireader.leaves().size() == 1;
-				NumericDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetNumericDocValues
+				//assert ireader.Leaves.size() == 1;
+				NumericDocValues dv = ((AtomicReader)ireader.Leaves[0].Reader).GetNumericDocValues
 					("dv");
-				NUnit.Framework.Assert.AreEqual(5, dv.Get(hits.scoreDocs[i].doc));
+				AreEqual(5, dv.Get(hits.ScoreDocs[i].Doc));
 			}
-			ireader.Close();
-			directory.Close();
+			ireader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -97,7 +89,7 @@ namespace Lucene.Net.TestFramework.Index
 		{
 			Directory directory = NewDirectory();
 			RandomIndexWriter iwriter = new RandomIndexWriter(Random(), directory);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			string longTerm = "longtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongterm";
 			string text = "This is the text to be indexed. " + longTerm;
@@ -109,25 +101,25 @@ namespace Lucene.Net.TestFramework.Index
 			IndexReader ireader = DirectoryReader.Open(directory);
 			// read-only=true
 			IndexSearcher isearcher = new IndexSearcher(ireader);
-			NUnit.Framework.Assert.AreEqual(1, isearcher.Search(new TermQuery(new Term("fieldname"
-				, longTerm)), 1).totalHits);
+			AreEqual(1, isearcher.Search(new TermQuery(new Term("fieldname"
+				, longTerm)), 1).TotalHits);
 			Query query = new TermQuery(new Term("fieldname", "text"));
 			TopDocs hits = isearcher.Search(query, null, 1);
-			NUnit.Framework.Assert.AreEqual(1, hits.totalHits);
+			AreEqual(1, hits.TotalHits);
 			// Iterate through the results:
-			for (int i = 0; i < hits.scoreDocs.Length; i++)
+			for (int i = 0; i < hits.ScoreDocs.Length; i++)
 			{
-				Lucene.NetDocument.Document hitDoc = isearcher.Doc(hits.scoreDocs[i].doc);
-				NUnit.Framework.Assert.AreEqual(text, hitDoc.Get("fieldname"));
+				Lucene.Net.Documents.Document hitDoc = isearcher.Doc(hits.ScoreDocs[i].Doc);
+				AreEqual(text, hitDoc.Get("fieldname"));
 				 
-				//assert ireader.leaves().size() == 1;
-				NumericDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetNumericDocValues
+				//assert ireader.Leaves.size() == 1;
+				NumericDocValues dv = ((AtomicReader)ireader.Leaves[0].Reader).GetNumericDocValues
 					("dv");
-				NUnit.Framework.Assert.AreEqual(float.FloatToRawIntBits(5.7f), dv.Get(hits.scoreDocs
-					[i].doc));
+				AreEqual(float.FloatToRawIntBits(5.7f), dv.Get(hits.ScoreDocs
+					[i].Doc));
 			}
-			ireader.Close();
-			directory.Close();
+			ireader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -135,7 +127,7 @@ namespace Lucene.Net.TestFramework.Index
 		{
 			Directory directory = NewDirectory();
 			RandomIndexWriter iwriter = new RandomIndexWriter(Random(), directory);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			string longTerm = "longtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongterm";
 			string text = "This is the text to be indexed. " + longTerm;
@@ -148,26 +140,26 @@ namespace Lucene.Net.TestFramework.Index
 			IndexReader ireader = DirectoryReader.Open(directory);
 			// read-only=true
 			IndexSearcher isearcher = new IndexSearcher(ireader);
-			NUnit.Framework.Assert.AreEqual(1, isearcher.Search(new TermQuery(new Term("fieldname"
-				, longTerm)), 1).totalHits);
+			AreEqual(1, isearcher.Search(new TermQuery(new Term("fieldname"
+				, longTerm)), 1).TotalHits);
 			Query query = new TermQuery(new Term("fieldname", "text"));
 			TopDocs hits = isearcher.Search(query, null, 1);
-			NUnit.Framework.Assert.AreEqual(1, hits.totalHits);
+			AreEqual(1, hits.TotalHits);
 			// Iterate through the results:
-			for (int i = 0; i < hits.scoreDocs.Length; i++)
+			for (int i = 0; i < hits.ScoreDocs.Length; i++)
 			{
-				Lucene.NetDocument.Document hitDoc = isearcher.Doc(hits.scoreDocs[i].doc);
-				NUnit.Framework.Assert.AreEqual(text, hitDoc.Get("fieldname"));
+				Lucene.Net.Documents.Document hitDoc = isearcher.Doc(hits.ScoreDocs[i].Doc);
+				AreEqual(text, hitDoc.Get("fieldname"));
 				 
-				//assert ireader.leaves().size() == 1;
-				NumericDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetNumericDocValues
+				//assert ireader.Leaves.size() == 1;
+				NumericDocValues dv = ((AtomicReader)ireader.Leaves[0].Reader).GetNumericDocValues
 					("dv1");
-				NUnit.Framework.Assert.AreEqual(5, dv.Get(hits.scoreDocs[i].doc));
-				dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetNumericDocValues("dv2");
-				NUnit.Framework.Assert.AreEqual(17, dv.Get(hits.scoreDocs[i].doc));
+				AreEqual(5, dv.Get(hits.ScoreDocs[i].Doc));
+				dv = ((AtomicReader)ireader.Leaves[0].Reader).GetNumericDocValues("dv2");
+				AreEqual(17, dv.Get(hits.ScoreDocs[i].Doc));
 			}
-			ireader.Close();
-			directory.Close();
+			ireader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -175,7 +167,7 @@ namespace Lucene.Net.TestFramework.Index
 		{
 			Directory directory = NewDirectory();
 			RandomIndexWriter iwriter = new RandomIndexWriter(Random(), directory);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			string longTerm = "longtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongterm";
 			string text = "This is the text to be indexed. " + longTerm;
@@ -188,29 +180,29 @@ namespace Lucene.Net.TestFramework.Index
 			IndexReader ireader = DirectoryReader.Open(directory);
 			// read-only=true
 			IndexSearcher isearcher = new IndexSearcher(ireader);
-			NUnit.Framework.Assert.AreEqual(1, isearcher.Search(new TermQuery(new Term("fieldname"
-				, longTerm)), 1).totalHits);
+			AreEqual(1, isearcher.Search(new TermQuery(new Term("fieldname"
+				, longTerm)), 1).TotalHits);
 			Query query = new TermQuery(new Term("fieldname", "text"));
 			TopDocs hits = isearcher.Search(query, null, 1);
-			NUnit.Framework.Assert.AreEqual(1, hits.totalHits);
+			AreEqual(1, hits.TotalHits);
 			// Iterate through the results:
-			for (int i = 0; i < hits.scoreDocs.Length; i++)
+			for (int i = 0; i < hits.ScoreDocs.Length; i++)
 			{
-				Lucene.NetDocument.Document hitDoc = isearcher.Doc(hits.scoreDocs[i].doc);
-				NUnit.Framework.Assert.AreEqual(text, hitDoc.Get("fieldname"));
+				Lucene.Net.Documents.Document hitDoc = isearcher.Doc(hits.ScoreDocs[i].Doc);
+				AreEqual(text, hitDoc.Get("fieldname"));
 				 
-				//assert ireader.leaves().size() == 1;
-				BinaryDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetBinaryDocValues
+				//assert ireader.Leaves.size() == 1;
+				BinaryDocValues dv = ((AtomicReader)ireader.Leaves[0].Reader).GetBinaryDocValues
 					("dv1");
 				BytesRef scratch = new BytesRef();
-				dv.Get(hits.scoreDocs[i].doc, scratch);
-				NUnit.Framework.Assert.AreEqual(new BytesRef(longTerm), scratch);
-				dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetBinaryDocValues("dv2");
-				dv.Get(hits.scoreDocs[i].doc, scratch);
-				NUnit.Framework.Assert.AreEqual(new BytesRef(text), scratch);
+				dv.Get(hits.ScoreDocs[i].Doc, scratch);
+				AreEqual(new BytesRef(longTerm), scratch);
+				dv = ((AtomicReader)ireader.Leaves[0].Reader).GetBinaryDocValues("dv2");
+				dv.Get(hits.ScoreDocs[i].Doc, scratch);
+				AreEqual(new BytesRef(text), scratch);
 			}
-			ireader.Close();
-			directory.Close();
+			ireader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -218,7 +210,7 @@ namespace Lucene.Net.TestFramework.Index
 		{
 			Directory directory = NewDirectory();
 			RandomIndexWriter iwriter = new RandomIndexWriter(Random(), directory);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			string longTerm = "longtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongterm";
 			string text = "This is the text to be indexed. " + longTerm;
@@ -231,29 +223,29 @@ namespace Lucene.Net.TestFramework.Index
 			IndexReader ireader = DirectoryReader.Open(directory);
 			// read-only=true
 			IndexSearcher isearcher = new IndexSearcher(ireader);
-			NUnit.Framework.Assert.AreEqual(1, isearcher.Search(new TermQuery(new Term("fieldname"
-				, longTerm)), 1).totalHits);
+			AreEqual(1, isearcher.Search(new TermQuery(new Term("fieldname"
+				, longTerm)), 1).TotalHits);
 			Query query = new TermQuery(new Term("fieldname", "text"));
 			TopDocs hits = isearcher.Search(query, null, 1);
-			NUnit.Framework.Assert.AreEqual(1, hits.totalHits);
+			AreEqual(1, hits.TotalHits);
 			BytesRef scratch = new BytesRef();
 			// Iterate through the results:
-			for (int i = 0; i < hits.scoreDocs.Length; i++)
+			for (int i = 0; i < hits.ScoreDocs.Length; i++)
 			{
-				Lucene.NetDocument.Document hitDoc = isearcher.Doc(hits.scoreDocs[i].doc);
-				NUnit.Framework.Assert.AreEqual(text, hitDoc.Get("fieldname"));
+				Lucene.Net.Documents.Document hitDoc = isearcher.Doc(hits.ScoreDocs[i].Doc);
+				AreEqual(text, hitDoc.Get("fieldname"));
 				 
-				//assert ireader.leaves().size() == 1;
-				NumericDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetNumericDocValues
+				//assert ireader.Leaves.size() == 1;
+				NumericDocValues dv = ((AtomicReader)ireader.Leaves[0].Reader).GetNumericDocValues
 					("dv1");
-				NUnit.Framework.Assert.AreEqual(5, dv.Get(hits.scoreDocs[i].doc));
-				BinaryDocValues dv2 = ((AtomicReader)ireader.Leaves()[0].Reader()).GetBinaryDocValues
+				AreEqual(5, dv.Get(hits.ScoreDocs[i].Doc));
+				BinaryDocValues dv2 = ((AtomicReader)ireader.Leaves[0].Reader).GetBinaryDocValues
 					("dv2");
-				dv2.Get(hits.scoreDocs[i].doc, scratch);
-				NUnit.Framework.Assert.AreEqual(new BytesRef("hello world"), scratch);
+				dv2.Get(hits.ScoreDocs[i].Doc, scratch);
+				AreEqual(new BytesRef("hello world"), scratch);
 			}
-			ireader.Close();
-			directory.Close();
+			ireader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -261,7 +253,7 @@ namespace Lucene.Net.TestFramework.Index
 		{
 			Directory directory = NewDirectory();
 			RandomIndexWriter iwriter = new RandomIndexWriter(Random(), directory);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			string longTerm = "longtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongterm";
 			string text = "This is the text to be indexed. " + longTerm;
@@ -275,34 +267,34 @@ namespace Lucene.Net.TestFramework.Index
 			IndexReader ireader = DirectoryReader.Open(directory);
 			// read-only=true
 			IndexSearcher isearcher = new IndexSearcher(ireader);
-			NUnit.Framework.Assert.AreEqual(1, isearcher.Search(new TermQuery(new Term("fieldname"
-				, longTerm)), 1).totalHits);
+			AreEqual(1, isearcher.Search(new TermQuery(new Term("fieldname"
+				, longTerm)), 1).TotalHits);
 			Query query = new TermQuery(new Term("fieldname", "text"));
 			TopDocs hits = isearcher.Search(query, null, 1);
-			NUnit.Framework.Assert.AreEqual(1, hits.totalHits);
+			AreEqual(1, hits.TotalHits);
 			BytesRef scratch = new BytesRef();
 			// Iterate through the results:
-			for (int i = 0; i < hits.scoreDocs.Length; i++)
+			for (int i = 0; i < hits.ScoreDocs.Length; i++)
 			{
-				Lucene.NetDocument.Document hitDoc = isearcher.Doc(hits.scoreDocs[i].doc);
-				NUnit.Framework.Assert.AreEqual(text, hitDoc.Get("fieldname"));
+				Lucene.Net.Documents.Document hitDoc = isearcher.Doc(hits.ScoreDocs[i].Doc);
+				AreEqual(text, hitDoc.Get("fieldname"));
 				 
-				//assert ireader.leaves().size() == 1;
-				SortedDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetSortedDocValues
+				//assert ireader.Leaves.size() == 1;
+				SortedDocValues dv = ((AtomicReader)ireader.Leaves[0].Reader).GetSortedDocValues
 					("dv1");
 				int ord = dv.GetOrd(0);
 				dv.LookupOrd(ord, scratch);
-				NUnit.Framework.Assert.AreEqual(new BytesRef("hello hello"), scratch);
-				NumericDocValues dv2 = ((AtomicReader)ireader.Leaves()[0].Reader()).GetNumericDocValues
+				AreEqual(new BytesRef("hello hello"), scratch);
+				NumericDocValues dv2 = ((AtomicReader)ireader.Leaves[0].Reader).GetNumericDocValues
 					("dv2");
-				NUnit.Framework.Assert.AreEqual(5, dv2.Get(hits.scoreDocs[i].doc));
-				BinaryDocValues dv3 = ((AtomicReader)ireader.Leaves()[0].Reader()).GetBinaryDocValues
+				AreEqual(5, dv2.Get(hits.ScoreDocs[i].Doc));
+				BinaryDocValues dv3 = ((AtomicReader)ireader.Leaves[0].Reader).GetBinaryDocValues
 					("dv3");
-				dv3.Get(hits.scoreDocs[i].doc, scratch);
-				NUnit.Framework.Assert.AreEqual(new BytesRef("hello world"), scratch);
+				dv3.Get(hits.ScoreDocs[i].Doc, scratch);
+				AreEqual(new BytesRef("hello world"), scratch);
 			}
-			ireader.Close();
-			directory.Close();
+			ireader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -310,7 +302,7 @@ namespace Lucene.Net.TestFramework.Index
 		{
 			Directory directory = NewDirectory();
 			RandomIndexWriter iwriter = new RandomIndexWriter(Random(), directory);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			string longTerm = "longtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongterm";
 			string text = "This is the text to be indexed. " + longTerm;
@@ -324,34 +316,34 @@ namespace Lucene.Net.TestFramework.Index
 			IndexReader ireader = DirectoryReader.Open(directory);
 			// read-only=true
 			IndexSearcher isearcher = new IndexSearcher(ireader);
-			NUnit.Framework.Assert.AreEqual(1, isearcher.Search(new TermQuery(new Term("fieldname"
-				, longTerm)), 1).totalHits);
+			AreEqual(1, isearcher.Search(new TermQuery(new Term("fieldname"
+				, longTerm)), 1).TotalHits);
 			Query query = new TermQuery(new Term("fieldname", "text"));
 			TopDocs hits = isearcher.Search(query, null, 1);
-			NUnit.Framework.Assert.AreEqual(1, hits.totalHits);
+			AreEqual(1, hits.TotalHits);
 			BytesRef scratch = new BytesRef();
 			// Iterate through the results:
-			for (int i = 0; i < hits.scoreDocs.Length; i++)
+			for (int i = 0; i < hits.ScoreDocs.Length; i++)
 			{
-				Lucene.NetDocument.Document hitDoc = isearcher.Doc(hits.scoreDocs[i].doc);
-				NUnit.Framework.Assert.AreEqual(text, hitDoc.Get("fieldname"));
+				Lucene.Net.Documents.Document hitDoc = isearcher.Doc(hits.ScoreDocs[i].Doc);
+				AreEqual(text, hitDoc.Get("fieldname"));
 				 
-				//assert ireader.leaves().size() == 1;
-				SortedDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetSortedDocValues
+				//assert ireader.Leaves.size() == 1;
+				SortedDocValues dv = ((AtomicReader)ireader.Leaves[0].Reader).GetSortedDocValues
 					("dv2");
 				int ord = dv.GetOrd(0);
 				dv.LookupOrd(ord, scratch);
-				NUnit.Framework.Assert.AreEqual(new BytesRef("hello hello"), scratch);
-				NumericDocValues dv2 = ((AtomicReader)ireader.Leaves()[0].Reader()).GetNumericDocValues
+				AreEqual(new BytesRef("hello hello"), scratch);
+				NumericDocValues dv2 = ((AtomicReader)ireader.Leaves[0].Reader).GetNumericDocValues
 					("dv3");
-				NUnit.Framework.Assert.AreEqual(5, dv2.Get(hits.scoreDocs[i].doc));
-				BinaryDocValues dv3 = ((AtomicReader)ireader.Leaves()[0].Reader()).GetBinaryDocValues
+				AreEqual(5, dv2.Get(hits.ScoreDocs[i].Doc));
+				BinaryDocValues dv3 = ((AtomicReader)ireader.Leaves[0].Reader).GetBinaryDocValues
 					("dv1");
-				dv3.Get(hits.scoreDocs[i].doc, scratch);
-				NUnit.Framework.Assert.AreEqual(new BytesRef("hello world"), scratch);
+				dv3.Get(hits.ScoreDocs[i].Doc, scratch);
+				AreEqual(new BytesRef("hello world"), scratch);
 			}
-			ireader.Close();
-			directory.Close();
+			ireader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -362,11 +354,11 @@ namespace Lucene.Net.TestFramework.Index
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer);
 			conf.SetMergePolicy(NewLogMergePolicy());
 			RandomIndexWriter iwriter = new RandomIndexWriter(Random(), directory, conf);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new NumericDocValuesField("dv", 1));
 			iwriter.AddDocument(doc);
-			doc = new Lucene.NetDocument.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(new NumericDocValuesField("dv", 2));
 			iwriter.AddDocument(doc);
 			iwriter.ForceMerge(1);
@@ -375,13 +367,13 @@ namespace Lucene.Net.TestFramework.Index
 			IndexReader ireader = DirectoryReader.Open(directory);
 			// read-only=true
 			 
-			//assert ireader.leaves().size() == 1;
-			NumericDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetNumericDocValues
+			//assert ireader.Leaves.size() == 1;
+			NumericDocValues dv = ((AtomicReader)ireader.Leaves[0].Reader).GetNumericDocValues
 				("dv");
-			NUnit.Framework.Assert.AreEqual(1, dv.Get(0));
-			NUnit.Framework.Assert.AreEqual(2, dv.Get(1));
-			ireader.Close();
-			directory.Close();
+			AreEqual(1, dv.Get(0));
+			AreEqual(2, dv.Get(1));
+			ireader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -392,13 +384,13 @@ namespace Lucene.Net.TestFramework.Index
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer);
 			conf.SetMergePolicy(NewLogMergePolicy());
 			RandomIndexWriter iwriter = new RandomIndexWriter(Random(), directory, conf);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewField("id", "0", StringField.TYPE_STORED));
 			doc.Add(new NumericDocValuesField("dv", -10));
 			iwriter.AddDocument(doc);
 			iwriter.Commit();
-			doc = new Lucene.NetDocument.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewField("id", "1", StringField.TYPE_STORED));
 			doc.Add(new NumericDocValuesField("dv", 99));
 			iwriter.AddDocument(doc);
@@ -408,13 +400,12 @@ namespace Lucene.Net.TestFramework.Index
 			IndexReader ireader = DirectoryReader.Open(directory);
 			// read-only=true
 			 
-			//assert ireader.leaves().size() == 1;
-			NumericDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetNumericDocValues
+			//assert ireader.Leaves.size() == 1;
+			NumericDocValues dv = ((AtomicReader)ireader.Leaves[0].Reader).GetNumericDocValues
 				("dv");
 			for (int i = 0; i < 2; i++)
 			{
-				Lucene.NetDocument.Document doc2 = ((AtomicReader)ireader.Leaves()[0].Reader
-					()).Document(i);
+				Lucene.Net.Documents.Document doc2 = ((AtomicReader)ireader.Leaves[0].Reader).Document(i);
 				long expected;
 				if (doc2.Get("id").Equals("0"))
 				{
@@ -424,10 +415,10 @@ namespace Lucene.Net.TestFramework.Index
 				{
 					expected = 99;
 				}
-				NUnit.Framework.Assert.AreEqual(expected, dv.Get(i));
+				AreEqual(expected, dv.Get(i));
 			}
-			ireader.Close();
-			directory.Close();
+			ireader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -438,11 +429,11 @@ namespace Lucene.Net.TestFramework.Index
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer);
 			conf.SetMergePolicy(NewLogMergePolicy());
 			RandomIndexWriter iwriter = new RandomIndexWriter(Random(), directory, conf);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new NumericDocValuesField("dv", long.MinValue));
 			iwriter.AddDocument(doc);
-			doc = new Lucene.NetDocument.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(new NumericDocValuesField("dv", long.MaxValue));
 			iwriter.AddDocument(doc);
 			iwriter.ForceMerge(1);
@@ -451,13 +442,13 @@ namespace Lucene.Net.TestFramework.Index
 			IndexReader ireader = DirectoryReader.Open(directory);
 			// read-only=true
 			 
-			//assert ireader.leaves().size() == 1;
-			NumericDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetNumericDocValues
+			//assert ireader.Leaves.size() == 1;
+			NumericDocValues dv = ((AtomicReader)ireader.Leaves[0].Reader).GetNumericDocValues
 				("dv");
-			NUnit.Framework.Assert.AreEqual(long.MinValue, dv.Get(0));
-			NUnit.Framework.Assert.AreEqual(long.MaxValue, dv.Get(1));
-			ireader.Close();
-			directory.Close();
+			AreEqual(long.MinValue, dv.Get(0));
+			AreEqual(long.MaxValue, dv.Get(1));
+			ireader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -468,11 +459,11 @@ namespace Lucene.Net.TestFramework.Index
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer);
 			conf.SetMergePolicy(NewLogMergePolicy());
 			RandomIndexWriter iwriter = new RandomIndexWriter(Random(), directory, conf);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new NumericDocValuesField("dv", -8841491950446638677L));
 			iwriter.AddDocument(doc);
-			doc = new Lucene.NetDocument.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(new NumericDocValuesField("dv", 9062230939892376225L));
 			iwriter.AddDocument(doc);
 			iwriter.ForceMerge(1);
@@ -481,13 +472,13 @@ namespace Lucene.Net.TestFramework.Index
 			IndexReader ireader = DirectoryReader.Open(directory);
 			// read-only=true
 			 
-			//assert ireader.leaves().size() == 1;
-			NumericDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetNumericDocValues
+			//assert ireader.Leaves.size() == 1;
+			NumericDocValues dv = ((AtomicReader)ireader.Leaves[0].Reader).GetNumericDocValues
 				("dv");
-			NUnit.Framework.Assert.AreEqual(-8841491950446638677L, dv.Get(0));
-			NUnit.Framework.Assert.AreEqual(9062230939892376225L, dv.Get(1));
-			ireader.Close();
-			directory.Close();
+			AreEqual(-8841491950446638677L, dv.Get(0));
+			AreEqual(9062230939892376225L, dv.Get(1));
+			ireader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -497,7 +488,7 @@ namespace Lucene.Net.TestFramework.Index
 			Directory directory = NewDirectory();
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer);
 			RandomIndexWriter iwriter = new RandomIndexWriter(Random(), directory, conf);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			string longTerm = "longtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongterm";
 			string text = "This is the text to be indexed. " + longTerm;
@@ -509,26 +500,26 @@ namespace Lucene.Net.TestFramework.Index
 			IndexReader ireader = DirectoryReader.Open(directory);
 			// read-only=true
 			IndexSearcher isearcher = new IndexSearcher(ireader);
-			NUnit.Framework.Assert.AreEqual(1, isearcher.Search(new TermQuery(new Term("fieldname"
-				, longTerm)), 1).totalHits);
+			AreEqual(1, isearcher.Search(new TermQuery(new Term("fieldname"
+				, longTerm)), 1).TotalHits);
 			Query query = new TermQuery(new Term("fieldname", "text"));
 			TopDocs hits = isearcher.Search(query, null, 1);
-			NUnit.Framework.Assert.AreEqual(1, hits.totalHits);
+			AreEqual(1, hits.TotalHits);
 			BytesRef scratch = new BytesRef();
 			// Iterate through the results:
-			for (int i = 0; i < hits.scoreDocs.Length; i++)
+			for (int i = 0; i < hits.ScoreDocs.Length; i++)
 			{
-				Lucene.NetDocument.Document hitDoc = isearcher.Doc(hits.scoreDocs[i].doc);
-				NUnit.Framework.Assert.AreEqual(text, hitDoc.Get("fieldname"));
+				Lucene.Net.Documents.Document hitDoc = isearcher.Doc(hits.ScoreDocs[i].Doc);
+				AreEqual(text, hitDoc.Get("fieldname"));
 				 
-				//assert ireader.leaves().size() == 1;
-				BinaryDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetBinaryDocValues
+				//assert ireader.Leaves.size() == 1;
+				BinaryDocValues dv = ((AtomicReader)ireader.Leaves[0].Reader).GetBinaryDocValues
 					("dv");
-				dv.Get(hits.scoreDocs[i].doc, scratch);
-				NUnit.Framework.Assert.AreEqual(new BytesRef("hello world"), scratch);
+				dv.Get(hits.ScoreDocs[i].Doc, scratch);
+				AreEqual(new BytesRef("hello world"), scratch);
 			}
-			ireader.Close();
-			directory.Close();
+			ireader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -539,13 +530,13 @@ namespace Lucene.Net.TestFramework.Index
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer);
 			conf.SetMergePolicy(NewLogMergePolicy());
 			RandomIndexWriter iwriter = new RandomIndexWriter(Random(), directory, conf);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewField("id", "0", StringField.TYPE_STORED));
 			doc.Add(new BinaryDocValuesField("dv", new BytesRef("hello world 1")));
 			iwriter.AddDocument(doc);
 			iwriter.Commit();
-			doc = new Lucene.NetDocument.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewField("id", "1", StringField.TYPE_STORED));
 			doc.Add(new BinaryDocValuesField("dv", new BytesRef("hello 2")));
 			iwriter.AddDocument(doc);
@@ -555,14 +546,13 @@ namespace Lucene.Net.TestFramework.Index
 			IndexReader ireader = DirectoryReader.Open(directory);
 			// read-only=true
 			 
-			//assert ireader.leaves().size() == 1;
-			BinaryDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetBinaryDocValues
+			//assert ireader.Leaves.size() == 1;
+			BinaryDocValues dv = ((AtomicReader)ireader.Leaves[0].Reader).GetBinaryDocValues
 				("dv");
 			BytesRef scratch = new BytesRef();
 			for (int i = 0; i < 2; i++)
 			{
-				Lucene.NetDocument.Document doc2 = ((AtomicReader)ireader.Leaves()[0].Reader
-					()).Document(i);
+				Lucene.Net.Documents.Document doc2 = ((AtomicReader)ireader.Leaves[0].Reader).Document(i);
 				string expected;
 				if (doc2.Get("id").Equals("0"))
 				{
@@ -573,10 +563,10 @@ namespace Lucene.Net.TestFramework.Index
 					expected = "hello 2";
 				}
 				dv.Get(i, scratch);
-				NUnit.Framework.Assert.AreEqual(expected, scratch.Utf8ToString());
+				AreEqual(expected, scratch.Utf8ToString());
 			}
-			ireader.Close();
-			directory.Close();
+			ireader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -586,7 +576,7 @@ namespace Lucene.Net.TestFramework.Index
 			Directory directory = NewDirectory();
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer);
 			RandomIndexWriter iwriter = new RandomIndexWriter(Random(), directory, conf);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			string longTerm = "longtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongtermlongterm";
 			string text = "This is the text to be indexed. " + longTerm;
@@ -598,26 +588,26 @@ namespace Lucene.Net.TestFramework.Index
 			IndexReader ireader = DirectoryReader.Open(directory);
 			// read-only=true
 			IndexSearcher isearcher = new IndexSearcher(ireader);
-			NUnit.Framework.Assert.AreEqual(1, isearcher.Search(new TermQuery(new Term("fieldname"
-				, longTerm)), 1).totalHits);
+			AreEqual(1, isearcher.Search(new TermQuery(new Term("fieldname"
+				, longTerm)), 1).TotalHits);
 			Query query = new TermQuery(new Term("fieldname", "text"));
 			TopDocs hits = isearcher.Search(query, null, 1);
-			NUnit.Framework.Assert.AreEqual(1, hits.totalHits);
+			AreEqual(1, hits.TotalHits);
 			BytesRef scratch = new BytesRef();
 			// Iterate through the results:
-			for (int i = 0; i < hits.scoreDocs.Length; i++)
+			for (int i = 0; i < hits.ScoreDocs.Length; i++)
 			{
-				Lucene.NetDocument.Document hitDoc = isearcher.Doc(hits.scoreDocs[i].doc);
-				NUnit.Framework.Assert.AreEqual(text, hitDoc.Get("fieldname"));
+				Lucene.Net.Documents.Document hitDoc = isearcher.Doc(hits.ScoreDocs[i].Doc);
+				AreEqual(text, hitDoc.Get("fieldname"));
 				 
-				//assert ireader.leaves().size() == 1;
-				SortedDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetSortedDocValues
+				//assert ireader.Leaves.size() == 1;
+				SortedDocValues dv = ((AtomicReader)ireader.Leaves[0].Reader).GetSortedDocValues
 					("dv");
-				dv.LookupOrd(dv.GetOrd(hits.scoreDocs[i].doc), scratch);
-				NUnit.Framework.Assert.AreEqual(new BytesRef("hello world"), scratch);
+				dv.LookupOrd(dv.GetOrd(hits.ScoreDocs[i].Doc), scratch);
+				AreEqual(new BytesRef("hello world"), scratch);
 			}
-			ireader.Close();
-			directory.Close();
+			ireader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -628,11 +618,11 @@ namespace Lucene.Net.TestFramework.Index
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer);
 			conf.SetMergePolicy(NewLogMergePolicy());
 			RandomIndexWriter iwriter = new RandomIndexWriter(Random(), directory, conf);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new SortedDocValuesField("dv", new BytesRef("hello world 1")));
 			iwriter.AddDocument(doc);
-			doc = new Lucene.NetDocument.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(new SortedDocValuesField("dv", new BytesRef("hello world 2")));
 			iwriter.AddDocument(doc);
 			iwriter.ForceMerge(1);
@@ -641,16 +631,16 @@ namespace Lucene.Net.TestFramework.Index
 			IndexReader ireader = DirectoryReader.Open(directory);
 			// read-only=true
 			 
-			//assert ireader.leaves().size() == 1;
-			SortedDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetSortedDocValues
+			//assert ireader.Leaves.size() == 1;
+			SortedDocValues dv = ((AtomicReader)ireader.Leaves[0].Reader).GetSortedDocValues
 				("dv");
 			BytesRef scratch = new BytesRef();
 			dv.LookupOrd(dv.GetOrd(0), scratch);
-			NUnit.Framework.Assert.AreEqual("hello world 1", scratch.Utf8ToString());
+			AreEqual("hello world 1", scratch.Utf8ToString());
 			dv.LookupOrd(dv.GetOrd(1), scratch);
-			NUnit.Framework.Assert.AreEqual("hello world 2", scratch.Utf8ToString());
-			ireader.Close();
-			directory.Close();
+			AreEqual("hello world 2", scratch.Utf8ToString());
+			ireader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -661,14 +651,14 @@ namespace Lucene.Net.TestFramework.Index
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer);
 			conf.SetMergePolicy(NewLogMergePolicy());
 			RandomIndexWriter iwriter = new RandomIndexWriter(Random(), directory, conf);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new SortedDocValuesField("dv", new BytesRef("hello world 1")));
 			iwriter.AddDocument(doc);
-			doc = new Lucene.NetDocument.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(new SortedDocValuesField("dv", new BytesRef("hello world 2")));
 			iwriter.AddDocument(doc);
-			doc = new Lucene.NetDocument.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(new SortedDocValuesField("dv", new BytesRef("hello world 1")));
 			iwriter.AddDocument(doc);
 			iwriter.ForceMerge(1);
@@ -677,20 +667,20 @@ namespace Lucene.Net.TestFramework.Index
 			IndexReader ireader = DirectoryReader.Open(directory);
 			// read-only=true
 			 
-			//assert ireader.leaves().size() == 1;
-			SortedDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetSortedDocValues
+			//assert ireader.Leaves.size() == 1;
+			SortedDocValues dv = ((AtomicReader)ireader.Leaves[0].Reader).GetSortedDocValues
 				("dv");
-			NUnit.Framework.Assert.AreEqual(2, dv.GetValueCount());
+			AreEqual(2, dv.ValueCount);
 			BytesRef scratch = new BytesRef();
-			NUnit.Framework.Assert.AreEqual(0, dv.GetOrd(0));
+			AreEqual(0, dv.GetOrd(0));
 			dv.LookupOrd(0, scratch);
-			NUnit.Framework.Assert.AreEqual("hello world 1", scratch.Utf8ToString());
-			NUnit.Framework.Assert.AreEqual(1, dv.GetOrd(1));
+			AreEqual("hello world 1", scratch.Utf8ToString());
+			AreEqual(1, dv.GetOrd(1));
 			dv.LookupOrd(1, scratch);
-			NUnit.Framework.Assert.AreEqual("hello world 2", scratch.Utf8ToString());
-			NUnit.Framework.Assert.AreEqual(0, dv.GetOrd(2));
-			ireader.Close();
-			directory.Close();
+			AreEqual("hello world 2", scratch.Utf8ToString());
+			AreEqual(0, dv.GetOrd(2));
+			ireader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -701,13 +691,12 @@ namespace Lucene.Net.TestFramework.Index
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer);
 			conf.SetMergePolicy(NewLogMergePolicy());
 			RandomIndexWriter iwriter = new RandomIndexWriter(Random(), directory, conf);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
-				();
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewField("id", "0", StringField.TYPE_STORED));
 			doc.Add(new SortedDocValuesField("dv", new BytesRef("hello world 1")));
 			iwriter.AddDocument(doc);
 			iwriter.Commit();
-			doc = new Lucene.NetDocument.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewField("id", "1", StringField.TYPE_STORED));
 			doc.Add(new SortedDocValuesField("dv", new BytesRef("hello world 2")));
 			iwriter.AddDocument(doc);
@@ -717,20 +706,19 @@ namespace Lucene.Net.TestFramework.Index
 			IndexReader ireader = DirectoryReader.Open(directory);
 			// read-only=true
 			 
-			//assert ireader.leaves().size() == 1;
-			SortedDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetSortedDocValues
+			//assert ireader.Leaves.size() == 1;
+			SortedDocValues dv = ((AtomicReader)ireader.Leaves[0].Reader).GetSortedDocValues
 				("dv");
-			NUnit.Framework.Assert.AreEqual(2, dv.GetValueCount());
+			AreEqual(2, dv.ValueCount);
 			// 2 ords
 			BytesRef scratch = new BytesRef();
 			dv.LookupOrd(0, scratch);
-			NUnit.Framework.Assert.AreEqual(new BytesRef("hello world 1"), scratch);
+			AreEqual(new BytesRef("hello world 1"), scratch);
 			dv.LookupOrd(1, scratch);
-			NUnit.Framework.Assert.AreEqual(new BytesRef("hello world 2"), scratch);
+			AreEqual(new BytesRef("hello world 2"), scratch);
 			for (int i = 0; i < 2; i++)
 			{
-				Lucene.NetDocument.Document doc2 = ((AtomicReader)ireader.Leaves()[0].Reader
-					()).Document(i);
+				Lucene.Net.Documents.Document doc2 = ((AtomicReader)ireader.Leaves[0].Reader).Document(i);
 				string expected;
 				if (doc2.Get("id").Equals("0"))
 				{
@@ -741,10 +729,10 @@ namespace Lucene.Net.TestFramework.Index
 					expected = "hello world 2";
 				}
 				dv.LookupOrd(dv.GetOrd(i), scratch);
-				NUnit.Framework.Assert.AreEqual(expected, scratch.Utf8ToString());
+				AreEqual(expected, scratch.Utf8ToString());
 			}
-			ireader.Close();
-			directory.Close();
+			ireader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -755,11 +743,11 @@ namespace Lucene.Net.TestFramework.Index
 			IndexWriterConfig iwconfig = NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer);
 			iwconfig.SetMergePolicy(NewLogMergePolicy());
 			RandomIndexWriter iwriter = new RandomIndexWriter(Random(), directory, iwconfig);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new StringField("id", "0", Field.Store.NO));
 			iwriter.AddDocument(doc);
-			doc = new Lucene.NetDocument.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(new StringField("id", "1", Field.Store.NO));
 			doc.Add(new SortedDocValuesField("field", new BytesRef("hello")));
 			iwriter.AddDocument(doc);
@@ -771,19 +759,19 @@ namespace Lucene.Net.TestFramework.Index
 			SortedDocValues dv = GetOnlySegmentReader(ireader).GetSortedDocValues("field");
 			if (DefaultCodecSupportsDocsWithField())
 			{
-				NUnit.Framework.Assert.AreEqual(-1, dv.GetOrd(0));
-				NUnit.Framework.Assert.AreEqual(0, dv.GetValueCount());
+				AreEqual(-1, dv.GetOrd(0));
+				AreEqual(0, dv.ValueCount);
 			}
 			else
 			{
-				NUnit.Framework.Assert.AreEqual(0, dv.GetOrd(0));
-				NUnit.Framework.Assert.AreEqual(1, dv.GetValueCount());
+				AreEqual(0, dv.GetOrd(0));
+				AreEqual(1, dv.ValueCount);
 				BytesRef @ref = new BytesRef();
 				dv.LookupOrd(0, @ref);
-				NUnit.Framework.Assert.AreEqual(new BytesRef(), @ref);
+				AreEqual(new BytesRef(), @ref);
 			}
-			ireader.Close();
-			directory.Close();
+			ireader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -794,7 +782,7 @@ namespace Lucene.Net.TestFramework.Index
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer);
 			conf.SetMergePolicy(NewLogMergePolicy());
 			RandomIndexWriter iwriter = new RandomIndexWriter(Random(), directory, conf);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new BinaryDocValuesField("dv", new BytesRef("hello\nworld\r1")));
 			iwriter.AddDocument(doc);
@@ -803,14 +791,14 @@ namespace Lucene.Net.TestFramework.Index
 			IndexReader ireader = DirectoryReader.Open(directory);
 			// read-only=true
 			 
-			//assert ireader.leaves().size() == 1;
-			BinaryDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetBinaryDocValues
+			//assert ireader.Leaves.size() == 1;
+			BinaryDocValues dv = ((AtomicReader)ireader.Leaves[0].Reader).GetBinaryDocValues
 				("dv");
 			BytesRef scratch = new BytesRef();
 			dv.Get(0, scratch);
-			NUnit.Framework.Assert.AreEqual(new BytesRef("hello\nworld\r1"), scratch);
-			ireader.Close();
-			directory.Close();
+			AreEqual(new BytesRef("hello\nworld\r1"), scratch);
+			ireader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -821,31 +809,31 @@ namespace Lucene.Net.TestFramework.Index
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer);
 			conf.SetMergePolicy(NewLogMergePolicy());
 			RandomIndexWriter iwriter = new RandomIndexWriter(Random(), directory, conf);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new SortedDocValuesField("dv", new BytesRef("hello world 2")));
 			iwriter.AddDocument(doc);
 			// 2nd doc missing the DV field
-			iwriter.AddDocument(new Lucene.NetDocument.Document());
+			iwriter.AddDocument(new Lucene.Net.Documents.Document());
 			iwriter.Close();
 			// Now search the index:
 			IndexReader ireader = DirectoryReader.Open(directory);
 			// read-only=true
 			 
-			//assert ireader.leaves().size() == 1;
-			SortedDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetSortedDocValues
+			//assert ireader.Leaves.size() == 1;
+			SortedDocValues dv = ((AtomicReader)ireader.Leaves[0].Reader).GetSortedDocValues
 				("dv");
 			BytesRef scratch = new BytesRef();
 			dv.LookupOrd(dv.GetOrd(0), scratch);
-			NUnit.Framework.Assert.AreEqual(new BytesRef("hello world 2"), scratch);
+			AreEqual(new BytesRef("hello world 2"), scratch);
 			if (DefaultCodecSupportsDocsWithField())
 			{
-				NUnit.Framework.Assert.AreEqual(-1, dv.GetOrd(1));
+				AreEqual(-1, dv.GetOrd(1));
 			}
 			dv.Get(1, scratch);
-			NUnit.Framework.Assert.AreEqual(new BytesRef(string.Empty), scratch);
-			ireader.Close();
-			directory.Close();
+			AreEqual(new BytesRef(string.Empty), scratch);
+			ireader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -856,64 +844,63 @@ namespace Lucene.Net.TestFramework.Index
 			IndexWriterConfig iwconfig = NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer);
 			iwconfig.SetMergePolicy(NewLogMergePolicy());
 			RandomIndexWriter iwriter = new RandomIndexWriter(Random(), directory, iwconfig);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new SortedDocValuesField("field", new BytesRef("hello")));
 			iwriter.AddDocument(doc);
-			doc = new Lucene.NetDocument.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(new SortedDocValuesField("field", new BytesRef("world")));
 			iwriter.AddDocument(doc);
-			doc = new Lucene.NetDocument.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(new SortedDocValuesField("field", new BytesRef("beer")));
 			iwriter.AddDocument(doc);
 			iwriter.ForceMerge(1);
 			DirectoryReader ireader = iwriter.GetReader();
 			iwriter.Close();
 			SortedDocValues dv = GetOnlySegmentReader(ireader).GetSortedDocValues("field");
-			NUnit.Framework.Assert.AreEqual(3, dv.GetValueCount());
-			TermsEnum termsEnum = dv.TermsEnum();
+			AreEqual(3, dv.ValueCount);
+			TermsEnum termsEnum = dv.TermsEnum;
 			// next()
-			NUnit.Framework.Assert.AreEqual("beer", termsEnum.Next().Utf8ToString());
-			NUnit.Framework.Assert.AreEqual(0, termsEnum.Ord());
-			NUnit.Framework.Assert.AreEqual("hello", termsEnum.Next().Utf8ToString());
-			NUnit.Framework.Assert.AreEqual(1, termsEnum.Ord());
-			NUnit.Framework.Assert.AreEqual("world", termsEnum.Next().Utf8ToString());
-			NUnit.Framework.Assert.AreEqual(2, termsEnum.Ord());
+			AreEqual("beer", termsEnum.Next().Utf8ToString());
+			AreEqual(0, termsEnum.Ord);
+			AreEqual("hello", termsEnum.Next().Utf8ToString());
+			AreEqual(1, termsEnum.Ord);
+			AreEqual("world", termsEnum.Next().Utf8ToString());
+			AreEqual(2, termsEnum.Ord);
 			// seekCeil()
-			NUnit.Framework.Assert.AreEqual(TermsEnum.SeekStatus.NOT_FOUND, termsEnum.SeekCeil
+			AreEqual(TermsEnum.SeekStatus.NOT_FOUND, termsEnum.SeekCeil
 				(new BytesRef("ha!")));
-			NUnit.Framework.Assert.AreEqual("hello", termsEnum.Term().Utf8ToString());
-			NUnit.Framework.Assert.AreEqual(1, termsEnum.Ord());
-			NUnit.Framework.Assert.AreEqual(TermsEnum.SeekStatus.FOUND, termsEnum.SeekCeil(new 
+			AreEqual("hello", termsEnum.Term.Utf8ToString());
+			AreEqual(1, termsEnum.Ord);
+			AreEqual(TermsEnum.SeekStatus.FOUND, termsEnum.SeekCeil(new 
 				BytesRef("beer")));
-			NUnit.Framework.Assert.AreEqual("beer", termsEnum.Term().Utf8ToString());
-			NUnit.Framework.Assert.AreEqual(0, termsEnum.Ord());
-			NUnit.Framework.Assert.AreEqual(TermsEnum.SeekStatus.END, termsEnum.SeekCeil(new 
+			AreEqual("beer", termsEnum.Term.Utf8ToString());
+			AreEqual(0, termsEnum.Ord);
+			AreEqual(TermsEnum.SeekStatus.END, termsEnum.SeekCeil(new 
 				BytesRef("zzz")));
 			// seekExact()
-			NUnit.Framework.Assert.IsTrue(termsEnum.SeekExact(new BytesRef("beer")));
-			NUnit.Framework.Assert.AreEqual("beer", termsEnum.Term().Utf8ToString());
-			NUnit.Framework.Assert.AreEqual(0, termsEnum.Ord());
-			NUnit.Framework.Assert.IsTrue(termsEnum.SeekExact(new BytesRef("hello")));
-			NUnit.Framework.Assert.AreEqual(Codec.GetDefault().ToString(), "hello", termsEnum
-				.Term().Utf8ToString());
-			NUnit.Framework.Assert.AreEqual(1, termsEnum.Ord());
-			NUnit.Framework.Assert.IsTrue(termsEnum.SeekExact(new BytesRef("world")));
-			NUnit.Framework.Assert.AreEqual("world", termsEnum.Term().Utf8ToString());
-			NUnit.Framework.Assert.AreEqual(2, termsEnum.Ord());
-			NUnit.Framework.Assert.IsFalse(termsEnum.SeekExact(new BytesRef("bogus")));
+			IsTrue(termsEnum.SeekExact(new BytesRef("beer")));
+			AreEqual("beer", termsEnum.Term.Utf8ToString());
+			AreEqual(0, termsEnum.Ord);
+			IsTrue(termsEnum.SeekExact(new BytesRef("hello")));
+			AreEqual(Codec.Default.ToString(), "hello", termsEnum.Term.Utf8ToString());
+			AreEqual(1, termsEnum.Ord);
+			IsTrue(termsEnum.SeekExact(new BytesRef("world")));
+			AreEqual("world", termsEnum.Term.Utf8ToString());
+			AreEqual(2, termsEnum.Ord);
+			IsFalse(termsEnum.SeekExact(new BytesRef("bogus")));
 			// seek(ord)
 			termsEnum.SeekExact(0);
-			NUnit.Framework.Assert.AreEqual("beer", termsEnum.Term().Utf8ToString());
-			NUnit.Framework.Assert.AreEqual(0, termsEnum.Ord());
+			AreEqual("beer", termsEnum.Term.Utf8ToString());
+			AreEqual(0, termsEnum.Ord);
 			termsEnum.SeekExact(1);
-			NUnit.Framework.Assert.AreEqual("hello", termsEnum.Term().Utf8ToString());
-			NUnit.Framework.Assert.AreEqual(1, termsEnum.Ord());
+			AreEqual("hello", termsEnum.Term.Utf8ToString());
+			AreEqual(1, termsEnum.Ord);
 			termsEnum.SeekExact(2);
-			NUnit.Framework.Assert.AreEqual("world", termsEnum.Term().Utf8ToString());
-			NUnit.Framework.Assert.AreEqual(2, termsEnum.Ord());
-			ireader.Close();
-			directory.Close();
+			AreEqual("world", termsEnum.Term.Utf8ToString());
+			AreEqual(2, termsEnum.Ord);
+			ireader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -924,11 +911,11 @@ namespace Lucene.Net.TestFramework.Index
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer);
 			conf.SetMergePolicy(NewLogMergePolicy());
 			RandomIndexWriter iwriter = new RandomIndexWriter(Random(), directory, conf);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new SortedDocValuesField("dv", new BytesRef(string.Empty)));
 			iwriter.AddDocument(doc);
-			doc = new Lucene.NetDocument.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(new SortedDocValuesField("dv", new BytesRef(string.Empty)));
 			iwriter.AddDocument(doc);
 			iwriter.ForceMerge(1);
@@ -937,16 +924,16 @@ namespace Lucene.Net.TestFramework.Index
 			IndexReader ireader = DirectoryReader.Open(directory);
 			// read-only=true
 			 
-			//assert ireader.leaves().size() == 1;
-			SortedDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetSortedDocValues
+			//assert ireader.Leaves.size() == 1;
+			SortedDocValues dv = ((AtomicReader)ireader.Leaves[0].Reader).GetSortedDocValues
 				("dv");
 			BytesRef scratch = new BytesRef();
-			NUnit.Framework.Assert.AreEqual(0, dv.GetOrd(0));
-			NUnit.Framework.Assert.AreEqual(0, dv.GetOrd(1));
+			AreEqual(0, dv.GetOrd(0));
+			AreEqual(0, dv.GetOrd(1));
 			dv.LookupOrd(dv.GetOrd(0), scratch);
-			NUnit.Framework.Assert.AreEqual(string.Empty, scratch.Utf8ToString());
-			ireader.Close();
-			directory.Close();
+			AreEqual(string.Empty, scratch.Utf8ToString());
+			ireader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -957,11 +944,11 @@ namespace Lucene.Net.TestFramework.Index
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer);
 			conf.SetMergePolicy(NewLogMergePolicy());
 			RandomIndexWriter iwriter = new RandomIndexWriter(Random(), directory, conf);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new BinaryDocValuesField("dv", new BytesRef(string.Empty)));
 			iwriter.AddDocument(doc);
-			doc = new Lucene.NetDocument.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(new BinaryDocValuesField("dv", new BytesRef(string.Empty)));
 			iwriter.AddDocument(doc);
 			iwriter.ForceMerge(1);
@@ -970,16 +957,16 @@ namespace Lucene.Net.TestFramework.Index
 			IndexReader ireader = DirectoryReader.Open(directory);
 			// read-only=true
 			 
-			//assert ireader.leaves().size() == 1;
-			BinaryDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetBinaryDocValues
+			//assert ireader.Leaves.size() == 1;
+			BinaryDocValues dv = ((AtomicReader)ireader.Leaves[0].Reader).GetBinaryDocValues
 				("dv");
 			BytesRef scratch = new BytesRef();
 			dv.Get(0, scratch);
-			NUnit.Framework.Assert.AreEqual(string.Empty, scratch.Utf8ToString());
+			AreEqual(string.Empty, scratch.Utf8ToString());
 			dv.Get(1, scratch);
-			NUnit.Framework.Assert.AreEqual(string.Empty, scratch.Utf8ToString());
-			ireader.Close();
-			directory.Close();
+			AreEqual(string.Empty, scratch.Utf8ToString());
+			ireader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -990,11 +977,10 @@ namespace Lucene.Net.TestFramework.Index
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer);
 			conf.SetMergePolicy(NewLogMergePolicy());
 			RandomIndexWriter iwriter = new RandomIndexWriter(Random(), directory, conf);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
-				();
-			byte[] bytes = new byte[32766];
+			var doc = new Document();
+			var bytes = new sbyte[32766];
 			BytesRef b = new BytesRef(bytes);
-			Random().NextBytes(bytes);
+			Random().NextBytes(bytes.ToBytes());
 			doc.Add(new BinaryDocValuesField("dv", b));
 			iwriter.AddDocument(doc);
 			iwriter.Close();
@@ -1002,14 +988,14 @@ namespace Lucene.Net.TestFramework.Index
 			IndexReader ireader = DirectoryReader.Open(directory);
 			// read-only=true
 			 
-			//assert ireader.leaves().size() == 1;
-			BinaryDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetBinaryDocValues
+			//assert ireader.Leaves.size() == 1;
+			BinaryDocValues dv = ((AtomicReader)ireader.Leaves[0].Reader).GetBinaryDocValues
 				("dv");
 			BytesRef scratch = new BytesRef();
 			dv.Get(0, scratch);
-			NUnit.Framework.Assert.AreEqual(new BytesRef(bytes), scratch);
-			ireader.Close();
-			directory.Close();
+			AreEqual(new BytesRef(bytes), scratch);
+			ireader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -1020,10 +1006,10 @@ namespace Lucene.Net.TestFramework.Index
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer);
 			conf.SetMergePolicy(NewLogMergePolicy());
 			RandomIndexWriter iwriter = new RandomIndexWriter(Random(), directory, conf);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			byte[] bytes = new byte[32766];
-			BytesRef b = new BytesRef(bytes);
+			BytesRef b = new BytesRef(bytes.ToSbytes());
 			Random().NextBytes(bytes);
 			doc.Add(new SortedDocValuesField("dv", b));
 			iwriter.AddDocument(doc);
@@ -1032,14 +1018,14 @@ namespace Lucene.Net.TestFramework.Index
 			IndexReader ireader = DirectoryReader.Open(directory);
 			// read-only=true
 			 
-			//assert ireader.leaves().size() == 1;
-			BinaryDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetSortedDocValues
+			//assert ireader.Leaves.size() == 1;
+			BinaryDocValues dv = ((AtomicReader)ireader.Leaves[0].Reader).GetSortedDocValues
 				("dv");
 			BytesRef scratch = new BytesRef();
 			dv.Get(0, scratch);
-			NUnit.Framework.Assert.AreEqual(new BytesRef(bytes), scratch);
-			ireader.Close();
-			directory.Close();
+			AreEqual(new BytesRef(bytes.ToSbytes()), scratch);
+			ireader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -1050,7 +1036,7 @@ namespace Lucene.Net.TestFramework.Index
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer);
 			conf.SetMergePolicy(NewLogMergePolicy());
 			RandomIndexWriter iwriter = new RandomIndexWriter(Random(), directory, conf);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new BinaryDocValuesField("dv", new BytesRef("boo!")));
 			iwriter.AddDocument(doc);
@@ -1059,16 +1045,16 @@ namespace Lucene.Net.TestFramework.Index
 			IndexReader ireader = DirectoryReader.Open(directory);
 			// read-only=true
 			 
-			//assert ireader.leaves().size() == 1;
-			BinaryDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetBinaryDocValues
+			//assert ireader.Leaves.size() == 1;
+			BinaryDocValues dv = ((AtomicReader)ireader.Leaves[0].Reader).GetBinaryDocValues
 				("dv");
-			byte[] mybytes = new byte[20];
+			var mybytes = new sbyte[20];
 			BytesRef scratch = new BytesRef(mybytes);
 			dv.Get(0, scratch);
-			NUnit.Framework.Assert.AreEqual("boo!", scratch.Utf8ToString());
-			NUnit.Framework.Assert.IsFalse(scratch.bytes == mybytes);
-			ireader.Close();
-			directory.Close();
+			AreEqual("boo!", scratch.Utf8ToString());
+			IsFalse(scratch.bytes == mybytes);
+			ireader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -1078,26 +1064,24 @@ namespace Lucene.Net.TestFramework.Index
 			Directory directory = NewDirectory();
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer);
 			conf.SetMergePolicy(NewLogMergePolicy());
-			RandomIndexWriter iwriter = new RandomIndexWriter(Random(), directory, conf);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
-				();
-			doc.Add(new SortedDocValuesField("dv", new BytesRef("boo!")));
-			iwriter.AddDocument(doc);
+			var iwriter = new RandomIndexWriter(Random(), directory, conf);
+			var doc = new Document {new SortedDocValuesField("dv", new BytesRef("boo!"))};
+		    iwriter.AddDocument(doc);
 			iwriter.Close();
 			// Now search the index:
 			IndexReader ireader = DirectoryReader.Open(directory);
 			// read-only=true
 			 
-			//assert ireader.leaves().size() == 1;
-			BinaryDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetSortedDocValues
+			//assert ireader.Leaves.size() == 1;
+			BinaryDocValues dv = ((AtomicReader)ireader.Leaves[0].Reader).GetSortedDocValues
 				("dv");
-			byte[] mybytes = new byte[20];
+			var mybytes = new sbyte[20];
 			BytesRef scratch = new BytesRef(mybytes);
 			dv.Get(0, scratch);
-			NUnit.Framework.Assert.AreEqual("boo!", scratch.Utf8ToString());
-			NUnit.Framework.Assert.IsFalse(scratch.bytes == mybytes);
-			ireader.Close();
-			directory.Close();
+			AreEqual("boo!", scratch.Utf8ToString());
+			IsFalse(scratch.bytes == mybytes);
+			ireader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -1108,31 +1092,28 @@ namespace Lucene.Net.TestFramework.Index
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer);
 			conf.SetMergePolicy(NewLogMergePolicy());
 			RandomIndexWriter iwriter = new RandomIndexWriter(Random(), directory, conf);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
-				();
-			doc.Add(new BinaryDocValuesField("dv", new BytesRef("foo!")));
-			iwriter.AddDocument(doc);
-			doc = new Lucene.NetDocument.Document();
-			doc.Add(new BinaryDocValuesField("dv", new BytesRef("bar!")));
-			iwriter.AddDocument(doc);
+			var doc = new Document {new BinaryDocValuesField("dv", new BytesRef("foo!"))};
+		    iwriter.AddDocument(doc);
+			doc = new Document {new BinaryDocValuesField("dv", new BytesRef("bar!"))};
+		    iwriter.AddDocument(doc);
 			iwriter.Close();
 			// Now search the index:
 			IndexReader ireader = DirectoryReader.Open(directory);
 			// read-only=true
 			 
-			//assert ireader.leaves().size() == 1;
-			BinaryDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetBinaryDocValues
+			//assert ireader.Leaves.size() == 1;
+			BinaryDocValues dv = ((AtomicReader)ireader.Leaves[0].Reader).GetBinaryDocValues
 				("dv");
 			BytesRef scratch = new BytesRef();
 			dv.Get(0, scratch);
-			NUnit.Framework.Assert.AreEqual("foo!", scratch.Utf8ToString());
+			AreEqual("foo!", scratch.Utf8ToString());
 			BytesRef scratch2 = new BytesRef();
 			dv.Get(1, scratch2);
-			NUnit.Framework.Assert.AreEqual("bar!", scratch2.Utf8ToString());
+			AreEqual("bar!", scratch2.Utf8ToString());
 			// check scratch is still valid
-			NUnit.Framework.Assert.AreEqual("foo!", scratch.Utf8ToString());
-			ireader.Close();
-			directory.Close();
+			AreEqual("foo!", scratch.Utf8ToString());
+			ireader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -1143,11 +1124,9 @@ namespace Lucene.Net.TestFramework.Index
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer);
 			conf.SetMergePolicy(NewLogMergePolicy());
 			RandomIndexWriter iwriter = new RandomIndexWriter(Random(), directory, conf);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
-				();
-			doc.Add(new SortedDocValuesField("dv", new BytesRef("foo!")));
-			iwriter.AddDocument(doc);
-			doc = new Lucene.NetDocument.Document();
+			var doc = new Document {new SortedDocValuesField("dv", new BytesRef("foo!"))};
+		    iwriter.AddDocument(doc);
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(new SortedDocValuesField("dv", new BytesRef("bar!")));
 			iwriter.AddDocument(doc);
 			iwriter.Close();
@@ -1155,19 +1134,19 @@ namespace Lucene.Net.TestFramework.Index
 			IndexReader ireader = DirectoryReader.Open(directory);
 			// read-only=true
 			 
-			//assert ireader.leaves().size() == 1;
-			BinaryDocValues dv = ((AtomicReader)ireader.Leaves()[0].Reader()).GetSortedDocValues
+			//assert ireader.Leaves.size() == 1;
+			BinaryDocValues dv = ((AtomicReader)ireader.Leaves[0].Reader).GetSortedDocValues
 				("dv");
 			BytesRef scratch = new BytesRef();
 			dv.Get(0, scratch);
-			NUnit.Framework.Assert.AreEqual("foo!", scratch.Utf8ToString());
+			AreEqual("foo!", scratch.Utf8ToString());
 			BytesRef scratch2 = new BytesRef();
 			dv.Get(1, scratch2);
-			NUnit.Framework.Assert.AreEqual("bar!", scratch2.Utf8ToString());
+			AreEqual("bar!", scratch2.Utf8ToString());
 			// check scratch is still valid
-			NUnit.Framework.Assert.AreEqual("foo!", scratch.Utf8ToString());
-			ireader.Close();
-			directory.Close();
+			AreEqual("foo!", scratch.Utf8ToString());
+			ireader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -1180,36 +1159,37 @@ namespace Lucene.Net.TestFramework.Index
 			IndexWriter writer = new IndexWriter(dir, conf);
 			for (int i = 0; i < 5; i++)
 			{
-				Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
-					();
-				doc.Add(new NumericDocValuesField("docId", i));
-				doc.Add(new TextField("docId", string.Empty + i, Field.Store.NO));
-				writer.AddDocument(doc);
+				var doc = new Document
+				{
+				    new NumericDocValuesField("docId", i),
+				    new TextField("docId", string.Empty + i, Field.Store.NO)
+				};
+			    writer.AddDocument(doc);
 			}
 			writer.Commit();
 			writer.ForceMerge(1, true);
-			writer.Close(true);
+			writer.Dispose(true);
 			DirectoryReader reader = DirectoryReader.Open(dir, 1);
-			NUnit.Framework.Assert.AreEqual(1, reader.Leaves().Count);
+			AreEqual(1, reader.Leaves.Count);
 			IndexSearcher searcher = new IndexSearcher(reader);
 			BooleanQuery query = new BooleanQuery();
-			query.Add(new TermQuery(new Term("docId", "0")), BooleanClause.Occur.SHOULD);
-			query.Add(new TermQuery(new Term("docId", "1")), BooleanClause.Occur.SHOULD);
-			query.Add(new TermQuery(new Term("docId", "2")), BooleanClause.Occur.SHOULD);
-			query.Add(new TermQuery(new Term("docId", "3")), BooleanClause.Occur.SHOULD);
-			query.Add(new TermQuery(new Term("docId", "4")), BooleanClause.Occur.SHOULD);
+			query.Add(new TermQuery(new Term("docId", "0")), Occur.SHOULD);
+			query.Add(new TermQuery(new Term("docId", "1")), Occur.SHOULD);
+			query.Add(new TermQuery(new Term("docId", "2")), Occur.SHOULD);
+			query.Add(new TermQuery(new Term("docId", "3")), Occur.SHOULD);
+			query.Add(new TermQuery(new Term("docId", "4")), Occur.SHOULD);
 			TopDocs search = searcher.Search(query, 10);
-			NUnit.Framework.Assert.AreEqual(5, search.totalHits);
-			ScoreDoc[] scoreDocs = search.scoreDocs;
+			AreEqual(5, search.TotalHits);
+			ScoreDoc[] ScoreDocs = search.ScoreDocs;
 			NumericDocValues docValues = GetOnlySegmentReader(reader).GetNumericDocValues("docId"
 				);
-			for (int i_1 = 0; i_1 < scoreDocs.Length; i_1++)
+			for (int i_1 = 0; i_1 < ScoreDocs.Length; i_1++)
 			{
-				NUnit.Framework.Assert.AreEqual(i_1, scoreDocs[i_1].doc);
-				NUnit.Framework.Assert.AreEqual(i_1, docValues.Get(scoreDocs[i_1].doc));
+				AreEqual(i_1, ScoreDocs[i_1].Doc);
+				AreEqual(i_1, docValues.Get(ScoreDocs[i_1].Doc));
 			}
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -1231,14 +1211,12 @@ namespace Lucene.Net.TestFramework.Index
 			int maxLength = TestUtil.NextInt(Random(), 1, 50);
 			for (int i = 0; i < numDocs; i++)
 			{
-				Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
-					();
-				doc.Add(NewTextField("id", string.Empty + i, Field.Store.YES));
-				string @string = TestUtil.RandomRealisticUnicodeString(Random(), 1, maxLength);
+				var doc = new Document {NewTextField("id", string.Empty + i, Field.Store.YES)};
+			    string @string = TestUtil.RandomRealisticUnicodeString(Random(), 1, maxLength);
 				BytesRef br = new BytesRef(@string);
 				doc.Add(new SortedDocValuesField("field", br));
 				hash.Add(br);
-				docToString.Put(string.Empty + i, @string);
+				docToString[string.Empty + i] = @string;
 				w.AddDocument(doc);
 			}
 			if (Rarely())
@@ -1248,10 +1226,8 @@ namespace Lucene.Net.TestFramework.Index
 			int numDocsNoValue = AtLeast(10);
 			for (int i_1 = 0; i_1 < numDocsNoValue; i_1++)
 			{
-				Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
-					();
-				doc.Add(NewTextField("id", "noValue", Field.Store.YES));
-				w.AddDocument(doc);
+				var doc = new Document {NewTextField("id", "noValue", Field.Store.YES)};
+			    w.AddDocument(doc);
 			}
 			if (!DefaultCodecSupportsDocsWithField())
 			{
@@ -1271,34 +1247,33 @@ namespace Lucene.Net.TestFramework.Index
 			}
 			for (int i_2 = 0; i_2 < numDocs; i_2++)
 			{
-				Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
-					();
+				var doc = new Document();
 				string id = string.Empty + i_2 + numDocs;
 				doc.Add(NewTextField("id", id, Field.Store.YES));
 				string @string = TestUtil.RandomRealisticUnicodeString(Random(), 1, maxLength);
 				BytesRef br = new BytesRef(@string);
 				hash.Add(br);
-				docToString.Put(id, @string);
+				docToString[id] = @string;
 				doc.Add(new SortedDocValuesField("field", br));
 				w.AddDocument(doc);
 			}
 			w.Commit();
 			IndexReader reader = w.GetReader();
 			SortedDocValues docValues = MultiDocValues.GetSortedValues(reader, "field");
-			int[] sort = hash.Sort(BytesRef.GetUTF8SortedAsUnicodeComparator());
+			int[] sort = hash.Sort(BytesRef.UTF8SortedAsUnicodeComparer);
 			BytesRef expected = new BytesRef();
 			BytesRef actual = new BytesRef();
-			NUnit.Framework.Assert.AreEqual(hash.Size(), docValues.GetValueCount());
-			for (int i_3 = 0; i_3 < hash.Size(); i_3++)
+			AreEqual(hash.Size, docValues.ValueCount);
+			for (int i_3 = 0; i_3 < hash.Size; i_3++)
 			{
 				hash.Get(sort[i_3], expected);
 				docValues.LookupOrd(i_3, actual);
-				NUnit.Framework.Assert.AreEqual(expected.Utf8ToString(), actual.Utf8ToString());
+				AreEqual(expected.Utf8ToString(), actual.Utf8ToString());
 				int ord = docValues.LookupTerm(expected);
-				NUnit.Framework.Assert.AreEqual(i_3, ord);
+				AreEqual(i_3, ord);
 			}
 			AtomicReader slowR = SlowCompositeReaderWrapper.Wrap(reader);
-			ICollection<KeyValuePair<string, string>> entrySet = docToString.EntrySet();
+			ICollection<KeyValuePair<string, string>> entrySet = docToString;
 			foreach (KeyValuePair<string, string> entry in entrySet)
 			{
 				// pk lookup
@@ -1306,11 +1281,11 @@ namespace Lucene.Net.TestFramework.Index
 				int docId = termDocsEnum.NextDoc();
 				expected = new BytesRef(entry.Value);
 				docValues.Get(docId, actual);
-				NUnit.Framework.Assert.AreEqual(expected, actual);
+				AreEqual(expected, actual);
 			}
-			reader.Close();
+			reader.Dispose();
 			w.Close();
-			dir.Close();
+			dir.Dispose();
 		}
 
 		internal abstract class LongProducer
@@ -1321,12 +1296,12 @@ namespace Lucene.Net.TestFramework.Index
 		/// <exception cref="System.Exception"></exception>
 		private void DoTestNumericsVsStoredFields(long minValue, long maxValue)
 		{
-			DoTestNumericsVsStoredFields(new _LongProducer_1272(minValue, maxValue));
+			DoTestNumericsVsStoredFields(new AnonymousLongProducer(minValue, maxValue));
 		}
 
-		private sealed class _LongProducer_1272 : BaseDocValuesFormatTestCase.LongProducer
+		private sealed class AnonymousLongProducer : LongProducer
 		{
-			public _LongProducer_1272(long minValue, long maxValue)
+			public AnonymousLongProducer(long minValue, long maxValue)
 			{
 				this.minValue = minValue;
 				this.maxValue = maxValue;
@@ -1350,8 +1325,7 @@ namespace Lucene.Net.TestFramework.Index
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random()));
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir, conf);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
-				();
+			var doc = new Document();
 			Field idField = new StringField("id", string.Empty, Field.Store.NO);
 			Field storedField = NewStringField("stored", string.Empty, Field.Store.YES);
 			Field dvField = new NumericDocValuesField("dv", 0);
@@ -1366,9 +1340,9 @@ namespace Lucene.Net.TestFramework.Index
 			//assert numDocs > 256;
 			for (int i = 0; i < numDocs; i++)
 			{
-				idField.SetStringValue(Sharpen.Extensions.ToString(i));
+			    idField.StringValue = i.ToString();
 				long value = longs.Next();
-				storedField.SetStringValue(System.Convert.ToString(value));
+				storedField.StringValue = Convert.ToString(value);
 				dvField.SetLongValue(value);
 				writer.AddDocument(doc);
 				if (Random().Next(31) == 0)
@@ -1381,7 +1355,7 @@ namespace Lucene.Net.TestFramework.Index
 			for (int i_1 = 0; i_1 < numDeletions; i_1++)
 			{
 				int id = Random().Next(numDocs);
-				writer.DeleteDocuments(new Term("id", Sharpen.Extensions.ToString(id)));
+				writer.DeleteDocuments(new Term("id", id.ToString()));
 			}
 			// merge some segments and ensure that at least one of them has more than
 			// 256 values
@@ -1389,29 +1363,29 @@ namespace Lucene.Net.TestFramework.Index
 			writer.Close();
 			// compare
 			DirectoryReader ir = DirectoryReader.Open(dir);
-			foreach (AtomicReaderContext context in ir.Leaves())
+			foreach (AtomicReaderContext context in ir.Leaves)
 			{
-				AtomicReader r = ((AtomicReader)context.Reader());
+				AtomicReader r = ((AtomicReader)context.Reader);
 				NumericDocValues docValues = r.GetNumericDocValues("dv");
-				for (int i_2 = 0; i_2 < r.MaxDoc(); i_2++)
+				for (int i_2 = 0; i_2 < r.MaxDoc; i_2++)
 				{
 					long storedValue = long.Parse(r.Document(i_2).Get("stored"));
-					NUnit.Framework.Assert.AreEqual(storedValue, docValues.Get(i_2));
+					AreEqual(storedValue, docValues.Get(i_2));
 				}
 			}
-			ir.Close();
-			dir.Close();
+			ir.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
 		private void DoTestMissingVsFieldCache(long minValue, long maxValue)
 		{
-			DoTestMissingVsFieldCache(new _LongProducer_1338(minValue, maxValue));
+			DoTestMissingVsFieldCache(new AnonymousLongProducer2(minValue, maxValue));
 		}
 
-		private sealed class _LongProducer_1338 : BaseDocValuesFormatTestCase.LongProducer
+		private sealed class AnonymousLongProducer2 : LongProducer
 		{
-			public _LongProducer_1338(long minValue, long maxValue)
+			public AnonymousLongProducer2(long minValue, long maxValue)
 			{
 				this.minValue = minValue;
 				this.maxValue = maxValue;
@@ -1419,7 +1393,7 @@ namespace Lucene.Net.TestFramework.Index
 
 			internal override long Next()
 			{
-				return TestUtil.NextLong(LuceneTestCase.Random(), minValue, maxValue);
+				return LuceneTestCase.Random().NextLong(minValue, maxValue);
 			}
 
 			private readonly long minValue;
@@ -1448,11 +1422,11 @@ namespace Lucene.Net.TestFramework.Index
 			//assert numDocs > 256;
 			for (int i = 0; i < numDocs; i++)
 			{
-				idField.SetStringValue(Sharpen.Extensions.ToString(i));
+				idField.StringValue = i.ToString();
 				long value = longs.Next();
-				indexedField.SetStringValue(System.Convert.ToString(value));
+				indexedField.StringValue = System.Convert.ToString(value));
 				dvField.SetLongValue(value);
-				Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(idField);
 				// 1/4 of the time we neglect to add the fields
@@ -1480,7 +1454,7 @@ namespace Lucene.Net.TestFramework.Index
 			writer.Close();
 			// compare
 			DirectoryReader ir = DirectoryReader.Open(dir);
-			foreach (AtomicReaderContext context in ir.Leaves())
+			foreach (AtomicReaderContext context in ir.Leaves)
 			{
 				AtomicReader r = ((AtomicReader)context.Reader());
 				Bits expected = FieldCache.DEFAULT.GetDocsWithField(r, "indexed");
@@ -1588,7 +1562,7 @@ namespace Lucene.Net.TestFramework.Index
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random()));
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir, conf);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			Field idField = new StringField("id", string.Empty, Field.Store.NO);
 			Field storedField = new StoredField("stored", new byte[0]);
@@ -1600,7 +1574,7 @@ namespace Lucene.Net.TestFramework.Index
 			int numDocs = AtLeast(300);
 			for (int i = 0; i < numDocs; i++)
 			{
-				idField.SetStringValue(Sharpen.Extensions.ToString(i));
+				idField.StringValue = Sharpen.Extensions.ToString(i));
 				int length;
 				if (minLength == maxLength)
 				{
@@ -1631,7 +1605,7 @@ namespace Lucene.Net.TestFramework.Index
 			writer.Close();
 			// compare
 			DirectoryReader ir = DirectoryReader.Open(dir);
-			foreach (AtomicReaderContext context in ir.Leaves())
+			foreach (AtomicReaderContext context in ir.Leaves)
 			{
 				AtomicReader r = ((AtomicReader)context.Reader());
 				BinaryDocValues docValues = r.GetBinaryDocValues("dv");
@@ -1640,7 +1614,7 @@ namespace Lucene.Net.TestFramework.Index
 					BytesRef binaryValue = r.Document(i_2).GetBinaryValue("stored");
 					BytesRef scratch = new BytesRef();
 					docValues.Get(i_2, scratch);
-					NUnit.Framework.Assert.AreEqual(binaryValue, scratch);
+					AreEqual(binaryValue, scratch);
 				}
 			}
 			ir.Close();
@@ -1675,7 +1649,7 @@ namespace Lucene.Net.TestFramework.Index
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random()));
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir, conf);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			Field idField = new StringField("id", string.Empty, Field.Store.NO);
 			Field storedField = new StoredField("stored", new byte[0]);
@@ -1687,7 +1661,7 @@ namespace Lucene.Net.TestFramework.Index
 			int numDocs = AtLeast(300);
 			for (int i = 0; i < numDocs; i++)
 			{
-				idField.SetStringValue(Sharpen.Extensions.ToString(i));
+				idField.StringValue = Sharpen.Extensions.ToString(i));
 				int length;
 				if (minLength == maxLength)
 				{
@@ -1718,7 +1692,7 @@ namespace Lucene.Net.TestFramework.Index
 			writer.Close();
 			// compare
 			DirectoryReader ir = DirectoryReader.Open(dir);
-			foreach (AtomicReaderContext context in ir.Leaves())
+			foreach (AtomicReaderContext context in ir.Leaves)
 			{
 				AtomicReader r = ((AtomicReader)context.Reader());
 				BinaryDocValues docValues = r.GetSortedDocValues("dv");
@@ -1727,7 +1701,7 @@ namespace Lucene.Net.TestFramework.Index
 					BytesRef binaryValue = r.Document(i_2).GetBinaryValue("stored");
 					BytesRef scratch = new BytesRef();
 					docValues.Get(i_2, scratch);
-					NUnit.Framework.Assert.AreEqual(binaryValue, scratch);
+					AreEqual(binaryValue, scratch);
 				}
 			}
 			ir.Close();
@@ -1741,7 +1715,7 @@ namespace Lucene.Net.TestFramework.Index
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random()));
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir, conf);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			Field idField = new StringField("id", string.Empty, Field.Store.NO);
 			Field indexedField = new StringField("indexed", string.Empty, Field.Store.NO);
@@ -1753,7 +1727,7 @@ namespace Lucene.Net.TestFramework.Index
 			int numDocs = AtLeast(300);
 			for (int i = 0; i < numDocs; i++)
 			{
-				idField.SetStringValue(Sharpen.Extensions.ToString(i));
+				idField.StringValue = Sharpen.Extensions.ToString(i));
 				int length;
 				if (minLength == maxLength)
 				{
@@ -1765,7 +1739,7 @@ namespace Lucene.Net.TestFramework.Index
 					length = TestUtil.NextInt(Random(), minLength, maxLength);
 				}
 				string value = TestUtil.RandomSimpleString(Random(), length);
-				indexedField.SetStringValue(value);
+				indexedField.StringValue = value);
 				dvField.SetBytesValue(new BytesRef(value));
 				writer.AddDocument(doc);
 				if (Random().Next(31) == 0)
@@ -1783,7 +1757,7 @@ namespace Lucene.Net.TestFramework.Index
 			writer.Close();
 			// compare
 			DirectoryReader ir = DirectoryReader.Open(dir);
-			foreach (AtomicReaderContext context in ir.Leaves())
+			foreach (AtomicReaderContext context in ir.Leaves)
 			{
 				AtomicReader r = ((AtomicReader)context.Reader());
 				SortedDocValues expected = FieldCache.DEFAULT.GetTermsIndex(r, "indexed");
@@ -1842,7 +1816,7 @@ namespace Lucene.Net.TestFramework.Index
 			AssumeTrue("Codec does not support SORTED_SET", DefaultCodecSupportsSortedSet());
 			Directory directory = NewDirectory();
 			RandomIndexWriter iwriter = new RandomIndexWriter(Random(), directory);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new SortedSetDocValuesField("field", new BytesRef("hello")));
 			iwriter.AddDocument(doc);
@@ -1851,13 +1825,13 @@ namespace Lucene.Net.TestFramework.Index
 			SortedSetDocValues dv = GetOnlySegmentReader(ireader).GetSortedSetDocValues("field"
 				);
 			dv.SetDocument(0);
-			NUnit.Framework.Assert.AreEqual(0, dv.NextOrd());
-			NUnit.Framework.Assert.AreEqual(SortedSetDocValues.NO_MORE_ORDS, dv.NextOrd());
+			AreEqual(0, dv.NextOrd());
+			AreEqual(SortedSetDocValues.NO_MORE_ORDS, dv.NextOrd());
 			BytesRef bytes = new BytesRef();
 			dv.LookupOrd(0, bytes);
-			NUnit.Framework.Assert.AreEqual(new BytesRef("hello"), bytes);
-			ireader.Close();
-			directory.Close();
+			AreEqual(new BytesRef("hello"), bytes);
+			ireader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -1866,7 +1840,7 @@ namespace Lucene.Net.TestFramework.Index
 			AssumeTrue("Codec does not support SORTED_SET", DefaultCodecSupportsSortedSet());
 			Directory directory = NewDirectory();
 			RandomIndexWriter iwriter = new RandomIndexWriter(Random(), directory);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new SortedSetDocValuesField("field", new BytesRef("hello")));
 			doc.Add(new SortedSetDocValuesField("field2", new BytesRef("world")));
@@ -1876,19 +1850,19 @@ namespace Lucene.Net.TestFramework.Index
 			SortedSetDocValues dv = GetOnlySegmentReader(ireader).GetSortedSetDocValues("field"
 				);
 			dv.SetDocument(0);
-			NUnit.Framework.Assert.AreEqual(0, dv.NextOrd());
-			NUnit.Framework.Assert.AreEqual(SortedSetDocValues.NO_MORE_ORDS, dv.NextOrd());
+			AreEqual(0, dv.NextOrd());
+			AreEqual(SortedSetDocValues.NO_MORE_ORDS, dv.NextOrd());
 			BytesRef bytes = new BytesRef();
 			dv.LookupOrd(0, bytes);
-			NUnit.Framework.Assert.AreEqual(new BytesRef("hello"), bytes);
+			AreEqual(new BytesRef("hello"), bytes);
 			dv = GetOnlySegmentReader(ireader).GetSortedSetDocValues("field2");
 			dv.SetDocument(0);
-			NUnit.Framework.Assert.AreEqual(0, dv.NextOrd());
-			NUnit.Framework.Assert.AreEqual(SortedSetDocValues.NO_MORE_ORDS, dv.NextOrd());
+			AreEqual(0, dv.NextOrd());
+			AreEqual(SortedSetDocValues.NO_MORE_ORDS, dv.NextOrd());
 			dv.LookupOrd(0, bytes);
-			NUnit.Framework.Assert.AreEqual(new BytesRef("world"), bytes);
-			ireader.Close();
-			directory.Close();
+			AreEqual(new BytesRef("world"), bytes);
+			ireader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -1900,12 +1874,12 @@ namespace Lucene.Net.TestFramework.Index
 			IndexWriterConfig iwconfig = NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer);
 			iwconfig.SetMergePolicy(NewLogMergePolicy());
 			RandomIndexWriter iwriter = new RandomIndexWriter(Random(), directory, iwconfig);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new SortedSetDocValuesField("field", new BytesRef("hello")));
 			iwriter.AddDocument(doc);
 			iwriter.Commit();
-			doc = new Lucene.NetDocument.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(new SortedSetDocValuesField("field", new BytesRef("world")));
 			iwriter.AddDocument(doc);
 			iwriter.ForceMerge(1);
@@ -1913,20 +1887,20 @@ namespace Lucene.Net.TestFramework.Index
 			iwriter.Close();
 			SortedSetDocValues dv = GetOnlySegmentReader(ireader).GetSortedSetDocValues("field"
 				);
-			NUnit.Framework.Assert.AreEqual(2, dv.GetValueCount());
+			AreEqual(2, dv.ValueCount);
 			dv.SetDocument(0);
-			NUnit.Framework.Assert.AreEqual(0, dv.NextOrd());
-			NUnit.Framework.Assert.AreEqual(SortedSetDocValues.NO_MORE_ORDS, dv.NextOrd());
+			AreEqual(0, dv.NextOrd());
+			AreEqual(SortedSetDocValues.NO_MORE_ORDS, dv.NextOrd());
 			BytesRef bytes = new BytesRef();
 			dv.LookupOrd(0, bytes);
-			NUnit.Framework.Assert.AreEqual(new BytesRef("hello"), bytes);
+			AreEqual(new BytesRef("hello"), bytes);
 			dv.SetDocument(1);
-			NUnit.Framework.Assert.AreEqual(1, dv.NextOrd());
-			NUnit.Framework.Assert.AreEqual(SortedSetDocValues.NO_MORE_ORDS, dv.NextOrd());
+			AreEqual(1, dv.NextOrd());
+			AreEqual(SortedSetDocValues.NO_MORE_ORDS, dv.NextOrd());
 			dv.LookupOrd(1, bytes);
-			NUnit.Framework.Assert.AreEqual(new BytesRef("world"), bytes);
-			ireader.Close();
-			directory.Close();
+			AreEqual(new BytesRef("world"), bytes);
+			ireader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -1935,7 +1909,7 @@ namespace Lucene.Net.TestFramework.Index
 			AssumeTrue("Codec does not support SORTED_SET", DefaultCodecSupportsSortedSet());
 			Directory directory = NewDirectory();
 			RandomIndexWriter iwriter = new RandomIndexWriter(Random(), directory);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new SortedSetDocValuesField("field", new BytesRef("hello")));
 			doc.Add(new SortedSetDocValuesField("field", new BytesRef("world")));
@@ -1945,16 +1919,16 @@ namespace Lucene.Net.TestFramework.Index
 			SortedSetDocValues dv = GetOnlySegmentReader(ireader).GetSortedSetDocValues("field"
 				);
 			dv.SetDocument(0);
-			NUnit.Framework.Assert.AreEqual(0, dv.NextOrd());
-			NUnit.Framework.Assert.AreEqual(1, dv.NextOrd());
-			NUnit.Framework.Assert.AreEqual(SortedSetDocValues.NO_MORE_ORDS, dv.NextOrd());
+			AreEqual(0, dv.NextOrd());
+			AreEqual(1, dv.NextOrd());
+			AreEqual(SortedSetDocValues.NO_MORE_ORDS, dv.NextOrd());
 			BytesRef bytes = new BytesRef();
 			dv.LookupOrd(0, bytes);
-			NUnit.Framework.Assert.AreEqual(new BytesRef("hello"), bytes);
+			AreEqual(new BytesRef("hello"), bytes);
 			dv.LookupOrd(1, bytes);
-			NUnit.Framework.Assert.AreEqual(new BytesRef("world"), bytes);
-			ireader.Close();
-			directory.Close();
+			AreEqual(new BytesRef("world"), bytes);
+			ireader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -1963,7 +1937,7 @@ namespace Lucene.Net.TestFramework.Index
 			AssumeTrue("Codec does not support SORTED_SET", DefaultCodecSupportsSortedSet());
 			Directory directory = NewDirectory();
 			RandomIndexWriter iwriter = new RandomIndexWriter(Random(), directory);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new SortedSetDocValuesField("field", new BytesRef("world")));
 			doc.Add(new SortedSetDocValuesField("field", new BytesRef("hello")));
@@ -1973,16 +1947,16 @@ namespace Lucene.Net.TestFramework.Index
 			SortedSetDocValues dv = GetOnlySegmentReader(ireader).GetSortedSetDocValues("field"
 				);
 			dv.SetDocument(0);
-			NUnit.Framework.Assert.AreEqual(0, dv.NextOrd());
-			NUnit.Framework.Assert.AreEqual(1, dv.NextOrd());
-			NUnit.Framework.Assert.AreEqual(SortedSetDocValues.NO_MORE_ORDS, dv.NextOrd());
+			AreEqual(0, dv.NextOrd());
+			AreEqual(1, dv.NextOrd());
+			AreEqual(SortedSetDocValues.NO_MORE_ORDS, dv.NextOrd());
 			BytesRef bytes = new BytesRef();
 			dv.LookupOrd(0, bytes);
-			NUnit.Framework.Assert.AreEqual(new BytesRef("hello"), bytes);
+			AreEqual(new BytesRef("hello"), bytes);
 			dv.LookupOrd(1, bytes);
-			NUnit.Framework.Assert.AreEqual(new BytesRef("world"), bytes);
-			ireader.Close();
-			directory.Close();
+			AreEqual(new BytesRef("world"), bytes);
+			ireader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -1994,13 +1968,13 @@ namespace Lucene.Net.TestFramework.Index
 			IndexWriterConfig iwconfig = NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer);
 			iwconfig.SetMergePolicy(NewLogMergePolicy());
 			RandomIndexWriter iwriter = new RandomIndexWriter(Random(), directory, iwconfig);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new SortedSetDocValuesField("field", new BytesRef("hello")));
 			doc.Add(new SortedSetDocValuesField("field", new BytesRef("world")));
 			iwriter.AddDocument(doc);
 			iwriter.Commit();
-			doc = new Lucene.NetDocument.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(new SortedSetDocValuesField("field", new BytesRef("hello")));
 			doc.Add(new SortedSetDocValuesField("field", new BytesRef("beer")));
 			iwriter.AddDocument(doc);
@@ -2009,24 +1983,24 @@ namespace Lucene.Net.TestFramework.Index
 			iwriter.Close();
 			SortedSetDocValues dv = GetOnlySegmentReader(ireader).GetSortedSetDocValues("field"
 				);
-			NUnit.Framework.Assert.AreEqual(3, dv.GetValueCount());
+			AreEqual(3, dv.ValueCount);
 			dv.SetDocument(0);
-			NUnit.Framework.Assert.AreEqual(1, dv.NextOrd());
-			NUnit.Framework.Assert.AreEqual(2, dv.NextOrd());
-			NUnit.Framework.Assert.AreEqual(SortedSetDocValues.NO_MORE_ORDS, dv.NextOrd());
+			AreEqual(1, dv.NextOrd());
+			AreEqual(2, dv.NextOrd());
+			AreEqual(SortedSetDocValues.NO_MORE_ORDS, dv.NextOrd());
 			dv.SetDocument(1);
-			NUnit.Framework.Assert.AreEqual(0, dv.NextOrd());
-			NUnit.Framework.Assert.AreEqual(1, dv.NextOrd());
-			NUnit.Framework.Assert.AreEqual(SortedSetDocValues.NO_MORE_ORDS, dv.NextOrd());
+			AreEqual(0, dv.NextOrd());
+			AreEqual(1, dv.NextOrd());
+			AreEqual(SortedSetDocValues.NO_MORE_ORDS, dv.NextOrd());
 			BytesRef bytes = new BytesRef();
 			dv.LookupOrd(0, bytes);
-			NUnit.Framework.Assert.AreEqual(new BytesRef("beer"), bytes);
+			AreEqual(new BytesRef("beer"), bytes);
 			dv.LookupOrd(1, bytes);
-			NUnit.Framework.Assert.AreEqual(new BytesRef("hello"), bytes);
+			AreEqual(new BytesRef("hello"), bytes);
 			dv.LookupOrd(2, bytes);
-			NUnit.Framework.Assert.AreEqual(new BytesRef("world"), bytes);
-			ireader.Close();
-			directory.Close();
+			AreEqual(new BytesRef("world"), bytes);
+			ireader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -2038,26 +2012,26 @@ namespace Lucene.Net.TestFramework.Index
 			IndexWriterConfig iwconfig = NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer);
 			iwconfig.SetMergePolicy(NewLogMergePolicy());
 			RandomIndexWriter iwriter = new RandomIndexWriter(Random(), directory, iwconfig);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new SortedSetDocValuesField("field", new BytesRef("hello")));
 			iwriter.AddDocument(doc);
-			doc = new Lucene.NetDocument.Document();
+			doc = new Lucene.Net.Documents.Document();
 			iwriter.AddDocument(doc);
 			iwriter.ForceMerge(1);
 			DirectoryReader ireader = iwriter.GetReader();
 			iwriter.Close();
 			SortedSetDocValues dv = GetOnlySegmentReader(ireader).GetSortedSetDocValues("field"
 				);
-			NUnit.Framework.Assert.AreEqual(1, dv.GetValueCount());
+			AreEqual(1, dv.ValueCount);
 			dv.SetDocument(0);
-			NUnit.Framework.Assert.AreEqual(0, dv.NextOrd());
-			NUnit.Framework.Assert.AreEqual(SortedSetDocValues.NO_MORE_ORDS, dv.NextOrd());
+			AreEqual(0, dv.NextOrd());
+			AreEqual(SortedSetDocValues.NO_MORE_ORDS, dv.NextOrd());
 			BytesRef bytes = new BytesRef();
 			dv.LookupOrd(0, bytes);
-			NUnit.Framework.Assert.AreEqual(new BytesRef("hello"), bytes);
-			ireader.Close();
-			directory.Close();
+			AreEqual(new BytesRef("hello"), bytes);
+			ireader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -2069,27 +2043,27 @@ namespace Lucene.Net.TestFramework.Index
 			IndexWriterConfig iwconfig = NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer);
 			iwconfig.SetMergePolicy(NewLogMergePolicy());
 			RandomIndexWriter iwriter = new RandomIndexWriter(Random(), directory, iwconfig);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new SortedSetDocValuesField("field", new BytesRef("hello")));
 			iwriter.AddDocument(doc);
 			iwriter.Commit();
-			doc = new Lucene.NetDocument.Document();
+			doc = new Lucene.Net.Documents.Document();
 			iwriter.AddDocument(doc);
 			iwriter.ForceMerge(1);
 			DirectoryReader ireader = iwriter.GetReader();
 			iwriter.Close();
 			SortedSetDocValues dv = GetOnlySegmentReader(ireader).GetSortedSetDocValues("field"
 				);
-			NUnit.Framework.Assert.AreEqual(1, dv.GetValueCount());
+			AreEqual(1, dv.ValueCount);
 			dv.SetDocument(0);
-			NUnit.Framework.Assert.AreEqual(0, dv.NextOrd());
-			NUnit.Framework.Assert.AreEqual(SortedSetDocValues.NO_MORE_ORDS, dv.NextOrd());
+			AreEqual(0, dv.NextOrd());
+			AreEqual(SortedSetDocValues.NO_MORE_ORDS, dv.NextOrd());
 			BytesRef bytes = new BytesRef();
 			dv.LookupOrd(0, bytes);
-			NUnit.Framework.Assert.AreEqual(new BytesRef("hello"), bytes);
-			ireader.Close();
-			directory.Close();
+			AreEqual(new BytesRef("hello"), bytes);
+			ireader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -2101,10 +2075,10 @@ namespace Lucene.Net.TestFramework.Index
 			IndexWriterConfig iwconfig = NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer);
 			iwconfig.SetMergePolicy(NewLogMergePolicy());
 			RandomIndexWriter iwriter = new RandomIndexWriter(Random(), directory, iwconfig);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			iwriter.AddDocument(doc);
-			doc = new Lucene.NetDocument.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(new SortedSetDocValuesField("field", new BytesRef("hello")));
 			iwriter.AddDocument(doc);
 			iwriter.ForceMerge(1);
@@ -2112,15 +2086,15 @@ namespace Lucene.Net.TestFramework.Index
 			iwriter.Close();
 			SortedSetDocValues dv = GetOnlySegmentReader(ireader).GetSortedSetDocValues("field"
 				);
-			NUnit.Framework.Assert.AreEqual(1, dv.GetValueCount());
+			AreEqual(1, dv.ValueCount);
 			dv.SetDocument(1);
-			NUnit.Framework.Assert.AreEqual(0, dv.NextOrd());
-			NUnit.Framework.Assert.AreEqual(SortedSetDocValues.NO_MORE_ORDS, dv.NextOrd());
+			AreEqual(0, dv.NextOrd());
+			AreEqual(SortedSetDocValues.NO_MORE_ORDS, dv.NextOrd());
 			BytesRef bytes = new BytesRef();
 			dv.LookupOrd(0, bytes);
-			NUnit.Framework.Assert.AreEqual(new BytesRef("hello"), bytes);
-			ireader.Close();
-			directory.Close();
+			AreEqual(new BytesRef("hello"), bytes);
+			ireader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -2132,11 +2106,11 @@ namespace Lucene.Net.TestFramework.Index
 			IndexWriterConfig iwconfig = NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer);
 			iwconfig.SetMergePolicy(NewLogMergePolicy());
 			RandomIndexWriter iwriter = new RandomIndexWriter(Random(), directory, iwconfig);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			iwriter.AddDocument(doc);
 			iwriter.Commit();
-			doc = new Lucene.NetDocument.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(new SortedSetDocValuesField("field", new BytesRef("hello")));
 			iwriter.AddDocument(doc);
 			iwriter.ForceMerge(1);
@@ -2144,15 +2118,15 @@ namespace Lucene.Net.TestFramework.Index
 			iwriter.Close();
 			SortedSetDocValues dv = GetOnlySegmentReader(ireader).GetSortedSetDocValues("field"
 				);
-			NUnit.Framework.Assert.AreEqual(1, dv.GetValueCount());
+			AreEqual(1, dv.ValueCount);
 			dv.SetDocument(1);
-			NUnit.Framework.Assert.AreEqual(0, dv.NextOrd());
-			NUnit.Framework.Assert.AreEqual(SortedSetDocValues.NO_MORE_ORDS, dv.NextOrd());
+			AreEqual(0, dv.NextOrd());
+			AreEqual(SortedSetDocValues.NO_MORE_ORDS, dv.NextOrd());
 			BytesRef bytes = new BytesRef();
 			dv.LookupOrd(0, bytes);
-			NUnit.Framework.Assert.AreEqual(new BytesRef("hello"), bytes);
-			ireader.Close();
-			directory.Close();
+			AreEqual(new BytesRef("hello"), bytes);
+			ireader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -2164,11 +2138,11 @@ namespace Lucene.Net.TestFramework.Index
 			IndexWriterConfig iwconfig = NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer);
 			iwconfig.SetMergePolicy(NewLogMergePolicy());
 			RandomIndexWriter iwriter = new RandomIndexWriter(Random(), directory, iwconfig);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new StringField("id", "0", Field.Store.NO));
 			iwriter.AddDocument(doc);
-			doc = new Lucene.NetDocument.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(new StringField("id", "1", Field.Store.NO));
 			doc.Add(new SortedSetDocValuesField("field", new BytesRef("hello")));
 			iwriter.AddDocument(doc);
@@ -2179,9 +2153,9 @@ namespace Lucene.Net.TestFramework.Index
 			iwriter.Close();
 			SortedSetDocValues dv = GetOnlySegmentReader(ireader).GetSortedSetDocValues("field"
 				);
-			NUnit.Framework.Assert.AreEqual(0, dv.GetValueCount());
-			ireader.Close();
-			directory.Close();
+			AreEqual(0, dv.ValueCount);
+			ireader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -2193,7 +2167,7 @@ namespace Lucene.Net.TestFramework.Index
 			IndexWriterConfig iwconfig = NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer);
 			iwconfig.SetMergePolicy(NewLogMergePolicy());
 			RandomIndexWriter iwriter = new RandomIndexWriter(Random(), directory, iwconfig);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new SortedSetDocValuesField("field", new BytesRef("hello")));
 			doc.Add(new SortedSetDocValuesField("field", new BytesRef("world")));
@@ -2203,49 +2177,49 @@ namespace Lucene.Net.TestFramework.Index
 			iwriter.Close();
 			SortedSetDocValues dv = GetOnlySegmentReader(ireader).GetSortedSetDocValues("field"
 				);
-			NUnit.Framework.Assert.AreEqual(3, dv.GetValueCount());
-			TermsEnum termsEnum = dv.TermsEnum();
+			AreEqual(3, dv.ValueCount);
+			TermsEnum termsEnum = dv.TermsEnum;
 			// next()
-			NUnit.Framework.Assert.AreEqual("beer", termsEnum.Next().Utf8ToString());
-			NUnit.Framework.Assert.AreEqual(0, termsEnum.Ord());
-			NUnit.Framework.Assert.AreEqual("hello", termsEnum.Next().Utf8ToString());
-			NUnit.Framework.Assert.AreEqual(1, termsEnum.Ord());
-			NUnit.Framework.Assert.AreEqual("world", termsEnum.Next().Utf8ToString());
-			NUnit.Framework.Assert.AreEqual(2, termsEnum.Ord());
+			AreEqual("beer", termsEnum.Next().Utf8ToString());
+			AreEqual(0, termsEnum.Ord);
+			AreEqual("hello", termsEnum.Next().Utf8ToString());
+			AreEqual(1, termsEnum.Ord);
+			AreEqual("world", termsEnum.Next().Utf8ToString());
+			AreEqual(2, termsEnum.Ord);
 			// seekCeil()
-			NUnit.Framework.Assert.AreEqual(TermsEnum.SeekStatus.NOT_FOUND, termsEnum.SeekCeil
+			AreEqual(TermsEnum.SeekStatus.NOT_FOUND, termsEnum.SeekCeil
 				(new BytesRef("ha!")));
-			NUnit.Framework.Assert.AreEqual("hello", termsEnum.Term().Utf8ToString());
-			NUnit.Framework.Assert.AreEqual(1, termsEnum.Ord());
-			NUnit.Framework.Assert.AreEqual(TermsEnum.SeekStatus.FOUND, termsEnum.SeekCeil(new 
+			AreEqual("hello", termsEnum.Term.Utf8ToString());
+			AreEqual(1, termsEnum.Ord);
+			AreEqual(TermsEnum.SeekStatus.FOUND, termsEnum.SeekCeil(new 
 				BytesRef("beer")));
-			NUnit.Framework.Assert.AreEqual("beer", termsEnum.Term().Utf8ToString());
-			NUnit.Framework.Assert.AreEqual(0, termsEnum.Ord());
-			NUnit.Framework.Assert.AreEqual(TermsEnum.SeekStatus.END, termsEnum.SeekCeil(new 
+			AreEqual("beer", termsEnum.Term.Utf8ToString());
+			AreEqual(0, termsEnum.Ord);
+			AreEqual(TermsEnum.SeekStatus.END, termsEnum.SeekCeil(new 
 				BytesRef("zzz")));
 			// seekExact()
-			NUnit.Framework.Assert.IsTrue(termsEnum.SeekExact(new BytesRef("beer")));
-			NUnit.Framework.Assert.AreEqual("beer", termsEnum.Term().Utf8ToString());
-			NUnit.Framework.Assert.AreEqual(0, termsEnum.Ord());
-			NUnit.Framework.Assert.IsTrue(termsEnum.SeekExact(new BytesRef("hello")));
-			NUnit.Framework.Assert.AreEqual("hello", termsEnum.Term().Utf8ToString());
-			NUnit.Framework.Assert.AreEqual(1, termsEnum.Ord());
-			NUnit.Framework.Assert.IsTrue(termsEnum.SeekExact(new BytesRef("world")));
-			NUnit.Framework.Assert.AreEqual("world", termsEnum.Term().Utf8ToString());
-			NUnit.Framework.Assert.AreEqual(2, termsEnum.Ord());
-			NUnit.Framework.Assert.IsFalse(termsEnum.SeekExact(new BytesRef("bogus")));
+			IsTrue(termsEnum.SeekExact(new BytesRef("beer")));
+			AreEqual("beer", termsEnum.Term.Utf8ToString());
+			AreEqual(0, termsEnum.Ord);
+			IsTrue(termsEnum.SeekExact(new BytesRef("hello")));
+			AreEqual("hello", termsEnum.Term.Utf8ToString());
+			AreEqual(1, termsEnum.Ord);
+			IsTrue(termsEnum.SeekExact(new BytesRef("world")));
+			AreEqual("world", termsEnum.Term.Utf8ToString());
+			AreEqual(2, termsEnum.Ord);
+			IsFalse(termsEnum.SeekExact(new BytesRef("bogus")));
 			// seek(ord)
 			termsEnum.SeekExact(0);
-			NUnit.Framework.Assert.AreEqual("beer", termsEnum.Term().Utf8ToString());
-			NUnit.Framework.Assert.AreEqual(0, termsEnum.Ord());
+			AreEqual("beer", termsEnum.Term.Utf8ToString());
+			AreEqual(0, termsEnum.Ord);
 			termsEnum.SeekExact(1);
-			NUnit.Framework.Assert.AreEqual("hello", termsEnum.Term().Utf8ToString());
-			NUnit.Framework.Assert.AreEqual(1, termsEnum.Ord());
+			AreEqual("hello", termsEnum.Term.Utf8ToString());
+			AreEqual(1, termsEnum.Ord);
 			termsEnum.SeekExact(2);
-			NUnit.Framework.Assert.AreEqual("world", termsEnum.Term().Utf8ToString());
-			NUnit.Framework.Assert.AreEqual(2, termsEnum.Ord());
-			ireader.Close();
-			directory.Close();
+			AreEqual("world", termsEnum.Term.Utf8ToString());
+			AreEqual(2, termsEnum.Ord);
+			ireader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -2260,7 +2234,7 @@ namespace Lucene.Net.TestFramework.Index
 			int numDocs = AtLeast(300);
 			for (int i = 0; i < numDocs; i++)
 			{
-				Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				Field idField = new StringField("id", Sharpen.Extensions.ToString(i), Field.Store
 					.NO);
@@ -2310,7 +2284,7 @@ namespace Lucene.Net.TestFramework.Index
 			writer.Close();
 			// compare
 			DirectoryReader ir = DirectoryReader.Open(dir);
-			foreach (AtomicReaderContext context in ir.Leaves())
+			foreach (AtomicReaderContext context in ir.Leaves)
 			{
 				AtomicReader r = ((AtomicReader)context.Reader());
 				SortedSetDocValues docValues = r.GetSortedSetDocValues("dv");
@@ -2330,7 +2304,7 @@ namespace Lucene.Net.TestFramework.Index
 						 
 						//assert ord != NO_MORE_ORDS;
 						docValues.LookupOrd(ord, scratch);
-						NUnit.Framework.Assert.AreEqual(stringValues[j], scratch.Utf8ToString());
+						AreEqual(stringValues[j], scratch.Utf8ToString());
 					}
 				}
 			}
@@ -2389,10 +2363,10 @@ namespace Lucene.Net.TestFramework.Index
 		/// <exception cref="System.Exception"></exception>
 		private void AssertEquals(Bits expected, Bits actual)
 		{
-			NUnit.Framework.Assert.AreEqual(expected.Length(), actual.Length());
+			AreEqual(expected.Length(), actual.Length());
 			for (int i = 0; i < expected.Length(); i++)
 			{
-				NUnit.Framework.Assert.AreEqual(expected.Get(i), actual.Get(i));
+				AreEqual(expected.Get(i), actual.Get(i));
 			}
 		}
 
@@ -2412,10 +2386,10 @@ namespace Lucene.Net.TestFramework.Index
 			// in this case FC.getDocTermsOrds returns EMPTY
 			if (actual == null)
 			{
-				NUnit.Framework.Assert.AreEqual(DocValues.EMPTY_SORTED_SET, expected);
+				AreEqual(DocValues.EMPTY_SORTED_SET, expected);
 				return;
 			}
-			NUnit.Framework.Assert.AreEqual(expected.GetValueCount(), actual.GetValueCount());
+			AreEqual(expected.ValueCount, actual.ValueCount);
 			// compare ord lists
 			for (int i = 0; i < maxDoc; i++)
 			{
@@ -2424,22 +2398,22 @@ namespace Lucene.Net.TestFramework.Index
 				long expectedOrd;
 				while ((expectedOrd = expected.NextOrd()) != SortedSetDocValues.NO_MORE_ORDS)
 				{
-					NUnit.Framework.Assert.AreEqual(expectedOrd, actual.NextOrd());
+					AreEqual(expectedOrd, actual.NextOrd());
 				}
-				NUnit.Framework.Assert.AreEqual(SortedSetDocValues.NO_MORE_ORDS, actual.NextOrd()
+				AreEqual(SortedSetDocValues.NO_MORE_ORDS, actual.NextOrd()
 					);
 			}
 			// compare ord dictionary
 			BytesRef expectedBytes = new BytesRef();
 			BytesRef actualBytes = new BytesRef();
-			for (long i_1 = 0; i_1 < expected.GetValueCount(); i_1++)
+			for (long i_1 = 0; i_1 < expected.ValueCount; i_1++)
 			{
 				expected.LookupTerm(expectedBytes);
 				actual.LookupTerm(actualBytes);
-				NUnit.Framework.Assert.AreEqual(expectedBytes, actualBytes);
+				AreEqual(expectedBytes, actualBytes);
 			}
 			// compare termsenum
-			AssertEquals(expected.GetValueCount(), expected.TermsEnum(), actual.TermsEnum());
+			AssertEquals(expected.ValueCount, expected.TermsEnum, actual.TermsEnum);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -2449,35 +2423,35 @@ namespace Lucene.Net.TestFramework.Index
 			// sequential next() through all terms
 			while ((@ref = expected.Next()) != null)
 			{
-				NUnit.Framework.Assert.AreEqual(@ref, actual.Next());
-				NUnit.Framework.Assert.AreEqual(expected.Ord(), actual.Ord());
-				NUnit.Framework.Assert.AreEqual(expected.Term(), actual.Term());
+				AreEqual(@ref, actual.Next());
+				AreEqual(expected.Ord, actual.Ord);
+				AreEqual(expected.Term, actual.Term);
 			}
-			NUnit.Framework.Assert.IsNull(actual.Next());
+			IsNull(actual.Next());
 			// sequential seekExact(ord) through all terms
 			for (long i = 0; i < numOrds; i++)
 			{
 				expected.SeekExact(i);
 				actual.SeekExact(i);
-				NUnit.Framework.Assert.AreEqual(expected.Ord(), actual.Ord());
-				NUnit.Framework.Assert.AreEqual(expected.Term(), actual.Term());
+				AreEqual(expected.Ord, actual.Ord);
+				AreEqual(expected.Term, actual.Term);
 			}
 			// sequential seekExact(BytesRef) through all terms
 			for (long i_1 = 0; i_1 < numOrds; i_1++)
 			{
 				expected.SeekExact(i_1);
-				NUnit.Framework.Assert.IsTrue(actual.SeekExact(expected.Term()));
-				NUnit.Framework.Assert.AreEqual(expected.Ord(), actual.Ord());
-				NUnit.Framework.Assert.AreEqual(expected.Term(), actual.Term());
+				IsTrue(actual.SeekExact(expected.Term));
+				AreEqual(expected.Ord, actual.Ord);
+				AreEqual(expected.Term, actual.Term);
 			}
 			// sequential seekCeil(BytesRef) through all terms
 			for (long i_2 = 0; i_2 < numOrds; i_2++)
 			{
 				expected.SeekExact(i_2);
-				NUnit.Framework.Assert.AreEqual(TermsEnum.SeekStatus.FOUND, actual.SeekCeil(expected
-					.Term()));
-				NUnit.Framework.Assert.AreEqual(expected.Ord(), actual.Ord());
-				NUnit.Framework.Assert.AreEqual(expected.Term(), actual.Term());
+				AreEqual(TermsEnum.SeekStatus.FOUND, actual.SeekCeil(expected
+					.Term));
+				AreEqual(expected.Ord, actual.Ord);
+				AreEqual(expected.Term, actual.Term);
 			}
 			// random seekExact(ord)
 			for (long i_3 = 0; i_3 < numOrds; i_3++)
@@ -2485,28 +2459,28 @@ namespace Lucene.Net.TestFramework.Index
 				long randomOrd = TestUtil.NextLong(Random(), 0, numOrds - 1);
 				expected.SeekExact(randomOrd);
 				actual.SeekExact(randomOrd);
-				NUnit.Framework.Assert.AreEqual(expected.Ord(), actual.Ord());
-				NUnit.Framework.Assert.AreEqual(expected.Term(), actual.Term());
+				AreEqual(expected.Ord, actual.Ord);
+				AreEqual(expected.Term, actual.Term);
 			}
 			// random seekExact(BytesRef)
 			for (long i_4 = 0; i_4 < numOrds; i_4++)
 			{
 				long randomOrd = TestUtil.NextLong(Random(), 0, numOrds - 1);
 				expected.SeekExact(randomOrd);
-				actual.SeekExact(expected.Term());
-				NUnit.Framework.Assert.AreEqual(expected.Ord(), actual.Ord());
-				NUnit.Framework.Assert.AreEqual(expected.Term(), actual.Term());
+				actual.SeekExact(expected.Term);
+				AreEqual(expected.Ord, actual.Ord);
+				AreEqual(expected.Term, actual.Term);
 			}
 			// random seekCeil(BytesRef)
 			for (long i_5 = 0; i_5 < numOrds; i_5++)
 			{
 				BytesRef target = new BytesRef(TestUtil.RandomUnicodeString(Random()));
 				TermsEnum.SeekStatus expectedStatus = expected.SeekCeil(target);
-				NUnit.Framework.Assert.AreEqual(expectedStatus, actual.SeekCeil(target));
+				AreEqual(expectedStatus, actual.SeekCeil(target));
 				if (expectedStatus != TermsEnum.SeekStatus.END)
 				{
-					NUnit.Framework.Assert.AreEqual(expected.Ord(), actual.Ord());
-					NUnit.Framework.Assert.AreEqual(expected.Term(), actual.Term());
+					AreEqual(expected.Ord, actual.Ord);
+					AreEqual(expected.Term, actual.Term);
 				}
 			}
 		}
@@ -2522,7 +2496,7 @@ namespace Lucene.Net.TestFramework.Index
 			int numDocs = AtLeast(300);
 			for (int i = 0; i < numDocs; i++)
 			{
-				Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				Field idField = new StringField("id", Sharpen.Extensions.ToString(i), Field.Store
 					.NO);
@@ -2573,7 +2547,7 @@ namespace Lucene.Net.TestFramework.Index
 			}
 			// compare per-segment
 			DirectoryReader ir = writer.GetReader();
-			foreach (AtomicReaderContext context in ir.Leaves())
+			foreach (AtomicReaderContext context in ir.Leaves)
 			{
 				AtomicReader r = ((AtomicReader)context.Reader());
 				SortedSetDocValues expected = FieldCache.DEFAULT.GetDocTermOrds(r, "indexed");
@@ -2687,27 +2661,27 @@ namespace Lucene.Net.TestFramework.Index
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, null);
 			conf.SetMergePolicy(NewLogMergePolicy());
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), directory, conf);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new StringField("id", "0", Field.Store.YES));
 			doc.Add(new NumericDocValuesField("dv1", 0));
 			iw.AddDocument(doc);
-			doc = new Lucene.NetDocument.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(new StringField("id", "1", Field.Store.YES));
 			iw.AddDocument(doc);
 			iw.ForceMerge(1);
 			iw.Close();
 			IndexReader ir = DirectoryReader.Open(directory);
-			NUnit.Framework.Assert.AreEqual(1, ir.Leaves().Count);
-			AtomicReader ar = ((AtomicReader)ir.Leaves()[0].Reader());
+			AreEqual(1, ir.Leaves.Count);
+			AtomicReader ar = ((AtomicReader)ir.Leaves[0].Reader);
 			NumericDocValues dv = ar.GetNumericDocValues("dv1");
-			NUnit.Framework.Assert.AreEqual(0, dv.Get(0));
-			NUnit.Framework.Assert.AreEqual(0, dv.Get(1));
-			Bits docsWithField = ar.GetDocsWithField("dv1");
-			NUnit.Framework.Assert.IsTrue(docsWithField.Get(0));
-			NUnit.Framework.Assert.IsFalse(docsWithField.Get(1));
+			AreEqual(0, dv.Get(0));
+			AreEqual(0, dv.Get(1));
+			IBits docsWithField = ar.GetDocsWithField("dv1");
+			IsTrue(docsWithField.Get(0));
+			IsFalse(docsWithField.Get(1));
 			ir.Close();
-			directory.Close();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -2719,28 +2693,28 @@ namespace Lucene.Net.TestFramework.Index
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, null);
 			conf.SetMergePolicy(NewLogMergePolicy());
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), directory, conf);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new StringField("id", "0", Field.Store.YES));
 			doc.Add(new NumericDocValuesField("dv1", 0));
 			iw.AddDocument(doc);
 			iw.Commit();
-			doc = new Lucene.NetDocument.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(new StringField("id", "1", Field.Store.YES));
 			iw.AddDocument(doc);
 			iw.ForceMerge(1);
 			iw.Close();
 			IndexReader ir = DirectoryReader.Open(directory);
-			NUnit.Framework.Assert.AreEqual(1, ir.Leaves().Count);
-			AtomicReader ar = ((AtomicReader)ir.Leaves()[0].Reader());
+			AreEqual(1, ir.Leaves.Count);
+			AtomicReader ar = ((AtomicReader)ir.Leaves[0].Reader);
 			NumericDocValues dv = ar.GetNumericDocValues("dv1");
-			NUnit.Framework.Assert.AreEqual(0, dv.Get(0));
-			NUnit.Framework.Assert.AreEqual(0, dv.Get(1));
+			AreEqual(0, dv.Get(0));
+			AreEqual(0, dv.Get(1));
 			Bits docsWithField = ar.GetDocsWithField("dv1");
-			NUnit.Framework.Assert.IsTrue(docsWithField.Get(0));
-			NUnit.Framework.Assert.IsFalse(docsWithField.Get(1));
+			IsTrue(docsWithField.Get(0));
+			IsFalse(docsWithField.Get(1));
 			ir.Close();
-			directory.Close();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -2752,34 +2726,34 @@ namespace Lucene.Net.TestFramework.Index
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, null);
 			conf.SetMergePolicy(NewLogMergePolicy());
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), directory, conf);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new StringField("id", "0", Field.Store.YES));
 			doc.Add(new NumericDocValuesField("dv1", 0));
 			iw.AddDocument(doc);
-			doc = new Lucene.NetDocument.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(new StringField("id", "1", Field.Store.YES));
 			iw.AddDocument(doc);
 			iw.Commit();
-			doc = new Lucene.NetDocument.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(new StringField("id", "2", Field.Store.YES));
 			doc.Add(new NumericDocValuesField("dv1", 5));
 			iw.AddDocument(doc);
 			iw.ForceMerge(1);
 			iw.Close();
 			IndexReader ir = DirectoryReader.Open(directory);
-			NUnit.Framework.Assert.AreEqual(1, ir.Leaves().Count);
-			AtomicReader ar = ((AtomicReader)ir.Leaves()[0].Reader());
+			AreEqual(1, ir.Leaves.Count);
+			AtomicReader ar = ((AtomicReader)ir.Leaves[0].Reader);
 			NumericDocValues dv = ar.GetNumericDocValues("dv1");
-			NUnit.Framework.Assert.AreEqual(0, dv.Get(0));
-			NUnit.Framework.Assert.AreEqual(0, dv.Get(1));
-			NUnit.Framework.Assert.AreEqual(5, dv.Get(2));
+			AreEqual(0, dv.Get(0));
+			AreEqual(0, dv.Get(1));
+			AreEqual(5, dv.Get(2));
 			Bits docsWithField = ar.GetDocsWithField("dv1");
-			NUnit.Framework.Assert.IsTrue(docsWithField.Get(0));
-			NUnit.Framework.Assert.IsFalse(docsWithField.Get(1));
-			NUnit.Framework.Assert.IsTrue(docsWithField.Get(2));
+			IsTrue(docsWithField.Get(0));
+			IsFalse(docsWithField.Get(1));
+			IsTrue(docsWithField.Get(2));
 			ir.Close();
-			directory.Close();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -2791,30 +2765,30 @@ namespace Lucene.Net.TestFramework.Index
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, null);
 			conf.SetMergePolicy(NewLogMergePolicy());
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), directory, conf);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new StringField("id", "0", Field.Store.YES));
 			doc.Add(new BinaryDocValuesField("dv1", new BytesRef()));
 			iw.AddDocument(doc);
-			doc = new Lucene.NetDocument.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(new StringField("id", "1", Field.Store.YES));
 			iw.AddDocument(doc);
 			iw.ForceMerge(1);
 			iw.Close();
 			IndexReader ir = DirectoryReader.Open(directory);
-			NUnit.Framework.Assert.AreEqual(1, ir.Leaves().Count);
-			AtomicReader ar = ((AtomicReader)ir.Leaves()[0].Reader());
+			AreEqual(1, ir.Leaves.Count);
+			AtomicReader ar = ((AtomicReader)ir.Leaves[0].Reader);
 			BinaryDocValues dv = ar.GetBinaryDocValues("dv1");
 			BytesRef @ref = new BytesRef();
 			dv.Get(0, @ref);
-			NUnit.Framework.Assert.AreEqual(new BytesRef(), @ref);
+			AreEqual(new BytesRef(), @ref);
 			dv.Get(1, @ref);
-			NUnit.Framework.Assert.AreEqual(new BytesRef(), @ref);
+			AreEqual(new BytesRef(), @ref);
 			Bits docsWithField = ar.GetDocsWithField("dv1");
-			NUnit.Framework.Assert.IsTrue(docsWithField.Get(0));
-			NUnit.Framework.Assert.IsFalse(docsWithField.Get(1));
+			IsTrue(docsWithField.Get(0));
+			IsFalse(docsWithField.Get(1));
 			ir.Close();
-			directory.Close();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -2826,31 +2800,31 @@ namespace Lucene.Net.TestFramework.Index
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, null);
 			conf.SetMergePolicy(NewLogMergePolicy());
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), directory, conf);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new StringField("id", "0", Field.Store.YES));
 			doc.Add(new BinaryDocValuesField("dv1", new BytesRef()));
 			iw.AddDocument(doc);
 			iw.Commit();
-			doc = new Lucene.NetDocument.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(new StringField("id", "1", Field.Store.YES));
 			iw.AddDocument(doc);
 			iw.ForceMerge(1);
 			iw.Close();
 			IndexReader ir = DirectoryReader.Open(directory);
-			NUnit.Framework.Assert.AreEqual(1, ir.Leaves().Count);
-			AtomicReader ar = ((AtomicReader)ir.Leaves()[0].Reader());
+			AreEqual(1, ir.Leaves.Count);
+			AtomicReader ar = ((AtomicReader)ir.Leaves[0].Reader);
 			BinaryDocValues dv = ar.GetBinaryDocValues("dv1");
 			BytesRef @ref = new BytesRef();
 			dv.Get(0, @ref);
-			NUnit.Framework.Assert.AreEqual(new BytesRef(), @ref);
+			AreEqual(new BytesRef(), @ref);
 			dv.Get(1, @ref);
-			NUnit.Framework.Assert.AreEqual(new BytesRef(), @ref);
+			AreEqual(new BytesRef(), @ref);
 			Bits docsWithField = ar.GetDocsWithField("dv1");
-			NUnit.Framework.Assert.IsTrue(docsWithField.Get(0));
-			NUnit.Framework.Assert.IsFalse(docsWithField.Get(1));
+			IsTrue(docsWithField.Get(0));
+			IsFalse(docsWithField.Get(1));
 			ir.Close();
-			directory.Close();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -2862,38 +2836,38 @@ namespace Lucene.Net.TestFramework.Index
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, null);
 			conf.SetMergePolicy(NewLogMergePolicy());
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), directory, conf);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new StringField("id", "0", Field.Store.YES));
 			doc.Add(new BinaryDocValuesField("dv1", new BytesRef()));
 			iw.AddDocument(doc);
-			doc = new Lucene.NetDocument.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(new StringField("id", "1", Field.Store.YES));
 			iw.AddDocument(doc);
 			iw.Commit();
-			doc = new Lucene.NetDocument.Document();
+			doc = new Lucene.Net.Documents.Document();
 			doc.Add(new StringField("id", "2", Field.Store.YES));
 			doc.Add(new BinaryDocValuesField("dv1", new BytesRef("boo")));
 			iw.AddDocument(doc);
 			iw.ForceMerge(1);
 			iw.Close();
 			IndexReader ir = DirectoryReader.Open(directory);
-			NUnit.Framework.Assert.AreEqual(1, ir.Leaves().Count);
-			AtomicReader ar = ((AtomicReader)ir.Leaves()[0].Reader());
+			AreEqual(1, ir.Leaves.Count);
+			AtomicReader ar = ((AtomicReader)ir.Leaves[0].Reader);
 			BinaryDocValues dv = ar.GetBinaryDocValues("dv1");
 			BytesRef @ref = new BytesRef();
 			dv.Get(0, @ref);
-			NUnit.Framework.Assert.AreEqual(new BytesRef(), @ref);
+			AreEqual(new BytesRef(), @ref);
 			dv.Get(1, @ref);
-			NUnit.Framework.Assert.AreEqual(new BytesRef(), @ref);
+			AreEqual(new BytesRef(), @ref);
 			dv.Get(2, @ref);
-			NUnit.Framework.Assert.AreEqual(new BytesRef("boo"), @ref);
+			AreEqual(new BytesRef("boo"), @ref);
 			Bits docsWithField = ar.GetDocsWithField("dv1");
-			NUnit.Framework.Assert.IsTrue(docsWithField.Get(0));
-			NUnit.Framework.Assert.IsFalse(docsWithField.Get(1));
-			NUnit.Framework.Assert.IsTrue(docsWithField.Get(2));
+			IsTrue(docsWithField.Get(0));
+			IsFalse(docsWithField.Get(1));
+			IsTrue(docsWithField.Get(2));
 			ir.Close();
-			directory.Close();
+			directory.Dispose();
 		}
 
 		// LUCENE-4853
@@ -2952,7 +2926,7 @@ namespace Lucene.Net.TestFramework.Index
 				byte[] bytes = new byte[numBytes];
 				Random().NextBytes(bytes);
 				docBytes.AddItem(bytes);
-				Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				BytesRef b = new BytesRef(bytes);
 				b.length = bytes.Length;
@@ -2971,7 +2945,7 @@ namespace Lucene.Net.TestFramework.Index
 					else
 					{
 						// OK: some codecs can't handle binary DV > 32K
-						NUnit.Framework.Assert.IsFalse(CodecAcceptsHugeBinaryValues("field"));
+						IsFalse(CodecAcceptsHugeBinaryValues("field"));
 						w.Rollback();
 						d.Close();
 						return;
@@ -2991,7 +2965,7 @@ namespace Lucene.Net.TestFramework.Index
 				}
 				else
 				{
-					NUnit.Framework.Assert.IsFalse(CodecAcceptsHugeBinaryValues("field"));
+					IsFalse(CodecAcceptsHugeBinaryValues("field"));
 					// OK: some codecs can't handle binary DV > 32K
 					w.Rollback();
 					d.Close();
@@ -3003,14 +2977,14 @@ namespace Lucene.Net.TestFramework.Index
 			BinaryDocValues s = FieldCache.DEFAULT.GetTerms(ar, "field", false);
 			for (int docID_1 = 0; docID_1 < docBytes.Count; docID_1++)
 			{
-				Lucene.NetDocument.Document doc = ar.Document(docID_1);
+				Lucene.Net.Documents.Document doc = ar.Document(docID_1);
 				BytesRef bytes = new BytesRef();
 				s.Get(docID_1, bytes);
 				byte[] expected = docBytes[System.Convert.ToInt32(doc.Get("id"))];
-				NUnit.Framework.Assert.AreEqual(expected.Length, bytes.length);
-				NUnit.Framework.Assert.AreEqual(new BytesRef(expected), bytes);
+				AreEqual(expected.Length, bytes.length);
+				AreEqual(new BytesRef(expected), bytes);
 			}
-			NUnit.Framework.Assert.IsTrue(CodecAcceptsHugeBinaryValues("field"));
+			IsTrue(CodecAcceptsHugeBinaryValues("field"));
 			ar.Close();
 			d.Close();
 		}
@@ -3042,7 +3016,7 @@ namespace Lucene.Net.TestFramework.Index
 			}
 			IndexWriter w = new IndexWriter(d, NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer
 				));
-			IList<byte[]> docBytes = new AList<byte[]>();
+			IList<byte[]> docBytes = new List<byte[]>();
 			long totalBytes = 0;
 			for (int docID = 0; docID < numDocs; docID++)
 			{
@@ -3074,8 +3048,8 @@ namespace Lucene.Net.TestFramework.Index
 				}
 				byte[] bytes = new byte[numBytes];
 				Random().NextBytes(bytes);
-				docBytes.AddItem(bytes);
-				Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+				docBytes.Add(bytes);
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				BytesRef b = new BytesRef(bytes);
 				b.length = bytes.Length;
@@ -3083,18 +3057,18 @@ namespace Lucene.Net.TestFramework.Index
 				doc.Add(new StringField("id", string.Empty + docID, Field.Store.YES));
 				w.AddDocument(doc);
 			}
-			DirectoryReader r = w.GetReader();
+			DirectoryReader r = w.Reader();
 			w.Close();
 			AtomicReader ar = SlowCompositeReaderWrapper.Wrap(r);
 			BinaryDocValues s = FieldCache.DEFAULT.GetTerms(ar, "field", false);
 			for (int docID_1 = 0; docID_1 < docBytes.Count; docID_1++)
 			{
-				Lucene.NetDocument.Document doc = ar.Document(docID_1);
+				Lucene.Net.Documents.Document doc = ar.Document(docID_1);
 				BytesRef bytes = new BytesRef();
 				s.Get(docID_1, bytes);
 				byte[] expected = docBytes[System.Convert.ToInt32(doc.Get("id"))];
-				NUnit.Framework.Assert.AreEqual(expected.Length, bytes.length);
-				NUnit.Framework.Assert.AreEqual(new BytesRef(expected), bytes);
+				AreEqual(expected.Length, bytes.length);
+				AreEqual(new BytesRef(expected), bytes);
 			}
 			ar.Close();
 			d.Close();
@@ -3109,7 +3083,7 @@ namespace Lucene.Net.TestFramework.Index
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random()));
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir, conf);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			Field idField = new StringField("id", string.Empty, Field.Store.NO);
 			Field storedBinField = new StoredField("storedBin", new byte[0]);
@@ -3127,7 +3101,7 @@ namespace Lucene.Net.TestFramework.Index
 			int numDocs = AtLeast(300);
 			for (int i = 0; i < numDocs; i++)
 			{
-				idField.SetStringValue(Sharpen.Extensions.ToString(i));
+				idField.StringValue = Sharpen.Extensions.ToString(i));
 				int length = TestUtil.NextInt(Random(), 0, 8);
 				byte[] buffer = new byte[length];
 				Random().NextBytes(buffer);
@@ -3135,7 +3109,7 @@ namespace Lucene.Net.TestFramework.Index
 				dvBinField.SetBytesValue(buffer);
 				dvSortedField.SetBytesValue(buffer);
 				long numericValue = Random().NextLong();
-				storedNumericField.SetStringValue(System.Convert.ToString(numericValue));
+				storedNumericField.StringValue = System.Convert.ToString(numericValue));
 				dvNumericField.SetLongValue(numericValue);
 				writer.AddDocument(doc);
 				if (Random().Next(31) == 0)
@@ -3183,7 +3157,7 @@ namespace Lucene.Net.TestFramework.Index
 				try
 				{
 					startingGun.Await();
-					foreach (AtomicReaderContext context in ir.Leaves())
+					foreach (AtomicReaderContext context in ir.Leaves)
 					{
 						AtomicReader r = ((AtomicReader)context.Reader());
 						BinaryDocValues binaries = r.GetBinaryDocValues("dvBin");
@@ -3194,11 +3168,11 @@ namespace Lucene.Net.TestFramework.Index
 							BytesRef binaryValue = r.Document(j).GetBinaryValue("storedBin");
 							BytesRef scratch = new BytesRef();
 							binaries.Get(j, scratch);
-							NUnit.Framework.Assert.AreEqual(binaryValue, scratch);
+							AreEqual(binaryValue, scratch);
 							sorted.Get(j, scratch);
-							NUnit.Framework.Assert.AreEqual(binaryValue, scratch);
+							AreEqual(binaryValue, scratch);
 							string expected = r.Document(j).Get("storedNum");
-							NUnit.Framework.Assert.AreEqual(long.Parse(expected), numerics.Get(j));
+							AreEqual(long.Parse(expected), numerics.Get(j));
 						}
 					}
 					TestUtil.CheckReader(ir);
@@ -3235,7 +3209,7 @@ namespace Lucene.Net.TestFramework.Index
 			int numDocs = AtLeast(300);
 			for (int i = 0; i < numDocs; i++)
 			{
-				idField.SetStringValue(Sharpen.Extensions.ToString(i));
+				idField.StringValue = Sharpen.Extensions.ToString(i));
 				int length = TestUtil.NextInt(Random(), 0, 8);
 				byte[] buffer = new byte[length];
 				Random().NextBytes(buffer);
@@ -3243,9 +3217,9 @@ namespace Lucene.Net.TestFramework.Index
 				dvBinField.SetBytesValue(buffer);
 				dvSortedField.SetBytesValue(buffer);
 				long numericValue = Random().NextLong();
-				storedNumericField.SetStringValue(System.Convert.ToString(numericValue));
+				storedNumericField.StringValue = System.Convert.ToString(numericValue));
 				dvNumericField.SetLongValue(numericValue);
-				Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(idField);
 				if (Random().Next(4) > 0)
@@ -3316,7 +3290,7 @@ namespace Lucene.Net.TestFramework.Index
 				try
 				{
 					startingGun.Await();
-					foreach (AtomicReaderContext context in ir.Leaves())
+					foreach (AtomicReaderContext context in ir.Leaves)
 					{
 						AtomicReader r = ((AtomicReader)context.Reader());
 						BinaryDocValues binaries = r.GetBinaryDocValues("dvBin");
@@ -3336,20 +3310,20 @@ namespace Lucene.Net.TestFramework.Index
 								{
 									BytesRef scratch = new BytesRef();
 									binaries.Get(j, scratch);
-									NUnit.Framework.Assert.AreEqual(binaryValue, scratch);
+									AreEqual(binaryValue, scratch);
 									sorted.Get(j, scratch);
-									NUnit.Framework.Assert.AreEqual(binaryValue, scratch);
-									NUnit.Framework.Assert.IsTrue(binaryBits.Get(j));
-									NUnit.Framework.Assert.IsTrue(sortedBits.Get(j));
+									AreEqual(binaryValue, scratch);
+									IsTrue(binaryBits.Get(j));
+									IsTrue(sortedBits.Get(j));
 								}
 							}
 							else
 							{
 								if (binaries != null)
 								{
-									NUnit.Framework.Assert.IsFalse(binaryBits.Get(j));
-									NUnit.Framework.Assert.IsFalse(sortedBits.Get(j));
-									NUnit.Framework.Assert.AreEqual(-1, sorted.GetOrd(j));
+									IsFalse(binaryBits.Get(j));
+									IsFalse(sortedBits.Get(j));
+									AreEqual(-1, sorted.GetOrd(j));
 								}
 							}
 							string number = r.Document(j).Get("storedNum");
@@ -3357,42 +3331,42 @@ namespace Lucene.Net.TestFramework.Index
 							{
 								if (numerics != null)
 								{
-									NUnit.Framework.Assert.AreEqual(long.Parse(number), numerics.Get(j));
+									AreEqual(long.Parse(number), numerics.Get(j));
 								}
 							}
 							else
 							{
 								if (numerics != null)
 								{
-									NUnit.Framework.Assert.IsFalse(numericBits.Get(j));
-									NUnit.Framework.Assert.AreEqual(0, numerics.Get(j));
+									IsFalse(numericBits.Get(j));
+									AreEqual(0, numerics.Get(j));
 								}
 							}
 							string[] values = r.Document(j).GetValues("storedSortedSet");
 							if (values.Length > 0)
 							{
-								NUnit.Framework.Assert.IsNotNull(sortedSet);
+								IsNotNull(sortedSet);
 								sortedSet.SetDocument(j);
 								for (int k = 0; k < values.Length; k++)
 								{
 									long ord = sortedSet.NextOrd();
-									NUnit.Framework.Assert.IsTrue(ord != SortedSetDocValues.NO_MORE_ORDS);
+									IsTrue(ord != SortedSetDocValues.NO_MORE_ORDS);
 									BytesRef value = new BytesRef();
 									sortedSet.LookupOrd(ord, value);
-									NUnit.Framework.Assert.AreEqual(values[k], value.Utf8ToString());
+									AreEqual(values[k], value.Utf8ToString());
 								}
-								NUnit.Framework.Assert.AreEqual(SortedSetDocValues.NO_MORE_ORDS, sortedSet.NextOrd
+								AreEqual(SortedSetDocValues.NO_MORE_ORDS, sortedSet.NextOrd
 									());
-								NUnit.Framework.Assert.IsTrue(sortedSetBits.Get(j));
+								IsTrue(sortedSetBits.Get(j));
 							}
 							else
 							{
 								if (sortedSet != null)
 								{
 									sortedSet.SetDocument(j);
-									NUnit.Framework.Assert.AreEqual(SortedSetDocValues.NO_MORE_ORDS, sortedSet.NextOrd
+									AreEqual(SortedSetDocValues.NO_MORE_ORDS, sortedSet.NextOrd
 										());
-									NUnit.Framework.Assert.IsFalse(sortedSetBits.Get(j));
+									IsFalse(sortedSetBits.Get(j));
 								}
 							}
 						}
@@ -3429,12 +3403,12 @@ namespace Lucene.Net.TestFramework.Index
 				bytes.length = 1 << i;
 				for (int j = 0; j < 4; j++)
 				{
-					Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+					Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 						();
 					doc.Add(new BinaryDocValuesField("field", bytes));
 					w.AddDocument(doc);
 				}
-				Lucene.NetDocument.Document doc_1 = new Lucene.NetDocument.Document
+				Lucene.Net.Documents.Document doc_1 = new Lucene.Net.Documents.Document
 					();
 				doc_1.Add(new StoredField("id", "5"));
 				doc_1.Add(new BinaryDocValuesField("field", new BytesRef()));
@@ -3447,7 +3421,7 @@ namespace Lucene.Net.TestFramework.Index
 				for (int j_1 = 0; j_1 < 5; j_1++)
 				{
 					values.Get(0, result);
-					NUnit.Framework.Assert.IsTrue(result.length == 0 || result.length == 1 << i);
+					IsTrue(result.length == 0 || result.length == 1 << i);
 				}
 				ar.Close();
 				dir.Close();

@@ -46,9 +46,9 @@ namespace Lucene.Net.Store
             set { this.pos = value; }
         }
 
-        public void Reset(byte[] bytes, int offset, int len)
+        public void Reset(byte[] inputBytes, int offset, int len)
         {
-            this.bytes = bytes;
+            this.bytes = inputBytes;
             pos = offset;
             limit = offset + len;
         }

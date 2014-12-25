@@ -1,6 +1,6 @@
-using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Util;
+
 
 namespace Lucene.Net.Codecs.Memory
 {
@@ -34,29 +34,11 @@ namespace Lucene.Net.Codecs.Memory
 	/// </remarks>
 	public class DirectDocValuesFormat : DocValuesFormat
 	{
-		/// <summary>
-		/// The sum of all byte lengths for binary field, or for
-		/// the unique values in sorted or sorted set fields, cannot
-		/// exceed this.
-		/// </summary>
-		/// <remarks>
-		/// The sum of all byte lengths for binary field, or for
-		/// the unique values in sorted or sorted set fields, cannot
-		/// exceed this.
-		/// </remarks>
-		public const int MAX_TOTAL_BYTES_LENGTH = ArrayUtil.MAX_ARRAY_LENGTH;
-        
-		/// <summary>
-		/// The sum of the number of values across all documents
-		/// in a sorted set field cannot exceed this.
-		/// </summary>
-		/// <remarks>
-		/// The sum of the number of values across all documents
-		/// in a sorted set field cannot exceed this.
-		/// </remarks>
-		public const int MAX_SORTED_SET_ORDS = ArrayUtil.MAX_ARRAY_LENGTH;
+	    public static readonly int MAX_TOTAL_BYTES_LENGTH = ArrayUtil.MAX_ARRAY_LENGTH;
 
-		/// <summary>Sole constructor.</summary>
+	    public static readonly int MAX_SORTED_SET_ORDS = ArrayUtil.MAX_ARRAY_LENGTH;
+
+	    /// <summary>Sole constructor.</summary>
 		/// <remarks>Sole constructor.</remarks>
 		public DirectDocValuesFormat() : base("Direct")
 		{

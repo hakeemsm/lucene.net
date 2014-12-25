@@ -1,14 +1,7 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
-using Lucene.Net.Codecs.Memory;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
+using Lucene.Net.Support;
 using Lucene.Net.Util.Fst;
-using Sharpen;
 
 namespace Lucene.Net.Codecs.Memory
 {
@@ -70,7 +63,7 @@ namespace Lucene.Net.Codecs.Memory
 			// aren't NO_OUTPUTs.
 			public override int GetHashCode()
 			{
-				int hash = 0;
+				long hash = 0;
 				if (longs != null)
 				{
 					int end = longs.Length;
@@ -89,7 +82,7 @@ namespace Lucene.Net.Codecs.Memory
 					}
 				}
 				hash += docFreq + totalTermFreq;
-				return hash;
+				return (int) hash;
 			}
 
 			public override bool Equals(object other_)
@@ -113,7 +106,7 @@ namespace Lucene.Net.Codecs.Memory
 
 		protected internal FSTTermOutputs(FieldInfo fieldInfo, int longsSize)
 		{
-			this.hasPos = (fieldInfo.GetIndexOptions() != FieldInfo.IndexOptions.DOCS_ONLY);
+			this.hasPos = (fieldInfo.IndexOptionsValue != FieldInfo.IndexOptions.DOCS_ONLY);
 			this.longsSize = longsSize;
 		}
 

@@ -1,15 +1,7 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
-using Lucene.Net.Codecs;
+using System;
 using Lucene.Net.Codecs.Lucene41;
-using Lucene.Net.Codecs.Memory;
 using Lucene.Net.Index;
 using Lucene.Net.Util;
-using Sharpen;
 
 namespace Lucene.Net.Codecs.Memory
 {
@@ -22,7 +14,7 @@ namespace Lucene.Net.Codecs.Memory
 
 		public override string ToString()
 		{
-			return GetName();
+		    return Name;
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -42,7 +34,7 @@ namespace Lucene.Net.Codecs.Memory
 			{
 				if (!success)
 				{
-					IOUtils.CloseWhileHandlingException(postingsWriter);
+					IOUtils.CloseWhileHandlingException((IDisposable)postingsWriter);
 				}
 			}
 		}
@@ -65,7 +57,7 @@ namespace Lucene.Net.Codecs.Memory
 			{
 				if (!success)
 				{
-					IOUtils.CloseWhileHandlingException(postingsReader);
+					IOUtils.CloseWhileHandlingException((IDisposable)postingsReader);
 				}
 			}
 		}

@@ -147,5 +147,15 @@ namespace Lucene.Net.Support
             value = (value & 0x3333333333333333) + ((value >> 2) & 0x3333333333333333);
             return (int)(unchecked(((value + (value >> 4)) & 0xF0F0F0F0F0F0F0F) * 0x101010101010101) >> 56);
         }
+
+        public static byte[] ToBytes(this sbyte[] sbytes)
+        {
+            return Array.ConvertAll(sbytes, Convert.ToByte);
+        }
+
+        public static sbyte[] ToSbytes(this byte[] bytes)
+        {
+            return Array.ConvertAll(bytes, Convert.ToSByte);
+        }
     }
 }

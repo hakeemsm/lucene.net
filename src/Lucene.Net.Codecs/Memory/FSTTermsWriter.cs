@@ -1,17 +1,9 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
+using System;
 using System.Collections.Generic;
-using Lucene.Net.Codecs;
-using Lucene.Net.Codecs.Memory;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Lucene.Net.Util.Fst;
-using Sharpen;
 
 namespace Lucene.Net.Codecs.Memory
 {
@@ -113,8 +105,7 @@ namespace Lucene.Net.Codecs.Memory
 
 		internal IndexOutput @out;
 
-		internal readonly IList<FSTTermsWriter.FieldMetaData> fields = new AList<FSTTermsWriter.FieldMetaData
-			>();
+		internal readonly IList<FSTTermsWriter.FieldMetaData> fields = new List<FieldMetaData>();
 
 		/// <exception cref="System.IO.IOException"></exception>
 		public FSTTermsWriter(SegmentWriteState state, PostingsWriterBase postingsWriter)
@@ -135,7 +126,7 @@ namespace Lucene.Net.Codecs.Memory
 			{
 				if (!success)
 				{
-					IOUtils.CloseWhileHandlingException(@out);
+					IOUtils.CloseWhileHandlingException((IDisposable)@out);
 				}
 			}
 		}
@@ -159,7 +150,7 @@ namespace Lucene.Net.Codecs.Memory
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		public override void Close()
+		protected override void Dispose(bool disposing)
 		{
 			if (@out != null)
 			{
@@ -173,7 +164,7 @@ namespace Lucene.Net.Codecs.Memory
 					{
 						@out.WriteVInt(field.fieldInfo.number);
 						@out.WriteVLong(field.numTerms);
-						if (field.fieldInfo.GetIndexOptions() != FieldInfo.IndexOptions.DOCS_ONLY)
+						if (field.fieldInfo.IndexOptionsValue != FieldInfo.IndexOptions.DOCS_ONLY)
 						{
 							@out.WriteVLong(field.sumTotalTermFreq);
 						}
@@ -194,14 +185,14 @@ namespace Lucene.Net.Codecs.Memory
 					}
 					else
 					{
-						IOUtils.CloseWhileHandlingException(@out, postingsWriter);
+						IOUtils.CloseWhileHandlingException((IDisposable)@out, postingsWriter);
 					}
 					@out = null;
 				}
 			}
 		}
 
-		private class FieldMetaData
+	    internal class FieldMetaData
 		{
 			public readonly FieldInfo fieldInfo;
 
@@ -259,9 +250,9 @@ namespace Lucene.Net.Codecs.Memory
 					);
 			}
 
-			public override IComparer<BytesRef> GetComparator()
+			public override IComparer<BytesRef> Comparator
 			{
-				return BytesRef.GetUTF8SortedAsUnicodeComparator();
+			    get { return BytesRef.UTF8SortedAsUnicodeComparer; }
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
@@ -303,7 +294,7 @@ namespace Lucene.Net.Codecs.Memory
 				if (this.numTerms > 0)
 				{
 					FST<FSTTermOutputs.TermData> fst = this.builder.Finish();
-					this._enclosing.fields.AddItem(new FSTTermsWriter.FieldMetaData(this.fieldInfo, this
+					this._enclosing.fields.Add(new FieldMetaData(this.fieldInfo, this
 						.numTerms, sumTotalTermFreq, sumDocFreq, docCount, this.longsSize, fst));
 				}
 			}

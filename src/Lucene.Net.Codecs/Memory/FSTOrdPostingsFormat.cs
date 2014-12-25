@@ -1,3 +1,4 @@
+using System;
 using Lucene.Net.Codecs.Lucene41;
 using Lucene.Net.Index;
 using Lucene.Net.Util;
@@ -32,7 +33,7 @@ namespace Lucene.Net.Codecs.Memory
 			{
 				if (!success)
 				{
-					IOUtils.CloseWhileHandlingException(postingsWriter);
+					IOUtils.CloseWhileHandlingException((IDisposable)postingsWriter);
 				}
 			}
 		}
@@ -55,7 +56,7 @@ namespace Lucene.Net.Codecs.Memory
 			{
 				if (!success)
 				{
-					IOUtils.CloseWhileHandlingException(postingsReader);
+					IOUtils.CloseWhileHandlingException((IDisposable)postingsReader);
 				}
 			}
 		}

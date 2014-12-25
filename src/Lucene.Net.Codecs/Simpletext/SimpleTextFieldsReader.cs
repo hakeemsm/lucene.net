@@ -1,19 +1,10 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using System.Collections.Generic;
-using Lucene.Net.Codecs;
-using Lucene.Net.Codecs.Simpletext;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Lucene.Net.Util.Fst;
-using Sharpen;
 
 namespace Lucene.Net.Codecs.Simpletext
 {
@@ -30,7 +21,7 @@ namespace Lucene.Net.Codecs.Simpletext
 		/// <exception cref="System.IO.IOException"></exception>
 		public SimpleTextFieldsReader(SegmentReadState state)
 		{
-			this.maxDoc = state.segmentInfo.GetDocCount();
+			this.maxDoc = state.segmentInfo.DocCount;
 			fieldInfos = state.fieldInfos;
 			@in = state.directory.OpenInput(SimpleTextPostingsFormat.GetPostingsFileName(state
 				.segmentInfo.name, state.segmentSuffix), state.context);

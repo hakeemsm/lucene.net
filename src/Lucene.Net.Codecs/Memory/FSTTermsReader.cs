@@ -1,19 +1,12 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
+using System.Collections;
 using System.Collections.Generic;
-using Lucene.Net.Codecs;
-using Lucene.Net.Codecs.Memory;
+using System.Linq;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Lucene.Net.Util.Automaton;
 using Lucene.Net.Util.Fst;
-using Sharpen;
 
 namespace Lucene.Net.Codecs.Memory
 {
@@ -58,14 +51,14 @@ namespace Lucene.Net.Codecs.Memory
 					int fieldNumber = @in.ReadVInt();
 					FieldInfo fieldInfo = fieldInfos.FieldInfo(fieldNumber);
 					long numTerms = @in.ReadVLong();
-					long sumTotalTermFreq = fieldInfo.GetIndexOptions() == FieldInfo.IndexOptions.DOCS_ONLY
+					long sumTotalTermFreq = fieldInfo.IndexOptionsValue == FieldInfo.IndexOptions.DOCS_ONLY
 						 ? -1 : @in.ReadVLong();
 					long sumDocFreq = @in.ReadVLong();
 					int docCount = @in.ReadVInt();
 					int longsSize = @in.ReadVInt();
 					FSTTermsReader.TermsReader current = new FSTTermsReader.TermsReader(this, fieldInfo
 						, @in, numTerms, sumTotalTermFreq, sumDocFreq, docCount, longsSize);
-					FSTTermsReader.TermsReader previous = fields.Put(fieldInfo.name, current);
+					FSTTermsReader.TermsReader previous = fields[fieldInfo.name] = current;
 					CheckFieldSummary(state.segmentInfo, @in, current, previous);
 				}
 				success = true;
@@ -78,7 +71,7 @@ namespace Lucene.Net.Codecs.Memory
 				}
 				else
 				{
-					IOUtils.CloseWhileHandlingException(@in);
+					IOUtils.CloseWhileHandlingException((IDisposable)@in);
 				}
 			}
 		}
@@ -95,11 +88,11 @@ namespace Lucene.Net.Codecs.Memory
 		{
 			if (version >= FSTTermsWriter.TERMS_VERSION_CHECKSUM)
 			{
-				@in.Seek(@in.Length() - CodecUtil.FooterLength() - 8);
+				@in.Seek(@in.Length - CodecUtil.FooterLength() - 8);
 			}
 			else
 			{
-				@in.Seek(@in.Length() - 8);
+				@in.Seek(@in.Length - 8);
 			}
 			@in.Seek(@in.ReadLong());
 		}
@@ -109,10 +102,10 @@ namespace Lucene.Net.Codecs.Memory
 			 field, FSTTermsReader.TermsReader previous)
 		{
 			// #docs with field must be <= #docs
-			if (field.docCount < 0 || field.docCount > info.GetDocCount())
+			if (field.docCount < 0 || field.docCount > info.DocCount)
 			{
 				throw new CorruptIndexException("invalid docCount: " + field.docCount + " maxDoc: "
-					 + info.GetDocCount() + " (resource=" + @in + ")");
+					 + info.DocCount + " (resource=" + @in + ")");
 			}
 			// #postings must be >= #docs with field
 			if (field.sumDocFreq < field.docCount)
@@ -133,9 +126,9 @@ namespace Lucene.Net.Codecs.Memory
 			}
 		}
 
-		public override Sharpen.Iterator<string> Iterator()
+		public override IEnumerator<string> GetEnumerator()
 		{
-			return Sharpen.Collections.UnmodifiableSet(fields.Keys).Iterator();
+		    return fields.Keys.GetEnumerator();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -143,16 +136,16 @@ namespace Lucene.Net.Codecs.Memory
 		{
 			//HM:revisit 
 			//assert field != null;
-			return fields.Get(field);
+			return fields[field];
 		}
 
-		public override int Size()
+		public override int Size
 		{
-			return fields.Count;
+		    get { return fields.Count; }
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		public override void Close()
+		protected override void Dispose(bool disposing)
 		{
 			try
 			{
@@ -196,54 +189,64 @@ namespace Lucene.Net.Codecs.Memory
 					));
 			}
 
-			public override IComparer<BytesRef> GetComparator()
+			public override IComparer<BytesRef> Comparator
 			{
-				return BytesRef.GetUTF8SortedAsUnicodeComparator();
+			    get { return BytesRef.UTF8SortedAsUnicodeComparer; }
 			}
 
-			public override bool HasFreqs()
+			public override bool HasFreqs
 			{
-				return this.fieldInfo.GetIndexOptions().CompareTo(FieldInfo.IndexOptions.DOCS_AND_FREQS
-					) >= 0;
+			    get
+			    {
+			        return this.fieldInfo.IndexOptionsValue.GetValueOrDefault().CompareTo(FieldInfo.IndexOptions.DOCS_AND_FREQS
+			            ) >= 0;
+			    }
 			}
 
-			public override bool HasOffsets()
+			public override bool HasOffsets
 			{
-				return this.fieldInfo.GetIndexOptions().CompareTo(FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS
-					) >= 0;
+			    get
+			    {
+			        return this.fieldInfo.IndexOptionsValue.GetValueOrDefault().CompareTo(
+			            FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS
+			            ) >= 0;
+			    }
 			}
 
-			public override bool HasPositions()
+			public override bool HasPositions
 			{
-				return this.fieldInfo.GetIndexOptions().CompareTo(FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS
-					) >= 0;
+			    get
+			    {
+			        return this.fieldInfo.IndexOptionsValue.GetValueOrDefault().CompareTo(FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS
+			            ) >= 0;
+			    }
 			}
 
-			public override bool HasPayloads()
+			public override bool HasPayloads
 			{
-				return this.fieldInfo.HasPayloads();
+			    get { return this.fieldInfo.HasPayloads; }
 			}
 
-			public override long Size()
+			public override long Size
 			{
-				return this.numTerms;
+			    get { return this.numTerms; }
 			}
 
-			public override long GetSumTotalTermFreq()
+			public override long SumTotalTermFreq
 			{
-				return this.sumTotalTermFreq;
+			    get { return this.sumTotalTermFreq; }
+			}
+
+			
+			public override long SumDocFreq
+			{
+			    get { return this.sumDocFreq; }
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
-			public override long GetSumDocFreq()
+			public override int DocCount
 			{
-				return this.sumDocFreq;
-			}
-
-			/// <exception cref="System.IO.IOException"></exception>
-			public override int GetDocCount()
-			{
-				return this.docCount;
+			    get { return this.docCount; }
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
@@ -286,42 +289,45 @@ namespace Lucene.Net.Codecs.Memory
 
 				// NOTE: metadata will only be initialized in child class
 				/// <exception cref="System.IO.IOException"></exception>
-				public override Lucene.Net.Index.TermState TermState()
+				public override Lucene.Net.Index.TermState TermState
 				{
-					this.DecodeMetaData();
-					return this.state.Clone();
+				    get
+				    {
+				        this.DecodeMetaData();
+				        return (TermState) this.state.Clone();
+				    }
 				}
 
-				public override BytesRef Term()
+				public override BytesRef Term
 				{
-					return this.term;
-				}
-
-				/// <exception cref="System.IO.IOException"></exception>
-				public override int DocFreq()
-				{
-					return this.state.docFreq;
+				    get { return this.term; }
 				}
 
 				/// <exception cref="System.IO.IOException"></exception>
-				public override long TotalTermFreq()
+				public override int DocFreq
 				{
-					return this.state.totalTermFreq;
+				    get { return this.state.docFreq; }
 				}
 
-				/// <exception cref="System.IO.IOException"></exception>
-				public override DocsEnum Docs(Bits liveDocs, DocsEnum reuse, int flags)
+				
+				public override long TotalTermFreq
+				{
+				    get { return this.state.totalTermFreq; }
+				}
+
+				
+				public override DocsEnum Docs(IBits liveDocs, DocsEnum reuse, int flags)
 				{
 					this.DecodeMetaData();
 					return this._enclosing._enclosing.postingsReader.Docs(this._enclosing.fieldInfo, 
 						this.state, liveDocs, reuse, flags);
 				}
 
-				/// <exception cref="System.IO.IOException"></exception>
-				public override DocsAndPositionsEnum DocsAndPositions(Bits liveDocs, DocsAndPositionsEnum
+				
+				public override DocsAndPositionsEnum DocsAndPositions(IBits liveDocs, DocsAndPositionsEnum
 					 reuse, int flags)
 				{
-					if (!this._enclosing.HasPositions())
+					if (!this._enclosing.HasPositions)
 					{
 						return null;
 					}
@@ -336,9 +342,9 @@ namespace Lucene.Net.Codecs.Memory
 					throw new NotSupportedException();
 				}
 
-				public override long Ord()
+				public override long Ord
 				{
-					throw new NotSupportedException();
+				    get { throw new NotSupportedException(); }
 				}
 
 				private readonly TermsReader _enclosing;
@@ -363,9 +369,9 @@ namespace Lucene.Net.Codecs.Memory
 					this.meta = null;
 				}
 
-				public override IComparer<BytesRef> GetComparator()
+				public override IComparer<BytesRef> Comparator
 				{
-					return BytesRef.GetUTF8SortedAsUnicodeComparator();
+				    get { return BytesRef.UTF8SortedAsUnicodeComparer; }
 				}
 
 				// Let PBF decode metadata from long[] and byte[]
@@ -385,8 +391,7 @@ namespace Lucene.Net.Codecs.Memory
 				}
 
 				// Update current enum according to FSTEnum
-				internal void UpdateEnum(BytesRefFSTEnum.InputOutput<FSTTermOutputs.TermData> pair
-					)
+                internal void UpdateEnum(BytesRefFSTEnum<FSTTermOutputs.TermData>.InputOutput<FSTTermOutputs.TermData> pair)
 				{
 					if (pair == null)
 					{
@@ -394,8 +399,8 @@ namespace Lucene.Net.Codecs.Memory
 					}
 					else
 					{
-						this.term = pair.input;
-						this.meta = pair.output;
+						this.term = pair.Input;
+						this.meta = pair.Output;
 						this.state.docFreq = this.meta.docFreq;
 						this.state.totalTermFreq = this.meta.totalTermFreq;
 					}
@@ -459,7 +464,7 @@ namespace Lucene.Net.Codecs.Memory
 
 				internal bool pending;
 
-				internal FSTTermsReader.TermsReader.IntersectTermsEnum.Frame[] stack;
+				internal Frame[] stack;
 
 				internal int level;
 
@@ -473,7 +478,7 @@ namespace Lucene.Net.Codecs.Memory
 
 				internal readonly ByteRunAutomaton fsa;
 
-				private sealed class Frame
+			    internal sealed class Frame
 				{
 					internal FST.Arc<FSTTermOutputs.TermData> fstArc;
 
@@ -503,15 +508,15 @@ namespace Lucene.Net.Codecs.Memory
 					//if (TEST) System.out.println("Enum init, startTerm=" + startTerm);
 					this.fst = this._enclosing.dict;
 					this.fstReader = this.fst.GetBytesReader();
-					this.fstOutputs = this._enclosing.dict.outputs;
+					this.fstOutputs = this._enclosing.dict.Outputs;
 					this.fsa = compiled.runAutomaton;
 					this.level = -1;
-					this.stack = new FSTTermsReader.TermsReader.IntersectTermsEnum.Frame[16];
+					this.stack = new Frame[16];
 					for (int i = 0; i < this.stack.Length; i++)
 					{
-						this.stack[i] = new FSTTermsReader.TermsReader.IntersectTermsEnum.Frame(this);
+						this.stack[i] = new Frame(this);
 					}
-					FSTTermsReader.TermsReader.IntersectTermsEnum.Frame frame;
+					Frame frame;
 					frame = this.LoadVirtualFrame(this.NewFrame());
 					this.level++;
 					frame = this.LoadFirstFrame(this.NewFrame());
@@ -532,9 +537,9 @@ namespace Lucene.Net.Codecs.Memory
 					}
 				}
 
-				public override IComparer<BytesRef> GetComparator()
+				public override IComparer<BytesRef> Comparator
 				{
-					return BytesRef.GetUTF8SortedAsUnicodeComparator();
+				    get { return BytesRef.UTF8SortedAsUnicodeComparer; }
 				}
 
 				/// <exception cref="System.IO.IOException"></exception>
@@ -565,16 +570,16 @@ namespace Lucene.Net.Codecs.Memory
 					{
 						this.metaUpto++;
 						next = this.stack[this.metaUpto].fstArc;
-						next.output = this.fstOutputs.Add(next.output, last.output);
+						next.Output = this.fstOutputs.Add(next.Output, last.Output);
 						last = next;
 					}
 					if (last.IsFinal())
 					{
-						this.meta = this.fstOutputs.Add(last.output, last.nextFinalOutput);
+						this.meta = this.fstOutputs.Add(last.Output, last.NextFinalOutput);
 					}
 					else
 					{
-						this.meta = last.output;
+						this.meta = last.Output;
 					}
 					this.state.docFreq = this.meta.docFreq;
 					this.state.totalTermFreq = this.meta.totalTermFreq;
@@ -597,7 +602,7 @@ namespace Lucene.Net.Codecs.Memory
 					}
 				}
 
-				/// <exception cref="System.IO.IOException"></exception>
+				//TODO:fix gotos
 				public override BytesRef Next()
 				{
 					//if (TEST) System.out.println("Enum next()");
@@ -662,7 +667,7 @@ DFS_break: ;
 						frame = this.NewFrame();
 						label = target.bytes[upto] & unchecked((int)(0xff));
 						frame = this.LoadCeilFrame(label, this.TopFrame(), frame);
-						if (frame == null || frame.fstArc.label != label)
+						if (frame == null || frame.fstArc.Label != label)
 						{
 							break;
 						}
@@ -700,38 +705,36 @@ DFS_break: ;
 				}
 
 				/// <summary>Virtual frame, never pop</summary>
-				/// <exception cref="System.IO.IOException"></exception>
-				internal FSTTermsReader.TermsReader.IntersectTermsEnum.Frame LoadVirtualFrame(FSTTermsReader.TermsReader.IntersectTermsEnum.Frame
+				
+				internal Frame LoadVirtualFrame(FSTTermsReader.TermsReader.IntersectTermsEnum.Frame
 					 frame)
 				{
-					frame.fstArc.output = this.fstOutputs.GetNoOutput();
-					frame.fstArc.nextFinalOutput = this.fstOutputs.GetNoOutput();
+					frame.fstArc.Output = this.fstOutputs.GetNoOutput();
+					frame.fstArc.NextFinalOutput = this.fstOutputs.GetNoOutput();
 					frame.fsaState = -1;
 					return frame;
 				}
 
 				/// <summary>Load frame for start arc(node) on fst</summary>
-				/// <exception cref="System.IO.IOException"></exception>
-				internal FSTTermsReader.TermsReader.IntersectTermsEnum.Frame LoadFirstFrame(FSTTermsReader.TermsReader.IntersectTermsEnum.Frame
-					 frame)
+				
+				internal Frame LoadFirstFrame(Frame frame)
 				{
 					frame.fstArc = this.fst.GetFirstArc(frame.fstArc);
-					frame.fsaState = this.fsa.GetInitialState();
+					frame.fsaState = this.fsa.InitialState;
 					return frame;
 				}
 
 				/// <summary>Load frame for target arc(node) on fst</summary>
-				/// <exception cref="System.IO.IOException"></exception>
-				internal FSTTermsReader.TermsReader.IntersectTermsEnum.Frame LoadExpandFrame(FSTTermsReader.TermsReader.IntersectTermsEnum.Frame
-					 top, FSTTermsReader.TermsReader.IntersectTermsEnum.Frame frame)
+				
+				internal Frame LoadExpandFrame(Frame top, Frame frame)
 				{
 					if (!this.CanGrow(top))
 					{
 						return null;
 					}
-					frame.fstArc = this.fst.ReadFirstRealTargetArc(top.fstArc.target, frame.fstArc, this
+					frame.fstArc = this.fst.ReadFirstRealTargetArc(top.fstArc.Target, frame.fstArc, this
 						.fstReader);
-					frame.fsaState = this.fsa.Step(top.fsaState, frame.fstArc.label);
+					frame.fsaState = this.fsa.Step(top.fsaState, frame.fstArc.Label);
 					//if (TEST) System.out.println(" loadExpand frame="+frame);
 					if (frame.fsaState == -1)
 					{
@@ -741,9 +744,8 @@ DFS_break: ;
 				}
 
 				/// <summary>Load frame for sibling arc(node) on fst</summary>
-				/// <exception cref="System.IO.IOException"></exception>
-				internal FSTTermsReader.TermsReader.IntersectTermsEnum.Frame LoadNextFrame(FSTTermsReader.TermsReader.IntersectTermsEnum.Frame
-					 top, FSTTermsReader.TermsReader.IntersectTermsEnum.Frame frame)
+				
+				internal Frame LoadNextFrame(Frame top, Frame frame)
 				{
 					if (!this.CanRewind(frame))
 					{
@@ -752,7 +754,7 @@ DFS_break: ;
 					while (!frame.fstArc.IsLast())
 					{
 						frame.fstArc = this.fst.ReadNextRealArc(frame.fstArc, this.fstReader);
-						frame.fsaState = this.fsa.Step(top.fsaState, frame.fstArc.label);
+						frame.fsaState = this.fsa.Step(top.fsaState, frame.fstArc.Label);
 						if (frame.fsaState != -1)
 						{
 							break;
@@ -771,9 +773,7 @@ DFS_break: ;
 				/// arc.label &gt;= label and !fsa.reject(arc.label)
 				/// </summary>
 				/// <exception cref="System.IO.IOException"></exception>
-				internal FSTTermsReader.TermsReader.IntersectTermsEnum.Frame LoadCeilFrame(int label
-					, FSTTermsReader.TermsReader.IntersectTermsEnum.Frame top, FSTTermsReader.TermsReader.IntersectTermsEnum.Frame
-					 frame)
+				internal Frame LoadCeilFrame(int label , Frame top, Frame frame)
 				{
 					FST.Arc<FSTTermOutputs.TermData> arc = frame.fstArc;
 					arc = Lucene.Net.Util.Fst.Util.ReadCeilArc(label, this.fst, top.fstArc, arc
@@ -782,7 +782,7 @@ DFS_break: ;
 					{
 						return null;
 					}
-					frame.fsaState = this.fsa.Step(top.fsaState, arc.label);
+					frame.fsaState = this.fsa.Step(top.fsaState, arc.Label);
 					//if (TEST) System.out.println(" loadCeil frame="+frame);
 					if (frame.fsaState == -1)
 					{
@@ -806,7 +806,7 @@ DFS_break: ;
 				internal bool CanGrow(FSTTermsReader.TermsReader.IntersectTermsEnum.Frame frame)
 				{
 					// can walk forward on both fst&fsa
-					return frame.fsaState != -1 && FST.TargetHasArcs(frame.fstArc);
+					return frame.fsaState != -1 && FST<Frame>.TargetHasArcs(frame.fstArc);
 				}
 
 				internal bool CanRewind(FSTTermsReader.TermsReader.IntersectTermsEnum.Frame frame
@@ -819,7 +819,7 @@ DFS_break: ;
 				internal void PushFrame(FSTTermsReader.TermsReader.IntersectTermsEnum.Frame frame
 					)
 				{
-					this.term = this.Grow(frame.fstArc.label);
+					this.term = this.Grow(frame.fstArc.Label);
 					this.level++;
 				}
 
@@ -858,7 +858,7 @@ DFS_break: ;
 				{
 					if (this.term == null)
 					{
-						this.term = new BytesRef(new byte[16], 0, 0);
+						this.term = new BytesRef(new sbyte[16], 0, 0);
 					}
 					else
 					{
@@ -866,7 +866,7 @@ DFS_break: ;
 						{
 							this.term.Grow(this.term.length + 1);
 						}
-						this.term.bytes[this.term.length++] = unchecked((byte)label);
+						this.term.bytes[this.term.length++] = (sbyte)label;
 					}
 					return this.term;
 				}
@@ -893,23 +893,24 @@ DFS_break: ;
 		/// <exception cref="System.IO.IOException"></exception>
 		internal static void Walk<T>(FST<T> fst)
 		{
-			AList<FST.Arc<T>> queue = new AList<FST.Arc<T>>();
-			BitSet seen = new BitSet();
+			var queue = new List<FST.Arc<T>>();
+			BitArray seen = new BitArray(100);
 			FST.BytesReader reader = fst.GetBytesReader();
 			FST.Arc<T> startArc = fst.GetFirstArc(new FST.Arc<T>());
-			queue.AddItem(startArc);
-			while (!queue.IsEmpty())
+			queue.Add(startArc);
+			while (queue.Any())
 			{
-				FST.Arc<T> arc = queue.Remove(0);
-				long node = arc.target;
+			    FST.Arc<T> arc = queue[0];
+                queue.RemoveAt(0);
+				long node = arc.Target;
 				//System.out.println(arc);
-				if (FST.TargetHasArcs(arc) && !seen.Get((int)node))
+				if (FST<T>.TargetHasArcs(arc) && !seen.Get((int)node))
 				{
-					seen.Set((int)node);
+					seen.Set((int)node,true);
 					fst.ReadFirstRealTargetArc(node, arc, reader);
 					while (true)
 					{
-						queue.AddItem(new FST.Arc<T>().CopyFrom(arc));
+						queue.Add(new FST.Arc<T>().CopyFrom(arc));
 						if (arc.IsLast())
 						{
 							break;
@@ -923,14 +924,12 @@ DFS_break: ;
 			}
 		}
 
-		public override long RamBytesUsed()
+		public override long RamBytesUsed
 		{
-			long ramBytesUsed = 0;
-			foreach (FSTTermsReader.TermsReader r in fields.Values)
-			{
-				ramBytesUsed += r.dict == null ? 0 : r.dict.SizeInBytes();
-			}
-			return ramBytesUsed;
+		    get
+		    {
+		        return fields.Values.Sum(r => r.dict == null ? 0 : r.dict.SizeInBytes());
+		    }
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>

@@ -1,17 +1,9 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
+using System;
 using System.Collections.Generic;
-using Lucene.Net.Codecs;
-using Lucene.Net.Codecs.Memory;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Lucene.Net.Util.Fst;
-using Sharpen;
 
 namespace Lucene.Net.Codecs.Memory
 {
@@ -145,8 +137,7 @@ namespace Lucene.Net.Codecs.Memory
 
 		internal readonly FieldInfos fieldInfos;
 
-		internal readonly IList<FSTOrdTermsWriter.FieldMetaData> fields = new AList<FSTOrdTermsWriter.FieldMetaData
-			>();
+		internal readonly IList<FSTOrdTermsWriter.FieldMetaData> fields = new List<FieldMetaData>();
 
 		internal IndexOutput blockOut = null;
 
@@ -176,7 +167,7 @@ namespace Lucene.Net.Codecs.Memory
 			{
 				if (!success)
 				{
-					IOUtils.CloseWhileHandlingException(indexOut, blockOut);
+					IOUtils.CloseWhileHandlingException((IDisposable)indexOut, blockOut);
 				}
 			}
 		}
@@ -188,7 +179,7 @@ namespace Lucene.Net.Codecs.Memory
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		public override void Close()
+		protected override void Dispose(bool disposing)
 		{
 			if (blockOut != null)
 			{
@@ -202,7 +193,7 @@ namespace Lucene.Net.Codecs.Memory
 					{
 						blockOut.WriteVInt(field.fieldInfo.number);
 						blockOut.WriteVLong(field.numTerms);
-						if (field.fieldInfo.GetIndexOptions() != FieldInfo.IndexOptions.DOCS_ONLY)
+						if (field.fieldInfo.IndexOptionsValue != FieldInfo.IndexOptions.DOCS_ONLY)
 						{
 							blockOut.WriteVLong(field.sumTotalTermFreq);
 						}
@@ -231,7 +222,7 @@ namespace Lucene.Net.Codecs.Memory
 					}
 					else
 					{
-						IOUtils.CloseWhileHandlingException(blockOut, indexOut, postingsWriter);
+						IOUtils.CloseWhileHandlingException((IDisposable)blockOut, indexOut, postingsWriter);
 					}
 					blockOut = null;
 				}
@@ -250,7 +241,7 @@ namespace Lucene.Net.Codecs.Memory
 			@out.WriteLong(dirStart);
 		}
 
-		private class FieldMetaData
+	    internal class FieldMetaData
 		{
 			public FieldInfo fieldInfo;
 
@@ -330,9 +321,9 @@ namespace Lucene.Net.Codecs.Memory
 				this.lastMetaBytesFP = 0;
 			}
 
-			public override IComparer<BytesRef> GetComparator()
+			public override IComparer<BytesRef> Comparator
 			{
-				return BytesRef.GetUTF8SortedAsUnicodeComparator();
+			    get { return BytesRef.UTF8SortedAsUnicodeComparer; }
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
@@ -404,7 +395,7 @@ namespace Lucene.Net.Codecs.Memory
 					metadata.metaLongsOut = this.metaLongsOut;
 					metadata.metaBytesOut = this.metaBytesOut;
 					metadata.dict = this.builder.Finish();
-					this._enclosing.fields.AddItem(metadata);
+					this._enclosing.fields.Add(metadata);
 				}
 			}
 

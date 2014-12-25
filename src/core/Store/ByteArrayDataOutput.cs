@@ -1,14 +1,12 @@
 ﻿using Lucene.Net.Util;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace Lucene.Net.Store
 {
     public class ByteArrayDataOutput : DataOutput
     {
         private byte[] bytes;
+        private sbyte[] sbytes;
 
         private int pos;
         private int limit;
@@ -28,14 +26,26 @@ namespace Lucene.Net.Store
             Reset((byte[])(Array)BytesRef.EMPTY_BYTES);
         }
 
-        public void Reset(byte[] bytes)
+        public void Reset(byte[] inputBytes)
         {
-            Reset(bytes, 0, bytes.Length);
+            Reset(inputBytes, 0, inputBytes.Length);
         }
 
-        public void Reset(byte[] bytes, int offset, int len)
+        public void Reset(byte[] inputBytes, int offset, int len)
         {
-            this.bytes = bytes;
+            this.bytes = inputBytes;
+            pos = offset;
+            limit = offset + len;
+        }
+
+        public void Reset(sbyte[] inputBytes)
+        {
+            Reset(inputBytes, 0, inputBytes.Length);
+        }
+
+        public void Reset(sbyte[] inputBytes, int offset, int len)
+        {
+            this.sbytes = inputBytes;
             pos = offset;
             limit = offset + len;
         }

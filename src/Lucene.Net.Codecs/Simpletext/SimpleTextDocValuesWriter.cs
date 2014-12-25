@@ -1,20 +1,10 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
-using Mono.Math;
-using Lucene.Net.Codecs;
-using Lucene.Net.Codecs.Simpletext;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
 using Lucene.Net.Util;
-using Sharpen;
 
 namespace Lucene.Net.Codecs.Simpletext
 {
@@ -56,7 +46,7 @@ namespace Lucene.Net.Codecs.Simpletext
 			// System.out.println("WRITE: " + IndexFileNames.segmentFileName(state.segmentInfo.name, state.segmentSuffix, ext) + " " + state.segmentInfo.getDocCount() + " docs");
 			data = state.directory.CreateOutput(IndexFileNames.SegmentFileName(state.segmentInfo
 				.name, state.segmentSuffix, ext), state.context);
-			numDocs = state.segmentInfo.GetDocCount();
+			numDocs = state.segmentInfo.DocCount;
 		}
 
 		// for asserting
