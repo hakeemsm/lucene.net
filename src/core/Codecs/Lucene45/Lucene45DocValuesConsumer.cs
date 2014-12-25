@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
+using Lucene.Net.Support;
 using Lucene.Net.Util;
 using Lucene.Net.Util.Packed;
 
@@ -101,13 +102,13 @@ namespace Lucene.Net.Codecs.Lucene45
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void AddNumericField(FieldInfo field, IEnumerable<long> values)
+        public override void AddNumericField(FieldInfo field, IEnumerable<long?> values)
         {
             AddNumericField(field, values, true);
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        internal virtual void AddNumericField(FieldInfo field, IEnumerable<long> values, bool
+        internal virtual void AddNumericField(FieldInfo field, IEnumerable<long?> values, bool
              optimizeStorage)
         {
             long count = 0;
@@ -117,14 +118,13 @@ namespace Lucene.Net.Codecs.Lucene45
             bool missing = false;
             // TODO: more efficient?
             HashSet<long> uniqueValues = null;
-            var valuesList = values as IList<long> ?? values.ToList();
+            var valuesList = values as IList<long?> ?? values.ToList();
             if (optimizeStorage)
             {
                 uniqueValues = new HashSet<long>();
                 foreach (var nv in valuesList)
                 {
-                    long v;
-                    v = nv;
+                    long v = nv.Value;
                     if (gcd != 1)
                     {
                         if (v < long.MinValue / 2 || v > long.MaxValue / 2)
@@ -194,11 +194,11 @@ namespace Lucene.Net.Codecs.Lucene45
                     {
                         meta.WriteLong(minValue);
                         meta.WriteLong(gcd);
-                        BlockPackedWriter quotientWriter = new BlockPackedWriter(data, BLOCK_SIZE);
+                        var quotientWriter = new BlockPackedWriter(data, BLOCK_SIZE);
                         foreach (var nv1 in valuesList)
                         {
-                            long value = nv1;
-                            quotientWriter.Add((value - minValue) / gcd);
+                            var value = nv1;
+                            quotientWriter.Add((value.Value - minValue) / gcd);
                         }
                         quotientWriter.Finish();
                         break;
@@ -206,10 +206,10 @@ namespace Lucene.Net.Codecs.Lucene45
 
                 case DELTA_COMPRESSED:
                     {
-                        BlockPackedWriter writer = new BlockPackedWriter(data, BLOCK_SIZE);
+                        var writer = new BlockPackedWriter(data, BLOCK_SIZE);
                         foreach (var nv2 in valuesList)
                         {
-                            writer.Add(nv2);
+                            writer.Add(nv2.Value);
                         }
                         writer.Finish();
                         break;
@@ -230,7 +230,7 @@ namespace Lucene.Net.Codecs.Lucene45
                             .PACKED, (int)count, bitsRequired, PackedInts.DEFAULT_BUFFER_SIZE);
                         foreach (var nv3 in valuesList)
                         {
-                            ordsWriter.Add(encode[nv3]);
+                            ordsWriter.Add(encode[nv3.Value]);
                         }
                         ordsWriter.Finish();
                         break;
@@ -406,29 +406,27 @@ namespace Lucene.Net.Codecs.Lucene45
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void AddSortedField(FieldInfo field, IEnumerable<BytesRef> values, IEnumerable
-            <int> docToOrd)
+        public override void AddSortedField(FieldInfo field, IEnumerable<BytesRef> values, IEnumerable<int?> docToOrd)
         {
             meta.WriteVInt(field.number);
             meta.WriteByte(Lucene45DocValuesFormat.SORTED);
             AddTermsDict(field, values);
-            var docToOrdLong = new List<long>();
+            var docToOrdLong = new List<long?>();
             docToOrd.ToList().ForEach(i=>docToOrdLong.Add(i)); //this was needed because of the constraints imposed by the method being overridden
             AddNumericField(field, docToOrdLong, false);
         }
 
-        private static bool IsSingleValued(IEnumerable<int> docToOrdCount)
+        private static bool IsSingleValued(IEnumerable<int?> docToOrdCount)
         {
             return docToOrdCount.All(ordCount => ordCount <= 1);
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void AddSortedSetField(FieldInfo field, IEnumerable<BytesRef> values
-            , IEnumerable<int> docToOrdCount, IEnumerable<long> ords)
+        public override void AddSortedSetField(FieldInfo field, IEnumerable<BytesRef> values, IEnumerable<int?> docToOrdCount, IEnumerable<long?> ords)
         {
             meta.WriteVInt(field.number);
             meta.WriteByte(Lucene45DocValuesFormat.SORTED_SET);
-            var ordList = docToOrdCount as IList<int> ?? docToOrdCount.ToList();
+            var ordList = docToOrdCount as IList<int?> ?? docToOrdCount.ToList();
             if (IsSingleValued(ordList))
             {
                 meta.WriteVInt(SORTED_SET_SINGLE_VALUED_SORTED);
@@ -452,27 +450,27 @@ namespace Lucene.Net.Codecs.Lucene45
             meta.WriteVLong(maxDoc);
             meta.WriteVInt(BLOCK_SIZE);
             MonotonicBlockPackedWriter writer = new MonotonicBlockPackedWriter(data, BLOCK_SIZE);
-            long addr = 0;
+            long? addr = 0;
             foreach (var v in ordList)
             {
                 addr += v;
-                writer.Add(addr);
+                writer.Add(addr.Value);
             }
             writer.Finish();
         }
 
-        private sealed class SortedFieldEnumerable : IEnumerable<int>
+        private sealed class SortedFieldEnumerable : IEnumerable<int?>
         {
-            private readonly IEnumerable<int> _docToOrdCount;
-            private readonly IEnumerable<long> _ords;
+            private readonly IEnumerable<int?> _docToOrdCount;
+            private readonly IEnumerable<long?> _ords;
 
-            public SortedFieldEnumerable(IEnumerable<int> docToOrdCount, IEnumerable<long> ords)
+            public SortedFieldEnumerable(IList<int?> docToOrdCount, IEnumerable<long?> ords)
             {
                 _docToOrdCount = docToOrdCount;
                 _ords = ords;
             }
 
-            public IEnumerator<int> GetEnumerator()
+            public IEnumerator<int?> GetEnumerator()
             {
                 var docToOrdCountIt = _docToOrdCount.GetEnumerator();
                 var ordsIt = _ords.GetEnumerator();
@@ -485,12 +483,12 @@ namespace Lucene.Net.Codecs.Lucene45
             }
         }
 
-        private sealed class SortedFieldEnumerator : IEnumerator<int>
+        private sealed class SortedFieldEnumerator : IEnumerator<int?>
         {
-            private readonly IEnumerator<int> _docToOrdCountIt;
-            private readonly IEnumerator<long> _ordsIt;
+            private readonly IEnumerator<int?> _docToOrdCountIt;
+            private readonly IEnumerator<long?> _ordsIt;
 
-            public SortedFieldEnumerator(IEnumerator<int> docToOrdCountIt, IEnumerator<long> ordsIt)
+            public SortedFieldEnumerator(IEnumerator<int?> docToOrdCountIt, IEnumerator<long?> ordsIt)
             {
                 _docToOrdCountIt = docToOrdCountIt;
                 _ordsIt = ordsIt;
@@ -512,7 +510,7 @@ namespace Lucene.Net.Codecs.Lucene45
                 throw new NotImplementedException();
             }
 
-            public int Current
+            public int? Current
             {
                 //the cast should not be needed if the overridden AddSetSortedField is updated
                 get { return _docToOrdCountIt.Current == 0 ? MISSING_ORD : (int) _ordsIt.Current; }

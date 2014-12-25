@@ -131,7 +131,7 @@ namespace Lucene.Net.Codecs.Intblock
 					if (upto == blockSize)
 					{
 						// Load new block
-						lastBlockFP = @in.GetFilePointer();
+						lastBlockFP = @in.FilePointer;
 						blockReader.ReadBlock();
 						upto = 0;
 					}

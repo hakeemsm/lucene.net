@@ -167,7 +167,7 @@ namespace Lucene.Net.Codecs.Memory
 				try
 				{
 					// write field summary
-					long dirStart = @out.GetFilePointer();
+					long dirStart = @out.FilePointer;
 					@out.WriteVInt(fields.Count);
 					foreach (FSTTermsWriter.FieldMetaData field in fields)
 					{
@@ -284,7 +284,7 @@ namespace Lucene.Net.Codecs.Memory
 				this._enclosing.postingsWriter.FinishTerm(state);
 				this._enclosing.postingsWriter.EncodeTerm(meta.longs, this.metaWriter, this.fieldInfo
 					, state, true);
-				int bytesSize = (int)this.metaWriter.GetFilePointer();
+				int bytesSize = (int)this.metaWriter.FilePointer;
 				if (bytesSize > 0)
 				{
 					meta.bytes = new byte[bytesSize];

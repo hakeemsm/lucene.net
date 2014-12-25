@@ -141,7 +141,7 @@ namespace Lucene.Net.Codecs.Intblock
 					while (upto >= blockSize)
 					{
 						upto -= blockSize;
-						lastBlockFP = @in.GetFilePointer();
+						lastBlockFP = @in.FilePointer;
 						blockSize = blockReader.ReadBlock();
 					}
 					seekPending = false;
@@ -154,7 +154,7 @@ namespace Lucene.Net.Codecs.Intblock
 				this.MaybeSeek();
 				if (upto == blockSize)
 				{
-					lastBlockFP = @in.GetFilePointer();
+					lastBlockFP = @in.FilePointer;
 					blockSize = blockReader.ReadBlock();
 					upto = 0;
 				}

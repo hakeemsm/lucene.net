@@ -1,18 +1,9 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using System.Collections.Generic;
-using Lucene.Net.Codecs;
-using Lucene.Net.Codecs.Memory;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
 using Lucene.Net.Support;
 using Lucene.Net.Util;
-using Sharpen;
 
 namespace Lucene.Net.Codecs.Memory
 {
@@ -22,34 +13,25 @@ namespace Lucene.Net.Codecs.Memory
 	/// </summary>
 	internal class DirectDocValuesProducer : DocValuesProducer
 	{
-		private readonly IDictionary<int, DirectDocValuesProducer.NumericEntry> numerics = 
-			new Dictionary<int, DirectDocValuesProducer.NumericEntry>();
+		private readonly IDictionary<int, NumericEntry> numerics = new Dictionary<int, NumericEntry>();
 
-		private readonly IDictionary<int, DirectDocValuesProducer.BinaryEntry> binaries = 
-			new Dictionary<int, DirectDocValuesProducer.BinaryEntry>();
+		private readonly IDictionary<int, BinaryEntry> binaries = new Dictionary<int, BinaryEntry>();
 
-		private readonly IDictionary<int, DirectDocValuesProducer.SortedEntry> sorteds = 
-			new Dictionary<int, DirectDocValuesProducer.SortedEntry>();
+		private readonly IDictionary<int, SortedEntry> sorteds = new Dictionary<int, SortedEntry>();
 
-		private readonly IDictionary<int, DirectDocValuesProducer.SortedSetEntry> sortedSets
-			 = new Dictionary<int, DirectDocValuesProducer.SortedSetEntry>();
+		private readonly IDictionary<int, SortedSetEntry> sortedSets = new Dictionary<int, SortedSetEntry>();
 
 		private readonly IndexInput data;
 
-		private readonly IDictionary<int, NumericDocValues> numericInstances = new Dictionary
-			<int, NumericDocValues>();
+		private readonly IDictionary<int, NumericDocValues> numericInstances = new Dictionary<int, NumericDocValues>();
 
-		private readonly IDictionary<int, BinaryDocValues> binaryInstances = new Dictionary
-			<int, BinaryDocValues>();
+		private readonly IDictionary<int, BinaryDocValues> binaryInstances = new Dictionary<int, BinaryDocValues>();
 
-		private readonly IDictionary<int, SortedDocValues> sortedInstances = new Dictionary
-			<int, SortedDocValues>();
+		private readonly IDictionary<int, SortedDocValues> sortedInstances = new Dictionary<int, SortedDocValues>();
 
-		private readonly IDictionary<int, DirectDocValuesProducer.SortedSetRawValues> sortedSetInstances
-			 = new Dictionary<int, DirectDocValuesProducer.SortedSetRawValues>();
+		private readonly IDictionary<int, SortedSetRawValues> sortedSetInstances = new Dictionary<int, SortedSetRawValues>();
 
-		private readonly IDictionary<int, Bits> docsWithFieldInstances = new Dictionary<int
-			, Bits>();
+		private readonly IDictionary<int, IBits> docsWithFieldInstances = new Dictionary<int, IBits>();
 
 		private readonly int maxDoc;
 
@@ -77,7 +59,7 @@ namespace Lucene.Net.Codecs.Memory
 		{
 			// metadata maps (just file pointers and minimal stuff)
 			// ram instances we have already loaded
-			maxDoc = state.segmentInfo.GetDocCount();
+			maxDoc = state.segmentInfo.DocCount;
 			string metaName = IndexFileNames.SegmentFileName(state.segmentInfo.name, state.segmentSuffix
 				, metaExtension);
 			// read in the entries from the metadata file.
@@ -107,7 +89,7 @@ namespace Lucene.Net.Codecs.Memory
 				}
 				else
 				{
-					IOUtils.CloseWhileHandlingException(@in);
+					IOUtils.CloseWhileHandlingException((IDisposable)@in);
 				}
 			}
 			success = false;
@@ -128,74 +110,54 @@ namespace Lucene.Net.Codecs.Memory
 			{
 				if (!success)
 				{
-					IOUtils.CloseWhileHandlingException(this.data);
+					IOUtils.CloseWhileHandlingException((IDisposable)this.data);
 				}
 			}
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		private DirectDocValuesProducer.NumericEntry ReadNumericEntry(IndexInput meta)
+		private NumericEntry ReadNumericEntry(IndexInput meta)
 		{
-			DirectDocValuesProducer.NumericEntry entry = new DirectDocValuesProducer.NumericEntry
-				();
-			entry.offset = meta.ReadLong();
-			entry.count = meta.ReadInt();
-			entry.missingOffset = meta.ReadLong();
-			if (entry.missingOffset != -1)
-			{
-				entry.missingBytes = meta.ReadLong();
-			}
-			else
-			{
-				entry.missingBytes = 0;
-			}
+			var entry = new NumericEntry {offset = meta.ReadLong(), count = meta.ReadInt(), missingOffset = meta.ReadLong()};
+		    entry.missingBytes = entry.missingOffset != -1 ? meta.ReadLong() : 0;
 			entry.byteWidth = meta.ReadByte();
 			return entry;
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		private DirectDocValuesProducer.BinaryEntry ReadBinaryEntry(IndexInput meta)
+		private BinaryEntry ReadBinaryEntry(IndexInput meta)
 		{
-			DirectDocValuesProducer.BinaryEntry entry = new DirectDocValuesProducer.BinaryEntry
-				();
-			entry.offset = meta.ReadLong();
-			entry.numBytes = meta.ReadInt();
-			entry.count = meta.ReadInt();
-			entry.missingOffset = meta.ReadLong();
-			if (entry.missingOffset != -1)
+			var entry = new BinaryEntry
 			{
-				entry.missingBytes = meta.ReadLong();
-			}
-			else
+			    offset = meta.ReadLong(),
+			    numBytes = meta.ReadInt(),
+			    count = meta.ReadInt(),
+			    missingOffset = meta.ReadLong()
+			};
+		    entry.missingBytes = entry.missingOffset != -1 ? meta.ReadLong() : 0;
+			return entry;
+		}
+
+		
+		private SortedEntry ReadSortedEntry(IndexInput meta)
+		{
+			var entry = new SortedEntry {docToOrd = ReadNumericEntry(meta), values = ReadBinaryEntry(meta)};
+		    return entry;
+		}
+
+		/// <exception cref="System.IO.IOException"></exception>
+		private SortedSetEntry ReadSortedSetEntry(IndexInput meta)
+		{
+			var entry = new SortedSetEntry
 			{
-				entry.missingBytes = 0;
-			}
-			return entry;
+			    docToOrdAddress = ReadNumericEntry(meta),
+			    ords = ReadNumericEntry(meta),
+			    values = ReadBinaryEntry(meta)
+			};
+		    return entry;
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
-		private DirectDocValuesProducer.SortedEntry ReadSortedEntry(IndexInput meta)
-		{
-			DirectDocValuesProducer.SortedEntry entry = new DirectDocValuesProducer.SortedEntry
-				();
-			entry.docToOrd = ReadNumericEntry(meta);
-			entry.values = ReadBinaryEntry(meta);
-			return entry;
-		}
-
-		/// <exception cref="System.IO.IOException"></exception>
-		private DirectDocValuesProducer.SortedSetEntry ReadSortedSetEntry(IndexInput meta
-			)
-		{
-			DirectDocValuesProducer.SortedSetEntry entry = new DirectDocValuesProducer.SortedSetEntry
-				();
-			entry.docToOrdAddress = ReadNumericEntry(meta);
-			entry.ords = ReadNumericEntry(meta);
-			entry.values = ReadBinaryEntry(meta);
-			return entry;
-		}
-
-		/// <exception cref="System.IO.IOException"></exception>
+		
 		private void ReadFields(IndexInput meta)
 		{
 			int fieldNumber = meta.ReadVInt();
@@ -204,25 +166,25 @@ namespace Lucene.Net.Codecs.Memory
 				int fieldType = meta.ReadByte();
 				if (fieldType == NUMBER)
 				{
-					numerics.Put(fieldNumber, ReadNumericEntry(meta));
+					numerics[fieldNumber] = ReadNumericEntry(meta);
 				}
 				else
 				{
 					if (fieldType == BYTES)
 					{
-						binaries.Put(fieldNumber, ReadBinaryEntry(meta));
+						binaries[fieldNumber] = ReadBinaryEntry(meta);
 					}
 					else
 					{
 						if (fieldType == SORTED)
 						{
-							sorteds.Put(fieldNumber, ReadSortedEntry(meta));
+							sorteds[fieldNumber] = ReadSortedEntry(meta);
 						}
 						else
 						{
 							if (fieldType == SORTED_SET)
 							{
-								sortedSets.Put(fieldNumber, ReadSortedSetEntry(meta));
+								sortedSets[fieldNumber] = ReadSortedSetEntry(meta);
 							}
 							else
 							{
@@ -236,9 +198,9 @@ namespace Lucene.Net.Codecs.Memory
 			}
 		}
 
-		public override long RamBytesUsed()
+		public override long RamBytesUsed
 		{
-			return ramBytesUsed.Get();
+		    get { return ramBytesUsed.Get(); }
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -255,19 +217,19 @@ namespace Lucene.Net.Codecs.Memory
 		{
 			lock (this)
 			{
-				NumericDocValues instance = numericInstances.Get(field.number);
+				NumericDocValues instance = numericInstances[field.number];
 				if (instance == null)
 				{
 					// Lazy load
-					instance = LoadNumeric(numerics.Get(field.number));
-					numericInstances.Put(field.number, instance);
+					instance = LoadNumeric(numerics[field.number]);
+					numericInstances[field.number] = instance;
 				}
 				return instance;
 			}
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
-		private NumericDocValues LoadNumeric(DirectDocValuesProducer.NumericEntry entry)
+		
+		private NumericDocValues LoadNumeric(NumericEntry entry)
 		{
 			data.Seek(entry.offset + entry.missingBytes);
 			switch (entry.byteWidth)
@@ -277,7 +239,7 @@ namespace Lucene.Net.Codecs.Memory
 					byte[] values = new byte[entry.count];
 					data.ReadBytes(values, 0, entry.count);
 					ramBytesUsed.AddAndGet(RamUsageEstimator.SizeOf(values));
-					return new _NumericDocValues_222(values);
+					return new AnonymousNumericDocValues(values);
 				}
 
 				case 2:
@@ -288,7 +250,7 @@ namespace Lucene.Net.Codecs.Memory
 						values[i] = data.ReadShort();
 					}
 					ramBytesUsed.AddAndGet(RamUsageEstimator.SizeOf(values));
-					return new _NumericDocValues_237(values);
+					return new AnonymousNumericDocValues2(values);
 				}
 
 				case 4:
@@ -299,7 +261,7 @@ namespace Lucene.Net.Codecs.Memory
 						values[i] = data.ReadInt();
 					}
 					ramBytesUsed.AddAndGet(RamUsageEstimator.SizeOf(values));
-					return new _NumericDocValues_252(values);
+					return new AnonymousNumericDocValues3(values);
 				}
 
 				case 8:
@@ -310,7 +272,7 @@ namespace Lucene.Net.Codecs.Memory
 						values[i] = data.ReadLong();
 					}
 					ramBytesUsed.AddAndGet(RamUsageEstimator.SizeOf(values));
-					return new _NumericDocValues_267(values);
+					return new AnonymousNumericDocValues4(values);
 				}
 
 				default:
@@ -320,9 +282,9 @@ namespace Lucene.Net.Codecs.Memory
 			}
 		}
 
-		private sealed class _NumericDocValues_222 : NumericDocValues
+		private sealed class AnonymousNumericDocValues : NumericDocValues
 		{
-			public _NumericDocValues_222(byte[] values)
+			public AnonymousNumericDocValues(byte[] values)
 			{
 				this.values = values;
 			}
@@ -335,9 +297,9 @@ namespace Lucene.Net.Codecs.Memory
 			private readonly byte[] values;
 		}
 
-		private sealed class _NumericDocValues_237 : NumericDocValues
+		private sealed class AnonymousNumericDocValues2 : NumericDocValues
 		{
-			public _NumericDocValues_237(short[] values)
+			public AnonymousNumericDocValues2(short[] values)
 			{
 				this.values = values;
 			}
@@ -350,9 +312,9 @@ namespace Lucene.Net.Codecs.Memory
 			private readonly short[] values;
 		}
 
-		private sealed class _NumericDocValues_252 : NumericDocValues
+		private sealed class AnonymousNumericDocValues3 : NumericDocValues
 		{
-			public _NumericDocValues_252(int[] values)
+			public AnonymousNumericDocValues3(int[] values)
 			{
 				this.values = values;
 			}
@@ -365,9 +327,9 @@ namespace Lucene.Net.Codecs.Memory
 			private readonly int[] values;
 		}
 
-		private sealed class _NumericDocValues_267 : NumericDocValues
+		private sealed class AnonymousNumericDocValues4 : NumericDocValues
 		{
-			public _NumericDocValues_267(long[] values)
+			public AnonymousNumericDocValues4(long[] values)
 			{
 				this.values = values;
 			}
@@ -385,19 +347,19 @@ namespace Lucene.Net.Codecs.Memory
 		{
 			lock (this)
 			{
-				BinaryDocValues instance = binaryInstances.Get(field.number);
+				BinaryDocValues instance = binaryInstances[field.number];
 				if (instance == null)
 				{
 					// Lazy load
-					instance = LoadBinary(binaries.Get(field.number));
-					binaryInstances.Put(field.number, instance);
+					instance = LoadBinary(binaries[field.number]);
+					binaryInstances[field.number] = instance;
 				}
 				return instance;
 			}
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		private BinaryDocValues LoadBinary(DirectDocValuesProducer.BinaryEntry entry)
+		private BinaryDocValues LoadBinary(BinaryEntry entry)
 		{
 			data.Seek(entry.offset);
 			byte[] bytes = new byte[entry.numBytes];
@@ -411,14 +373,14 @@ namespace Lucene.Net.Codecs.Memory
 			address[entry.count] = data.ReadInt();
 			ramBytesUsed.AddAndGet(RamUsageEstimator.SizeOf(bytes) + RamUsageEstimator.SizeOf
 				(address));
-			return new _BinaryDocValues_305(bytes, address);
+			return new AnonymousBinaryDocValues(bytes, address);
 		}
 
-		private sealed class _BinaryDocValues_305 : BinaryDocValues
+		private sealed class AnonymousBinaryDocValues : BinaryDocValues
 		{
-			public _BinaryDocValues_305(byte[] bytes, int[] address)
+			public AnonymousBinaryDocValues(byte[] bytes, int[] address)
 			{
-				this.bytes = bytes;
+			    this.bytes = Array.ConvertAll(bytes, Convert.ToSByte);
 				this.address = address;
 			}
 
@@ -429,7 +391,7 @@ namespace Lucene.Net.Codecs.Memory
 				result.length = address[docID + 1] - result.offset;
 			}
 
-			private readonly byte[] bytes;
+			private readonly sbyte[] bytes;
 
 			private readonly int[] address;
 		}
@@ -439,30 +401,29 @@ namespace Lucene.Net.Codecs.Memory
 		{
 			lock (this)
 			{
-				SortedDocValues instance = sortedInstances.Get(field.number);
+				SortedDocValues instance = sortedInstances[field.number];
 				if (instance == null)
 				{
 					// Lazy load
 					instance = LoadSorted(field);
-					sortedInstances.Put(field.number, instance);
+					sortedInstances[field.number] = instance;
 				}
 				return instance;
 			}
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		
 		private SortedDocValues LoadSorted(FieldInfo field)
 		{
-			DirectDocValuesProducer.SortedEntry entry = sorteds.Get(field.number);
+			SortedEntry entry = sorteds[field.number];
 			NumericDocValues docToOrd = LoadNumeric(entry.docToOrd);
 			BinaryDocValues values = LoadBinary(entry.values);
-			return new _SortedDocValues_331(docToOrd, values, entry);
+			return new AnonymousSortedDocValues(docToOrd, values, entry);
 		}
 
-		private sealed class _SortedDocValues_331 : SortedDocValues
+		private sealed class AnonymousSortedDocValues : SortedDocValues
 		{
-			public _SortedDocValues_331(NumericDocValues docToOrd, BinaryDocValues values, DirectDocValuesProducer.SortedEntry
-				 entry)
+			public AnonymousSortedDocValues(NumericDocValues docToOrd, BinaryDocValues values, SortedEntry entry)
 			{
 				this.docToOrd = docToOrd;
 				this.values = values;
@@ -479,16 +440,16 @@ namespace Lucene.Net.Codecs.Memory
 				values.Get(ord, result);
 			}
 
-			public override int GetValueCount()
+			public override int ValueCount
 			{
-				return entry.values.count;
+			    get { return entry.values.count; }
 			}
 
 			private readonly NumericDocValues docToOrd;
 
 			private readonly BinaryDocValues values;
 
-			private readonly DirectDocValuesProducer.SortedEntry entry;
+			private readonly SortedEntry entry;
 		}
 
 		// Leave lookupTerm to super's binary search
@@ -498,27 +459,26 @@ namespace Lucene.Net.Codecs.Memory
 		{
 			lock (this)
 			{
-				DirectDocValuesProducer.SortedSetRawValues instance = sortedSetInstances.Get(field
-					.number);
-				DirectDocValuesProducer.SortedSetEntry entry = sortedSets.Get(field.number);
+				SortedSetRawValues instance = sortedSetInstances[field.number];
+				SortedSetEntry entry = sortedSets[field.number];
 				if (instance == null)
 				{
 					// Lazy load
 					instance = LoadSortedSet(entry);
-					sortedSetInstances.Put(field.number, instance);
+					sortedSetInstances[field.number] = instance;
 				}
 				NumericDocValues docToOrdAddress = instance.docToOrdAddress;
 				NumericDocValues ords = instance.ords;
 				BinaryDocValues values = instance.values;
 				// Must make a new instance since the iterator has state:
-				return new _RandomAccessOrds_369(ords, docToOrdAddress, values, entry);
+				return new AnonymousRandomAccessOrds(ords, docToOrdAddress, values, entry);
 			}
 		}
 
-		private sealed class _RandomAccessOrds_369 : RandomAccessOrds
+		private sealed class AnonymousRandomAccessOrds : RandomAccessOrds
 		{
-			public _RandomAccessOrds_369(NumericDocValues ords, NumericDocValues docToOrdAddress
-				, BinaryDocValues values, DirectDocValuesProducer.SortedSetEntry entry)
+			public AnonymousRandomAccessOrds(NumericDocValues ords, NumericDocValues docToOrdAddress
+				, BinaryDocValues values, SortedSetEntry entry)
 			{
 				this.ords = ords;
 				this.docToOrdAddress = docToOrdAddress;
@@ -534,17 +494,10 @@ namespace Lucene.Net.Codecs.Memory
 
 			public override long NextOrd()
 			{
-				if (this.ordUpto == this.ordLimit)
-				{
-					return SortedSetDocValues.NO_MORE_ORDS;
-				}
-				else
-				{
-					return ords.Get(this.ordUpto++);
-				}
+			    return this.ordUpto == this.ordLimit ? NO_MORE_ORDS : ords.Get(this.ordUpto++);
 			}
 
-			public override void SetDocument(int docID)
+		    public override void SetDocument(int docID)
 			{
 				this.ordStart = this.ordUpto = (int)docToOrdAddress.Get(docID);
 				this.ordLimit = (int)docToOrdAddress.Get(docID + 1);
@@ -555,9 +508,9 @@ namespace Lucene.Net.Codecs.Memory
 				values.Get((int)ord, result);
 			}
 
-			public override long GetValueCount()
+			public override long ValueCount
 			{
-				return entry.values.count;
+			    get { return entry.values.count; }
 			}
 
 			public override long OrdAt(int index)
@@ -576,53 +529,50 @@ namespace Lucene.Net.Codecs.Memory
 
 			private readonly BinaryDocValues values;
 
-			private readonly DirectDocValuesProducer.SortedSetEntry entry;
+			private readonly SortedSetEntry entry;
 		}
 
 		// Leave lookupTerm to super's binary search
 		// Leave termsEnum to super
 		/// <exception cref="System.IO.IOException"></exception>
-		private DirectDocValuesProducer.SortedSetRawValues LoadSortedSet(DirectDocValuesProducer.SortedSetEntry
-			 entry)
+		private SortedSetRawValues LoadSortedSet(SortedSetEntry entry)
 		{
-			DirectDocValuesProducer.SortedSetRawValues instance = new DirectDocValuesProducer.SortedSetRawValues
-				();
-			instance.docToOrdAddress = LoadNumeric(entry.docToOrdAddress);
-			instance.ords = LoadNumeric(entry.ords);
-			instance.values = LoadBinary(entry.values);
-			return instance;
+			var instance = new SortedSetRawValues
+			{
+			    docToOrdAddress = LoadNumeric(entry.docToOrdAddress),
+			    ords = LoadNumeric(entry.ords),
+			    values = LoadBinary(entry.values)
+			};
+		    return instance;
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		private Bits GetMissingBits(int fieldNumber, long offset, long length)
+		private IBits GetMissingBits(int fieldNumber, long offset, long length)
 		{
 			if (offset == -1)
 			{
 				return new Bits.MatchAllBits(maxDoc);
 			}
-			else
-			{
-				Bits instance;
-				lock (this)
-				{
-					instance = docsWithFieldInstances.Get(fieldNumber);
-					if (instance == null)
-					{
-						IndexInput data = ((IndexInput)this.data.Clone());
-						data.Seek(offset);
-						//HM:revisit 
-						//assert length % 8 == 0;
-						long[] bits = new long[(int)length >> 3];
-						for (int i = 0; i < bits.Length; i++)
-						{
-							bits[i] = data.ReadLong();
-						}
-						instance = new FixedBitSet(bits, maxDoc);
-						docsWithFieldInstances.Put(fieldNumber, instance);
-					}
-				}
-				return instance;
-			}
+		    IBits instance;
+		    lock (this)
+		    {
+		        instance = docsWithFieldInstances[fieldNumber];
+		        if (instance == null)
+		        {
+		            IndexInput data = ((IndexInput)this.data.Clone());
+		            data.Seek(offset);
+		            
+		            //assert length % 8 == 0;
+		            long[] bits = new long[(int)length >> 3];
+		            for (int i = 0; i < bits.Length; i++)
+		            {
+		                bits[i] = data.ReadLong();
+		            }
+		            instance = new FixedBitSet(bits, maxDoc);
+		            docsWithFieldInstances[fieldNumber] = instance;
+		        }
+		    }
+		    return instance;
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -642,13 +592,13 @@ namespace Lucene.Net.Codecs.Memory
 
 				case FieldInfo.DocValuesType.BINARY:
 				{
-					DirectDocValuesProducer.BinaryEntry be = binaries.Get(field.number);
+					BinaryEntry be = binaries[field.number];
 					return GetMissingBits(field.number, be.missingOffset, be.missingBytes);
 				}
 
 				case FieldInfo.DocValuesType.NUMERIC:
 				{
-					DirectDocValuesProducer.NumericEntry ne = numerics.Get(field.number);
+					NumericEntry ne = numerics[field.number];
 					return GetMissingBits(field.number, ne.missingOffset, ne.missingBytes);
 				}
 
@@ -659,10 +609,10 @@ namespace Lucene.Net.Codecs.Memory
 			}
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
-		public override void Close()
+
+	    protected override void Dispose(bool disposing)
 		{
-			data.Close();
+			data.Dispose();
 		}
 
 		internal class SortedSetRawValues

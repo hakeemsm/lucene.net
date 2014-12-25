@@ -63,7 +63,7 @@ namespace Lucene.Net.Codecs.Intblock
 			/// <exception cref="System.IO.IOException"></exception>
 			public override void Mark()
 			{
-				this.fp = this._enclosing.@out.GetFilePointer();
+				this.fp = this._enclosing.@out.FilePointer;
 				this.upto = this._enclosing.upto;
 			}
 

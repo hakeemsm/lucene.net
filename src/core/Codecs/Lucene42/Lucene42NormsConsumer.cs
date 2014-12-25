@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
+using Lucene.Net.Support;
 using Lucene.Net.Util;
 using Lucene.Net.Util.Packed;
 
@@ -63,7 +64,7 @@ namespace Lucene.Net.Codecs.Lucene42
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		public override void AddNumericField(FieldInfo field, IEnumerable<long> values)
+		public override void AddNumericField(FieldInfo field, IEnumerable<long?> values)
 		{
 			meta.WriteVInt(field.number);
 			meta.WriteByte(NUMBER);
@@ -72,16 +73,16 @@ namespace Lucene.Net.Codecs.Lucene42
 			long maxValue = long.MinValue;
 			long gcd = 0;
 			// TODO: more efficient?
-			HashSet<long> uniqueValues;
-		    var valuesList = values as IList<long> ?? values.ToList();
+			HashSet<long?> uniqueValues;
+		    var valuesList = values as IList<long?> ?? values.ToList();
 		    if (true)
 			{
-				uniqueValues = new HashSet<long>();
+				uniqueValues = new HashSet<long?>();
 				long count = 0;
 				foreach (var nv in valuesList)
 				{
 					
-					long v = nv;
+					var v = nv;
 					if (gcd != 1)
 					{
 						if (v < long.MinValue / 2 || v > long.MaxValue / 2)
@@ -96,12 +97,12 @@ namespace Lucene.Net.Codecs.Lucene42
 							if (count != 0)
 							{
 								// minValue needs to be set first
-								gcd = MathUtil.Gcd(gcd, v - minValue);
+								gcd = MathUtil.Gcd(gcd, v.Value - minValue);
 							}
 						}
 					}
-					minValue = Math.Min(minValue, v);
-					maxValue = Math.Max(maxValue, v);
+					minValue = Math.Min(minValue, v.Value);
+					maxValue = Math.Max(maxValue, v.Value);
 					if (uniqueValues != null)
 					{
 						if (uniqueValues.Add(v))
@@ -136,13 +137,13 @@ namespace Lucene.Net.Codecs.Lucene42
 				{
 					meta.WriteByte(TABLE_COMPRESSED);
 					// table-compressed
-				    long[] decode = uniqueValues.ToArray();
+				    var decode = uniqueValues.ToArray();
 					Dictionary<long, int> encode = new Dictionary<long, int>();
 					data.WriteVInt(decode.Length);
 					for (int i = 0; i < decode.Length; i++)
 					{
-						data.WriteLong(decode[i]);
-						encode[decode[i]] =  i;
+						data.WriteLong(decode[i].Value);
+						encode[decode[i].Value] =  i;
 					}
 					meta.WriteVInt(PackedInts.VERSION_CURRENT);
 					data.WriteVInt(formatAndBits.Format.id);
@@ -151,7 +152,7 @@ namespace Lucene.Net.Codecs.Lucene42
 						, maxDoc, formatAndBits.BitsPerValue, PackedInts.DEFAULT_BUFFER_SIZE);
 					foreach (var nv in valuesList)
 					{
-						writer.Add(encode[nv]);
+						writer.Add(encode[nv.Value]);
 					}
 					writer.Finish();
 				}
@@ -168,8 +169,8 @@ namespace Lucene.Net.Codecs.Lucene42
 					BlockPackedWriter writer = new BlockPackedWriter(data, BLOCK_SIZE);
 					foreach (var nv in valuesList)
 					{
-						long value = nv;
-						writer.Add((value - minValue) / gcd);
+						var value = nv;
+						writer.Add((value.Value - minValue) / gcd);
 					}
 					writer.Finish();
 				}
@@ -179,10 +180,10 @@ namespace Lucene.Net.Codecs.Lucene42
 					// delta-compressed
 					meta.WriteVInt(PackedInts.VERSION_CURRENT);
 					data.WriteVInt(BLOCK_SIZE);
-					BlockPackedWriter writer = new BlockPackedWriter(data, BLOCK_SIZE);
+					var writer = new BlockPackedWriter(data, BLOCK_SIZE);
 					foreach (var nv in valuesList)
 					{
-						writer.Add(nv);
+						writer.Add(nv.Value);
 					}
 					writer.Finish();
 				}
@@ -230,14 +231,13 @@ namespace Lucene.Net.Codecs.Lucene42
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		public override void AddSortedField(FieldInfo field, IEnumerable<BytesRef> values, IEnumerable<int> docToOrd)
+		public override void AddSortedField(FieldInfo field, IEnumerable<BytesRef> values, IEnumerable<int?> docToOrd)
 		{
 			throw new NotSupportedException();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		public override void AddSortedSetField(FieldInfo field, IEnumerable<BytesRef> values
-			, IEnumerable<int> docToOrdCount, IEnumerable<long> ords)
+		public override void AddSortedSetField(FieldInfo field, IEnumerable<BytesRef> values, IEnumerable<int?> docToOrdCount, IEnumerable<long?> ords)
 		{
 			throw new NotSupportedException();
 		}

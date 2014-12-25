@@ -1,7 +1,10 @@
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
+using Lucene.Net.Support;
 using Lucene.Net.Util;
 
 namespace Lucene.Net.Codecs.Memory
@@ -40,13 +43,13 @@ namespace Lucene.Net.Codecs.Memory
 			{
 				if (!success)
 				{
-					IOUtils.CloseWhileHandlingException(this);
+					IOUtils.CloseWhileHandlingException((IDisposable)this);
 				}
 			}
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
-		public override void AddNumericField(FieldInfo field, Iterable<Number> values)
+		
+		public override void AddNumericField(FieldInfo field, IEnumerable<long?> values)
 		{
 			meta.WriteVInt(field.number);
 			meta.WriteByte(DirectDocValuesProducer.NUMBER);
@@ -54,20 +57,20 @@ namespace Lucene.Net.Codecs.Memory
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		private void AddNumericFieldValues(FieldInfo field, Iterable<Number> values)
+        private void AddNumericFieldValues(FieldInfo field, IEnumerable<long?> values)
 		{
-			meta.WriteLong(data.GetFilePointer());
+			meta.WriteLong(data.FilePointer);
 			long minValue = long.MaxValue;
 			long maxValue = long.MinValue;
 			bool missing = false;
 			long count = 0;
-			foreach (Number nv in values)
+			foreach (var nv in values)
 			{
-				if (nv != null)
+				if (nv!=null) 
 				{
-					long v = nv;
-					minValue = Math.Min(minValue, v);
-					maxValue = Math.Max(maxValue, v);
+					var v = nv;
+					minValue = Math.Min(minValue, v.Value);
+					maxValue = Math.Max(maxValue, v.Value);
 				}
 				else
 				{
@@ -83,10 +86,10 @@ namespace Lucene.Net.Codecs.Memory
 			meta.WriteInt((int)count);
 			if (missing)
 			{
-				long start = data.GetFilePointer();
+				long start = data.FilePointer;
 				WriteMissingBitset(values);
 				meta.WriteLong(start);
-				meta.WriteLong(data.GetFilePointer() - start);
+				meta.WriteLong(data.FilePointer - start);
 			}
 			else
 			{
@@ -116,18 +119,10 @@ namespace Lucene.Net.Codecs.Memory
 				}
 			}
 			meta.WriteByte(byteWidth);
-			foreach (Number nv_1 in values)
+			foreach (var nv in values)
 			{
-				long v;
-				if (nv_1 != null)
-				{
-					v = nv_1;
-				}
-				else
-				{
-					v = 0;
-				}
-				switch (byteWidth)
+			    long v = nv.HasValue ? nv.Value : 0;
+			    switch (byteWidth)
 				{
 					case 1:
 					{
@@ -156,8 +151,8 @@ namespace Lucene.Net.Codecs.Memory
 			}
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
-		public override void Close()
+		
+		protected override void Dispose(bool disposing)
 		{
 			bool success = false;
 			try
@@ -183,25 +178,25 @@ namespace Lucene.Net.Codecs.Memory
 				}
 				else
 				{
-					IOUtils.CloseWhileHandlingException(data, meta);
+					IOUtils.CloseWhileHandlingException((IDisposable)data, meta);
 				}
 				data = meta = null;
 			}
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
-		public override void AddBinaryField(FieldInfo field, Iterable<BytesRef> values)
+		
+		public override void AddBinaryField(FieldInfo field, IEnumerable<BytesRef> values)
 		{
 			meta.WriteVInt(field.number);
 			meta.WriteByte(DirectDocValuesProducer.BYTES);
 			AddBinaryFieldValues(field, values);
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
-		private void AddBinaryFieldValues(FieldInfo field, Iterable<BytesRef> values)
+		
+		private void AddBinaryFieldValues(FieldInfo field, IEnumerable<BytesRef> values)
 		{
 			// write the byte[] data
-			long startFP = data.GetFilePointer();
+			long startFP = data.FilePointer;
 			bool missing = false;
 			long totalBytes = 0;
 			int count = 0;
@@ -228,10 +223,10 @@ namespace Lucene.Net.Codecs.Memory
 			meta.WriteInt(count);
 			if (missing)
 			{
-				long start = data.GetFilePointer();
+				long start = data.FilePointer;
 				WriteMissingBitset(values);
 				meta.WriteLong(start);
-				meta.WriteLong(data.GetFilePointer() - start);
+				meta.WriteLong(data.FilePointer - start);
 			}
 			else
 			{
@@ -252,7 +247,7 @@ namespace Lucene.Net.Codecs.Memory
 		// TODO: in some cases representing missing with minValue-1 wouldn't take up additional space and so on,
 		// but this is very simple, and algorithms only check this for values of 0 anyway (doesnt slow down normal decode)
 		/// <exception cref="System.IO.IOException"></exception>
-		internal virtual void WriteMissingBitset<_T0>(Iterable<_T0> values)
+		internal virtual void WriteMissingBitset<T>(IEnumerable<T> values)
 		{
 			long bits = 0;
 			int count = 0;
@@ -276,29 +271,27 @@ namespace Lucene.Net.Codecs.Memory
 			}
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
-		public override void AddSortedField(FieldInfo field, Iterable<BytesRef> values, Iterable
-			<Number> docToOrd)
+		
+		public override void AddSortedField(FieldInfo field, IEnumerable<BytesRef> values, IEnumerable<int?> docToOrd)
 		{
 			meta.WriteVInt(field.number);
 			meta.WriteByte(DirectDocValuesProducer.SORTED);
 			// write the ordinals as numerics
-			AddNumericFieldValues(field, docToOrd);
+			AddNumericFieldValues(field, docToOrd.ToList().ConvertAll(i=>(long?)i));
 			// write the values as binary
 			AddBinaryFieldValues(field, values);
 		}
 
 		// note: this might not be the most efficient... but its fairly simple
-		/// <exception cref="System.IO.IOException"></exception>
-		public override void AddSortedSetField(FieldInfo field, Iterable<BytesRef> values
-			, Iterable<Number> docToOrdCount, Iterable<Number> ords)
+		
+		public override void AddSortedSetField(FieldInfo field, IEnumerable<BytesRef> values, IEnumerable<int?> docToOrdCount, IEnumerable<long?> ords)
 		{
 			meta.WriteVInt(field.number);
 			meta.WriteByte(DirectDocValuesProducer.SORTED_SET);
 			// First write docToOrdCounts, except we "aggregate" the
 			// counts so they turn into addresses, and add a final
 			// value = the total aggregate:
-			AddNumericFieldValues(field, new _Iterable_251(docToOrdCount));
+			AddNumericFieldValues(field, GetNumericIterator(docToOrdCount));
 			// Just aggregates the count values so they become
 			// "addresses", and adds one more value in the end
 			// (the final sum):
@@ -311,65 +304,18 @@ namespace Lucene.Net.Codecs.Memory
 			AddBinaryFieldValues(field, values);
 		}
 
-		private sealed class _Iterable_251 : Iterable<Number>
-		{
-			public _Iterable_251(Iterable<Number> docToOrdCount)
-			{
-				this.docToOrdCount = docToOrdCount;
-			}
+        private IEnumerable<long?> GetNumericIterator(IEnumerable<int?> intList)
+        {
+            // .NET Port: using yield return instead of custom iterator type. Much less code.
 
-			public override Iterator<Number> Iterator()
-			{
-				Iterator<Number> iter = docToOrdCount.Iterator();
-				return new _Iterator_261(iter);
-			}
-
-			private sealed class _Iterator_261 : Iterator<Number>
-			{
-				public _Iterator_261(Iterator<Number> iter)
-				{
-					this.iter = iter;
-				}
-
-				internal long sum;
-
-				internal bool ended;
-
-				public override bool HasNext()
-				{
-					return iter.HasNext() || !this.ended;
-				}
-
-				public override Number Next()
-				{
-					long toReturn = this.sum;
-					if (iter.HasNext())
-					{
-						Number n = iter.Next();
-						if (n != null)
-						{
-							this.sum += n;
-						}
-					}
-					else
-					{
-						if (!this.ended)
-						{
-							this.ended = true;
-						}
-					}
-					return toReturn;
-				}
-
-				public override void Remove()
-				{
-					throw new NotSupportedException();
-				}
-
-				private readonly Iterator<Number> iter;
-			}
-
-			private readonly Iterable<Number> docToOrdCount;
-		}
+            long? sum = 0;
+            long? retVal;
+            foreach (var i in intList)
+            {
+                retVal = sum;
+                sum += i;
+                yield return retVal;
+            }
+        }
 	}
 }

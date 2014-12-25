@@ -767,7 +767,7 @@ namespace Lucene.Net.Codecs.Sep
 				//assert pendingPayloadBytes >= payloadLength;
 				if (this.pendingPayloadBytes > this.payloadLength)
 				{
-					this.payloadIn.Seek(this.payloadIn.GetFilePointer() + (this.pendingPayloadBytes -
+					this.payloadIn.Seek(this.payloadIn.FilePointer + (this.pendingPayloadBytes -
 						 this.payloadLength));
 				}
 				if (this.payload == null)

@@ -83,7 +83,7 @@ namespace Lucene.Net.Codecs.Simpletext
 				SimpleTextUtil.ReadLine(input, scratch);
 				if (StringHelper.StartsWith(scratch, DOC))
 				{
-					offsets[upto] = input.GetFilePointer();
+					offsets[upto] = input.FilePointer;
 					upto++;
 				}
 			}

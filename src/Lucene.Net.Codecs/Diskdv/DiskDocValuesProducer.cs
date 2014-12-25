@@ -1,22 +1,15 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using Lucene.Net.Codecs.Lucene45;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
 using Lucene.Net.Util.Packed;
-using Sharpen;
 
 namespace Lucene.Net.Codecs.Diskdv
 {
 	internal class DiskDocValuesProducer : Lucene45DocValuesProducer
 	{
 		/// <exception cref="System.IO.IOException"></exception>
-		protected DiskDocValuesProducer(SegmentReadState state, string dataCodec, string 
+		public DiskDocValuesProducer(SegmentReadState state, string dataCodec, string 
 			dataExtension, string metaCodec, string metaExtension) : base(state, dataCodec, 
 			dataExtension, metaCodec, metaExtension)
 		{

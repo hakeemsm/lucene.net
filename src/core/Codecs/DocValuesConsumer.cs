@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Lucene.Net.Index;
+using Lucene.Net.Support;
 using Lucene.Net.Util;
 using OrdinalMap = Lucene.Net.Index.MultiDocValues.OrdinalMap;
 
@@ -14,13 +15,13 @@ namespace Lucene.Net.Codecs
         {
         }
 
-        public abstract void AddNumericField(FieldInfo field, IEnumerable<long> values);
+        public abstract void AddNumericField(FieldInfo field, IEnumerable<long?> values);
 
         public abstract void AddBinaryField(FieldInfo field, IEnumerable<BytesRef> values);
 
-        public abstract void AddSortedField(FieldInfo field, IEnumerable<BytesRef> values, IEnumerable<int> docToOrd);
+        public abstract void AddSortedField(FieldInfo field, IEnumerable<BytesRef> values, IEnumerable<int?> docToOrd);
 
-        public abstract void AddSortedSetField(FieldInfo field, IEnumerable<BytesRef> values, IEnumerable<int> docToOrdCount, IEnumerable<long> ords);
+        public abstract void AddSortedSetField(FieldInfo field, IEnumerable<BytesRef> values, IEnumerable<int?> docToOrdCount, IEnumerable<long?> ords);
 
         public virtual void MergeNumericField(FieldInfo fieldInfo, MergeState mergeState,
             IList<NumericDocValues> toMerge, IList<IBits> docsWithField)
@@ -28,7 +29,7 @@ namespace Lucene.Net.Codecs
             AddNumericField(fieldInfo, GetMergeNumericFieldEnumerable(toMerge, mergeState));
         }
 
-        private IEnumerable<long> GetMergeNumericFieldEnumerable(IList<NumericDocValues> toMerge, MergeState mergeState)
+        private IEnumerable<long?> GetMergeNumericFieldEnumerable(IList<NumericDocValues> toMerge, MergeState mergeState)
         {
             int readerUpto = -1;
             int docIDUpto = 0;
@@ -170,7 +171,7 @@ namespace Lucene.Net.Codecs
             }
         }
 
-        private IEnumerable<int> GetMergeSortedFieldDocToOrdEnumerable(AtomicReader[] readers, SortedDocValues[] dvs, OrdinalMap map)
+        private IEnumerable<int?> GetMergeSortedFieldDocToOrdEnumerable(AtomicReader[] readers, SortedDocValues[] dvs, OrdinalMap map)
         {
             int readerUpto = -1;
             int docIDUpto = 0;
@@ -267,7 +268,7 @@ namespace Lucene.Net.Codecs
             }
         }
 
-        private IEnumerable<int> GetMergeSortedSetDocToOrdCountEnumerable(AtomicReader[] readers, SortedSetDocValues[] dvs)
+        private IEnumerable<int?> GetMergeSortedSetDocToOrdCountEnumerable(AtomicReader[] readers, SortedSetDocValues[] dvs)
         {
             int readerUpto = -1;
             int docIDUpto = 0;
@@ -311,7 +312,7 @@ namespace Lucene.Net.Codecs
             }
         }
 
-        private IEnumerable<long> GetMergeSortedSetOrdsEnumerable(AtomicReader[] readers, SortedSetDocValues[] dvs, OrdinalMap map)
+        private IEnumerable<long?> GetMergeSortedSetOrdsEnumerable(AtomicReader[] readers, SortedSetDocValues[] dvs, OrdinalMap map)
         {
             int readerUpto = -1;
             int docIDUpto = 0;

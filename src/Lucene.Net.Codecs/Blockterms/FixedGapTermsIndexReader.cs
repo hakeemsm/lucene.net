@@ -1,22 +1,13 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
+using System;
 using System.Collections.Generic;
-using Lucene.Net.Codecs;
-using Lucene.Net.Codecs.Blockterms;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Lucene.Net.Util.Packed;
-using Sharpen;
 
 namespace Lucene.Net.Codecs.Blockterms
 {
 	/// <summary>TermsIndexReader for simple every Nth terms indexes.</summary>
-	/// <remarks>TermsIndexReader for simple every Nth terms indexes.</remarks>
 	/// <seealso cref="FixedGapTermsIndexWriter">FixedGapTermsIndexWriter</seealso>
 	/// <lucene.experimental></lucene.experimental>
 	public class FixedGapTermsIndexReader : TermsIndexReaderBase
@@ -27,7 +18,7 @@ namespace Lucene.Net.Codecs.Blockterms
 
 		private readonly int indexInterval;
 
-		private IndexInput @in;
+		private IndexInput indexInput;
 
 		private volatile bool indexLoaded;
 
@@ -39,8 +30,8 @@ namespace Lucene.Net.Codecs.Blockterms
 
 		private PagedBytes.Reader termBytesReader;
 
-		internal readonly Dictionary<FieldInfo, FixedGapTermsIndexReader.FieldIndexData> 
-			fields = new Dictionary<FieldInfo, FixedGapTermsIndexReader.FieldIndexData>();
+		internal readonly Dictionary<FieldInfo, FieldIndexData> 
+			fields = new Dictionary<FieldInfo, FieldIndexData>();
 
 		private long dirOffset;
 
@@ -64,21 +55,21 @@ namespace Lucene.Net.Codecs.Blockterms
 			this.termComp = termComp;
 			//HM:revisit 
 			//assert indexDivisor == -1 || indexDivisor > 0;
-			@in = dir.OpenInput(IndexFileNames.SegmentFileName(segment, segmentSuffix, FixedGapTermsIndexWriter
+			indexInput = dir.OpenInput(IndexFileNames.SegmentFileName(segment, segmentSuffix, FixedGapTermsIndexWriter
 				.TERMS_INDEX_EXTENSION), context);
 			bool success = false;
 			try
 			{
-				version = ReadHeader(@in);
+				version = ReadHeader(indexInput);
 				if (version >= FixedGapTermsIndexWriter.VERSION_CHECKSUM)
 				{
-					CodecUtil.ChecksumEntireFile(@in);
+					CodecUtil.ChecksumEntireFile(indexInput);
 				}
-				indexInterval = @in.ReadInt();
+				indexInterval = indexInput.ReadInt();
 				if (indexInterval < 1)
 				{
 					throw new CorruptIndexException("invalid indexInterval: " + indexInterval + " (resource="
-						 + @in + ")");
+						 + indexInput + ")");
 				}
 				this.indexDivisor = indexDivisor;
 				if (indexDivisor < 0)
@@ -92,42 +83,41 @@ namespace Lucene.Net.Codecs.Blockterms
 				}
 				//HM:revisit 
 				//assert totalIndexInterval > 0;
-				SeekDir(@in, dirOffset);
+				SeekDir(indexInput, dirOffset);
 				// Read directory
-				int numFields = @in.ReadVInt();
+				int numFields = indexInput.ReadVInt();
 				if (numFields < 0)
 				{
 					throw new CorruptIndexException("invalid numFields: " + numFields + " (resource="
-						 + @in + ")");
+						 + indexInput + ")");
 				}
 				//System.out.println("FGR: init seg=" + segment + " div=" + indexDivisor + " nF=" + numFields);
 				for (int i = 0; i < numFields; i++)
 				{
-					int field = @in.ReadVInt();
-					int numIndexTerms = @in.ReadVInt();
+					int field = indexInput.ReadVInt();
+					int numIndexTerms = indexInput.ReadVInt();
 					if (numIndexTerms < 0)
 					{
 						throw new CorruptIndexException("invalid numIndexTerms: " + numIndexTerms + " (resource="
-							 + @in + ")");
+							 + indexInput + ")");
 					}
-					long termsStart = @in.ReadVLong();
-					long indexStart = @in.ReadVLong();
-					long packedIndexStart = @in.ReadVLong();
-					long packedOffsetsStart = @in.ReadVLong();
+					long termsStart = indexInput.ReadVLong();
+					long indexStart = indexInput.ReadVLong();
+					long packedIndexStart = indexInput.ReadVLong();
+					long packedOffsetsStart = indexInput.ReadVLong();
 					if (packedIndexStart < indexStart)
 					{
 						throw new CorruptIndexException("invalid packedIndexStart: " + packedIndexStart +
 							 " indexStart: " + indexStart + "numIndexTerms: " + numIndexTerms + " (resource="
-							 + @in + ")");
+							 + indexInput + ")");
 					}
 					FieldInfo fieldInfo = fieldInfos.FieldInfo(field);
-					FixedGapTermsIndexReader.FieldIndexData previous = fields.Put(fieldInfo, new FixedGapTermsIndexReader.FieldIndexData
+					FieldIndexData previous = fields[fieldInfo] = new FieldIndexData
 						(this, fieldInfo, numIndexTerms, indexStart, termsStart, packedIndexStart, packedOffsetsStart
-						));
+						);
 					if (previous != null)
 					{
-						throw new CorruptIndexException("duplicate field: " + fieldInfo.name + " (resource="
-							 + @in + ")");
+						throw new CorruptIndexException("duplicate field: " + fieldInfo.name + " (resource="+ indexInput + ")");
 					}
 				}
 				success = true;
@@ -136,12 +126,12 @@ namespace Lucene.Net.Codecs.Blockterms
 			{
 				if (!success)
 				{
-					IOUtils.CloseWhileHandlingException(@in);
+					IOUtils.CloseWhileHandlingException((IDisposable)indexInput);
 				}
 				if (indexDivisor > 0)
 				{
-					@in.Close();
-					@in = null;
+					indexInput.Dispose();
+					indexInput = null;
 					if (success)
 					{
 						indexLoaded = true;
@@ -168,18 +158,18 @@ namespace Lucene.Net.Codecs.Blockterms
 			return version;
 		}
 
-		private class IndexEnum : TermsIndexReaderBase.FieldIndexEnum
+		private class IndexEnum : FieldIndexEnum
 		{
-			private readonly FixedGapTermsIndexReader.FieldIndexData.CoreFieldIndex fieldIndex;
+			private readonly FieldIndexData.CoreFieldIndex fieldIndex;
 
 			private readonly BytesRef term = new BytesRef();
 
 			private long ord;
 
-			public IndexEnum(FixedGapTermsIndexReader _enclosing, FixedGapTermsIndexReader.FieldIndexData.CoreFieldIndex
+			public IndexEnum(FixedGapTermsIndexReader enclosing, FieldIndexData.CoreFieldIndex
 				 fieldIndex)
 			{
-				this._enclosing = _enclosing;
+				this.enclosingInstance = enclosing;
 				this.fieldIndex = fieldIndex;
 			}
 
@@ -200,9 +190,9 @@ namespace Lucene.Net.Codecs.Blockterms
 					int mid = (int)(((uint)(lo + hi)) >> 1);
 					long offset = this.fieldIndex.termOffsets.Get(mid);
 					int length = (int)(this.fieldIndex.termOffsets.Get(1 + mid) - offset);
-					this._enclosing.termBytesReader.FillSlice(this.term, this.fieldIndex.termBytesStart
+					this.enclosingInstance.termBytesReader.FillSlice(this.term, this.fieldIndex.termBytesStart
 						 + offset, length);
-					int delta = this._enclosing.termComp.Compare(target, this.term);
+					int delta = this.enclosingInstance.termComp.Compare(target, this.term);
 					if (delta < 0)
 					{
 						hi = mid - 1;
@@ -217,7 +207,7 @@ namespace Lucene.Net.Codecs.Blockterms
 						{
 							//HM:revisit 
 							//assert mid >= 0;
-							this.ord = mid * this._enclosing.totalIndexInterval;
+							this.ord = mid * this.enclosingInstance.totalIndexInterval;
 							return this.fieldIndex.termsStart + this.fieldIndex.termsDictOffsets.Get(mid);
 						}
 					}
@@ -230,23 +220,23 @@ namespace Lucene.Net.Codecs.Blockterms
 				}
 				long offset_1 = this.fieldIndex.termOffsets.Get(hi);
 				int length_1 = (int)(this.fieldIndex.termOffsets.Get(1 + hi) - offset_1);
-				this._enclosing.termBytesReader.FillSlice(this.term, this.fieldIndex.termBytesStart
+				this.enclosingInstance.termBytesReader.FillSlice(this.term, this.fieldIndex.termBytesStart
 					 + offset_1, length_1);
-				this.ord = hi * this._enclosing.totalIndexInterval;
+				this.ord = hi * this.enclosingInstance.totalIndexInterval;
 				return this.fieldIndex.termsStart + this.fieldIndex.termsDictOffsets.Get(hi);
 			}
 
 			public override long Next()
 			{
-				int idx = 1 + (int)(this.ord / this._enclosing.totalIndexInterval);
+				int idx = 1 + (int)(this.ord / this.enclosingInstance.totalIndexInterval);
 				if (idx >= this.fieldIndex.numIndexTerms)
 				{
 					return -1;
 				}
-				this.ord += this._enclosing.totalIndexInterval;
+				this.ord += this.enclosingInstance.totalIndexInterval;
 				long offset = this.fieldIndex.termOffsets.Get(idx);
 				int length = (int)(this.fieldIndex.termOffsets.Get(1 + idx) - offset);
-				this._enclosing.termBytesReader.FillSlice(this.term, this.fieldIndex.termBytesStart
+				this.enclosingInstance.termBytesReader.FillSlice(this.term, this.fieldIndex.termBytesStart
 					 + offset, length);
 				return this.fieldIndex.termsStart + this.fieldIndex.termsDictOffsets.Get(idx);
 			}
@@ -258,19 +248,19 @@ namespace Lucene.Net.Codecs.Blockterms
 
 			public override long Seek(long ord)
 			{
-				int idx = (int)(ord / this._enclosing.totalIndexInterval);
+				int idx = (int)(ord / this.enclosingInstance.totalIndexInterval);
 				// caller must ensure ord is in bounds
 				//HM:revisit 
 				//assert idx < fieldIndex.numIndexTerms;
 				long offset = this.fieldIndex.termOffsets.Get(idx);
 				int length = (int)(this.fieldIndex.termOffsets.Get(1 + idx) - offset);
-				this._enclosing.termBytesReader.FillSlice(this.term, this.fieldIndex.termBytesStart
+				this.enclosingInstance.termBytesReader.FillSlice(this.term, this.fieldIndex.termBytesStart
 					 + offset, length);
-				this.ord = idx * this._enclosing.totalIndexInterval;
+				this.ord = idx * this.enclosingInstance.totalIndexInterval;
 				return this.fieldIndex.termsStart + this.fieldIndex.termsDictOffsets.Get(idx);
 			}
 
-			private readonly FixedGapTermsIndexReader _enclosing;
+			private readonly FixedGapTermsIndexReader enclosingInstance;
 		}
 
 		public override bool SupportsOrd()
@@ -278,7 +268,7 @@ namespace Lucene.Net.Codecs.Blockterms
 			return true;
 		}
 
-		private sealed class FieldIndexData
+	    internal sealed class FieldIndexData
 		{
 			internal volatile FixedGapTermsIndexReader.FieldIndexData.CoreFieldIndex coreIndex;
 
@@ -320,13 +310,13 @@ namespace Lucene.Net.Codecs.Blockterms
 				}
 			}
 
-			private sealed class CoreFieldIndex
+	        internal sealed class CoreFieldIndex
 			{
 				internal readonly long termBytesStart;
 
-				internal readonly PackedInts.Reader termOffsets;
+				internal readonly PackedInts.IReader termOffsets;
 
-				internal readonly PackedInts.Reader termsDictOffsets;
+				internal readonly PackedInts.IReader termsDictOffsets;
 
 				internal readonly int numIndexTerms;
 
@@ -342,8 +332,8 @@ namespace Lucene.Net.Codecs.Blockterms
 					// offset into index termBytes
 					// index pointers into main terms dict
 					this.termsStart = termsStart;
-					this.termBytesStart = this._enclosing._enclosing.termBytes.GetPointer();
-					IndexInput clone = ((IndexInput)this._enclosing._enclosing.@in.Clone());
+					this.termBytesStart = this._enclosing._enclosing.termBytes.Pointer;
+					IndexInput clone = ((IndexInput)this._enclosing._enclosing.indexInput.Clone());
 					clone.Seek(indexStart);
 					// -1 is passed to mean "don't load term index", but
 					// if we are then later loaded it's overwritten with
@@ -371,30 +361,30 @@ namespace Lucene.Net.Codecs.Blockterms
 						{
 							//HM:revisit 
 							//assert termOffsets.size() == 1+numIndexTerms;
-							clone.Close();
+							clone.Dispose();
 						}
 					}
 					else
 					{
 						// Get packed iterators
-						IndexInput clone1 = ((IndexInput)this._enclosing._enclosing.@in.Clone());
-						IndexInput clone2 = ((IndexInput)this._enclosing._enclosing.@in.Clone());
+						IndexInput clone1 = ((IndexInput)this._enclosing._enclosing.indexInput.Clone());
+						IndexInput clone2 = ((IndexInput)this._enclosing._enclosing.indexInput.Clone());
 						try
 						{
 							// Subsample the index terms
 							clone1.Seek(packedIndexStart);
-							PackedInts.ReaderIterator termsDictOffsetsIter = PackedInts.GetReaderIterator(clone1
+							PackedInts.IReaderIterator termsDictOffsetsIter = PackedInts.GetReaderIterator(clone1
 								, PackedInts.DEFAULT_BUFFER_SIZE);
 							clone2.Seek(packedOffsetsStart);
-							PackedInts.ReaderIterator termOffsetsIter = PackedInts.GetReaderIterator(clone2, 
+							PackedInts.IReaderIterator termOffsetsIter = PackedInts.GetReaderIterator(clone2, 
 								PackedInts.DEFAULT_BUFFER_SIZE);
 							// TODO: often we can get by w/ fewer bits per
 							// value, below.. .but this'd be more complex:
 							// we'd have to try @ fewer bits and then grow
 							// if we overflowed it.
-							PackedInts.Mutable termsDictOffsetsM = PackedInts.GetMutable(this.numIndexTerms, 
+							PackedInts.IMutable termsDictOffsetsM = PackedInts.GetMutable(this.numIndexTerms, 
 								termsDictOffsetsIter.GetBitsPerValue(), PackedInts.DEFAULT);
-							PackedInts.Mutable termOffsetsM = PackedInts.GetMutable(this.numIndexTerms + 1, termOffsetsIter
+							PackedInts.IMutable termOffsetsM = PackedInts.GetMutable(this.numIndexTerms + 1, termOffsetsIter
 								.GetBitsPerValue(), PackedInts.DEFAULT);
 							this.termsDictOffsets = termsDictOffsetsM;
 							this.termOffsets = termOffsetsM;
@@ -432,9 +422,9 @@ namespace Lucene.Net.Codecs.Blockterms
 						}
 						finally
 						{
-							clone1.Close();
-							clone2.Close();
-							clone.Close();
+							clone1.Dispose();
+							clone2.Dispose();
+							clone.Dispose();
 						}
 					}
 				}
@@ -452,42 +442,38 @@ namespace Lucene.Net.Codecs.Blockterms
 			private readonly FixedGapTermsIndexReader _enclosing;
 		}
 
-		public override TermsIndexReaderBase.FieldIndexEnum GetFieldEnum(FieldInfo fieldInfo
-			)
+		public override FieldIndexEnum GetFieldEnum(FieldInfo fieldInfo)
 		{
-			FixedGapTermsIndexReader.FieldIndexData fieldData = fields.Get(fieldInfo);
+			var fieldData = fields[fieldInfo];
 			if (fieldData.coreIndex == null)
 			{
 				return null;
 			}
-			else
-			{
-				return new FixedGapTermsIndexReader.IndexEnum(this, fieldData.coreIndex);
-			}
+		    return new IndexEnum(this, fieldData.coreIndex);
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		
 		public override void Close()
 		{
-			if (@in != null && !indexLoaded)
+			if (indexInput != null && !indexLoaded)
 			{
-				@in.Close();
+				indexInput.Dispose();
 			}
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		
 		private void SeekDir(IndexInput input, long dirOffset)
 		{
 			if (version >= FixedGapTermsIndexWriter.VERSION_CHECKSUM)
 			{
-				input.Seek(input.Length() - CodecUtil.FooterLength() - 8);
+				input.Seek(input.Length - CodecUtil.FooterLength() - 8);
 				dirOffset = input.ReadLong();
 			}
 			else
 			{
 				if (version >= FixedGapTermsIndexWriter.VERSION_APPEND_ONLY)
 				{
-					input.Seek(input.Length() - 8);
+					input.Seek(input.Length - 8);
 					dirOffset = input.ReadLong();
 				}
 			}

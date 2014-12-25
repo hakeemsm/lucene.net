@@ -70,7 +70,7 @@ namespace Lucene.Net.Codecs.Simpletext
 						string fieldName = new string(scratch.bytes, scratch.offset + SimpleTextFieldsWriter
 							.FIELD.length, scratch.length - SimpleTextFieldsWriter.FIELD.length, StandardCharsets
 							.UTF_8);
-						fields.Put(fieldName, input.GetFilePointer());
+						fields.Put(fieldName, input.FilePointer);
 					}
 				}
 			}
@@ -318,7 +318,7 @@ namespace Lucene.Net.Codecs.Simpletext
 				int termFreq = 0;
 				while (true)
 				{
-					long lineStart = this.@in.GetFilePointer();
+					long lineStart = this.@in.FilePointer;
 					SimpleTextUtil.ReadLine(this.@in, this.scratch);
 					if (StringHelper.StartsWith(this.scratch, SimpleTextFieldsWriter.DOC))
 					{
@@ -495,7 +495,7 @@ namespace Lucene.Net.Codecs.Simpletext
 				long posStart = 0;
 				while (true)
 				{
-					long lineStart = this.@in.GetFilePointer();
+					long lineStart = this.@in.FilePointer;
 					SimpleTextUtil.ReadLine(this.@in, this.scratch);
 					//System.out.println("NEXT DOC: " + scratch.utf8ToString());
 					if (StringHelper.StartsWith(this.scratch, SimpleTextFieldsWriter.DOC))
@@ -523,7 +523,7 @@ namespace Lucene.Net.Codecs.Simpletext
 								);
 							this.tf = ArrayUtil.ParseInt(this.scratchUTF16.chars, 0, this.scratchUTF16.length
 								);
-							posStart = this.@in.GetFilePointer();
+							posStart = this.@in.FilePointer;
 						}
 						else
 						{
@@ -614,7 +614,7 @@ namespace Lucene.Net.Codecs.Simpletext
 					this.endOffset = ArrayUtil.ParseInt(this.scratchUTF16_2.chars, 0, this.scratchUTF16_2
 						.length);
 				}
-				long fp = this.@in.GetFilePointer();
+				long fp = this.@in.FilePointer;
 				SimpleTextUtil.ReadLine(this.@in, this.scratch);
 				if (StringHelper.StartsWith(this.scratch, SimpleTextFieldsWriter.PAYLOAD))
 				{
@@ -772,7 +772,7 @@ namespace Lucene.Net.Codecs.Simpletext
 										b.Add(Lucene.Net.Util.Fst.Util.ToIntsRef(lastTerm, scratchIntsRef), outputs
 											.NewPair(lastDocsStart, outputsInner.NewPair((long)docFreq, totalTermFreq)));
 									}
-									lastDocsStart = @in.GetFilePointer();
+									lastDocsStart = @in.FilePointer;
 									int len = this.scratch.length - SimpleTextFieldsWriter.TERM.length;
 									if (len > lastTerm.length)
 									{

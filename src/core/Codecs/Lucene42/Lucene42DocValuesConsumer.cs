@@ -54,7 +54,7 @@ namespace Lucene.Net.Codecs.Lucene42
             }
         }
 
-        public override void AddNumericField(FieldInfo field, IEnumerable<long> values)
+        public override void AddNumericField(FieldInfo field, IEnumerable<long?> values)
         {
             meta.WriteVInt(field.number);
             meta.WriteByte(NUMBER);
@@ -216,16 +216,17 @@ namespace Lucene.Net.Codecs.Lucene42
             meta.WriteVLong(ord);
         }
 
-        public override void AddSortedField(FieldInfo field, IEnumerable<BytesRef> values, IEnumerable<int> docToOrd)
+        public override void AddSortedField(FieldInfo field, IEnumerable<BytesRef> values, IEnumerable<int?> docToOrd)
         {
             // write the ordinals as numerics
-            AddNumericField(field, docToOrd.Cast<long>());
+            IEnumerable<long?> longList = docToOrd.ToList().ConvertAll(i => (long?) i.Value);
+            AddNumericField(field, longList);
 
             // write the values as FST
             WriteFST(field, values);
         }
 
-        public override void AddSortedSetField(FieldInfo field, IEnumerable<BytesRef> values, IEnumerable<int> docToOrdCount, IEnumerable<long> ords)
+        public override void AddSortedSetField(FieldInfo field, IEnumerable<BytesRef> values, IEnumerable<int?> docToOrdCount, IEnumerable<long?> ords)
         {
             AddBinaryField(field, new AnonymousAddSortedSetFieldEnumerable(docToOrdCount, ords));
             // write the ordinals as a binary field
@@ -242,10 +243,10 @@ namespace Lucene.Net.Codecs.Lucene42
 
         private sealed class AnonymousAddSortedSetFieldEnumerable : IEnumerable<BytesRef>
         {
-            private readonly IEnumerable<int> docToOrdCount;
-            private readonly IEnumerable<long> ords;
+            private readonly IEnumerable<int?> docToOrdCount;
+            private readonly IEnumerable<long?> ords;
 
-            public AnonymousAddSortedSetFieldEnumerable(IEnumerable<int> docToOrdCount, IEnumerable<long> ords)
+            public AnonymousAddSortedSetFieldEnumerable(IEnumerable<int?> docToOrdCount, IEnumerable<long?> ords)
             {
                 this.docToOrdCount = docToOrdCount;
                 this.ords = ords;
@@ -268,10 +269,10 @@ namespace Lucene.Net.Codecs.Lucene42
             internal ByteArrayDataOutput output = new ByteArrayDataOutput();
             internal BytesRef bytesref = new BytesRef();
 
-            internal IEnumerator<int> counts;
-            internal IEnumerator<long> ords;
+            internal IEnumerator<int?> counts;
+            internal IEnumerator<long?> ords;
 
-            internal SortedSetIterator(IEnumerator<int> counts, IEnumerator<long> ords)
+            internal SortedSetIterator(IEnumerator<int?> counts, IEnumerator<long?> ords)
             {
                 this.counts = counts;
                 this.ords = ords;
@@ -298,8 +299,8 @@ namespace Lucene.Net.Codecs.Lucene42
                 if (!counts.MoveNext())
                     return false;
 
-                int count = counts.Current;
-                int maxSize = count * 9; // worst case
+                var count = counts.Current;
+                int maxSize = count.Value * 9; // worst case
                 if (maxSize > buffer.Length)
                 {
                     buffer = ArrayUtil.Grow(buffer, maxSize);
@@ -307,7 +308,7 @@ namespace Lucene.Net.Codecs.Lucene42
 
                 try
                 {
-                    EncodeValues(count);
+                    EncodeValues(count.Value);
                 }
                 catch (System.IO.IOException)
                 {
@@ -329,9 +330,9 @@ namespace Lucene.Net.Codecs.Lucene42
                 for (int i = 0; i < count; i++)
                 {
                     ords.MoveNext();
-                    long ord = ords.Current;
-                    output.WriteVLong(ord - lastOrd);
-                    lastOrd = ord;
+                    var ord = ords.Current;
+                    output.WriteVLong(ord.Value - lastOrd);
+                    lastOrd = ord.Value;
                 }
             }
 

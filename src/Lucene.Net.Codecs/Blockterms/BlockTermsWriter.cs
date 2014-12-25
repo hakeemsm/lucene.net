@@ -1,17 +1,8 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using System.Collections.Generic;
-using Lucene.Net.Codecs;
-using Lucene.Net.Codecs.Blockterms;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
 using Lucene.Net.Util;
-using Sharpen;
 
 namespace Lucene.Net.Codecs.Blockterms
 {
@@ -43,7 +34,7 @@ namespace Lucene.Net.Codecs.Blockterms
 		/// <summary>Extension of terms file</summary>
 		internal static readonly string TERMS_EXTENSION = "tib";
 
-		protected internal IndexOutput @out;
+		protected internal IndexOutput indexOut;
 
 		internal readonly PostingsWriterBase postingsWriter;
 
@@ -90,8 +81,7 @@ namespace Lucene.Net.Codecs.Blockterms
 			}
 		}
 
-		private readonly IList<BlockTermsWriter.FieldMetaData> fields = new AList<BlockTermsWriter.FieldMetaData
-			>();
+		private readonly IList<FieldMetaData> fields = new List<FieldMetaData>();
 
 		/// <exception cref="System.IO.IOException"></exception>
 		public BlockTermsWriter(TermsIndexWriterBase termsIndexWriter, SegmentWriteState 
@@ -101,17 +91,17 @@ namespace Lucene.Net.Codecs.Blockterms
 			string termsFileName = IndexFileNames.SegmentFileName(state.segmentInfo.name, state
 				.segmentSuffix, TERMS_EXTENSION);
 			this.termsIndexWriter = termsIndexWriter;
-			@out = state.directory.CreateOutput(termsFileName, state.context);
+			indexOut = state.directory.CreateOutput(termsFileName, state.context);
 			bool success = false;
 			try
 			{
 				fieldInfos = state.fieldInfos;
-				WriteHeader(@out);
+				WriteHeader(indexOut);
 				currentField = null;
 				this.postingsWriter = postingsWriter;
 				// segment = state.segmentName;
 				//System.out.println("BTW.init seg=" + state.segmentName);
-				postingsWriter.Init(@out);
+				postingsWriter.Init(indexOut);
 				// have consumer write its format/header
 				success = true;
 			}
@@ -119,7 +109,7 @@ namespace Lucene.Net.Codecs.Blockterms
 			{
 				if (!success)
 				{
-					IOUtils.CloseWhileHandlingException(@out);
+					IOUtils.CloseWhileHandlingException((IDisposable)indexOut);
 				}
 			}
 		}
@@ -140,43 +130,43 @@ namespace Lucene.Net.Codecs.Blockterms
 			//assert currentField == null || currentField.name.compareTo(field.name) < 0;
 			currentField = field;
 			TermsIndexWriterBase.FieldWriter fieldIndexWriter = termsIndexWriter.AddField(field
-				, @out.GetFilePointer());
+				, indexOut.FilePointer);
 			return new BlockTermsWriter.TermsWriter(this, fieldIndexWriter, field, postingsWriter
 				);
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		public override void Close()
+		protected override void Dispose(bool disposing)
 		{
-			if (@out != null)
+			if (indexOut != null)
 			{
 				try
 				{
-					long dirStart = @out.GetFilePointer();
-					@out.WriteVInt(fields.Count);
+					long dirStart = indexOut.FilePointer;
+					indexOut.WriteVInt(fields.Count);
 					foreach (BlockTermsWriter.FieldMetaData field in fields)
 					{
-						@out.WriteVInt(field.fieldInfo.number);
-						@out.WriteVLong(field.numTerms);
-						@out.WriteVLong(field.termsStartPointer);
-						if (field.fieldInfo.GetIndexOptions() != FieldInfo.IndexOptions.DOCS_ONLY)
+						indexOut.WriteVInt(field.fieldInfo.number);
+						indexOut.WriteVLong(field.numTerms);
+						indexOut.WriteVLong(field.termsStartPointer);
+						if (field.fieldInfo.IndexOptionsValue != FieldInfo.IndexOptions.DOCS_ONLY)
 						{
-							@out.WriteVLong(field.sumTotalTermFreq);
+							indexOut.WriteVLong(field.sumTotalTermFreq);
 						}
-						@out.WriteVLong(field.sumDocFreq);
-						@out.WriteVInt(field.docCount);
+						indexOut.WriteVLong(field.sumDocFreq);
+						indexOut.WriteVInt(field.docCount);
 						if (VERSION_CURRENT >= VERSION_META_ARRAY)
 						{
-							@out.WriteVInt(field.longsSize);
+							indexOut.WriteVInt(field.longsSize);
 						}
 					}
 					WriteTrailer(dirStart);
-					CodecUtil.WriteFooter(@out);
+					CodecUtil.WriteFooter(indexOut);
 				}
 				finally
 				{
-					IOUtils.Close(@out, postingsWriter, termsIndexWriter);
-					@out = null;
+					IOUtils.Close(indexOut, postingsWriter, termsIndexWriter);
+					indexOut = null;
 				}
 			}
 		}
@@ -184,7 +174,7 @@ namespace Lucene.Net.Codecs.Blockterms
 		/// <exception cref="System.IO.IOException"></exception>
 		private void WriteTrailer(long dirStart)
 		{
-			@out.WriteLong(dirStart);
+			indexOut.WriteLong(dirStart);
 		}
 
 		private class TermEntry
@@ -229,14 +219,14 @@ namespace Lucene.Net.Codecs.Blockterms
 				{
 					this.pendingTerms[i] = new BlockTermsWriter.TermEntry();
 				}
-				this.termsStartPointer = this._enclosing.@out.GetFilePointer();
+				this.termsStartPointer = this._enclosing.indexOut.FilePointer;
 				this.postingsWriter = postingsWriter;
 				this.longsSize = postingsWriter.SetField(fieldInfo);
 			}
 
-			public override IComparer<BytesRef> GetComparator()
+			public override IComparer<BytesRef> Comparator
 			{
-				return BytesRef.GetUTF8SortedAsUnicodeComparator();
+			    get { return BytesRef.UTF8SortedAsUnicodeComparer; }
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
@@ -267,7 +257,7 @@ namespace Lucene.Net.Codecs.Blockterms
 						// entire block in between index terms:
 						this.FlushBlock();
 					}
-					this.fieldIndexWriter.Add(text, stats, this._enclosing.@out.GetFilePointer());
+					this.fieldIndexWriter.Add(text, stats, this._enclosing.indexOut.FilePointer);
 				}
 				//System.out.println("  index term!");
 				if (this.pendingTerms.Length == this.pendingCount)
@@ -300,14 +290,14 @@ namespace Lucene.Net.Codecs.Blockterms
 					this.FlushBlock();
 				}
 				// EOF marker:
-				this._enclosing.@out.WriteVInt(0);
+				this._enclosing.indexOut.WriteVInt(0);
 				this.sumTotalTermFreq = sumTotalTermFreq;
 				this.sumDocFreq = sumDocFreq;
 				this.docCount = docCount;
-				this.fieldIndexWriter.Finish(this._enclosing.@out.GetFilePointer());
+				this.fieldIndexWriter.Finish(this._enclosing.indexOut.FilePointer);
 				if (this.numTerms > 0)
 				{
-					this._enclosing.fields.AddItem(new BlockTermsWriter.FieldMetaData(this.fieldInfo, 
+					this._enclosing.fields.Add(new BlockTermsWriter.FieldMetaData(this.fieldInfo, 
 						this.numTerms, this.termsStartPointer, sumTotalTermFreq, sumDocFreq, docCount, this
 						.longsSize));
 				}
@@ -356,8 +346,8 @@ namespace Lucene.Net.Codecs.Blockterms
 					commonPrefix = Math.Min(commonPrefix, this.SharedPrefix(this.lastPrevTerm, this.pendingTerms
 						[termCount].term));
 				}
-				this._enclosing.@out.WriteVInt(this.pendingCount);
-				this._enclosing.@out.WriteVInt(commonPrefix);
+				this._enclosing.indexOut.WriteVInt(this.pendingCount);
+				this._enclosing.indexOut.WriteVInt(commonPrefix);
 				// 2nd pass: write suffixes, as separate byte[] blob
 				for (int termCount_1 = 0; termCount_1 < this.pendingCount; termCount_1++)
 				{
@@ -368,8 +358,8 @@ namespace Lucene.Net.Codecs.Blockterms
 					this.bytesWriter.WriteBytes(this.pendingTerms[termCount_1].term.bytes, commonPrefix
 						, suffix);
 				}
-				this._enclosing.@out.WriteVInt((int)this.bytesWriter.GetFilePointer());
-				this.bytesWriter.WriteTo(this._enclosing.@out);
+				this._enclosing.indexOut.WriteVInt((int)this.bytesWriter.FilePointer);
+				this.bytesWriter.WriteTo(this._enclosing.indexOut);
 				this.bytesWriter.Reset();
 				// 3rd pass: write the freqs as byte[] blob
 				// TODO: cutover to better intblock codec.  simple64?
@@ -382,13 +372,13 @@ namespace Lucene.Net.Codecs.Blockterms
 					//HM:revisit 
 					//assert state != null;
 					this.bytesWriter.WriteVInt(state.docFreq);
-					if (this.fieldInfo.GetIndexOptions() != FieldInfo.IndexOptions.DOCS_ONLY)
+					if (this.fieldInfo.IndexOptionsValue != FieldInfo.IndexOptions.DOCS_ONLY)
 					{
 						this.bytesWriter.WriteVLong(state.totalTermFreq - state.docFreq);
 					}
 				}
-				this._enclosing.@out.WriteVInt((int)this.bytesWriter.GetFilePointer());
-				this.bytesWriter.WriteTo(this._enclosing.@out);
+				this._enclosing.indexOut.WriteVInt((int)this.bytesWriter.FilePointer);
+				this.bytesWriter.WriteTo(this._enclosing.indexOut);
 				this.bytesWriter.Reset();
 				// 4th pass: write the metadata 
 				long[] longs = new long[this.longsSize];
@@ -406,8 +396,8 @@ namespace Lucene.Net.Codecs.Blockterms
 					this.bufferWriter.Reset();
 					absolute = false;
 				}
-				this._enclosing.@out.WriteVInt((int)this.bytesWriter.GetFilePointer());
-				this.bytesWriter.WriteTo(this._enclosing.@out);
+				this._enclosing.indexOut.WriteVInt((int)this.bytesWriter.FilePointer);
+				this.bytesWriter.WriteTo(this._enclosing.indexOut);
 				this.bytesWriter.Reset();
 				this.lastPrevTerm.CopyBytes(this.pendingTerms[this.pendingCount - 1].term);
 				this.pendingCount = 0;

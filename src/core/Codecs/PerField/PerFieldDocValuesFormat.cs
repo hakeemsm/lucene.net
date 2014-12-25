@@ -72,7 +72,7 @@ namespace Lucene.Net.Codecs.PerField
                 segmentWriteState = state;
             }
 
-            public override void AddNumericField(FieldInfo field, IEnumerable<long> values)
+            public override void AddNumericField(FieldInfo field, IEnumerable<long?> values)
             {
                 GetInstance(field).AddNumericField(field, values);
             }
@@ -82,13 +82,12 @@ namespace Lucene.Net.Codecs.PerField
                 GetInstance(field).AddBinaryField(field, values);
             }
 
-            public override void AddSortedField(FieldInfo field, IEnumerable<BytesRef> values, IEnumerable<int> docToOrd)
+            public override void AddSortedField(FieldInfo field, IEnumerable<BytesRef> values, IEnumerable<int?> docToOrd)
             {
                 GetInstance(field).AddSortedField(field, values, docToOrd);
             }
 
-            public override void AddSortedSetField(FieldInfo field, IEnumerable<BytesRef> values,
-                IEnumerable<int> docToOrdCount, IEnumerable<long> ords)
+            public override void AddSortedSetField(FieldInfo field, IEnumerable<BytesRef> values, IEnumerable<int?> docToOrdCount, IEnumerable<long?> ords)
             {
                 GetInstance(field).AddSortedSetField(field, values, docToOrdCount, ords);
             }

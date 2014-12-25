@@ -1,18 +1,9 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using System.Collections.Generic;
-using Lucene.Net.Codecs;
-using Lucene.Net.Codecs.Blockterms;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Lucene.Net.Util.Packed;
-using Sharpen;
 
 namespace Lucene.Net.Codecs.Blockterms
 {
@@ -159,7 +150,7 @@ namespace Lucene.Net.Codecs.Blockterms
 				// that auto-grows... then we wouldn't force 6 bytes RAM
 				// per index term:
 				this.fieldInfo = fieldInfo;
-				this.indexStart = this._enclosing.@out.GetFilePointer();
+				this.indexStart = this._enclosing.@out.FilePointer;
 				this.termsStart = this.lastTermsPointer = termsFilePointer;
 				this.termLengths = new short[0];
 				this.termsPointerDeltas = new int[0];
@@ -220,7 +211,7 @@ namespace Lucene.Net.Codecs.Blockterms
 			public override void Finish(long termsFilePointer)
 			{
 				// write primary terms dict offsets
-				this.packedIndexStart = this._enclosing.@out.GetFilePointer();
+				this.packedIndexStart = this._enclosing.@out.FilePointer;
 				PackedInts.Writer w = PackedInts.GetWriter(this._enclosing.@out, this.numIndexTerms
 					, PackedInts.BitsRequired(termsFilePointer), PackedInts.DEFAULT);
 				// relative to our indexStart
@@ -231,7 +222,7 @@ namespace Lucene.Net.Codecs.Blockterms
 					w.Add(upto);
 				}
 				w.Finish();
-				this.packedOffsetsStart = this._enclosing.@out.GetFilePointer();
+				this.packedOffsetsStart = this._enclosing.@out.FilePointer;
 				// write offsets into the byte[] terms
 				w = PackedInts.GetWriter(this._enclosing.@out, 1 + this.numIndexTerms, PackedInts
 					.BitsRequired(this.totTermLength), PackedInts.DEFAULT);
@@ -260,7 +251,7 @@ namespace Lucene.Net.Codecs.Blockterms
 				bool success = false;
 				try
 				{
-					long dirStart = @out.GetFilePointer();
+					long dirStart = @out.FilePointer;
 					int fieldCount = fields.Count;
 					int nonNullFieldCount = 0;
 					for (int i = 0; i < fieldCount; i++)

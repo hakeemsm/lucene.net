@@ -253,10 +253,10 @@ namespace Lucene.Net.Codecs.Memory
 				{
 					buffer2.WriteVLong(stats.totalTermFreq - stats.docFreq);
 				}
-				int pos = (int)buffer2.GetFilePointer();
+				int pos = (int)buffer2.FilePointer;
 				buffer2.WriteTo(finalBuffer, 0);
 				buffer2.Reset();
-				int totalBytes = pos + (int)postingsWriter.buffer.GetFilePointer();
+				int totalBytes = pos + (int)postingsWriter.buffer.FilePointer;
 				if (totalBytes > finalBuffer.Length)
 				{
 					finalBuffer = ArrayUtil.Grow(finalBuffer, totalBytes);

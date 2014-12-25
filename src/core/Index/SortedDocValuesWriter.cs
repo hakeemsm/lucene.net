@@ -100,7 +100,7 @@ namespace Lucene.Net.Index
             int valueCount = hash.Size;
 
             int[] sortedValues = hash.Sort(BytesRef.UTF8SortedAsUnicodeComparer);
-            int[] ordMap = new int[valueCount];
+            var ordMap = new int[valueCount];
 
             for (int ord = 0; ord < valueCount; ord++)
             {
@@ -132,7 +132,7 @@ namespace Lucene.Net.Index
             }
         }
 
-        private IEnumerable<int> GetOrdsIterator(int[] ordMap, int maxDoc)
+        private IEnumerable<int?> GetOrdsIterator(int[] ordMap, int maxDoc)
         {
             // .NET Port: using yield return instead of custom iterator type. Much less code.
 

@@ -110,7 +110,7 @@ namespace Lucene.Net.Codecs.Simpletext
 				throw new CorruptIndexException("SimpleText checksum failure: " + actualChecksum 
 					+ " != " + expectedChecksum + " (resource=" + input + ")");
 			}
-			if (input.Length() != input.GetFilePointer())
+			if (input.Length() != input.FilePointer)
 			{
 				throw new CorruptIndexException("Unexpected stuff at the end of file, please be careful with your text editor! (resource="
 					 + input + ")");

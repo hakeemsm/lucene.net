@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+using System;
 using Lucene.Net.Codecs.Lucene40;
 
 namespace Lucene.Net.Codecs.Appending
@@ -27,7 +28,7 @@ namespace Lucene.Net.Codecs.Appending
 	/// streams and append-only filesystems.
 	/// </summary>
 	/// <lucene.experimental></lucene.experimental>
-	[System.ObsoleteAttribute(@"This codec is read-only: as the functionality has been folded into the default codec. Its only for convenience to read old segments."
+	[Obsolete(@"This codec is read-only: as the functionality has been folded into the default codec. Its only for convenience to read old segments."
 		)]
 	public class AppendingCodec : FilterCodec
 	{

@@ -289,7 +289,7 @@ namespace Lucene.Net.Codecs.Blockterms
 				this.fieldInfo = fieldInfo;
 				this.fstOutputs = PositiveIntOutputs.GetSingleton();
 				this.fstBuilder = new Builder<long>(FST.INPUT_TYPE.BYTE1, this.fstOutputs);
-				this.indexStart = this._enclosing.@out.GetFilePointer();
+				this.indexStart = this._enclosing.@out.FilePointer;
 				////System.out.println("VGW: field=" + fieldInfo.name);
 				// Always put empty string in
 				this.fstBuilder.Add(new IntsRef(), termsFilePointer);
@@ -361,7 +361,7 @@ namespace Lucene.Net.Codecs.Blockterms
 			{
 				try
 				{
-					long dirStart = @out.GetFilePointer();
+					long dirStart = @out.FilePointer;
 					int fieldCount = fields.Count;
 					int nonNullFieldCount = 0;
 					for (int i = 0; i < fieldCount; i++)

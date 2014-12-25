@@ -79,7 +79,7 @@ namespace Lucene.Net.Index
         {
         }
 
-        private IEnumerable<long> GetNumericIterator(int maxDoc)
+        private IEnumerable<long?> GetNumericIterator(int maxDoc)
         {
             // .NET Port: using yield return instead of custom iterator type. Much less code.
 

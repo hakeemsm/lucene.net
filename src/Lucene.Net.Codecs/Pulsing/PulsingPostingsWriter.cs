@@ -430,7 +430,7 @@ namespace Lucene.Net.Codecs.Pulsing
 						}
 					}
 				}
-				state.bytes = new byte[(int)buffer.GetFilePointer()];
+				state.bytes = new byte[(int)buffer.FilePointer];
 				buffer.WriteTo(state.bytes, 0);
 				buffer.Reset();
 			}

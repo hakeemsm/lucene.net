@@ -661,7 +661,7 @@ namespace Lucene.Net.Index
             }
         }
 
-        private sealed class AnonymousEnumerableNumber : IEnumerable<long>
+        private sealed class AnonymousEnumerableNumber : IEnumerable<long?>
         {
             public AnonymousEnumerableNumber(ReadersAndUpdates _enclosing, SegmentReader reader, string field
                 , NumericDocValuesFieldUpdates fieldUpdates)
@@ -684,13 +684,13 @@ namespace Lucene.Net.Index
 
             internal readonly NumericDocValuesFieldUpdates.Iterator updatesIter;
 
-            public IEnumerator<long> GetEnumerator()
+            public IEnumerator<long?> GetEnumerator()
             {
                 this.updatesIter.Reset();
                 return new AnonymousNumberEnumerator(this);
             }
 
-            private sealed class AnonymousNumberEnumerator : IEnumerator<long>
+            private sealed class AnonymousNumberEnumerator : IEnumerator<long?>
             {
                 public AnonymousNumberEnumerator(AnonymousEnumerableNumber _enclosing)
                 {
@@ -708,7 +708,7 @@ namespace Lucene.Net.Index
                     return this.curDoc < this._enclosing.maxDoc - 1;
                 }
 
-                public long Current
+                public long? Current
                 {
                     get
                     {

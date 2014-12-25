@@ -73,7 +73,7 @@ namespace Lucene.Net.Codecs.Memory
 		{
 			meta.WriteVInt(field.number);
 			meta.WriteByte(MemoryDocValuesProducer.NUMBER);
-			meta.WriteLong(data.GetFilePointer());
+			meta.WriteLong(data.FilePointer);
 			long minValue = long.MaxValue;
 			long maxValue = long.MinValue;
 			long gcd = 0;
@@ -133,10 +133,10 @@ namespace Lucene.Net.Codecs.Memory
 			//assert count == maxDoc;
 			if (missing)
 			{
-				long start = data.GetFilePointer();
+				long start = data.FilePointer;
 				WriteMissingBitset(values);
 				meta.WriteLong(start);
-				meta.WriteLong(data.GetFilePointer() - start);
+				meta.WriteLong(data.FilePointer - start);
 			}
 			else
 			{
@@ -258,7 +258,7 @@ namespace Lucene.Net.Codecs.Memory
 			meta.WriteByte(MemoryDocValuesProducer.BYTES);
 			int minLength = int.MaxValue;
 			int maxLength = int.MinValue;
-			long startFP = data.GetFilePointer();
+			long startFP = data.FilePointer;
 			bool missing = false;
 			foreach (BytesRef v in values)
 			{
@@ -285,13 +285,13 @@ namespace Lucene.Net.Codecs.Memory
 				}
 			}
 			meta.WriteLong(startFP);
-			meta.WriteLong(data.GetFilePointer() - startFP);
+			meta.WriteLong(data.FilePointer - startFP);
 			if (missing)
 			{
-				long start = data.GetFilePointer();
+				long start = data.FilePointer;
 				WriteMissingBitset(values);
 				meta.WriteLong(start);
-				meta.WriteLong(data.GetFilePointer() - start);
+				meta.WriteLong(data.FilePointer - start);
 			}
 			else
 			{
@@ -325,7 +325,7 @@ namespace Lucene.Net.Codecs.Memory
 		{
 			meta.WriteVInt(field.number);
 			meta.WriteByte(MemoryDocValuesProducer.FST);
-			meta.WriteLong(data.GetFilePointer());
+			meta.WriteLong(data.FilePointer);
 			PositiveIntOutputs outputs = PositiveIntOutputs.GetSingleton();
 			Builder<long> builder = new Builder<long>(FST.INPUT_TYPE.BYTE1, outputs);
 			IntsRef scratch = new IntsRef();

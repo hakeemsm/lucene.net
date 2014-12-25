@@ -1,15 +1,6 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
-using Lucene.Net.Codecs;
 using Lucene.Net.Codecs.Lucene41;
-using Lucene.Net.Codecs.Memory;
 using Lucene.Net.Index;
 using Lucene.Net.Util;
-using Sharpen;
 
 namespace Lucene.Net.Codecs.Memory
 {
@@ -22,7 +13,7 @@ namespace Lucene.Net.Codecs.Memory
 
 		public override string ToString()
 		{
-			return GetName();
+			return Name;
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -33,8 +24,7 @@ namespace Lucene.Net.Codecs.Memory
 			bool success = false;
 			try
 			{
-				Lucene.Net.Codecs.FieldsConsumer ret = new FSTOrdTermsWriter(state, postingsWriter
-					);
+				FieldsConsumer ret = new FSTOrdTermsWriter(state, postingsWriter);
 				success = true;
 				return ret;
 			}

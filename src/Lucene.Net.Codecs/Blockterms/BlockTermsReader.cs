@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
 using Lucene.Net.Util;
@@ -27,8 +28,7 @@ namespace Lucene.Net.Codecs.Blockterms
 
 		private readonly PostingsReaderBase postingsReader;
 
-		private readonly SortedDictionary<string, BlockTermsReader.FieldReader> fields = 
-			new SortedDictionary<string, BlockTermsReader.FieldReader>();
+		private readonly SortedDictionary<string, FieldReader> fields = new SortedDictionary<string, FieldReader>();
 
 		private TermsIndexReaderBase indexReader;
 
@@ -46,7 +46,7 @@ namespace Lucene.Net.Codecs.Blockterms
 			{
 			}
 
-			public FieldAndTerm(BlockTermsReader.FieldAndTerm other)
+			public FieldAndTerm(FieldAndTerm other)
 			{
 				// Open input to the main terms dict file (_X.tis)
 				// Reads the terms dict entries, to gather state to
@@ -60,13 +60,13 @@ namespace Lucene.Net.Codecs.Blockterms
 
 			public override bool Equals(object _other)
 			{
-				BlockTermsReader.FieldAndTerm other = (BlockTermsReader.FieldAndTerm)_other;
+				BlockTermsReader.FieldAndTerm other = (FieldAndTerm)_other;
 				return other.field.Equals(field) && term.BytesEquals(other.term);
 			}
 
 			public override DoubleBarrelLRUCache.CloneableKey Clone()
 			{
-				return new BlockTermsReader.FieldAndTerm(this);
+				return new FieldAndTerm(this);
 			}
 
 			public override int GetHashCode()
@@ -75,7 +75,7 @@ namespace Lucene.Net.Codecs.Blockterms
 			}
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		
 		public BlockTermsReader(TermsIndexReaderBase indexReader, Directory dir, FieldInfos
 			 fieldInfos, SegmentInfo info, PostingsReaderBase postingsReader, IOContext context
 			, string segmentSuffix)
@@ -168,14 +168,14 @@ namespace Lucene.Net.Codecs.Blockterms
 		{
 			if (version >= BlockTermsWriter.VERSION_CHECKSUM)
 			{
-				input.Seek(input.Length() - CodecUtil.FooterLength() - 8);
+				input.Seek(input.Length - CodecUtil.FooterLength() - 8);
 				dirOffset = input.ReadLong();
 			}
 			else
 			{
 				if (version >= BlockTermsWriter.VERSION_APPEND_ONLY)
 				{
-					input.Seek(input.Length() - 8);
+					input.Seek(input.Length - 8);
 					dirOffset = input.ReadLong();
 				}
 			}
@@ -210,27 +210,26 @@ namespace Lucene.Net.Codecs.Blockterms
 			{
 				if (postingsReader != null)
 				{
-					postingsReader.Close();
+					postingsReader.Dispose();
 				}
 			}
 		}
 
-		public override Iterator<string> Iterator()
+		public override IEnumerator<string> GetEnumerator()
 		{
-			return Sharpen.Collections.UnmodifiableSet(fields.Keys).Iterator();
+			return fields.Keys.GetEnumerator();
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		
 		public override Terms Terms(string field)
 		{
-			//HM:revisit 
-			//assert field != null;
-			return fields.Get(field);
+			Debug.Assert(field != null);
+			return fields[field];
 		}
 
-		public override int Size()
+		public override int Size
 		{
-			return fields.Count;
+		    get { return fields.Count; }
 		}
 
 		private class FieldReader : Terms
@@ -267,60 +266,70 @@ namespace Lucene.Net.Codecs.Blockterms
 				this.longsSize = longsSize;
 			}
 
-			public override IComparer<BytesRef> GetComparator()
+			public override IComparer<BytesRef> Comparator
 			{
-				return BytesRef.GetUTF8SortedAsUnicodeComparator();
+			    get { return BytesRef.UTF8SortedAsUnicodeComparer; }
 			}
 
-			/// <exception cref="System.IO.IOException"></exception>
+			
 			public override TermsEnum Iterator(TermsEnum reuse)
 			{
-				return new BlockTermsReader.FieldReader.SegmentTermsEnum(this);
+				return new SegmentTermsEnum(this);
 			}
 
-			public override bool HasFreqs()
+			public override bool HasFreqs
 			{
-				return this.fieldInfo.GetIndexOptions().CompareTo(FieldInfo.IndexOptions.DOCS_AND_FREQS
-					) >= 0;
+			    get
+			    {
+			        return this.fieldInfo.IndexOptionsValue.GetValueOrDefault().CompareTo(FieldInfo.IndexOptions.DOCS_AND_FREQS
+			            ) >= 0;
+			    }
 			}
 
-			public override bool HasOffsets()
+			public override bool HasOffsets
 			{
-				return this.fieldInfo.GetIndexOptions().CompareTo(FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS
-					) >= 0;
+			    get
+			    {
+			        return this.fieldInfo.IndexOptionsValue.GetValueOrDefault()
+			            .CompareTo(FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS
+			            ) >= 0;
+			    }
 			}
 
-			public override bool HasPositions()
+			public override bool HasPositions
 			{
-				return this.fieldInfo.GetIndexOptions().CompareTo(FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS
-					) >= 0;
+			    get
+			    {
+			        return this.fieldInfo.IndexOptionsValue.GetValueOrDefault().CompareTo(FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS
+			            ) >= 0;
+			    }
 			}
 
-			public override bool HasPayloads()
+			public override bool HasPayloads
 			{
-				return this.fieldInfo.HasPayloads();
+			    get { return this.fieldInfo.HasPayloads; }
 			}
 
-			public override long Size()
+			public override long Size
 			{
-				return this.numTerms;
+			    get { return this.numTerms; }
 			}
 
-			public override long GetSumTotalTermFreq()
+			public override long SumTotalTermFreq
 			{
-				return this.sumTotalTermFreq;
+			    get { return this.sumTotalTermFreq; }
 			}
 
-			/// <exception cref="System.IO.IOException"></exception>
-			public override long GetSumDocFreq()
+			
+			public override long SumDocFreq
 			{
-				return this.sumDocFreq;
+			    get { return this.sumDocFreq; }
 			}
 
-			/// <exception cref="System.IO.IOException"></exception>
-			public override int GetDocCount()
+			
+			public override int DocCount
 			{
-				return this.docCount;
+			    get { return this.docCount; }
 			}
 
 			private sealed class SegmentTermsEnum : TermsEnum
@@ -331,8 +340,7 @@ namespace Lucene.Net.Codecs.Blockterms
 
 				private readonly bool doOrd;
 
-				private readonly BlockTermsReader.FieldAndTerm fieldTerm = new BlockTermsReader.FieldAndTerm
-					();
+				private readonly FieldAndTerm fieldTerm = new FieldAndTerm();
 
 				private readonly TermsIndexReaderBase.FieldIndexEnum indexEnum;
 
@@ -388,9 +396,9 @@ namespace Lucene.Net.Codecs.Blockterms
 					this.longs = new long[this._enclosing.longsSize];
 				}
 
-				public override IComparer<BytesRef> GetComparator()
+				public override IComparer<BytesRef> Comparator
 				{
-					return BytesRef.GetUTF8SortedAsUnicodeComparator();
+				    get { return BytesRef.UTF8SortedAsUnicodeComparer; }
 				}
 
 				// TODO: we may want an alternate mode here which is
@@ -399,8 +407,8 @@ namespace Lucene.Net.Codecs.Blockterms
 				// (usually) just immediately call seek again if we
 				// return NOT_FOUND so it's a waste for us to fill in
 				// the term that was actually NOT_FOUND
-				/// <exception cref="System.IO.IOException"></exception>
-				public override TermsEnum.SeekStatus SeekCeil(BytesRef target)
+				
+				public override SeekStatus SeekCeil(BytesRef target)
 				{
 					if (this.indexEnum == null)
 					{
@@ -420,40 +428,37 @@ namespace Lucene.Net.Codecs.Blockterms
 					// is after current term but before next index term:
 					if (this.indexIsCurrent)
 					{
-						int cmp = BytesRef.GetUTF8SortedAsUnicodeComparator().Compare(this.term, target);
+						int cmp = BytesRef.UTF8SortedAsUnicodeComparer.Compare(this.term, target);
 						if (cmp == 0)
 						{
 							// Already at the requested term
 							return TermsEnum.SeekStatus.FOUND;
 						}
-						else
-						{
-							if (cmp < 0)
-							{
-								// Target term is after current term
-								if (!this.didIndexNext)
-								{
-									if (this.indexEnum.Next() == -1)
-									{
-										this.nextIndexTerm = null;
-									}
-									else
-									{
-										this.nextIndexTerm = this.indexEnum.Term();
-									}
-									//System.out.println("  now do index next() nextIndexTerm=" + (nextIndexTerm == null ? "null" : nextIndexTerm.utf8ToString()));
-									this.didIndexNext = true;
-								}
-								if (this.nextIndexTerm == null || BytesRef.GetUTF8SortedAsUnicodeComparator().Compare
-									(target, this.nextIndexTerm) < 0)
-								{
-									// Optimization: requested term is within the
-									// same term block we are now in; skip seeking
-									// (but do scanning):
-									doSeek = false;
-								}
-							}
-						}
+					    if (cmp < 0)
+					    {
+					        // Target term is after current term
+					        if (!this.didIndexNext)
+					        {
+					            if (this.indexEnum.Next() == -1)
+					            {
+					                this.nextIndexTerm = null;
+					            }
+					            else
+					            {
+					                this.nextIndexTerm = this.indexEnum.Term();
+					            }
+					            //System.out.println("  now do index next() nextIndexTerm=" + (nextIndexTerm == null ? "null" : nextIndexTerm.utf8ToString()));
+					            this.didIndexNext = true;
+					        }
+					        if (this.nextIndexTerm == null || BytesRef.UTF8SortedAsUnicodeComparer.Compare
+					            (target, this.nextIndexTerm) < 0)
+					        {
+					            // Optimization: requested term is within the
+					            // same term block we are now in; skip seeking
+					            // (but do scanning):
+					            doSeek = false;
+					        }
+					    }
 					}
 					//System.out.println("  skip seek: nextIndexTerm=" + (nextIndexTerm == null ? "null" : nextIndexTerm.utf8ToString()));
 					if (doSeek)
@@ -575,7 +580,7 @@ namespace Lucene.Net.Codecs.Blockterms
 							int suffix = this.termSuffixesReader.ReadVInt();
 							// We know the prefix matches, so just compare the new suffix:
 							int termLen = this.termBlockPrefix + suffix;
-							int bytePos = this.termSuffixesReader.GetPosition();
+							int bytePos = this.termSuffixesReader.Position;
 							bool next = false;
 							int limit = target.offset + (termLen < target.length ? termLen : target.length);
 							int targetPos = target.offset + this.termBlockPrefix;
@@ -729,29 +734,35 @@ namespace Lucene.Net.Codecs.Blockterms
 					return this.term;
 				}
 
-				public override BytesRef Term()
+				public override BytesRef Term
 				{
-					return this.term;
+				    get { return this.term; }
 				}
 
-				/// <exception cref="System.IO.IOException"></exception>
-				public override int DocFreq()
+				
+				public override int DocFreq
 				{
-					//System.out.println("BTR.docFreq");
-					this.DecodeMetaData();
-					//System.out.println("  return " + state.docFreq);
-					return this.state.docFreq;
+				    get
+				    {
+				        //System.out.println("BTR.docFreq");
+				        this.DecodeMetaData();
+				        //System.out.println("  return " + state.docFreq);
+				        return this.state.docFreq;
+				    }
 				}
 
-				/// <exception cref="System.IO.IOException"></exception>
-				public override long TotalTermFreq()
+				
+				public override long TotalTermFreq
 				{
-					this.DecodeMetaData();
-					return this.state.totalTermFreq;
+				    get
+				    {
+				        this.DecodeMetaData();
+				        return this.state.totalTermFreq;
+				    }
 				}
 
-				/// <exception cref="System.IO.IOException"></exception>
-				public override DocsEnum Docs(Bits liveDocs, DocsEnum reuse, int flags)
+				
+				public override DocsEnum Docs(IBits liveDocs, DocsEnum reuse, int flags)
 				{
 					//System.out.println("BTR.docs this=" + this);
 					this.DecodeMetaData();
@@ -760,11 +771,11 @@ namespace Lucene.Net.Codecs.Blockterms
 						this.state, liveDocs, reuse, flags);
 				}
 
-				/// <exception cref="System.IO.IOException"></exception>
-				public override DocsAndPositionsEnum DocsAndPositions(Bits liveDocs, DocsAndPositionsEnum
+				
+				public override DocsAndPositionsEnum DocsAndPositions(IBits liveDocs, DocsAndPositionsEnum
 					 reuse, int flags)
 				{
-					if (this._enclosing.fieldInfo.GetIndexOptions().CompareTo(FieldInfo.IndexOptions.
+					if (this._enclosing.fieldInfo.IndexOptionsValue.GetValueOrDefault().CompareTo(FieldInfo.IndexOptions.
 						DOCS_AND_FREQS_AND_POSITIONS) < 0)
 					{
 						// Positions were not indexed:
@@ -779,12 +790,10 @@ namespace Lucene.Net.Codecs.Blockterms
 					 otherState)
 				{
 					//System.out.println("BTR.seekExact termState target=" + target.utf8ToString() + " " + target + " this=" + this);
-					//HM:revisit
-					//
-					//HM:revisit 
+					
+					
 					//assert otherState != null && otherState instanceof BlockTermState;
-					//
-					//HM:revisit 
+					
 					//assert !doOrd || ((BlockTermState) otherState).ord < numTerms;
 					this.state.CopyFrom(otherState);
 					this.seekPending = true;
@@ -792,17 +801,20 @@ namespace Lucene.Net.Codecs.Blockterms
 					this.term.CopyBytes(target);
 				}
 
-				/// <exception cref="System.IO.IOException"></exception>
-				public override Lucene.Net.Index.TermState TermState()
+				
+				public override TermState TermState
 				{
-					//System.out.println("BTR.termState this=" + this);
-					this.DecodeMetaData();
-					Lucene.Net.Index.TermState ts = this.state.Clone();
-					//System.out.println("  return ts=" + ts);
-					return ts;
+				    get
+				    {
+				        //System.out.println("BTR.termState this=" + this);
+				        this.DecodeMetaData();
+				        Lucene.Net.Index.TermState ts = (TermState) this.state.Clone();
+				        //System.out.println("  return ts=" + ts);
+				        return ts;
+				    }
 				}
 
-				/// <exception cref="System.IO.IOException"></exception>
+				
 				public override void SeekExact(long ord)
 				{
 					//System.out.println("BTR.seek by ord ord=" + ord);
@@ -851,13 +863,16 @@ namespace Lucene.Net.Codecs.Blockterms
 				//
 				//HM:revisit 
 				//assert indexIsCurrent;
-				public override long Ord()
+				public override long Ord
 				{
-					if (!this.doOrd)
-					{
-						throw new NotSupportedException();
-					}
-					return this.state.ord;
+				    get
+				    {
+				        if (!this.doOrd)
+				        {
+				            throw new NotSupportedException();
+				        }
+				        return this.state.ord;
+				    }
 				}
 
 				/// <exception cref="System.IO.IOException"></exception>
@@ -868,7 +883,7 @@ namespace Lucene.Net.Codecs.Blockterms
 					// all N terms up front then seeking could do a fast
 					// bsearch w/in the block...
 					//System.out.println("BTR.nextBlock() fp=" + in.getFilePointer() + " this=" + this);
-					this.state.blockFilePointer = this.@in.GetFilePointer();
+					this.state.blockFilePointer = this.@in.FilePointer;
 					this.blockTermCount = this.@in.ReadVInt();
 					//System.out.println("  blockTermCount=" + blockTermCount);
 					if (this.blockTermCount == 0)
@@ -946,7 +961,7 @@ namespace Lucene.Net.Codecs.Blockterms
 							// docFreq, totalTermFreq
 							this.state.docFreq = this.freqReader.ReadVInt();
 							//System.out.println("    dF=" + state.docFreq);
-							if (this._enclosing.fieldInfo.GetIndexOptions() != FieldInfo.IndexOptions.DOCS_ONLY)
+							if (this._enclosing.fieldInfo.IndexOptionsValue != FieldInfo.IndexOptions.DOCS_ONLY)
 							{
 								this.state.totalTermFreq = this.state.docFreq + this.freqReader.ReadVLong();
 							}
@@ -971,11 +986,14 @@ namespace Lucene.Net.Codecs.Blockterms
 			private readonly BlockTermsReader _enclosing;
 		}
 
-		public override long RamBytesUsed()
+		public override long RamBytesUsed
 		{
-			long sizeInBytes = (postingsReader != null) ? postingsReader.RamBytesUsed() : 0;
-			sizeInBytes += (indexReader != null) ? indexReader.RamBytesUsed() : 0;
-			return sizeInBytes;
+		    get
+		    {
+		        long sizeInBytes = (postingsReader != null) ? postingsReader.RamBytesUsed() : 0;
+		        sizeInBytes += (indexReader != null) ? indexReader.RamBytesUsed() : 0;
+		        return sizeInBytes;
+		    }
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>

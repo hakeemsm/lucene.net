@@ -195,7 +195,7 @@ namespace Lucene.Net.Codecs.Memory
 				bool success = false;
 				try
 				{
-					long blockDirStart = blockOut.GetFilePointer();
+					long blockDirStart = blockOut.FilePointer;
 					// write field summary
 					blockOut.WriteVInt(fields.Count);
 					foreach (FSTOrdTermsWriter.FieldMetaData field in fields)
@@ -209,9 +209,9 @@ namespace Lucene.Net.Codecs.Memory
 						blockOut.WriteVLong(field.sumDocFreq);
 						blockOut.WriteVInt(field.docCount);
 						blockOut.WriteVInt(field.longsSize);
-						blockOut.WriteVLong(field.statsOut.GetFilePointer());
-						blockOut.WriteVLong(field.metaLongsOut.GetFilePointer());
-						blockOut.WriteVLong(field.metaBytesOut.GetFilePointer());
+						blockOut.WriteVLong(field.statsOut.FilePointer);
+						blockOut.WriteVLong(field.metaLongsOut.FilePointer);
+						blockOut.WriteVLong(field.metaBytesOut.FilePointer);
 						field.skipOut.WriteTo(blockOut);
 						field.statsOut.WriteTo(blockOut);
 						field.metaLongsOut.WriteTo(blockOut);
@@ -379,12 +379,12 @@ namespace Lucene.Net.Codecs.Memory
 					this.metaLongsOut.WriteVLong(longs[i] - this.lastLongs[i]);
 					this.lastLongs[i] = longs[i];
 				}
-				this.metaLongsOut.WriteVLong(this.metaBytesOut.GetFilePointer() - this.lastMetaBytesFP
+				this.metaLongsOut.WriteVLong(this.metaBytesOut.FilePointer - this.lastMetaBytesFP
 					);
 				this.builder.Add(Lucene.Net.Util.Fst.Util.ToIntsRef(text, this.scratchTerm
 					), this.numTerms);
 				this.numTerms++;
-				this.lastMetaBytesFP = this.metaBytesOut.GetFilePointer();
+				this.lastMetaBytesFP = this.metaBytesOut.FilePointer;
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
@@ -411,18 +411,18 @@ namespace Lucene.Net.Codecs.Memory
 			/// <exception cref="System.IO.IOException"></exception>
 			private void BufferSkip()
 			{
-				this.skipOut.WriteVLong(this.statsOut.GetFilePointer() - this.lastBlockStatsFP);
-				this.skipOut.WriteVLong(this.metaLongsOut.GetFilePointer() - this.lastBlockMetaLongsFP
+				this.skipOut.WriteVLong(this.statsOut.FilePointer - this.lastBlockStatsFP);
+				this.skipOut.WriteVLong(this.metaLongsOut.FilePointer - this.lastBlockMetaLongsFP
 					);
-				this.skipOut.WriteVLong(this.metaBytesOut.GetFilePointer() - this.lastBlockMetaBytesFP
+				this.skipOut.WriteVLong(this.metaBytesOut.FilePointer - this.lastBlockMetaBytesFP
 					);
 				for (int i = 0; i < this.longsSize; i++)
 				{
 					this.skipOut.WriteVLong(this.lastLongs[i] - this.lastBlockLongs[i]);
 				}
-				this.lastBlockStatsFP = this.statsOut.GetFilePointer();
-				this.lastBlockMetaLongsFP = this.metaLongsOut.GetFilePointer();
-				this.lastBlockMetaBytesFP = this.metaBytesOut.GetFilePointer();
+				this.lastBlockStatsFP = this.statsOut.FilePointer;
+				this.lastBlockMetaLongsFP = this.metaLongsOut.FilePointer;
+				this.lastBlockMetaBytesFP = this.metaBytesOut.FilePointer;
 				System.Array.Copy(this.lastLongs, 0, this.lastBlockLongs, 0, this.longsSize);
 			}
 

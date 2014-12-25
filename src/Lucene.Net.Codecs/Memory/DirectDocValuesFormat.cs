@@ -1,14 +1,6 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
-using Lucene.Net.Codecs;
-using Lucene.Net.Codecs.Memory;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Util;
-using Sharpen;
 
 namespace Lucene.Net.Codecs.Memory
 {
@@ -33,7 +25,7 @@ namespace Lucene.Net.Codecs.Memory
 	/// document's set of values cannot exceed about 2.1 B
 	/// values (see #MAX_SORTED_SET_ORDS).  For example,
 	/// if every document has 10 values (10 instances of
-	/// <see cref="Lucene.Net.Document.SortedSetDocValuesField">Lucene.Net.Document.SortedSetDocValuesField
+	/// SortedSetDocValuesFieldValuesField">Lucene.Net.Document.SortedSetDocValuesField
 	/// 	</see>
 	/// ) added, then no
 	/// more than ~210 M documents can be added to one
@@ -53,7 +45,7 @@ namespace Lucene.Net.Codecs.Memory
 		/// exceed this.
 		/// </remarks>
 		public const int MAX_TOTAL_BYTES_LENGTH = ArrayUtil.MAX_ARRAY_LENGTH;
-
+        
 		/// <summary>
 		/// The sum of the number of values across all documents
 		/// in a sorted set field cannot exceed this.

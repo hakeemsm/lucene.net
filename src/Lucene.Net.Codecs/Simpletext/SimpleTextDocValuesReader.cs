@@ -86,8 +86,8 @@ namespace Lucene.Net.Codecs.Simpletext
 					//HM:revisit 
 					//assert startsWith(PATTERN);
 					field.pattern = StripPrefix(SimpleTextDocValuesWriter.PATTERN);
-					field.dataStartFilePointer = data.GetFilePointer();
-					data.Seek(data.GetFilePointer() + (1 + field.pattern.Length + 2) * maxDoc);
+					field.dataStartFilePointer = data.FilePointer;
+					data.Seek(data.FilePointer + (1 + field.pattern.Length + 2) * maxDoc);
 				}
 				else
 				{
@@ -102,8 +102,8 @@ namespace Lucene.Net.Codecs.Simpletext
 						//HM:revisit 
 						//assert startsWith(PATTERN);
 						field.pattern = StripPrefix(SimpleTextDocValuesWriter.PATTERN);
-						field.dataStartFilePointer = data.GetFilePointer();
-						data.Seek(data.GetFilePointer() + (9 + field.pattern.Length + field.maxLength + 2
+						field.dataStartFilePointer = data.FilePointer;
+						data.Seek(data.FilePointer + (9 + field.pattern.Length + field.maxLength + 2
 							) * maxDoc);
 					}
 					else
@@ -128,8 +128,8 @@ namespace Lucene.Net.Codecs.Simpletext
 							//HM:revisit 
 							//assert startsWith(ORDPATTERN);
 							field.ordPattern = StripPrefix(SimpleTextDocValuesWriter.ORDPATTERN);
-							field.dataStartFilePointer = data.GetFilePointer();
-							data.Seek(data.GetFilePointer() + (9 + field.pattern.Length + field.maxLength) * 
+							field.dataStartFilePointer = data.FilePointer;
+							data.Seek(data.FilePointer + (9 + field.pattern.Length + field.maxLength) * 
 								field.numValues + (1 + field.ordPattern.Length) * maxDoc);
 						}
 						else

@@ -1,12 +1,13 @@
+using System;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
 
 namespace Lucene.Net.Codecs.Appending
 {
 	/// <summary>Reads append-only terms from AppendingTermsWriter.</summary>
-	/// <remarks>Reads append-only terms from AppendingTermsWriter.</remarks>
+	
 	/// <lucene.experimental></lucene.experimental>
-	[System.ObsoleteAttribute(@"Only for reading old Appending segments")]
+	[Obsolete(@"Only for reading old Appending segments")]
 	public class AppendingTermsReader : BlockTreeTermsReader
 	{
 		internal static readonly string APPENDING_TERMS_CODEC_NAME = "APPENDING_TERMS_DICT";

@@ -174,7 +174,7 @@ namespace Lucene.Net.Index
             }
         }
 
-        private IEnumerable<long> GetOrdsIterator(int[] ordMap, int maxCount)
+        private IEnumerable<long?> GetOrdsIterator(int[] ordMap, int maxCount)
         {
             // .NET Port: using yield return instead of custom iterator type. Much less code.
 
@@ -208,7 +208,7 @@ namespace Lucene.Net.Index
             }
         }
 
-        private IEnumerable<int> GetOrdCountIterator(int maxDoc)
+        private IEnumerable<int?> GetOrdCountIterator(int maxDoc)
         {
             // .NET Port: using yield return instead of custom iterator type. Much less code.
 

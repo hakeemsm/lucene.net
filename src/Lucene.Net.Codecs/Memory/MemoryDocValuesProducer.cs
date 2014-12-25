@@ -409,7 +409,7 @@ namespace Lucene.Net.Codecs.Memory
 			}
 			else
 			{
-				data.Seek(data.GetFilePointer() + entry.missingBytes);
+				data.Seek(data.FilePointer + entry.missingBytes);
 				MonotonicBlockPackedReader addresses = new MonotonicBlockPackedReader(data, entry
 					.packedIntsVersion, entry.blockSize, maxDoc, false);
 				ramBytesUsed.AddAndGet(bytes.RamBytesUsed() + addresses.RamBytesUsed());
