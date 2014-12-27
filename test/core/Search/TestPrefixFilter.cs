@@ -105,9 +105,9 @@ namespace Lucene.Net.Search
 			query = new ConstantScoreQuery(filter);
 			hits = searcher.Search(query, null, 1000).ScoreDocs;
 			Assert.AreEqual(0, hits.Length);
-			writer.Close();
-			reader.Close();
-			directory.Close();
+			writer.Dispose();
+			reader.Dispose();
+			directory.Dispose();
 		}
 	}
 }

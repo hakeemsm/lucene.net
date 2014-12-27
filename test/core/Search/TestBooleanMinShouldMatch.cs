@@ -50,7 +50,7 @@ namespace Lucene.Net.Search
 			}
 			r = w.GetReader();
 			s = NewSearcher(r);
-			w.Close();
+			w.Dispose();
 		}
 
 		//System.out.println("Set up " + getName());
@@ -59,9 +59,9 @@ namespace Lucene.Net.Search
 		public static void AfterClass()
 		{
 			s = null;
-			r.Close();
+			r.Dispose();
 			r = null;
-			index.Close();
+			index.Dispose();
 			index = null;
 		}
 
@@ -69,7 +69,7 @@ namespace Lucene.Net.Search
 		public virtual void VerifyNrHits(Query q, int expected)
 		{
 			// bs1
-			ScoreDoc[] h = s.Search(q, null, 1000).scoreDocs;
+			ScoreDoc[] h = s.Search(q, null, 1000).ScoreDocs;
 			if (expected != h.Length)
 			{
 				PrintHits(GetTestName(), h, s);
@@ -79,7 +79,7 @@ namespace Lucene.Net.Search
 			// bs2
 			TopScoreDocCollector collector = TopScoreDocCollector.Create(1000, true);
 			s.Search(q, collector);
-			ScoreDoc[] h2 = collector.TopDocs().scoreDocs;
+			ScoreDoc[] h2 = collector.TopDocs().ScoreDocs;
 			if (expected != h2.Length)
 			{
 				PrintHits(GetTestName(), h2, s);
@@ -432,16 +432,16 @@ namespace Lucene.Net.Search
 			}
 			for (int hit = 0; hit < top2.TotalHits; hit++)
 			{
-				int id = top2.scoreDocs[hit].doc;
-				float score = top2.scoreDocs[hit].score;
+				int id = top2.ScoreDocs[hit].Doc;
+				float score = top2.ScoreDocs[hit].score;
 				bool found = false;
 				// find this doc in other hits
 				for (int other = 0; other < top1.TotalHits; other++)
 				{
-					if (top1.scoreDocs[other].doc == id)
+					if (top1.ScoreDocs[other].Doc == id)
 					{
 						found = true;
-						float otherScore = top1.scoreDocs[other].score;
+						float otherScore = top1.ScoreDocs[other].score;
 						// check if scores match
 						AreEqual("Doc " + id + " scores don't match\n" + CheckHits
 							.TopdocsString(top1, 0, 0) + CheckHits.TopdocsString(top2, 0, 0) + "for query:" 
@@ -536,7 +536,7 @@ namespace Lucene.Net.Search
 				CultureInfo.ROOT));
 			for (int i = 0; i < h.Length; i++)
 			{
-				Lucene.Net.Documents.Document d = searcher.Doc(h[i].doc);
+				Lucene.Net.Documents.Document d = searcher.Doc(h[i].Doc);
 				float score = h[i].score;
 				System.Console.Error.WriteLine("#" + i + ": " + f.Format(score) + " - " + d.Get("id"
 					) + " - " + d.Get("data"));

@@ -57,7 +57,7 @@ namespace Lucene.Net.Search
 				doc.Add(NewTextField(field, docFields[i], Field.Store.NO));
 				writer.AddDocument(doc);
 			}
-			writer.Close();
+			writer.Dispose();
 			littleReader = DirectoryReader.Open(directory);
 			searcher = NewSearcher(littleReader);
 			// this is intentionally using the baseline sim, because it compares against bigSearcher (which uses a random one)
@@ -83,7 +83,7 @@ namespace Lucene.Net.Search
 				RandomIndexWriter w = new RandomIndexWriter(Random(), dir2);
 				w.AddIndexes(copy);
 				docCount = w.MaxDoc;
-				w.Close();
+				w.Dispose();
 				mulFactor *= 2;
 			}
 			while (docCount < 3000);
@@ -105,17 +105,17 @@ namespace Lucene.Net.Search
 			}
 			reader = w_1.GetReader();
 			bigSearcher = NewSearcher(reader);
-			w_1.Close();
+			w_1.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
 		[NUnit.Framework.AfterClass]
 		public static void AfterClass()
 		{
-			reader.Close();
-			littleReader.Close();
-			dir2.Close();
-			directory.Close();
+			reader.Dispose();
+			littleReader.Dispose();
+			dir2.Dispose();
+			directory.Dispose();
 			searcher = null;
 			reader = null;
 			littleReader = null;
@@ -132,10 +132,10 @@ namespace Lucene.Net.Search
 		{
 			TopScoreDocCollector collector = TopScoreDocCollector.Create(1000, false);
 			searcher.Search(query, null, collector);
-			ScoreDoc[] hits1 = collector.TopDocs().scoreDocs;
+			ScoreDoc[] hits1 = collector.TopDocs().ScoreDocs;
 			collector = TopScoreDocCollector.Create(1000, true);
 			searcher.Search(query, null, collector);
-			ScoreDoc[] hits2 = collector.TopDocs().scoreDocs;
+			ScoreDoc[] hits2 = collector.TopDocs().ScoreDocs;
 			AreEqual(mulFactor * collector.TotalHits, bigSearcher.Search
 				(query, 1).TotalHits);
 			CheckHits.CheckHitsQuery(query, hits1, hits2, expDocNrs);
@@ -315,10 +315,10 @@ namespace Lucene.Net.Search
 					TopFieldCollector collector = TopFieldCollector.Create(sort, 1000, false, true, true
 						, true);
 					searcher.Search(q1, null, collector);
-					ScoreDoc[] hits1 = collector.TopDocs().scoreDocs;
+					ScoreDoc[] hits1 = collector.TopDocs().ScoreDocs;
 					collector = TopFieldCollector.Create(sort, 1000, false, true, true, false);
 					searcher.Search(q1, null, collector);
-					ScoreDoc[] hits2 = collector.TopDocs().scoreDocs;
+					ScoreDoc[] hits2 = collector.TopDocs().ScoreDocs;
 					tot += hits2.Length;
 					CheckHits.CheckEqual(q1, hits1, hits2);
 					BooleanQuery q3 = new BooleanQuery();

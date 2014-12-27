@@ -313,7 +313,7 @@ namespace Lucene.Net.Test.Analysis
 			AreEqual(1 + endOffset + offsetGap, dpe.EndOffset);
 			AreEqual(null, te.Next());
 			reader.Dispose();
-			writer.Close();
+			writer.Dispose();
 			writer.w.Directory.Dispose();
 		}
 

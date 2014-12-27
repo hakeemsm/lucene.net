@@ -10,7 +10,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestSizeBoundedForceMerge : LuceneTestCase
 	{
@@ -60,7 +60,7 @@ namespace Lucene.Net.Index
 				int numDocs = i == 7 ? 30 : 1;
 				AddDocs(writer, numDocs);
 			}
-			writer.Close();
+			writer.Dispose();
 			SegmentInfos sis = new SegmentInfos();
 			sis.Read(dir);
 			double min = sis.Info(0).SizeInBytes();
@@ -70,7 +70,7 @@ namespace Lucene.Net.Index
 			conf.SetMergePolicy(lmp);
 			writer = new IndexWriter(dir, conf);
 			writer.ForceMerge(1);
-			writer.Close();
+			writer.Dispose();
 			// Should only be 3 segments in the index, because one of them exceeds the size limit
 			sis = new SegmentInfos();
 			sis.Read(dir);
@@ -92,14 +92,14 @@ namespace Lucene.Net.Index
 			AddDocs(writer, 3);
 			AddDocs(writer, 3);
 			AddDocs(writer, 3);
-			writer.Close();
+			writer.Dispose();
 			conf = NewWriterConfig();
 			LogMergePolicy lmp = new LogDocMergePolicy();
 			lmp.SetMaxMergeDocs(3);
 			conf.SetMergePolicy(lmp);
 			writer = new IndexWriter(dir, conf);
 			writer.ForceMerge(1);
-			writer.Close();
+			writer.Dispose();
 			// Should only be 3 segments in the index, because one of them exceeds the size limit
 			SegmentInfos sis = new SegmentInfos();
 			sis.Read(dir);
@@ -116,14 +116,14 @@ namespace Lucene.Net.Index
 			AddDocs(writer, 3);
 			AddDocs(writer, 3);
 			AddDocs(writer, 5);
-			writer.Close();
+			writer.Dispose();
 			conf = NewWriterConfig();
 			LogMergePolicy lmp = new LogDocMergePolicy();
 			lmp.SetMaxMergeDocs(3);
 			conf.SetMergePolicy(lmp);
 			writer = new IndexWriter(dir, conf);
 			writer.ForceMerge(1);
-			writer.Close();
+			writer.Dispose();
 			SegmentInfos sis = new SegmentInfos();
 			sis.Read(dir);
 			AreEqual(2, sis.Size());
@@ -139,14 +139,14 @@ namespace Lucene.Net.Index
 			AddDocs(writer, 3);
 			AddDocs(writer, 3);
 			AddDocs(writer, 3);
-			writer.Close();
+			writer.Dispose();
 			conf = NewWriterConfig();
 			LogMergePolicy lmp = new LogDocMergePolicy();
 			lmp.SetMaxMergeDocs(3);
 			conf.SetMergePolicy(lmp);
 			writer = new IndexWriter(dir, conf);
 			writer.ForceMerge(1);
-			writer.Close();
+			writer.Dispose();
 			SegmentInfos sis = new SegmentInfos();
 			sis.Read(dir);
 			AreEqual(2, sis.Size());
@@ -162,14 +162,14 @@ namespace Lucene.Net.Index
 			AddDocs(writer, 3);
 			AddDocs(writer, 3);
 			AddDocs(writer, 3);
-			writer.Close();
+			writer.Dispose();
 			conf = NewWriterConfig();
 			LogMergePolicy lmp = new LogDocMergePolicy();
 			lmp.SetMaxMergeDocs(3);
 			conf.SetMergePolicy(lmp);
 			writer = new IndexWriter(dir, conf);
 			writer.ForceMerge(1);
-			writer.Close();
+			writer.Dispose();
 			SegmentInfos sis = new SegmentInfos();
 			sis.Read(dir);
 			AreEqual(1, sis.Size());
@@ -184,14 +184,14 @@ namespace Lucene.Net.Index
 			AddDocs(writer, 3);
 			AddDocs(writer, 3);
 			AddDocs(writer, 3);
-			writer.Close();
+			writer.Dispose();
 			conf = NewWriterConfig();
 			LogMergePolicy lmp = new LogDocMergePolicy();
 			lmp.SetMaxMergeDocs(2);
 			conf.SetMergePolicy(lmp);
 			writer = new IndexWriter(dir, conf);
 			writer.ForceMerge(1);
-			writer.Close();
+			writer.Dispose();
 			SegmentInfos sis = new SegmentInfos();
 			sis.Read(dir);
 			AreEqual(3, sis.Size());
@@ -207,14 +207,14 @@ namespace Lucene.Net.Index
 			AddDocs(writer, 5);
 			AddDocs(writer, 3);
 			AddDocs(writer, 5);
-			writer.Close();
+			writer.Dispose();
 			conf = NewWriterConfig();
 			LogMergePolicy lmp = new LogDocMergePolicy();
 			lmp.SetMaxMergeDocs(3);
 			conf.SetMergePolicy(lmp);
 			writer = new IndexWriter(dir, conf);
 			writer.ForceMerge(1);
-			writer.Close();
+			writer.Dispose();
 			SegmentInfos sis = new SegmentInfos();
 			sis.Read(dir);
 			AreEqual(4, sis.Size());
@@ -233,15 +233,15 @@ namespace Lucene.Net.Index
 			AddDocs(writer, 5);
 			AddDocs(writer, 3);
 			AddDocs(writer, 3);
-			writer.Close();
+			writer.Dispose();
 			conf = NewWriterConfig();
 			LogMergePolicy lmp = new LogDocMergePolicy();
 			lmp.SetMaxMergeDocs(3);
-			lmp.SetMergeFactor(2);
+			lmp.MergeFactor = (2);
 			conf.SetMergePolicy(lmp);
 			writer = new IndexWriter(dir, conf);
 			writer.ForceMerge(1);
-			writer.Close();
+			writer.Dispose();
 			// Should only be 4 segments in the index, because of the merge factor and
 			// max merge docs settings.
 			SegmentInfos sis = new SegmentInfos();
@@ -260,14 +260,14 @@ namespace Lucene.Net.Index
 			AddDocs(writer, 3);
 			// delete the last document, so that the last segment is merged.
 			writer.DeleteDocuments(new Term("id", "10"));
-			writer.Close();
+			writer.Dispose();
 			conf = NewWriterConfig();
 			LogMergePolicy lmp = new LogDocMergePolicy();
 			lmp.SetMaxMergeDocs(3);
 			conf.SetMergePolicy(lmp);
 			writer = new IndexWriter(dir, conf);
 			writer.ForceMerge(1);
-			writer.Close();
+			writer.Dispose();
 			// Verify that the last segment does not have deletions.
 			SegmentInfos sis = new SegmentInfos();
 			sis.Read(dir);
@@ -282,14 +282,14 @@ namespace Lucene.Net.Index
 			IndexWriterConfig conf = NewWriterConfig();
 			IndexWriter writer = new IndexWriter(dir, conf);
 			AddDocs(writer, 3, true);
-			writer.Close();
+			writer.Dispose();
 			conf = NewWriterConfig();
 			LogMergePolicy lmp = new LogDocMergePolicy();
 			lmp.SetMaxMergeDocs(3);
 			conf.SetMergePolicy(lmp);
 			writer = new IndexWriter(dir, conf);
 			writer.ForceMerge(1);
-			writer.Close();
+			writer.Dispose();
 			// Verify that the last segment does not have deletions.
 			SegmentInfos sis = new SegmentInfos();
 			sis.Read(dir);
@@ -305,14 +305,14 @@ namespace Lucene.Net.Index
 			AddDocs(writer, 5, true);
 			// delete the last document
 			writer.DeleteDocuments(new Term("id", "4"));
-			writer.Close();
+			writer.Dispose();
 			conf = NewWriterConfig();
 			LogMergePolicy lmp = new LogDocMergePolicy();
 			lmp.SetMaxMergeDocs(2);
 			conf.SetMergePolicy(lmp);
 			writer = new IndexWriter(dir, conf);
 			writer.ForceMerge(1);
-			writer.Close();
+			writer.Dispose();
 			// Verify that the last segment does not have deletions.
 			SegmentInfos sis = new SegmentInfos();
 			sis.Read(dir);

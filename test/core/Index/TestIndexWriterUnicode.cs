@@ -12,7 +12,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestIndexWriterUnicode : LuceneTestCase
 	{
@@ -278,9 +278,9 @@ namespace Lucene.Net.Index
 			w.AddDocument(doc);
 			IndexReader r = w.GetReader();
 			AreEqual(1, r.DocFreq(new Term("field", "a\uffffb")));
-			r.Close();
-			w.Close();
-			d.Close();
+			r.Dispose();
+			w.Dispose();
+			d.Dispose();
 		}
 
 		// LUCENE-510
@@ -298,7 +298,7 @@ namespace Lucene.Net.Index
 				doc.Add(NewTextField("f" + i, utf8Data[2 * i], Field.Store.YES));
 			}
 			w.AddDocument(doc);
-			w.Close();
+			w.Dispose();
 			IndexReader ir = DirectoryReader.Open(dir);
 			Lucene.Net.Documents.Document doc2 = ir.Document(0);
 			for (int i_1 = 0; i_1 < count; i_1++)
@@ -308,8 +308,8 @@ namespace Lucene.Net.Index
 				AreEqual("field " + i_1 + " is incorrect", utf8Data[2 * i_1
 					 + 1], doc2.GetField("f" + i_1).StringValue = ));
 			}
-			ir.Close();
-			dir.Close();
+			ir.Dispose();
+			dir.Dispose();
 		}
 
 		// Make sure terms, including ones with surrogate pairs,
@@ -367,20 +367,20 @@ namespace Lucene.Net.Index
 			}
 			IndexReader r = writer.GetReader();
 			// Test each sub-segment
-			foreach (AtomicReaderContext ctx in r.Leaves())
+			foreach (AtomicReaderContext ctx in r.Leaves)
 			{
-				CheckTermsOrder(((AtomicReader)ctx.Reader()), allTerms, false);
+				CheckTermsOrder(((AtomicReader)ctx.Reader), allTerms, false);
 			}
 			CheckTermsOrder(r, allTerms, true);
 			// Test multi segment
-			r.Close();
+			r.Dispose();
 			writer.ForceMerge(1);
 			// Test single segment
 			r = writer.GetReader();
 			CheckTermsOrder(r, allTerms, true);
-			r.Close();
-			writer.Close();
-			dir.Close();
+			r.Dispose();
+			writer.Dispose();
+			dir.Dispose();
 		}
 	}
 }

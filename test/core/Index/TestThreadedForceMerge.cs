@@ -13,7 +13,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestThreadedForceMerge : LuceneTestCase
 	{
@@ -48,17 +48,17 @@ namespace Lucene.Net.Index
 			for (int iter = 0; iter < NUM_ITER; iter++)
 			{
 				int iterFinal = iter;
-				((LogMergePolicy)writer.GetConfig().GetMergePolicy()).SetMergeFactor(1000);
+				((LogMergePolicy)writer.Config.MergePolicy).MergeFactor = (1000);
 				FieldType customType = new FieldType(StringField.TYPE_STORED);
-				customType.SetOmitNorms(true);
+				customType.OmitNorms = (true);
 				for (int i = 0; i < 200; i++)
 				{
 					Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
-					d.Add(NewField("id", Sharpen.Extensions.ToString(i), customType));
+					d.Add(NewField("id", i.ToString(), customType));
 					d.Add(NewField("contents", English.IntToEnglish(i), customType));
 					writer.AddDocument(d);
 				}
-				((LogMergePolicy)writer.GetConfig().GetMergePolicy()).SetMergeFactor(4);
+				((LogMergePolicy)writer.Config.MergePolicy).MergeFactor = (4);
 				Sharpen.Thread[] threads = new Sharpen.Thread[NUM_THREADS];
 				for (int i_1 = 0; i_1 < NUM_THREADS; i_1++)
 				{
@@ -78,21 +78,21 @@ namespace Lucene.Net.Index
 				int expectedDocCount = (int)((1 + iter) * (200 + 8 * NUM_ITER2 * (NUM_THREADS / 2.0
 					) * (1 + NUM_THREADS)));
 				AreEqual("index=" + writer.SegString() + " numDocs=" + writer
-					.NumDocs() + " maxDoc=" + writer.MaxDoc + " config=" + writer.GetConfig(), expectedDocCount
-					, writer.NumDocs());
+					.NumDocs + " maxDoc=" + writer.MaxDoc + " config=" + writer.Config, expectedDocCount
+					, writer.NumDocs);
 				AreEqual("index=" + writer.SegString() + " numDocs=" + writer
-					.NumDocs() + " maxDoc=" + writer.MaxDoc + " config=" + writer.GetConfig(), expectedDocCount
+					.NumDocs + " maxDoc=" + writer.MaxDoc + " config=" + writer.Config, expectedDocCount
 					, writer.MaxDoc);
-				writer.Close();
+				writer.Dispose();
 				writer = new IndexWriter(directory, ((IndexWriterConfig)NewIndexWriterConfig(TEST_VERSION_CURRENT
 					, ANALYZER).SetOpenMode(IndexWriterConfig.OpenMode.APPEND).SetMaxBufferedDocs(2)
 					));
 				DirectoryReader reader = DirectoryReader.Open(directory);
-				AreEqual("reader=" + reader, 1, reader.Leaves().Count);
-				AreEqual(expectedDocCount, reader.NumDocs());
-				reader.Close();
+				AreEqual("reader=" + reader, 1, reader.Leaves.Count);
+				AreEqual(expectedDocCount, reader.NumDocs);
+				reader.Dispose();
 			}
-			writer.Close();
+			writer.Dispose();
 		}
 
 		private sealed class _Thread_89 : Sharpen.Thread
@@ -156,7 +156,7 @@ namespace Lucene.Net.Index
 		{
 			Directory directory = NewDirectory();
 			RunTest(Random(), directory);
-			directory.Close();
+			directory.Dispose();
 		}
 	}
 }

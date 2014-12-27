@@ -11,7 +11,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestSegmentMerger : LuceneTestCase
 	{
@@ -56,11 +56,11 @@ namespace Lucene.Net.Index
 		/// <exception cref="System.Exception"></exception>
 		public override void TearDown()
 		{
-			reader1.Close();
-			reader2.Close();
-			mergedDir.Close();
-			merge1Dir.Close();
-			merge2Dir.Close();
+			reader1.Dispose();
+			reader2.Dispose();
+			mergedDir.Dispose();
+			merge1Dir.Dispose();
+			merge2Dir.Dispose();
 			base.TearDown();
 		}
 
@@ -92,7 +92,7 @@ namespace Lucene.Net.Index
 				, null), 0, -1L, -1L), DirectoryReader.DEFAULT_TERMS_INDEX_DIVISOR, NewIOContext
 				(Random()));
 			IsTrue(mergedReader != null);
-			IsTrue(mergedReader.NumDocs() == 2);
+			IsTrue(mergedReader.NumDocs == 2);
 			Lucene.Net.Documents.Document newDoc1 = mergedReader.Document(0);
 			IsTrue(newDoc1 != null);
 			//There are 2 unstored fields on the document
@@ -133,7 +133,7 @@ namespace Lucene.Net.Index
 				i++;
 			}
 			TestSegmentReader.CheckNorms(mergedReader);
-			mergedReader.Close();
+			mergedReader.Dispose();
 		}
 
 		private static bool Equals(MergeState.DocMap map1, MergeState.DocMap map2)
@@ -172,7 +172,7 @@ namespace Lucene.Net.Index
 			}
 			MergeState.DocMap docMap = MergeState.DocMap.Build(maxDoc, liveDocs);
 			AreEqual(maxDoc, docMap.MaxDoc);
-			AreEqual(numDocs, docMap.NumDocs());
+			AreEqual(numDocs, docMap.NumDocs);
 			AreEqual(numDeletedDocs, docMap.NumDeletedDocs());
 			// 
 			//HM:revisit 

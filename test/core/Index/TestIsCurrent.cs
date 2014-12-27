@@ -10,7 +10,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestIsCurrent : LuceneTestCase
 	{
@@ -37,8 +37,8 @@ namespace Lucene.Net.Index
 		public override void TearDown()
 		{
 			base.TearDown();
-			writer.Close();
-			directory.Close();
+			writer.Dispose();
+			directory.Dispose();
 		}
 
 		/// <summary>Failing testcase showing the trouble</summary>
@@ -62,10 +62,10 @@ namespace Lucene.Net.Index
 			// 
 			//HM:revisit 
 			//assert document has been deleted (index changed), reader is stale
-			AreEqual("Document should be removed", 0, writer.NumDocs()
+			AreEqual("Document should be removed", 0, writer.NumDocs
 				);
 			IsFalse("Reader should be stale", reader.IsCurrent());
-			reader.Close();
+			reader.Dispose();
 		}
 
 		/// <summary>Testcase for example to show that writer.deleteAll() is working as expected
@@ -89,10 +89,10 @@ namespace Lucene.Net.Index
 			// 
 			//HM:revisit 
 			//assert document has been deleted (index changed), reader is stale
-			AreEqual("Document should be removed", 0, writer.NumDocs()
+			AreEqual("Document should be removed", 0, writer.NumDocs
 				);
 			IsFalse("Reader should be stale", reader.IsCurrent());
-			reader.Close();
+			reader.Dispose();
 		}
 	}
 }

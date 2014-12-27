@@ -47,9 +47,9 @@ namespace Lucene.Net.Search.Spans
 				)), 2);
 			sfq = new SpanNotQuery(include, sfq);
 			AreEqual(1, searcher.Search(sfq, 10).TotalHits);
-			writer.Close();
-			reader.Close();
-			dir.Close();
+			writer.Dispose();
+			reader.Dispose();
+			dir.Dispose();
 		}
 	}
 }

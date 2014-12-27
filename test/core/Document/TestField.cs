@@ -1,15 +1,11 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using System.IO;
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Document;
+using System.Text;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
+using Lucene.Net.Support;
+using Lucene.Net.TestFramework.Analysis;
 using Lucene.Net.Util;
-using Sharpen;
 
 namespace Lucene.Net.Document
 {
@@ -36,7 +32,7 @@ namespace Lucene.Net.Document
 				TrySetShortValue(field);
 				TrySetStringValue(field);
 				TrySetTokenStreamValue(field);
-				AreEqual(6d, field.NumericValue(), 0.0d);
+				AreEqual(6d, (double)field.NumericValue, 0.0d);
 			}
 		}
 
@@ -57,8 +53,7 @@ namespace Lucene.Net.Document
 			TrySetShortValue(field);
 			TrySetStringValue(field);
 			TrySetTokenStreamValue(field);
-			AreEqual(6d, double.LongBitsToDouble(field.NumericValue())
-				, 0.0d);
+            AreEqual(6d, ((long)field.NumericValue).LongBitsToDouble(), 0.0d);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -78,8 +73,7 @@ namespace Lucene.Net.Document
 			TrySetShortValue(field);
 			TrySetStringValue(field);
 			TrySetTokenStreamValue(field);
-			AreEqual(6f, Sharpen.Runtime.IntBitsToFloat(field.NumericValue
-				()), 0.0f);
+            AreEqual(6f, ((int)field.NumericValue).IntBitsToFloat(), 0.0f);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -102,7 +96,7 @@ namespace Lucene.Net.Document
 				TrySetShortValue(field);
 				TrySetStringValue(field);
 				TrySetTokenStreamValue(field);
-				AreEqual(6f, field.NumericValue(), 0.0f);
+				AreEqual(6f, (float)field.NumericValue, 0.0f);
 			}
 		}
 
@@ -126,7 +120,7 @@ namespace Lucene.Net.Document
 				TrySetShortValue(field);
 				TrySetStringValue(field);
 				TrySetTokenStreamValue(field);
-				AreEqual(6, field.NumericValue());
+				AreEqual(6, field.NumericValue);
 			}
 		}
 
@@ -147,7 +141,7 @@ namespace Lucene.Net.Document
 			TrySetShortValue(field);
 			TrySetStringValue(field);
 			TrySetTokenStreamValue(field);
-			AreEqual(6L, field.NumericValue());
+			AreEqual(6L, field.NumericValue);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -170,7 +164,7 @@ namespace Lucene.Net.Document
 				TrySetShortValue(field);
 				TrySetStringValue(field);
 				TrySetTokenStreamValue(field);
-				AreEqual(6L, field.NumericValue());
+				AreEqual(6L, field.NumericValue);
 			}
 		}
 
@@ -180,8 +174,8 @@ namespace Lucene.Net.Document
 			SortedDocValuesField field = new SortedDocValuesField("foo", new BytesRef("bar"));
 			TrySetBoost(field);
 			TrySetByteValue(field);
-			field.SetBytesValue(Sharpen.Runtime.GetBytesForString("fubar", StandardCharsets.UTF_8
-				));
+
+            field.SetBytesValue(Encoding.UTF8.GetBytes("fubar").ToSbytes());
 			field.SetBytesValue(new BytesRef("baz"));
 			TrySetDoubleValue(field);
 			TrySetIntValue(field);
@@ -191,7 +185,7 @@ namespace Lucene.Net.Document
 			TrySetShortValue(field);
 			TrySetStringValue(field);
 			TrySetTokenStreamValue(field);
-			AreEqual(new BytesRef("baz"), field.BinaryValue());
+			AreEqual(new BytesRef("baz"), field.BinaryValue);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -200,8 +194,7 @@ namespace Lucene.Net.Document
 			BinaryDocValuesField field = new BinaryDocValuesField("foo", new BytesRef("bar"));
 			TrySetBoost(field);
 			TrySetByteValue(field);
-			field.SetBytesValue(Sharpen.Runtime.GetBytesForString("fubar", StandardCharsets.UTF_8
-				));
+            field.SetBytesValue(Encoding.UTF8.GetBytes("fubar").ToSbytes());
 			field.SetBytesValue(new BytesRef("baz"));
 			TrySetDoubleValue(field);
 			TrySetIntValue(field);
@@ -211,7 +204,7 @@ namespace Lucene.Net.Document
 			TrySetShortValue(field);
 			TrySetStringValue(field);
 			TrySetTokenStreamValue(field);
-			AreEqual(new BytesRef("baz"), field.BinaryValue());
+			AreEqual(new BytesRef("baz"), field.BinaryValue);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -231,9 +224,9 @@ namespace Lucene.Net.Document
 				TrySetLongValue(field);
 				TrySetReaderValue(field);
 				TrySetShortValue(field);
-				field.StringValue = "baz");
+				field.StringValue = "baz";
 				TrySetTokenStreamValue(field);
-				AreEqual("baz", field.StringValue = ));
+				AreEqual("baz", field.StringValue);
 			}
 		}
 
@@ -244,7 +237,7 @@ namespace Lucene.Net.Document
 				("foo", "bar", Field.Store.YES) };
 			foreach (Field field in fields)
 			{
-				field.SetBoost(5f);
+				field.Boost = 5f;
 				TrySetByteValue(field);
 				TrySetBytesValue(field);
 				TrySetBytesRefValue(field);
@@ -254,10 +247,10 @@ namespace Lucene.Net.Document
 				TrySetLongValue(field);
 				TrySetReaderValue(field);
 				TrySetShortValue(field);
-				field.StringValue = "baz");
+				field.StringValue = "baz";
 				field.SetTokenStream(new CannedTokenStream(new Token("foo", 0, 3)));
-				AreEqual("baz", field.StringValue = ));
-				AreEqual(5f, field.Boost(), 0f);
+				AreEqual("baz", field.StringValue);
+				AreEqual(5f, field.Boost, 0f);
 			}
 		}
 
@@ -265,7 +258,7 @@ namespace Lucene.Net.Document
 		public virtual void TestTextFieldReader()
 		{
 			Field field = new TextField("foo", new StringReader("bar"));
-			field.SetBoost(5f);
+			field.Boost = 5f;
 			TrySetByteValue(field);
 			TrySetBytesValue(field);
 			TrySetBytesRefValue(field);
@@ -273,27 +266,25 @@ namespace Lucene.Net.Document
 			TrySetIntValue(field);
 			TrySetFloatValue(field);
 			TrySetLongValue(field);
-			field.SetReaderValue(new StringReader("foobar"));
+			field.ReaderValue = new StringReader("foobar");
 			TrySetShortValue(field);
 			TrySetStringValue(field);
 			field.SetTokenStream(new CannedTokenStream(new Token("foo", 0, 3)));
-			IsNotNull(field.ReaderValue());
-			AreEqual(5f, field.Boost(), 0f);
+			IsNotNull(field.ReaderValue);
+			AreEqual(5f, field.Boost, 0f);
 		}
 
 		/// <exception cref="System.Exception"></exception>
 		public virtual void TestStoredFieldBytes()
 		{
-			Field[] fields = new Field[] { new StoredField("foo", Sharpen.Runtime.GetBytesForString
-				("bar", StandardCharsets.UTF_8)), new StoredField("foo", Sharpen.Runtime.GetBytesForString
-				("bar", StandardCharsets.UTF_8), 0, 3), new StoredField("foo", new BytesRef("bar"
-				)) };
+            Field[] fields = new Field[] { new StoredField("foo", Encoding.UTF8.GetBytes("bar").ToSbytes()), 
+                new StoredField("foo", Encoding.UTF8.GetBytes("bar").ToSbytes(), 0, 3), 
+                new StoredField("foo", new BytesRef("bar")) };
 			foreach (Field field in fields)
 			{
 				TrySetBoost(field);
 				TrySetByteValue(field);
-				field.SetBytesValue(Sharpen.Runtime.GetBytesForString("baz", StandardCharsets.UTF_8
-					));
+                field.SetBytesValue(Encoding.UTF8.GetBytes("baz").ToSbytes());
 				field.SetBytesValue(new BytesRef("baz"));
 				TrySetDoubleValue(field);
 				TrySetIntValue(field);
@@ -303,7 +294,7 @@ namespace Lucene.Net.Document
 				TrySetShortValue(field);
 				TrySetStringValue(field);
 				TrySetTokenStreamValue(field);
-				AreEqual(new BytesRef("baz"), field.BinaryValue());
+				AreEqual(new BytesRef("baz"), field.BinaryValue);
 			}
 		}
 
@@ -321,9 +312,9 @@ namespace Lucene.Net.Document
 			TrySetLongValue(field);
 			TrySetReaderValue(field);
 			TrySetShortValue(field);
-			field.StringValue = "baz");
+			field.StringValue = "baz";
 			TrySetTokenStreamValue(field);
-			AreEqual("baz", field.StringValue = ));
+			AreEqual("baz", field.StringValue);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -342,7 +333,7 @@ namespace Lucene.Net.Document
 			TrySetShortValue(field);
 			TrySetStringValue(field);
 			TrySetTokenStreamValue(field);
-			AreEqual(5, field.NumericValue());
+			AreEqual(5, field.NumericValue);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -361,7 +352,7 @@ namespace Lucene.Net.Document
 			TrySetShortValue(field);
 			TrySetStringValue(field);
 			TrySetTokenStreamValue(field);
-			AreEqual(5D, field.NumericValue(), 0.0D);
+			AreEqual(5D, (double)field.NumericValue, 0.0D);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -380,7 +371,7 @@ namespace Lucene.Net.Document
 			TrySetShortValue(field);
 			TrySetStringValue(field);
 			TrySetTokenStreamValue(field);
-			AreEqual(5f, field.NumericValue(), 0.0f);
+			AreEqual(5f, (float)field.NumericValue, 0.0f);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -399,14 +390,14 @@ namespace Lucene.Net.Document
 			TrySetShortValue(field);
 			TrySetStringValue(field);
 			TrySetTokenStreamValue(field);
-			AreEqual(5L, field.NumericValue());
+			AreEqual(5L, field.NumericValue);
 		}
 
 		private void TrySetByteValue(Field f)
 		{
 			try
 			{
-				f.SetByteValue(unchecked((byte)10));
+				f.SetByteValue(10);
 				Fail();
 			}
 			catch (ArgumentException)
@@ -419,7 +410,7 @@ namespace Lucene.Net.Document
 		{
 			try
 			{
-				f.SetBytesValue(new byte[] { 5, 5 });
+				f.SetBytesValue(new sbyte[] { 5, 5 });
 				Fail();
 			}
 			catch (ArgumentException)
@@ -497,7 +488,7 @@ namespace Lucene.Net.Document
 		{
 			try
 			{
-				f.SetReaderValue(new StringReader("BOO!"));
+				f.ReaderValue = new StringReader("BOO!");
 				Fail();
 			}
 			catch (ArgumentException)
@@ -523,7 +514,7 @@ namespace Lucene.Net.Document
 		{
 			try
 			{
-				f.StringValue = "BOO!");
+				f.StringValue = "BOO!";
 				Fail();
 			}
 			catch (ArgumentException)
@@ -549,7 +540,7 @@ namespace Lucene.Net.Document
 		{
 			try
 			{
-				f.SetBoost(5.0f);
+				f.Boost = 5.0f;
 				Fail();
 			}
 			catch (ArgumentException)

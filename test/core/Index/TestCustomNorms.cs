@@ -14,7 +14,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestCustomNorms : LuceneTestCase
 	{
@@ -51,7 +51,7 @@ namespace Lucene.Net.Index
 				}
 			}
 			writer.Commit();
-			writer.Close();
+			writer.Dispose();
 			AtomicReader open = SlowCompositeReaderWrapper.Wrap(DirectoryReader.Open(dir));
 			NumericDocValues norms = open.GetNormValues(floatTestField);
 			IsNotNull(norms);
@@ -62,9 +62,9 @@ namespace Lucene.Net.Index
 				AreEqual(expected, Sharpen.Runtime.IntBitsToFloat((int)norms
 					.Get(i_1)), 0.0f);
 			}
-			open.Close();
-			dir.Close();
-			docs.Close();
+			open.Dispose();
+			dir.Dispose();
+			docs.Dispose();
 		}
 
 		public class MySimProvider : PerFieldSimilarityWrapper

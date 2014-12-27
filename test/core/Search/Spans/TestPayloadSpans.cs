@@ -38,7 +38,7 @@ namespace Lucene.Net.Search.Spans
 			base.SetUp();
 			PayloadHelper helper = new PayloadHelper();
 			searcher = helper.SetUp(Random(), similarity, 1000);
-			indexReader = searcher.GetIndexReader();
+			indexReader = searcher.IndexReader;
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -97,10 +97,10 @@ namespace Lucene.Net.Search.Spans
 				.YES));
 			writer.AddDocument(doc);
 			IndexReader reader = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			CheckSpans(MultiSpansWrapper.Wrap(reader.GetContext(), snq), 1, new int[] { 2 });
-			reader.Close();
-			directory.Close();
+			reader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -142,8 +142,8 @@ namespace Lucene.Net.Search.Spans
 				);
 			IsTrue("spans is null and it shouldn't be", spans != null);
 			CheckSpans(spans, 2, new int[] { 3, 3 });
-			closeIndexReader.Close();
-			directory.Close();
+			closeIndexReader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -168,8 +168,8 @@ namespace Lucene.Net.Search.Spans
 				);
 			IsTrue("spans is null and it shouldn't be", spans != null);
 			CheckSpans(spans, 1, new int[] { 3 });
-			closeIndexReader.Close();
-			directory.Close();
+			closeIndexReader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -200,8 +200,8 @@ namespace Lucene.Net.Search.Spans
 				);
 			IsTrue("spans is null and it shouldn't be", spans != null);
 			CheckSpans(spans, 2, new int[] { 8, 8 });
-			closeIndexReader.Close();
-			directory.Close();
+			closeIndexReader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -216,7 +216,7 @@ namespace Lucene.Net.Search.Spans
 			writer.AddDocument(doc);
 			IndexReader reader = writer.GetReader();
 			IndexSearcher @is = NewSearcher(reader);
-			writer.Close();
+			writer.Dispose();
 			SpanTermQuery stq1 = new SpanTermQuery(new Term("content", "a"));
 			SpanTermQuery stq2 = new SpanTermQuery(new Term("content", "k"));
 			SpanQuery[] sqs = new SpanQuery[] { stq1, stq2 };
@@ -225,7 +225,7 @@ namespace Lucene.Net.Search.Spans
 				(), snq);
 			TopDocs topDocs = @is.Search(snq, 1);
 			ICollection<string> payloadSet = new HashSet<string>();
-			for (int i = 0; i < topDocs.scoreDocs.Length; i++)
+			for (int i = 0; i < topDocs.ScoreDocs.Length; i++)
 			{
 				while (spans.Next())
 				{
@@ -239,8 +239,8 @@ namespace Lucene.Net.Search.Spans
 			AreEqual(2, payloadSet.Count);
 			IsTrue(payloadSet.Contains("a:Noise:10"));
 			IsTrue(payloadSet.Contains("k:Noise:11"));
-			reader.Close();
-			directory.Close();
+			reader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -255,7 +255,7 @@ namespace Lucene.Net.Search.Spans
 			writer.AddDocument(doc);
 			IndexReader reader = writer.GetReader();
 			IndexSearcher @is = NewSearcher(reader);
-			writer.Close();
+			writer.Dispose();
 			SpanTermQuery stq1 = new SpanTermQuery(new Term("content", "a"));
 			SpanTermQuery stq2 = new SpanTermQuery(new Term("content", "k"));
 			SpanQuery[] sqs = new SpanQuery[] { stq1, stq2 };
@@ -264,7 +264,7 @@ namespace Lucene.Net.Search.Spans
 				(), snq);
 			TopDocs topDocs = @is.Search(snq, 1);
 			ICollection<string> payloadSet = new HashSet<string>();
-			for (int i = 0; i < topDocs.scoreDocs.Length; i++)
+			for (int i = 0; i < topDocs.ScoreDocs.Length; i++)
 			{
 				while (spans.Next())
 				{
@@ -278,8 +278,8 @@ namespace Lucene.Net.Search.Spans
 			AreEqual(2, payloadSet.Count);
 			IsTrue(payloadSet.Contains("a:Noise:10"));
 			IsTrue(payloadSet.Contains("k:Noise:11"));
-			reader.Close();
-			directory.Close();
+			reader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -295,7 +295,7 @@ namespace Lucene.Net.Search.Spans
 			writer.AddDocument(doc);
 			IndexReader reader = writer.GetReader();
 			IndexSearcher @is = NewSearcher(reader);
-			writer.Close();
+			writer.Dispose();
 			SpanTermQuery stq1 = new SpanTermQuery(new Term("content", "a"));
 			SpanTermQuery stq2 = new SpanTermQuery(new Term("content", "k"));
 			SpanQuery[] sqs = new SpanQuery[] { stq1, stq2 };
@@ -304,7 +304,7 @@ namespace Lucene.Net.Search.Spans
 				(), snq);
 			TopDocs topDocs = @is.Search(snq, 1);
 			ICollection<string> payloadSet = new HashSet<string>();
-			for (int i = 0; i < topDocs.scoreDocs.Length; i++)
+			for (int i = 0; i < topDocs.ScoreDocs.Length; i++)
 			{
 				while (spans.Next())
 				{
@@ -325,8 +325,8 @@ namespace Lucene.Net.Search.Spans
 			}
 			IsTrue(payloadSet.Contains("a:Noise:10"));
 			IsTrue(payloadSet.Contains("k:Noise:11"));
-			reader.Close();
-			directory.Close();
+			reader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -341,7 +341,7 @@ namespace Lucene.Net.Search.Spans
 			doc.Add(NewTextField(PayloadHelper.FIELD, "xx rr yy mm  pp", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader reader = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(reader);
 			PayloadSpanUtil psu = new PayloadSpanUtil(searcher.GetTopReaderContext());
 			ICollection<byte[]> payloads = psu.GetPayloadsForQuery(new TermQuery(new Term(PayloadHelper
@@ -354,8 +354,8 @@ namespace Lucene.Net.Search.Spans
 					System.Console.Out.WriteLine(new string(bytes, StandardCharsets.UTF_8));
 				}
 			}
-			reader.Close();
-			directory.Close();
+			reader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -419,7 +419,7 @@ namespace Lucene.Net.Search.Spans
 				writer.AddDocument(doc);
 			}
 			closeIndexReader = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(closeIndexReader);
 			return searcher;
 		}

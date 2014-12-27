@@ -15,7 +15,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	/// <summary>JUnit adaptation of an older test case DocTest.</summary>
 	/// <remarks>JUnit adaptation of an older test case DocTest.</remarks>
@@ -45,7 +45,7 @@ namespace Lucene.Net.Index
 			indexDir = CreateTempDir("testIndex");
 			indexDir.Mkdirs();
 			Directory directory = NewFSDirectory(indexDir);
-			directory.Close();
+			directory.Dispose();
 			files = new List<FilePath>();
 			files.AddItem(CreateOutput("test.txt", "This is the first test file"));
 			files.AddItem(CreateOutput("test2.txt", "This is the second test file"));
@@ -72,11 +72,11 @@ namespace Lucene.Net.Index
 			{
 				if (pw != null)
 				{
-					pw.Close();
+					pw.Dispose();
 				}
 				if (fw != null)
 				{
-					fw.Close();
+					fw.Dispose();
 				}
 			}
 		}
@@ -113,7 +113,7 @@ namespace Lucene.Net.Index
 			PrintSegment(@out, si1);
 			SegmentCommitInfo si2 = IndexDoc(writer, "test2.txt");
 			PrintSegment(@out, si2);
-			writer.Close();
+			writer.Dispose();
 			SegmentCommitInfo siMerge = Merge(directory, si1, si2, "_merge", false);
 			PrintSegment(@out, siMerge);
 			SegmentCommitInfo siMerge2 = Merge(directory, si1, si2, "_merge2", false);
@@ -121,9 +121,9 @@ namespace Lucene.Net.Index
 			SegmentCommitInfo siMerge3 = Merge(directory, siMerge, siMerge2, "_merge3", false
 				);
 			PrintSegment(@out, siMerge3);
-			directory.Close();
-			@out.Close();
-			sw.Close();
+			directory.Dispose();
+			@out.Dispose();
+			sw.Dispose();
 			string multiFileOutput = sw.ToString();
 			//System.out.println(multiFileOutput);
 			sw = new StringWriter();
@@ -142,16 +142,16 @@ namespace Lucene.Net.Index
 			PrintSegment(@out, si1);
 			si2 = IndexDoc(writer, "test2.txt");
 			PrintSegment(@out, si2);
-			writer.Close();
+			writer.Dispose();
 			siMerge = Merge(directory, si1, si2, "_merge", true);
 			PrintSegment(@out, siMerge);
 			siMerge2 = Merge(directory, si1, si2, "_merge2", true);
 			PrintSegment(@out, siMerge2);
 			siMerge3 = Merge(directory, siMerge, siMerge2, "_merge3", true);
 			PrintSegment(@out, siMerge3);
-			directory.Close();
-			@out.Close();
-			sw.Close();
+			directory.Dispose();
+			@out.Dispose();
+			sw.Dispose();
 			string singleFileOutput = sw.ToString();
 			AreEqual(multiFileOutput, singleFileOutput);
 		}
@@ -167,7 +167,7 @@ namespace Lucene.Net.Index
 			doc.Add(new TextField("contents", @is));
 			writer.AddDocument(doc);
 			writer.Commit();
-			@is.Close();
+			@is.Dispose();
 			return writer.NewestSegment();
 		}
 
@@ -188,8 +188,8 @@ namespace Lucene.Net.Index
 				InfoStream.GetDefault(), trackingDir, IndexWriterConfig.DEFAULT_TERM_INDEX_INTERVAL
 				, MergeState.CheckAbort.NONE, new FieldInfos.FieldNumbers(), context, true);
 			MergeState mergeState = merger.Merge();
-			r1.Close();
-			r2.Close();
+			r1.Dispose();
+			r2.Dispose();
 			SegmentInfo info = new SegmentInfo(si1.info.dir, Constants.LUCENE_MAIN_VERSION, merged
 				, si1.info.DocCount + si2.info.DocCount, false, codec, null);
 			info.SetFiles(new HashSet<string>(trackingDir.GetCreatedFiles()));
@@ -211,7 +211,7 @@ namespace Lucene.Net.Index
 		{
 			SegmentReader reader = new SegmentReader(si, DirectoryReader.DEFAULT_TERMS_INDEX_DIVISOR
 				, NewIOContext(Random()));
-			for (int i = 0; i < reader.NumDocs(); i++)
+			for (int i = 0; i < reader.NumDocs; i++)
 			{
 				@out.WriteLine(reader.Document(i));
 			}
@@ -225,7 +225,7 @@ namespace Lucene.Net.Index
 				{
 					@out.Write("  term=" + field + ":" + tis.Term());
 					@out.WriteLine("    DF=" + tis.DocFreq);
-					DocsAndPositionsEnum positions = tis.DocsAndPositions(reader.GetLiveDocs(), null);
+					DocsAndPositionsEnum positions = tis.DocsAndPositions(reader.LiveDocs, null);
 					while (positions.NextDoc() != DocIdSetIterator.NO_MORE_DOCS)
 					{
 						@out.Write(" doc=" + positions.DocID);
@@ -240,7 +240,7 @@ namespace Lucene.Net.Index
 					}
 				}
 			}
-			reader.Close();
+			reader.Dispose();
 		}
 	}
 }

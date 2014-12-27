@@ -12,7 +12,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestIndexWriterMerging : LuceneTestCase
 	{
@@ -47,12 +47,12 @@ namespace Lucene.Net.Index
 				, new MockAnalyzer(Random())).SetMergePolicy(NewLogMergePolicy(2)));
 			writer.AddIndexes(indexA, indexB);
 			writer.ForceMerge(1);
-			writer.Close();
+			writer.Dispose();
 			fail = VerifyIndex(merged, 0);
 			IsFalse("The merged index is invalid", fail);
-			indexA.Close();
-			indexB.Close();
-			merged.Close();
+			indexA.Dispose();
+			indexB.Dispose();
+			merged.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -73,7 +73,7 @@ namespace Lucene.Net.Index
 						 + temp.GetField("count").StringValue = ));
 				}
 			}
-			reader.Close();
+			reader.Dispose();
 			return fail;
 		}
 
@@ -90,7 +90,7 @@ namespace Lucene.Net.Index
 				temp.Add(NewStringField("count", (string.Empty + i), Field.Store.YES));
 				writer.AddDocument(temp);
 			}
-			writer.Close();
+			writer.Dispose();
 		}
 
 		// LUCENE-325: test forceMergeDeletes, when 2 singular merges
@@ -105,7 +105,7 @@ namespace Lucene.Net.Index
 			Lucene.Net.Documents.Document document = new Lucene.Net.Documents.Document
 				();
 			FieldType customType = new FieldType();
-			customType.SetStored(true);
+			customType.Stored = (true);
 			FieldType customType1 = new FieldType(TextField.TYPE_NOT_STORED);
 			customType1.SetTokenized(false);
 			customType1.StoreTermVectors = true;
@@ -122,32 +122,32 @@ namespace Lucene.Net.Index
 				idField.StringValue = string.Empty + i);
 				writer.AddDocument(document);
 			}
-			writer.Close();
+			writer.Dispose();
 			IndexReader ir = DirectoryReader.Open(dir);
 			AreEqual(10, ir.MaxDoc);
-			AreEqual(10, ir.NumDocs());
-			ir.Close();
+			AreEqual(10, ir.NumDocs);
+			ir.Dispose();
 			IndexWriterConfig dontMergeConfig = new IndexWriterConfig(TEST_VERSION_CURRENT, new 
 				MockAnalyzer(Random())).SetMergePolicy(NoMergePolicy.COMPOUND_FILES);
 			writer = new IndexWriter(dir, dontMergeConfig);
 			writer.DeleteDocuments(new Term("id", "0"));
 			writer.DeleteDocuments(new Term("id", "7"));
-			writer.Close();
+			writer.Dispose();
 			ir = DirectoryReader.Open(dir);
-			AreEqual(8, ir.NumDocs());
-			ir.Close();
+			AreEqual(8, ir.NumDocs);
+			ir.Dispose();
 			writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random())).SetMergePolicy(NewLogMergePolicy()));
-			AreEqual(8, writer.NumDocs());
+			AreEqual(8, writer.NumDocs);
 			AreEqual(10, writer.MaxDoc);
 			writer.ForceMergeDeletes();
-			AreEqual(8, writer.NumDocs());
-			writer.Close();
+			AreEqual(8, writer.NumDocs);
+			writer.Dispose();
 			ir = DirectoryReader.Open(dir);
 			AreEqual(8, ir.MaxDoc);
-			AreEqual(8, ir.NumDocs());
-			ir.Close();
-			dir.Close();
+			AreEqual(8, ir.NumDocs);
+			ir.Dispose();
+			dir.Dispose();
 		}
 
 		// LUCENE-325: test forceMergeDeletes, when many adjacent merges are required
@@ -162,7 +162,7 @@ namespace Lucene.Net.Index
 			Lucene.Net.Documents.Document document = new Lucene.Net.Documents.Document
 				();
 			FieldType customType = new FieldType();
-			customType.SetStored(true);
+			customType.Stored = (true);
 			FieldType customType1 = new FieldType(TextField.TYPE_NOT_STORED);
 			customType1.SetTokenized(false);
 			customType1.StoreTermVectors = true;
@@ -179,11 +179,11 @@ namespace Lucene.Net.Index
 				idField.StringValue = string.Empty + i);
 				writer.AddDocument(document);
 			}
-			writer.Close();
+			writer.Dispose();
 			IndexReader ir = DirectoryReader.Open(dir);
 			AreEqual(98, ir.MaxDoc);
-			AreEqual(98, ir.NumDocs());
-			ir.Close();
+			AreEqual(98, ir.NumDocs);
+			ir.Dispose();
 			IndexWriterConfig dontMergeConfig = new IndexWriterConfig(TEST_VERSION_CURRENT, new 
 				MockAnalyzer(Random())).SetMergePolicy(NoMergePolicy.COMPOUND_FILES);
 			writer = new IndexWriter(dir, dontMergeConfig);
@@ -191,20 +191,20 @@ namespace Lucene.Net.Index
 			{
 				writer.DeleteDocuments(new Term("id", string.Empty + i_1));
 			}
-			writer.Close();
+			writer.Dispose();
 			ir = DirectoryReader.Open(dir);
-			AreEqual(49, ir.NumDocs());
-			ir.Close();
+			AreEqual(49, ir.NumDocs);
+			ir.Dispose();
 			writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random())).SetMergePolicy(NewLogMergePolicy(3)));
-			AreEqual(49, writer.NumDocs());
+			AreEqual(49, writer.NumDocs);
 			writer.ForceMergeDeletes();
-			writer.Close();
+			writer.Dispose();
 			ir = DirectoryReader.Open(dir);
 			AreEqual(49, ir.MaxDoc);
-			AreEqual(49, ir.NumDocs());
-			ir.Close();
-			dir.Close();
+			AreEqual(49, ir.NumDocs);
+			ir.Dispose();
+			dir.Dispose();
 		}
 
 		// LUCENE-325: test forceMergeDeletes without waiting, when
@@ -218,7 +218,7 @@ namespace Lucene.Net.Index
 				(2)).SetRAMBufferSizeMB(IndexWriterConfig.DISABLE_AUTO_FLUSH)).SetMergePolicy(NewLogMergePolicy
 				(50)));
 			FieldType customType = new FieldType();
-			customType.SetStored(true);
+			customType.Stored = (true);
 			FieldType customType1 = new FieldType(TextField.TYPE_NOT_STORED);
 			customType1.SetTokenized(false);
 			customType1.StoreTermVectors = true;
@@ -237,11 +237,11 @@ namespace Lucene.Net.Index
 				idField.StringValue = string.Empty + i);
 				writer.AddDocument(document);
 			}
-			writer.Close();
+			writer.Dispose();
 			IndexReader ir = DirectoryReader.Open(dir);
 			AreEqual(98, ir.MaxDoc);
-			AreEqual(98, ir.NumDocs());
-			ir.Close();
+			AreEqual(98, ir.NumDocs);
+			ir.Dispose();
 			IndexWriterConfig dontMergeConfig = new IndexWriterConfig(TEST_VERSION_CURRENT, new 
 				MockAnalyzer(Random())).SetMergePolicy(NoMergePolicy.COMPOUND_FILES);
 			writer = new IndexWriter(dir, dontMergeConfig);
@@ -249,19 +249,19 @@ namespace Lucene.Net.Index
 			{
 				writer.DeleteDocuments(new Term("id", string.Empty + i_1));
 			}
-			writer.Close();
+			writer.Dispose();
 			ir = DirectoryReader.Open(dir);
-			AreEqual(49, ir.NumDocs());
-			ir.Close();
+			AreEqual(49, ir.NumDocs);
+			ir.Dispose();
 			writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random())).SetMergePolicy(NewLogMergePolicy(3)));
 			writer.ForceMergeDeletes(false);
-			writer.Close();
+			writer.Dispose();
 			ir = DirectoryReader.Open(dir);
 			AreEqual(49, ir.MaxDoc);
-			AreEqual(49, ir.NumDocs());
-			ir.Close();
-			dir.Close();
+			AreEqual(49, ir.NumDocs);
+			ir.Dispose();
+			dir.Dispose();
 		}
 
 		private class MyMergeScheduler : MergeScheduler
@@ -311,9 +311,9 @@ namespace Lucene.Net.Index
 			IndexWriterConfig conf = ((IndexWriterConfig)NewIndexWriterConfig(TEST_VERSION_CURRENT
 				, new MockAnalyzer(Random())).SetMergeScheduler(new TestIndexWriterMerging.MyMergeScheduler
 				(this)).SetMaxBufferedDocs(2)).SetMergePolicy(NewLogMergePolicy());
-			LogMergePolicy lmp = (LogMergePolicy)conf.GetMergePolicy();
+			LogMergePolicy lmp = (LogMergePolicy)conf.MergePolicy;
 			lmp.SetMaxMergeDocs(20);
-			lmp.SetMergeFactor(2);
+			lmp.MergeFactor = (2);
 			IndexWriter iw = new IndexWriter(dir, conf);
 			Lucene.Net.Documents.Document document = new Lucene.Net.Documents.Document
 				();
@@ -324,8 +324,8 @@ namespace Lucene.Net.Index
 			{
 				iw.AddDocument(document);
 			}
-			iw.Close();
-			dir.Close();
+			iw.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -352,7 +352,7 @@ namespace Lucene.Net.Index
 					conf.SetMergeScheduler(new SerialMergeScheduler());
 				}
 				IndexWriter writer = new IndexWriter(directory, conf);
-				((LogMergePolicy)writer.GetConfig().GetMergePolicy()).SetMergeFactor(100);
+				((LogMergePolicy)writer.Config.MergePolicy).MergeFactor = (100);
 				for (int iter = 0; iter < 10; iter++)
 				{
 					if (VERBOSE)
@@ -372,7 +372,7 @@ namespace Lucene.Net.Index
 					}
 					// Force a bunch of merge threads to kick off so we
 					// stress out aborting them on close:
-					((LogMergePolicy)writer.GetConfig().GetMergePolicy()).SetMergeFactor(2);
+					((LogMergePolicy)writer.Config.MergePolicy).MergeFactor = (2);
 					IndexWriter finalWriter = writer;
 					AList<Exception> failure = new AList<Exception>();
 					Sharpen.Thread t1 = new _Thread_404(finalWriter, doc, failure);
@@ -385,15 +385,15 @@ namespace Lucene.Net.Index
 					t1.Join();
 					// Make sure reader can read
 					IndexReader reader = DirectoryReader.Open(directory);
-					reader.Close();
+					reader.Dispose();
 					// Reopen
 					writer = new IndexWriter(directory, NewIndexWriterConfig(TEST_VERSION_CURRENT, new 
 						MockAnalyzer(Random())).SetOpenMode(IndexWriterConfig.OpenMode.APPEND).SetMergePolicy
 						(NewLogMergePolicy()));
 				}
-				writer.Close();
+				writer.Dispose();
 			}
-			directory.Close();
+			directory.Dispose();
 		}
 
 		private sealed class _Thread_404 : Sharpen.Thread
@@ -402,7 +402,7 @@ namespace Lucene.Net.Index
 				, AList<Exception> failure)
 			{
 				this.finalWriter = finalWriter;
-				this.doc = doc;
+				this.Doc = doc;
 				this.failure = failure;
 			}
 

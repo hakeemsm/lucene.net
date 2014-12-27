@@ -51,16 +51,16 @@ namespace Lucene.Net.Search
 			{
 				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
-				doc.Add(NewStringField("data", Sharpen.Extensions.ToString(i), Field.Store.NO));
+				doc.Add(NewStringField("data", i.ToString(), Field.Store.NO));
 				writer.AddDocument(doc);
 				((i % 2 == 0) ? swriter1 : swriter2).AddDocument(doc);
 			}
 			writer.ForceMerge(1);
 			swriter1.ForceMerge(1);
 			swriter2.ForceMerge(1);
-			writer.Close();
-			swriter1.Close();
-			swriter2.Close();
+			writer.Dispose();
+			swriter1.Dispose();
+			swriter2.Dispose();
 			reader = DirectoryReader.Open(dir);
 			searcher = NewSearcher(reader);
 			multiReader = new MultiReader(new IndexReader[] { DirectoryReader.Open(sdir1), DirectoryReader
@@ -75,12 +75,12 @@ namespace Lucene.Net.Search
 		[NUnit.Framework.AfterClass]
 		public static void AfterClass()
 		{
-			reader.Close();
-			multiReader.Close();
-			multiReaderDupls.Close();
-			dir.Close();
-			sdir1.Close();
-			sdir2.Close();
+			reader.Dispose();
+			multiReader.Dispose();
+			multiReaderDupls.Dispose();
+			dir.Dispose();
+			sdir1.Dispose();
+			sdir2.Dispose();
 			reader = multiReader = multiReaderDupls = null;
 			searcher = multiSearcher = multiSearcherDupls = null;
 			dir = sdir1 = sdir2 = null;

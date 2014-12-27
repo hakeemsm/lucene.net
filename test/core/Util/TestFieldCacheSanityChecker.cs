@@ -65,8 +65,8 @@ namespace Lucene.Net.Util
 					wB.AddDocument(doc);
 				}
 			}
-			wA.Close();
-			wB.Close();
+			wA.Dispose();
+			wB.Dispose();
 			DirectoryReader rA = DirectoryReader.Open(dirA);
 			readerA = SlowCompositeReaderWrapper.Wrap(rA);
 			readerAclone = SlowCompositeReaderWrapper.Wrap(rA);
@@ -78,12 +78,12 @@ namespace Lucene.Net.Util
 		/// <exception cref="System.Exception"></exception>
 		public override void TearDown()
 		{
-			readerA.Close();
-			readerAclone.Close();
-			readerB.Close();
-			readerX.Close();
-			dirA.Close();
-			dirB.Close();
+			readerA.Dispose();
+			readerAclone.Dispose();
+			readerB.Dispose();
+			readerX.Dispose();
+			dirA.Dispose();
+			dirB.Dispose();
 			base.TearDown();
 		}
 

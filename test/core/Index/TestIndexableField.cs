@@ -16,7 +16,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestIndexableField : LuceneTestCase
 	{
@@ -206,7 +206,7 @@ namespace Lucene.Net.Index
 			//HM:revisit 
 			//assert fieldUpto < fieldCount;
 			IndexReader r = w.GetReader();
-			w.Close();
+			w.Dispose();
 			IndexSearcher s = NewSearcher(r);
 			int counter = 0;
 			for (int id = 0; id < NUM_DOCS; id++)
@@ -218,7 +218,7 @@ namespace Lucene.Net.Index
 				}
 				TopDocs hits = s.Search(new TermQuery(new Term("id", string.Empty + id)), 1);
 				AreEqual(1, hits.TotalHits);
-				int docID = hits.scoreDocs[0].doc;
+				int docID = hits.ScoreDocs[0].Doc;
 				Lucene.Net.Documents.Document doc = s.Doc(docID);
 				int endCounter = counter + fieldsPerDoc[id];
 				while (counter < endCounter)
@@ -298,7 +298,7 @@ namespace Lucene.Net.Index
 						bq.Add(new TermQuery(new Term(name, "text")), BooleanClause.Occur.MUST);
 						TopDocs hits2 = s.Search(bq, 1);
 						AreEqual(1, hits2.TotalHits);
-						AreEqual(docID, hits2.scoreDocs[0].doc);
+						AreEqual(docID, hits2.ScoreDocs[0].Doc);
 						bq = new BooleanQuery();
 						bq.Add(new TermQuery(new Term("id", string.Empty + id)), BooleanClause.Occur.MUST
 							);
@@ -306,13 +306,13 @@ namespace Lucene.Net.Index
 							.MUST);
 						TopDocs hits3 = s.Search(bq, 1);
 						AreEqual(1, hits3.TotalHits);
-						AreEqual(docID, hits3.scoreDocs[0].doc);
+						AreEqual(docID, hits3.ScoreDocs[0].Doc);
 					}
 					counter++;
 				}
 			}
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 
 		private sealed class _Iterable_193 : Iterable<IIndexableField>

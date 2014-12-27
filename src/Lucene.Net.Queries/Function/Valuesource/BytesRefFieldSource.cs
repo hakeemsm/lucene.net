@@ -40,9 +40,8 @@ namespace Lucene.Net.Queries.Function.Valuesource
 				BINARY)
 			{
 				BinaryDocValues binaryValues = FieldCache.DEFAULT.GetTerms(((AtomicReader)readerContext
-					.Reader()), field, true);
-				Bits docsWithField = FieldCache.DEFAULT.GetDocsWithField(((AtomicReader)readerContext
-					.Reader()), field);
+					.Reader), field, true);
+				IBits docsWithField = FieldCache.DEFAULT.GetDocsWithField(((AtomicReader)readerContext.Reader), field);
 				return new _FunctionValues_50(this, docsWithField, binaryValues);
 			}
 			else

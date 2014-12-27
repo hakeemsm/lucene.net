@@ -43,15 +43,15 @@ namespace Lucene.Net.Search.Spans
 				writer.AddDocument(doc);
 			}
 			reader = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			searcher = NewSearcher(reader);
 		}
 
 		/// <exception cref="System.Exception"></exception>
 		public override void TearDown()
 		{
-			reader.Close();
-			directory.Close();
+			reader.Dispose();
+			directory.Dispose();
 			base.TearDown();
 		}
 
@@ -393,7 +393,7 @@ namespace Lucene.Net.Search.Spans
 			bool ordered = true;
 			int slop = 1;
 			IndexReaderContext topReaderContext = searcher.GetTopReaderContext();
-			IList<AtomicReaderContext> leaves = topReaderContext.Leaves();
+			IList<AtomicReaderContext> leaves = topReaderContext.Leaves;
 			int subIndex = ReaderUtil.SubIndex(11, leaves);
 			for (int i = 0; i < c; i++)
 			{
@@ -407,7 +407,7 @@ namespace Lucene.Net.Search.Spans
 					SpanNearQuery snq = new SpanNearQuery(new SpanQuery[] { MakeSpanTermQuery("t1"), 
 						MakeSpanTermQuery("t2") }, slop, ordered);
 					spanScorer = searcher.CreateNormalizedWeight(snq).Scorer(ctx, ((AtomicReader)ctx.
-						Reader()).GetLiveDocs());
+						Reader()).LiveDocs);
 				}
 				finally
 				{
@@ -492,7 +492,7 @@ namespace Lucene.Net.Search.Spans
 			AddDoc(writer, "2", "the cat chased the mouse, then the cat ate the mouse quickly"
 				);
 			// Commit
-			writer.Close();
+			writer.Dispose();
 			// Get searcher
 			IndexReader reader = DirectoryReader.Open(dir);
 			IndexSearcher searcher = NewSearcher(reader);
@@ -504,8 +504,8 @@ namespace Lucene.Net.Search.Spans
 			// This throws exception (it shouldn't)
 			AreEqual(1, searcher.Search(CreateSpan(0, true, new SpanQuery
 				[] { CreateSpan(4, false, "chased", "cat"), CreateSpan("ate") }), 10).TotalHits);
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>

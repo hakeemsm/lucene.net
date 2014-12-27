@@ -1,20 +1,18 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Document;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
+using Lucene.Net.Randomized.Generators;
 using Lucene.Net.Store;
+using Lucene.Net.Support;
+using Lucene.Net.TestFramework.Index;
+using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
-using Sharpen;
+using NUnit.Framework;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	/// <summary>
 	/// Simple test that adds numeric terms, where each term has the
@@ -24,7 +22,8 @@ namespace Lucene.Net.Index
 	/// Simple test that adds numeric terms, where each term has the
 	/// totalTermFreq of its integer value, and checks that the totalTermFreq is correct.
 	/// </remarks>
-	public class TestBagOfPositions : LuceneTestCase
+	[TestFixture]
+    public class TestBagOfPositions : LuceneTestCase
 	{
 		// TODO: somehow factor this with BagOfPostings? its almost the same
 		// at night this makes like 200k/300k docs and will make Direct's heart beat!
@@ -32,13 +31,12 @@ namespace Lucene.Net.Index
 		/// <exception cref="System.Exception"></exception>
 		public virtual void Test()
 		{
-			IList<string> postingsList = new AList<string>();
+			IList<string> postingsList = new List<string>();
 			int numTerms = AtLeast(300);
 			int maxTermsPerDoc = TestUtil.NextInt(Random(), 10, 20);
 			bool isSimpleText = "SimpleText".Equals(TestUtil.GetPostingsFormat("field"));
-			IndexWriterConfig iwc = NewIndexWriterConfig(Random(), TEST_VERSION_CURRENT, new 
-				MockAnalyzer(Random()));
-			if ((isSimpleText || iwc.GetMergePolicy() is MockRandomMergePolicy) && (TEST_NIGHTLY
+			IndexWriterConfig iwc = NewIndexWriterConfig(Random(), TEST_VERSION_CURRENT, new MockAnalyzer(Random()));
+			if ((isSimpleText || iwc.MergePolicy is MockRandomMergePolicy) && (TEST_NIGHTLY
 				 || RANDOM_MULTIPLIER > 1))
 			{
 				// Otherwise test can take way too long (> 2 hours)
@@ -51,33 +49,32 @@ namespace Lucene.Net.Index
 			}
 			for (int i = 0; i < numTerms; i++)
 			{
-				string term = Sharpen.Extensions.ToString(i);
+				string term = i.ToString();
 				for (int j = 0; j < i; j++)
 				{
-					postingsList.AddItem(term);
+					postingsList.Add(term);
 				}
 			}
-			Sharpen.Collections.Shuffle(postingsList, Random());
-			ConcurrentLinkedQueue<string> postings = new ConcurrentLinkedQueue<string>(postingsList
-				);
+			postingsList.Shuffle(Random());
+			ConcurrentLinkedQueue<string> postings = new ConcurrentLinkedQueue<string>(postingsList);
 			Directory dir = NewFSDirectory(CreateTempDir("bagofpositions"));
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir, iwc);
 			int threadCount = TestUtil.NextInt(Random(), 1, 5);
 			if (VERBOSE)
 			{
-				System.Console.Out.WriteLine("config: " + iw.w.GetConfig());
+				System.Console.Out.WriteLine("config: " + iw.w.Config);
 				System.Console.Out.WriteLine("threadCount=" + threadCount);
 			}
 			Field prototype = NewTextField("field", string.Empty, Field.Store.NO);
-			FieldType fieldType = new FieldType(prototype.FieldType());
+			FieldType fieldType = new FieldType((FieldType) prototype.FieldTypeValue);
 			if (Random().NextBoolean())
 			{
-				fieldType.SetOmitNorms(true);
+				fieldType.OmitNorms = (true);
 			}
 			int options = Random().Next(3);
 			if (options == 0)
 			{
-				fieldType.SetIndexOptions(FieldInfo.IndexOptions.DOCS_AND_FREQS);
+				fieldType.IndexOptions = (FieldInfo.IndexOptions.DOCS_AND_FREQS);
 				// we dont actually need positions
 				fieldType.StoreTermVectors = true;
 			}
@@ -87,7 +84,7 @@ namespace Lucene.Net.Index
 				if (options == 1 && !doesntSupportOffsets.Contains(TestUtil.GetPostingsFormat("field"
 					)))
 				{
-					fieldType.SetIndexOptions(FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS
+					fieldType.IndexOptions = (FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS
 						);
 				}
 			}
@@ -112,8 +109,8 @@ namespace Lucene.Net.Index
 			}
 			iw.ForceMerge(1);
 			DirectoryReader ir = iw.GetReader();
-			AreEqual(1, ir.Leaves().Count);
-			AtomicReader air = ((AtomicReader)ir.Leaves()[0].Reader());
+			AreEqual(1, ir.Leaves.Count);
+			AtomicReader air = ((AtomicReader)ir.Leaves[0].Reader);
 			Terms terms = air.Terms("field");
 			// numTerms-1 because there cannot be a term 0 with 0 postings:
 			AreEqual(numTerms - 1, terms.Size());
@@ -127,9 +124,9 @@ namespace Lucene.Net.Index
 			// don't really need to check more than this, as CheckIndex
 			// will verify that totalTermFreq == total number of positions seen
 			// from a docsAndPositionsEnum.
-			ir.Close();
-			iw.Close();
-			dir.Close();
+			ir.Dispose();
+			iw.Dispose();
+			dir.Dispose();
 		}
 
 		private sealed class _Thread_104 : Sharpen.Thread

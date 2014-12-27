@@ -14,7 +14,7 @@ using Lucene.Net.Util;
 using Lucene.Net.Util.Automaton;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestTermsEnum : LuceneTestCase
 	{
@@ -34,7 +34,7 @@ namespace Lucene.Net.Index
 				w.AddDocument(docs.NextDoc());
 			}
 			IndexReader r = w.GetReader();
-			w.Close();
+			w.Dispose();
 			IList<BytesRef> terms = new AList<BytesRef>();
 			TermsEnum termsEnum = MultiFields.GetTerms(r, "body").Iterator(null);
 			BytesRef term;
@@ -163,9 +163,9 @@ namespace Lucene.Net.Index
 					}
 				}
 			}
-			r.Close();
-			d.Close();
-			docs.Close();
+			r.Dispose();
+			d.Dispose();
+			docs.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -248,7 +248,7 @@ namespace Lucene.Net.Index
 				}
 			}
 			IndexReader r = w.GetReader();
-			w.Close();
+			w.Dispose();
 			// NOTE: intentional insanity!!
 			FieldCache.Ints docIDToID = FieldCache.DEFAULT.GetInts(SlowCompositeReaderWrapper
 				.Wrap(r), "id", false);
@@ -390,8 +390,8 @@ namespace Lucene.Net.Index
 					IsNull(te.Next());
 				}
 			}
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 
 		private Directory d;
@@ -420,15 +420,15 @@ namespace Lucene.Net.Index
 				Close();
 			}
 			r = w.GetReader();
-			w.Close();
+			w.Dispose();
 			return r;
 		}
 
 		/// <exception cref="System.Exception"></exception>
 		private void Close()
 		{
-			r.Close();
-			d.Close();
+			r.Dispose();
+			d.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -540,16 +540,16 @@ namespace Lucene.Net.Index
 			w.DeleteDocuments(new Term("field", "one"));
 			w.ForceMerge(1);
 			IndexReader r = w.GetReader();
-			w.Close();
-			AreEqual(1, r.NumDocs());
+			w.Dispose();
+			AreEqual(1, r.NumDocs);
 			AreEqual(1, r.MaxDoc);
 			Terms terms = MultiFields.GetTerms(r, "field");
 			if (terms != null)
 			{
 				IsNull(terms.Iterator(null).Next());
 			}
-			r.Close();
-			d.Close();
+			r.Dispose();
+			d.Dispose();
 		}
 
 		private string GetRandomString()
@@ -843,7 +843,7 @@ namespace Lucene.Net.Index
 			w.AddDocument(doc);
 			w.ForceMerge(1);
 			DirectoryReader r = w.GetReader();
-			w.Close();
+			w.Dispose();
 			AtomicReader sub = GetOnlySegmentReader(r);
 			Terms terms = sub.Fields().Terms("field");
 			Lucene.Net.Util.Automaton.Automaton automaton = new RegExp(".*", RegExp.NONE
@@ -876,8 +876,8 @@ namespace Lucene.Net.Index
 			AreEqual(2, te.Docs(null, null, DocsEnum.FLAG_NONE).NextDoc
 				());
 			IsNull(te.Next());
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -903,7 +903,7 @@ namespace Lucene.Net.Index
 			w.AddDocument(doc);
 			w.ForceMerge(1);
 			DirectoryReader r = w.GetReader();
-			w.Close();
+			w.Dispose();
 			AtomicReader sub = GetOnlySegmentReader(r);
 			Terms terms = sub.Fields().Terms("field");
 			Lucene.Net.Util.Automaton.Automaton automaton = new RegExp(".*d", RegExp.NONE
@@ -933,8 +933,8 @@ namespace Lucene.Net.Index
 			IsNull(te.Next());
 			te = terms.Intersect(ca, new BytesRef("ddd"));
 			IsNull(te.Next());
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -959,7 +959,7 @@ namespace Lucene.Net.Index
 			w.AddDocument(doc);
 			w.ForceMerge(1);
 			DirectoryReader r = w.GetReader();
-			w.Close();
+			w.Dispose();
 			AtomicReader sub = GetOnlySegmentReader(r);
 			Terms terms = sub.Fields().Terms("field");
 			Lucene.Net.Util.Automaton.Automaton automaton = new RegExp(".*", RegExp.NONE
@@ -984,8 +984,8 @@ namespace Lucene.Net.Index
 			AreEqual(0, de.NextDoc());
 			AreEqual(1, de.NextDoc());
 			IsNull(te.Next());
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 	}
 }

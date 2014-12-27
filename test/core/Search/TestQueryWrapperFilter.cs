@@ -47,7 +47,7 @@ namespace Lucene.Net.Search
 			doc.Add(NewTextField("field", "value", Field.Store.NO));
 			writer.AddDocument(doc);
 			IndexReader reader = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			
 			TermQuery termQuery = new TermQuery(new Term("field", "value"));
 			
@@ -87,14 +87,14 @@ namespace Lucene.Net.Search
 			hits = searcher.Search(new MatchAllDocsQuery(), new CachingWrapperFilter(qwf), 10
 				);
 			AreEqual(0, hits.TotalHits);
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 		}
 		public virtual void TestRandom()
 		{
 			Directory d = NewDirectory();
 			RandomIndexWriter w = new RandomIndexWriter(Random(), d);
-			w.w.GetConfig().SetMaxBufferedDocs(17);
+			w.w.Config.SetMaxBufferedDocs(17);
 			int numDocs = AtLeast(100);
 			ICollection<string> aDocs = new HashSet<string>();
 			for (int i = 0; i < numDocs; i++)
@@ -124,16 +124,16 @@ namespace Lucene.Net.Search
 				aDocs.Remove(delID);
 			}
 			IndexReader r = w.GetReader();
-			w.Close();
+			w.Dispose();
 			TopDocs hits = NewSearcher(r).Search(new MatchAllDocsQuery(), new QueryWrapperFilter
 				(new TermQuery(new Term("field", "a"))), numDocs);
 			AreEqual(aDocs.Count, hits.TotalHits);
-			foreach (ScoreDoc sd in hits.scoreDocs)
+			foreach (ScoreDoc sd in hits.ScoreDocs)
 			{
-				IsTrue(aDocs.Contains(r.Document(sd.doc).Get("id")));
+				IsTrue(aDocs.Contains(r.Document(sd.Doc).Get("id")));
 			}
-			r.Close();
-			d.Close();
+			r.Dispose();
+			d.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -149,7 +149,7 @@ namespace Lucene.Net.Search
 				writer.AddDocument(doc);
 			}
 			IndexReader reader = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(reader);
 			for (int i_1 = 0; i_1 < 1000; i_1++)
 			{
@@ -158,8 +158,8 @@ namespace Lucene.Net.Search
 				TopDocs td = searcher.Search(new MatchAllDocsQuery(), qwf, 10);
 				AreEqual(1, td.TotalHits);
 			}
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 		}
 	}
 }

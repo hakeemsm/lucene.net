@@ -46,7 +46,7 @@ namespace Lucene.Net.Search
 			field2.StringValue = "jumps over lazy brown dog");
 			iw.AddDocument(doc);
 			reader = iw.GetReader();
-			iw.Close();
+			iw.Dispose();
 			searcher = NewSearcher(reader);
 			searcher.SetSimilarity(sim);
 		}
@@ -54,8 +54,8 @@ namespace Lucene.Net.Search
 		/// <exception cref="System.Exception"></exception>
 		public override void TearDown()
 		{
-			reader.Close();
-			directory.Close();
+			reader.Dispose();
+			directory.Dispose();
 			base.TearDown();
 		}
 
@@ -76,7 +76,7 @@ namespace Lucene.Net.Search
 			IsTrue(foodocs.TotalHits > 0);
 			TopDocs bardocs = searcher.Search(new TermQuery(new Term("bar", "brown")), 10);
 			IsTrue(bardocs.TotalHits > 0);
-			IsTrue(foodocs.scoreDocs[0].score < bardocs.scoreDocs[0].score
+			IsTrue(foodocs.ScoreDocs[0].score < bardocs.ScoreDocs[0].score
 				);
 		}
 

@@ -10,7 +10,7 @@ using Lucene.Net.Index;
 using Lucene.Net.Store;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestPersistentSnapshotDeletionPolicy : TestSnapshotDeletionPolicy
 	{
@@ -48,7 +48,7 @@ namespace Lucene.Net.Index
 			IsNull(psdp.GetLastSaveFile());
 			PrepareIndexAndSnapshots(psdp, writer, numSnapshots);
 			IsNotNull(psdp.GetLastSaveFile());
-			writer.Close();
+			writer.Dispose();
 			// Make sure only 1 save file exists:
 			int count = 0;
 			foreach (string file in dir.ListAll())
@@ -66,7 +66,7 @@ namespace Lucene.Net.Index
 			psdp = new PersistentSnapshotDeletionPolicy(new KeepOnlyLastCommitDeletionPolicy(
 				), dir, IndexWriterConfig.OpenMode.APPEND);
 			writer = new IndexWriter(dir, GetConfig(Random(), psdp));
-			psdp = (PersistentSnapshotDeletionPolicy)writer.GetConfig().GetIndexDeletionPolicy
+			psdp = (PersistentSnapshotDeletionPolicy)writer.Config.GetIndexDeletionPolicy
 				();
 			AreEqual(numSnapshots, psdp.GetSnapshots().Count);
 			AreEqual(numSnapshots, psdp.GetSnapshotCount());
@@ -77,8 +77,8 @@ namespace Lucene.Net.Index
 			AreEqual(numSnapshots + 1, psdp.GetSnapshots().Count);
 			AreEqual(numSnapshots + 1, psdp.GetSnapshotCount());
 			AssertSnapshotExists(dir, psdp, numSnapshots + 1, false);
-			writer.Close();
-			dir.Close();
+			writer.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -88,7 +88,7 @@ namespace Lucene.Net.Index
 			Directory dir = NewDirectory();
 			new PersistentSnapshotDeletionPolicy(new KeepOnlyLastCommitDeletionPolicy(), dir, 
 				IndexWriterConfig.OpenMode.CREATE);
-			dir.Close();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -106,7 +106,7 @@ namespace Lucene.Net.Index
 			{
 			}
 			// expected
-			dir.Close();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -137,9 +137,9 @@ namespace Lucene.Net.Index
 				}
 			}
 			AreEqual(0, psdp.GetSnapshotCount());
-			writer.Close();
+			writer.Dispose();
 			AreEqual(1, DirectoryReader.ListCommits(dir).Count);
-			dir.Close();
+			dir.Dispose();
 		}
 
 		private sealed class _Failure_118 : MockDirectoryWrapper.Failure
@@ -173,13 +173,13 @@ namespace Lucene.Net.Index
 			PersistentSnapshotDeletionPolicy psdp = (PersistentSnapshotDeletionPolicy)writer.
 				GetConfig().GetIndexDeletionPolicy();
 			PrepareIndexAndSnapshots(psdp, writer, 1);
-			writer.Close();
+			writer.Dispose();
 			psdp.Release(snapshots[0]);
 			psdp = new PersistentSnapshotDeletionPolicy(new KeepOnlyLastCommitDeletionPolicy(
 				), dir, IndexWriterConfig.OpenMode.APPEND);
 			AreEqual("Should have no snapshots !", 0, psdp.GetSnapshotCount
 				());
-			dir.Close();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -192,13 +192,13 @@ namespace Lucene.Net.Index
 			PersistentSnapshotDeletionPolicy psdp = (PersistentSnapshotDeletionPolicy)writer.
 				GetConfig().GetIndexDeletionPolicy();
 			PrepareIndexAndSnapshots(psdp, writer, 1);
-			writer.Close();
+			writer.Dispose();
 			psdp.Release(snapshots[0].GetGeneration());
 			psdp = new PersistentSnapshotDeletionPolicy(new KeepOnlyLastCommitDeletionPolicy(
 				), dir, IndexWriterConfig.OpenMode.APPEND);
 			AreEqual("Should have no snapshots !", 0, psdp.GetSnapshotCount
 				());
-			dir.Close();
+			dir.Dispose();
 		}
 	}
 }

@@ -35,7 +35,7 @@ namespace Lucene.Net.Test.Codecs.Perfield
 
 	    protected override Codec Codec
 		{
-			return codec;
+	        get { return codec; }
 		}
 
 		protected override bool CodecAcceptsHugeBinaryValues(string field)

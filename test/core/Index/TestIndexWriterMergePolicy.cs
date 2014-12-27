@@ -12,7 +12,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestIndexWriterMergePolicy : LuceneTestCase
 	{
@@ -29,8 +29,8 @@ namespace Lucene.Net.Index
 				AddDoc(writer);
 				CheckInvariants(writer);
 			}
-			writer.Close();
-			dir.Close();
+			writer.Dispose();
+			dir.Dispose();
 		}
 
 		// Test to see if there is over merge
@@ -46,14 +46,14 @@ namespace Lucene.Net.Index
 			{
 				AddDoc(writer);
 				CheckInvariants(writer);
-				if (writer.GetNumBufferedDocuments() + writer.GetSegmentCount() >= 18)
+				if (writer.GetNumBufferedDocuments() + writer.SegmentCount >= 18)
 				{
 					noOverMerge = true;
 				}
 			}
 			IsTrue(noOverMerge);
-			writer.Close();
-			dir.Close();
+			writer.Dispose();
+			dir.Dispose();
 		}
 
 		// Test the case where flush is forced after every addDoc
@@ -63,24 +63,24 @@ namespace Lucene.Net.Index
 			Directory dir = NewDirectory();
 			LogDocMergePolicy mp = new LogDocMergePolicy();
 			mp.SetMinMergeDocs(100);
-			mp.SetMergeFactor(10);
+			mp.MergeFactor = (10);
 			IndexWriter writer = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig
 				(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMaxBufferedDocs(10)).SetMergePolicy
 				(mp));
 			for (int i = 0; i < 100; i++)
 			{
 				AddDoc(writer);
-				writer.Close();
+				writer.Dispose();
 				mp = new LogDocMergePolicy();
-				mp.SetMergeFactor(10);
+				mp.MergeFactor = (10);
 				writer = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig(TEST_VERSION_CURRENT
 					, new MockAnalyzer(Random())).SetOpenMode(IndexWriterConfig.OpenMode.APPEND).SetMaxBufferedDocs
 					(10)).SetMergePolicy(mp));
 				mp.SetMinMergeDocs(100);
 				CheckInvariants(writer);
 			}
-			writer.Close();
-			dir.Close();
+			writer.Dispose();
+			dir.Dispose();
 		}
 
 		// Test the case where mergeFactor changes
@@ -96,7 +96,7 @@ namespace Lucene.Net.Index
 				AddDoc(writer);
 				CheckInvariants(writer);
 			}
-			((LogMergePolicy)writer.GetConfig().GetMergePolicy()).SetMergeFactor(5);
+			((LogMergePolicy)writer.Config.MergePolicy).MergeFactor = (5);
 			// merge policy only fixes segments on levels where merges
 			// have been triggered, so check invariants after all adds
 			for (int i_1 = 0; i_1 < 10; i_1++)
@@ -104,8 +104,8 @@ namespace Lucene.Net.Index
 				AddDoc(writer);
 			}
 			CheckInvariants(writer);
-			writer.Close();
-			dir.Close();
+			writer.Dispose();
+			dir.Dispose();
 		}
 
 		// Test the case where both mergeFactor and maxBufferedDocs change
@@ -125,15 +125,15 @@ namespace Lucene.Net.Index
 					AddDoc(writer);
 					CheckInvariants(writer);
 				}
-				writer.Close();
+				writer.Dispose();
 				writer = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig(TEST_VERSION_CURRENT
 					, new MockAnalyzer(Random())).SetOpenMode(IndexWriterConfig.OpenMode.APPEND).SetMaxBufferedDocs
 					(101)).SetMergePolicy(new LogDocMergePolicy()).SetMergeScheduler(new SerialMergeScheduler
 					()));
 			}
-			writer.Close();
+			writer.Dispose();
 			LogDocMergePolicy ldmp = new LogDocMergePolicy();
-			ldmp.SetMergeFactor(10);
+			ldmp.MergeFactor = (10);
 			writer = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig(TEST_VERSION_CURRENT
 				, new MockAnalyzer(Random())).SetOpenMode(IndexWriterConfig.OpenMode.APPEND).SetMaxBufferedDocs
 				(10)).SetMergePolicy(ldmp).SetMergeScheduler(new SerialMergeScheduler()));
@@ -152,8 +152,8 @@ namespace Lucene.Net.Index
 			writer.WaitForMerges();
 			writer.Commit();
 			CheckInvariants(writer);
-			writer.Close();
-			dir.Close();
+			writer.Dispose();
+			dir.Dispose();
 		}
 
 		// Test the case where a merge results in no doc at all
@@ -162,7 +162,7 @@ namespace Lucene.Net.Index
 		{
 			Directory dir = NewDirectory();
 			LogDocMergePolicy ldmp = new LogDocMergePolicy();
-			ldmp.SetMergeFactor(100);
+			ldmp.MergeFactor = (100);
 			IndexWriter writer = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig
 				(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMaxBufferedDocs(10)).SetMergePolicy
 				(ldmp));
@@ -171,14 +171,14 @@ namespace Lucene.Net.Index
 				AddDoc(writer);
 				CheckInvariants(writer);
 			}
-			writer.Close();
+			writer.Dispose();
 			// delete some docs without merging
 			writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random())).SetMergePolicy(NoMergePolicy.NO_COMPOUND_FILES));
 			writer.DeleteDocuments(new Term("content", "aaa"));
-			writer.Close();
+			writer.Dispose();
 			ldmp = new LogDocMergePolicy();
-			ldmp.SetMergeFactor(5);
+			ldmp.MergeFactor = (5);
 			writer = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig(TEST_VERSION_CURRENT
 				, new MockAnalyzer(Random())).SetOpenMode(IndexWriterConfig.OpenMode.APPEND).SetMaxBufferedDocs
 				(10)).SetMergePolicy(ldmp).SetMergeScheduler(new ConcurrentMergeScheduler()));
@@ -192,8 +192,8 @@ namespace Lucene.Net.Index
 			writer.Commit();
 			CheckInvariants(writer);
 			AreEqual(10, writer.MaxDoc);
-			writer.Close();
-			dir.Close();
+			writer.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -208,23 +208,23 @@ namespace Lucene.Net.Index
 		private void CheckInvariants(IndexWriter writer)
 		{
 			writer.WaitForMerges();
-			int maxBufferedDocs = writer.GetConfig().GetMaxBufferedDocs();
-			int mergeFactor = ((LogMergePolicy)writer.GetConfig().GetMergePolicy()).GetMergeFactor
+			int maxBufferedDocs = writer.Config.GetMaxBufferedDocs();
+			int mergeFactor = ((LogMergePolicy)writer.Config.MergePolicy).GetMergeFactor
 				();
-			int maxMergeDocs = ((LogMergePolicy)writer.GetConfig().GetMergePolicy()).GetMaxMergeDocs
+			int maxMergeDocs = ((LogMergePolicy)writer.Config.MergePolicy).GetMaxMergeDocs
 				();
 			int ramSegmentCount = writer.GetNumBufferedDocuments();
 			IsTrue(ramSegmentCount < maxBufferedDocs);
 			int lowerBound = -1;
 			int upperBound = maxBufferedDocs;
 			int numSegments = 0;
-			int segmentCount = writer.GetSegmentCount();
+			int segmentCount = writer.SegmentCount;
 			for (int i = segmentCount - 1; i >= 0; i--)
 			{
 				int docCount = writer.GetDocCount(i);
 				IsTrue("docCount=" + docCount + " lowerBound=" + lowerBound
 					 + " upperBound=" + upperBound + " i=" + i + " segmentCount=" + segmentCount + " index="
-					 + writer.SegString() + " config=" + writer.GetConfig(), docCount > lowerBound);
+					 + writer.SegString() + " config=" + writer.Config, docCount > lowerBound);
 				if (docCount <= upperBound)
 				{
 					numSegments++;
@@ -235,7 +235,7 @@ namespace Lucene.Net.Index
 					{
 						IsTrue("maxMergeDocs=" + maxMergeDocs + "; numSegments=" +
 							 numSegments + "; upperBound=" + upperBound + "; mergeFactor=" + mergeFactor + "; segs="
-							 + writer.SegString() + " config=" + writer.GetConfig(), numSegments < mergeFactor
+							 + writer.SegString() + " config=" + writer.Config, numSegments < mergeFactor
 							);
 					}
 					do

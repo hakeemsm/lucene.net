@@ -12,7 +12,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestSegmentReader : LuceneTestCase
 	{
@@ -38,8 +38,8 @@ namespace Lucene.Net.Index
 		/// <exception cref="System.Exception"></exception>
 		public override void TearDown()
 		{
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 			base.TearDown();
 		}
 
@@ -55,7 +55,7 @@ namespace Lucene.Net.Index
 		/// <exception cref="System.IO.IOException"></exception>
 		public virtual void TestDocument()
 		{
-			IsTrue(reader.NumDocs() == 1);
+			IsTrue(reader.NumDocs == 1);
 			IsTrue(reader.MaxDoc >= 1);
 			Lucene.Net.Documents.Document result = reader.Document(0);
 			IsTrue(result != null);

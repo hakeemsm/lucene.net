@@ -74,16 +74,16 @@ namespace Lucene.Net.Search
 			writer.AddDocument(doc);
 			reader = writer.GetReader();
 			searcher = NewSearcher(reader);
-			writer.Close();
+			writer.Dispose();
 		}
 		
 		[NUnit.Framework.AfterClass]
 		public static void AfterClass()
 		{
 			searcher = null;
-			reader.Close();
+			reader.Dispose();
 			reader = null;
-			directory.Close();
+			directory.Dispose();
 			directory = null;
 		}
 		[Test]

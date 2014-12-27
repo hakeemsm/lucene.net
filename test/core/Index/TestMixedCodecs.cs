@@ -13,7 +13,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestMixedCodecs : LuceneTestCase
 	{
@@ -44,7 +44,7 @@ namespace Lucene.Net.Index
 					}
 					if (w != null)
 					{
-						w.Close();
+						w.Dispose();
 					}
 					w = new RandomIndexWriter(Random(), dir, iwc);
 					docsLeftInThisSegment = TestUtil.NextInt(Random(), 10, 100);
@@ -72,13 +72,13 @@ namespace Lucene.Net.Index
 					if (Random().Next(17) == 6)
 					{
 						IndexReader r = w.GetReader();
-						AreEqual(NUM_DOCS - deleted.Count, r.NumDocs());
-						r.Close();
+						AreEqual(NUM_DOCS - deleted.Count, r.NumDocs);
+						r.Dispose();
 					}
 				}
 			}
-			w.Close();
-			dir.Close();
+			w.Dispose();
+			dir.Dispose();
 		}
 	}
 }

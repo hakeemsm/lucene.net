@@ -15,7 +15,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	/// <summary>
 	/// This testcase tests whether multi-level skipping is being used
@@ -77,7 +77,7 @@ namespace Lucene.Net.Index
 			}
 			writer.Commit();
 			writer.ForceMerge(1);
-			writer.Close();
+			writer.Dispose();
 			AtomicReader reader = GetOnlySegmentReader(DirectoryReader.Open(dir));
 			for (int i_1 = 0; i_1 < 2; i_1++)
 			{
@@ -187,7 +187,7 @@ namespace Lucene.Net.Index
 			/// <exception cref="System.IO.IOException"></exception>
 			public override void Close()
 			{
-				this.input.Close();
+				this.input.Dispose();
 			}
 
 			public override long FilePointer

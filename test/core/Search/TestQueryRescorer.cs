@@ -45,7 +45,7 @@ namespace Lucene.Net.Search
 				));
 			w.AddDocument(doc);
 			IndexReader r = w.GetReader();
-			w.Close();
+			w.Dispose();
 			// Do ordinary BooleanQuery:
 			BooleanQuery bq = new BooleanQuery();
 			bq.Add(new TermQuery(new Term("field", "wizard")), BooleanClause.Occur.SHOULD);
@@ -54,9 +54,9 @@ namespace Lucene.Net.Search
 			searcher.SetSimilarity(new DefaultSimilarity());
 			TopDocs hits = searcher.Search(bq, 10);
 			AreEqual(2, hits.TotalHits);
-			AreEqual("0", searcher.Doc(hits.scoreDocs[0].doc).Get("id"
+			AreEqual("0", searcher.Doc(hits.ScoreDocs[0].Doc).Get("id"
 				));
-			AreEqual("1", searcher.Doc(hits.scoreDocs[1].doc).Get("id"
+			AreEqual("1", searcher.Doc(hits.ScoreDocs[1].Doc).Get("id"
 				));
 			// Now, resort using PhraseQuery:
 			PhraseQuery pq = new PhraseQuery();
@@ -66,9 +66,9 @@ namespace Lucene.Net.Search
 			TopDocs hits2 = QueryRescorer.Rescore(searcher, hits, pq, 2.0, 10);
 			// Resorting changed the order:
 			AreEqual(2, hits2.TotalHits);
-			AreEqual("1", searcher.Doc(hits2.scoreDocs[0].doc).Get("id"
+			AreEqual("1", searcher.Doc(hits2.ScoreDocs[0].Doc).Get("id"
 				));
-			AreEqual("0", searcher.Doc(hits2.scoreDocs[1].doc).Get("id"
+			AreEqual("0", searcher.Doc(hits2.ScoreDocs[1].Doc).Get("id"
 				));
 			// Resort using SpanNearQuery:
 			SpanTermQuery t1 = new SpanTermQuery(new Term("field", "wizard"));
@@ -77,12 +77,12 @@ namespace Lucene.Net.Search
 			TopDocs hits3 = QueryRescorer.Rescore(searcher, hits, snq, 2.0, 10);
 			// Resorting changed the order:
 			AreEqual(2, hits3.TotalHits);
-			AreEqual("1", searcher.Doc(hits3.scoreDocs[0].doc).Get("id"
+			AreEqual("1", searcher.Doc(hits3.ScoreDocs[0].Doc).Get("id"
 				));
-			AreEqual("0", searcher.Doc(hits3.scoreDocs[1].doc).Get("id"
+			AreEqual("0", searcher.Doc(hits3.ScoreDocs[1].Doc).Get("id"
 				));
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -102,7 +102,7 @@ namespace Lucene.Net.Search
 				));
 			w.AddDocument(doc);
 			IndexReader r = w.GetReader();
-			w.Close();
+			w.Dispose();
 			// Do ordinary BooleanQuery:
 			BooleanQuery bq = new BooleanQuery();
 			bq.Add(new TermQuery(new Term("field", "wizard")), BooleanClause.Occur.SHOULD);
@@ -110,9 +110,9 @@ namespace Lucene.Net.Search
 			IndexSearcher searcher = GetSearcher(r);
 			TopDocs hits = searcher.Search(bq, 10);
 			AreEqual(2, hits.TotalHits);
-			AreEqual("0", searcher.Doc(hits.scoreDocs[0].doc).Get("id"
+			AreEqual("0", searcher.Doc(hits.ScoreDocs[0].Doc).Get("id"
 				));
-			AreEqual("1", searcher.Doc(hits.scoreDocs[1].doc).Get("id"
+			AreEqual("1", searcher.Doc(hits.ScoreDocs[1].Doc).Get("id"
 				));
 			// Now, resort using PhraseQuery, but with an
 			// opposite-world combine:
@@ -123,12 +123,12 @@ namespace Lucene.Net.Search
 			TopDocs hits2 = new _QueryRescorer_146(pq).Rescore(searcher, hits, 10);
 			// Resorting didn't change the order:
 			AreEqual(2, hits2.TotalHits);
-			AreEqual("0", searcher.Doc(hits2.scoreDocs[0].doc).Get("id"
+			AreEqual("0", searcher.Doc(hits2.ScoreDocs[0].Doc).Get("id"
 				));
-			AreEqual("1", searcher.Doc(hits2.scoreDocs[1].doc).Get("id"
+			AreEqual("1", searcher.Doc(hits2.ScoreDocs[1].Doc).Get("id"
 				));
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 
 		private sealed class _QueryRescorer_146 : QueryRescorer
@@ -166,7 +166,7 @@ namespace Lucene.Net.Search
 				));
 			w.AddDocument(doc);
 			IndexReader r = w.GetReader();
-			w.Close();
+			w.Dispose();
 			// Do ordinary BooleanQuery:
 			BooleanQuery bq = new BooleanQuery();
 			bq.Add(new TermQuery(new Term("field", "wizard")), BooleanClause.Occur.SHOULD);
@@ -174,9 +174,9 @@ namespace Lucene.Net.Search
 			IndexSearcher searcher = GetSearcher(r);
 			TopDocs hits = searcher.Search(bq, 10);
 			AreEqual(2, hits.TotalHits);
-			AreEqual("0", searcher.Doc(hits.scoreDocs[0].doc).Get("id"
+			AreEqual("0", searcher.Doc(hits.ScoreDocs[0].Doc).Get("id"
 				));
-			AreEqual("1", searcher.Doc(hits.scoreDocs[1].doc).Get("id"
+			AreEqual("1", searcher.Doc(hits.ScoreDocs[1].Doc).Get("id"
 				));
 			// Now, resort using PhraseQuery:
 			PhraseQuery pq = new PhraseQuery();
@@ -186,11 +186,11 @@ namespace Lucene.Net.Search
 			TopDocs hits2 = rescorer.Rescore(searcher, hits, 10);
 			// Resorting changed the order:
 			AreEqual(2, hits2.TotalHits);
-			AreEqual("1", searcher.Doc(hits2.scoreDocs[0].doc).Get("id"
+			AreEqual("1", searcher.Doc(hits2.ScoreDocs[0].Doc).Get("id"
 				));
-			AreEqual("0", searcher.Doc(hits2.scoreDocs[1].doc).Get("id"
+			AreEqual("0", searcher.Doc(hits2.ScoreDocs[1].Doc).Get("id"
 				));
-			int docID = hits2.scoreDocs[0].doc;
+			int docID = hits2.ScoreDocs[0].Doc;
 			Explanation explain = rescorer.Explain(searcher, searcher.Explain(bq, docID), docID
 				);
 			string s = explain.ToString();
@@ -198,9 +198,9 @@ namespace Lucene.Net.Search
 			IsTrue(s.Contains("combined first and second pass score"));
 			IsTrue(s.Contains("first pass score"));
 			IsTrue(s.Contains("= second pass score"));
-			AreEqual(hits2.scoreDocs[0].score, explain.GetValue(), 0.0f
+			AreEqual(hits2.ScoreDocs[0].score, explain.GetValue(), 0.0f
 				);
-			docID = hits2.scoreDocs[1].doc;
+			docID = hits2.ScoreDocs[1].Doc;
 			explain = rescorer.Explain(searcher, searcher.Explain(bq, docID), docID);
 			s = explain.ToString();
 			IsTrue(s.Contains("TestQueryRescorer$"));
@@ -209,10 +209,10 @@ namespace Lucene.Net.Search
 			IsTrue(s.Contains("no second pass score"));
 			IsFalse(s.Contains("= second pass score"));
 			IsTrue(s.Contains("NON-MATCH"));
-			AreEqual(hits2.scoreDocs[1].score, explain.GetValue(), 0.0f
+			AreEqual(hits2.ScoreDocs[1].score, explain.GetValue(), 0.0f
 				);
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 
 		private sealed class _QueryRescorer_198 : QueryRescorer
@@ -250,7 +250,7 @@ namespace Lucene.Net.Search
 				));
 			w.AddDocument(doc);
 			IndexReader r = w.GetReader();
-			w.Close();
+			w.Dispose();
 			// Do ordinary BooleanQuery:
 			BooleanQuery bq = new BooleanQuery();
 			bq.Add(new TermQuery(new Term("field", "wizard")), BooleanClause.Occur.SHOULD);
@@ -258,9 +258,9 @@ namespace Lucene.Net.Search
 			IndexSearcher searcher = GetSearcher(r);
 			TopDocs hits = searcher.Search(bq, 10);
 			AreEqual(2, hits.TotalHits);
-			AreEqual("0", searcher.Doc(hits.scoreDocs[0].doc).Get("id"
+			AreEqual("0", searcher.Doc(hits.ScoreDocs[0].Doc).Get("id"
 				));
-			AreEqual("1", searcher.Doc(hits.scoreDocs[1].doc).Get("id"
+			AreEqual("1", searcher.Doc(hits.ScoreDocs[1].Doc).Get("id"
 				));
 			// Now, resort using PhraseQuery, no slop:
 			PhraseQuery pq = new PhraseQuery();
@@ -269,9 +269,9 @@ namespace Lucene.Net.Search
 			TopDocs hits2 = QueryRescorer.Rescore(searcher, hits, pq, 2.0, 10);
 			// Resorting changed the order:
 			AreEqual(2, hits2.TotalHits);
-			AreEqual("1", searcher.Doc(hits2.scoreDocs[0].doc).Get("id"
+			AreEqual("1", searcher.Doc(hits2.ScoreDocs[0].Doc).Get("id"
 				));
-			AreEqual("0", searcher.Doc(hits2.scoreDocs[1].doc).Get("id"
+			AreEqual("0", searcher.Doc(hits2.ScoreDocs[1].Doc).Get("id"
 				));
 			// Resort using SpanNearQuery:
 			SpanTermQuery t1 = new SpanTermQuery(new Term("field", "wizard"));
@@ -280,12 +280,12 @@ namespace Lucene.Net.Search
 			TopDocs hits3 = QueryRescorer.Rescore(searcher, hits, snq, 2.0, 10);
 			// Resorting changed the order:
 			AreEqual(2, hits3.TotalHits);
-			AreEqual("1", searcher.Doc(hits3.scoreDocs[0].doc).Get("id"
+			AreEqual("1", searcher.Doc(hits3.ScoreDocs[0].Doc).Get("id"
 				));
-			AreEqual("0", searcher.Doc(hits3.scoreDocs[1].doc).Get("id"
+			AreEqual("0", searcher.Doc(hits3.ScoreDocs[1].Doc).Get("id"
 				));
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -313,7 +313,7 @@ namespace Lucene.Net.Search
 				w.AddDocument(doc);
 			}
 			IndexReader r = w.GetReader();
-			w.Close();
+			w.Dispose();
 			IndexSearcher s = NewSearcher(r);
 			int numHits = TestUtil.NextInt(Random(), 1, numDocs);
 			bool reverse = Random().NextBoolean();
@@ -324,7 +324,7 @@ namespace Lucene.Net.Search
 			int[] expected = new int[numHits];
 			for (int i_1 = 0; i_1 < numHits; i_1++)
 			{
-				expected[i_1] = hits.scoreDocs[i_1].doc;
+				expected[i_1] = hits.ScoreDocs[i_1].Doc;
 			}
 			int reverseInt = reverse ? -1 : 1;
 			Arrays.Sort(expected, new _IComparer_344(idToNum, r, reverseInt));
@@ -332,16 +332,16 @@ namespace Lucene.Net.Search
 			bool fail = false;
 			for (int i_2 = 0; i_2 < numHits; i_2++)
 			{
-				//System.out.println("expected=" + expected[i] + " vs " + hits2.scoreDocs[i].doc + " v=" + idToNum[Integer.parseInt(r.document(expected[i]).get("id"))]);
-				if (expected[i_2] != hits2.scoreDocs[i_2].doc)
+				//System.out.println("expected=" + expected[i] + " vs " + hits2.ScoreDocs[i].Doc + " v=" + idToNum[Integer.parseInt(r.document(expected[i]).get("id"))]);
+				if (expected[i_2] != hits2.ScoreDocs[i_2].Doc)
 				{
 					//System.out.println("  diff!");
 					fail = true;
 				}
 			}
 			IsFalse(fail);
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 
 		private sealed class _QueryRescorer_329 : QueryRescorer
@@ -478,7 +478,7 @@ namespace Lucene.Net.Search
 					public override int NextDoc()
 					{
 						this.docID++;
-						if (this.docID >= ((AtomicReader)context.Reader()).MaxDoc)
+						if (this.docID >= ((AtomicReader)context.Reader).MaxDoc)
 						{
 							return DocIdSetIterator.NO_MORE_DOCS;
 						}
@@ -495,7 +495,7 @@ namespace Lucene.Net.Search
 					public override float Score()
 					{
 						int num = this._enclosing._enclosing.idToNum[System.Convert.ToInt32(((AtomicReader
-							)context.Reader()).Document(this.docID).Get("id"))];
+							)context.Reader).Document(this.docID).Get("id"))];
 						if (this._enclosing._enclosing.reverse)
 						{
 							//System.out.println("score doc=" + docID + " num=" + num);

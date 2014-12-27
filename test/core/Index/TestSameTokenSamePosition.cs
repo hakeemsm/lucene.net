@@ -12,7 +12,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestSameTokenSamePosition : LuceneTestCase
 	{
@@ -33,8 +33,8 @@ namespace Lucene.Net.Index
 				();
 			doc.Add(new TextField("eng", new BugReproTokenStream()));
 			riw.AddDocument(doc);
-			riw.Close();
-			dir.Close();
+			riw.Dispose();
+			dir.Dispose();
 		}
 
 		/// <summary>Same as the above, but with more docs</summary>
@@ -50,8 +50,8 @@ namespace Lucene.Net.Index
 				doc.Add(new TextField("eng", new BugReproTokenStream()));
 				riw.AddDocument(doc);
 			}
-			riw.Close();
-			dir.Close();
+			riw.Dispose();
+			dir.Dispose();
 		}
 	}
 

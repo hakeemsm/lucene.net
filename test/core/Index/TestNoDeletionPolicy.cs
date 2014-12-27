@@ -13,7 +13,7 @@ using Lucene.Net.Util;
 using Sharpen;
 using Sharpen.Reflect;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestNoDeletionPolicy : LuceneTestCase
 	{
@@ -81,8 +81,8 @@ namespace Lucene.Net.Index
 				AreEqual("wrong number of commits !", i + 1, DirectoryReader
 					.ListCommits(dir).Count);
 			}
-			writer.Close();
-			dir.Close();
+			writer.Dispose();
+			dir.Dispose();
 		}
 	}
 }

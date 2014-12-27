@@ -125,8 +125,8 @@ namespace Lucene.Net.Search
 		                                             query4.Add(new Term("field2", "foobar"));
 		                                         });
 			
-			searcher.Close();
-			indexStore.Close();
+			searcher.Dispose();
+			indexStore.Dispose();
 		}
 		
 		public virtual void TestTall()
@@ -136,15 +136,15 @@ namespace Lucene.Net.Search
 			Add("blueberry chocolate pie", writer);
 			Add("blueberry chocolate tart", writer);
 			IndexReader r = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(r);
 			MultiPhraseQuery q = new MultiPhraseQuery();
 			q.Add(new Term("body", "blueberry"));
 			q.Add(new Term("body", "chocolate"));
 			q.Add(new Term[] { new Term("body", "pie"), new Term("body", "tart") });
 			AreEqual(2, searcher.Search(q, 1).TotalHits);
-			r.Close();
-			indexStore.Close();
+			r.Dispose();
+			indexStore.Dispose();
 		}
 		[Ignore]
 		public virtual void TestMultiSloppyWithRepeats()
@@ -154,7 +154,7 @@ namespace Lucene.Net.Search
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), indexStore);
 			Add("a b c d e f g h i k", writer);
 			IndexReader r = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(r);
 			MultiPhraseQuery q = new MultiPhraseQuery();
 			// this will fail, when the scorer would propagate [a] rather than [a,b],
@@ -163,8 +163,8 @@ namespace Lucene.Net.Search
 			q.SetSlop(6);
 			AreEqual(1, searcher.Search(q, 1).TotalHits);
 			// should match on "a b"
-			r.Close();
-			indexStore.Close();
+			r.Dispose();
+			indexStore.Dispose();
 		}
 		public virtual void TestMultiExactWithRepeats()
 		{
@@ -172,15 +172,15 @@ namespace Lucene.Net.Search
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), indexStore);
 			Add("a b c d e f g h i k", writer);
 			IndexReader r = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(r);
 			MultiPhraseQuery q = new MultiPhraseQuery();
 			q.Add(new Term[] { new Term("body", "a"), new Term("body", "d") }, 0);
 			q.Add(new Term[] { new Term("body", "a"), new Term("body", "f") }, 2);
 			AreEqual(1, searcher.Search(q, 1).TotalHits);
 			// should match on "a b"
-			r.Close();
-			indexStore.Close();
+			r.Dispose();
+			indexStore.Dispose();
 		}
 		private void Add(string s, RandomIndexWriter writer)
 		{
@@ -217,9 +217,9 @@ namespace Lucene.Net.Search
 			
 			Assert.AreEqual(2, hits.Length, "Wrong number of hits");
 			searcher.Explain(q, 0);
-			writer.Close();
-			reader.Close();
-			indexStore.Close();
+			writer.Dispose();
+			reader.Dispose();
+			indexStore.Dispose();
 		}
 		
 		[Test]
@@ -245,9 +245,9 @@ namespace Lucene.Net.Search
 			// exception will be thrown here without fix for #35626:
 			ScoreDoc[] hits = searcher.Search(q, null, 1000).ScoreDocs;
 			Assert.AreEqual(0, hits.Length, "Wrong number of hits");
-			writer.Close();
-			reader.Close();
-			indexStore.Close();
+			writer.Dispose();
+			reader.Dispose();
+			indexStore.Dispose();
 		}
 		
 		public virtual void TestNoDocs()
@@ -264,9 +264,9 @@ namespace Lucene.Net.Search
 				, 1).TotalHits);
 			// just make sure no exc:
 			searcher.Explain(q, 0);
-			writer.Close();
-			reader.Close();
-			indexStore.Close();
+			writer.Dispose();
+			reader.Dispose();
+			indexStore.Dispose();
 		}
 		[Test]
 		public virtual void  TestHashCodeAndEquals()
@@ -325,9 +325,9 @@ namespace Lucene.Net.Search
 			Weight weight = query.CreateWeight(searcher);
 			AreEqual(10f * 10f, weight.GetValueForNormalization(), 0.001f
 				);
-			writer.Close();
-			reader.Close();
-			indexStore.Close();
+			writer.Dispose();
+			reader.Dispose();
+			indexStore.Dispose();
 		}
 		private sealed class _DefaultSimilarity_339 : DefaultSimilarity
 		{
@@ -363,7 +363,7 @@ namespace Lucene.Net.Search
 			doc.Add(new TextField("field", new CannedTokenStream(tokens)));
 			writer.AddDocument(doc);
 			IndexReader r = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			IndexSearcher s = NewSearcher(r);
 			MultiPhraseQuery mpq = new MultiPhraseQuery();
 			//mpq.setSlop(1);
@@ -385,10 +385,10 @@ namespace Lucene.Net.Search
 			}
 			TopDocs hits = s.Search(mpq, 2);
 			AreEqual(2, hits.TotalHits);
-			AreEqual(hits.scoreDocs[0].score, hits.scoreDocs[1].score, 
+			AreEqual(hits.ScoreDocs[0].score, hits.ScoreDocs[1].score, 
 				1e-5);
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 		private static Token MakeToken(string text, int posIncr)
 		{
@@ -434,7 +434,7 @@ namespace Lucene.Net.Search
 			doc.Add(new TextField("field", new CannedTokenStream(INCR_0_DOC_TOKENS)));
 			writer.AddDocument(doc);
 			IndexReader r = DirectoryReader.Open(writer, false);
-			writer.Close();
+			writer.Dispose();
 			IndexSearcher s = NewSearcher(r);
 			if (VERBOSE)
 			{
@@ -447,12 +447,12 @@ namespace Lucene.Net.Search
 			{
 				for (int hit = 0; hit < hits.TotalHits; hit++)
 				{
-					ScoreDoc sd = hits.scoreDocs[hit];
-					System.Console.Out.WriteLine("  hit doc=" + sd.doc + " score=" + sd.score);
+					ScoreDoc sd = hits.ScoreDocs[hit];
+					System.Console.Out.WriteLine("  hit doc=" + sd.Doc + " score=" + sd.score);
 				}
 			}
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 
 		/// <summary>PQ AND Mode - Manually creating a phrase query</summary>

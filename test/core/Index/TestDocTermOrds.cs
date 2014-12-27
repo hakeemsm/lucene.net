@@ -14,7 +14,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestDocTermOrds : LuceneTestCase
 	{
@@ -40,9 +40,9 @@ namespace Lucene.Net.Index
 			field.StringValue = "a f");
 			w.AddDocument(doc);
 			IndexReader r = w.GetReader();
-			w.Close();
+			w.Dispose();
 			AtomicReader ar = SlowCompositeReaderWrapper.Wrap(r);
-			DocTermOrds dto = new DocTermOrds(ar, ar.GetLiveDocs(), "field");
+			DocTermOrds dto = new DocTermOrds(ar, ar.LiveDocs, "field");
 			SortedSetDocValues iter = dto.Iterator(ar);
 			iter.SetDocument(0);
 			AreEqual(0, iter.NextOrd());
@@ -58,8 +58,8 @@ namespace Lucene.Net.Index
 			AreEqual(0, iter.NextOrd());
 			AreEqual(5, iter.NextOrd());
 			AreEqual(SortedSetDocValues.NO_MORE_ORDS, iter.NextOrd());
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -127,18 +127,18 @@ namespace Lucene.Net.Index
 				w.AddDocument(doc);
 			}
 			DirectoryReader r = w.GetReader();
-			w.Close();
+			w.Dispose();
 			if (VERBOSE)
 			{
 				System.Console.Out.WriteLine("TEST: reader=" + r);
 			}
-			foreach (AtomicReaderContext ctx in r.Leaves())
+			foreach (AtomicReaderContext ctx in r.Leaves)
 			{
 				if (VERBOSE)
 				{
-					System.Console.Out.WriteLine("\nTEST: sub=" + ((AtomicReader)ctx.Reader()));
+					System.Console.Out.WriteLine("\nTEST: sub=" + ((AtomicReader)ctx.Reader));
 				}
-				Verify(((AtomicReader)ctx.Reader()), idToOrds, termsArray, null);
+				Verify(((AtomicReader)ctx.Reader), idToOrds, termsArray, null);
 			}
 			// Also test top-level reader: its enum does not support
 			// ord, so this forces the OrdWrapper to run:
@@ -149,8 +149,8 @@ namespace Lucene.Net.Index
 			AtomicReader slowR = SlowCompositeReaderWrapper.Wrap(r);
 			Verify(slowR, idToOrds, termsArray, null);
 			FieldCache.DEFAULT.PurgeByCacheKey(slowR.GetCoreCacheKey());
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -231,7 +231,7 @@ namespace Lucene.Net.Index
 				w.AddDocument(doc);
 			}
 			DirectoryReader r = w.GetReader();
-			w.Close();
+			w.Dispose();
 			if (VERBOSE)
 			{
 				System.Console.Out.WriteLine("TEST: reader=" + r);
@@ -260,13 +260,13 @@ namespace Lucene.Net.Index
 					}
 					idToOrdsPrefix[id_1] = newOrdsArray;
 				}
-				foreach (AtomicReaderContext ctx in r.Leaves())
+				foreach (AtomicReaderContext ctx in r.Leaves)
 				{
 					if (VERBOSE)
 					{
-						System.Console.Out.WriteLine("\nTEST: sub=" + ((AtomicReader)ctx.Reader()));
+						System.Console.Out.WriteLine("\nTEST: sub=" + ((AtomicReader)ctx.Reader));
 					}
-					Verify(((AtomicReader)ctx.Reader()), idToOrdsPrefix, termsArray, prefixRef);
+					Verify(((AtomicReader)ctx.Reader), idToOrdsPrefix, termsArray, prefixRef);
 				}
 				// Also test top-level reader: its enum does not support
 				// ord, so this forces the OrdWrapper to run:
@@ -277,15 +277,15 @@ namespace Lucene.Net.Index
 				Verify(slowR, idToOrdsPrefix, termsArray, prefixRef);
 			}
 			FieldCache.DEFAULT.PurgeByCacheKey(slowR.GetCoreCacheKey());
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
 		private void Verify(AtomicReader r, int[][] idToOrds, BytesRef[] termsArray, BytesRef
 			 prefixRef)
 		{
-			DocTermOrds dto = new DocTermOrds(r, r.GetLiveDocs(), "field", prefixRef, int.MaxValue
+			DocTermOrds dto = new DocTermOrds(r, r.LiveDocs, "field", prefixRef, int.MaxValue
 				, TestUtil.NextInt(Random(), 2, 10));
 			FieldCache.Ints docIDToID = FieldCache.DEFAULT.GetInts(r, "id", false);
 			if (VERBOSE)
@@ -392,10 +392,10 @@ namespace Lucene.Net.Index
 			AreEqual(2, v.GetValueCount());
 			v.SetDocument(1);
 			AreEqual(1, v.NextOrd());
-			iw.Close();
-			r1.Close();
-			r2.Close();
-			dir.Close();
+			iw.Dispose();
+			r1.Dispose();
+			r2.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -418,7 +418,7 @@ namespace Lucene.Net.Index
 			iwriter.AddDocument(doc);
 			iwriter.ForceMerge(1);
 			DirectoryReader ireader = iwriter.GetReader();
-			iwriter.Close();
+			iwriter.Dispose();
 			AtomicReader ar = GetOnlySegmentReader(ireader);
 			SortedSetDocValues dv = FieldCache.DEFAULT.GetDocTermOrds(ar, "field");
 			AreEqual(3, dv.GetValueCount());
@@ -462,8 +462,8 @@ namespace Lucene.Net.Index
 			termsEnum.SeekExact(2);
 			AreEqual("world", termsEnum.Term().Utf8ToString());
 			AreEqual(2, termsEnum.Ord());
-			ireader.Close();
-			directory.Close();
+			ireader.Dispose();
+			directory.Dispose();
 		}
 	}
 }

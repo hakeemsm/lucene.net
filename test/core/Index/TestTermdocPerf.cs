@@ -14,7 +14,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	internal class RepeatingTokenizer : Tokenizer
 	{
@@ -86,7 +86,7 @@ namespace Lucene.Net.Index
 				writer.AddDocument(doc);
 			}
 			writer.ForceMerge(1);
-			writer.Close();
+			writer.Dispose();
 		}
 
 		private sealed class _Analyzer_81 : Analyzer
@@ -119,9 +119,9 @@ namespace Lucene.Net.Index
 		public virtual int DoTest(int iter, int ndocs, int maxTF, float percentDocs)
 		{
 			Directory dir = NewDirectory();
-			long start = Runtime.CurrentTimeMillis();
+			long start = DateTime.Now.CurrentTimeMillis();
 			AddDocs(Random(), dir, ndocs, "foo", "val", maxTF, percentDocs);
-			long end = Runtime.CurrentTimeMillis();
+			long end = DateTime.Now.CurrentTimeMillis();
 			if (VERBOSE)
 			{
 				System.Console.Out.WriteLine("milliseconds for creation of " + ndocs + " docs = "
@@ -129,7 +129,7 @@ namespace Lucene.Net.Index
 			}
 			IndexReader reader = DirectoryReader.Open(dir);
 			TermsEnum tenum = MultiFields.GetTerms(reader, "foo").Iterator(null);
-			start = Runtime.CurrentTimeMillis();
+			start = DateTime.Now.CurrentTimeMillis();
 			int ret = 0;
 			DocsEnum tdocs = null;
 			Random random = new Random(Random().NextLong());
@@ -143,7 +143,7 @@ namespace Lucene.Net.Index
 					ret += tdocs.DocID;
 				}
 			}
-			end = Runtime.CurrentTimeMillis();
+			end = DateTime.Now.CurrentTimeMillis();
 			if (VERBOSE)
 			{
 				System.Console.Out.WriteLine("milliseconds for " + iter + " TermDocs iteration: "

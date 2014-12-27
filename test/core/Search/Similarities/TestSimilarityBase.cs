@@ -108,14 +108,14 @@ namespace Lucene.Net.Search.Similarities
 			{
 				Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 				FieldType ft = new FieldType(TextField.TYPE_STORED);
-				ft.SetIndexed(false);
-				d.Add(NewField(FIELD_ID, Sharpen.Extensions.ToString(i), ft));
+				ft.Indexed(false);
+				d.Add(NewField(FIELD_ID, i.ToString(), ft));
 				d.Add(NewTextField(FIELD_BODY, docs[i], Field.Store.YES));
 				writer.AddDocument(d);
 			}
 			reader = writer.GetReader();
 			searcher = NewSearcher(reader);
-			writer.Close();
+			writer.Dispose();
 			sims = new AList<SimilarityBase>();
 			foreach (BasicModel basicModel in BASIC_MODELS)
 			{
@@ -729,15 +729,15 @@ namespace Lucene.Net.Search.Similarities
 				searcher.SetSimilarity(sim);
 				TopDocs topDocs = searcher.Search(q, 1000);
 				AreEqual("Failed: " + sim.ToString(), "2", reader.Document
-					(topDocs.scoreDocs[0].doc).Get(FIELD_ID));
+					(topDocs.ScoreDocs[0].Doc).Get(FIELD_ID));
 			}
 		}
 
 		/// <exception cref="System.Exception"></exception>
 		public override void TearDown()
 		{
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 			base.TearDown();
 		}
 

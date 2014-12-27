@@ -15,7 +15,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestStressNRT : LuceneTestCase
 	{
@@ -70,7 +70,7 @@ namespace Lucene.Net.Index
 			int nReadThreads = TestUtil.NextInt(Random(), 1, TEST_NIGHTLY ? 10 : 5);
 			InitModel(ndocs);
 			FieldType storedOnlyType = new FieldType();
-			storedOnlyType.SetStored(true);
+			storedOnlyType.Stored = (true);
 			if (VERBOSE)
 			{
 				System.Console.Out.WriteLine("\n");
@@ -155,13 +155,13 @@ namespace Lucene.Net.Index
 			{
 				thread_2.Join();
 			}
-			writer.Close();
+			writer.Dispose();
 			if (VERBOSE)
 			{
 				System.Console.Out.WriteLine("TEST: close reader=" + reader);
 			}
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		private sealed class _Thread_115 : Sharpen.Thread
@@ -254,7 +254,7 @@ namespace Lucene.Net.Index
 								oldReader.DecRef();
 								lock (this._enclosing)
 								{
-									if (newReader.GetVersion() > this._enclosing.reader.GetVersion())
+									if (newReader.Version > this._enclosing.reader.Version)
 									{
 										if (LuceneTestCase.VERBOSE)
 										{
@@ -447,7 +447,7 @@ namespace Lucene.Net.Index
 						if (LuceneTestCase.VERBOSE)
 						{
 							System.Console.Out.WriteLine("TEST: " + Sharpen.Thread.CurrentThread().GetName() 
-								+ ": s id=" + id + " val=" + val + " r=" + r.GetVersion());
+								+ ": s id=" + id + " val=" + val + " r=" + r.Version);
 						}
 						IndexSearcher searcher;
 						if (r == lastReader)
@@ -485,16 +485,16 @@ namespace Lucene.Net.Index
 							if (results.TotalHits != 1)
 							{
 								System.Console.Out.WriteLine("FAIL: hits id:" + id + " val=" + val);
-								foreach (ScoreDoc sd in results.scoreDocs)
+								foreach (ScoreDoc sd in results.ScoreDocs)
 								{
-									Lucene.Net.Documents.Document doc = r.Document(sd.doc);
-									System.Console.Out.WriteLine("  docID=" + sd.doc + " id:" + doc.Get("id") + " foundVal="
+									Lucene.Net.Documents.Document doc = r.Document(sd.Doc);
+									System.Console.Out.WriteLine("  docID=" + sd.Doc + " id:" + doc.Get("id") + " foundVal="
 										 + doc.Get(this._enclosing.field));
 								}
 								Fail("id=" + id + " reader=" + r + " TotalHits=" + results
 									.TotalHits);
 							}
-							Lucene.Net.Documents.Document doc_1 = searcher.Doc(results.scoreDocs[0].doc
+							Lucene.Net.Documents.Document doc_1 = searcher.Doc(results.ScoreDocs[0].Doc
 								);
 							long foundVal = long.Parse(doc_1.Get(this._enclosing.field));
 							if (foundVal < Math.Abs(val))

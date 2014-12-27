@@ -57,7 +57,7 @@ namespace Lucene.Net.Store
 			{
 				if (stream != null)
 				{
-					stream.Close();
+					stream.Dispose();
 				}
 			}
 		}
@@ -99,7 +99,7 @@ namespace Lucene.Net.Store
 			}
 			finally
 			{
-				input.Close();
+				input.Dispose();
 			}
 		}
 		
@@ -262,15 +262,15 @@ namespace Lucene.Net.Store
 				IndexReader reader = DirectoryReader.Open(writer, true);
 				Term aaa = new Term("content", "aaa");
 				Term bbb = new Term("content", "bbb");
-				reader.Close();
+				reader.Dispose();
 				dir.TweakBufferSizes();
 				writer.DeleteDocuments(new Term("id", "0"));
 				reader = DirectoryReader.Open(writer, true);
 				IndexSearcher searcher = NewSearcher(reader);
-				ScoreDoc[] hits = searcher.Search(new TermQuery(bbb), null, 1000).scoreDocs;
+				ScoreDoc[] hits = searcher.Search(new TermQuery(bbb), null, 1000).ScoreDocs;
 				dir.TweakBufferSizes();
 				AreEqual(36, hits.Length);
-				reader.Close();
+				reader.Dispose();
 				dir.TweakBufferSizes();
 				writer.DeleteDocuments(new Term("id", "4"));
 				reader = DirectoryReader.Open(writer, true);
@@ -285,8 +285,8 @@ namespace Lucene.Net.Store
 				hits = searcher.Search(new TermQuery(aaa), null, 1000).ScoreDocs;
 				dir.tweakBufferSizes();
 				Assert.AreEqual(35, hits.Length);
-				writer.Close();
-				reader.Close();
+				writer.Dispose();
+				reader.Dispose();
 			}
 			finally
 			{
@@ -350,7 +350,7 @@ namespace Lucene.Net.Store
                 {
                     if (dir != null)
                     {
-                        dir.Close();
+                        dir.Dispose();
                     }
                 }
 

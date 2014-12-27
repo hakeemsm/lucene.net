@@ -48,15 +48,15 @@ namespace Lucene.Net.Search
 			writer.AddDocument(Doc("nutch", "nutch is an internet search engine with web crawler and is using lucene and hadoop"
 				));
 			reader = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			searcher = NewSearcher(reader);
 		}
 
 		/// <exception cref="System.Exception"></exception>
 		public override void TearDown()
 		{
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 			base.TearDown();
 		}
 

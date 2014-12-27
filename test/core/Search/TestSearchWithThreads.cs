@@ -37,7 +37,7 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter w = new RandomIndexWriter(Random(), dir);
-			long startTime = Runtime.CurrentTimeMillis();
+			long startTime = DateTime.Now.CurrentTimeMillis();
 			// TODO: replace w/ the @nightly test data; make this
 			// into an optional @nightly stress test
 			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
@@ -58,8 +58,8 @@ namespace Lucene.Net.Search
 				sb.Delete(0, sb.Length);
 			}
 			IndexReader r = w.GetReader();
-			w.Close();
-			long endTime = Runtime.CurrentTimeMillis();
+			w.Dispose();
+			long endTime = DateTime.Now.CurrentTimeMillis();
 			if (VERBOSE)
 			{
 				System.Console.Out.WriteLine("BUILD took " + (endTime - startTime));
@@ -86,8 +86,8 @@ namespace Lucene.Net.Search
 				System.Console.Out.WriteLine(NUM_SEARCH_THREADS + " threads did " + netSearch.Get
 					() + " searches");
 			}
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 
 		private sealed class _Thread_80 : Sharpen.Thread
@@ -110,8 +110,8 @@ namespace Lucene.Net.Search
 				{
 					long totHits = 0;
 					long totSearch = 0;
-					long stopAt = Runtime.CurrentTimeMillis() + this._enclosing.RUN_TIME_MSEC;
-					while (Runtime.CurrentTimeMillis() < stopAt && !failed.Get())
+					long stopAt = DateTime.Now.CurrentTimeMillis() + this._enclosing.RUN_TIME_MSEC;
+					while (DateTime.Now.CurrentTimeMillis() < stopAt && !failed.Get())
 					{
 						s.Search(new TermQuery(new Term("body", "aaa")), this.col);
 						totHits += this.col.GetTotalHits();

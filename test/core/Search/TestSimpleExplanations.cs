@@ -818,10 +818,10 @@ namespace Lucene.Net.Search
 			writerA.AddDocument(lDoc);
 			writerA.AddDocument(lDoc2);
 			writerA.Optimize();
-			writerA.Close();
+			writerA.Dispose();
 			
 			writerB.AddDocument(lDoc3);
-			writerB.Close();
+			writerB.Dispose();
 			
 			QueryParser parser = new QueryParser(Util.Version.LUCENE_CURRENT, "fulltext", new StandardAnalyzer(Util.Version.LUCENE_CURRENT));
 			Query query = parser.Parse("handle:1");
@@ -858,7 +858,7 @@ namespace Lucene.Net.Search
 			exp = explain.ToString(0);
 			Assert.IsTrue(exp.IndexOf("1=3") > - 1, exp);
 			Assert.IsTrue(exp.IndexOf("2=3") > - 1, exp);
-			mSearcher.Close();
+			mSearcher.Dispose();
 		}
 	}
 }

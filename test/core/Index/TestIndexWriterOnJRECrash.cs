@@ -16,7 +16,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	/// <summary>
 	/// Runs TestNRTThreads in a separate process, crashes the JRE in the middle
@@ -218,10 +218,10 @@ namespace Lucene.Net.Index
 					{
 						TestUtil.CheckIndex(dir);
 					}
-					dir.Close();
+					dir.Dispose();
 					return true;
 				}
-				dir.Close();
+				dir.Dispose();
 				foreach (FilePath f in file.ListFiles())
 				{
 					if (CheckIndexes(f))

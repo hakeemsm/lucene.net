@@ -187,7 +187,7 @@ namespace Lucene.Net.Test.Codecs.Lucene40
 			{
 				writer.AddDocument(lineFileDocs.NextDoc());
 			}
-			lineFileDocs.Close();
+			lineFileDocs.Dispose();
 		}
 	}
 }

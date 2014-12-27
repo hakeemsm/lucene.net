@@ -67,16 +67,16 @@ namespace Lucene.Net
 			System.IO.StreamWriter pw = new System.IO.StreamWriter(sw);
 			int MAX_DOCS = AtLeast(225);
 			DoTest(Random(), pw, false, MAX_DOCS);
-			pw.Close();
-			sw.Close();
+			pw.Dispose();
+			sw.Dispose();
 			System.String multiFileOutput = System.Text.ASCIIEncoding.ASCII.GetString(sw.ToArray());
 			//System.out.println(multiFileOutput);
 			
 			sw = new System.IO.MemoryStream();
 			pw = new System.IO.StreamWriter(sw);
 			DoTest(Random(), pw, true, MAX_DOCS);
-			pw.Close();
-			sw.Close();
+			pw.Dispose();
+			sw.Dispose();
 			System.String singleFileOutput = System.Text.ASCIIEncoding.ASCII.GetString(sw.ToArray());
 			
 			Assert.AreEqual(multiFileOutput, singleFileOutput);
@@ -88,7 +88,7 @@ namespace Lucene.Net
 			Directory directory = NewDirectory();
 			Analyzer analyzer = new MockAnalyzer(random);
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer);
-			MergePolicy mp = conf.GetMergePolicy();
+			MergePolicy mp = conf.MergePolicy;
 			mp.SetNoCFSRatio(useCompoundFiles ? 1.0 : 0.0);
 			IndexWriter writer = new IndexWriter(directory, conf);
 			if (VERBOSE)
@@ -102,7 +102,7 @@ namespace Lucene.Net
 				d.Add(NewTextField(ID_FIELD, Sharpen.Extensions.ToString(j), Field.Store.YES));
 				writer.AddDocument(d);
 			}
-			writer.Close();
+			writer.Dispose();
 			
 			// try a search without OR
 			IndexReader reader = DirectoryReader.Open(directory);
@@ -130,12 +130,12 @@ namespace Lucene.Net
 				.SHOULD);
 			out_Renamed.WriteLine("Query: " + query.ToString(PRIORITY_FIELD));
 			
-			hits = searcher.Search(booleanQuery, null, MAX_DOCS, sort).scoreDocs;
+			hits = searcher.Search(booleanQuery, null, MAX_DOCS, sort).ScoreDocs;
 			PrintHits(out_Renamed, hits, searcher);
 			CheckHits(hits, MAX_DOCS, searcher);
 			
-			reader.Close();
-			directory.Close();
+			reader.Dispose();
+			directory.Dispose();
 		}
 		
 		

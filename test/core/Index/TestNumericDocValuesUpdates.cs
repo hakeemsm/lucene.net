@@ -22,7 +22,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestNumericDocValuesUpdates : LuceneTestCase
 	{
@@ -51,18 +51,18 @@ namespace Lucene.Net.Index
 			writer.AddDocument(Doc(3));
 			// val=2
 			writer.Commit();
-			AreEqual(1, writer.GetFlushDeletesCount());
+			AreEqual(1, writer.FlushDeletesCount);
 			writer.UpdateNumericDocValue(new Term("id", "doc-0"), "val", 5L);
-			AreEqual(2, writer.GetFlushDeletesCount());
+			AreEqual(2, writer.FlushDeletesCount);
 			writer.UpdateNumericDocValue(new Term("id", "doc-1"), "val", 6L);
-			AreEqual(3, writer.GetFlushDeletesCount());
+			AreEqual(3, writer.FlushDeletesCount);
 			writer.UpdateNumericDocValue(new Term("id", "doc-2"), "val", 7L);
-			AreEqual(4, writer.GetFlushDeletesCount());
-			writer.GetConfig().SetRAMBufferSizeMB(1000d);
+			AreEqual(4, writer.FlushDeletesCount);
+			writer.Config.SetRAMBufferSizeMB(1000d);
 			writer.UpdateNumericDocValue(new Term("id", "doc-2"), "val", 7L);
-			AreEqual(4, writer.GetFlushDeletesCount());
-			writer.Close();
-			dir.Close();
+			AreEqual(4, writer.FlushDeletesCount);
+			writer.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -91,22 +91,22 @@ namespace Lucene.Net.Index
 			if (Random().NextBoolean())
 			{
 				// not NRT
-				writer.Close();
+				writer.Dispose();
 				reader = DirectoryReader.Open(dir);
 			}
 			else
 			{
 				// NRT
 				reader = DirectoryReader.Open(writer, true);
-				writer.Close();
+				writer.Dispose();
 			}
-			AreEqual(1, reader.Leaves().Count);
-			AtomicReader r = ((AtomicReader)reader.Leaves()[0].Reader());
+			AreEqual(1, reader.Leaves.Count);
+			AtomicReader r = ((AtomicReader)reader.Leaves[0].Reader);
 			NumericDocValues ndv = r.GetNumericDocValues("val");
 			AreEqual(2, ndv.Get(0));
 			AreEqual(2, ndv.Get(1));
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -143,18 +143,18 @@ namespace Lucene.Net.Index
 			if (Random().NextBoolean())
 			{
 				// not NRT
-				writer.Close();
+				writer.Dispose();
 				reader = DirectoryReader.Open(dir);
 			}
 			else
 			{
 				// NRT
 				reader = DirectoryReader.Open(writer, true);
-				writer.Close();
+				writer.Dispose();
 			}
-			foreach (AtomicReaderContext context in reader.Leaves())
+			foreach (AtomicReaderContext context in reader.Leaves)
 			{
-				AtomicReader r = ((AtomicReader)context.Reader());
+				AtomicReader r = ((AtomicReader)context.Reader);
 				NumericDocValues ndv = r.GetNumericDocValues("val");
 				IsNotNull(ndv);
 				for (int i_2 = 0; i_2 < r.MaxDoc; i_2++)
@@ -164,8 +164,8 @@ namespace Lucene.Net.Index
 					AreEqual(expected, actual);
 				}
 			}
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -202,9 +202,9 @@ namespace Lucene.Net.Index
 			DirectoryReader reader2 = DirectoryReader.OpenIfChanged(reader1);
 			IsNotNull(reader2);
 			IsTrue(reader1 != reader2);
-			AreEqual(1, ((AtomicReader)reader1.Leaves()[0].Reader()).GetNumericDocValues
+			AreEqual(1, ((AtomicReader)reader1.Leaves[0].Reader).GetNumericDocValues
 				("val").Get(0));
-			AreEqual(10, ((AtomicReader)reader2.Leaves()[0].Reader()).
+			AreEqual(10, ((AtomicReader)reader2.Leaves[0].Reader).
 				GetNumericDocValues("val").Get(0));
 			IOUtils.Close(writer, reader1, reader2, dir);
 		}
@@ -242,17 +242,17 @@ namespace Lucene.Net.Index
 			if (Random().NextBoolean())
 			{
 				// not NRT
-				writer.Close();
+				writer.Dispose();
 				reader = DirectoryReader.Open(dir);
 			}
 			else
 			{
 				// NRT
 				reader = DirectoryReader.Open(writer, true);
-				writer.Close();
+				writer.Dispose();
 			}
 			AtomicReader slow = SlowCompositeReaderWrapper.Wrap(reader);
-			Bits liveDocs = slow.GetLiveDocs();
+			Bits liveDocs = slow.LiveDocs;
 			bool[] expectedLiveDocs = new bool[] { true, false, false, true, true, true };
 			for (int i_1 = 0; i_1 < expectedLiveDocs.Length; i_1++)
 			{
@@ -264,8 +264,8 @@ namespace Lucene.Net.Index
 			{
 				AreEqual(expectedValues[i_2], ndv.Get(i_2));
 			}
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -291,20 +291,20 @@ namespace Lucene.Net.Index
 			if (Random().NextBoolean())
 			{
 				// not NRT
-				writer.Close();
+				writer.Dispose();
 				reader = DirectoryReader.Open(dir);
 			}
 			else
 			{
 				// NRT
 				reader = DirectoryReader.Open(writer, true);
-				writer.Close();
+				writer.Dispose();
 			}
-			AtomicReader r = ((AtomicReader)reader.Leaves()[0].Reader());
-			IsFalse(r.GetLiveDocs().Get(0));
+			AtomicReader r = ((AtomicReader)reader.Leaves[0].Reader);
+			IsFalse(r.LiveDocs.Get(0));
 			AreEqual(17, r.GetNumericDocValues("val").Get(1));
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -330,21 +330,21 @@ namespace Lucene.Net.Index
 			if (Random().NextBoolean())
 			{
 				// not NRT
-				writer.Close();
+				writer.Dispose();
 				reader = DirectoryReader.Open(dir);
 			}
 			else
 			{
 				// NRT
 				reader = DirectoryReader.Open(writer, true);
-				writer.Close();
+				writer.Dispose();
 			}
-			AtomicReader r = ((AtomicReader)reader.Leaves()[0].Reader());
-			IsFalse(r.GetLiveDocs().Get(0));
+			AtomicReader r = ((AtomicReader)reader.Leaves[0].Reader);
+			IsFalse(r.LiveDocs.Get(0));
 			AreEqual(1, r.GetNumericDocValues("val").Get(0));
 			// deletes are currently applied first
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -376,9 +376,9 @@ namespace Lucene.Net.Index
 			writer.Commit();
 			// update all docs' ndv field
 			writer.UpdateNumericDocValue(new Term("dvUpdateKey", "dv"), "ndv", 17L);
-			writer.Close();
+			writer.Dispose();
 			DirectoryReader reader = DirectoryReader.Open(dir);
-			AtomicReader r = ((AtomicReader)reader.Leaves()[0].Reader());
+			AtomicReader r = ((AtomicReader)reader.Leaves[0].Reader);
 			NumericDocValues ndv = r.GetNumericDocValues("ndv");
 			BinaryDocValues bdv = r.GetBinaryDocValues("bdv");
 			SortedDocValues sdv = r.GetSortedDocValues("sdv");
@@ -407,8 +407,8 @@ namespace Lucene.Net.Index
 				}
 				AreEqual(SortedSetDocValues.NO_MORE_ORDS, ssdv.NextOrd());
 			}
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -433,9 +433,9 @@ namespace Lucene.Net.Index
 			writer.Commit();
 			// update all docs' ndv1 field
 			writer.UpdateNumericDocValue(new Term("dvUpdateKey", "dv"), "ndv1", 17L);
-			writer.Close();
+			writer.Dispose();
 			DirectoryReader reader = DirectoryReader.Open(dir);
-			AtomicReader r = ((AtomicReader)reader.Leaves()[0].Reader());
+			AtomicReader r = ((AtomicReader)reader.Leaves[0].Reader);
 			NumericDocValues ndv1 = r.GetNumericDocValues("ndv1");
 			NumericDocValues ndv2 = r.GetNumericDocValues("ndv2");
 			for (int i_1 = 0; i_1 < r.MaxDoc; i_1++)
@@ -443,8 +443,8 @@ namespace Lucene.Net.Index
 				AreEqual(17, ndv1.Get(i_1));
 				AreEqual(i_1, ndv2.Get(i_1));
 			}
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -470,16 +470,16 @@ namespace Lucene.Net.Index
 			writer.Commit();
 			// update all docs' ndv field
 			writer.UpdateNumericDocValue(new Term("dvUpdateKey", "dv"), "ndv", 17L);
-			writer.Close();
+			writer.Dispose();
 			DirectoryReader reader = DirectoryReader.Open(dir);
-			AtomicReader r = ((AtomicReader)reader.Leaves()[0].Reader());
+			AtomicReader r = ((AtomicReader)reader.Leaves[0].Reader);
 			NumericDocValues ndv = r.GetNumericDocValues("ndv");
 			for (int i_1 = 0; i_1 < r.MaxDoc; i_1++)
 			{
 				AreEqual(17, ndv.Get(i_1));
 			}
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -503,9 +503,9 @@ namespace Lucene.Net.Index
 			writer.Commit();
 			// unset the value of 'doc0'
 			writer.UpdateNumericDocValue(new Term("id", "doc0"), "ndv", null);
-			writer.Close();
+			writer.Dispose();
 			DirectoryReader reader = DirectoryReader.Open(dir);
-			AtomicReader r = ((AtomicReader)reader.Leaves()[0].Reader());
+			AtomicReader r = ((AtomicReader)reader.Leaves[0].Reader);
 			NumericDocValues ndv = r.GetNumericDocValues("ndv");
 			for (int i_1 = 0; i_1 < r.MaxDoc; i_1++)
 			{
@@ -521,8 +521,8 @@ namespace Lucene.Net.Index
 			Bits docsWithField = r.GetDocsWithField("ndv");
 			IsFalse(docsWithField.Get(0));
 			IsTrue(docsWithField.Get(1));
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -545,9 +545,9 @@ namespace Lucene.Net.Index
 			writer.Commit();
 			// unset the value of 'doc'
 			writer.UpdateNumericDocValue(new Term("id", "doc"), "ndv", null);
-			writer.Close();
+			writer.Dispose();
 			DirectoryReader reader = DirectoryReader.Open(dir);
-			AtomicReader r = ((AtomicReader)reader.Leaves()[0].Reader());
+			AtomicReader r = ((AtomicReader)reader.Leaves[0].Reader);
 			NumericDocValues ndv = r.GetNumericDocValues("ndv");
 			for (int i_1 = 0; i_1 < r.MaxDoc; i_1++)
 			{
@@ -556,8 +556,8 @@ namespace Lucene.Net.Index
 			Bits docsWithField = r.GetDocsWithField("ndv");
 			IsFalse(docsWithField.Get(0));
 			IsFalse(docsWithField.Get(1));
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -599,8 +599,8 @@ namespace Lucene.Net.Index
 			{
 			}
 			// ok
-			writer.Close();
-			dir.Close();
+			writer.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -623,7 +623,7 @@ namespace Lucene.Net.Index
 			writer.AddDocument(doc);
 			// in-memory document
 			writer.UpdateNumericDocValue(new Term("key", "doc"), "ndv", 17L);
-			writer.Close();
+			writer.Dispose();
 			DirectoryReader reader = DirectoryReader.Open(dir);
 			AtomicReader r = SlowCompositeReaderWrapper.Wrap(reader);
 			NumericDocValues ndv = r.GetNumericDocValues("ndv");
@@ -635,8 +635,8 @@ namespace Lucene.Net.Index
 				sdv.Get(i, scratch);
 				AreEqual(new BytesRef("value"), scratch);
 			}
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		private sealed class _Lucene46Codec_554 : Lucene46Codec
@@ -672,7 +672,7 @@ namespace Lucene.Net.Index
 			// update existing field
 			writer.UpdateNumericDocValue(new Term("key", "doc"), "ndv", 3L);
 			// update existing field 2nd time in this commit
-			writer.Close();
+			writer.Dispose();
 			DirectoryReader reader = DirectoryReader.Open(dir);
 			AtomicReader r = SlowCompositeReaderWrapper.Wrap(reader);
 			NumericDocValues ndv = r.GetNumericDocValues("ndv");
@@ -680,8 +680,8 @@ namespace Lucene.Net.Index
 			{
 				AreEqual(3, ndv.Get(i));
 			}
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -726,7 +726,7 @@ namespace Lucene.Net.Index
 				{
 					if (random.NextDouble() < 0.1)
 					{
-						writer.Close();
+						writer.Dispose();
 						writer = new IndexWriter(dir, conf.Clone());
 					}
 				}
@@ -753,8 +753,8 @@ namespace Lucene.Net.Index
 				{
 					reader = DirectoryReader.Open(writer, true);
 				}
-				AreEqual(1, reader.Leaves().Count);
-				AtomicReader r = ((AtomicReader)reader.Leaves()[0].Reader());
+				AreEqual(1, reader.Leaves.Count);
+				AtomicReader r = ((AtomicReader)reader.Leaves[0].Reader);
 				IsNull("index should have no deletes after forceMerge", r.
 					GetLiveDocs());
 				NumericDocValues ndv = r.GetNumericDocValues("ndv");
@@ -763,10 +763,10 @@ namespace Lucene.Net.Index
 				{
 					AreEqual(value, ndv.Get(i_1));
 				}
-				reader.Close();
+				reader.Dispose();
 			}
-			writer.Close();
-			dir.Close();
+			writer.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -790,7 +790,7 @@ namespace Lucene.Net.Index
 			// in-memory document
 			writer.UpdateNumericDocValue(new Term("k1", "v1"), "ndv", 17L);
 			writer.UpdateNumericDocValue(new Term("k2", "v2"), "ndv", 3L);
-			writer.Close();
+			writer.Dispose();
 			DirectoryReader reader = DirectoryReader.Open(dir);
 			AtomicReader r = SlowCompositeReaderWrapper.Wrap(reader);
 			NumericDocValues ndv = r.GetNumericDocValues("ndv");
@@ -798,8 +798,8 @@ namespace Lucene.Net.Index
 			{
 				AreEqual(3, ndv.Get(i));
 			}
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -811,7 +811,7 @@ namespace Lucene.Net.Index
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(random));
 			LogMergePolicy lmp = NewLogMergePolicy();
-			lmp.SetMergeFactor(3);
+			lmp.MergeFactor = (3);
 			// merge often
 			conf.SetMergePolicy(lmp);
 			IndexWriter writer = new IndexWriter(dir, conf);
@@ -894,16 +894,16 @@ namespace Lucene.Net.Index
 				//      System.out.println("[" + Thread.currentThread().getName() + "]: reopen reader: " + reader);
 				DirectoryReader newReader = DirectoryReader.OpenIfChanged(reader);
 				IsNotNull(newReader);
-				reader.Close();
+				reader.Dispose();
 				reader = newReader;
 				//      System.out.println("[" + Thread.currentThread().getName() + "]: reopened reader: " + reader);
-				IsTrue(reader.NumDocs() > 0);
+				IsTrue(reader.NumDocs > 0);
 				// we delete at most one document per round
-				foreach (AtomicReaderContext context in reader.Leaves())
+				foreach (AtomicReaderContext context in reader.Leaves)
 				{
-					AtomicReader r = ((AtomicReader)context.Reader());
+					AtomicReader r = ((AtomicReader)context.Reader);
 					//        System.out.println(((SegmentReader) r).getSegmentName());
-					Bits liveDocs = r.GetLiveDocs();
+					Bits liveDocs = r.LiveDocs;
 					for (int field_1 = 0; field_1 < fieldValues.Length; field_1++)
 					{
 						string f = "f" + field_1;
@@ -973,11 +973,11 @@ namespace Lucene.Net.Index
 			// update document in the second segment - field should be added and we should
 			// be able to handle the other document correctly (e.g. no NPE)
 			writer.UpdateNumericDocValue(new Term("id", "doc1"), "ndv", 5L);
-			writer.Close();
+			writer.Dispose();
 			DirectoryReader reader = DirectoryReader.Open(dir);
-			foreach (AtomicReaderContext context in reader.Leaves())
+			foreach (AtomicReaderContext context in reader.Leaves)
 			{
-				AtomicReader r = ((AtomicReader)context.Reader());
+				AtomicReader r = ((AtomicReader)context.Reader);
 				NumericDocValues ndv = r.GetNumericDocValues("ndv");
 				Bits docsWithField = r.GetDocsWithField("ndv");
 				IsNotNull(docsWithField);
@@ -986,8 +986,8 @@ namespace Lucene.Net.Index
 				IsFalse(docsWithField.Get(1));
 				AreEqual(0L, ndv.Get(1));
 			}
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -1018,19 +1018,19 @@ namespace Lucene.Net.Index
 			writer.Commit();
 			// update document in the second segment
 			writer.UpdateNumericDocValue(new Term("id", "doc1"), "ndv", 5L);
-			writer.Close();
+			writer.Dispose();
 			DirectoryReader reader = DirectoryReader.Open(dir);
-			foreach (AtomicReaderContext context in reader.Leaves())
+			foreach (AtomicReaderContext context in reader.Leaves)
 			{
-				AtomicReader r = ((AtomicReader)context.Reader());
+				AtomicReader r = ((AtomicReader)context.Reader);
 				NumericDocValues ndv = r.GetNumericDocValues("ndv");
 				for (int i = 0; i < r.MaxDoc; i++)
 				{
 					AreEqual(5L, ndv.Get(i));
 				}
 			}
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -1050,13 +1050,13 @@ namespace Lucene.Net.Index
 			writer.AddDocument(doc);
 			writer.Commit();
 			writer.UpdateNumericDocValue(new Term("f", "mock-value"), "f", 17L);
-			writer.Close();
+			writer.Dispose();
 			DirectoryReader r = DirectoryReader.Open(dir);
-			NumericDocValues ndv = ((AtomicReader)r.Leaves()[0].Reader()).GetNumericDocValues
+			NumericDocValues ndv = ((AtomicReader)r.Leaves[0].Reader).GetNumericDocValues
 				("f");
 			AreEqual(17, ndv.Get(0));
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -1078,14 +1078,14 @@ namespace Lucene.Net.Index
 			doc.Add(new StringField("id", "doc", Field.Store.NO));
 			doc.Add(new NumericDocValuesField("f", 5));
 			writer.AddDocument(doc);
-			writer.Close();
+			writer.Dispose();
 			conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(Random()));
 			writer = new IndexWriter(dir, conf);
 			writer.UpdateNumericDocValue(new Term("id", "doc"), "f", 4L);
 			OLD_FORMAT_IMPERSONATION_IS_ACTIVE = false;
 			try
 			{
-				writer.Close();
+				writer.Dispose();
 				Fail("should not have succeeded to update a segment written with an old Codec"
 					);
 			}
@@ -1097,7 +1097,7 @@ namespace Lucene.Net.Index
 			{
 				OLD_FORMAT_IMPERSONATION_IS_ACTIVE = oldValue;
 			}
-			dir.Close();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -1177,18 +1177,18 @@ namespace Lucene.Net.Index
 				t.Start();
 			}
 			done.Await();
-			writer.Close();
+			writer.Dispose();
 			DirectoryReader reader = DirectoryReader.Open(dir);
-			foreach (AtomicReaderContext context in reader.Leaves())
+			foreach (AtomicReaderContext context in reader.Leaves)
 			{
-				AtomicReader r = ((AtomicReader)context.Reader());
+				AtomicReader r = ((AtomicReader)context.Reader);
 				for (int i_2 = 0; i_2 < numThreads; i_2++)
 				{
 					NumericDocValues ndv = r.GetNumericDocValues("f" + i_2);
 					NumericDocValues control = r.GetNumericDocValues("cf" + i_2);
 					Bits docsWithNdv = r.GetDocsWithField("f" + i_2);
 					Bits docsWithControl = r.GetDocsWithField("cf" + i_2);
-					Bits liveDocs = r.GetLiveDocs();
+					Bits liveDocs = r.LiveDocs;
 					for (int j = 0; j < r.MaxDoc; j++)
 					{
 						if (liveDocs == null || liveDocs.Get(j))
@@ -1202,8 +1202,8 @@ namespace Lucene.Net.Index
 					}
 				}
 			}
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		private sealed class _Thread_1014 : Sharpen.Thread
@@ -1283,7 +1283,7 @@ namespace Lucene.Net.Index
 								DirectoryReader r2 = DirectoryReader.OpenIfChanged(reader, writer, true);
 								if (r2 != null)
 								{
-									reader.Close();
+									reader.Dispose();
 									reader = r2;
 								}
 							}
@@ -1301,7 +1301,7 @@ namespace Lucene.Net.Index
 					{
 						try
 						{
-							reader.Close();
+							reader.Dispose();
 						}
 						catch (IOException e)
 						{
@@ -1358,9 +1358,9 @@ namespace Lucene.Net.Index
 				writer.UpdateNumericDocValue(t, "f", value);
 				writer.UpdateNumericDocValue(t, "cf", value * 2);
 				DirectoryReader reader = DirectoryReader.Open(writer, true);
-				foreach (AtomicReaderContext context in reader.Leaves())
+				foreach (AtomicReaderContext context in reader.Leaves)
 				{
-					AtomicReader r = ((AtomicReader)context.Reader());
+					AtomicReader r = ((AtomicReader)context.Reader);
 					NumericDocValues fndv = r.GetNumericDocValues("f");
 					NumericDocValues cfndv = r.GetNumericDocValues("cf");
 					for (int j = 0; j < r.MaxDoc; j++)
@@ -1368,10 +1368,10 @@ namespace Lucene.Net.Index
 						AreEqual(cfndv.Get(j), fndv.Get(j) * 2);
 					}
 				}
-				reader.Close();
+				reader.Dispose();
 			}
-			writer.Close();
-			dir.Close();
+			writer.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -1391,7 +1391,7 @@ namespace Lucene.Net.Index
 			doc.Add(new NumericDocValuesField("f1", 5L));
 			doc.Add(new NumericDocValuesField("f2", 13L));
 			writer.AddDocument(doc);
-			writer.Close();
+			writer.Dispose();
 			// change format
 			conf.SetCodec(new _Lucene46Codec_1171());
 			writer = new IndexWriter(dir, conf.Clone());
@@ -1401,7 +1401,7 @@ namespace Lucene.Net.Index
 			doc.Add(new NumericDocValuesField("f2", 2L));
 			writer.AddDocument(doc);
 			writer.UpdateNumericDocValue(new Term("id", "d0"), "f1", 12L);
-			writer.Close();
+			writer.Dispose();
 			DirectoryReader reader = DirectoryReader.Open(dir);
 			AtomicReader r = SlowCompositeReaderWrapper.Wrap(reader);
 			NumericDocValues f1 = r.GetNumericDocValues("f1");
@@ -1410,8 +1410,8 @@ namespace Lucene.Net.Index
 			AreEqual(13L, f2.Get(0));
 			AreEqual(17L, f1.Get(1));
 			AreEqual(2L, f2.Get(1));
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		private sealed class _Lucene46Codec_1156 : Lucene46Codec
@@ -1473,7 +1473,7 @@ namespace Lucene.Net.Index
 			Term term = new Term("id", RandomPicks.RandomFrom(Random(), randomTerms));
 			writer.UpdateNumericDocValue(term, "ndv", value);
 			writer.UpdateNumericDocValue(term, "control", value * 2);
-			writer.Close();
+			writer.Dispose();
 			Directory dir2 = NewDirectory();
 			conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(Random()));
 			writer = new IndexWriter(dir2, conf);
@@ -1485,13 +1485,13 @@ namespace Lucene.Net.Index
 			{
 				DirectoryReader reader = DirectoryReader.Open(dir1);
 				writer.AddIndexes(reader);
-				reader.Close();
+				reader.Dispose();
 			}
-			writer.Close();
+			writer.Dispose();
 			DirectoryReader reader_1 = DirectoryReader.Open(dir2);
-			foreach (AtomicReaderContext context in reader_1.Leaves())
+			foreach (AtomicReaderContext context in reader_1.Leaves)
 			{
-				AtomicReader r = ((AtomicReader)context.Reader());
+				AtomicReader r = ((AtomicReader)context.Reader);
 				NumericDocValues ndv = r.GetNumericDocValues("ndv");
 				NumericDocValues control = r.GetNumericDocValues("control");
 				for (int i_1 = 0; i_1 < r.MaxDoc; i_1++)
@@ -1499,7 +1499,7 @@ namespace Lucene.Net.Index
 					AreEqual(ndv.Get(i_1) * 2, control.Get(i_1));
 				}
 			}
-			reader_1.Close();
+			reader_1.Dispose();
 			IOUtils.Close(dir1, dir2);
 		}
 
@@ -1521,19 +1521,19 @@ namespace Lucene.Net.Index
 			writer.Commit();
 			int numFiles = dir.ListAll().Length;
 			DirectoryReader r = DirectoryReader.Open(dir);
-			AreEqual(2L, ((AtomicReader)r.Leaves()[0].Reader()).GetNumericDocValues
+			AreEqual(2L, ((AtomicReader)r.Leaves[0].Reader).GetNumericDocValues
 				("f").Get(0));
-			r.Close();
+			r.Dispose();
 			// create second gen of update files, first gen should be deleted
 			writer.UpdateNumericDocValue(new Term("id", "d0"), "f", 5L);
 			writer.Commit();
 			AreEqual(numFiles, dir.ListAll().Length);
 			r = DirectoryReader.Open(dir);
-			AreEqual(5L, ((AtomicReader)r.Leaves()[0].Reader()).GetNumericDocValues
+			AreEqual(5L, ((AtomicReader)r.Leaves[0].Reader).GetNumericDocValues
 				("f").Get(0));
-			r.Close();
-			writer.Close();
-			dir.Close();
+			r.Dispose();
+			writer.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -1583,7 +1583,7 @@ namespace Lucene.Net.Index
 			// commit so there's something to apply to
 			// set to flush every 2048 bytes (approximately every 12 updates), so we get
 			// many flushes during numeric updates
-			writer.GetConfig().SetRAMBufferSizeMB(2048.0 / 1024 / 1024);
+			writer.Config.SetRAMBufferSizeMB(2048.0 / 1024 / 1024);
 			int numUpdates = AtLeast(100);
 			//    System.out.println("numUpdates=" + numUpdates);
 			for (int i_1 = 0; i_1 < numUpdates; i_1++)
@@ -1594,13 +1594,13 @@ namespace Lucene.Net.Index
 				writer.UpdateNumericDocValue(updateTerm, "f" + field, value);
 				writer.UpdateNumericDocValue(updateTerm, "cf" + field, value * 2);
 			}
-			writer.Close();
+			writer.Dispose();
 			DirectoryReader reader = DirectoryReader.Open(dir);
-			foreach (AtomicReaderContext context in reader.Leaves())
+			foreach (AtomicReaderContext context in reader.Leaves)
 			{
 				for (int i_2 = 0; i_2 < numNumericFields; i_2++)
 				{
-					AtomicReader r = ((AtomicReader)context.Reader());
+					AtomicReader r = ((AtomicReader)context.Reader);
 					NumericDocValues f = r.GetNumericDocValues("f" + i_2);
 					NumericDocValues cf = r.GetNumericDocValues("cf" + i_2);
 					for (int j = 0; j < r.MaxDoc; j++)
@@ -1610,8 +1610,8 @@ namespace Lucene.Net.Index
 					}
 				}
 			}
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -1639,14 +1639,14 @@ namespace Lucene.Net.Index
 			// update f2 to 3
 			writer.UpdateNumericDocValue(new Term("upd", "t1"), "f1", 4L);
 			// update f1 to 4 (but not f2)
-			writer.Close();
+			writer.Dispose();
 			DirectoryReader reader = DirectoryReader.Open(dir);
-			AreEqual(4, ((AtomicReader)reader.Leaves()[0].Reader()).GetNumericDocValues
+			AreEqual(4, ((AtomicReader)reader.Leaves[0].Reader).GetNumericDocValues
 				("f1").Get(0));
-			AreEqual(3, ((AtomicReader)reader.Leaves()[0].Reader()).GetNumericDocValues
+			AreEqual(3, ((AtomicReader)reader.Leaves[0].Reader).GetNumericDocValues
 				("f2").Get(0));
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -1668,13 +1668,13 @@ namespace Lucene.Net.Index
 			// delete all docs in the first segment
 			writer.AddDocument(doc);
 			writer.UpdateNumericDocValue(new Term("id", "doc"), "f1", 2L);
-			writer.Close();
+			writer.Dispose();
 			DirectoryReader reader = DirectoryReader.Open(dir);
-			AreEqual(1, reader.Leaves().Count);
-			AreEqual(2L, ((AtomicReader)reader.Leaves()[0].Reader()).GetNumericDocValues
+			AreEqual(1, reader.Leaves.Count);
+			AreEqual(2L, ((AtomicReader)reader.Leaves[0].Reader).GetNumericDocValues
 				("f1").Get(0));
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -1693,13 +1693,13 @@ namespace Lucene.Net.Index
 			// update w/ multiple nonexisting terms in same field
 			writer.UpdateNumericDocValue(new Term("c", "foo"), "f1", 2L);
 			writer.UpdateNumericDocValue(new Term("c", "bar"), "f1", 2L);
-			writer.Close();
+			writer.Dispose();
 			DirectoryReader reader = DirectoryReader.Open(dir);
-			AreEqual(1, reader.Leaves().Count);
-			AreEqual(1L, ((AtomicReader)reader.Leaves()[0].Reader()).GetNumericDocValues
+			AreEqual(1, reader.Leaves.Count);
+			AreEqual(1L, ((AtomicReader)reader.Leaves[0].Reader).GetNumericDocValues
 				("f1").Get(0));
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 		}
 	}
 }

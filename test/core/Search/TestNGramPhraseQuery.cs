@@ -24,7 +24,7 @@ namespace Lucene.Net.Search
 		{
 			directory = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), directory);
-			writer.Close();
+			writer.Dispose();
 			reader = DirectoryReader.Open(directory);
 		}
 
@@ -32,9 +32,9 @@ namespace Lucene.Net.Search
 		[NUnit.Framework.AfterClass]
 		public static void AfterClass()
 		{
-			reader.Close();
+			reader.Dispose();
 			reader = null;
-			directory.Close();
+			directory.Dispose();
 			directory = null;
 		}
 

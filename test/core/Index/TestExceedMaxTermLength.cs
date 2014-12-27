@@ -13,7 +13,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	/// <summary>
 	/// Tests that a useful exception is thrown when attempting to index a term that is
@@ -38,7 +38,7 @@ namespace Lucene.Net.Index
 		[TearDown]
 		public virtual void DestroyDir()
 		{
-			dir.Close();
+			dir.Dispose();
 			dir = null;
 		}
 
@@ -50,8 +50,8 @@ namespace Lucene.Net.Index
 			try
 			{
 				FieldType ft = new FieldType();
-				ft.SetIndexed(true);
-				ft.SetStored(Random().NextBoolean());
+				ft.Indexed(true);
+				ft.Stored = (Random().NextBoolean());
 				ft.Freeze();
 				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
@@ -93,7 +93,7 @@ namespace Lucene.Net.Index
 			}
 			finally
 			{
-				w.Close();
+				w.Dispose();
 			}
 		}
 	}

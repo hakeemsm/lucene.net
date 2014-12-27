@@ -1,28 +1,22 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
-using Com.Carrotsearch.Randomizedtesting.Generators;
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Document;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
+using Lucene.Net.Randomized.Generators;
 using Lucene.Net.Store;
 using Lucene.Net.Util;
-using Sharpen;
+using NUnit.Framework;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	/// <summary>This test creates an index with one segment that is a little larger than 4GB.
 	/// 	</summary>
-	/// <remarks>This test creates an index with one segment that is a little larger than 4GB.
-	/// 	</remarks>
+	[TestFixture]
 	public class Test4GBStoredFields : LuceneTestCase
 	{
 		/// <exception cref="System.Exception"></exception>
-		[LuceneTestCase.Nightly]
-		public virtual void Test()
+		//[LuceneTestCase.Nightly]
+        [Test]
+		public virtual void TestStoredFields4GB()
 		{
 			MockDirectoryWrapper dir = new MockDirectoryWrapper(Random(), new MMapDirectory(CreateTempDir
 				("4GBStoredFields")));
@@ -32,24 +26,24 @@ namespace Lucene.Net.Index
 				(IndexWriterConfig.DISABLE_AUTO_FLUSH)).SetRAMBufferSizeMB(256.0)).SetMergeScheduler
 				(new ConcurrentMergeScheduler()).SetMergePolicy(NewLogMergePolicy(false, 10)).SetOpenMode
 				(IndexWriterConfig.OpenMode.CREATE));
-			MergePolicy mp = w.GetConfig().GetMergePolicy();
+			MergePolicy mp = w.Config.MergePolicy;
 			if (mp is LogByteSizeMergePolicy)
 			{
 				// 1 petabyte:
-				((LogByteSizeMergePolicy)mp).SetMaxMergeMB(1024 * 1024 * 1024);
+				((LogByteSizeMergePolicy)mp).MaxMergeMB= (1024 * 1024 * 1024);
 			}
 			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			FieldType ft = new FieldType();
-			ft.SetIndexed(false);
-			ft.SetStored(true);
+			ft.Indexed = (false);
+			ft.Stored = (true);
 			ft.Freeze();
 			int valueLength = RandomInts.RandomIntBetween(Random(), 1 << 13, 1 << 20);
-			byte[] value = new byte[valueLength];
+			var value = new sbyte[valueLength];
 			for (int i = 0; i < valueLength; ++i)
 			{
 				// random so that even compressing codecs can't compress it
-				value[i] = unchecked((byte)Random().Next(256));
+				value[i] = ((sbyte)Random().Next(256));
 			}
 			Field f = new Field("fld", value, ft);
 			doc.Add(f);
@@ -63,7 +57,7 @@ namespace Lucene.Net.Index
 				}
 			}
 			w.ForceMerge(1);
-			w.Close();
+			w.Dispose();
 			if (VERBOSE)
 			{
 				bool found = false;
@@ -91,8 +85,8 @@ namespace Lucene.Net.Index
 			BytesRef valueRef = sd.GetBinaryValue("fld");
 			IsNotNull(valueRef);
 			AreEqual(new BytesRef(value), valueRef);
-			rd.Close();
-			dir.Close();
+			rd.Dispose();
+			dir.Dispose();
 		}
 	}
 }

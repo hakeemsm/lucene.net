@@ -11,7 +11,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	/// <summary>Test indexing and searching some byte[] terms</summary>
 	public class TestBinaryTerms : LuceneTestCase
@@ -31,13 +31,13 @@ namespace Lucene.Net.Index
 				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				FieldType customType = new FieldType();
-				customType.SetStored(true);
+				customType.Stored = (true);
 				doc.Add(new Field("id", string.Empty + i, customType));
 				doc.Add(new TextField("bytes", tokenStream));
 				iw.AddDocument(doc);
 			}
 			IndexReader ir = iw.GetReader();
-			iw.Close();
+			iw.Dispose();
 			IndexSearcher @is = NewSearcher(ir);
 			for (int i_1 = 0; i_1 < 256; i_1++)
 			{
@@ -46,11 +46,11 @@ namespace Lucene.Net.Index
 				bytes.length = 2;
 				TopDocs docs = @is.Search(new TermQuery(new Term("bytes", bytes)), 5);
 				AreEqual(1, docs.TotalHits);
-				AreEqual(string.Empty + i_1, @is.Doc(docs.scoreDocs[0].doc
+				AreEqual(string.Empty + i_1, @is.Doc(docs.ScoreDocs[0].Doc
 					).Get("id"));
 			}
-			ir.Close();
-			dir.Close();
+			ir.Dispose();
+			dir.Dispose();
 		}
 
 		public virtual void TestToString()

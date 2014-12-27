@@ -45,13 +45,13 @@ namespace Lucene.Net.Search
 				doc.Add(fld);
 				writer.AddDocument(doc);
 			}
-			writer.Close();
+			writer.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
 		public override void TearDown()
 		{
-			directory.Close();
+			directory.Dispose();
 			base.TearDown();
 		}
 
@@ -77,7 +77,7 @@ namespace Lucene.Net.Search
 				{
 					try
 					{
-						reader.Close();
+						reader.Dispose();
 					}
 					catch (IOException ioe)
 					{
@@ -170,18 +170,18 @@ namespace Lucene.Net.Search
 		private void TestTermVectors()
 		{
 			// check:
-			int numDocs = reader.NumDocs();
+			int numDocs = reader.NumDocs;
 			long start = 0L;
 			for (int docId = 0; docId < numDocs; docId++)
 			{
-				start = Runtime.CurrentTimeMillis();
+				start = DateTime.Now.CurrentTimeMillis();
 				Fields vectors = reader.GetTermVectors(docId);
-				timeElapsed += Runtime.CurrentTimeMillis() - start;
+				timeElapsed += DateTime.Now.CurrentTimeMillis() - start;
 				// verify vectors result
 				VerifyVectors(vectors, docId);
-				start = Runtime.CurrentTimeMillis();
+				start = DateTime.Now.CurrentTimeMillis();
 				Terms vector = reader.GetTermVectors(docId).Terms("field");
-				timeElapsed += Runtime.CurrentTimeMillis() - start;
+				timeElapsed += DateTime.Now.CurrentTimeMillis() - start;
 				VerifyVector(vector.Iterator(null), docId);
 			}
 		}

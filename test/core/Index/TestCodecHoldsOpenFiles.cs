@@ -11,7 +11,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestCodecHoldsOpenFiles : LuceneTestCase
 	{
@@ -29,7 +29,7 @@ namespace Lucene.Net.Index
 				w.AddDocument(doc);
 			}
 			IndexReader r = w.GetReader();
-			w.Close();
+			w.Dispose();
 			foreach (string fileName in d.ListAll())
 			{
 				try
@@ -42,12 +42,12 @@ namespace Lucene.Net.Index
 			}
 			// ignore: this means codec (correctly) is holding
 			// the file open
-			foreach (AtomicReaderContext cxt in r.Leaves())
+			foreach (AtomicReaderContext cxt in r.Leaves)
 			{
-				TestUtil.CheckReader(((AtomicReader)cxt.Reader()));
+				TestUtil.CheckReader(((AtomicReader)cxt.Reader));
 			}
-			r.Close();
-			d.Close();
+			r.Dispose();
+			d.Dispose();
 		}
 	}
 }

@@ -55,17 +55,17 @@ namespace Lucene.Net
 				}
 				finally
 				{
-					writer.Close();
+					writer.Dispose();
 				}
 				IndexReader reader = DirectoryReader.Open(directory);
 				try
 				{
 					IndexSearcher searcher = NewSearcher(reader);
-					ScoreDoc[] hits = searcher.Search(q, null, 1000).scoreDocs;
+					ScoreDoc[] hits = searcher.Search(q, null, 1000).ScoreDocs;
 					AreEqual(1, hits.Length);
 					IsTrue("score is not negative: " + hits[0].score, hits[0].
 						score < 0);
-					Explanation explain = searcher.Explain(q, hits[0].doc);
+					Explanation explain = searcher.Explain(q, hits[0].Doc);
 					AreEqual("score doesn't match explanation", hits[0].score, 
 						explain.GetValue(), 0.001f);
 					IsTrue("explain doesn't think doc is a match", explain.IsMatch
@@ -73,12 +73,12 @@ namespace Lucene.Net
 				}
 				finally
 				{
-					reader.Close();
+					reader.Dispose();
 				}
 			}
 			finally
 			{
-				directory.Close();
+				directory.Dispose();
 			}
 		}
 		
@@ -97,16 +97,16 @@ namespace Lucene.Net
 			System.IO.MemoryStream sw = new System.IO.MemoryStream();
 			System.IO.StreamWriter pw = new System.IO.StreamWriter(sw);
 			DoTestSearch(pw, false);
-			pw.Close();
-			sw.Close();
+			pw.Dispose();
+			sw.Dispose();
 			System.String multiFileOutput = System.Text.ASCIIEncoding.ASCII.GetString(sw.ToArray());
 			//System.out.println(multiFileOutput);
 			
 			sw = new System.IO.MemoryStream();
 			pw = new System.IO.StreamWriter(sw);
 			DoTestSearch(pw, true);
-			pw.Close();
-			sw.Close();
+			pw.Dispose();
+			sw.Dispose();
 			System.String singleFileOutput = System.Text.ASCIIEncoding.ASCII.GetString(sw.ToArray());
 			
 			Assert.AreEqual(multiFileOutput, singleFileOutput);
@@ -118,7 +118,7 @@ namespace Lucene.Net
 			Directory directory = NewDirectory();
 			Analyzer analyzer = new MockAnalyzer(random);
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer);
-			MergePolicy mp = conf.GetMergePolicy();
+			MergePolicy mp = conf.MergePolicy;
 			mp.SetNoCFSRatio(useCompoundFile ? 1.0 : 0.0);
 			IndexWriter writer = new IndexWriter(directory, conf);
 			System.String[] docs = new System.String[]{"a b c d e", "a b c d e a b c d e", "a b c d e f g h i j", "a c e", "e c a", "a c e a c e", "a c e a b c"};
@@ -129,7 +129,7 @@ namespace Lucene.Net
 				d.Add(NewStringField("id", string.Empty + j, Field.Store.NO));
 				writer.AddDocument(d);
 			}
-			writer.Close();
+			writer.Dispose();
 			IndexReader reader = DirectoryReader.Open(directory);
 			IndexSearcher searcher = NewSearcher(reader);
 			ScoreDoc[] hits = null;
@@ -144,7 +144,7 @@ namespace Lucene.Net
 				//DateFilter filter = DateFilter.Before("modified", Time(1997,00,01));
 				//System.out.println(filter);
 				
-				hits = searcher.Search(query, null, 1000, sort).scoreDocs;
+				hits = searcher.Search(query, null, 1000, sort).ScoreDocs;
 				
 				out_Renamed.WriteLine(hits.Length + " total results");
 				for (int i = 0; i < hits.Length && i < 10; i++)
@@ -153,8 +153,8 @@ namespace Lucene.Net
 					out_Renamed.WriteLine(i + " " + hits[i].Score + " " + d.Get("contents"));
 				}
 			}
-			reader.Close();
-			directory.Close();
+			reader.Dispose();
+			directory.Dispose();
 		}
 		private IList<Query> BuildQueries()
 		{

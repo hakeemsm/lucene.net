@@ -97,7 +97,7 @@ namespace Lucene.Net.Search.Spans
 			}
 			reader = writer.GetReader();
 			searcher = NewSearcher(reader);
-			writer.Close();
+			writer.Dispose();
 		}
 
 		private sealed class _Analyzer_104 : Analyzer
@@ -119,8 +119,8 @@ namespace Lucene.Net.Search.Spans
 		[AfterClass]
 		public static void AfterClass()
 		{
-			reader.Close();
-			directory.Close();
+			reader.Dispose();
+			directory.Dispose();
 			searcher = null;
 			reader = null;
 			directory = null;

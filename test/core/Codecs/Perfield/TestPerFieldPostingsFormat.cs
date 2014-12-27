@@ -12,7 +12,7 @@ namespace Lucene.Net.Test.Codecs.Perfield
 	{
 		protected override Codec Codec
 		{
-			return new RandomCodec(new Random(Random().NextInt(0,int.MaxValue)), new List<string>());
+		    get { return new RandomCodec(new Random(Random().NextInt(0, int.MaxValue)), new List<string>()); }
 		}
 
 		

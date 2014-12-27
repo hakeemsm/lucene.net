@@ -73,14 +73,14 @@ namespace Lucene.Net.Search
 			reader = writer.GetReader();
 			searcher1 = NewSearcher(reader);
 			searcher2 = NewSearcher(reader);
-			writer.Close();
+			writer.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
 		public override void TearDown()
 		{
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 			base.TearDown();
 		}
 
@@ -172,7 +172,7 @@ namespace Lucene.Net.Search
 				, new Term(fieldName, regexp), RegExp.NONE);
 			TopDocs smartDocs = searcher1.Search(smart, 25);
 			TopDocs dumbDocs = searcher2.Search(dumb, 25);
-			CheckHits.CheckEqual(smart, smartDocs.scoreDocs, dumbDocs.scoreDocs);
+			CheckHits.CheckEqual(smart, smartDocs.ScoreDocs, dumbDocs.ScoreDocs);
 		}
 	}
 }

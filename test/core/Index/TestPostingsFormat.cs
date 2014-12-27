@@ -8,7 +8,7 @@ using Lucene.Net.Codecs;
 using Lucene.Net.Index;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	/// <summary>
 	/// Tests the codec configuration defined by LuceneTestCase randomly

@@ -1,16 +1,9 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Test.Analysis.Tokenattributes;
-using Lucene.Net.Index;
+using Lucene.Net.Analysis;
+using Lucene.Net.Analysis.Tokenattributes;
+using Lucene.Net.TestFramework.Analysis;
 using Lucene.Net.Util;
-using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	/// <summary>
 	/// A binary tokenstream that lets you index a single
@@ -20,12 +13,11 @@ namespace Lucene.Net.Index
 	/// A binary tokenstream that lets you index a single
 	/// binary token (BytesRef value).
 	/// </remarks>
-	/// <seealso cref="Lucene.Net.Test.Analysis.CannedBinaryTokenStream">Lucene.Net.Test.Analysis.CannedBinaryTokenStream
+	/// <seealso cref="CannedBinaryTokenStream">Lucene.Net.Test.Analysis.CannedBinaryTokenStream
 	/// 	</seealso>
 	public sealed class BinaryTokenStream : TokenStream
 	{
-		private readonly BinaryTokenStream.ByteTermAttribute bytesAtt = AddAttribute<BinaryTokenStream.ByteTermAttribute
-			>();
+	    private readonly ByteTermAttribute bytesAtt;
 
 		private readonly BytesRef bytes;
 
@@ -35,6 +27,7 @@ namespace Lucene.Net.Index
 		{
 			// javadocs
 			this.bytes = bytes;
+            bytesAtt = AddAttribute<BinaryTokenStream.ByteTermAttribute>();
 		}
 
 		public override bool IncrementToken()
@@ -54,13 +47,12 @@ namespace Lucene.Net.Index
 			available = true;
 		}
 
-		public interface ByteTermAttribute : TermToBytesRefAttribute
+		public interface ByteTermAttribute : ITermToBytesRefAttribute
 		{
 			void SetBytesRef(BytesRef bytes);
 		}
 
-		public class ByteTermAttributeImpl : AttributeImpl, BinaryTokenStream.ByteTermAttribute
-			, TermToBytesRefAttribute
+		public class ByteTermAttributeImpl : ByteTermAttribute
 		{
 			private BytesRef bytes;
 
@@ -68,25 +60,26 @@ namespace Lucene.Net.Index
 			{
 			}
 
-			// no-op: the bytes was already filled by our owner's incrementToken
-			public virtual BytesRef GetBytesRef()
-			{
-				return bytes;
-			}
+		    public BytesRef BytesRef
+            {
+		        get { return bytes; }
+		        private set { bytes = value; } }
+
+		    // no-op: the bytes was already filled by our owner's incrementToken
+			
 
 			public virtual void SetBytesRef(BytesRef bytes)
 			{
 				this.bytes = bytes;
 			}
 
-			public override void Clear()
+			public void Clear()
 			{
 			}
 
-			public override void CopyTo(AttributeImpl target)
+			public void CopyTo(IAttribute target)
 			{
-				BinaryTokenStream.ByteTermAttributeImpl other = (BinaryTokenStream.ByteTermAttributeImpl
-					)target;
+				var other = (ByteTermAttributeImpl)target;
 				other.bytes = bytes;
 			}
 		}

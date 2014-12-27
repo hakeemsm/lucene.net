@@ -13,7 +13,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestCrashCausesCorruptIndex : LuceneTestCase
 	{
@@ -63,9 +63,9 @@ namespace Lucene.Net.Index
 			}
 			// expected
 			// writes segments_3
-			indexWriter.Close();
+			indexWriter.Dispose();
 			IsFalse(SlowFileExists(realDirectory, "segments_2"));
-			crashAfterCreateOutput.Close();
+			crashAfterCreateOutput.Dispose();
 		}
 
 		/// <summary>Attempts to index another 1 document.</summary>
@@ -82,9 +82,9 @@ namespace Lucene.Net.Index
 			// currently the test fails above.
 			// however, to test the fix, the following lines should pass as well.
 			indexWriter.AddDocument(GetDocument());
-			indexWriter.Close();
+			indexWriter.Dispose();
 			IsFalse(SlowFileExists(realDirectory, "segments_2"));
-			realDirectory.Close();
+			realDirectory.Dispose();
 		}
 
 		/// <summary>Run an example search.</summary>
@@ -99,8 +99,8 @@ namespace Lucene.Net.Index
 				)), 10);
 			IsNotNull(topDocs);
 			AreEqual(expectedTotalHits, topDocs.TotalHits);
-			indexReader.Close();
-			realDirectory.Close();
+			indexReader.Dispose();
+			realDirectory.Dispose();
 		}
 
 		private static readonly string TEXT_FIELD = "text";
@@ -161,7 +161,7 @@ namespace Lucene.Net.Index
 				if (null != crashAfterCreateOutput && name.Equals(crashAfterCreateOutput))
 				{
 					// CRASH!
-					indexOutput.Close();
+					indexOutput.Dispose();
 					if (VERBOSE)
 					{
 						System.Console.Out.WriteLine("TEST: now crash");

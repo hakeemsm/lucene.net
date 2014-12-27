@@ -23,7 +23,7 @@ namespace Lucene.Net.Store
 				null));
 			try
 			{
-				dir.Close();
+				dir.Dispose();
 				Fail();
 			}
 			catch (Exception expected)
@@ -31,8 +31,8 @@ namespace Lucene.Net.Store
 				IsTrue(expected.Message.Contains("there are still open locks"
 					));
 			}
-			iw.Close();
-			dir.Close();
+			iw.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -44,7 +44,7 @@ namespace Lucene.Net.Store
 				null));
 			try
 			{
-				dir.Close();
+				dir.Dispose();
 				Fail();
 			}
 			catch (Exception expected)
@@ -52,8 +52,8 @@ namespace Lucene.Net.Store
 				IsTrue(expected.Message.Contains("there are still open locks"
 					));
 			}
-			iw.Close();
-			dir.Close();
+			iw.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -78,8 +78,8 @@ namespace Lucene.Net.Store
 			{
 			}
 			// expected
-			@out.Close();
-			dir.Close();
+			@out.Dispose();
+			dir.Dispose();
 			// test copyBytes
 			dir = NewMockDirectory();
 			dir.SetMaxSizeInBytes(3);
@@ -98,8 +98,8 @@ namespace Lucene.Net.Store
 			{
 			}
 			// expected
-			@out.Close();
-			dir.Close();
+			@out.Dispose();
+			dir.Dispose();
 		}
 	}
 }

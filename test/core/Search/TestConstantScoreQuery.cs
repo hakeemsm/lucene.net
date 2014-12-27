@@ -117,7 +117,7 @@ namespace Lucene.Net.Search
 				doc.Add(NewStringField("field", "term", Field.Store.NO));
 				writer.AddDocument(doc);
 				reader = writer.GetReader();
-				writer.Close();
+				writer.Dispose();
 				// we don't wrap with AssertingIndexSearcher in order to have the original scorer in setScorer.
 				searcher = NewSearcher(reader, true, false);
 				// set a similarity that does not normalize our boost away
@@ -146,11 +146,11 @@ namespace Lucene.Net.Search
 			{
 				if (reader != null)
 				{
-					reader.Close();
+					reader.Dispose();
 				}
 				if (directory != null)
 				{
-					directory.Close();
+					directory.Dispose();
 				}
 			}
 		}
@@ -180,7 +180,7 @@ namespace Lucene.Net.Search
 			doc.Add(NewStringField("field", "b", Field.Store.NO));
 			w.AddDocument(doc);
 			IndexReader r = w.GetReader();
-			w.Close();
+			w.Dispose();
 			Filter filterB = new CachingWrapperFilter(new QueryWrapperFilter(new TermQuery(new 
 				Term("field", "b"))));
 			Query query = new ConstantScoreQuery(filterB);
@@ -192,8 +192,8 @@ namespace Lucene.Net.Search
 			query = new ConstantScoreQuery(filterA);
 			AreEqual(0, s.Search(query, filterB, 1).TotalHits);
 			// Query field:b, Filter field:a
-			r.Close();
-			d.Close();
+			r.Dispose();
+			d.Dispose();
 		}
 
 		// LUCENE-5307
@@ -208,7 +208,7 @@ namespace Lucene.Net.Search
 			doc.Add(NewStringField("field", "a", Field.Store.NO));
 			w.AddDocument(doc);
 			IndexReader r = w.GetReader();
-			w.Close();
+			w.Dispose();
 			Filter filter = new QueryWrapperFilter(AssertingQuery.Wrap(Random(), new TermQuery
 				(new Term("field", "a"))));
 			IndexSearcher s = NewSearcher(r);
@@ -221,8 +221,8 @@ namespace Lucene.Net.Search
 			IsTrue(rewritten is ConstantScoreQuery);
 			IsTrue(((ConstantScoreQuery)rewritten).GetQuery() is AssertingQuery
 				);
-			r.Close();
-			d.Close();
+			r.Dispose();
+			d.Dispose();
 		}
 	}
 }

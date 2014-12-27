@@ -169,7 +169,7 @@ namespace Lucene.Net.Util
 			{
 				w.Write(datum);
 			}
-			w.Close();
+			w.Dispose();
 			return file;
 		}
 

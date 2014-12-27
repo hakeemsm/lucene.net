@@ -120,7 +120,7 @@ namespace Lucene.Net.Search
 						System.Console.Out.WriteLine("[" + Sharpen.Thread.CurrentThread().GetName() + "]: launch reopen thread"
 							);
 					}
-					while (Runtime.CurrentTimeMillis() < stopTime)
+					while (DateTime.Now.CurrentTimeMillis() < stopTime)
 					{
 						Sharpen.Thread.Sleep(TestUtil.NextInt(LuceneTestCase.Random(), 1, 100));
 						this._enclosing.writer.Commit();
@@ -196,7 +196,7 @@ namespace Lucene.Net.Search
 			if (s == null)
 			{
 				s = mgr.Acquire();
-				if (s.GetIndexReader().NumDocs() != 0)
+				if (s.IndexReader.NumDocs != 0)
 				{
 					long token = lifetimeMGR.Record(s);
 					lock (pastSearchers)
@@ -214,7 +214,7 @@ namespace Lucene.Net.Search
 		/// <exception cref="System.Exception"></exception>
 		protected override void ReleaseSearcher(IndexSearcher s)
 		{
-			s.GetIndexReader().DecRef();
+			s.IndexReader.DecRef();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -225,8 +225,8 @@ namespace Lucene.Net.Search
 			{
 				System.Console.Out.WriteLine("TEST: now close SearcherManager");
 			}
-			mgr.Close();
-			lifetimeMGR.Close();
+			mgr.Dispose();
+			lifetimeMGR.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -256,7 +256,7 @@ namespace Lucene.Net.Search
 			IndexSearcher searcher = searcherManager.Acquire();
 			try
 			{
-				AreEqual(1, searcher.GetIndexReader().NumDocs());
+				AreEqual(1, searcher.IndexReader.NumDocs);
 			}
 			finally
 			{
@@ -280,7 +280,7 @@ namespace Lucene.Net.Search
 			{
 				System.Console.Out.WriteLine("NOW call close");
 			}
-			searcherManager.Close();
+			searcherManager.Dispose();
 			awaitClose.CountDown();
 			thread.Join();
 			try
@@ -295,8 +295,8 @@ namespace Lucene.Net.Search
 			IsFalse(success.Get());
 			IsTrue(triedReopen.Get());
 			IsNull(string.Empty + exc[0], exc[0]);
-			writer.Close();
-			dir.Close();
+			writer.Dispose();
+			dir.Dispose();
 			if (es != null)
 			{
 				es.Shutdown();
@@ -392,11 +392,11 @@ namespace Lucene.Net.Search
 		{
 			// test that we can close SM twice (per Closeable's contract).
 			Directory dir = NewDirectory();
-			new IndexWriter(dir, new IndexWriterConfig(TEST_VERSION_CURRENT, null)).Close();
+			new IndexWriter(dir, new IndexWriterConfig(TEST_VERSION_CURRENT, null)).Dispose();
 			SearcherManager sm = new SearcherManager(dir, null);
-			sm.Close();
-			sm.Close();
-			dir.Close();
+			sm.Dispose();
+			sm.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -414,7 +414,7 @@ namespace Lucene.Net.Search
 			sm.Release(acquire);
 			sm.Release(acquire2);
 			acquire = sm.Acquire();
-			acquire.GetIndexReader().DecRef();
+			acquire.IndexReader.DecRef();
 			sm.Release(acquire);
 			try
 			{
@@ -427,18 +427,18 @@ namespace Lucene.Net.Search
 			}
 			//
 			// sm.close(); -- already closed
-			writer.Close();
-			dir.Close();
+			writer.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
 		public virtual void TestEnsureOpen()
 		{
 			Directory dir = NewDirectory();
-			new IndexWriter(dir, new IndexWriterConfig(TEST_VERSION_CURRENT, null)).Close();
+			new IndexWriter(dir, new IndexWriterConfig(TEST_VERSION_CURRENT, null)).Dispose();
 			SearcherManager sm = new SearcherManager(dir, null);
 			IndexSearcher s = sm.Acquire();
-			sm.Close();
+			sm.Dispose();
 			// this should succeed;
 			sm.Release(s);
 			try
@@ -459,7 +459,7 @@ namespace Lucene.Net.Search
 			{
 			}
 			// ok
-			dir.Close();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -476,9 +476,9 @@ namespace Lucene.Net.Search
 			IsFalse(afterRefreshCalled.Get());
 			sm.MaybeRefreshBlocking();
 			IsTrue(afterRefreshCalled.Get());
-			sm.Close();
-			iw.Close();
-			dir.Close();
+			sm.Dispose();
+			iw.Dispose();
+			dir.Dispose();
 		}
 
 		private sealed class _RefreshListener_368 : ReferenceManager.RefreshListener
@@ -528,9 +528,9 @@ namespace Lucene.Net.Search
 			{
 			}
 			// expected
-			w.Close();
-			other.Close();
-			dir.Close();
+			w.Dispose();
+			other.Dispose();
+			dir.Dispose();
 		}
 
 		private sealed class _SearcherFactory_397 : SearcherFactory
@@ -555,7 +555,7 @@ namespace Lucene.Net.Search
 			// threads cannot obtain it.
 			Directory dir = NewDirectory();
 			RandomIndexWriter w = new RandomIndexWriter(Random(), dir);
-			w.Close();
+			w.Dispose();
 			SearcherManager sm = new SearcherManager(dir, null);
 			Sharpen.Thread t = new _Thread_428(sm);
 			// this used to not release the lock, preventing other threads from obtaining it.
@@ -564,8 +564,8 @@ namespace Lucene.Net.Search
 			// if maybeRefreshBlocking didn't release the lock, this will fail.
 			IsTrue("failde to obtain the refreshLock!", sm.MaybeRefresh
 				());
-			sm.Close();
-			dir.Close();
+			sm.Dispose();
+			dir.Dispose();
 		}
 
 		private sealed class _Thread_428 : Sharpen.Thread

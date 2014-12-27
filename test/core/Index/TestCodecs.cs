@@ -21,7 +21,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestCodecs : LuceneTestCase
 	{
@@ -388,8 +388,8 @@ namespace Lucene.Net.Index
 					), TermsEnum.SeekStatus.FOUND);
 			}
 			IsFalse(fieldsEnum.HasNext());
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -435,8 +435,8 @@ namespace Lucene.Net.Index
 			}
 			//HM:revisit 
 			//assert !threads[i].failed;
-			terms.Close();
-			dir.Close();
+			terms.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -456,31 +456,31 @@ namespace Lucene.Net.Index
 				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
-				customType.SetOmitNorms(true);
+				customType.OmitNorms = (true);
 				doc.Add(NewField("content", "aaa bbb ccc ddd", customType));
 				// add document and force commit for creating a first segment
 				writer.AddDocument(doc);
 				writer.Commit();
 				ScoreDoc[] results = this.Search(writer, pq, 5);
 				AreEqual(1, results.Length);
-				AreEqual(0, results[0].doc);
+				AreEqual(0, results[0].Doc);
 				// add document and force commit for creating a second segment
 				writer.AddDocument(doc);
 				writer.Commit();
 				// at this point, there should be at least two segments
 				results = this.Search(writer, pq, 5);
 				AreEqual(2, results.Length);
-				AreEqual(0, results[0].doc);
+				AreEqual(0, results[0].Doc);
 				writer.ForceMerge(1);
 				// optimise to merge the segments.
 				results = this.Search(writer, pq, 5);
 				AreEqual(2, results.Length);
-				AreEqual(0, results[0].doc);
+				AreEqual(0, results[0].Doc);
 			}
 			finally
 			{
-				writer.Close();
-				dir.Close();
+				writer.Dispose();
+				dir.Dispose();
 			}
 		}
 
@@ -491,11 +491,11 @@ namespace Lucene.Net.Index
 			IndexSearcher searcher = NewSearcher(reader);
 			try
 			{
-				return searcher.Search(q, null, n).scoreDocs;
+				return searcher.Search(q, null, n).ScoreDocs;
 			}
 			finally
 			{
-				reader.Close();
+				reader.Dispose();
 			}
 		}
 
@@ -820,7 +820,7 @@ namespace Lucene.Net.Index
 				}
 				field.Write(consumer);
 			}
-			consumer.Close();
+			consumer.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -843,19 +843,19 @@ namespace Lucene.Net.Index
 				doc.Add(new StringField("f", "doc", Field.Store.NO));
 				writer.AddDocument(doc);
 			}
-			writer.Close();
+			writer.Dispose();
 			Term term = new Term("f", new BytesRef("doc"));
 			DirectoryReader reader = DirectoryReader.Open(dir);
-			foreach (AtomicReaderContext ctx in reader.Leaves())
+			foreach (AtomicReaderContext ctx in reader.Leaves)
 			{
-				DocsEnum de = ((AtomicReader)ctx.Reader()).TermDocsEnum(term);
+				DocsEnum de = ((AtomicReader)ctx.Reader).TermDocsEnum(term);
 				while (de.NextDoc() != DocIdSetIterator.NO_MORE_DOCS)
 				{
 					AreEqual("wrong freq for doc " + de.DocID, 1, de.Freq);
 				}
 			}
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -876,7 +876,7 @@ namespace Lucene.Net.Index
 			OLD_FORMAT_IMPERSONATION_IS_ACTIVE = false;
 			try
 			{
-				writer.Close();
+				writer.Dispose();
 				Fail("should not have succeeded to impersonate an old format!"
 					);
 			}
@@ -888,7 +888,7 @@ namespace Lucene.Net.Index
 			{
 				OLD_FORMAT_IMPERSONATION_IS_ACTIVE = true;
 			}
-			dir.Close();
+			dir.Dispose();
 		}
 	}
 }

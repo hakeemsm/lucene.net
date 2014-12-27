@@ -11,7 +11,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	/// <summary>
 	/// Some tests for
@@ -31,7 +31,7 @@ namespace Lucene.Net.Index
 			Directory rd1 = NewDirectory();
 			IndexWriter iw = new IndexWriter(rd1, NewIndexWriterConfig(TEST_VERSION_CURRENT, 
 				new MockAnalyzer(Random())));
-			iw.Close();
+			iw.Dispose();
 			// create a copy:
 			Directory rd2 = NewDirectory(rd1);
 			Directory rdOut = NewDirectory();
@@ -54,10 +54,10 @@ namespace Lucene.Net.Index
 			// 2nd try with a readerless parallel reader
 			iwOut.AddIndexes(new ParallelCompositeReader());
 			iwOut.ForceMerge(1);
-			iwOut.Close();
-			rdOut.Close();
-			rd1.Close();
-			rd2.Close();
+			iwOut.Dispose();
+			rdOut.Dispose();
+			rd1.Dispose();
+			rd2.Dispose();
 		}
 
 		/// <summary>
@@ -92,7 +92,7 @@ namespace Lucene.Net.Index
 				doc.Add(NewTextField("test", string.Empty, Field.Store.NO));
 				idField.StringValue = "2");
 				iw.AddDocument(doc);
-				iw.Close();
+				iw.Dispose();
 				IndexWriterConfig dontMergeConfig = new IndexWriterConfig(TEST_VERSION_CURRENT, new 
 					MockAnalyzer(Random())).SetMergePolicy(NoMergePolicy.COMPOUND_FILES);
 				if (VERBOSE)
@@ -101,15 +101,15 @@ namespace Lucene.Net.Index
 				}
 				IndexWriter writer = new IndexWriter(rd1, dontMergeConfig);
 				writer.DeleteDocuments(new Term("id", "1"));
-				writer.Close();
+				writer.Dispose();
 				IndexReader ir = DirectoryReader.Open(rd1);
 				AreEqual(2, ir.MaxDoc);
-				AreEqual(1, ir.NumDocs());
-				ir.Close();
+				AreEqual(1, ir.NumDocs);
+				ir.Dispose();
 				iw = new IndexWriter(rd1, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 					(Random())).SetOpenMode(IndexWriterConfig.OpenMode.APPEND));
 				iw.ForceMerge(1);
-				iw.Close();
+				iw.Dispose();
 			}
 			Directory rd2 = NewDirectory();
 			{
@@ -118,7 +118,7 @@ namespace Lucene.Net.Index
 				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				iw.AddDocument(doc);
-				iw.Close();
+				iw.Dispose();
 			}
 			Directory rdOut = NewDirectory();
 			IndexWriter iwOut = new IndexWriter(rdOut, NewIndexWriterConfig(TEST_VERSION_CURRENT
@@ -131,17 +131,17 @@ namespace Lucene.Net.Index
 			// When unpatched, Lucene crashes here with an ArrayIndexOutOfBoundsException (caused by TermVectorsWriter)
 			iwOut.AddIndexes(pr);
 			// ParallelReader closes any IndexReader you added to it:
-			pr.Close();
+			pr.Dispose();
 			// 
 			//HM:revisit 
 			//assert subreaders were closed
 			AreEqual(0, reader1.GetRefCount());
 			AreEqual(0, reader2.GetRefCount());
-			rd1.Close();
-			rd2.Close();
+			rd1.Dispose();
+			rd2.Dispose();
 			iwOut.ForceMerge(1);
-			iwOut.Close();
-			rdOut.Close();
+			iwOut.Dispose();
+			rdOut.Dispose();
 		}
 	}
 }

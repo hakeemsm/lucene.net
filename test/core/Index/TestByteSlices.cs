@@ -23,7 +23,7 @@ using LuceneTestCase = Lucene.Net.Util.LuceneTestCase;
 
 using ByteBlockPool = Lucene.Net.Index.ByteBlockPool;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	
 	[TestFixture]

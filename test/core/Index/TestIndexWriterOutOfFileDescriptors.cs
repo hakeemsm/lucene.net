@@ -12,7 +12,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestIndexWriterOutOfFileDescriptors : LuceneTestCase
 	{
@@ -85,7 +85,7 @@ namespace Lucene.Net.Index
 						w.AddDocument(docs.NextDoc());
 					}
 					dir.SetRandomIOExceptionRateOnOpen(0.0);
-					w.Close();
+					w.Dispose();
 					w = null;
 					// NOTE: This is O(N^2)!  Only enable for temporary debugging:
 					//dir.setRandomIOExceptionRateOnOpen(0.0);
@@ -104,13 +104,13 @@ namespace Lucene.Net.Index
 						DirectoryReader r3 = DirectoryReader.OpenIfChanged(r2);
 						if (r3 != null)
 						{
-							r2.Close();
+							r2.Dispose();
 							r2 = r3;
 						}
 					}
-					IsTrue("before=" + lastNumDocs + " after=" + r2.NumDocs(), 
-						r2.NumDocs() >= lastNumDocs);
-					lastNumDocs = r2.NumDocs();
+					IsTrue("before=" + lastNumDocs + " after=" + r2.NumDocs, 
+						r2.NumDocs >= lastNumDocs);
+					lastNumDocs = r2.NumDocs;
 					//System.out.println("numDocs=" + lastNumDocs);
 					dir.SetRandomIOExceptionRateOnOpen(rate);
 					any = true;
@@ -154,21 +154,21 @@ namespace Lucene.Net.Index
 					// the time we take a copy because we are holding
 					// open a reader:
 					new IndexWriter(dirCopy, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
-						(Random()))).Close();
+						(Random()))).Dispose();
 					dirCopy.SetRandomIOExceptionRate(rate);
 					dir.SetRandomIOExceptionRateOnOpen(rate);
 				}
 			}
 			if (r2 != null)
 			{
-				r2.Close();
+				r2.Dispose();
 			}
 			if (r != null)
 			{
-				r.Close();
-				dirCopy.Close();
+				r.Dispose();
+				dirCopy.Dispose();
 			}
-			dir.Close();
+			dir.Dispose();
 		}
 	}
 }

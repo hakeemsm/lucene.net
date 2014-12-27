@@ -251,7 +251,7 @@ namespace Lucene.Net.Search
 			writer.AddDocument(d1);
 			writer.AddDocument(d2);
 			writer.Optimize();
-			writer.Close();
+			writer.Dispose();
 			
 			Searcher searcher = new IndexSearcher(store, true);
 			searcher.Similarity = new SimpleSimilarity();

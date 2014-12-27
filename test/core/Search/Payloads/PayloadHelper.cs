@@ -138,7 +138,7 @@ namespace Lucene.Net.Search.Payloads
 				writer.AddDocument(doc);
 			}
 			reader = DirectoryReader.Open(writer, true);
-			writer.Close();
+			writer.Dispose();
 			IndexSearcher searcher = LuceneTestCase.NewSearcher(reader);
 			searcher.SetSimilarity(similarity);
 			return searcher;
@@ -147,7 +147,7 @@ namespace Lucene.Net.Search.Payloads
 		/// <exception cref="System.Exception"></exception>
 		public virtual void TearDown()
 		{
-			reader.Close();
+			reader.Dispose();
 		}
 	}
 }

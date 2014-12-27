@@ -64,11 +64,11 @@ namespace Lucene.Net.Search
 		[TearDown]
 		public override void  TearDown()
 		{
-			searcher.Close();
+			searcher.Dispose();
             searcher = null;
-			reader.Close();
+			reader.Dispose();
 			reader = null;
-			directory.Close();
+			directory.Dispose();
 			directory = null;
             GC.Collect();
 			base.TearDown();
@@ -93,7 +93,7 @@ namespace Lucene.Net.Search
 				writer.AddDocument(doc);
 			}
 			reader = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			searcher = NewSearcher(reader);
 		}
 		

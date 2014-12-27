@@ -112,9 +112,9 @@ namespace Lucene.Net.Search
 			dmq.Add(new TermQuery(new Term("field", "a")));
 			dmq.Add(pq);
 			AreEqual(1, s.Search(dmq, 10).TotalHits);
-			r.Close();
-			w.Close();
-			dir.Close();
+			r.Dispose();
+			w.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -127,7 +127,7 @@ namespace Lucene.Net.Search
 			doc1.Add(NewTextField("field", "foo bar", Field.Store.NO));
 			iw1.AddDocument(doc1);
 			IndexReader reader1 = iw1.GetReader();
-			iw1.Close();
+			iw1.Dispose();
 			Directory dir2 = NewDirectory();
 			RandomIndexWriter iw2 = new RandomIndexWriter(Random(), dir2);
 			Lucene.Net.Documents.Document doc2 = new Lucene.Net.Documents.Document
@@ -135,7 +135,7 @@ namespace Lucene.Net.Search
 			doc2.Add(NewTextField("field", "foo baz", Field.Store.NO));
 			iw2.AddDocument(doc2);
 			IndexReader reader2 = iw2.GetReader();
-			iw2.Close();
+			iw2.Dispose();
 			BooleanQuery query = new BooleanQuery();
 			// Query: +foo -ba*
 			query.Add(new TermQuery(new Term("field", "foo")), BooleanClause.Occur.MUST);
@@ -155,11 +155,11 @@ namespace Lucene.Net.Search
 			AreEqual(0, searcher.Search(query, 10).TotalHits);
 			es.Shutdown();
 			es.AwaitTermination(1, TimeUnit.SECONDS);
-			multireader.Close();
-			reader1.Close();
-			reader2.Close();
-			dir1.Close();
-			dir2.Close();
+			multireader.Dispose();
+			reader1.Dispose();
+			reader2.Dispose();
+			dir1.Dispose();
+			dir2.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -199,7 +199,7 @@ namespace Lucene.Net.Search
 			w.ForceMerge(1);
 			IndexReader r = w.GetReader();
 			IndexSearcher s = NewSearcher(r);
-			w.Close();
+			w.Dispose();
 			for (int iter = 0; iter < 10 * RANDOM_MULTIPLIER; iter++)
 			{
 				if (VERBOSE)
@@ -262,7 +262,7 @@ namespace Lucene.Net.Search
 							// advance
 							int inc = TestUtil.NextInt(Random(), 1, left - 1);
 							nextUpto = inc + upto;
-							nextDoc = scorer.Advance(hits[nextUpto].doc);
+							nextDoc = scorer.Advance(hits[nextUpto].Doc);
 						}
 						if (nextUpto == hits.Count)
 						{
@@ -271,17 +271,17 @@ namespace Lucene.Net.Search
 						else
 						{
 							ScoreDoc hit = hits[nextUpto];
-							AreEqual(hit.doc, nextDoc);
+							AreEqual(hit.Doc, nextDoc);
 							// Test for precise float equality:
-							IsTrue("doc " + hit.doc + " has wrong score: expected=" + 
+							IsTrue("doc " + hit.Doc + " has wrong score: expected=" + 
 								hit.score + " actual=" + scorer.Score(), hit.score == scorer.Score());
 						}
 						upto = nextUpto;
 					}
 				}
 			}
-			r.Close();
-			d.Close();
+			r.Dispose();
+			d.Dispose();
 		}
 
 		// LUCENE-4477 / LUCENE-4401:
@@ -299,7 +299,7 @@ namespace Lucene.Net.Search
 			Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 			d.Add(new TextField(FIELD, "clockwork orange", Field.Store.YES));
 			writer.AddDocument(d);
-			writer.Close();
+			writer.Dispose();
 			IndexReader indexReader = DirectoryReader.Open(directory);
 			IndexSearcher searcher = NewSearcher(indexReader);
 			BooleanQuery query = new BooleanQuery();
@@ -309,17 +309,17 @@ namespace Lucene.Net.Search
 			query.Add(sq2, BooleanClause.Occur.SHOULD);
 			TopScoreDocCollector collector = TopScoreDocCollector.Create(1000, true);
 			searcher.Search(query, collector);
-			hits = collector.TopDocs().scoreDocs.Length;
-			foreach (ScoreDoc scoreDoc in collector.TopDocs().scoreDocs)
+			hits = collector.TopDocs().ScoreDocs.Length;
+			foreach (ScoreDoc scoreDoc in collector.TopDocs().ScoreDocs)
 			{
-				System.Console.Out.WriteLine(scoreDoc.doc);
+				System.Console.Out.WriteLine(scoreDoc.Doc);
 			}
-			indexReader.Close();
+			indexReader.Dispose();
 			AreEqual("Bug in boolean query composed of span queries", 
 				failed, false);
 			AreEqual("Bug in boolean query composed of span queries", 
 				hits, 1);
-			directory.Close();
+			directory.Dispose();
 		}
 
 		// LUCENE-5487
@@ -333,7 +333,7 @@ namespace Lucene.Net.Search
 			doc.Add(NewTextField("field", "some text here", Field.Store.NO));
 			w.AddDocument(doc);
 			IndexReader r = w.GetReader();
-			w.Close();
+			w.Dispose();
 			IndexSearcher s = new _IndexSearcher_338(r);
 			BooleanQuery bq = new BooleanQuery();
 			bq.Add(new TermQuery(new Term("field", "some")), BooleanClause.Occur.SHOULD);
@@ -341,8 +341,8 @@ namespace Lucene.Net.Search
 			bq.Add(new TermQuery(new Term("field", "here")), BooleanClause.Occur.SHOULD);
 			bq.SetMinimumNumberShouldMatch(2);
 			s.Search(bq, 10);
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 
 		private sealed class _IndexSearcher_338 : IndexSearcher

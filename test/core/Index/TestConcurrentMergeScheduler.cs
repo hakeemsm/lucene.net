@@ -15,7 +15,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestConcurrentMergeScheduler : LuceneTestCase
 	{
@@ -129,13 +129,13 @@ namespace Lucene.Net.Index
 						break;
 					}
 				}
-				AreEqual(20 * (i + 1) + extraCount, writer.NumDocs());
+				AreEqual(20 * (i + 1) + extraCount, writer.NumDocs);
 			}
-			writer.Close();
+			writer.Dispose();
 			IndexReader reader = DirectoryReader.Open(directory);
-			AreEqual(200 + extraCount, reader.NumDocs());
-			reader.Close();
-			directory.Close();
+			AreEqual(200 + extraCount, reader.NumDocs);
+			reader.Dispose();
+			directory.Dispose();
 		}
 
 		// Test that deletes committed after a merge started and
@@ -178,12 +178,12 @@ namespace Lucene.Net.Index
 				}
 				writer.Commit();
 			}
-			writer.Close();
+			writer.Dispose();
 			IndexReader reader = DirectoryReader.Open(directory);
 			// Verify that we did not lose any deletes...
-			AreEqual(450, reader.NumDocs());
-			reader.Close();
-			directory.Close();
+			AreEqual(450, reader.NumDocs);
+			reader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -205,15 +205,15 @@ namespace Lucene.Net.Index
 					doc.Add(NewTextField("content", "a b c", Field.Store.NO));
 					writer.AddDocument(doc);
 				}
-				writer.Close();
+				writer.Dispose();
 				TestIndexWriter.AssertNoUnreferencedFiles(directory, "testNoExtraFiles");
 				// Reopen
 				writer = new IndexWriter(directory, ((IndexWriterConfig)NewIndexWriterConfig(TEST_VERSION_CURRENT
 					, new MockAnalyzer(Random())).SetOpenMode(IndexWriterConfig.OpenMode.APPEND).SetMaxBufferedDocs
 					(2)));
 			}
-			writer.Close();
-			directory.Close();
+			writer.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -242,20 +242,20 @@ namespace Lucene.Net.Index
 				}
 				// Force a bunch of merge threads to kick off so we
 				// stress out aborting them on close:
-				((LogMergePolicy)writer.GetConfig().GetMergePolicy()).SetMergeFactor(3);
+				((LogMergePolicy)writer.Config.MergePolicy).MergeFactor = (3);
 				writer.AddDocument(doc);
 				writer.Commit();
 				writer.Close(false);
 				IndexReader reader = DirectoryReader.Open(directory);
-				AreEqual((1 + iter) * 182, reader.NumDocs());
-				reader.Close();
+				AreEqual((1 + iter) * 182, reader.NumDocs);
+				reader.Dispose();
 				// Reopen
 				writer = new IndexWriter(directory, NewIndexWriterConfig(TEST_VERSION_CURRENT, new 
 					MockAnalyzer(Random())).SetOpenMode(IndexWriterConfig.OpenMode.APPEND).SetMergePolicy
 					(NewLogMergePolicy(100)));
 			}
-			writer.Close();
-			directory.Close();
+			writer.Dispose();
+			directory.Dispose();
 		}
 
 		// LUCENE-4544
@@ -302,7 +302,7 @@ namespace Lucene.Net.Index
 				}
 			}
 			w.Close(false);
-			dir.Close();
+			dir.Dispose();
 		}
 
 		private sealed class _ConcurrentMergeScheduler_275 : ConcurrentMergeScheduler
@@ -407,8 +407,8 @@ namespace Lucene.Net.Index
 			}
 			IsTrue(((TestConcurrentMergeScheduler.TrackingCMS)w.GetConfig
 				().GetMergeScheduler()).totMergedBytes != 0);
-			w.Close();
-			d.Close();
+			w.Dispose();
+			d.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -448,13 +448,13 @@ namespace Lucene.Net.Index
 			{
 				w.AddDocument(new Lucene.Net.Documents.Document());
 			}
-			((ConcurrentMergeScheduler)w.GetConfig().GetMergeScheduler()).SetMaxMergesAndThreads
+			((ConcurrentMergeScheduler)w.Config.GetMergeScheduler()).SetMaxMergesAndThreads
 				(1, 1);
 			w.ForceMerge(1);
 			// At most 1 merge thread should have launched at once:
 			AreEqual(1, maxRunningMergeCount.Get());
-			w.Close();
-			d.Close();
+			w.Dispose();
+			d.Dispose();
 		}
 
 		private sealed class _ConcurrentMergeScheduler_384 : ConcurrentMergeScheduler

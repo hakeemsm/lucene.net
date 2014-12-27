@@ -836,6 +836,11 @@ namespace Lucene.Net
 			return NewDirectory(Random());
         }
 
+        public static BaseDirectoryWrapper NewDirectory(Directory d)
+        {
+            return NewDirectory(Random(),d);
+        }
+
 		public static BaseDirectoryWrapper NewDirectory(Random r)
 		{
 			return WrapDirectory(r, NewDirectoryImpl(r, TEST_DIRECTORY), Rarely(r));

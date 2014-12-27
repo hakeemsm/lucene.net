@@ -40,15 +40,15 @@ namespace Lucene.Net.Search
 				, Field.Store.NO));
 			writer.AddDocument(doc);
 			reader = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			searcher = NewSearcher(reader);
 		}
 
 		/// <exception cref="System.Exception"></exception>
 		public override void TearDown()
 		{
-			reader.Close();
-			directory.Close();
+			reader.Dispose();
+			directory.Dispose();
 			base.TearDown();
 		}
 

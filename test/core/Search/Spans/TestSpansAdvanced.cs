@@ -53,7 +53,7 @@ namespace Lucene.Net.Search.Spans
 			AddDocument(writer, "3", "I think it should work.");
 			AddDocument(writer, "4", "I think it should work.");
 			reader = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			searcher = NewSearcher(reader);
 			searcher.SetSimilarity(new DefaultSimilarity());
 		}
@@ -61,8 +61,8 @@ namespace Lucene.Net.Search.Spans
 		/// <exception cref="System.Exception"></exception>
 		public override void TearDown()
 		{
-			reader.Close();
-			mDirectory.Close();
+			reader.Dispose();
+			mDirectory.Dispose();
 			mDirectory = null;
 			base.TearDown();
 		}
@@ -127,9 +127,9 @@ namespace Lucene.Net.Search.Spans
 			for (int i = 0; i < topdocs.TotalHits; i++)
 			{
 				// System.out.println(i + " exp: " + expectedIds[i]);
-				// System.out.println(i + " field: " + hits.doc(i).get(FIELD_ID));
-				int id = topdocs.scoreDocs[i].doc;
-				float score = topdocs.scoreDocs[i].score;
+				// System.out.println(i + " field: " + hits.Doc(i).get(FIELD_ID));
+				int id = topdocs.ScoreDocs[i].Doc;
+				float score = topdocs.ScoreDocs[i].score;
 				Lucene.Net.Documents.Document doc = s.Doc(id);
 				AreEqual(expectedIds[i], doc.Get(FIELD_ID));
 				bool scoreEq = Math.Abs(expectedScores[i] - score) < tolerance;

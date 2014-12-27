@@ -18,7 +18,7 @@ using Lucene.Net.Util;
 using Sharpen;
 using Sharpen.Reflect;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestIndexWriterConfig : LuceneTestCase
 	{
@@ -75,7 +75,7 @@ namespace Lucene.Net.Index
 			IsNull(conf.GetMergedSegmentWarmer());
 			AreEqual(IndexWriterConfig.DEFAULT_READER_TERMS_INDEX_DIVISOR
 				, conf.GetReaderTermsIndexDivisor());
-			AreEqual(typeof(TieredMergePolicy), conf.GetMergePolicy().
+			AreEqual(typeof(TieredMergePolicy), conf.MergePolicy.
 				GetType());
 			AreEqual(typeof(DocumentsWriterPerThreadPool), conf.GetIndexerThreadPool
 				().GetType());
@@ -169,7 +169,7 @@ namespace Lucene.Net.Index
 			Directory dir = NewDirectory();
 			// test that IWC cannot be reused across two IWs
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, null);
-			new RandomIndexWriter(Random(), dir, conf).Close();
+			new RandomIndexWriter(Random(), dir, conf).Dispose();
 			// this should fail
 			try
 			{
@@ -193,9 +193,9 @@ namespace Lucene.Net.Index
 			// expected
 			// if it's cloned in advance, it should be ok
 			conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, null);
-			new RandomIndexWriter(Random(), dir, conf.Clone()).Close();
-			new RandomIndexWriter(Random(), dir, conf.Clone()).Close();
-			dir.Close();
+			new RandomIndexWriter(Random(), dir, conf.Clone()).Dispose();
+			new RandomIndexWriter(Random(), dir, conf.Clone()).Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -476,10 +476,10 @@ namespace Lucene.Net.Index
 			}
 			// this is expected
 			// Test MergePolicy
-			AreEqual(typeof(TieredMergePolicy), conf.GetMergePolicy().
+			AreEqual(typeof(TieredMergePolicy), conf.MergePolicy.
 				GetType());
 			conf.SetMergePolicy(new LogDocMergePolicy());
-			AreEqual(typeof(LogDocMergePolicy), conf.GetMergePolicy().
+			AreEqual(typeof(LogDocMergePolicy), conf.MergePolicy.
 				GetType());
 			try
 			{
@@ -501,10 +501,10 @@ namespace Lucene.Net.Index
 			iwc.SetMergePolicy(NewLogMergePolicy(true));
 			// Start false:
 			iwc.SetUseCompoundFile(false);
-			iwc.GetMergePolicy().SetNoCFSRatio(0.0d);
+			iwc.MergePolicy.SetNoCFSRatio(0.0d);
 			IndexWriter w = new IndexWriter(dir, iwc);
 			// Change to true:
-			w.GetConfig().SetUseCompoundFile(true);
+			w.Config.SetUseCompoundFile(true);
 			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewStringField("field", "foo", Field.Store.NO));
@@ -520,7 +520,7 @@ namespace Lucene.Net.Index
 			// no compound files after merge
 			IsFalse("Expected Non-CFS after merge", w.NewestSegment().
 				info.GetUseCompoundFile());
-			MergePolicy lmp = w.GetConfig().GetMergePolicy();
+			MergePolicy lmp = w.Config.MergePolicy;
 			lmp.SetNoCFSRatio(1.0);
 			lmp.SetMaxCFSSegmentSizeMB(double.PositiveInfinity);
 			w.AddDocument(doc);
@@ -528,8 +528,8 @@ namespace Lucene.Net.Index
 			w.Commit();
 			IsTrue("Expected CFS after merge", w.NewestSegment().info.
 				GetUseCompoundFile());
-			w.Close();
-			dir.Close();
+			w.Dispose();
+			dir.Dispose();
 		}
 	}
 }

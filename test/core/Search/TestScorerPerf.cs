@@ -84,7 +84,7 @@ namespace Lucene.Net.Search
 			IndexWriter iw = new IndexWriter(d, NewIndexWriterConfig(TEST_VERSION_CURRENT, new 
 				MockAnalyzer(Random())));
 			iw.AddDocument(new Document());
-			iw.Close();
+			iw.Dispose();
 			r = DirectoryReader.Open(d);
 			s = NewSearcher(r);
 		}
@@ -115,7 +115,7 @@ namespace Lucene.Net.Search
 				iw.AddDocument(d);
 			}
 			iw.ForceMerge(1);
-			iw.Close();
+			iw.Dispose();
 		}
 		
 		
@@ -398,9 +398,9 @@ namespace Lucene.Net.Search
 			sets = RandBitSets(AtLeast(1000), AtLeast(10));
 			DoConjunctions(AtLeast(10000), AtLeast(5));
 			DoNestedConjunctions(AtLeast(10000), AtLeast(3), AtLeast(3));
-			s.Close();
-			r.Close();
-			d.Close();
+			s.Dispose();
+			r.Dispose();
+			d.Dispose();
 		}
 
         // <summary> 

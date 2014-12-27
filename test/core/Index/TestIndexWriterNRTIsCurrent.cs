@@ -13,7 +13,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestIndexWriterNRTIsCurrent : LuceneTestCase
 	{
@@ -61,8 +61,8 @@ namespace Lucene.Net.Index
 				}
 			}
 			IsFalse(failed);
-			writer.Close();
-			dir.Close();
+			writer.Dispose();
+			dir.Dispose();
 		}
 
 		public class WriterThread : Sharpen.Thread
@@ -138,7 +138,7 @@ namespace Lucene.Net.Index
 								currentReader.DecRef();
 								currentReader = newReader;
 							}
-							if (currentReader.NumDocs() == 0)
+							if (currentReader.NumDocs == 0)
 							{
 								writer.AddDocument(doc);
 							}

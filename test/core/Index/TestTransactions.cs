@@ -13,7 +13,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestTransactions : LuceneTestCase
 	{
@@ -56,7 +56,7 @@ namespace Lucene.Net.Index
 
 			public override void Run()
 			{
-				long stopTime = Runtime.CurrentTimeMillis() + (long)(RUN_TIME_MSEC);
+				long stopTime = DateTime.Now.CurrentTimeMillis() + (long)(RUN_TIME_MSEC);
 				try
 				{
 					do
@@ -67,7 +67,7 @@ namespace Lucene.Net.Index
 						}
 						DoWork();
 					}
-					while (Runtime.CurrentTimeMillis() < stopTime);
+					while (DateTime.Now.CurrentTimeMillis() < stopTime);
 				}
 				catch (Exception e)
 				{
@@ -116,7 +116,7 @@ namespace Lucene.Net.Index
 					.NewIndexWriterConfig(LuceneTestCase.TEST_VERSION_CURRENT, new MockAnalyzer(LuceneTestCase
 					.Random())).SetMaxBufferedDocs(3)).SetMergeScheduler(new ConcurrentMergeScheduler
 					()).SetMergePolicy(LuceneTestCase.NewLogMergePolicy(2)));
-				((ConcurrentMergeScheduler)writer1.GetConfig().GetMergeScheduler()).SetSuppressExceptions
+				((ConcurrentMergeScheduler)writer1.Config.GetMergeScheduler()).SetSuppressExceptions
 					();
 				// Intentionally use different params so flush/merge
 				// happen @ different times
@@ -124,7 +124,7 @@ namespace Lucene.Net.Index
 					.NewIndexWriterConfig(LuceneTestCase.TEST_VERSION_CURRENT, new MockAnalyzer(LuceneTestCase
 					.Random())).SetMaxBufferedDocs(2)).SetMergeScheduler(new ConcurrentMergeScheduler
 					()).SetMergePolicy(LuceneTestCase.NewLogMergePolicy(3)));
-				((ConcurrentMergeScheduler)writer2.GetConfig().GetMergeScheduler()).SetSuppressExceptions
+				((ConcurrentMergeScheduler)writer2.Config.GetMergeScheduler()).SetSuppressExceptions
 					();
 				this.Update(writer1);
 				this.Update(writer2);
@@ -161,8 +161,8 @@ namespace Lucene.Net.Index
 				{
 					TestTransactions.doFail = false;
 				}
-				writer1.Close();
-				writer2.Close();
+				writer1.Dispose();
+				writer2.Dispose();
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
@@ -229,22 +229,22 @@ namespace Lucene.Net.Index
 						}
 						if (r1 != null)
 						{
-							r1.Close();
+							r1.Dispose();
 						}
 						if (r2 != null)
 						{
-							r2.Close();
+							r2.Dispose();
 						}
 						return;
 					}
 				}
-				if (r1.NumDocs() != r2.NumDocs())
+				if (r1.NumDocs != r2.NumDocs)
 				{
-					throw new RuntimeException("doc counts differ: r1=" + r1.NumDocs() + " r2=" + r2.
+					throw new RuntimeException("doc counts differ: r1=" + r1.NumDocs + " r2=" + r2.
 						NumDocs());
 				}
-				r1.Close();
-				r2.Close();
+				r1.Dispose();
+				r2.Dispose();
 			}
 		}
 
@@ -260,7 +260,7 @@ namespace Lucene.Net.Index
 				d.Add(NewTextField("contents", English.IntToEnglish(n), Field.Store.NO));
 				writer.AddDocument(d);
 			}
-			writer.Close();
+			writer.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -305,8 +305,8 @@ namespace Lucene.Net.Index
 			{
 				IsTrue(!threads[i_1].failed);
 			}
-			dir1.Close();
-			dir2.Close();
+			dir1.Dispose();
+			dir2.Dispose();
 		}
 	}
 }

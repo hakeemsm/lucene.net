@@ -15,7 +15,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestIndexWriterThreadsToSegments : LuceneTestCase
 	{
@@ -42,22 +42,22 @@ namespace Lucene.Net.Index
 			startingGun.CountDown();
 			startDone.Await();
 			IndexReader r = DirectoryReader.Open(w, true);
-			AreEqual(2, r.NumDocs());
-			int numSegments = r.Leaves().Count;
+			AreEqual(2, r.NumDocs);
+			int numSegments = r.Leaves.Count;
 			// 1 segment if the threads ran sequentially, else 2:
 			IsTrue(numSegments <= 2);
-			r.Close();
+			r.Dispose();
 			middleGun.CountDown();
 			threads[0].Join();
 			finalGun.CountDown();
 			threads[1].Join();
 			r = DirectoryReader.Open(w, true);
-			AreEqual(4, r.NumDocs());
+			AreEqual(4, r.NumDocs);
 			// Both threads should have shared a single thread state since they did not try to index concurrently:
-			AreEqual(1 + numSegments, r.Leaves().Count);
-			r.Close();
-			w.Close();
-			dir.Close();
+			AreEqual(1 + numSegments, r.Leaves.Count);
+			r.Dispose();
+			w.Dispose();
+			dir.Dispose();
 		}
 
 		private sealed class _Thread_55 : Sharpen.Thread
@@ -136,7 +136,7 @@ namespace Lucene.Net.Index
 				this.maxThreadCountPerIter = maxThreadCountPerIter;
 				this.indexingCount = indexingCount;
 				r = DirectoryReader.Open(w, true);
-				AreEqual(0, r.Leaves().Count);
+				AreEqual(0, r.Leaves.Count);
 				SetNextIterThreadCount();
 			}
 
@@ -144,21 +144,21 @@ namespace Lucene.Net.Index
 			{
 				try
 				{
-					int oldSegmentCount = r.Leaves().Count;
+					int oldSegmentCount = r.Leaves.Count;
 					DirectoryReader r2 = DirectoryReader.OpenIfChanged(r);
 					IsNotNull(r2);
-					r.Close();
+					r.Dispose();
 					r = r2;
-					int maxThreadStates = w.GetConfig().GetMaxThreadStates();
+					int maxThreadStates = w.Config.GetMaxThreadStates();
 					int maxExpectedSegments = oldSegmentCount + Math.Min(maxThreadStates, maxThreadCountPerIter
 						.Get());
 					if (VERBOSE)
 					{
 						System.Console.Out.WriteLine("TEST: iter done; now verify oldSegCount=" + oldSegmentCount
-							 + " newSegCount=" + r2.Leaves().Count + " maxExpected=" + maxExpectedSegments);
+							 + " newSegCount=" + r2.Leaves.Count + " maxExpected=" + maxExpectedSegments);
 					}
 					// NOTE: it won't necessarily be ==, in case some threads were strangely scheduled and never conflicted with one another (should be uncommon...?):
-					IsTrue(r.Leaves().Count <= maxExpectedSegments);
+					IsTrue(r.Leaves.Count <= maxExpectedSegments);
 					SetNextIterThreadCount();
 				}
 				catch (Exception e)
@@ -181,7 +181,7 @@ namespace Lucene.Net.Index
 			/// <exception cref="System.IO.IOException"></exception>
 			public virtual void Close()
 			{
-				r.Close();
+				r.Dispose();
 				r = null;
 			}
 		}
@@ -310,12 +310,12 @@ namespace Lucene.Net.Index
 			}
 			startingGun.CountDown();
 			Sharpen.Thread.Sleep(100);
-			w.Close();
+			w.Dispose();
 			foreach (Sharpen.Thread t in threads)
 			{
 				t.Join();
 			}
-			dir.Close();
+			dir.Dispose();
 		}
 
 		private sealed class _Thread_245 : Sharpen.Thread
@@ -409,14 +409,14 @@ namespace Lucene.Net.Index
 							}
 							finally
 							{
-								sr.Close();
+								sr.Dispose();
 							}
 						}
 					}
 				}
 			}
-			w.Close();
-			dir.Close();
+			w.Dispose();
+			dir.Dispose();
 		}
 
 		private sealed class _Thread_287 : Sharpen.Thread

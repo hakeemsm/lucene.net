@@ -13,7 +13,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestLongPostings : LuceneTestCase
 	{
@@ -102,8 +102,8 @@ namespace Lucene.Net.Index
 				riw.AddDocument(doc);
 			}
 			r = riw.GetReader();
-			riw.Close();
-			AreEqual(NUM_DOCS, r.NumDocs());
+			riw.Dispose();
+			AreEqual(NUM_DOCS, r.NumDocs);
 			IsTrue(r.DocFreq(new Term("field", s1)) > 0);
 			IsTrue(r.DocFreq(new Term("field", s2)) > 0);
 			int num = AtLeast(1000);
@@ -255,8 +255,8 @@ namespace Lucene.Net.Index
 				}
 			}
 			// get it again
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 
 		// a weaker form of testLongPostings, that doesnt check positions
@@ -303,7 +303,7 @@ namespace Lucene.Net.Index
 				iwc.SetMaxBufferedDocs(-1);
 				RandomIndexWriter riw = new RandomIndexWriter(Random(), dir, iwc);
 				FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
-				ft.SetIndexOptions(options);
+				ft.IndexOptions = (options);
 				for (int idx_1 = 0; idx_1 < NUM_DOCS; idx_1++)
 				{
 					Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
@@ -318,13 +318,13 @@ namespace Lucene.Net.Index
 					riw.AddDocument(doc);
 				}
 				r = riw.GetReader();
-				riw.Close();
+				riw.Dispose();
 			}
 			else
 			{
 				r = DirectoryReader.Open(dir);
 			}
-			AreEqual(NUM_DOCS, r.NumDocs());
+			AreEqual(NUM_DOCS, r.NumDocs);
 			IsTrue(r.DocFreq(new Term("field", s1)) > 0);
 			IsTrue(r.DocFreq(new Term("field", s2)) > 0);
 			int num = AtLeast(1000);
@@ -466,8 +466,8 @@ namespace Lucene.Net.Index
 					}
 				}
 			}
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 	}
 }

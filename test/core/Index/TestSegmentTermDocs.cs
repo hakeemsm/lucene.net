@@ -12,7 +12,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestSegmentTermDocs : LuceneTestCase
 	{
@@ -35,7 +35,7 @@ namespace Lucene.Net.Index
 		/// <exception cref="System.Exception"></exception>
 		public override void TearDown()
 		{
-			dir.Close();
+			dir.Dispose();
 			base.TearDown();
 		}
 
@@ -61,7 +61,7 @@ namespace Lucene.Net.Index
 			TermsEnum terms = reader.Fields().Terms(DocHelper.TEXT_FIELD_2_KEY).Iterator(null
 				);
 			terms.SeekCeil(new BytesRef("field"));
-			DocsEnum termDocs = TestUtil.Docs(Random(), terms, reader.GetLiveDocs(), null, DocsEnum
+			DocsEnum termDocs = TestUtil.Docs(Random(), terms, reader.LiveDocs, null, DocsEnum
 				.FLAG_FREQS);
 			if (termDocs.NextDoc() != DocIdSetIterator.NO_MORE_DOCS)
 			{
@@ -70,7 +70,7 @@ namespace Lucene.Net.Index
 				int freq = termDocs.Freq;
 				IsTrue(freq == 3);
 			}
-			reader.Close();
+			reader.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -88,9 +88,9 @@ namespace Lucene.Net.Index
 					)));
 				IsTrue(reader != null);
 				DocsEnum termDocs = TestUtil.Docs(Random(), reader, "textField2", new BytesRef("bad"
-					), reader.GetLiveDocs(), null, 0);
+					), reader.LiveDocs, null, 0);
 				IsNull(termDocs);
-				reader.Close();
+				reader.Dispose();
 			}
 			{
 				//After adding the document, we should be able to read it back in
@@ -98,9 +98,9 @@ namespace Lucene.Net.Index
 					)));
 				IsTrue(reader != null);
 				DocsEnum termDocs = TestUtil.Docs(Random(), reader, "junk", new BytesRef("bad"), 
-					reader.GetLiveDocs(), null, 0);
+					reader.LiveDocs, null, 0);
 				IsNull(termDocs);
-				reader.Close();
+				reader.Dispose();
 			}
 		}
 
@@ -133,7 +133,7 @@ namespace Lucene.Net.Index
 			}
 			// assure that we deal with a single segment  
 			writer.ForceMerge(1);
-			writer.Close();
+			writer.Dispose();
 			IndexReader reader = DirectoryReader.Open(dir, indexDivisor);
 			DocsEnum tdocs = TestUtil.Docs(Random(), reader, ta.Field(), new BytesRef(ta.Text
 				()), MultiFields.GetLiveDocs(reader), null, DocsEnum.FLAG_FREQS);
@@ -234,8 +234,8 @@ namespace Lucene.Net.Index
 			AreEqual(75, tdocs.DocID);
 			IsFalse(tdocs.Advance(76) != DocIdSetIterator.NO_MORE_DOCS
 				);
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>

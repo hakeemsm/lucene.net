@@ -72,8 +72,7 @@ namespace Lucene.Net.Codecs.Simpletext
 			public SimpleTextTermsWriter(SimpleTextFieldsWriter _enclosing, FieldInfo field)
 			{
 				this._enclosing = _enclosing;
-				this.postingsWriter = new SimpleTextFieldsWriter.SimpleTextPostingsWriter(this, field
-					);
+				this.postingsWriter = new SimpleTextPostingsWriter(field);
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
@@ -92,9 +91,9 @@ namespace Lucene.Net.Codecs.Simpletext
 			{
 			}
 
-			public override IComparer<BytesRef> GetComparator()
+			public override IComparer<BytesRef> Comparator
 			{
-				return BytesRef.GetUTF8SortedAsUnicodeComparator();
+			    get { return BytesRef.UTF8SortedAsUnicodeComparer; }
 			}
 
 			private readonly SimpleTextFieldsWriter _enclosing;
@@ -114,14 +113,12 @@ namespace Lucene.Net.Codecs.Simpletext
 
 			private int lastStartOffset = 0;
 
-			public SimpleTextPostingsWriter(SimpleTextFieldsWriter _enclosing, FieldInfo field
-				)
+			public SimpleTextPostingsWriter(FieldInfo field)
 			{
-				this._enclosing = _enclosing;
-				// for 
-				//HM:revisit 
+			    // for 
+				
 				//assert:
-				this.indexOptions = field.GetIndexOptions();
+				this.indexOptions = field.IndexOptionsValue.GetValueOrDefault();
 				this.writePositions = this.indexOptions.CompareTo(FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS
 					) >= 0;
 				this.writeOffsets = this.indexOptions.CompareTo(FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS
@@ -136,18 +133,18 @@ namespace Lucene.Net.Codecs.Simpletext
 				if (!this.wroteTerm)
 				{
 					// we lazily do this, in case the term had zero docs
-					this._enclosing.Write(SimpleTextFieldsWriter.TERM);
+					this._enclosing.Write(TERM);
 					this._enclosing.Write(this.term);
 					this._enclosing.Newline();
 					this.wroteTerm = true;
 				}
-				this._enclosing.Write(SimpleTextFieldsWriter.DOC);
-				this._enclosing.Write(Sharpen.Extensions.ToString(docID));
+				this._enclosing.Write(DOC);
+				this._enclosing.Write(docID.ToString());
 				this._enclosing.Newline();
 				if (this.indexOptions != FieldInfo.IndexOptions.DOCS_ONLY)
 				{
-					this._enclosing.Write(SimpleTextFieldsWriter.FREQ);
-					this._enclosing.Write(Sharpen.Extensions.ToString(termDocFreq));
+					this._enclosing.Write(FREQ);
+					this._enclosing.Write(termDocFreq.ToString());
 					this._enclosing.Newline();
 				}
 				this.lastStartOffset = 0;
@@ -167,7 +164,7 @@ namespace Lucene.Net.Codecs.Simpletext
 				if (this.writePositions)
 				{
 					this._enclosing.Write(SimpleTextFieldsWriter.POS);
-					this._enclosing.Write(Sharpen.Extensions.ToString(position));
+					this._enclosing.Write(position.ToString());
 					this._enclosing.Newline();
 				}
 				if (this.writeOffsets)
@@ -177,11 +174,11 @@ namespace Lucene.Net.Codecs.Simpletext
 					//HM:revisit 
 					//assert startOffset >= lastStartOffset: "startOffset=" + startOffset + " lastStartOffset=" + lastStartOffset;
 					this.lastStartOffset = startOffset;
-					this._enclosing.Write(SimpleTextFieldsWriter.START_OFFSET);
-					this._enclosing.Write(Sharpen.Extensions.ToString(startOffset));
+					this._enclosing.Write(START_OFFSET);
+					this._enclosing.Write(startOffset.ToString());
 					this._enclosing.Newline();
-					this._enclosing.Write(SimpleTextFieldsWriter.END_OFFSET);
-					this._enclosing.Write(Sharpen.Extensions.ToString(endOffset));
+					this._enclosing.Write(END_OFFSET);
+					this._enclosing.Write(endOffset.ToString());
 					this._enclosing.Newline();
 				}
 				if (payload != null && payload.length > 0)
@@ -202,7 +199,7 @@ namespace Lucene.Net.Codecs.Simpletext
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		public override void Close()
+		protected override void Dispose(bool disposing)
 		{
 			if (@out != null)
 			{
@@ -214,7 +211,7 @@ namespace Lucene.Net.Codecs.Simpletext
 				}
 				finally
 				{
-					@out.Close();
+					@out.Dispose();
 					@out = null;
 				}
 			}

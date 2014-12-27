@@ -13,7 +13,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	/// <summary>Tests lazy skipping on the proximity file.</summary>
 	/// <remarks>Tests lazy skipping on the proximity file.</remarks>
@@ -93,7 +93,7 @@ namespace Lucene.Net.Index
 			}
 			// make sure the index has only a single segment
 			writer.ForceMerge(1);
-			writer.Close();
+			writer.Dispose();
 			SegmentReader reader = GetOnlySegmentReader(DirectoryReader.Open(directory));
 			this.searcher = NewSearcher(reader);
 		}
@@ -119,7 +119,7 @@ namespace Lucene.Net.Index
 			PhraseQuery pq = new PhraseQuery();
 			pq.Add(new Term(this.field, this.term1));
 			pq.Add(new Term(this.field, this.term2));
-			return this.searcher.Search(pq, null, 1000).scoreDocs;
+			return this.searcher.Search(pq, null, 1000).ScoreDocs;
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -134,7 +134,7 @@ namespace Lucene.Net.Index
 			IsTrue(this.seeksCounter > 0);
 			IsTrue("seeksCounter=" + this.seeksCounter + " numHits=" +
 				 numHits, this.seeksCounter <= numHits + 1);
-			searcher.GetIndexReader().Close();
+			searcher.IndexReader.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -166,7 +166,7 @@ namespace Lucene.Net.Index
 				doc.Add(NewTextField(this.field, "a b", Field.Store.YES));
 				writer.AddDocument(doc);
 			}
-			writer.Close();
+			writer.Dispose();
 			IndexReader reader = DirectoryReader.Open(directory);
 			DocsAndPositionsEnum tp = MultiFields.GetTermPositionsEnum(reader, MultiFields.GetLiveDocs
 				(reader), this.field, new BytesRef("b"));
@@ -184,8 +184,8 @@ namespace Lucene.Net.Index
 				AreEqual(tp.DocID, i_2);
 				AreEqual(tp.NextPosition(), 0);
 			}
-			reader.Close();
-			directory.Close();
+			reader.Dispose();
+			directory.Dispose();
 		}
 
 		internal class SeeksCountingStream : IndexInput
@@ -216,7 +216,7 @@ namespace Lucene.Net.Index
 			/// <exception cref="System.IO.IOException"></exception>
 			public override void Close()
 			{
-				this.input.Close();
+				this.input.Dispose();
 			}
 
 			public override long FilePointer

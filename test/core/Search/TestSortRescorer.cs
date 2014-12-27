@@ -49,14 +49,14 @@ namespace Lucene.Net.Search
 			iw.AddDocument(doc);
 			reader = iw.GetReader();
 			searcher = new IndexSearcher(reader);
-			iw.Close();
+			iw.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
 		public override void TearDown()
 		{
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 			base.TearDown();
 		}
 
@@ -65,23 +65,23 @@ namespace Lucene.Net.Search
 		{
 			// create a sort field and sort by it (reverse order)
 			Query query = new TermQuery(new Term("body", "contents"));
-			IndexReader r = searcher.GetIndexReader();
+			IndexReader r = searcher.IndexReader;
 			// Just first pass query
 			TopDocs hits = searcher.Search(query, 10);
 			AreEqual(3, hits.TotalHits);
-			AreEqual("3", r.Document(hits.scoreDocs[0].doc).Get("id"));
-			AreEqual("1", r.Document(hits.scoreDocs[1].doc).Get("id"));
-			AreEqual("2", r.Document(hits.scoreDocs[2].doc).Get("id"));
+			AreEqual("3", r.Document(hits.ScoreDocs[0].Doc).Get("id"));
+			AreEqual("1", r.Document(hits.ScoreDocs[1].Doc).Get("id"));
+			AreEqual("2", r.Document(hits.ScoreDocs[2].Doc).Get("id"));
 			// Now, rescore:
 			Sort sort = new Sort(new SortField("popularity", SortField.Type.INT, true));
 			Rescorer rescorer = new SortRescorer(sort);
 			hits = rescorer.Rescore(searcher, hits, 10);
 			AreEqual(3, hits.TotalHits);
-			AreEqual("2", r.Document(hits.scoreDocs[0].doc).Get("id"));
-			AreEqual("1", r.Document(hits.scoreDocs[1].doc).Get("id"));
-			AreEqual("3", r.Document(hits.scoreDocs[2].doc).Get("id"));
-			string expl = rescorer.Explain(searcher, searcher.Explain(query, hits.scoreDocs[0
-				].doc), hits.scoreDocs[0].doc).ToString();
+			AreEqual("2", r.Document(hits.ScoreDocs[0].Doc).Get("id"));
+			AreEqual("1", r.Document(hits.ScoreDocs[1].Doc).Get("id"));
+			AreEqual("3", r.Document(hits.ScoreDocs[2].Doc).Get("id"));
+			string expl = rescorer.Explain(searcher, searcher.Explain(query, hits.ScoreDocs[0
+				].Doc), hits.ScoreDocs[0].Doc).ToString();
 			// Confirm the explanation breaks out the individual
 			// sort fields:
 			IsTrue(expl.Contains("= sort field <int: \"popularity\">! value=20"
@@ -116,7 +116,7 @@ namespace Lucene.Net.Search
 				w.AddDocument(doc);
 			}
 			IndexReader r = w.GetReader();
-			w.Close();
+			w.Dispose();
 			IndexSearcher s = NewSearcher(r);
 			int numHits = TestUtil.NextInt(Random(), 1, numDocs);
 			bool reverse = Random().NextBoolean();
@@ -127,7 +127,7 @@ namespace Lucene.Net.Search
 			int[] expected = new int[numHits];
 			for (int i_1 = 0; i_1 < numHits; i_1++)
 			{
-				expected[i_1] = hits.scoreDocs[i_1].doc;
+				expected[i_1] = hits.ScoreDocs[i_1].Doc;
 			}
 			int reverseInt = reverse ? -1 : 1;
 			Arrays.Sort(expected, new _IComparer_153(idToNum, r, reverseInt));
@@ -135,11 +135,11 @@ namespace Lucene.Net.Search
 			bool fail = false;
 			for (int i_2 = 0; i_2 < numHits; i_2++)
 			{
-				fail |= expected[i_2] != hits2.scoreDocs[i_2].doc;
+				fail |= expected[i_2] != hits2.ScoreDocs[i_2].Doc;
 			}
 			IsFalse(fail);
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 
 		private sealed class _IComparer_153 : IComparer<int>

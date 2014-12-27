@@ -90,7 +90,7 @@ namespace Lucene.Net.Search
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), directory);
 			writer.Commit();
 			IndexReader ir = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Weight fake = new TermQuery(new Term("fake", "weight")).CreateWeight(searcher);
 			Scorer s = new TestPositiveScoresOnlyCollector.SimpleScorer(fake);
@@ -108,8 +108,8 @@ namespace Lucene.Net.Search
 			{
 				Assert.IsTrue(sd[i].Score > 0, "only positive scores should return: " + sd[i].Score);
 			}
-			ir.Close();
-			directory.Close();
+			ir.Dispose();
+			directory.Dispose();
 		}
 	}
 }

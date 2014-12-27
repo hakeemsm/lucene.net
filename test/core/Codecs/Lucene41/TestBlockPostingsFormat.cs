@@ -12,7 +12,7 @@ namespace Lucene.Net.Test.Codecs.Lucene41
 
 		protected override Codec Codec
 		{
-			return codec;
+		    get { return codec; }
 		}
 	}
 }

@@ -25,7 +25,7 @@ namespace Lucene.Net.Search
 			filter.SetRewriteMethod(MultiTermQuery.CONSTANT_SCORE_FILTER_REWRITE);
 			TopDocs fieldCacheDocs = searcher1.Search(fieldCache, 25);
 			TopDocs filterDocs = searcher2.Search(filter, 25);
-			CheckHits.CheckEqual(fieldCache, fieldCacheDocs.scoreDocs, filterDocs.scoreDocs);
+			CheckHits.CheckEqual(fieldCache, fieldCacheDocs.ScoreDocs, filterDocs.ScoreDocs);
 		}
 
 		/// <exception cref="System.Exception"></exception>

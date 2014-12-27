@@ -12,7 +12,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestStressAdvance : LuceneTestCase
 	{
@@ -91,9 +91,9 @@ namespace Lucene.Net.Index
 					de = TestUtil.Docs(Random(), te, null, de, DocsEnum.FLAG_NONE);
 					TestOne(de, bDocIDs);
 				}
-				w.Close();
-				r.Close();
-				dir.Close();
+				w.Dispose();
+				r.Dispose();
+				dir.Dispose();
 			}
 		}
 

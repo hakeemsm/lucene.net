@@ -46,7 +46,7 @@ namespace Lucene.Net.Search
 			writer.AddDocument(Doc("nutch", "nutch is an internet search engine with web crawler and is using lucene and hadoop"
 				));
 			reader = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			searcher = NewSearcher(reader);
 			searcher.SetSimilarity(new TestConjunctions.TFSimilarity());
 		}
@@ -68,15 +68,15 @@ namespace Lucene.Net.Search
 			bq.Add(new TermQuery(new Term(F2, "is")), BooleanClause.Occur.MUST);
 			TopDocs td = searcher.Search(bq, 3);
 			AreEqual(1, td.TotalHits);
-			AreEqual(3F, td.scoreDocs[0].score, 0.001F);
+			AreEqual(3F, td.ScoreDocs[0].score, 0.001F);
 		}
 
 		// f1:nutch + f2:is + f2:is
 		/// <exception cref="System.Exception"></exception>
 		public override void TearDown()
 		{
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 			base.TearDown();
 		}
 

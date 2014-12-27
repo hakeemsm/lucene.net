@@ -258,7 +258,6 @@
     <Compile Include="Index\FieldFilterAtomicReader.cs" />
     <Compile Include="Index\MockIndexInput.cs" />
     <Compile Include="Index\MockRandomMergePolicy.cs" />
-    <Compile Include="Index\RandomCodec.cs" />
     <Compile Include="Index\RandomIndexWriter.cs" />
     <Compile Include="Index\ThreadedIndexingAndSearchingTestCase.cs" />
     <Compile Include="JavaCompatibility\RandomHelpers.cs" />

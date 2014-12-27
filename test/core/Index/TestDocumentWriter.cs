@@ -14,7 +14,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestDocumentWriter : LuceneTestCase
 	{
@@ -30,7 +30,7 @@ namespace Lucene.Net.Index
 		/// <exception cref="System.Exception"></exception>
 		public override void TearDown()
 		{
-			dir.Close();
+			dir.Dispose();
 			base.TearDown();
 		}
 
@@ -50,7 +50,7 @@ namespace Lucene.Net.Index
 			writer.AddDocument(testDoc);
 			writer.Commit();
 			SegmentCommitInfo info = writer.NewestSegment();
-			writer.Close();
+			writer.Dispose();
 			//After adding the document, we should be able to read it back in
 			SegmentReader reader = new SegmentReader(info, DirectoryReader.DEFAULT_TERMS_INDEX_DIVISOR
 				, NewIOContext(Random()));
@@ -90,7 +90,7 @@ namespace Lucene.Net.Index
 						 null));
 				}
 			}
-			reader.Close();
+			reader.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -106,7 +106,7 @@ namespace Lucene.Net.Index
 			writer.AddDocument(doc);
 			writer.Commit();
 			SegmentCommitInfo info = writer.NewestSegment();
-			writer.Close();
+			writer.Dispose();
 			SegmentReader reader = new SegmentReader(info, DirectoryReader.DEFAULT_TERMS_INDEX_DIVISOR
 				, NewIOContext(Random()));
 			DocsAndPositionsEnum termPositions = MultiFields.GetTermPositionsEnum(reader, MultiFields
@@ -117,7 +117,7 @@ namespace Lucene.Net.Index
 			AreEqual(2, freq);
 			AreEqual(0, termPositions.NextPosition());
 			AreEqual(502, termPositions.NextPosition());
-			reader.Close();
+			reader.Dispose();
 		}
 
 		private sealed class _Analyzer_108 : Analyzer
@@ -153,11 +153,11 @@ namespace Lucene.Net.Index
 			writer.AddDocument(doc);
 			writer.Commit();
 			SegmentCommitInfo info = writer.NewestSegment();
-			writer.Close();
+			writer.Dispose();
 			SegmentReader reader = new SegmentReader(info, DirectoryReader.DEFAULT_TERMS_INDEX_DIVISOR
 				, NewIOContext(Random()));
 			DocsAndPositionsEnum termPositions = MultiFields.GetTermPositionsEnum(reader, reader
-				.GetLiveDocs(), "f1", new BytesRef("a"));
+				.LiveDocs, "f1", new BytesRef("a"));
 			IsTrue(termPositions.NextDoc() != DocIdSetIterator.NO_MORE_DOCS
 				);
 			int freq = termPositions.Freq;
@@ -168,7 +168,7 @@ namespace Lucene.Net.Index
 			IsNull(termPositions.GetPayload());
 			AreEqual(7, termPositions.NextPosition());
 			IsNull(termPositions.GetPayload());
-			reader.Close();
+			reader.Dispose();
 		}
 
 		private sealed class _Analyzer_143 : Analyzer
@@ -256,7 +256,7 @@ namespace Lucene.Net.Index
 			writer.AddDocument(doc);
 			writer.Commit();
 			SegmentCommitInfo info = writer.NewestSegment();
-			writer.Close();
+			writer.Dispose();
 			SegmentReader reader = new SegmentReader(info, DirectoryReader.DEFAULT_TERMS_INDEX_DIVISOR
 				, NewIOContext(Random()));
 			DocsAndPositionsEnum termPositions = reader.TermPositionsEnum(new Term("preanalyzed"
@@ -276,7 +276,7 @@ namespace Lucene.Net.Index
 				);
 			AreEqual(1, termPositions.Freq);
 			AreEqual(2, termPositions.NextPosition());
-			reader.Close();
+			reader.Dispose();
 		}
 
 		private sealed class _TokenStream_223 : TokenStream
@@ -335,7 +335,7 @@ namespace Lucene.Net.Index
 			IndexWriter writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT
 				, new MockAnalyzer(Random())));
 			writer.AddDocument(doc);
-			writer.Close();
+			writer.Dispose();
 			TestUtil.CheckIndex(dir);
 			IndexReader reader = DirectoryReader.Open(dir);
 			// f1
@@ -348,7 +348,7 @@ namespace Lucene.Net.Index
 			IsNotNull(tfv2);
 			AreEqual("the 'with_tv' setting should rule!", 2, tfv2.Size
 				());
-			reader.Close();
+			reader.Dispose();
 		}
 
 		/// <summary>
@@ -367,14 +367,14 @@ namespace Lucene.Net.Index
 				();
 			// f1 has no norms
 			FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
-			customType.SetOmitNorms(true);
+			customType.OmitNorms = (true);
 			FieldType customType2 = new FieldType();
-			customType2.SetStored(true);
+			customType2.Stored = (true);
 			doc.Add(NewField("f1", "v1", customType));
 			doc.Add(NewField("f1", "v2", customType2));
 			// f2 has no TF
 			FieldType customType3 = new FieldType(TextField.TYPE_NOT_STORED);
-			customType3.SetIndexOptions(FieldInfo.IndexOptions.DOCS_ONLY);
+			customType3.IndexOptions = (FieldInfo.IndexOptions.DOCS_ONLY);
 			Field f = NewField("f2", "v1", customType3);
 			doc.Add(f);
 			doc.Add(NewField("f2", "v2", customType2));
@@ -383,7 +383,7 @@ namespace Lucene.Net.Index
 			writer.AddDocument(doc);
 			writer.ForceMerge(1);
 			// be sure to have a single segment
-			writer.Close();
+			writer.Dispose();
 			TestUtil.CheckIndex(dir);
 			SegmentReader reader = GetOnlySegmentReader(DirectoryReader.Open(dir));
 			FieldInfos fi = reader.GetFieldInfos();
@@ -398,7 +398,7 @@ namespace Lucene.Net.Index
 				());
 			AreEqual("omitTermFreqAndPositions field bit should be set for f2"
 				, FieldInfo.IndexOptions.DOCS_ONLY, fi.FieldInfo("f2").GetIndexOptions());
-			reader.Close();
+			reader.Dispose();
 		}
 	}
 }

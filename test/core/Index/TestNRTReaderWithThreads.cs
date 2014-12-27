@@ -11,7 +11,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestNRTReaderWithThreads : LuceneTestCase
 	{
@@ -30,7 +30,7 @@ namespace Lucene.Net.Index
 				(NewLogMergePolicy(false, 2)));
 			IndexReader reader = writer.GetReader();
 			// start pooling readers
-			reader.Close();
+			reader.Dispose();
 			TestNRTReaderWithThreads.RunThread[] indexThreads = new TestNRTReaderWithThreads.RunThread
 				[4];
 			for (int x = 0; x < indexThreads.Length; x++)
@@ -39,9 +39,9 @@ namespace Lucene.Net.Index
 				indexThreads[x].SetName("Thread " + x);
 				indexThreads[x].Start();
 			}
-			long startTime = Runtime.CurrentTimeMillis();
+			long startTime = DateTime.Now.CurrentTimeMillis();
 			long duration = 1000;
-			while ((Runtime.CurrentTimeMillis() - startTime) < duration)
+			while ((DateTime.Now.CurrentTimeMillis() - startTime) < duration)
 			{
 				Sharpen.Thread.Sleep(100);
 			}
@@ -66,8 +66,8 @@ namespace Lucene.Net.Index
 			}
 			//System.out.println("addCount:"+addCount);
 			//System.out.println("delCount:"+delCount);
-			writer.Close();
-			mainDir.Close();
+			writer.Dispose();
+			mainDir.Dispose();
 		}
 
 		public class RunThread : Sharpen.Thread
@@ -120,7 +120,7 @@ namespace Lucene.Net.Index
 								Term term = new Term("id", Sharpen.Extensions.ToString(id));
 								int count = TestIndexWriterReader.Count(term, reader);
 								this.writer.DeleteDocuments(term);
-								reader.Close();
+								reader.Dispose();
 								this.delCount += count;
 							}
 						}

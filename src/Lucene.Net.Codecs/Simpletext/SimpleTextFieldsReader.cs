@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
+using Lucene.Net.Support;
 using Lucene.Net.Util;
 using Lucene.Net.Util.Fst;
 
@@ -35,7 +37,7 @@ namespace Lucene.Net.Codecs.Simpletext
 			{
 				if (!success)
 				{
-					IOUtils.CloseWhileHandlingException(this);
+					IOUtils.CloseWhileHandlingException((IDisposable)this);
 				}
 			}
 		}
@@ -58,10 +60,9 @@ namespace Lucene.Net.Codecs.Simpletext
 				{
 					if (StringHelper.StartsWith(scratch, SimpleTextFieldsWriter.FIELD))
 					{
-						string fieldName = new string(scratch.bytes, scratch.offset + SimpleTextFieldsWriter
-							.FIELD.length, scratch.length - SimpleTextFieldsWriter.FIELD.length, StandardCharsets
-							.UTF_8);
-						fields.Put(fieldName, input.FilePointer);
+						string fieldName = Encoding.UTF8.GetString(scratch.bytes.ToBytes(), scratch.offset + SimpleTextFieldsWriter
+							.FIELD.length, scratch.length - SimpleTextFieldsWriter.FIELD.length);
+						fields[fieldName] = input.FilePointer;
 					}
 				}
 			}
@@ -79,8 +80,7 @@ namespace Lucene.Net.Codecs.Simpletext
 
 			private bool ended;
 
-			private readonly BytesRefFSTEnum<PairOutputs.Pair<long, PairOutputs.Pair<long, long
-				>>> fstEnum;
+            private readonly BytesRefFSTEnum<PairOutputs<long, PairOutputs.Pair<long, long>>.Pair<long, PairOutputs.Pair<long, long>>> fstEnum;
 
 			public SimpleTextTermsEnum(SimpleTextFieldsReader _enclosing, FST<PairOutputs.Pair
 				<long, PairOutputs.Pair<long, long>>> fst, FieldInfo.IndexOptions indexOptions)
@@ -98,11 +98,11 @@ namespace Lucene.Net.Codecs.Simpletext
 					 result = this.fstEnum.SeekExact(text);
 				if (result != null)
 				{
-					PairOutputs.Pair<long, PairOutputs.Pair<long, long>> pair1 = result.output;
-					PairOutputs.Pair<long, long> pair2 = pair1.output2;
-					this.docsStart = pair1.output1;
-					this.docFreq = pair2.output1;
-					this.totalTermFreq = pair2.output2;
+					PairOutputs.Pair<long, PairOutputs.Pair<long, long>> pair1 = result.Output;
+					PairOutputs.Pair<long, long> pair2 = pair1.Output2;
+					this.docsStart = pair1.Output1;
+					this.docFreq = pair2.Output1;
+					this.totalTermFreq = pair2.Output2;
 					return true;
 				}
 				else

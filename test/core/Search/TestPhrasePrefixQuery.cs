@@ -62,7 +62,7 @@ namespace Lucene.Net.Search
 			writer.AddDocument(doc4);
 			writer.AddDocument(doc5);
 			IndexReader reader = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 
 			IndexSearcher searcher = NewSearcher(reader);
 			
@@ -101,8 +101,8 @@ namespace Lucene.Net.Search
 			
 			result = searcher.Search(query2, null, 1000).ScoreDocs;
 			Assert.AreEqual(0, result.Length);
-			reader.Close();
-			indexStore.Close();
+			reader.Dispose();
+			indexStore.Dispose();
 		}
 	}
 }

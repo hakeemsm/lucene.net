@@ -95,7 +95,7 @@ namespace Lucene.Net.Test.Analysis
             // 2) now add the document to the index and verify if all tokens are indexed
             //    don't reset the stream here, the DocumentWriter should do that implicitly
             writer.AddDocument(doc);
-            writer.Close();
+            writer.Dispose();
 
 			IndexReader reader = writer.GetReader();
 			DocsAndPositionsEnum termPositions = MultiFields.GetTermPositionsEnum(reader, MultiFields
@@ -116,7 +116,7 @@ namespace Lucene.Net.Test.Analysis
             AreEqual(1, termPositions.Freq);
             AreEqual(2, termPositions.NextPosition());
             reader.Dispose();
-			writer.Close();
+			writer.Dispose();
             // 3) reset stream and consume tokens again
             stream.Reset();
             checkTokens(stream);

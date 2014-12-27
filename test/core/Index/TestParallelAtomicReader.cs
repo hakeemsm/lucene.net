@@ -13,7 +13,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestParallelAtomicReader : LuceneTestCase
 	{
@@ -44,15 +44,15 @@ namespace Lucene.Net.Index
 			bq1.Add(new TermQuery(new Term("f1", "v1")), BooleanClause.Occur.MUST);
 			bq1.Add(new TermQuery(new Term("f4", "v1")), BooleanClause.Occur.MUST);
 			QueryTest(bq1);
-			single.GetIndexReader().Close();
+			single.IndexReader.Dispose();
 			single = null;
-			parallel.GetIndexReader().Close();
+			parallel.IndexReader.Dispose();
 			parallel = null;
-			dir.Close();
+			dir.Dispose();
 			dir = null;
-			dir1.Close();
+			dir1.Dispose();
 			dir1 = null;
-			dir2.Close();
+			dir2.Dispose();
 			dir2 = null;
 		}
 
@@ -70,9 +70,9 @@ namespace Lucene.Net.Index
 			IsNotNull(fieldInfos.FieldInfo("f2"));
 			IsNotNull(fieldInfos.FieldInfo("f3"));
 			IsNotNull(fieldInfos.FieldInfo("f4"));
-			pr.Close();
-			dir1.Close();
-			dir2.Close();
+			pr.Dispose();
+			dir1.Dispose();
+			dir2.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -89,11 +89,11 @@ namespace Lucene.Net.Index
 			// check RefCounts
 			AreEqual(1, ir1.GetRefCount());
 			AreEqual(1, ir2.GetRefCount());
-			pr.Close();
+			pr.Dispose();
 			AreEqual(0, ir1.GetRefCount());
 			AreEqual(0, ir2.GetRefCount());
-			dir1.Close();
-			dir2.Close();
+			dir1.Dispose();
+			dir2.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -108,15 +108,15 @@ namespace Lucene.Net.Index
 			// check RefCounts
 			AreEqual(2, ir1.GetRefCount());
 			AreEqual(2, ir2.GetRefCount());
-			pr.Close();
+			pr.Dispose();
 			AreEqual(1, ir1.GetRefCount());
 			AreEqual(1, ir2.GetRefCount());
-			ir1.Close();
-			ir2.Close();
+			ir1.Dispose();
+			ir2.Dispose();
 			AreEqual(0, ir1.GetRefCount());
 			AreEqual(0, ir2.GetRefCount());
-			dir1.Close();
-			dir2.Close();
+			dir1.Dispose();
+			dir2.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -127,7 +127,7 @@ namespace Lucene.Net.Index
 			// with overlapping
 			ParallelAtomicReader pr = new ParallelAtomicReader(true, new AtomicReader[] { ir1
 				 }, new AtomicReader[] { ir1 });
-			ir1.Close();
+			ir1.Dispose();
 			try
 			{
 				pr.Document(0);
@@ -139,8 +139,8 @@ namespace Lucene.Net.Index
 			}
 			// pass
 			// noop:
-			pr.Close();
-			dir1.Close();
+			pr.Dispose();
+			dir1.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -156,7 +156,7 @@ namespace Lucene.Net.Index
 				);
 			d3.Add(NewTextField("f3", "v1", Field.Store.YES));
 			w2.AddDocument(d3);
-			w2.Close();
+			w2.Dispose();
 			AtomicReader ir1 = SlowCompositeReaderWrapper.Wrap(DirectoryReader.Open(dir1));
 			AtomicReader ir2 = SlowCompositeReaderWrapper.Wrap(DirectoryReader.Open(dir2));
 			try
@@ -183,10 +183,10 @@ namespace Lucene.Net.Index
 			// check RefCounts
 			AreEqual(1, ir1.GetRefCount());
 			AreEqual(1, ir2.GetRefCount());
-			ir1.Close();
-			ir2.Close();
-			dir1.Close();
-			dir2.Close();
+			ir1.Dispose();
+			ir2.Dispose();
+			dir1.Dispose();
+			dir2.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -208,7 +208,7 @@ namespace Lucene.Net.Index
 			IsNotNull(pr.Terms("f2"));
 			IsNotNull(pr.Terms("f3"));
 			IsNotNull(pr.Terms("f4"));
-			pr.Close();
+			pr.Dispose();
 			// no stored fields at all
 			pr = new ParallelAtomicReader(false, new AtomicReader[] { ir2 }, new AtomicReader
 				[0]);
@@ -221,7 +221,7 @@ namespace Lucene.Net.Index
 			IsNull(pr.Terms("f2"));
 			IsNotNull(pr.Terms("f3"));
 			IsNotNull(pr.Terms("f4"));
-			pr.Close();
+			pr.Dispose();
 			// without overlapping
 			pr = new ParallelAtomicReader(true, new AtomicReader[] { ir2 }, new AtomicReader[
 				] { ir1 });
@@ -234,7 +234,7 @@ namespace Lucene.Net.Index
 			IsNull(pr.Terms("f2"));
 			IsNotNull(pr.Terms("f3"));
 			IsNotNull(pr.Terms("f4"));
-			pr.Close();
+			pr.Dispose();
 			// no main readers
 			try
 			{
@@ -246,23 +246,23 @@ namespace Lucene.Net.Index
 			{
 			}
 			// pass
-			dir1.Close();
-			dir2.Close();
+			dir1.Dispose();
+			dir2.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
 		private void QueryTest(Query query)
 		{
-			ScoreDoc[] parallelHits = parallel.Search(query, null, 1000).scoreDocs;
-			ScoreDoc[] singleHits = single.Search(query, null, 1000).scoreDocs;
+			ScoreDoc[] parallelHits = parallel.Search(query, null, 1000).ScoreDocs;
+			ScoreDoc[] singleHits = single.Search(query, null, 1000).ScoreDocs;
 			AreEqual(parallelHits.Length, singleHits.Length);
 			for (int i = 0; i < parallelHits.Length; i++)
 			{
 				AreEqual(parallelHits[i].score, singleHits[i].score, 0.001f
 					);
-				Lucene.Net.Documents.Document docParallel = parallel.Doc(parallelHits[i].doc
+				Lucene.Net.Documents.Document docParallel = parallel.Doc(parallelHits[i].Doc
 					);
-				Lucene.Net.Documents.Document docSingle = single.Doc(singleHits[i].doc);
+				Lucene.Net.Documents.Document docSingle = single.Doc(singleHits[i].Doc);
 				AreEqual(docParallel.Get("f1"), docSingle.Get("f1"));
 				AreEqual(docParallel.Get("f2"), docSingle.Get("f2"));
 				AreEqual(docParallel.Get("f3"), docSingle.Get("f3"));
@@ -291,7 +291,7 @@ namespace Lucene.Net.Index
 			d2.Add(NewTextField("f3", "v2", Field.Store.YES));
 			d2.Add(NewTextField("f4", "v2", Field.Store.YES));
 			w.AddDocument(d2);
-			w.Close();
+			w.Dispose();
 			DirectoryReader ir = DirectoryReader.Open(dir);
 			return NewSearcher(ir);
 		}
@@ -325,7 +325,7 @@ namespace Lucene.Net.Index
 			d2.Add(NewTextField("f1", "v2", Field.Store.YES));
 			d2.Add(NewTextField("f2", "v2", Field.Store.YES));
 			w1.AddDocument(d2);
-			w1.Close();
+			w1.Dispose();
 			return dir1;
 		}
 
@@ -345,7 +345,7 @@ namespace Lucene.Net.Index
 			d4.Add(NewTextField("f3", "v2", Field.Store.YES));
 			d4.Add(NewTextField("f4", "v2", Field.Store.YES));
 			w2.AddDocument(d4);
-			w2.Close();
+			w2.Dispose();
 			return dir2;
 		}
 	}

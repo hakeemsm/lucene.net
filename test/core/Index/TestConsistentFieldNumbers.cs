@@ -11,7 +11,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestConsistentFieldNumbers : LuceneTestCase
 	{
@@ -31,7 +31,7 @@ namespace Lucene.Net.Index
 				writer.AddDocument(d1);
 				if (i == 1)
 				{
-					writer.Close();
+					writer.Dispose();
 					writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 						(Random())).SetMergePolicy(NoMergePolicy.COMPOUND_FILES));
 				}
@@ -48,7 +48,7 @@ namespace Lucene.Net.Index
 				d2.Add(new TextField("f3", "third field", Field.Store.NO));
 				d2.Add(new TextField("f4", "fourth field", Field.Store.NO));
 				writer.AddDocument(d2);
-				writer.Close();
+				writer.Dispose();
 				SegmentInfos sis = new SegmentInfos();
 				sis.Read(dir);
 				AreEqual(2, sis.Size());
@@ -63,7 +63,7 @@ namespace Lucene.Net.Index
 				writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 					(Random())));
 				writer.ForceMerge(1);
-				writer.Close();
+				writer.Dispose();
 				sis = new SegmentInfos();
 				sis.Read(dir);
 				AreEqual(1, sis.Size());
@@ -72,7 +72,7 @@ namespace Lucene.Net.Index
 				AreEqual("f2", fis3.FieldInfo(1).name);
 				AreEqual("f3", fis3.FieldInfo(2).name);
 				AreEqual("f4", fis3.FieldInfo(3).name);
-				dir.Close();
+				dir.Dispose();
 			}
 		}
 
@@ -89,7 +89,7 @@ namespace Lucene.Net.Index
 			d1.Add(new TextField("f1", "first field", Field.Store.YES));
 			d1.Add(new TextField("f2", "second field", Field.Store.YES));
 			writer.AddDocument(d1);
-			writer.Close();
+			writer.Dispose();
 			writer = new IndexWriter(dir2, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random())).SetMergePolicy(NoMergePolicy.COMPOUND_FILES));
 			Lucene.Net.Documents.Document d2 = new Lucene.Net.Documents.Document(
@@ -101,11 +101,11 @@ namespace Lucene.Net.Index
 			d2.Add(new TextField("f3", "third field", Field.Store.YES));
 			d2.Add(new TextField("f4", "fourth field", Field.Store.YES));
 			writer.AddDocument(d2);
-			writer.Close();
+			writer.Dispose();
 			writer = new IndexWriter(dir1, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random())).SetMergePolicy(NoMergePolicy.COMPOUND_FILES));
 			writer.AddIndexes(dir2);
-			writer.Close();
+			writer.Dispose();
 			SegmentInfos sis = new SegmentInfos();
 			sis.Read(dir1);
 			AreEqual(2, sis.Size());
@@ -118,8 +118,8 @@ namespace Lucene.Net.Index
 			AreEqual("f1", fis2.FieldInfo(1).name);
 			AreEqual("f3", fis2.FieldInfo(2).name);
 			AreEqual("f4", fis2.FieldInfo(3).name);
-			dir1.Close();
-			dir2.Close();
+			dir1.Dispose();
+			dir2.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -136,7 +136,7 @@ namespace Lucene.Net.Index
 					d.Add(new TextField("f1", "d1 first field", Field.Store.YES));
 					d.Add(new TextField("f2", "d1 second field", Field.Store.YES));
 					writer.AddDocument(d);
-					writer.Close();
+					writer.Dispose();
 					SegmentInfos sis = new SegmentInfos();
 					sis.Read(dir);
 					AreEqual(1, sis.Size());
@@ -152,7 +152,7 @@ namespace Lucene.Net.Index
 					d.Add(new TextField("f1", "d2 first field", Field.Store.YES));
 					d.Add(new StoredField("f3", new byte[] { 1, 2, 3 }));
 					writer.AddDocument(d);
-					writer.Close();
+					writer.Dispose();
 					SegmentInfos sis = new SegmentInfos();
 					sis.Read(dir);
 					AreEqual(2, sis.Size());
@@ -173,7 +173,7 @@ namespace Lucene.Net.Index
 					d.Add(new TextField("f2", "d3 second field", Field.Store.YES));
 					d.Add(new StoredField("f3", new byte[] { 1, 2, 3, 4, 5 }));
 					writer.AddDocument(d);
-					writer.Close();
+					writer.Dispose();
 					SegmentInfos sis = new SegmentInfos();
 					sis.Read(dir);
 					AreEqual(3, sis.Size());
@@ -197,13 +197,13 @@ namespace Lucene.Net.Index
 					// nuke the first segment entirely so that the segment with gaps is
 					// loaded first!
 					writer.ForceMergeDeletes();
-					writer.Close();
+					writer.Dispose();
 				}
 				IndexWriter writer_1 = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT
 					, new MockAnalyzer(Random())).SetMergePolicy(new LogByteSizeMergePolicy()).SetInfoStream
 					(new FailOnNonBulkMergesInfoStream()));
 				writer_1.ForceMerge(1);
-				writer_1.Close();
+				writer_1.Dispose();
 				SegmentInfos sis_1 = new SegmentInfos();
 				sis_1.Read(dir);
 				AreEqual(1, sis_1.Size());
@@ -211,7 +211,7 @@ namespace Lucene.Net.Index
 				AreEqual("f1", fis1_1.FieldInfo(0).name);
 				AreEqual("f2", fis1_1.FieldInfo(1).name);
 				AreEqual("f3", fis1_1.FieldInfo(2).name);
-				dir.Close();
+				dir.Dispose();
 			}
 		}
 
@@ -243,7 +243,7 @@ namespace Lucene.Net.Index
 				writer.AddDocument(d);
 			}
 			writer.ForceMerge(1);
-			writer.Close();
+			writer.Dispose();
 			SegmentInfos sis = new SegmentInfos();
 			sis.Read(dir);
 			foreach (SegmentCommitInfo si in sis)
@@ -257,7 +257,7 @@ namespace Lucene.Net.Index
 						());
 				}
 			}
-			dir.Close();
+			dir.Dispose();
 		}
 
 		private Field GetField(int number)

@@ -93,16 +93,16 @@ namespace Lucene.Net.Search
 			
 			// delete a document:
 			iw.DeleteDocuments(new Term("key", "one"));
-			ir.Close();
+			ir.Dispose();
 			ir = DirectoryReader.Open(iw, true);
 			@is = NewSearcher(ir);
 			hits = is_Renamed.Search(new MatchAllDocsQuery(), null, 1000).ScoreDocs;
 			Assert.AreEqual(2, hits.Length);
 			
 			
-			is_Renamed.Close();
-			ir.Close();
-			dir.Close();
+			is_Renamed.Dispose();
+			ir.Dispose();
+			dir.Dispose();
 		}
 		
 		[Test]

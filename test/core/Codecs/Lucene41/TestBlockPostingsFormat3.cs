@@ -88,7 +88,7 @@ namespace Lucene.Net.Test.Codecs.Lucene41
 				field8.StringValue = stringValue;
 				iw.AddDocument(doc);
 			}
-			iw.Close();
+			iw.Dispose();
 			Verify(dir);
 			TestUtil.CheckIndex(dir);
 			// for some extra coverage, checkIndex before we forceMerge
@@ -97,7 +97,7 @@ namespace Lucene.Net.Test.Codecs.Lucene41
 			iw2.ForceMerge(1);
 			iw2.Dispose();
 			Verify(dir);
-			dir.Close();
+			dir.Dispose();
 		}
 
 		private sealed class AnonymousAnalyzer1 : Analyzer

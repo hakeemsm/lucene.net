@@ -61,14 +61,14 @@ namespace Lucene.Net.Store
 				string ext = FileSwitchDirectory.GetExtension(files[x_1]);
 				IsFalse(fileExtensions.Contains(ext));
 			}
-			reader.Close();
-			writer.Close();
+			reader.Dispose();
+			writer.Dispose();
 			files = fsd.ListAll();
 			for (int i = 0; i < files.Length; i++)
 			{
 				IsNotNull(files[i]);
 			}
-			fsd.Close();
+			fsd.Dispose();
 			OLD_FORMAT_IMPERSONATION_IS_ACTIVE = oldValue;
 		}
 
@@ -110,7 +110,7 @@ namespace Lucene.Net.Store
 			{
 			}
 			// expected
-			dir.Close();
+			dir.Dispose();
 		}
 
 		// LUCENE-3380 test that we can add a file, and then when we call list() we get it back
@@ -121,13 +121,13 @@ namespace Lucene.Net.Store
 			string name = "file";
 			try
 			{
-				dir.CreateOutput(name, NewIOContext(Random())).Close();
+				dir.CreateOutput(name, NewIOContext(Random())).Dispose();
 				IsTrue(SlowFileExists(dir, name));
 				IsTrue(Arrays.AsList(dir.ListAll()).Contains(name));
 			}
 			finally
 			{
-				dir.Close();
+				dir.Dispose();
 			}
 		}
 
@@ -141,16 +141,16 @@ namespace Lucene.Net.Store
 			CreateSequenceFile(newDir, "d1", unchecked((byte)0), 15);
 			IndexOutput @out = csw.CreateOutput("d.xyz", NewIOContext(Random()));
 			@out.WriteInt(0);
-			@out.Close();
+			@out.Dispose();
 			AreEqual(1, csw.ListAll().Length);
 			AreEqual("d.xyz", csw.ListAll()[0]);
-			csw.Close();
+			csw.Dispose();
 			CompoundFileDirectory cfr = new CompoundFileDirectory(newDir, "d.cfs", NewIOContext
 				(Random()), false);
 			AreEqual(1, cfr.ListAll().Length);
 			AreEqual("d.xyz", cfr.ListAll()[0]);
-			cfr.Close();
-			newDir.Close();
+			cfr.Dispose();
+			newDir.Dispose();
 		}
 
 		/// <summary>Creates a file of the specified size with sequential data.</summary>
@@ -168,7 +168,7 @@ namespace Lucene.Net.Store
 				os.WriteByte(start);
 				start++;
 			}
-			os.Close();
+			os.Dispose();
 		}
 	}
 }

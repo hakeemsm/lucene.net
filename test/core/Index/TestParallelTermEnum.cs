@@ -12,7 +12,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestParallelTermEnum : LuceneTestCase
 	{
@@ -36,7 +36,7 @@ namespace Lucene.Net.Index
 			doc.Add(NewTextField("field1", "the quick brown fox jumps", Field.Store.YES));
 			doc.Add(NewTextField("field2", "the quick brown fox jumps", Field.Store.YES));
 			iw1.AddDocument(doc);
-			iw1.Close();
+			iw1.Dispose();
 			rd2 = NewDirectory();
 			IndexWriter iw2 = new IndexWriter(rd2, NewIndexWriterConfig(TEST_VERSION_CURRENT, 
 				new MockAnalyzer(Random())));
@@ -46,7 +46,7 @@ namespace Lucene.Net.Index
 			doc.Add(NewTextField("field3", "the fox jumps over the lazy dog", Field.Store.YES
 				));
 			iw2.AddDocument(doc);
-			iw2.Close();
+			iw2.Dispose();
 			this.ir1 = SlowCompositeReaderWrapper.Wrap(DirectoryReader.Open(rd1));
 			this.ir2 = SlowCompositeReaderWrapper.Wrap(DirectoryReader.Open(rd2));
 		}
@@ -54,10 +54,10 @@ namespace Lucene.Net.Index
 		/// <exception cref="System.Exception"></exception>
 		public override void TearDown()
 		{
-			ir1.Close();
-			ir2.Close();
-			rd1.Close();
-			rd2.Close();
+			ir1.Dispose();
+			ir2.Dispose();
+			rd1.Dispose();
+			rd2.Dispose();
 			base.TearDown();
 		}
 
@@ -83,7 +83,7 @@ namespace Lucene.Net.Index
 		public virtual void Test1()
 		{
 			ParallelAtomicReader pr = new ParallelAtomicReader(ir1, ir2);
-			Bits liveDocs = pr.GetLiveDocs();
+			Bits liveDocs = pr.LiveDocs;
 			Fields fields = pr.Fields();
 			Iterator<string> fe = fields.Iterator();
 			string f = fe.Next();

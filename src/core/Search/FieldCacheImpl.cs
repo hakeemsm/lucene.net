@@ -1660,12 +1660,12 @@ namespace Lucene.Net.Search
 
         // TODO: this if DocTermsIndex was already created, we
         // should share it...
-        public BinaryDocValues GetTerms(AtomicReader reader, string field)
+        public BinaryDocValues GetTerms(AtomicReader reader, string field, bool setDocsWithField)
         {
-            return GetTerms(reader, field, PackedInts.FAST);
+            return GetTerms(reader, field, setDocsWithField, PackedInts.FAST);
         }
 
-        public BinaryDocValues GetTerms(AtomicReader reader, string field, float acceptableOverheadRatio)
+        public BinaryDocValues GetTerms(AtomicReader reader, string field, bool setDocsWithField, float acceptableOverheadRatio)
         {
             BinaryDocValues valuesIn = reader.GetBinaryDocValues(field);
             if (valuesIn == null)

@@ -50,11 +50,11 @@ namespace Lucene.Net.Store
 						DirectoryReader r2 = DirectoryReader.OpenIfChanged(r);
 						if (r2 != null)
 						{
-							r.Close();
+							r.Dispose();
 							r = r2;
 						}
 					}
-					AreEqual(1 + docCount, r.NumDocs());
+					AreEqual(1 + docCount, r.NumDocs);
 					IndexSearcher s = NewSearcher(r);
 					// Just make sure search can run; we can't 
 					//HM:revisit 
@@ -66,10 +66,10 @@ namespace Lucene.Net.Store
 			// System.out.println("tot hits " + hits.TotalHits);
 			if (r != null)
 			{
-				r.Close();
+				r.Dispose();
 			}
 			// Close should force cache to clear since all files are sync'd
-			w.Close();
+			w.Dispose();
 			string[] cachedFiles = cachedDir.ListCachedFiles();
 			foreach (string file in cachedFiles)
 			{
@@ -81,9 +81,9 @@ namespace Lucene.Net.Store
 			{
 				AreEqual(1, r.DocFreq(new Term("docid", id)));
 			}
-			r.Close();
-			cachedDir.Close();
-			docs.Close();
+			r.Dispose();
+			cachedDir.Dispose();
+			docs.Dispose();
 		}
 
 		// NOTE: not a test; just here to make sure the code frag
@@ -102,10 +102,10 @@ namespace Lucene.Net.Store
 		public virtual void TestDeleteFile()
 		{
 			Directory dir = new NRTCachingDirectory(NewDirectory(), 2.0, 25.0);
-			dir.CreateOutput("foo.txt", IOContext.DEFAULT).Close();
+			dir.CreateOutput("foo.txt", IOContext.DEFAULT).Dispose();
 			dir.DeleteFile("foo.txt");
 			AreEqual(0, dir.ListAll().Length);
-			dir.Close();
+			dir.Dispose();
 		}
 
 		// LUCENE-3382 -- make sure we get exception if the directory really does not exist.
@@ -124,7 +124,7 @@ namespace Lucene.Net.Store
 			{
 			}
 			// expected
-			dir.Close();
+			dir.Dispose();
 		}
 
 		// LUCENE-3382 test that we can add a file, and then when we call list() we get it back
@@ -136,13 +136,13 @@ namespace Lucene.Net.Store
 			string name = "file";
 			try
 			{
-				dir.CreateOutput(name, NewIOContext(Random())).Close();
+				dir.CreateOutput(name, NewIOContext(Random())).Dispose();
 				IsTrue(SlowFileExists(dir, name));
 				IsTrue(Arrays.AsList(dir.ListAll()).Contains(name));
 			}
 			finally
 			{
-				dir.Close();
+				dir.Dispose();
 			}
 		}
 
@@ -156,16 +156,16 @@ namespace Lucene.Net.Store
 			CreateSequenceFile(newDir, "d1", unchecked((byte)0), 15);
 			IndexOutput @out = csw.CreateOutput("d.xyz", NewIOContext(Random()));
 			@out.WriteInt(0);
-			@out.Close();
+			@out.Dispose();
 			AreEqual(1, csw.ListAll().Length);
 			AreEqual("d.xyz", csw.ListAll()[0]);
-			csw.Close();
+			csw.Dispose();
 			CompoundFileDirectory cfr = new CompoundFileDirectory(newDir, "d.cfs", NewIOContext
 				(Random()), false);
 			AreEqual(1, cfr.ListAll().Length);
 			AreEqual("d.xyz", cfr.ListAll()[0]);
-			cfr.Close();
-			newDir.Close();
+			cfr.Dispose();
+			newDir.Dispose();
 		}
 
 		/// <summary>Creates a file of the specified size with sequential data.</summary>
@@ -183,7 +183,7 @@ namespace Lucene.Net.Store
 				os.WriteByte(start);
 				start++;
 			}
-			os.Close();
+			os.Dispose();
 		}
 	}
 }

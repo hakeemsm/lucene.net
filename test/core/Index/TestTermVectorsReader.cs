@@ -16,7 +16,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestTermVectorsReader : LuceneTestCase
 	{
@@ -134,14 +134,14 @@ namespace Lucene.Net.Index
 			}
 			writer.Commit();
 			seg = writer.NewestSegment();
-			writer.Close();
+			writer.Dispose();
 			fieldInfos = SegmentReader.ReadFieldInfos(seg);
 		}
 
 		/// <exception cref="System.Exception"></exception>
 		public override void TearDown()
 		{
-			dir.Close();
+			dir.Dispose();
 			base.TearDown();
 		}
 
@@ -222,12 +222,12 @@ namespace Lucene.Net.Index
 		{
 			//Check to see the files were created properly in setup
 			DirectoryReader reader = DirectoryReader.Open(dir);
-			foreach (AtomicReaderContext ctx in reader.Leaves())
+			foreach (AtomicReaderContext ctx in reader.Leaves)
 			{
-				SegmentReader sr = (SegmentReader)((AtomicReader)ctx.Reader());
+				SegmentReader sr = (SegmentReader)((AtomicReader)ctx.Reader);
 				IsTrue(sr.GetFieldInfos().HasVectors());
 			}
-			reader.Close();
+			reader.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -251,7 +251,7 @@ namespace Lucene.Net.Index
 				}
 				IsNull(termsEnum.Next());
 			}
-			reader.Close();
+			reader.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -284,7 +284,7 @@ namespace Lucene.Net.Index
 				}
 				IsNull(termsEnum.Next());
 			}
-			reader.Close();
+			reader.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -348,7 +348,7 @@ namespace Lucene.Net.Index
 				IsNull(termsEnum.DocsAndPositions(null, null));
 			}
 			// no pos
-			reader.Close();
+			reader.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -390,7 +390,7 @@ namespace Lucene.Net.Index
 				}
 				AreEqual(DocIdSetIterator.NO_MORE_DOCS, dpEnum.NextDoc());
 			}
-			reader.Close();
+			reader.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -463,8 +463,8 @@ namespace Lucene.Net.Index
 				AreEqual("cannot index term vector payloads when term vectors are not indexed (field=\"field\")"
 					, iae.Message);
 			}
-			w.Close();
-			dir.Close();
+			w.Dispose();
+			dir.Dispose();
 		}
 	}
 }

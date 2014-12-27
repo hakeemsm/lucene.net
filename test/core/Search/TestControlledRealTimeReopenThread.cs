@@ -342,10 +342,10 @@ namespace Lucene.Net.Search
 			{
 				System.Console.Out.WriteLine("TEST: now close SearcherManagers");
 			}
-			nrtDeletesThread.Close();
-			nrtDeletes.Close();
-			nrtNoDeletesThread.Close();
-			nrtNoDeletes.Close();
+			nrtDeletesThread.Dispose();
+			nrtDeletes.Dispose();
+			nrtNoDeletesThread.Dispose();
+			nrtNoDeletes.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -381,7 +381,7 @@ namespace Lucene.Net.Search
 			IndexSearcher searcher = manager.Acquire();
 			try
 			{
-				AreEqual(2, searcher.GetIndexReader().NumDocs());
+				AreEqual(2, searcher.IndexReader.NumDocs);
 			}
 			finally
 			{
@@ -405,7 +405,7 @@ namespace Lucene.Net.Search
 				waiter.Interrupt();
 				Fail("thread deadlocked on waitForGeneration");
 			}
-			thread.Close();
+			thread.Dispose();
 			thread.Join();
 			IOUtils.Close(manager, _writer, d);
 		}
@@ -533,9 +533,9 @@ namespace Lucene.Net.Search
 			{
 			}
 			// expected
-			w.Close();
-			other.Close();
-			dir.Close();
+			w.Dispose();
+			other.Dispose();
+			dir.Dispose();
 		}
 
 		private sealed class _SearcherFactory_417 : SearcherFactory
@@ -567,9 +567,9 @@ namespace Lucene.Net.Search
 			IsFalse(afterRefreshCalled.Get());
 			sm.MaybeRefreshBlocking();
 			IsTrue(afterRefreshCalled.Get());
-			sm.Close();
-			iw.Close();
-			dir.Close();
+			sm.Dispose();
+			iw.Dispose();
+			dir.Dispose();
 		}
 
 		private sealed class _RefreshListener_440 : ReferenceManager.RefreshListener
@@ -639,10 +639,10 @@ namespace Lucene.Net.Search
 				Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 				d.Add(new TextField("count", i_1 + string.Empty, Field.Store.NO));
 				d.Add(new TextField("content", content, Field.Store.YES));
-				long start = Runtime.CurrentTimeMillis();
+				long start = DateTime.Now.CurrentTimeMillis();
 				long l = tiw.AddDocument(d);
 				controlledRealTimeReopenThread.WaitForGeneration(l);
-				long wait = Runtime.CurrentTimeMillis() - start;
+				long wait = DateTime.Now.CurrentTimeMillis() - start;
 				IsTrue("waited too long for generation " + wait, wait < (maxStaleSecs
 					 * 1000));
 				IndexSearcher searcher = sm.Acquire();
@@ -655,10 +655,10 @@ namespace Lucene.Net.Search
 			{
 				commitThread_1.Join();
 			}
-			controlledRealTimeReopenThread.Close();
-			sm.Close();
-			iw.Close();
-			dir.Close();
+			controlledRealTimeReopenThread.Dispose();
+			sm.Dispose();
+			iw.Dispose();
+			dir.Dispose();
 		}
 
 		private sealed class _Runnable_496 : Runnable

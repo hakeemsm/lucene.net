@@ -42,16 +42,16 @@ namespace Lucene.Net.Search
 				w.AddDocument(doc);
 			}
 			s = NewSearcher(w.GetReader());
-			w.Close();
+			w.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
 		[AfterClass]
 		public static void Finish()
 		{
-			s.GetIndexReader().Close();
+			s.IndexReader.Dispose();
 			s = null;
-			dir.Close();
+			dir.Dispose();
 			dir = null;
 		}
 
@@ -137,7 +137,7 @@ namespace Lucene.Net.Search
 			TestSubScorerFreqs.CountingCollector c = new TestSubScorerFreqs.CountingCollector
 				(TopScoreDocCollector.Create(10, true));
 			s.Search(q, null, c);
-			int maxDocs = s.GetIndexReader().MaxDoc;
+			int maxDocs = s.IndexReader.MaxDoc;
 			AreEqual(maxDocs, c.docCounts.Count);
 			for (int i = 0; i < maxDocs; i++)
 			{
@@ -174,7 +174,7 @@ namespace Lucene.Net.Search
 				TestSubScorerFreqs.CountingCollector c = new TestSubScorerFreqs.CountingCollector
 					(TopScoreDocCollector.Create(10, true), occur);
 				s.Search(query, null, c);
-				int maxDocs = s.GetIndexReader().MaxDoc;
+				int maxDocs = s.IndexReader.MaxDoc;
 				AreEqual(maxDocs, c.docCounts.Count);
 				bool includeOptional = occur.Contains("SHOULD");
 				for (int i = 0; i < maxDocs; i++)
@@ -209,7 +209,7 @@ namespace Lucene.Net.Search
 			TestSubScorerFreqs.CountingCollector c = new TestSubScorerFreqs.CountingCollector
 				(TopScoreDocCollector.Create(10, true));
 			s.Search(q, null, c);
-			int maxDocs = s.GetIndexReader().MaxDoc;
+			int maxDocs = s.IndexReader.MaxDoc;
 			AreEqual(maxDocs, c.docCounts.Count);
 			for (int i = 0; i < maxDocs; i++)
 			{

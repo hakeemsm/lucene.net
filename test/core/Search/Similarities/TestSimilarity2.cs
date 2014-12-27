@@ -64,7 +64,7 @@ namespace Lucene.Net.Search.Similarities
 			Directory dir = NewDirectory();
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir);
 			IndexReader ir = iw.GetReader();
-			iw.Close();
+			iw.Dispose();
 			IndexSearcher @is = NewSearcher(ir);
 			foreach (Similarity sim in sims)
 			{
@@ -72,8 +72,8 @@ namespace Lucene.Net.Search.Similarities
 				AreEqual(0, @is.Search(new TermQuery(new Term("foo", "bar"
 					)), 10).TotalHits);
 			}
-			ir.Close();
-			dir.Close();
+			ir.Dispose();
+			dir.Dispose();
 		}
 
 		/// <summary>similar to the above, but ORs the query with a real field</summary>
@@ -87,7 +87,7 @@ namespace Lucene.Net.Search.Similarities
 			doc.Add(NewTextField("foo", "bar", Field.Store.NO));
 			iw.AddDocument(doc);
 			IndexReader ir = iw.GetReader();
-			iw.Close();
+			iw.Dispose();
 			IndexSearcher @is = NewSearcher(ir);
 			foreach (Similarity sim in sims)
 			{
@@ -97,8 +97,8 @@ namespace Lucene.Net.Search.Similarities
 				query.Add(new TermQuery(new Term("bar", "baz")), BooleanClause.Occur.SHOULD);
 				AreEqual(1, @is.Search(query, 10).TotalHits);
 			}
-			ir.Close();
-			dir.Close();
+			ir.Dispose();
+			dir.Dispose();
 		}
 
 		/// <summary>similar to the above, however the field exists, but we query with a term that doesnt exist too
@@ -113,7 +113,7 @@ namespace Lucene.Net.Search.Similarities
 			doc.Add(NewTextField("foo", "bar", Field.Store.NO));
 			iw.AddDocument(doc);
 			IndexReader ir = iw.GetReader();
-			iw.Close();
+			iw.Dispose();
 			IndexSearcher @is = NewSearcher(ir);
 			foreach (Similarity sim in sims)
 			{
@@ -123,8 +123,8 @@ namespace Lucene.Net.Search.Similarities
 				query.Add(new TermQuery(new Term("foo", "baz")), BooleanClause.Occur.SHOULD);
 				AreEqual(1, @is.Search(query, 10).TotalHits);
 			}
-			ir.Close();
-			dir.Close();
+			ir.Dispose();
+			dir.Dispose();
 		}
 
 		/// <summary>make sure we can retrieve when norms are disabled</summary>
@@ -136,12 +136,12 @@ namespace Lucene.Net.Search.Similarities
 			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
-			ft.SetOmitNorms(true);
+			ft.OmitNorms = (true);
 			ft.Freeze();
 			doc.Add(NewField("foo", "bar", ft));
 			iw.AddDocument(doc);
 			IndexReader ir = iw.GetReader();
-			iw.Close();
+			iw.Dispose();
 			IndexSearcher @is = NewSearcher(ir);
 			foreach (Similarity sim in sims)
 			{
@@ -150,8 +150,8 @@ namespace Lucene.Net.Search.Similarities
 				query.Add(new TermQuery(new Term("foo", "bar")), BooleanClause.Occur.SHOULD);
 				AreEqual(1, @is.Search(query, 10).TotalHits);
 			}
-			ir.Close();
-			dir.Close();
+			ir.Dispose();
+			dir.Dispose();
 		}
 
 		/// <summary>make sure all sims work if TF is omitted</summary>
@@ -163,13 +163,13 @@ namespace Lucene.Net.Search.Similarities
 			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
-			ft.SetIndexOptions(FieldInfo.IndexOptions.DOCS_ONLY);
+			ft.IndexOptions = (FieldInfo.IndexOptions.DOCS_ONLY);
 			ft.Freeze();
 			Field f = NewField("foo", "bar", ft);
 			doc.Add(f);
 			iw.AddDocument(doc);
 			IndexReader ir = iw.GetReader();
-			iw.Close();
+			iw.Dispose();
 			IndexSearcher @is = NewSearcher(ir);
 			foreach (Similarity sim in sims)
 			{
@@ -178,8 +178,8 @@ namespace Lucene.Net.Search.Similarities
 				query.Add(new TermQuery(new Term("foo", "bar")), BooleanClause.Occur.SHOULD);
 				AreEqual(1, @is.Search(query, 10).TotalHits);
 			}
-			ir.Close();
-			dir.Close();
+			ir.Dispose();
+			dir.Dispose();
 		}
 
 		/// <summary>make sure all sims work if TF and norms is omitted</summary>
@@ -191,14 +191,14 @@ namespace Lucene.Net.Search.Similarities
 			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
-			ft.SetIndexOptions(FieldInfo.IndexOptions.DOCS_ONLY);
-			ft.SetOmitNorms(true);
+			ft.IndexOptions = (FieldInfo.IndexOptions.DOCS_ONLY);
+			ft.OmitNorms = (true);
 			ft.Freeze();
 			Field f = NewField("foo", "bar", ft);
 			doc.Add(f);
 			iw.AddDocument(doc);
 			IndexReader ir = iw.GetReader();
-			iw.Close();
+			iw.Dispose();
 			IndexSearcher @is = NewSearcher(ir);
 			foreach (Similarity sim in sims)
 			{
@@ -207,8 +207,8 @@ namespace Lucene.Net.Search.Similarities
 				query.Add(new TermQuery(new Term("foo", "bar")), BooleanClause.Occur.SHOULD);
 				AreEqual(1, @is.Search(query, 10).TotalHits);
 			}
-			ir.Close();
-			dir.Close();
+			ir.Dispose();
+			dir.Dispose();
 		}
 
 		/// <summary>make sure all sims work with spanOR(termX, termY) where termY does not exist
@@ -228,7 +228,7 @@ namespace Lucene.Net.Search.Similarities
 			doc.Add(NewField("foo", "bar", ft));
 			iw.AddDocument(doc);
 			IndexReader ir = iw.GetReader();
-			iw.Close();
+			iw.Dispose();
 			IndexSearcher @is = NewSearcher(ir);
 			foreach (Similarity sim in sims)
 			{
@@ -238,12 +238,12 @@ namespace Lucene.Net.Search.Similarities
 				Query query = new SpanOrQuery(s1, s2);
 				TopDocs td = @is.Search(query, 10);
 				AreEqual(1, td.TotalHits);
-				float score = td.scoreDocs[0].score;
+				float score = td.ScoreDocs[0].score;
 				IsTrue(score >= 0.0f);
 				IsFalse("inf score for " + sim, float.IsInfinite(score));
 			}
-			ir.Close();
-			dir.Close();
+			ir.Dispose();
+			dir.Dispose();
 		}
 	}
 }

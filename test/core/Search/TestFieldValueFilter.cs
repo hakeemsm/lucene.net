@@ -37,13 +37,13 @@ namespace Lucene.Net.Search
 			TopDocs search = searcher.Search(new TermQuery(new Term("all", "test")), new FieldValueFilter
 				("some", true), docs);
 			AreEqual(search.TotalHits, numDocsNoValue);
-			ScoreDoc[] scoreDocs = search.scoreDocs;
+			ScoreDoc[] scoreDocs = search.ScoreDocs;
 			foreach (ScoreDoc scoreDoc in scoreDocs)
 			{
-				IsNull(reader.Document(scoreDoc.doc).Get("some"));
+				IsNull(reader.Document(scoreDoc.Doc).Get("some"));
 			}
-			reader.Close();
-			directory.Close();
+			reader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -67,14 +67,14 @@ namespace Lucene.Net.Search
 			TopDocs search = searcher.Search(new TermQuery(new Term("all", "test")), new FieldValueFilter
 				("some"), docs);
 			AreEqual(search.TotalHits, numDocsWithValue);
-			ScoreDoc[] scoreDocs = search.scoreDocs;
+			ScoreDoc[] scoreDocs = search.ScoreDocs;
 			foreach (ScoreDoc scoreDoc in scoreDocs)
 			{
-				AreEqual("value", reader.Document(scoreDoc.doc).Get("some"
+				AreEqual("value", reader.Document(scoreDoc.Doc).Get("some"
 					));
 			}
-			reader.Close();
-			directory.Close();
+			reader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -102,7 +102,7 @@ namespace Lucene.Net.Search
 				writer.DeleteDocuments(new Term("id", string.Empty + docID));
 				docStates[docID] = 2;
 			}
-			writer.Close();
+			writer.Dispose();
 			return docStates;
 		}
 	}

@@ -12,7 +12,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	/// <lucene.experimental></lucene.experimental>
 	public class TestOmitPositions : LuceneTestCase
@@ -25,7 +25,7 @@ namespace Lucene.Net.Index
 			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
-			ft.SetIndexOptions(FieldInfo.IndexOptions.DOCS_AND_FREQS);
+			ft.IndexOptions = (FieldInfo.IndexOptions.DOCS_AND_FREQS);
 			Field f = NewField("foo", "this is a test test", ft);
 			doc.Add(f);
 			for (int i = 0; i < 100; i++)
@@ -33,7 +33,7 @@ namespace Lucene.Net.Index
 				w.AddDocument(doc);
 			}
 			IndexReader reader = w.GetReader();
-			w.Close();
+			w.Dispose();
 			IsNull(MultiFields.GetTermPositionsEnum(reader, null, "foo"
 				, new BytesRef("test")));
 			DocsEnum de = TestUtil.Docs(Random(), reader, "foo", new BytesRef("test"), null, 
@@ -42,8 +42,8 @@ namespace Lucene.Net.Index
 			{
 				AreEqual(2, de.Freq);
 			}
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		// Tests whether the DocumentWriter correctly enable the
@@ -58,7 +58,7 @@ namespace Lucene.Net.Index
 			Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 			// f1,f2,f3: docs only
 			FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
-			ft.SetIndexOptions(FieldInfo.IndexOptions.DOCS_ONLY);
+			ft.IndexOptions = (FieldInfo.IndexOptions.DOCS_ONLY);
 			Field f1 = NewField("f1", "This field has docs only", ft);
 			d.Add(f1);
 			Field f2 = NewField("f2", "This field has docs only", ft);
@@ -66,7 +66,7 @@ namespace Lucene.Net.Index
 			Field f3 = NewField("f3", "This field has docs only", ft);
 			d.Add(f3);
 			FieldType ft2 = new FieldType(TextField.TYPE_NOT_STORED);
-			ft2.SetIndexOptions(FieldInfo.IndexOptions.DOCS_AND_FREQS);
+			ft2.IndexOptions = (FieldInfo.IndexOptions.DOCS_AND_FREQS);
 			// f4,f5,f6 docs and freqs
 			Field f4 = NewField("f4", "This field has docs and freqs", ft2);
 			d.Add(f4);
@@ -75,7 +75,7 @@ namespace Lucene.Net.Index
 			Field f6 = NewField("f6", "This field has docs and freqs", ft2);
 			d.Add(f6);
 			FieldType ft3 = new FieldType(TextField.TYPE_NOT_STORED);
-			ft3.SetIndexOptions(FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS);
+			ft3.IndexOptions = (FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS);
 			// f7,f8,f9 docs/freqs/positions
 			Field f7 = NewField("f7", "This field has docs and freqs and positions", ft3);
 			d.Add(f7);
@@ -113,7 +113,7 @@ namespace Lucene.Net.Index
 			// force merge
 			writer.ForceMerge(1);
 			// flush
-			writer.Close();
+			writer.Dispose();
 			SegmentReader reader = GetOnlySegmentReader(DirectoryReader.Open(ram));
 			FieldInfos fi = reader.GetFieldInfos();
 			// docs + docs = docs
@@ -143,8 +143,8 @@ namespace Lucene.Net.Index
 			// docs/freqs/pos + docs/freqs/pos = docs/freqs/pos
 			AreEqual(FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS
 				, fi.FieldInfo("f9").GetIndexOptions());
-			reader.Close();
-			ram.Close();
+			reader.Dispose();
+			ram.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -167,12 +167,12 @@ namespace Lucene.Net.Index
 			IndexWriter writer = new IndexWriter(ram, ((IndexWriterConfig)NewIndexWriterConfig
 				(TEST_VERSION_CURRENT, analyzer).SetMaxBufferedDocs(3)).SetMergePolicy(NewLogMergePolicy
 				()));
-			LogMergePolicy lmp = (LogMergePolicy)writer.GetConfig().GetMergePolicy();
-			lmp.SetMergeFactor(2);
+			LogMergePolicy lmp = (LogMergePolicy)writer.Config.MergePolicy;
+			lmp.MergeFactor = (2);
 			lmp.SetNoCFSRatio(0.0);
 			Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 			FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
-			ft.SetIndexOptions(FieldInfo.IndexOptions.DOCS_AND_FREQS);
+			ft.IndexOptions = (FieldInfo.IndexOptions.DOCS_AND_FREQS);
 			Field f1 = NewField("f1", "This field has term freqs", ft);
 			d.Add(f1);
 			for (int i = 0; i < 30; i++)
@@ -192,9 +192,9 @@ namespace Lucene.Net.Index
 			// force merge
 			writer.ForceMerge(1);
 			// flush
-			writer.Close();
+			writer.Dispose();
 			AssertNoPrx(ram);
-			ram.Close();
+			ram.Dispose();
 		}
 
 		/// <summary>make sure we downgrade positions and payloads correctly</summary>
@@ -203,7 +203,7 @@ namespace Lucene.Net.Index
 		{
 			// no positions
 			FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
-			ft.SetIndexOptions(FieldInfo.IndexOptions.DOCS_AND_FREQS);
+			ft.IndexOptions = (FieldInfo.IndexOptions.DOCS_AND_FREQS);
 			Directory dir = NewDirectory();
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir);
 			for (int i = 0; i < 20; i++)
@@ -236,9 +236,9 @@ namespace Lucene.Net.Index
 			AreEqual(FieldInfo.IndexOptions.DOCS_AND_FREQS, fis.FieldInfo
 				("foo").GetIndexOptions());
 			IsFalse(fis.FieldInfo("foo").HasPayloads());
-			iw.Close();
-			ir.Close();
-			dir.Close();
+			iw.Dispose();
+			ir.Dispose();
+			dir.Dispose();
 		}
 		// checkindex
 	}

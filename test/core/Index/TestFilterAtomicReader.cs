@@ -15,7 +15,7 @@ using Lucene.Net.Util;
 using Sharpen;
 using Sharpen.Reflect;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestFilterAtomicReader : LuceneTestCase
 	{
@@ -138,7 +138,7 @@ namespace Lucene.Net.Index
 				);
 			d3.Add(NewTextField("default", "two four", Field.Store.YES));
 			writer.AddDocument(d3);
-			writer.Close();
+			writer.Dispose();
 			Directory target = NewDirectory();
 			// We mess with the postings so this can fail:
 			((BaseDirectoryWrapper)target).SetCrossCheckTermVectorsOnClose(false);
@@ -147,8 +147,8 @@ namespace Lucene.Net.Index
 			IndexReader reader = new TestFilterAtomicReader.TestReader(DirectoryReader.Open(directory
 				));
 			writer.AddIndexes(reader);
-			writer.Close();
-			reader.Close();
+			writer.Dispose();
+			reader.Dispose();
 			reader = DirectoryReader.Open(target);
 			TermsEnum terms = MultiFields.GetTerms(reader, "default").Iterator(null);
 			while (terms.Next() != null)
@@ -163,9 +163,9 @@ namespace Lucene.Net.Index
 			{
 				IsTrue((positions.DocID % 2) == 1);
 			}
-			reader.Close();
-			directory.Close();
-			target.Close();
+			reader.Dispose();
+			directory.Dispose();
+			target.Dispose();
 		}
 
 		/// <exception cref="Sharpen.NoSuchMethodException"></exception>

@@ -16,7 +16,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestOmitTf : LuceneTestCase
 	{
@@ -82,7 +82,7 @@ namespace Lucene.Net.Index
 
 		static TestOmitTf()
 		{
-			omitType.SetIndexOptions(FieldInfo.IndexOptions.DOCS_ONLY);
+			omitType.IndexOptions = (FieldInfo.IndexOptions.DOCS_ONLY);
 		}
 
 		// Tests whether the DocumentWriter correctly enable the
@@ -115,15 +115,15 @@ namespace Lucene.Net.Index
 			// force merge
 			writer.ForceMerge(1);
 			// flush
-			writer.Close();
+			writer.Dispose();
 			SegmentReader reader = GetOnlySegmentReader(DirectoryReader.Open(ram));
 			FieldInfos fi = reader.GetFieldInfos();
 			AreEqual("OmitTermFreqAndPositions field bit should be set."
 				, FieldInfo.IndexOptions.DOCS_ONLY, fi.FieldInfo("f1").GetIndexOptions());
 			AreEqual("OmitTermFreqAndPositions field bit should be set."
 				, FieldInfo.IndexOptions.DOCS_ONLY, fi.FieldInfo("f2").GetIndexOptions());
-			reader.Close();
-			ram.Close();
+			reader.Dispose();
+			ram.Dispose();
 		}
 
 		// Tests whether merging of docs that have different
@@ -162,15 +162,15 @@ namespace Lucene.Net.Index
 			// force merge
 			writer.ForceMerge(1);
 			// flush
-			writer.Close();
+			writer.Dispose();
 			SegmentReader reader = GetOnlySegmentReader(DirectoryReader.Open(ram));
 			FieldInfos fi = reader.GetFieldInfos();
 			AreEqual("OmitTermFreqAndPositions field bit should be set."
 				, FieldInfo.IndexOptions.DOCS_ONLY, fi.FieldInfo("f1").GetIndexOptions());
 			AreEqual("OmitTermFreqAndPositions field bit should be set."
 				, FieldInfo.IndexOptions.DOCS_ONLY, fi.FieldInfo("f2").GetIndexOptions());
-			reader.Close();
-			ram.Close();
+			reader.Dispose();
+			ram.Dispose();
 		}
 
 		// Make sure first adding docs that do not omitTermFreqAndPositions for
@@ -202,7 +202,7 @@ namespace Lucene.Net.Index
 			// force merge
 			writer.ForceMerge(1);
 			// flush
-			writer.Close();
+			writer.Dispose();
 			SegmentReader reader = GetOnlySegmentReader(DirectoryReader.Open(ram));
 			FieldInfos fi = reader.GetFieldInfos();
 			AreEqual("OmitTermFreqAndPositions field bit should not be set."
@@ -210,8 +210,8 @@ namespace Lucene.Net.Index
 				());
 			AreEqual("OmitTermFreqAndPositions field bit should be set."
 				, FieldInfo.IndexOptions.DOCS_ONLY, fi.FieldInfo("f2").GetIndexOptions());
-			reader.Close();
-			ram.Close();
+			reader.Dispose();
+			ram.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -234,8 +234,8 @@ namespace Lucene.Net.Index
 			IndexWriter writer = new IndexWriter(ram, ((IndexWriterConfig)NewIndexWriterConfig
 				(TEST_VERSION_CURRENT, analyzer).SetMaxBufferedDocs(3)).SetMergePolicy(NewLogMergePolicy
 				()));
-			LogMergePolicy lmp = (LogMergePolicy)writer.GetConfig().GetMergePolicy();
-			lmp.SetMergeFactor(2);
+			LogMergePolicy lmp = (LogMergePolicy)writer.Config.MergePolicy;
+			lmp.MergeFactor = (2);
 			lmp.SetNoCFSRatio(0.0);
 			Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 			Field f1 = NewField("f1", "This field has term freqs", omitType);
@@ -258,9 +258,9 @@ namespace Lucene.Net.Index
 			// force merge
 			writer.ForceMerge(1);
 			// flush
-			writer.Close();
+			writer.Dispose();
 			AssertNoPrx(ram);
-			ram.Close();
+			ram.Dispose();
 		}
 
 		// Test scores with one field with Term Freqs and one without, otherwise with equal content 
@@ -290,7 +290,7 @@ namespace Lucene.Net.Index
 			//System.out.println(d);
 			writer.ForceMerge(1);
 			// flush
-			writer.Close();
+			writer.Dispose();
 			IndexReader reader = DirectoryReader.Open(dir);
 			IndexSearcher searcher = NewSearcher(reader);
 			searcher.SetSimilarity(new TestOmitTf.SimpleSimilarity());
@@ -342,8 +342,8 @@ namespace Lucene.Net.Index
 			searcher.Search(bq, new _CountingHitCollector_406());
 			//System.out.println("BQ: Doc=" + doc + " score=" + score);
 			AreEqual(15, TestOmitTf.CountingHitCollector.GetCount());
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		private sealed class _CountingHitCollector_324 : TestOmitTf.CountingHitCollector
@@ -508,18 +508,18 @@ namespace Lucene.Net.Index
 			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
-			ft.SetIndexOptions(FieldInfo.IndexOptions.DOCS_ONLY);
+			ft.IndexOptions = (FieldInfo.IndexOptions.DOCS_ONLY);
 			ft.Freeze();
 			Field f = NewField("foo", "bar", ft);
 			doc.Add(f);
 			iw.AddDocument(doc);
 			IndexReader ir = iw.GetReader();
-			iw.Close();
+			iw.Dispose();
 			AreEqual(-1, ir.TotalTermFreq(new Term("foo", new BytesRef
 				("bar"))));
 			AreEqual(-1, ir.GetSumTotalTermFreq("foo"));
-			ir.Close();
-			dir.Close();
+			ir.Dispose();
+			dir.Dispose();
 		}
 	}
 }

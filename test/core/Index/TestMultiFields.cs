@@ -13,7 +13,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestMultiFields : LuceneTestCase
 	{
@@ -111,7 +111,7 @@ namespace Lucene.Net.Index
 					}
 				}
 				IndexReader reader = w.GetReader();
-				w.Close();
+				w.Dispose();
 				if (VERBOSE)
 				{
 					System.Console.Out.WriteLine("TEST: reader=" + reader);
@@ -142,8 +142,8 @@ namespace Lucene.Net.Index
 					AreEqual(DocIdSetIterator.NO_MORE_DOCS, docsEnum.NextDoc()
 						);
 				}
-				reader.Close();
-				dir.Close();
+				reader.Dispose();
+				dir.Dispose();
 			}
 		}
 
@@ -159,15 +159,15 @@ namespace Lucene.Net.Index
 			w.Commit();
 			w.AddDocument(d);
 			IndexReader r = w.GetReader();
-			w.Close();
+			w.Dispose();
 			DocsEnum d1 = TestUtil.Docs(Random(), r, "f", new BytesRef("j"), null, null, DocsEnum
 				.FLAG_NONE);
 			DocsEnum d2 = TestUtil.Docs(Random(), r, "f", new BytesRef("j"), null, null, DocsEnum
 				.FLAG_NONE);
 			AreEqual(0, d1.NextDoc());
 			AreEqual(0, d2.NextDoc());
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -182,13 +182,13 @@ namespace Lucene.Net.Index
 			w.Commit();
 			w.AddDocument(d);
 			IndexReader r = w.GetReader();
-			w.Close();
+			w.Dispose();
 			DocsEnum de = MultiFields.GetTermDocsEnum(r, null, "f", new BytesRef("j"));
 			AreEqual(0, de.NextDoc());
 			AreEqual(1, de.NextDoc());
 			AreEqual(DocIdSetIterator.NO_MORE_DOCS, de.NextDoc());
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 	}
 }

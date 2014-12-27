@@ -22,7 +22,7 @@ namespace Lucene.Net.Test.Analysis
 			AreEqual(2, reader.Read(buf,0,2));
 			AreEqual("ar", new string(buf, 0, 2));
 			AreEqual(-1, reader.Read(buf,0,2));
-			reader.Close();
+			reader.Dispose();
 			reader.SetValue("foobar");
 			AreEqual(0, reader.Read(buf, 1, 0));
 			AreEqual(3, reader.Read(buf, 1, 3));
@@ -31,7 +31,7 @@ namespace Lucene.Net.Test.Analysis
 			AreEqual("ba", new string(buf, 2, 2));
 			AreEqual('r', (char)reader.Read());
 			AreEqual(-1, reader.Read(buf,0,1));
-			reader.Close();
+			reader.Dispose();
 			reader.SetValue("foobar");
 			StringBuilder sb = new StringBuilder();
 			int ch;
@@ -39,7 +39,7 @@ namespace Lucene.Net.Test.Analysis
 			{
 				sb.Append((char)ch);
 			}
-			reader.Close();
+			reader.Dispose();
 			AreEqual("foobar", sb.ToString());
 		}
 	}

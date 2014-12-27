@@ -34,7 +34,7 @@ namespace Lucene.Net.Search
 			)
 		{
 			wasCalled = true;
-			return new FixedBitSet(((AtomicReader)context.Reader()).MaxDoc);
+			return new FixedBitSet(((AtomicReader)context.Reader).MaxDoc);
 		}
 		
 		public virtual void  Clear()

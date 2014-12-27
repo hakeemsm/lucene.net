@@ -53,11 +53,11 @@ namespace Lucene.Net.Search.Spans
 			{
 				termContexts.Put(term, TermContext.Build(topLevelReaderContext, term));
 			}
-			IList<AtomicReaderContext> leaves = topLevelReaderContext.Leaves();
+			IList<AtomicReaderContext> leaves = topLevelReaderContext.Leaves;
 			if (leaves.Count == 1)
 			{
 				AtomicReaderContext ctx = leaves[0];
-				return query.GetSpans(ctx, ((AtomicReader)ctx.Reader()).GetLiveDocs(), termContexts
+				return query.GetSpans(ctx, ((AtomicReader)ctx.Reader).LiveDocs, termContexts
 					);
 			}
 			return new Lucene.Net.Search.Spans.MultiSpansWrapper(leaves, query, termContexts
@@ -74,7 +74,7 @@ namespace Lucene.Net.Search.Spans
 			if (current == null)
 			{
 				AtomicReaderContext ctx = leaves[leafOrd];
-				current = query.GetSpans(ctx, ((AtomicReader)ctx.Reader()).GetLiveDocs(), termContexts
+				current = query.GetSpans(ctx, ((AtomicReader)ctx.Reader).LiveDocs, termContexts
 					);
 			}
 			while (true)
@@ -86,7 +86,7 @@ namespace Lucene.Net.Search.Spans
 				if (++leafOrd < numLeaves)
 				{
 					AtomicReaderContext ctx = leaves[leafOrd];
-					current = query.GetSpans(ctx, ((AtomicReader)ctx.Reader()).GetLiveDocs(), termContexts
+					current = query.GetSpans(ctx, ((AtomicReader)ctx.Reader).LiveDocs, termContexts
 						);
 				}
 				else
@@ -111,7 +111,7 @@ namespace Lucene.Net.Search.Spans
 			if (subIndex != leafOrd)
 			{
 				AtomicReaderContext ctx = leaves[subIndex];
-				current = query.GetSpans(ctx, ((AtomicReader)ctx.Reader()).GetLiveDocs(), termContexts
+				current = query.GetSpans(ctx, ((AtomicReader)ctx.Reader).LiveDocs, termContexts
 					);
 				leafOrd = subIndex;
 			}
@@ -120,7 +120,7 @@ namespace Lucene.Net.Search.Spans
 				if (current == null)
 				{
 					AtomicReaderContext ctx = leaves[leafOrd];
-					current = query.GetSpans(ctx, ((AtomicReader)ctx.Reader()).GetLiveDocs(), termContexts
+					current = query.GetSpans(ctx, ((AtomicReader)ctx.Reader).LiveDocs, termContexts
 						);
 				}
 			}
@@ -144,7 +144,7 @@ namespace Lucene.Net.Search.Spans
 				if (++leafOrd < numLeaves)
 				{
 					AtomicReaderContext ctx = leaves[leafOrd];
-					current = query.GetSpans(ctx, ((AtomicReader)ctx.Reader()).GetLiveDocs(), termContexts
+					current = query.GetSpans(ctx, ((AtomicReader)ctx.Reader).LiveDocs, termContexts
 						);
 				}
 				else

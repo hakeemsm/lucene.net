@@ -8,7 +8,7 @@ using Lucene.Net.Index;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestTerm : LuceneTestCase
 	{

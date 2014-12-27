@@ -37,7 +37,7 @@ namespace Lucene.Net.Search
 			// add 500 docs with id 0..499
 			for (int i = 0; i < 500; i++)
 			{
-				idField.StringValue = Sharpen.Extensions.ToString(i));
+				idField.StringValue = i.ToString());
 				iw.AddDocument(doc);
 			}
 			// delete 20 of them
@@ -64,12 +64,12 @@ namespace Lucene.Net.Search
 			TopDocs hits1 = @is.Search(query, f1, ir.MaxDoc);
 			TopDocs hits2 = @is.Search(query, f2, ir.MaxDoc);
 			AreEqual(hits1.TotalHits, hits2.TotalHits);
-			CheckHits.CheckEqual(query, hits1.scoreDocs, hits2.scoreDocs);
+			CheckHits.CheckEqual(query, hits1.ScoreDocs, hits2.ScoreDocs);
 			// now do it again to confirm caching works
 			TopDocs hits3 = @is.Search(query, f1, ir.MaxDoc);
 			TopDocs hits4 = @is.Search(query, f2, ir.MaxDoc);
 			AreEqual(hits3.TotalHits, hits4.TotalHits);
-			CheckHits.CheckEqual(query, hits3.scoreDocs, hits4.scoreDocs);
+			CheckHits.CheckEqual(query, hits3.ScoreDocs, hits4.ScoreDocs);
 		}
 
 		/// <summary>test null iterator</summary>
@@ -148,23 +148,23 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			writer.Close();
+			writer.Dispose();
 			IndexReader reader = SlowCompositeReaderWrapper.Wrap(DirectoryReader.Open(dir));
 			AtomicReaderContext context = (AtomicReaderContext)reader.GetContext();
 			MockFilter filter = new MockFilter();
 			CachingWrapperFilter cacher = new CachingWrapperFilter(filter);
 			// first time, nested filter is called
-			DocIdSet strongRef = cacher.GetDocIdSet(context, ((AtomicReader)context.Reader())
-				.GetLiveDocs());
+			DocIdSet strongRef = cacher.GetDocIdSet(context, ((AtomicReader)context.Reader)
+				.LiveDocs);
 			IsTrue("first time", filter.WasCalled());
 			// make sure no exception if cache is holding the wrong docIdSet
-			cacher.GetDocIdSet(context, ((AtomicReader)context.Reader()).GetLiveDocs());
+			cacher.GetDocIdSet(context, ((AtomicReader)context.Reader).LiveDocs);
 			// second time, nested filter should not be called
 			filter.Clear();
-			cacher.GetDocIdSet(context, ((AtomicReader)context.Reader()).GetLiveDocs());
+			cacher.GetDocIdSet(context, ((AtomicReader)context.Reader).LiveDocs);
 			IsFalse("second time", filter.WasCalled());
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -172,16 +172,16 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			writer.Close();
+			writer.Dispose();
 			IndexReader reader = SlowCompositeReaderWrapper.Wrap(DirectoryReader.Open(dir));
 			AtomicReaderContext context = (AtomicReaderContext)reader.GetContext();
 			Filter filter = new _Filter_177();
 			CachingWrapperFilter cacher = new CachingWrapperFilter(filter);
 			// the caching filter should return the empty set constant
 			IsNull(cacher.GetDocIdSet(context, ((AtomicReader)context.
-				Reader()).GetLiveDocs()));
-			reader.Close();
-			dir.Close();
+				Reader()).LiveDocs));
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		private sealed class _Filter_177 : Filter
@@ -202,16 +202,16 @@ namespace Lucene.Net.Search
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
-			writer.Close();
+			writer.Dispose();
 			IndexReader reader = SlowCompositeReaderWrapper.Wrap(DirectoryReader.Open(dir));
 			AtomicReaderContext context = (AtomicReaderContext)reader.GetContext();
 			Filter filter = new _Filter_200();
 			CachingWrapperFilter cacher = new CachingWrapperFilter(filter);
 			// the caching filter should return the empty set constant
 			IsNull(cacher.GetDocIdSet(context, ((AtomicReader)context.
-				Reader()).GetLiveDocs()));
-			reader.Close();
-			dir.Close();
+				Reader()).LiveDocs));
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		private sealed class _Filter_200 : Filter
@@ -247,9 +247,9 @@ namespace Lucene.Net.Search
 			AtomicReaderContext context = (AtomicReaderContext)reader.GetContext();
 			CachingWrapperFilter cacher = new CachingWrapperFilter(filter);
 			DocIdSet originalSet = filter.GetDocIdSet(context, ((AtomicReader)context.Reader(
-				)).GetLiveDocs());
-			DocIdSet cachedSet = cacher.GetDocIdSet(context, ((AtomicReader)context.Reader())
-				.GetLiveDocs());
+				)).LiveDocs);
+			DocIdSet cachedSet = cacher.GetDocIdSet(context, ((AtomicReader)context.Reader)
+				.LiveDocs);
 			if (originalSet == null)
 			{
 				IsNull(cachedSet);
@@ -283,7 +283,7 @@ namespace Lucene.Net.Search
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
 			writer.AddDocument(new Lucene.Net.Documents.Document());
-			writer.Close();
+			writer.Dispose();
 			IndexReader reader = SlowCompositeReaderWrapper.Wrap(DirectoryReader.Open(dir));
 			// not cacheable:
 			AssertDocIdSetCacheable(reader, new QueryWrapperFilter(new TermQuery(new Term("test"
@@ -296,8 +296,8 @@ namespace Lucene.Net.Search
 				(10), Sharpen.Extensions.ValueOf(20), true, true), true);
 			// a fixedbitset filter is always cacheable
 			AssertDocIdSetCacheable(reader, new _Filter_258(), true);
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		private sealed class _Filter_258 : Filter
@@ -309,7 +309,7 @@ namespace Lucene.Net.Search
 			public override DocIdSet GetDocIdSet(AtomicReaderContext context, Bits acceptDocs
 				)
 			{
-				return new FixedBitSet(((AtomicReader)context.Reader()).MaxDoc);
+				return new FixedBitSet(((AtomicReader)context.Reader).MaxDoc);
 			}
 		}
 
@@ -432,9 +432,9 @@ namespace Lucene.Net.Search
 			// CachingWrapperFilter's WeakHashMap from dropping the
 			// entry:
 			IsTrue(oldReader != null);
-			reader.Close();
-			writer.Close();
-			dir.Close();
+			reader.Dispose();
+			writer.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -444,7 +444,7 @@ namespace Lucene.Net.Search
 			reader = DirectoryReader.OpenIfChanged(reader);
 			if (reader != null)
 			{
-				oldReader.Close();
+				oldReader.Dispose();
 				return reader;
 			}
 			else

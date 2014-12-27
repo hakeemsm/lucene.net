@@ -123,7 +123,7 @@ namespace Lucene.Net.Search
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), directory);
 			writer.Commit();
 			IndexReader ir = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Weight fake = new TermQuery(new Term("fake", "weight")).CreateWeight(searcher);
 			Scorer s = new TestScoreCachingWrappingScorer.SimpleScorer(fake);
@@ -142,8 +142,8 @@ namespace Lucene.Net.Search
 			{
 				Assert.AreEqual(scores[i], scc.mscores[i], 0f);
 			}
-			ir.Close();
-			directory.Close();
+			ir.Dispose();
+			directory.Dispose();
 		}
 	}
 }

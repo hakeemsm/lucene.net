@@ -9,7 +9,7 @@ using Lucene.Net.Codecs.Lucene3x;
 using Lucene.Net.Index;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	/// <summary>Tests with the default randomized codec.</summary>
 	/// <remarks>

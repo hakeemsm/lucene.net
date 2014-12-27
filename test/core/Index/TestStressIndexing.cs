@@ -13,7 +13,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestStressIndexing : LuceneTestCase
 	{
@@ -37,7 +37,7 @@ namespace Lucene.Net.Index
 
 			public override void Run()
 			{
-				long stopTime = Runtime.CurrentTimeMillis() + RUN_TIME_MSEC;
+				long stopTime = DateTime.Now.CurrentTimeMillis() + RUN_TIME_MSEC;
 				count = 0;
 				try
 				{
@@ -50,7 +50,7 @@ namespace Lucene.Net.Index
 						DoWork();
 						count++;
 					}
-					while (Runtime.CurrentTimeMillis() < stopTime);
+					while (DateTime.Now.CurrentTimeMillis() < stopTime);
 				}
 				catch (Exception e)
 				{
@@ -129,7 +129,7 @@ namespace Lucene.Net.Index
 				{
 					IndexReader ir = DirectoryReader.Open(directory);
 					IndexSearcher @is = NewSearcher(ir);
-					ir.Close();
+					ir.Dispose();
 				}
 				count += 100;
 			}
@@ -169,7 +169,7 @@ namespace Lucene.Net.Index
 			{
 				threads[i].Join();
 			}
-			modifier.Close();
+			modifier.Dispose();
 			for (int i_1 = 0; i_1 < numThread; i_1++)
 			{
 				IsTrue(!threads[i_1].failed);
@@ -188,7 +188,7 @@ namespace Lucene.Net.Index
 				((MockDirectoryWrapper)directory).SetAssertNoUnrefencedFilesOnClose(true);
 			}
 			RunStressTest(directory, new ConcurrentMergeScheduler());
-			directory.Close();
+			directory.Dispose();
 		}
 	}
 }

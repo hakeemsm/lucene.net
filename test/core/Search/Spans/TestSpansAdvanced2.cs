@@ -43,7 +43,7 @@ namespace Lucene.Net.Search.Spans
 			AddDocument(writer, "C", "It shouldn't.");
 			AddDocument(writer, "D", "Should we, should we, should we.");
 			reader2 = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			// re-open the searcher since we added more docs
 			searcher2 = NewSearcher(reader2);
 			searcher2.SetSimilarity(new DefaultSimilarity());
@@ -52,7 +52,7 @@ namespace Lucene.Net.Search.Spans
 		/// <exception cref="System.Exception"></exception>
 		public override void TearDown()
 		{
-			reader2.Close();
+			reader2.Dispose();
 			base.TearDown();
 		}
 
@@ -62,8 +62,8 @@ namespace Lucene.Net.Search.Spans
 		public virtual void TestVerifyIndex()
 		{
 			IndexReader reader = DirectoryReader.Open(mDirectory);
-			AreEqual(8, reader.NumDocs());
-			reader.Close();
+			AreEqual(8, reader.NumDocs);
+			reader.Dispose();
 		}
 
 		/// <summary>Tests a single span query that matches multiple documents.</summary>

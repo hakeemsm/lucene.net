@@ -34,15 +34,15 @@ namespace Lucene.Net.Search
 				iw.AddDocument(doc);
 			}
 			ir = iw.GetReader();
-			iw.Close();
+			iw.Dispose();
 			@is = NewSearcher(ir);
 		}
 
 		/// <exception cref="System.Exception"></exception>
 		public override void TearDown()
 		{
-			ir.Close();
-			dir.Close();
+			ir.Dispose();
+			dir.Dispose();
 			base.TearDown();
 		}
 
@@ -61,10 +61,10 @@ namespace Lucene.Net.Search
 				TopDocsCollector<FieldValueHitQueue.Entry> tdc = TopFieldCollector.Create(sort[i]
 					, 10, false, false, false, true);
 				@is.Search(q, tdc);
-				ScoreDoc[] sd = tdc.TopDocs().scoreDocs;
+				ScoreDoc[] sd = tdc.TopDocs().ScoreDocs;
 				for (int j = 1; j < sd.Length; j++)
 				{
-					IsTrue(sd[j].doc != sd[j - 1].doc);
+					IsTrue(sd[j].Doc != sd[j - 1].Doc);
 				}
 			}
 		}
@@ -81,7 +81,7 @@ namespace Lucene.Net.Search
 					, 10, true, false, false, true);
 				@is.Search(q, tdc);
 				TopDocs td = tdc.TopDocs();
-				ScoreDoc[] sd = td.scoreDocs;
+				ScoreDoc[] sd = td.ScoreDocs;
 				for (int j = 0; j < sd.Length; j++)
 				{
 					IsTrue(float.IsNaN(sd[j].score));
@@ -102,7 +102,7 @@ namespace Lucene.Net.Search
 					, 10, true, true, false, true);
 				@is.Search(q, tdc);
 				TopDocs td = tdc.TopDocs();
-				ScoreDoc[] sd = td.scoreDocs;
+				ScoreDoc[] sd = td.ScoreDocs;
 				for (int j = 0; j < sd.Length; j++)
 				{
 					IsTrue(!float.IsNaN(sd[j].score));
@@ -124,7 +124,7 @@ namespace Lucene.Net.Search
 					, 10, true, true, false, true);
 				@is.Search(q, tdc);
 				TopDocs td = tdc.TopDocs();
-				ScoreDoc[] sd = td.scoreDocs;
+				ScoreDoc[] sd = td.ScoreDocs;
 				for (int j = 0; j < sd.Length; j++)
 				{
 					IsTrue(!float.IsNaN(sd[j].score));
@@ -145,7 +145,7 @@ namespace Lucene.Net.Search
 					, 10, true, true, true, true);
 				@is.Search(q, tdc);
 				TopDocs td = tdc.TopDocs();
-				ScoreDoc[] sd = td.scoreDocs;
+				ScoreDoc[] sd = td.ScoreDocs;
 				for (int j = 0; j < sd.Length; j++)
 				{
 					IsTrue(!float.IsNaN(sd[j].score));
@@ -185,7 +185,7 @@ namespace Lucene.Net.Search
 						[j]));
 					@is.Search(bq, tdc);
 					TopDocs td = tdc.TopDocs();
-					ScoreDoc[] sd = td.scoreDocs;
+					ScoreDoc[] sd = td.ScoreDocs;
 					AreEqual(10, sd.Length);
 				}
 			}
@@ -223,7 +223,7 @@ namespace Lucene.Net.Search
 						[j]));
 					@is.Search(bq, tdc);
 					TopDocs td = tdc.TopDocs();
-					ScoreDoc[] sd = td.scoreDocs;
+					ScoreDoc[] sd = td.ScoreDocs;
 					AreEqual(10, sd.Length);
 				}
 			}

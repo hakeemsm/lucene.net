@@ -43,13 +43,13 @@ namespace Lucene.Net.Search
 			writer.AddDocument(Adoc(new string[] { "id", "z", "title", "boosted boosted boosted"
 				, "str_s", "z" }));
 			IndexReader r = DirectoryReader.Open(writer, true);
-			writer.Close();
+			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(r);
 			searcher.SetSimilarity(new DefaultSimilarity());
 			RunTest(searcher, true);
 			RunTest(searcher, false);
-			r.Close();
-			directory.Close();
+			r.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -66,20 +66,20 @@ namespace Lucene.Net.Search
 				(sort, 50, false, true, true, true);
 			searcher.Search(newq, null, topCollector);
 			TopDocs topDocs = topCollector.TopDocs(0, 10);
-			int nDocsReturned = topDocs.scoreDocs.Length;
+			int nDocsReturned = topDocs.ScoreDocs.Length;
 			AreEqual(4, nDocsReturned);
 			// 0 & 3 were elevated
-			AreEqual(0, topDocs.scoreDocs[0].doc);
-			AreEqual(3, topDocs.scoreDocs[1].doc);
+			AreEqual(0, topDocs.ScoreDocs[0].Doc);
+			AreEqual(3, topDocs.ScoreDocs[1].Doc);
 			if (reversed)
 			{
-				AreEqual(2, topDocs.scoreDocs[2].doc);
-				AreEqual(1, topDocs.scoreDocs[3].doc);
+				AreEqual(2, topDocs.ScoreDocs[2].Doc);
+				AreEqual(1, topDocs.ScoreDocs[3].Doc);
 			}
 			else
 			{
-				AreEqual(1, topDocs.scoreDocs[2].doc);
-				AreEqual(2, topDocs.scoreDocs[3].doc);
+				AreEqual(1, topDocs.ScoreDocs[2].Doc);
+				AreEqual(2, topDocs.ScoreDocs[3].Doc);
 			}
 		}
 
@@ -189,7 +189,7 @@ namespace Lucene.Net.Search
 			/// <exception cref="System.IO.IOException"></exception>
 			public override FieldComparator<int> SetNextReader(AtomicReaderContext context)
 			{
-				this.idIndex = FieldCache.DEFAULT.GetTermsIndex(((AtomicReader)context.Reader()), 
+				this.idIndex = FieldCache.DEFAULT.GetTermsIndex(((AtomicReader)context.Reader), 
 					fieldname);
 				return this;
 			}

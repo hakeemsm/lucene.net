@@ -14,7 +14,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestIndexFileDeleter : LuceneTestCase
 	{
@@ -38,20 +38,20 @@ namespace Lucene.Net.Index
 			{
 				AddDoc(writer, i);
 			}
-			writer.GetConfig().GetMergePolicy().SetNoCFSRatio(0.0);
-			writer.GetConfig().SetUseCompoundFile(false);
+			writer.Config.MergePolicy.SetNoCFSRatio(0.0);
+			writer.Config.SetUseCompoundFile(false);
 			for (; i < 45; i++)
 			{
 				AddDoc(writer, i);
 			}
-			writer.Close();
+			writer.Dispose();
 			// Delete one doc so we get a .del file:
 			writer = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig(TEST_VERSION_CURRENT
 				, new MockAnalyzer(Random())).SetMergePolicy(NoMergePolicy.NO_COMPOUND_FILES).SetUseCompoundFile
 				(true)));
 			Term searchTerm = new Term("id", "7");
 			writer.DeleteDocuments(searchTerm);
-			writer.Close();
+			writer.Dispose();
 			// Now, artificially create an extra .del file & extra
 			// .s0 file:
 			string[] files = dir.ListAll();
@@ -86,9 +86,9 @@ namespace Lucene.Net.Index
 			// files and nothing more:
 			writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random())).SetOpenMode(IndexWriterConfig.OpenMode.APPEND));
-			writer.Close();
+			writer.Dispose();
 			string[] files2 = dir.ListAll();
-			dir.Close();
+			dir.Dispose();
 			Arrays.Sort(files);
 			Arrays.Sort(files2);
 			ICollection<string> dif = DifFiles(files, files2);
@@ -163,8 +163,8 @@ namespace Lucene.Net.Index
 				@out.WriteBytes(b, len);
 				remainder -= len;
 			}
-			@in.Close();
-			@out.Close();
+			@in.Dispose();
+			@out.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>

@@ -34,7 +34,7 @@ namespace Lucene.Net.Search
 				writer.AddDocument(doc);
 			}
 			IndexReader ir = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			BooleanQuery booleanQuery1 = new BooleanQuery();
 			booleanQuery1.Add(new TermQuery(new Term(FIELD, "1")), BooleanClause.Occur.SHOULD
 				);
@@ -44,10 +44,10 @@ namespace Lucene.Net.Search
 			query.Add(booleanQuery1, BooleanClause.Occur.MUST);
 			query.Add(new TermQuery(new Term(FIELD, "9")), BooleanClause.Occur.MUST_NOT);
 			IndexSearcher indexSearcher = NewSearcher(ir);
-			ScoreDoc[] hits = indexSearcher.Search(query, null, 1000).scoreDocs;
+			ScoreDoc[] hits = indexSearcher.Search(query, null, 1000).ScoreDocs;
 			AreEqual("Number of matched documents", 2, hits.Length);
-			ir.Close();
-			directory.Close();
+			ir.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -61,7 +61,7 @@ namespace Lucene.Net.Search
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), directory);
 			writer.Commit();
 			IndexReader ir = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			BooleanQuery.BooleanWeight weight = (BooleanQuery.BooleanWeight)new BooleanQuery(
 				).CreateWeight(searcher);
@@ -74,15 +74,15 @@ namespace Lucene.Net.Search
 			bs.Score(new _Collector_104(hits));
 			AreEqual("should have only 1 hit", 1, hits.Count);
 			AreEqual("hit should have been docID=3000", 3000, hits[0]);
-			ir.Close();
-			directory.Close();
+			ir.Dispose();
+			directory.Dispose();
 		}
 
 		private sealed class _BulkScorer_83 : BulkScorer
 		{
 			public _BulkScorer_83()
 			{
-				this.doc = -1;
+				this.Doc = -1;
 			}
 
 			private int doc;
@@ -90,9 +90,9 @@ namespace Lucene.Net.Search
 			/// <exception cref="System.IO.IOException"></exception>
 			public override bool Score(Collector c, int maxDoc)
 			{
-				this.doc = 3000;
+				this.Doc = 3000;
 				FakeScorer fs = new FakeScorer();
-				fs.doc = this.doc;
+				fs.Doc = this.Doc;
 				fs.score = 1.0f;
 				c.SetScorer(fs);
 				c.Collect(3000);
@@ -145,7 +145,7 @@ namespace Lucene.Net.Search
 			doc.Add(new TextField("field", "33", Field.Store.NO));
 			w.AddDocument(doc);
 			IndexReader r = w.GetReader();
-			w.Close();
+			w.Dispose();
 			// we don't wrap with AssertingIndexSearcher in order to have the original scorer in setScorer.
 			IndexSearcher s = NewSearcher(r, true, false);
 			BooleanQuery q = new BooleanQuery();
@@ -160,8 +160,8 @@ namespace Lucene.Net.Search
 			s.Search(q, new _Collector_155(count));
 			// Make sure we got BooleanScorer:
 			AreEqual(1, count[0]);
-			r.Close();
-			d.Close();
+			r.Dispose();
+			d.Dispose();
 		}
 
 		private sealed class _Collector_155 : Collector
@@ -284,7 +284,7 @@ namespace Lucene.Net.Search
 				, Field.Store.NO));
 			w.AddDocument(doc);
 			IndexReader r = w.GetReader();
-			w.Close();
+			w.Dispose();
 			IndexSearcher s = NewSearcher(r);
 			BooleanQuery q1 = new BooleanQuery();
 			q1.Add(new TermQuery(new Term("field", "little")), BooleanClause.Occur.SHOULD);
@@ -294,8 +294,8 @@ namespace Lucene.Net.Search
 			q2.Add(new TestBooleanScorer.CrazyMustUseBulkScorerQuery(), BooleanClause.Occur.SHOULD
 				);
 			AreEqual(1, s.Search(q2, 10).TotalHits);
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 	}
 }

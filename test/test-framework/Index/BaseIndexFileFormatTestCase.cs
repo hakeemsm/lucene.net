@@ -19,7 +19,7 @@ namespace Lucene.Net.TestFramework.Index
 	public abstract class BaseIndexFileFormatTestCase : LuceneTestCase
 	{
 		/// <summary>Returns the codec to run tests against</summary>
-		protected internal abstract Codec GetCodec();
+		protected internal abstract Codec Codec { get; }
 
 		private Codec savedCodec;
 
@@ -29,7 +29,7 @@ namespace Lucene.Net.TestFramework.Index
 			base.SetUp();
 			// set the default codec, so adding test cases to this isn't fragile
 			savedCodec = Codec.Default;
-			Codec.Default = GetCodec();
+			Codec.Default = Codec;
 		}
 
 		/// <exception cref="System.Exception"></exception>

@@ -11,7 +11,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestIndexInput : LuceneTestCase
 	{
@@ -188,10 +188,10 @@ namespace Lucene.Net.Index
 		{
 			IndexInput @is = new MockIndexInput(READ_TEST_BYTES);
 			CheckReads(@is, typeof(IOException));
-			@is.Close();
+			@is.Dispose();
 			@is = new MockIndexInput(RANDOM_TEST_BYTES);
 			CheckRandomReads(@is);
-			@is.Close();
+			@is.Dispose();
 		}
 
 		// this test checks the raw IndexInput methods as it uses RAMIndexInput which extends IndexInput directly
@@ -202,17 +202,17 @@ namespace Lucene.Net.Index
 			RAMDirectory dir = new RAMDirectory();
 			IndexOutput os = dir.CreateOutput("foo", NewIOContext(random));
 			os.WriteBytes(READ_TEST_BYTES, READ_TEST_BYTES.Length);
-			os.Close();
+			os.Dispose();
 			IndexInput @is = dir.OpenInput("foo", NewIOContext(random));
 			CheckReads(@is, typeof(IOException));
-			@is.Close();
+			@is.Dispose();
 			os = dir.CreateOutput("bar", NewIOContext(random));
 			os.WriteBytes(RANDOM_TEST_BYTES, RANDOM_TEST_BYTES.Length);
-			os.Close();
+			os.Dispose();
 			@is = dir.OpenInput("bar", NewIOContext(random));
 			CheckRandomReads(@is);
-			@is.Close();
-			dir.Close();
+			@is.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>

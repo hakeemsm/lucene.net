@@ -11,7 +11,7 @@ using Lucene.Net.Util;
 using Sharpen;
 using Sharpen.Reflect;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestNoMergeScheduler : LuceneTestCase
 	{
@@ -20,7 +20,7 @@ namespace Lucene.Net.Index
 		public virtual void TestNoMergeScheduler()
 		{
 			MergeScheduler ms = NoMergeScheduler.INSTANCE;
-			ms.Close();
+			ms.Dispose();
 			ms.Merge(null, RandomPicks.RandomFrom(Random(), MergeTrigger.Values()), Random().
 				NextBoolean());
 		}

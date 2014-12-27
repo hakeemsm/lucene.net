@@ -143,7 +143,7 @@ namespace Lucene.Net.Search
 				writer.AddDocument(d4);
 			}
 			r = SlowCompositeReaderWrapper.Wrap(writer.GetReader());
-			writer.Close();
+			writer.Dispose();
 
 			s = NewSearcher(r);
 			s.SetSimilarity(sim);
@@ -151,8 +151,8 @@ namespace Lucene.Net.Search
 		
 		public override void TearDown()
 		{
-			r.Close();
-			index.Close();
+			r.Dispose();
+			index.Dispose();
 			base.TearDown();
 		}
 		[Test]
@@ -166,7 +166,7 @@ namespace Lucene.Net.Search
 			IsTrue(s.GetTopReaderContext() is AtomicReaderContext);
 			Weight dw = s.CreateNormalizedWeight(dq);
 			AtomicReaderContext context = (AtomicReaderContext)s.GetTopReaderContext();
-			Scorer ds = dw.Scorer(context, ((AtomicReader)context.Reader()).GetLiveDocs());
+			Scorer ds = dw.Scorer(context, ((AtomicReader)context.Reader).LiveDocs);
 			bool skipOk = ds.Advance(3) != DocIdSetIterator.NO_MORE_DOCS;
 			if (skipOk)
 			{
@@ -185,7 +185,7 @@ namespace Lucene.Net.Search
 			
 			Weight dw = s.CreateNormalizedWeight(dq);
 			AtomicReaderContext context = (AtomicReaderContext)s.GetTopReaderContext();
-			Scorer ds = dw.Scorer(context, ((AtomicReader)context.Reader()).GetLiveDocs());
+			Scorer ds = dw.Scorer(context, ((AtomicReader)context.Reader).LiveDocs);
 			Assert.IsTrue(ds.Advance(3) != DocIdSetIterator.NO_MORE_DOCS, "firsttime skipTo found no match");
 			Assert.AreEqual("d4", r.Document(ds.DocID).Get("id"), "found wrong docid");
 		}
@@ -508,7 +508,7 @@ namespace Lucene.Net.Search
 			Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 			d.Add(new TextField(FIELD, "clockwork orange", Field.Store.YES));
 			writer.AddDocument(d);
-			writer.Close();
+			writer.Dispose();
 			IndexReader indexReader = DirectoryReader.Open(directory);
 			IndexSearcher searcher = NewSearcher(indexReader);
 			DisjunctionMaxQuery query = new DisjunctionMaxQuery(1.0f);
@@ -518,14 +518,14 @@ namespace Lucene.Net.Search
 			query.Add(sq2);
 			TopScoreDocCollector collector = TopScoreDocCollector.Create(1000, true);
 			searcher.Search(query, collector);
-			hits = collector.TopDocs().scoreDocs.Length;
-			foreach (ScoreDoc scoreDoc in collector.TopDocs().scoreDocs)
+			hits = collector.TopDocs().ScoreDocs.Length;
+			foreach (ScoreDoc scoreDoc in collector.TopDocs().ScoreDocs)
 			{
-				System.Console.Out.WriteLine(scoreDoc.doc);
+				System.Console.Out.WriteLine(scoreDoc.Doc);
 			}
-			indexReader.Close();
+			indexReader.Dispose();
 			AreEqual(hits, 1);
-			directory.Close();
+			directory.Dispose();
 		}
 		
 		/// <summary>macro </summary>

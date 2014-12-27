@@ -1,53 +1,48 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Test.Analysis.Tokenattributes;
-using Lucene.Net.Document;
+using Lucene.Net.Analysis;
+using Lucene.Net.Analysis.Tokenattributes;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
-using Lucene.Net.Util;
-using Sharpen;
+using Lucene.Net.Support;
+using NUnit.Framework;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	/// <summary>
 	/// Test indexes 2B docs with 65k freqs each,
 	/// so you get &gt; Integer.MAX_VALUE postings data for the term
 	/// </summary>
 	/// <lucene.experimental></lucene.experimental>
-	public class Test2BPostingsBytes : LuceneTestCase
+	[TestFixture]
+    public class Test2BPostingsBytes : LuceneTestCase
 	{
 		// disable Lucene3x: older lucene formats always had this issue.
 		// @Absurd @Ignore takes ~20GB-30GB of space and 10 minutes.
 		// with some codecs needs more heap space as well.
 		/// <exception cref="System.Exception"></exception>
-		public virtual void Test()
+		[Test]
+        public virtual void TestBytePostings()
 		{
 			BaseDirectoryWrapper dir = NewFSDirectory(CreateTempDir("2BPostingsBytes1"));
 			if (dir is MockDirectoryWrapper)
 			{
 				((MockDirectoryWrapper)dir).SetThrottling(MockDirectoryWrapper.Throttling.NEVER);
 			}
-			IndexWriter w = new IndexWriter(dir, ((IndexWriterConfig)((IndexWriterConfig)new 
-				IndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMaxBufferedDocs
-				(IndexWriterConfig.DISABLE_AUTO_FLUSH)).SetRAMBufferSizeMB(256.0)).SetMergeScheduler
+			IndexWriter w = new IndexWriter(dir, ((IndexWriterConfig)new 
+			    IndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMaxBufferedDocs
+			    (IndexWriterConfig.DISABLE_AUTO_FLUSH).SetRAMBufferSizeMB(256.0)).SetMergeScheduler
 				(new ConcurrentMergeScheduler()).SetMergePolicy(NewLogMergePolicy(false, 10)).SetOpenMode
 				(IndexWriterConfig.OpenMode.CREATE));
-			MergePolicy mp = w.GetConfig().GetMergePolicy();
+			MergePolicy mp = w.Config.MergePolicy;
 			if (mp is LogByteSizeMergePolicy)
 			{
 				// 1 petabyte:
-				((LogByteSizeMergePolicy)mp).SetMaxMergeMB(1024 * 1024 * 1024);
+				((LogByteSizeMergePolicy)mp).MaxMergeMB = (1024 * 1024 * 1024);
 			}
-			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-				();
+			var doc = new Lucene.Net.Documents.Document();
 			FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
-			ft.SetIndexOptions(FieldInfo.IndexOptions.DOCS_AND_FREQS);
-			ft.SetOmitNorms(true);
+			ft.IndexOptions = (FieldInfo.IndexOptions.DOCS_AND_FREQS);
+			ft.OmitNorms = (true);
 			Test2BPostingsBytes.MyTokenStream tokenStream = new Test2BPostingsBytes.MyTokenStream
 				();
 			Field field = new Field("field", tokenStream, ft);
@@ -67,7 +62,7 @@ namespace Lucene.Net.Index
 				w.AddDocument(doc);
 			}
 			w.ForceMerge(1);
-			w.Close();
+			w.Dispose();
 			DirectoryReader oneThousand = DirectoryReader.Open(dir);
 			IndexReader[] subReaders = new IndexReader[1000];
 			Arrays.Fill(subReaders, oneThousand);
@@ -81,8 +76,8 @@ namespace Lucene.Net.Index
 				, null));
 			w2.AddIndexes(mr);
 			w2.ForceMerge(1);
-			w2.Close();
-			oneThousand.Close();
+			w2.Dispose();
+			oneThousand.Dispose();
 			DirectoryReader oneMillion = DirectoryReader.Open(dir2);
 			subReaders = new IndexReader[2000];
 			Arrays.Fill(subReaders, oneMillion);
@@ -96,27 +91,32 @@ namespace Lucene.Net.Index
 				, null));
 			w3.AddIndexes(mr);
 			w3.ForceMerge(1);
-			w3.Close();
-			oneMillion.Close();
-			dir.Close();
-			dir2.Close();
-			dir3.Close();
+			w3.Dispose();
+			oneMillion.Dispose();
+			dir.Dispose();
+			dir2.Dispose();
+			dir3.Dispose();
 		}
 
 		public sealed class MyTokenStream : TokenStream
 		{
-			private readonly CharTermAttribute termAtt = AddAttribute<CharTermAttribute>();
+		    private readonly CharTermAttribute termAtt;
 
 			internal int index;
 
 			internal int n;
+
+		    public MyTokenStream()
+		    {
+                termAtt = AddAttribute<CharTermAttribute>();
+		    }
 
 			public override bool IncrementToken()
 			{
 				if (index < n)
 				{
 					ClearAttributes();
-					termAtt.Buffer()[0] = 'a';
+					termAtt.Buffer[0] = 'a';
 					termAtt.SetLength(1);
 					index++;
 					return true;

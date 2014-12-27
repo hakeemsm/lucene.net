@@ -119,7 +119,7 @@ namespace Lucene.Net.Search
 					w.AddDocument(doc);
 				}
 				reader = w.GetReader();
-				w.Close();
+				w.Dispose();
 			}
 			// NOTE: sometimes reader has just one segment, which is
 			// important to test
@@ -138,16 +138,16 @@ namespace Lucene.Net.Search
 			else
 			{
 				CompositeReaderContext compCTX = (CompositeReaderContext)ctx;
-				int size = compCTX.Leaves().Count;
+				int size = compCTX.Leaves.Count;
 				subSearchers = new TestTopDocsMerge.ShardSearcher[size];
 				docStarts = new int[size];
 				int docBase = 0;
 				for (int searcherIDX = 0; searcherIDX < subSearchers.Length; searcherIDX++)
 				{
-					AtomicReaderContext leave = compCTX.Leaves()[searcherIDX];
+					AtomicReaderContext leave = compCTX.Leaves[searcherIDX];
 					subSearchers[searcherIDX] = new TestTopDocsMerge.ShardSearcher(leave, compCTX);
 					docStarts[searcherIDX] = docBase;
-					docBase += ((AtomicReader)leave.Reader()).MaxDoc;
+					docBase += ((AtomicReader)leave.Reader).MaxDoc;
 				}
 			}
 			IList<SortField> sortFields = new AList<SortField>();
@@ -202,15 +202,15 @@ namespace Lucene.Net.Search
 						from = TestUtil.NextInt(Random(), 0, numHits - 1);
 						size = numHits - from;
 						TopDocs tempTopHits = c.TopDocs();
-						if (from < tempTopHits.scoreDocs.Length)
+						if (from < tempTopHits.ScoreDocs.Length)
 						{
 							// Can't use TopDocs#topDocs(start, howMany), since it has different behaviour when start >= hitCount
 							// than TopDocs#merge currently has
-							ScoreDoc[] newScoreDocs = new ScoreDoc[Math.Min(size, tempTopHits.scoreDocs.Length
+							ScoreDoc[] newScoreDocs = new ScoreDoc[Math.Min(size, tempTopHits.ScoreDocs.Length
 								 - from)];
-							System.Array.Copy(tempTopHits.scoreDocs, from, newScoreDocs, 0, newScoreDocs.Length
+							System.Array.Copy(tempTopHits.ScoreDocs, from, newScoreDocs, 0, newScoreDocs.Length
 								);
-							tempTopHits.scoreDocs = newScoreDocs;
+							tempTopHits.ScoreDocs = newScoreDocs;
 							topHits = tempTopHits;
 						}
 						else
@@ -234,15 +234,15 @@ namespace Lucene.Net.Search
 						from = TestUtil.NextInt(Random(), 0, numHits - 1);
 						size = numHits - from;
 						TopDocs tempTopHits = c.TopDocs();
-						if (from < tempTopHits.scoreDocs.Length)
+						if (from < tempTopHits.ScoreDocs.Length)
 						{
 							// Can't use TopDocs#topDocs(start, howMany), since it has different behaviour when start >= hitCount
 							// than TopDocs#merge currently has
-							ScoreDoc[] newScoreDocs = new ScoreDoc[Math.Min(size, tempTopHits.scoreDocs.Length
+							ScoreDoc[] newScoreDocs = new ScoreDoc[Math.Min(size, tempTopHits.ScoreDocs.Length
 								 - from)];
-							System.Array.Copy(tempTopHits.scoreDocs, from, newScoreDocs, 0, newScoreDocs.Length
+							System.Array.Copy(tempTopHits.ScoreDocs, from, newScoreDocs, 0, newScoreDocs.Length
 								);
-							tempTopHits.scoreDocs = newScoreDocs;
+							tempTopHits.ScoreDocs = newScoreDocs;
 							topHits = tempTopHits;
 						}
 						else
@@ -263,14 +263,14 @@ namespace Lucene.Net.Search
 						System.Console.Out.WriteLine("from=" + from + " size=" + size);
 					}
 					System.Console.Out.WriteLine("  top search: " + topHits.TotalHits + " TotalHits; hits="
-						 + (topHits.scoreDocs == null ? "null" : topHits.scoreDocs.Length + " maxScore="
+						 + (topHits.ScoreDocs == null ? "null" : topHits.ScoreDocs.Length + " maxScore="
 						 + topHits.GetMaxScore()));
-					if (topHits.scoreDocs != null)
+					if (topHits.ScoreDocs != null)
 					{
-						for (int hitIDX = 0; hitIDX < topHits.scoreDocs.Length; hitIDX++)
+						for (int hitIDX = 0; hitIDX < topHits.ScoreDocs.Length; hitIDX++)
 						{
-							ScoreDoc sd = topHits.scoreDocs[hitIDX];
-							System.Console.Out.WriteLine("    doc=" + sd.doc + " score=" + sd.score);
+							ScoreDoc sd = topHits.ScoreDocs[hitIDX];
+							System.Console.Out.WriteLine("    doc=" + sd.Doc + " score=" + sd.score);
 						}
 					}
 				}
@@ -296,12 +296,12 @@ namespace Lucene.Net.Search
 					if (VERBOSE)
 					{
 						System.Console.Out.WriteLine("  shard=" + shardIDX + " " + subHits.TotalHits + " TotalHits hits="
-							 + (subHits.scoreDocs == null ? "null" : subHits.scoreDocs.Length));
-						if (subHits.scoreDocs != null)
+							 + (subHits.ScoreDocs == null ? "null" : subHits.ScoreDocs.Length));
+						if (subHits.ScoreDocs != null)
 						{
-							foreach (ScoreDoc sd in subHits.scoreDocs)
+							foreach (ScoreDoc sd in subHits.ScoreDocs)
 							{
-								System.Console.Out.WriteLine("    doc=" + sd.doc + " score=" + sd.score);
+								System.Console.Out.WriteLine("    doc=" + sd.Doc + " score=" + sd.score);
 							}
 						}
 					}
@@ -316,20 +316,20 @@ namespace Lucene.Net.Search
 				{
 					mergedHits = TopDocs.Merge(sort, numHits, shardHits);
 				}
-				if (mergedHits.scoreDocs != null)
+				if (mergedHits.ScoreDocs != null)
 				{
 					// Make sure the returned shards are correct:
-					for (int hitIDX = 0; hitIDX < mergedHits.scoreDocs.Length; hitIDX++)
+					for (int hitIDX = 0; hitIDX < mergedHits.ScoreDocs.Length; hitIDX++)
 					{
-						ScoreDoc sd = mergedHits.scoreDocs[hitIDX];
-						AreEqual("doc=" + sd.doc + " wrong shard", ReaderUtil.SubIndex
-							(sd.doc, docStarts), sd.shardIndex);
+						ScoreDoc sd = mergedHits.ScoreDocs[hitIDX];
+						AreEqual("doc=" + sd.Doc + " wrong shard", ReaderUtil.SubIndex
+							(sd.Doc, docStarts), sd.shardIndex);
 					}
 				}
 				TestUtil.AssertEquals(topHits, mergedHits);
 			}
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 		}
 	}
 }

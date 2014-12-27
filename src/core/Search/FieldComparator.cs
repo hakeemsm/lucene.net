@@ -1294,7 +1294,7 @@ namespace Lucene.Net.Search
 
             public override FieldComparator SetNextReader(AtomicReaderContext context)
             {
-                docTerms = FieldCache.DEFAULT.GetTerms(context.AtomicReader, field);
+                docTerms = FieldCache.DEFAULT.GetTerms(context.AtomicReader, field, true);
                 return this;
             }
 

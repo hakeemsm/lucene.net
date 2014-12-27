@@ -26,7 +26,7 @@ using MockRAMDirectory = Lucene.Net.Store.MockRAMDirectory;
 using Constants = Lucene.Net.Util.Constants;
 using LuceneTestCase = Lucene.Net.Util.LuceneTestCase;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	
 	[TestFixture]
@@ -45,10 +45,10 @@ namespace Lucene.Net.Index
 			{
 				writer.AddDocument(doc);
 			}
-			writer.Close();
+			writer.Dispose();
 			IndexReader reader = IndexReader.Open(dir, false);
 			reader.DeleteDocument(5);
-			reader.Close();
+			reader.Dispose();
 			
 			System.IO.MemoryStream bos = new System.IO.MemoryStream(1024);
 			CheckIndex checker = new CheckIndex(dir);

@@ -64,7 +64,7 @@ namespace Lucene.Net.Search
 			// blindly accepts that docID in any sub-segment
 			writer.ForceMerge(1);
 			reader = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			searcher = NewSearcher(reader);
 			query = new TermQuery(new Term("field", "three"));
 			filter = NewStaticFilterB();
@@ -105,8 +105,8 @@ namespace Lucene.Net.Search
 		/// <exception cref="System.Exception"></exception>
 		public override void TearDown()
 		{
-			reader.Close();
-			directory.Close();
+			reader.Dispose();
+			directory.Dispose();
 			base.TearDown();
 		}
 
@@ -124,33 +124,33 @@ namespace Lucene.Net.Search
 		{
 			Query filteredquery = new FilteredQuery(query, filter, RandomFilterStrategy(Random
 				(), useRandomAccess));
-			ScoreDoc[] hits = searcher.Search(filteredquery, null, 1000).scoreDocs;
+			ScoreDoc[] hits = searcher.Search(filteredquery, null, 1000).ScoreDocs;
 			AreEqual(1, hits.Length);
-			AreEqual(1, hits[0].doc);
+			AreEqual(1, hits[0].Doc);
 			QueryUtils.Check(Random(), filteredquery, searcher);
 			hits = searcher.Search(filteredquery, null, 1000, new Sort(new SortField("sorter"
-				, SortField.Type.STRING))).scoreDocs;
+				, SortField.Type.STRING))).ScoreDocs;
 			AreEqual(1, hits.Length);
-			AreEqual(1, hits[0].doc);
+			AreEqual(1, hits[0].Doc);
 			filteredquery = new FilteredQuery(new TermQuery(new Term("field", "one")), filter
 				, RandomFilterStrategy(Random(), useRandomAccess));
-			hits = searcher.Search(filteredquery, null, 1000).scoreDocs;
+			hits = searcher.Search(filteredquery, null, 1000).ScoreDocs;
 			AreEqual(2, hits.Length);
 			QueryUtils.Check(Random(), filteredquery, searcher);
 			filteredquery = new FilteredQuery(new MatchAllDocsQuery(), filter, RandomFilterStrategy
 				(Random(), useRandomAccess));
-			hits = searcher.Search(filteredquery, null, 1000).scoreDocs;
+			hits = searcher.Search(filteredquery, null, 1000).ScoreDocs;
 			AreEqual(2, hits.Length);
 			QueryUtils.Check(Random(), filteredquery, searcher);
 			filteredquery = new FilteredQuery(new TermQuery(new Term("field", "x")), filter, 
 				RandomFilterStrategy(Random(), useRandomAccess));
-			hits = searcher.Search(filteredquery, null, 1000).scoreDocs;
+			hits = searcher.Search(filteredquery, null, 1000).ScoreDocs;
 			AreEqual(1, hits.Length);
-			AreEqual(3, hits[0].doc);
+			AreEqual(3, hits[0].Doc);
 			QueryUtils.Check(Random(), filteredquery, searcher);
 			filteredquery = new FilteredQuery(new TermQuery(new Term("field", "y")), filter, 
 				RandomFilterStrategy(Random(), useRandomAccess));
-			hits = searcher.Search(filteredquery, null, 1000).scoreDocs;
+			hits = searcher.Search(filteredquery, null, 1000).ScoreDocs;
 			AreEqual(0, hits.Length);
 			QueryUtils.Check(Random(), filteredquery, searcher);
 			// test boost
@@ -202,8 +202,8 @@ namespace Lucene.Net.Search
 		/// <exception cref="System.Exception"></exception>
 		public virtual void AssertScoreEquals(Query q1, Query q2)
 		{
-			ScoreDoc[] hits1 = searcher.Search(q1, null, 1000).scoreDocs;
-			ScoreDoc[] hits2 = searcher.Search(q2, null, 1000).scoreDocs;
+			ScoreDoc[] hits1 = searcher.Search(q1, null, 1000).ScoreDocs;
+			ScoreDoc[] hits2 = searcher.Search(q2, null, 1000).ScoreDocs;
 			AreEqual(hits1.Length, hits2.Length);
 			for (int i = 0; i < hits1.Length; i++)
 			{
@@ -226,7 +226,7 @@ namespace Lucene.Net.Search
 			TermRangeQuery rq = TermRangeQuery.NewStringRange("sorter", "b", "d", true, true);
 			Query filteredquery = new FilteredQuery(rq, filter, RandomFilterStrategy(Random()
 				, useRandomAccess));
-			ScoreDoc[] hits = searcher.Search(filteredquery, null, 1000).scoreDocs;
+			ScoreDoc[] hits = searcher.Search(filteredquery, null, 1000).ScoreDocs;
 			AreEqual(2, hits.Length);
 			QueryUtils.Check(Random(), filteredquery, searcher);
 		}
@@ -250,7 +250,7 @@ namespace Lucene.Net.Search
 			query = new FilteredQuery(new TermQuery(new Term("field", "one")), new SingleDocTestFilter
 				(1), RandomFilterStrategy(Random(), useRandomAccess));
 			bq.Add(query, BooleanClause.Occur.MUST);
-			ScoreDoc[] hits = searcher.Search(bq, null, 1000).scoreDocs;
+			ScoreDoc[] hits = searcher.Search(bq, null, 1000).ScoreDocs;
 			AreEqual(0, hits.Length);
 			QueryUtils.Check(Random(), query, searcher);
 		}
@@ -274,7 +274,7 @@ namespace Lucene.Net.Search
 			query = new FilteredQuery(new TermQuery(new Term("field", "one")), new SingleDocTestFilter
 				(1), RandomFilterStrategy(Random(), useRandomAccess));
 			bq.Add(query, BooleanClause.Occur.SHOULD);
-			ScoreDoc[] hits = searcher.Search(bq, null, 1000).scoreDocs;
+			ScoreDoc[] hits = searcher.Search(bq, null, 1000).ScoreDocs;
 			AreEqual(2, hits.Length);
 			QueryUtils.Check(Random(), query, searcher);
 		}
@@ -298,7 +298,7 @@ namespace Lucene.Net.Search
 				(Random(), useRandomAccess));
 			bq.Add(new TermQuery(new Term("field", "one")), BooleanClause.Occur.SHOULD);
 			bq.Add(new TermQuery(new Term("field", "two")), BooleanClause.Occur.SHOULD);
-			ScoreDoc[] hits = searcher.Search(query, 1000).scoreDocs;
+			ScoreDoc[] hits = searcher.Search(query, 1000).ScoreDocs;
 			AreEqual(1, hits.Length);
 			QueryUtils.Check(Random(), query, searcher);
 		}
@@ -320,14 +320,14 @@ namespace Lucene.Net.Search
 				(Random(), useRandomAccess)), new CachingWrapperFilter(new QueryWrapperFilter(new 
 				TermQuery(new Term("field", "four")))), RandomFilterStrategy(Random(), useRandomAccess
 				));
-			ScoreDoc[] hits = searcher.Search(query, 10).scoreDocs;
+			ScoreDoc[] hits = searcher.Search(query, 10).ScoreDocs;
 			AreEqual(2, hits.Length);
 			QueryUtils.Check(Random(), query, searcher);
 			// one more:
 			query = new FilteredQuery(query, new CachingWrapperFilter(new QueryWrapperFilter(
 				new TermQuery(new Term("field", "five")))), RandomFilterStrategy(Random(), useRandomAccess
 				));
-			hits = searcher.Search(query, 10).scoreDocs;
+			hits = searcher.Search(query, 10).ScoreDocs;
 			AreEqual(1, hits.Length);
 			QueryUtils.Check(Random(), query, searcher);
 		}
@@ -482,7 +482,7 @@ namespace Lucene.Net.Search
 				writer.AddDocument(doc);
 			}
 			IndexReader reader = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(reader);
 			Query query = new FilteredQuery(new TermQuery(new Term("field", "0")), new _Filter_422
 				(), FilteredQuery.QUERY_FIRST_FILTER_STRATEGY);
@@ -503,7 +503,7 @@ namespace Lucene.Net.Search
 				)
 			{
 				bool nullBitset = LuceneTestCase.Random().Next(10) == 5;
-				AtomicReader reader = ((AtomicReader)context.Reader());
+				AtomicReader reader = ((AtomicReader)context.Reader);
 				DocsEnum termDocsEnum = reader.TermDocsEnum(new Term("field", "0"));
 				if (termDocsEnum == null)
 				{
@@ -596,7 +596,7 @@ namespace Lucene.Net.Search
 				writer.AddDocument(doc);
 			}
 			IndexReader reader = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			bool queryFirst = Random().NextBoolean();
 			IndexSearcher searcher = NewSearcher(reader);
 			Query query = new FilteredQuery(new TermQuery(new Term("field", "0")), new _Filter_501
@@ -640,7 +640,7 @@ namespace Lucene.Net.Search
 				/// <exception cref="System.IO.IOException"></exception>
 				public override DocIdSetIterator Iterator()
 				{
-					DocsEnum termDocsEnum = ((AtomicReader)context.Reader()).TermDocsEnum(new Term("field"
+					DocsEnum termDocsEnum = ((AtomicReader)context.Reader).TermDocsEnum(new Term("field"
 						, "0"));
 					if (termDocsEnum == null)
 					{

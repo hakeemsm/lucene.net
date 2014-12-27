@@ -246,7 +246,7 @@ namespace Lucene.Net.Index
         // to allow users to query an IndexWriter settings.
         private readonly LiveIndexWriterConfig config;
 
-        internal DirectoryReader Reader
+        public DirectoryReader Reader
         {
             get
             {

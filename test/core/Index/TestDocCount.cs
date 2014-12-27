@@ -11,7 +11,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	/// <summary>Tests the Terms.docCount statistic</summary>
 	public class TestDocCount : LuceneTestCase
@@ -28,13 +28,13 @@ namespace Lucene.Net.Index
 			}
 			IndexReader ir = iw.GetReader();
 			VerifyCount(ir);
-			ir.Close();
+			ir.Dispose();
 			iw.ForceMerge(1);
 			ir = iw.GetReader();
 			VerifyCount(ir);
-			ir.Close();
-			iw.Close();
-			dir.Close();
+			ir.Dispose();
+			iw.Dispose();
+			dir.Dispose();
 		}
 
 		private Lucene.Net.Documents.Document Doc()

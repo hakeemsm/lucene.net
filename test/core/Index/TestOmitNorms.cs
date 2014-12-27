@@ -11,7 +11,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestOmitNorms : LuceneTestCase
 	{
@@ -30,7 +30,7 @@ namespace Lucene.Net.Index
 			d.Add(f1);
 			// this field will NOT have norms
 			FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
-			customType.SetOmitNorms(true);
+			customType.OmitNorms = (true);
 			Field f2 = NewField("f2", "This field has NO norms in all docs", customType);
 			d.Add(f2);
 			writer.AddDocument(d);
@@ -45,15 +45,15 @@ namespace Lucene.Net.Index
 			// force merge
 			writer.ForceMerge(1);
 			// flush
-			writer.Close();
+			writer.Dispose();
 			SegmentReader reader = GetOnlySegmentReader(DirectoryReader.Open(ram));
 			FieldInfos fi = reader.GetFieldInfos();
 			IsTrue("OmitNorms field bit should be set.", fi.FieldInfo(
 				"f1").OmitsNorms());
 			IsTrue("OmitNorms field bit should be set.", fi.FieldInfo(
 				"f2").OmitsNorms());
-			reader.Close();
-			ram.Close();
+			reader.Dispose();
+			ram.Dispose();
 		}
 
 		// Tests whether merging of docs that have different
@@ -72,7 +72,7 @@ namespace Lucene.Net.Index
 			d.Add(f1);
 			// this field will NOT have norms
 			FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
-			customType.SetOmitNorms(true);
+			customType.OmitNorms = (true);
 			Field f2 = NewField("f2", "This field has NO norms in all docs", customType);
 			d.Add(f2);
 			for (int i = 0; i < 30; i++)
@@ -92,15 +92,15 @@ namespace Lucene.Net.Index
 			// force merge
 			writer.ForceMerge(1);
 			// flush
-			writer.Close();
+			writer.Dispose();
 			SegmentReader reader = GetOnlySegmentReader(DirectoryReader.Open(ram));
 			FieldInfos fi = reader.GetFieldInfos();
 			IsTrue("OmitNorms field bit should be set.", fi.FieldInfo(
 				"f1").OmitsNorms());
 			IsTrue("OmitNorms field bit should be set.", fi.FieldInfo(
 				"f2").OmitsNorms());
-			reader.Close();
-			ram.Close();
+			reader.Dispose();
+			ram.Dispose();
 		}
 
 		// Make sure first adding docs that do not omitNorms for
@@ -120,7 +120,7 @@ namespace Lucene.Net.Index
 			d.Add(f1);
 			// this field will NOT have norms
 			FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
-			customType.SetOmitNorms(true);
+			customType.OmitNorms = (true);
 			Field f2 = NewField("f2", "This field has NO norms in all docs", customType);
 			d.Add(f2);
 			for (int i = 0; i < 5; i++)
@@ -134,15 +134,15 @@ namespace Lucene.Net.Index
 			// force merge
 			writer.ForceMerge(1);
 			// flush
-			writer.Close();
+			writer.Dispose();
 			SegmentReader reader = GetOnlySegmentReader(DirectoryReader.Open(ram));
 			FieldInfos fi = reader.GetFieldInfos();
 			IsTrue("OmitNorms field bit should not be set.", !fi.FieldInfo
 				("f1").OmitsNorms());
 			IsTrue("OmitNorms field bit should be set.", fi.FieldInfo(
 				"f2").OmitsNorms());
-			reader.Close();
-			ram.Close();
+			reader.Dispose();
+			ram.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -166,12 +166,12 @@ namespace Lucene.Net.Index
 			IndexWriter writer = new IndexWriter(ram, ((IndexWriterConfig)NewIndexWriterConfig
 				(TEST_VERSION_CURRENT, analyzer).SetMaxBufferedDocs(3)).SetMergePolicy(NewLogMergePolicy
 				()));
-			LogMergePolicy lmp = (LogMergePolicy)writer.GetConfig().GetMergePolicy();
-			lmp.SetMergeFactor(2);
+			LogMergePolicy lmp = (LogMergePolicy)writer.Config.MergePolicy;
+			lmp.MergeFactor = (2);
 			lmp.SetNoCFSRatio(0.0);
 			Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 			FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
-			customType.SetOmitNorms(true);
+			customType.OmitNorms = (true);
 			Field f1 = NewField("f1", "This field has no norms", customType);
 			d.Add(f1);
 			for (int i = 0; i < 30; i++)
@@ -183,9 +183,9 @@ namespace Lucene.Net.Index
 			// force merge
 			writer.ForceMerge(1);
 			// flush
-			writer.Close();
+			writer.Dispose();
 			AssertNoNrm(ram);
-			ram.Close();
+			ram.Dispose();
 		}
 
 		/// <summary>
@@ -206,16 +206,16 @@ namespace Lucene.Net.Index
 			Field norms = new Field("foo", "a", customType);
 			// indexed without norms
 			FieldType customType1 = new FieldType(TextField.TYPE_STORED);
-			customType1.SetOmitNorms(true);
+			customType1.OmitNorms = (true);
 			Field noNorms = new Field("foo", "a", customType1);
 			// not indexed, but stored
 			FieldType customType2 = new FieldType();
-			customType2.SetStored(true);
+			customType2.Stored = (true);
 			Field noIndex = new Field("foo", "a", customType2);
 			// not indexed but stored, omitNorms is set
 			FieldType customType3 = new FieldType();
-			customType3.SetStored(true);
-			customType3.SetOmitNorms(true);
+			customType3.Stored = (true);
+			customType3.OmitNorms = (true);
 			Field noNormsNoIndex = new Field("foo", "a", customType3);
 			// not indexed nor stored (doesnt exist at all, we index a different field instead)
 			Field emptyNorms = new Field("bar", "a", customType);
@@ -282,10 +282,10 @@ namespace Lucene.Net.Index
 					AreEqual(norms1.Get(docID), norms2.Get(docID));
 				}
 			}
-			ir1.Close();
-			ir2.Close();
-			riw.Close();
-			dir.Close();
+			ir1.Dispose();
+			ir2.Dispose();
+			riw.Dispose();
+			dir.Dispose();
 			return norms1;
 		}
 	}

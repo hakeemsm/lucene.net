@@ -11,7 +11,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestRollback : LuceneTestCase
 	{
@@ -25,10 +25,10 @@ namespace Lucene.Net.Index
 			{
 				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
-				doc.Add(NewStringField("pk", Sharpen.Extensions.ToString(i), Field.Store.YES));
+				doc.Add(NewStringField("pk", i.ToString(), Field.Store.YES));
 				rw.AddDocument(doc);
 			}
-			rw.Close();
+			rw.Dispose();
 			// If buffer size is small enough to cause a flush, errors ensue...
 			IndexWriter w = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig(TEST_VERSION_CURRENT
 				, new MockAnalyzer(Random())).SetMaxBufferedDocs(2)).SetOpenMode(IndexWriterConfig.OpenMode
@@ -45,9 +45,9 @@ namespace Lucene.Net.Index
 			w.Rollback();
 			IndexReader r = DirectoryReader.Open(dir);
 			AreEqual("index should contain same number of docs post rollback"
-				, 5, r.NumDocs());
-			r.Close();
-			dir.Close();
+				, 5, r.NumDocs);
+			r.Dispose();
+			dir.Dispose();
 		}
 	}
 }

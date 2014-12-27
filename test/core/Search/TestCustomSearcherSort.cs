@@ -65,15 +65,15 @@ namespace Lucene.Net.Search
 				writer.AddDocument(doc);
 			}
 			reader = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			query = new TermQuery(new Term("content", "test"));
 		}
 
 		/// <exception cref="System.Exception"></exception>
 		public override void TearDown()
 		{
-			reader.Close();
-			index.Close();
+			reader.Dispose();
+			index.Dispose();
 			base.TearDown();
 		}
 
@@ -112,7 +112,7 @@ namespace Lucene.Net.Search
 		private void MatchHits(IndexSearcher searcher, Sort sort)
 		{
 			// make a query without sorting first
-			ScoreDoc[] hitsByRank = searcher.Search(query, null, int.MaxValue).scoreDocs;
+			ScoreDoc[] hitsByRank = searcher.Search(query, null, int.MaxValue).ScoreDocs;
 			CheckHits(hitsByRank, "Sort by rank: ");
 			// check for duplicates
 			IDictionary<int, int> resultMap = new SortedDictionary<int, int>();
@@ -120,20 +120,20 @@ namespace Lucene.Net.Search
 			// entries are silently overwritten
 			for (int hitid = 0; hitid < hitsByRank.Length; ++hitid)
 			{
-				resultMap.Put(Sharpen.Extensions.ValueOf(hitsByRank[hitid].doc), Sharpen.Extensions.ValueOf
+				resultMap.Put(Sharpen.Extensions.ValueOf(hitsByRank[hitid].Doc), Sharpen.Extensions.ValueOf
 					(hitid));
 			}
 			// Key: Lucene
 			// Document ID
 			// Value: Hits-Objekt Index
 			// now make a query using the sort criteria
-			ScoreDoc[] resultSort = searcher.Search(query, null, int.MaxValue, sort).scoreDocs;
+			ScoreDoc[] resultSort = searcher.Search(query, null, int.MaxValue, sort).ScoreDocs;
 			CheckHits(resultSort, "Sort by custom criteria: ");
 			// check for duplicates
 			// besides the sorting both sets of hits must be identical
 			for (int hitid_1 = 0; hitid_1 < resultSort.Length; ++hitid_1)
 			{
-				int idHitDate = Sharpen.Extensions.ValueOf(resultSort[hitid_1].doc);
+				int idHitDate = Sharpen.Extensions.ValueOf(resultSort[hitid_1].Doc);
 				// document ID
 				// from sorted
 				// search
@@ -171,7 +171,7 @@ namespace Lucene.Net.Search
 				for (int docnum = 0; docnum < hits.Length; ++docnum)
 				{
 					int luceneId = null;
-					luceneId = Sharpen.Extensions.ValueOf(hits[docnum].doc);
+					luceneId = Sharpen.Extensions.ValueOf(hits[docnum].Doc);
 					if (idMap.ContainsKey(luceneId))
 					{
 						StringBuilder message = new StringBuilder(prefix);

@@ -28,8 +28,8 @@ namespace Lucene.Net.Search.Spans
 		/// <exception cref="System.Exception"></exception>
 		public override void TearDown()
 		{
-			reader.Close();
-			directory.Close();
+			reader.Dispose();
+			directory.Dispose();
 			base.TearDown();
 		}
 
@@ -49,7 +49,7 @@ namespace Lucene.Net.Search.Spans
 				writer.AddDocument(doc);
 			}
 			reader = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			searcher = NewSearcher(reader);
 		}
 
@@ -180,8 +180,8 @@ namespace Lucene.Net.Search.Spans
 			SpanNearQuery q = MakeQuery();
 			Weight w = searcher.CreateNormalizedWeight(q);
 			IndexReaderContext topReaderContext = searcher.GetTopReaderContext();
-			AtomicReaderContext leave = topReaderContext.Leaves()[0];
-			Scorer s = w.Scorer(leave, ((AtomicReader)leave.Reader()).GetLiveDocs());
+			AtomicReaderContext leave = topReaderContext.Leaves[0];
+			Scorer s = w.Scorer(leave, ((AtomicReader)leave.Reader).LiveDocs);
 			AreEqual(1, s.Advance(1));
 		}
 

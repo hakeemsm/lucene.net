@@ -59,13 +59,13 @@ namespace Lucene.Net.Search
 			hits = searcher.Search(query, null, 1000).ScoreDocs;
 			Assert.AreEqual(1, hits.Length, "One in /Computers/Mac");
 			query = new PrefixQuery(new Term("category", string.Empty));
-			Terms terms = MultiFields.GetTerms(searcher.GetIndexReader(), "category");
+			Terms terms = MultiFields.GetTerms(searcher.IndexReader, "category");
 			IsFalse(query.GetTermsEnum(terms) is PrefixTermsEnum);
-			hits = searcher.Search(query, null, 1000).scoreDocs;
+			hits = searcher.Search(query, null, 1000).ScoreDocs;
 			AreEqual("everything", 3, hits.Length);
-			writer.Close();
-			reader.Close();
-			directory.Close();
+			writer.Dispose();
+			reader.Dispose();
+			directory.Dispose();
 		}
 	}
 }

@@ -10,7 +10,7 @@ using Lucene.Net.Search;
 using Lucene.Net.Store;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestNRTThreads : ThreadedIndexingAndSearchingTestCase
 	{
@@ -32,7 +32,7 @@ namespace Lucene.Net.Index
 		{
 			bool anyOpenDelFiles = false;
 			DirectoryReader r = DirectoryReader.Open(writer, true);
-			while (Runtime.CurrentTimeMillis() < stopTime && !failed.Get())
+			while (DateTime.Now.CurrentTimeMillis() < stopTime && !failed.Get())
 			{
 				if (Random().NextBoolean())
 				{
@@ -43,7 +43,7 @@ namespace Lucene.Net.Index
 					DirectoryReader r2 = DirectoryReader.OpenIfChanged(r);
 					if (r2 != null)
 					{
-						r.Close();
+						r.Dispose();
 						r = r2;
 					}
 				}
@@ -53,7 +53,7 @@ namespace Lucene.Net.Index
 					{
 						System.Console.Out.WriteLine("TEST: now close reader=" + r);
 					}
-					r.Close();
+					r.Dispose();
 					writer.Commit();
 					ICollection<string> openDeletedFiles = ((MockDirectoryWrapper)dir).GetOpenDeletedFiles
 						();
@@ -75,14 +75,14 @@ namespace Lucene.Net.Index
 				}
 				//System.out.println("numDocs=" + r.numDocs() + "
 				//openDelFileCount=" + dir.openDeleteFileCount());
-				if (r.NumDocs() > 0)
+				if (r.NumDocs > 0)
 				{
 					fixedSearcher = new IndexSearcher(r, es);
 					SmokeTestSearcher(fixedSearcher);
-					RunSearchThreads(Runtime.CurrentTimeMillis() + 500);
+					RunSearchThreads(DateTime.Now.CurrentTimeMillis() + 500);
 				}
 			}
-			r.Close();
+			r.Dispose();
 			//System.out.println("numDocs=" + r.numDocs() + " openDelFileCount=" + dir.openDeleteFileCount());
 			ICollection<string> openDeletedFiles_1 = ((MockDirectoryWrapper)dir).GetOpenDeletedFiles
 				();
@@ -112,7 +112,7 @@ namespace Lucene.Net.Index
 			// Force writer to do reader pooling, always, so that
 			// all merged segments, even for merges before
 			// doSearching is called, are warmed:
-			writer.GetReader().Close();
+			writer.GetReader().Dispose();
 		}
 
 		private IndexSearcher fixedSearcher;
@@ -129,7 +129,7 @@ namespace Lucene.Net.Index
 			if (s != fixedSearcher)
 			{
 				// Final searcher:
-				s.GetIndexReader().Close();
+				s.IndexReader.Dispose();
 			}
 		}
 

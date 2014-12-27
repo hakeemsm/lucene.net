@@ -102,11 +102,11 @@ namespace Lucene.Net.Search
 				if (random.Next(40) == 17)
 				{
 					// force flush
-					writer.GetReader().Close();
+					writer.GetReader().Dispose();
 				}
 			}
 			IndexReader r = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			if (VERBOSE)
 			{
 				System.Console.Out.WriteLine("  reader=" + r);
@@ -211,17 +211,17 @@ namespace Lucene.Net.Search
 				if (VERBOSE)
 				{
 					System.Console.Out.WriteLine("  actual:");
-					for (int hitIDX = 0; hitIDX < hits.scoreDocs.Length; hitIDX++)
+					for (int hitIDX = 0; hitIDX < hits.ScoreDocs.Length; hitIDX++)
 					{
-						FieldDoc fd = (FieldDoc)hits.scoreDocs[hitIDX];
+						FieldDoc fd = (FieldDoc)hits.ScoreDocs[hitIDX];
 						BytesRef br = (BytesRef)fd.fields[0];
 						System.Console.Out.WriteLine("    " + hitIDX + ": " + (br == null ? "<missing>" : 
-							br.Utf8ToString()) + " id=" + s_1.Doc(fd.doc).Get("id"));
+							br.Utf8ToString()) + " id=" + s_1.Doc(fd.Doc).Get("id"));
 					}
 				}
-				for (int hitIDX_1 = 0; hitIDX_1 < hits.scoreDocs.Length; hitIDX_1++)
+				for (int hitIDX_1 = 0; hitIDX_1 < hits.ScoreDocs.Length; hitIDX_1++)
 				{
-					FieldDoc fd = (FieldDoc)hits.scoreDocs[hitIDX_1];
+					FieldDoc fd = (FieldDoc)hits.ScoreDocs[hitIDX_1];
 					BytesRef br = expected[hitIDX_1];
 					if (br == null && missingIsNull == false)
 					{
@@ -242,8 +242,8 @@ namespace Lucene.Net.Search
 						br2);
 				}
 			}
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 
 		private sealed class _IComparer_184 : IComparer<BytesRef>
@@ -316,7 +316,7 @@ namespace Lucene.Net.Search
 			public override DocIdSet GetDocIdSet(AtomicReaderContext context, Bits acceptDocs
 				)
 			{
-				int maxDoc = ((AtomicReader)context.Reader()).MaxDoc;
+				int maxDoc = ((AtomicReader)context.Reader).MaxDoc;
 				FieldCache.Ints idSource = FieldCache.DEFAULT.GetInts(((AtomicReader)context.Reader
 					()), "id", false);
 				IsNotNull(idSource);

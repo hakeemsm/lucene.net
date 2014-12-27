@@ -12,7 +12,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	/// <summary>Compares one codec against another</summary>
 	public class TestDuelingCodecs : LuceneTestCase
@@ -71,9 +71,9 @@ namespace Lucene.Net.Index
 			CreateRandomIndex(numdocs, leftWriter, seed);
 			CreateRandomIndex(numdocs, rightWriter, seed);
 			leftReader = MaybeWrapReader(leftWriter.GetReader());
-			leftWriter.Close();
+			leftWriter.Dispose();
 			rightReader = MaybeWrapReader(rightWriter.GetReader());
-			rightWriter.Close();
+			rightWriter.Dispose();
 			// check that our readers are valid
 			TestUtil.CheckReader(leftReader);
 			TestUtil.CheckReader(rightReader);
@@ -85,19 +85,19 @@ namespace Lucene.Net.Index
 		{
 			if (leftReader != null)
 			{
-				leftReader.Close();
+				leftReader.Dispose();
 			}
 			if (rightReader != null)
 			{
-				rightReader.Close();
+				rightReader.Dispose();
 			}
 			if (leftDir != null)
 			{
-				leftDir.Close();
+				leftDir.Dispose();
 			}
 			if (rightDir != null)
 			{
-				rightDir.Close();
+				rightDir.Dispose();
 			}
 			base.TearDown();
 		}
@@ -132,7 +132,7 @@ namespace Lucene.Net.Index
 				}
 				writer.AddDocument(document);
 			}
-			lineFileDocs.Close();
+			lineFileDocs.Dispose();
 		}
 
 		/// <summary>checks the two indexes are equivalent</summary>

@@ -166,7 +166,7 @@ namespace Lucene.Net
 				writer.AddDocument(doc);
 			
 			ms.Sync();
-			writer.Close();
+			writer.Dispose();
 
             Console.WriteLine("merge thread");
 			Assert.IsTrue(mergeThreadCreated);
@@ -177,7 +177,7 @@ namespace Lucene.Net
             Console.WriteLine("exec called");
             Assert.IsTrue(excCalled);
             Console.WriteLine("exec true");
-			dir.Close();
+			dir.Dispose();
 
             Console.WriteLine("Last");
 			Assert.IsTrue(ConcurrentMergeScheduler.AnyUnhandledExceptions());

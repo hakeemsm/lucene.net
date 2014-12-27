@@ -10,7 +10,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestIndexCommit : LuceneTestCase
 	{
@@ -25,7 +25,7 @@ namespace Lucene.Net.Index
 			AreEqual(ic1, ic2);
 			AreEqual("hash codes are not equals", ic1.GetHashCode(), ic2
 				.GetHashCode());
-			dir.Close();
+			dir.Dispose();
 		}
 
 		private sealed class _IndexCommit_34 : IndexCommit

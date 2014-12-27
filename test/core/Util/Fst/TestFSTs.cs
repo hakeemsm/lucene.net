@@ -41,7 +41,7 @@ namespace Lucene.Net.Util.Fst
 			// can be null if we force simpletext (funky, some kind of bug in test runner maybe)
 			if (dir != null)
 			{
-				dir.Close();
+				dir.Dispose();
 			}
 			base.TearDown();
 		}
@@ -300,16 +300,16 @@ namespace Lucene.Net.Util.Fst
 			FilePath tempDir = CreateTempDir("fstlines");
 			Directory dir = NewFSDirectory(tempDir);
 			IndexWriter writer = new IndexWriter(dir, conf);
-			long stopTime = Runtime.CurrentTimeMillis() + RUN_TIME_MSEC;
+			long stopTime = DateTime.Now.CurrentTimeMillis() + RUN_TIME_MSEC;
 			Lucene.Net.Documents.Document doc;
 			int docCount = 0;
-			while ((doc = docs.NextDoc()) != null && Runtime.CurrentTimeMillis() < stopTime)
+			while ((doc = docs.NextDoc()) != null && DateTime.Now.CurrentTimeMillis() < stopTime)
 			{
 				writer.AddDocument(doc);
 				docCount++;
 			}
 			IndexReader r = DirectoryReader.Open(writer, true);
-			writer.Close();
+			writer.Dispose();
 			PositiveIntOutputs outputs = PositiveIntOutputs.GetSingleton();
 			bool doRewrite = Random().NextBoolean();
 			Builder<long> builder = new Builder<long>(FST.INPUT_TYPE.BYTE1, 0, 0, true, true, 
@@ -453,8 +453,8 @@ namespace Lucene.Net.Util.Fst
 					}
 				}
 			}
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -523,7 +523,7 @@ namespace Lucene.Net.Util.Fst
 				try
 				{
 					IntsRef intsRef = new IntsRef(10);
-					long tStart = Runtime.CurrentTimeMillis();
+					long tStart = DateTime.Now.CurrentTimeMillis();
 					int ord = 0;
 					while (true)
 					{
@@ -538,20 +538,20 @@ namespace Lucene.Net.Util.Fst
 						if (ord % 500000 == 0)
 						{
 							System.Console.Out.WriteLine(string.Format(CultureInfo.ROOT, "%6.2fs: %9d...", ((
-								Runtime.CurrentTimeMillis() - tStart) / 1000.0), ord));
+								DateTime.Now.CurrentTimeMillis() - tStart) / 1000.0), ord));
 						}
 						if (ord >= limit)
 						{
 							break;
 						}
 					}
-					long tMid = Runtime.CurrentTimeMillis();
+					long tMid = DateTime.Now.CurrentTimeMillis();
 					System.Console.Out.WriteLine(((tMid - tStart) / 1000.0) + " sec to add all terms"
 						);
 					//HM:revisit 
 					//assert builder.getTermCount() == ord;
 					FST<T> fst = builder.Finish();
-					long tEnd = Runtime.CurrentTimeMillis();
+					long tEnd = DateTime.Now.CurrentTimeMillis();
 					System.Console.Out.WriteLine(((tEnd - tMid) / 1000.0) + " sec to finish/pack");
 					if (fst == null)
 					{
@@ -570,13 +570,13 @@ namespace Lucene.Net.Util.Fst
 						TextWriter w = new OutputStreamWriter(new FileOutputStream("out.dot"), StandardCharsets
 							.UTF_8);
 						Lucene.Net.Util.Fst.Util.ToDot(fst, w, false, false);
-						w.Close();
+						w.Dispose();
 						System.Console.Out.WriteLine("Wrote FST to out.dot");
 					}
 					Directory dir = FSDirectory.Open(new FilePath(dirOut));
 					IndexOutput @out = dir.CreateOutput("fst.bin", IOContext.DEFAULT);
 					fst.Save(@out);
-					@out.Close();
+					@out.Dispose();
 					System.Console.Out.WriteLine("Saved FST to fst.bin.");
 					if (!verify)
 					{
@@ -587,11 +587,11 @@ namespace Lucene.Net.Util.Fst
 					{
 						for (int iter = 0; iter < 2; iter++)
 						{
-							@is.Close();
+							@is.Dispose();
 							@is = new BufferedReader(new InputStreamReader(new FileInputStream(wordsFileIn), 
 								StandardCharsets.UTF_8), 65536);
 							ord = 0;
-							tStart = Runtime.CurrentTimeMillis();
+							tStart = DateTime.Now.CurrentTimeMillis();
 							while (true)
 							{
 								string w = @is.ReadLine();
@@ -633,7 +633,7 @@ namespace Lucene.Net.Util.Fst
 								ord++;
 								if (ord % 500000 == 0)
 								{
-									System.Console.Out.WriteLine(((Runtime.CurrentTimeMillis() - tStart) / 1000.0) + 
+									System.Console.Out.WriteLine(((DateTime.Now.CurrentTimeMillis() - tStart) / 1000.0) + 
 										"s: " + ord + "...");
 								}
 								if (ord >= limit)
@@ -641,7 +641,7 @@ namespace Lucene.Net.Util.Fst
 									break;
 								}
 							}
-							double totSec = ((Runtime.CurrentTimeMillis() - tStart) / 1000.0);
+							double totSec = ((DateTime.Now.CurrentTimeMillis() - tStart) / 1000.0);
 							System.Console.Out.WriteLine("Verify " + (iter == 1 ? "(by output) " : string.Empty
 								) + "took " + totSec + " sec + (" + (int)((totSec * 1000000000 / ord)) + " nsec per lookup)"
 								);
@@ -656,7 +656,7 @@ namespace Lucene.Net.Util.Fst
 				}
 				finally
 				{
-					@is.Close();
+					@is.Dispose();
 				}
 			}
 		}
@@ -1036,7 +1036,7 @@ namespace Lucene.Net.Util.Fst
 				// turn writer into reader:
 				IndexReader r = w.GetReader();
 				IndexSearcher s_1 = NewSearcher(r);
-				w.Close();
+				w.Dispose();
 				IList<string> allIDsList = new AList<string>(allIDs);
 				IList<string> sortedAllIDsList = new AList<string>(allIDsList);
 				sortedAllIDsList.Sort();
@@ -1151,9 +1151,9 @@ namespace Lucene.Net.Util.Fst
 						}
 					}
 				}
-				r.Close();
+				r.Dispose();
 			}
-			dir.Close();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -1192,7 +1192,7 @@ namespace Lucene.Net.Util.Fst
 				System.Console.Out.WriteLine("TEST: got reader=" + r);
 			}
 			IndexSearcher s = NewSearcher(r);
-			w.Close();
+			w.Dispose();
 			IList<string> allTermsList = new AList<string>(allTerms);
 			Sharpen.Collections.Shuffle(allTermsList, Random());
 			// verify exact lookup
@@ -1205,8 +1205,8 @@ namespace Lucene.Net.Util.Fst
 				AreEqual("term=" + term_1, 1, s.Search(new TermQuery(new Term
 					("field", term_1)), 1).TotalHits);
 			}
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 
 		/// <summary>Test state expansion (array format) on close-to-root states.</summary>
@@ -1325,7 +1325,7 @@ namespace Lucene.Net.Util.Fst
 			//Writer w = new OutputStreamWriter(new FileOutputStream("/x/tmp3/out.dot"));
 			StringWriter w = new StringWriter();
 			Lucene.Net.Util.Fst.Util.ToDot(fst, w, false, false);
-			w.Close();
+			w.Dispose();
 			//System.out.println(w.toString());
 			IsTrue(w.ToString().IndexOf("label=\"t/[7]\"") != -1);
 		}
@@ -1345,7 +1345,7 @@ namespace Lucene.Net.Util.Fst
 			StringWriter w = new StringWriter();
 			//Writer w = new OutputStreamWriter(new FileOutputStream("/x/tmp/out.dot"));
 			Lucene.Net.Util.Fst.Util.ToDot(fst, w, false, false);
-			w.Close();
+			w.Dispose();
 			//System.out.println(w.toString());
 			// check for accept state at label t
 			IsTrue(w.ToString().IndexOf("[label=\"t\" style=\"bold\"")
@@ -1392,18 +1392,18 @@ namespace Lucene.Net.Util.Fst
 			StringWriter w = new StringWriter();
 			//Writer w = new OutputStreamWriter(new FileOutputStream("/x/tmp3/out.dot"));
 			Lucene.Net.Util.Fst.Util.ToDot(fst, w, false, false);
-			w.Close();
+			w.Dispose();
 			CheckStopNodes(fst, outputs);
 			// Make sure it still works after save/load:
 			Directory dir = NewDirectory();
 			IndexOutput @out = dir.CreateOutput("fst", IOContext.DEFAULT);
 			fst.Save(@out);
-			@out.Close();
+			@out.Dispose();
 			IndexInput @in = dir.OpenInput("fst", IOContext.DEFAULT);
 			FST<long> fst2 = new FST<long>(@in, outputs);
 			CheckStopNodes(fst2, outputs);
-			@in.Close();
-			dir.Close();
+			@in.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>

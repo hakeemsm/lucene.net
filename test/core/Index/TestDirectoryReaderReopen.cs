@@ -15,7 +15,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestDirectoryReaderReopen : LuceneTestCase
 	{
@@ -25,11 +25,11 @@ namespace Lucene.Net.Index
 			Directory dir1 = NewDirectory();
 			CreateIndex(Random(), dir1, false);
 			PerformDefaultTests(new _TestReopen_49(dir1));
-			dir1.Close();
+			dir1.Dispose();
 			Directory dir2 = NewDirectory();
 			CreateIndex(Random(), dir2, true);
 			PerformDefaultTests(new _TestReopen_67(dir2));
-			dir2.Close();
+			dir2.Dispose();
 		}
 
 		private sealed class _TestReopen_49 : TestDirectoryReaderReopen.TestReopen
@@ -86,7 +86,7 @@ namespace Lucene.Net.Index
 		{
 			Directory dir = NewDirectory();
 			DoTestReopenWithCommit(Random(), dir, true);
-			dir.Close();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -94,7 +94,7 @@ namespace Lucene.Net.Index
 		{
 			Directory dir = NewDirectory();
 			DoTestReopenWithCommit(Random(), dir, false);
-			dir.Close();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -113,9 +113,9 @@ namespace Lucene.Net.Index
 				customType.SetTokenized(false);
 				FieldType customType2 = new FieldType(TextField.TYPE_STORED);
 				customType2.SetTokenized(false);
-				customType2.SetOmitNorms(true);
+				customType2.OmitNorms = (true);
 				FieldType customType3 = new FieldType();
-				customType3.SetStored(true);
+				customType3.Stored = (true);
 				for (int i = 0; i < 4; i++)
 				{
 					for (int j = 0; j < M; j++)
@@ -143,22 +143,22 @@ namespace Lucene.Net.Index
 						DirectoryReader r2 = DirectoryReader.OpenIfChanged(reader);
 						if (r2 != null)
 						{
-							reader.Close();
+							reader.Dispose();
 							reader = r2;
 						}
 					}
 					else
 					{
 						// recreate
-						reader.Close();
+						reader.Dispose();
 						reader = DirectoryReader.Open(dir);
 					}
 				}
 			}
 			finally
 			{
-				iwriter.Close();
-				reader.Close();
+				iwriter.Dispose();
+				reader.Dispose();
 			}
 		}
 
@@ -173,28 +173,28 @@ namespace Lucene.Net.Index
 			TestDirectoryReaderReopen.ReaderCouple couple = RefreshReader(index2, false);
 			IsTrue(couple.refreshedReader == index2);
 			couple = RefreshReader(index2, test, 0, true);
-			index1.Close();
+			index1.Dispose();
 			index1 = couple.newReader;
 			DirectoryReader index2_refreshed = couple.refreshedReader;
-			index2.Close();
+			index2.Dispose();
 			// test if refreshed reader and newly opened reader return equal results
 			TestDirectoryReader.AssertIndexEquals(index1, index2_refreshed);
-			index2_refreshed.Close();
+			index2_refreshed.Dispose();
 			AssertReaderClosed(index2, true);
 			AssertReaderClosed(index2_refreshed, true);
 			index2 = test.OpenReader();
 			for (int i = 1; i < 4; i++)
 			{
-				index1.Close();
+				index1.Dispose();
 				couple = RefreshReader(index2, test, i, true);
 				// refresh DirectoryReader
-				index2.Close();
+				index2.Dispose();
 				index2 = couple.refreshedReader;
 				index1 = couple.newReader;
 				TestDirectoryReader.AssertIndexEquals(index1, index2);
 			}
-			index1.Close();
-			index2.Close();
+			index1.Dispose();
+			index2.Dispose();
 			AssertReaderClosed(index1, true);
 			AssertReaderClosed(index2, true);
 		}
@@ -212,7 +212,7 @@ namespace Lucene.Net.Index
 				writer.AddDocument(CreateDocument(i, 3));
 			}
 			writer.ForceMerge(1);
-			writer.Close();
+			writer.Dispose();
 			TestDirectoryReaderReopen.TestReopen test = new _TestReopen_208(dir, n);
 			IList<TestDirectoryReaderReopen.ReaderCouple> readers = Collections.SynchronizedList
 				(new AList<TestDirectoryReaderReopen.ReaderCouple>());
@@ -276,17 +276,17 @@ namespace Lucene.Net.Index
 			}
 			foreach (DirectoryReader readerToClose in readersToClose)
 			{
-				readerToClose.Close();
+				readerToClose.Dispose();
 			}
-			firstReader.Close();
-			reader.Close();
+			firstReader.Dispose();
+			reader.Dispose();
 			foreach (DirectoryReader readerToClose_1 in readersToClose)
 			{
 				AssertReaderClosed(readerToClose_1, true);
 			}
 			AssertReaderClosed(reader, true);
 			AssertReaderClosed(firstReader, true);
-			dir.Close();
+			dir.Dispose();
 		}
 
 		private sealed class _TestReopen_208 : TestDirectoryReaderReopen.TestReopen
@@ -303,7 +303,7 @@ namespace Lucene.Net.Index
 				IndexWriter modifier = new IndexWriter(dir, new IndexWriterConfig(LuceneTestCase.
 					TEST_VERSION_CURRENT, new MockAnalyzer(LuceneTestCase.Random())));
 				modifier.AddDocument(TestDirectoryReaderReopen.CreateDocument(n + i, 6));
-				modifier.Close();
+				modifier.Dispose();
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
@@ -355,14 +355,14 @@ namespace Lucene.Net.Index
 						}
 						IndexSearcher searcher = LuceneTestCase.NewSearcher(refreshed);
 						ScoreDoc[] hits = searcher.Search(new TermQuery(new Term("field1", "a" + rnd.Next
-							(refreshed.MaxDoc))), null, 1000).scoreDocs;
+							(refreshed.MaxDoc))), null, 1000).ScoreDocs;
 						if (hits.Length > 0)
 						{
-							searcher.Doc(hits[0].doc);
+							searcher.Doc(hits[0].Doc);
 						}
 						if (refreshed != r)
 						{
-							refreshed.Close();
+							refreshed.Dispose();
 						}
 					}
 					lock (this)
@@ -506,7 +506,7 @@ namespace Lucene.Net.Index
 					if (refreshed == null && r != null)
 					{
 						// Hit exception -- close opened reader
-						r.Close();
+						r.Dispose();
 					}
 				}
 				if (hasChanges)
@@ -548,17 +548,17 @@ namespace Lucene.Net.Index
 			{
 				w.ForceMerge(1);
 			}
-			w.Close();
+			w.Dispose();
 			DirectoryReader r = DirectoryReader.Open(dir);
 			if (multiSegment)
 			{
-				IsTrue(r.Leaves().Count > 1);
+				IsTrue(r.Leaves.Count > 1);
 			}
 			else
 			{
-				IsTrue(r.Leaves().Count == 1);
+				IsTrue(r.Leaves.Count == 1);
 			}
-			r.Close();
+			r.Dispose();
 		}
 
 		public static Lucene.Net.Documents.Document CreateDocument(int n, int numFields
@@ -571,9 +571,9 @@ namespace Lucene.Net.Index
 			sb.Append(n);
 			FieldType customType2 = new FieldType(TextField.TYPE_STORED);
 			customType2.SetTokenized(false);
-			customType2.SetOmitNorms(true);
+			customType2.OmitNorms = (true);
 			FieldType customType3 = new FieldType();
-			customType3.SetStored(true);
+			customType3.Stored = (true);
 			doc.Add(new TextField("field1", sb.ToString(), Field.Store.YES));
 			doc.Add(new Field("fielda", sb.ToString(), customType2));
 			doc.Add(new Field("fieldb", sb.ToString(), customType3));
@@ -601,7 +601,7 @@ namespace Lucene.Net.Index
 						new MockAnalyzer(Random())));
 					w.DeleteDocuments(new Term("field2", "a11"));
 					w.DeleteDocuments(new Term("field2", "b30"));
-					w.Close();
+					w.Dispose();
 					break;
 				}
 
@@ -610,7 +610,7 @@ namespace Lucene.Net.Index
 					IndexWriter w = new IndexWriter(dir, new IndexWriterConfig(TEST_VERSION_CURRENT, 
 						new MockAnalyzer(Random())));
 					w.ForceMerge(1);
-					w.Close();
+					w.Dispose();
 					break;
 				}
 
@@ -622,7 +622,7 @@ namespace Lucene.Net.Index
 					w.ForceMerge(1);
 					w.AddDocument(CreateDocument(102, 4));
 					w.AddDocument(CreateDocument(103, 4));
-					w.Close();
+					w.Dispose();
 					break;
 				}
 
@@ -631,7 +631,7 @@ namespace Lucene.Net.Index
 					IndexWriter w = new IndexWriter(dir, new IndexWriterConfig(TEST_VERSION_CURRENT, 
 						new MockAnalyzer(Random())));
 					w.AddDocument(CreateDocument(101, 4));
-					w.Close();
+					w.Dispose();
 					break;
 				}
 			}
@@ -699,9 +699,9 @@ namespace Lucene.Net.Index
 				writer.SetCommitData(data);
 				writer.Commit();
 			}
-			writer.Close();
+			writer.Dispose();
 			DirectoryReader r = DirectoryReader.Open(dir);
-			AreEqual(0, r.NumDocs());
+			AreEqual(0, r.NumDocs);
 			ICollection<IndexCommit> commits = DirectoryReader.ListCommits(dir);
 			foreach (IndexCommit commit in commits)
 			{
@@ -721,17 +721,17 @@ namespace Lucene.Net.Index
 				}
 				if (v < 4)
 				{
-					AreEqual(1 + v, r2.NumDocs());
+					AreEqual(1 + v, r2.NumDocs);
 				}
 				else
 				{
-					AreEqual(7 - v, r2.NumDocs());
+					AreEqual(7 - v, r2.NumDocs);
 				}
-				r.Close();
+				r.Dispose();
 				r = r2;
 			}
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -750,14 +750,14 @@ namespace Lucene.Net.Index
 			AreEqual(1, commits.Count);
 			w.AddDocument(doc);
 			DirectoryReader r = DirectoryReader.Open(w, true);
-			AreEqual(2, r.NumDocs());
+			AreEqual(2, r.NumDocs);
 			IndexReader r2 = DirectoryReader.OpenIfChanged(r, commits[0]);
 			IsNotNull(r2);
-			r.Close();
-			AreEqual(1, r2.NumDocs());
-			w.Close();
-			r2.Close();
-			dir.Close();
+			r.Dispose();
+			AreEqual(1, r2.NumDocs);
+			w.Dispose();
+			r2.Dispose();
+			dir.Dispose();
 		}
 	}
 }

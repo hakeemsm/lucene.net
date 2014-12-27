@@ -37,7 +37,7 @@ namespace Lucene.Net.Store
 				), new NIOFSDirectory(tempDir) };
 			foreach (Directory dir in dirs)
 			{
-			dir.Close();
+			dir.Dispose();
 
             Assert.Throws<AlreadyClosedException>(() => dir.CreateOutput("test", NewIOContext(Random())), "did not hit expected exception");
 			}
@@ -69,7 +69,7 @@ namespace Lucene.Net.Store
 			theThread2.Start();
 			theThread.Join();
 			theThread2.Join();
-			dir.Close();
+			dir.Dispose();
 		}
 		
 		// Test that different instances of FSDirectory can coexist on the same
@@ -97,7 +97,7 @@ namespace Lucene.Net.Store
 				IndexOutput @out = dir.CreateOutput(fname, NewIOContext(Random()));
 				out_Renamed.WriteByte((byte) i);
 				@out.WriteBytes(largeBuffer, largeBuffer.Length);
-				out_Renamed.Close();
+				out_Renamed.Dispose();
 				
 				for (int j = 0; j < dirs.Length; j++)
 				{
@@ -120,7 +120,7 @@ namespace Lucene.Net.Store
 					Arrays.Fill(largeReadBuffer, unchecked((byte)0));
 					input.ReadBytes(largeReadBuffer, 0, largeReadBuffer.Length, false);
 					AssertArrayEquals(largeBuffer, largeReadBuffer);
-					input.Close();
+					input.Dispose();
 				}
 				
 				// delete with a different dir
@@ -149,19 +149,19 @@ namespace Lucene.Net.Store
 					}
 				}
 				
-				lock_Renamed.Close();
+				lock_Renamed.Dispose();
 				
 				// now lock with different dir
 				lock_Renamed = dirs[(i_1 + 1) % dirs.Length].MakeLock(lockname);
 				Assert.IsTrue(lock_Renamed.Obtain());
-				lock_Renamed.Close();
+				lock_Renamed.Dispose();
 			}
 			
 			for (int i_2 = 0; i_2 < dirs.Length; i_2++)
 			{
 				FSDirectory dir = dirs[i_2];
 				dir.EnsureOpen();
-				dir.Close();
+				dir.Dispose();
                 Assert.IsFalse(dir.isOpen_ForNUnit);
 			}
 			TestUtil.Rm(path);
@@ -177,7 +177,7 @@ namespace Lucene.Net.Store
 				IsTrue(!path.Exists());
 				Directory dir = new SimpleFSDirectory(path, null);
 				IsTrue(!path.Exists());
-				dir.Close();
+				dir.Dispose();
 			}
 			finally
 			{
@@ -205,13 +205,13 @@ namespace Lucene.Net.Store
 			System.String name = "file";
 			try
 			{
-				dir.CreateOutput(name, NewIOContext(Random())).Close();
+				dir.CreateOutput(name, NewIOContext(Random())).Dispose();
 				IsTrue(SlowFileExists(dir, name));
 				Assert.IsTrue(new System.Collections.ArrayList(dir.ListAll()).Contains(name));
 			}
 			finally
 			{
-				dir.Close();
+				dir.Dispose();
 			}
 		}
 		
@@ -243,7 +243,7 @@ namespace Lucene.Net.Store
 			try
 			{
 				IndexOutput out_Renamed = fsDir.CreateOutput("afile", NewIOContext(Random()));
-				out_Renamed.Close();
+				out_Renamed.Dispose();
 				IsTrue(SlowFileExists(fsDir, "afile"));
 
 			    Assert.Throws<NoSuchDirectoryException>(
@@ -253,7 +253,7 @@ namespace Lucene.Net.Store
 			}
 			finally
 			{
-				fsDir.Close();
+				fsDir.Dispose();
 				_TestUtil.RmDir(path);
 			}
 		}
@@ -265,7 +265,7 @@ namespace Lucene.Net.Store
 			// write a file
 			IndexOutput @out = fsdir.CreateOutput("afile", NewIOContext(Random()));
 			@out.WriteString("boo");
-			@out.Close();
+			@out.Dispose();
 			// delete it
 			IsTrue(new FilePath(path, "afile").Delete());
 			// directory is empty
@@ -283,7 +283,7 @@ namespace Lucene.Net.Store
 			// ok
 			// directory is still empty
 			AreEqual(0, fsdir.ListAll().Length);
-			fsdir.Close();
+			fsdir.Dispose();
 		}
 	}
 }

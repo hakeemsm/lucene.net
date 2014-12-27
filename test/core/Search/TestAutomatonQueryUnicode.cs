@@ -76,14 +76,14 @@ namespace Lucene.Net.Search
 			writer.AddDocument(doc);
 			reader = writer.GetReader();
 			searcher = NewSearcher(reader);
-			writer.Close();
+			writer.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
 		public override void TearDown()
 		{
-			reader.Close();
-			directory.Close();
+			reader.Dispose();
+			directory.Dispose();
 			base.TearDown();
 		}
 

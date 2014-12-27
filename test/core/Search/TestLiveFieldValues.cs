@@ -62,10 +62,10 @@ namespace Lucene.Net.Search
 			}
 			mgr.MaybeRefresh();
 			AreEqual(0, rt.Size());
-			rt.Close();
-			mgr.Close();
-			w.Close();
-			dir.Close();
+			rt.Dispose();
+			mgr.Dispose();
+			w.Dispose();
+			dir.Dispose();
 		}
 
 		private sealed class _SearcherFactory_51 : SearcherFactory
@@ -99,7 +99,7 @@ namespace Lucene.Net.Search
 				}
 				else
 				{
-					Lucene.Net.Documents.Document doc = s.Doc(hits.scoreDocs[0].doc);
+					Lucene.Net.Documents.Document doc = s.Doc(hits.ScoreDocs[0].Doc);
 					return (int)doc.GetField("field").NumericValue();
 				}
 			}

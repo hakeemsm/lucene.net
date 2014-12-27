@@ -35,7 +35,7 @@ namespace Lucene.Net.Test.Codecs.Lucene41
 		[TearDown]
 		public override void TearDown()
 		{
-			iw.Close();
+			iw.Dispose();
 			TestUtil.CheckIndex(dir);
 			// for some extra coverage, checkIndex before we forceMerge
 			iwc.SetOpenMode(IndexWriterConfig.OpenMode.APPEND);

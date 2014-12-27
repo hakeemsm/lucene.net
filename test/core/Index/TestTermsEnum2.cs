@@ -15,7 +15,7 @@ using Lucene.Net.Util;
 using Lucene.Net.Util.Automaton;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestTermsEnum2 : LuceneTestCase
 	{
@@ -61,14 +61,14 @@ namespace Lucene.Net.Index
 			termsAutomaton = BasicAutomata.MakeStringUnion(terms);
 			reader = writer.GetReader();
 			searcher = NewSearcher(reader);
-			writer.Close();
+			writer.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
 		public override void TearDown()
 		{
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 			base.TearDown();
 		}
 
@@ -98,8 +98,8 @@ namespace Lucene.Net.Index
 					);
 				AutomatonQuery a2 = new AutomatonQuery(new Term("field", string.Empty), alternate
 					);
-				CheckHits.CheckEqual(a1, searcher.Search(a1, 25).scoreDocs, searcher.Search(a2, 25
-					).scoreDocs);
+				CheckHits.CheckEqual(a1, searcher.Search(a1, 25).ScoreDocs, searcher.Search(a2, 25
+					).ScoreDocs);
 			}
 		}
 

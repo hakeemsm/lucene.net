@@ -10,7 +10,7 @@ using Lucene.Net.Index;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	/// <summary>
 	/// Tests for
@@ -53,8 +53,8 @@ namespace Lucene.Net.Index
 			}
 			// thread 0 only updates
 			Start(stallThreads);
-			long time = Runtime.CurrentTimeMillis();
-			while ((Runtime.CurrentTimeMillis() - time) < 100 * 1000 && !Terminated(stallThreads
+			long time = DateTime.Now.CurrentTimeMillis();
+			while ((DateTime.Now.CurrentTimeMillis() - time) < 100 * 1000 && !Terminated(stallThreads
 				))
 			{
 				ctrl.UpdateStalled(false);

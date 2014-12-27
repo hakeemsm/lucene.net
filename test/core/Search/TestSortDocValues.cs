@@ -52,19 +52,19 @@ namespace Lucene.Net.Search
 			doc.Add(NewStringField("value", "bar", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.STRING));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
 			AreEqual(2, td.TotalHits);
 			// 'bar' comes before 'foo'
-			AreEqual("bar", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("bar", searcher.Doc(td.ScoreDocs[0].Doc).Get("value"
 				));
-			AreEqual("foo", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+			AreEqual("foo", searcher.Doc(td.ScoreDocs[1].Doc).Get("value"
 				));
 			AssertNoFieldCaches();
-			ir.Close();
-			dir.Close();
+			ir.Dispose();
+			dir.Dispose();
 		}
 
 		/// <summary>Tests reverse sorting on type string</summary>
@@ -83,19 +83,19 @@ namespace Lucene.Net.Search
 			doc.Add(NewStringField("value", "foo", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.STRING, true));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
 			AreEqual(2, td.TotalHits);
 			// 'foo' comes after 'bar' in reverse order
-			AreEqual("foo", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("foo", searcher.Doc(td.ScoreDocs[0].Doc).Get("value"
 				));
-			AreEqual("bar", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+			AreEqual("bar", searcher.Doc(td.ScoreDocs[1].Doc).Get("value"
 				));
 			AssertNoFieldCaches();
-			ir.Close();
-			dir.Close();
+			ir.Dispose();
+			dir.Dispose();
 		}
 
 		/// <summary>Tests sorting on type string_val</summary>
@@ -114,19 +114,19 @@ namespace Lucene.Net.Search
 			doc.Add(NewStringField("value", "bar", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.STRING_VAL));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
 			AreEqual(2, td.TotalHits);
 			// 'bar' comes before 'foo'
-			AreEqual("bar", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("bar", searcher.Doc(td.ScoreDocs[0].Doc).Get("value"
 				));
-			AreEqual("foo", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+			AreEqual("foo", searcher.Doc(td.ScoreDocs[1].Doc).Get("value"
 				));
 			AssertNoFieldCaches();
-			ir.Close();
-			dir.Close();
+			ir.Dispose();
+			dir.Dispose();
 		}
 
 		/// <summary>Tests reverse sorting on type string_val</summary>
@@ -145,19 +145,19 @@ namespace Lucene.Net.Search
 			doc.Add(NewStringField("value", "foo", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.STRING_VAL, true));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
 			AreEqual(2, td.TotalHits);
 			// 'foo' comes after 'bar' in reverse order
-			AreEqual("foo", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("foo", searcher.Doc(td.ScoreDocs[0].Doc).Get("value"
 				));
-			AreEqual("bar", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+			AreEqual("bar", searcher.Doc(td.ScoreDocs[1].Doc).Get("value"
 				));
 			AssertNoFieldCaches();
-			ir.Close();
-			dir.Close();
+			ir.Dispose();
+			dir.Dispose();
 		}
 
 		/// <summary>Tests sorting on type string_val, but with a SortedDocValuesField</summary>
@@ -176,19 +176,19 @@ namespace Lucene.Net.Search
 			doc.Add(NewStringField("value", "bar", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.STRING_VAL));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
 			AreEqual(2, td.TotalHits);
 			// 'bar' comes before 'foo'
-			AreEqual("bar", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("bar", searcher.Doc(td.ScoreDocs[0].Doc).Get("value"
 				));
-			AreEqual("foo", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+			AreEqual("foo", searcher.Doc(td.ScoreDocs[1].Doc).Get("value"
 				));
 			AssertNoFieldCaches();
-			ir.Close();
-			dir.Close();
+			ir.Dispose();
+			dir.Dispose();
 		}
 
 		/// <summary>Tests reverse sorting on type string_val, but with a SortedDocValuesField
@@ -208,19 +208,19 @@ namespace Lucene.Net.Search
 			doc.Add(NewStringField("value", "foo", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.STRING_VAL, true));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
 			AreEqual(2, td.TotalHits);
 			// 'foo' comes after 'bar' in reverse order
-			AreEqual("foo", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("foo", searcher.Doc(td.ScoreDocs[0].Doc).Get("value"
 				));
-			AreEqual("bar", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+			AreEqual("bar", searcher.Doc(td.ScoreDocs[1].Doc).Get("value"
 				));
 			AssertNoFieldCaches();
-			ir.Close();
-			dir.Close();
+			ir.Dispose();
+			dir.Dispose();
 		}
 
 		/// <summary>Tests sorting on type byte</summary>
@@ -243,21 +243,21 @@ namespace Lucene.Net.Search
 			doc.Add(NewStringField("value", "4", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.BYTE));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
 			AreEqual(3, td.TotalHits);
 			// numeric order
-			AreEqual("-1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("-1", searcher.Doc(td.ScoreDocs[0].Doc).Get("value"
 				));
-			AreEqual("4", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+			AreEqual("4", searcher.Doc(td.ScoreDocs[1].Doc).Get("value"
 				));
-			AreEqual("23", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+			AreEqual("23", searcher.Doc(td.ScoreDocs[2].Doc).Get("value"
 				));
 			AssertNoFieldCaches();
-			ir.Close();
-			dir.Close();
+			ir.Dispose();
+			dir.Dispose();
 		}
 
 		/// <summary>Tests sorting on type byte in reverse</summary>
@@ -280,21 +280,21 @@ namespace Lucene.Net.Search
 			doc.Add(NewStringField("value", "4", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.BYTE, true));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
 			AreEqual(3, td.TotalHits);
 			// reverse numeric order
-			AreEqual("23", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("23", searcher.Doc(td.ScoreDocs[0].Doc).Get("value"
 				));
-			AreEqual("4", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+			AreEqual("4", searcher.Doc(td.ScoreDocs[1].Doc).Get("value"
 				));
-			AreEqual("-1", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+			AreEqual("-1", searcher.Doc(td.ScoreDocs[2].Doc).Get("value"
 				));
 			AssertNoFieldCaches();
-			ir.Close();
-			dir.Close();
+			ir.Dispose();
+			dir.Dispose();
 		}
 
 		/// <summary>Tests sorting on type short</summary>
@@ -317,21 +317,21 @@ namespace Lucene.Net.Search
 			doc.Add(NewStringField("value", "4", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.SHORT));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
 			AreEqual(3, td.TotalHits);
 			// numeric order
-			AreEqual("-1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("-1", searcher.Doc(td.ScoreDocs[0].Doc).Get("value"
 				));
-			AreEqual("4", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+			AreEqual("4", searcher.Doc(td.ScoreDocs[1].Doc).Get("value"
 				));
-			AreEqual("300", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+			AreEqual("300", searcher.Doc(td.ScoreDocs[2].Doc).Get("value"
 				));
 			AssertNoFieldCaches();
-			ir.Close();
-			dir.Close();
+			ir.Dispose();
+			dir.Dispose();
 		}
 
 		/// <summary>Tests sorting on type short in reverse</summary>
@@ -354,21 +354,21 @@ namespace Lucene.Net.Search
 			doc.Add(NewStringField("value", "4", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.SHORT, true));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
 			AreEqual(3, td.TotalHits);
 			// reverse numeric order
-			AreEqual("300", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("300", searcher.Doc(td.ScoreDocs[0].Doc).Get("value"
 				));
-			AreEqual("4", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+			AreEqual("4", searcher.Doc(td.ScoreDocs[1].Doc).Get("value"
 				));
-			AreEqual("-1", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+			AreEqual("-1", searcher.Doc(td.ScoreDocs[2].Doc).Get("value"
 				));
 			AssertNoFieldCaches();
-			ir.Close();
-			dir.Close();
+			ir.Dispose();
+			dir.Dispose();
 		}
 
 		/// <summary>Tests sorting on type int</summary>
@@ -391,21 +391,21 @@ namespace Lucene.Net.Search
 			doc.Add(NewStringField("value", "4", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.INT));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
 			AreEqual(3, td.TotalHits);
 			// numeric order
-			AreEqual("-1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("-1", searcher.Doc(td.ScoreDocs[0].Doc).Get("value"
 				));
-			AreEqual("4", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+			AreEqual("4", searcher.Doc(td.ScoreDocs[1].Doc).Get("value"
 				));
-			AreEqual("300000", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+			AreEqual("300000", searcher.Doc(td.ScoreDocs[2].Doc).Get("value"
 				));
 			AssertNoFieldCaches();
-			ir.Close();
-			dir.Close();
+			ir.Dispose();
+			dir.Dispose();
 		}
 
 		/// <summary>Tests sorting on type int in reverse</summary>
@@ -428,21 +428,21 @@ namespace Lucene.Net.Search
 			doc.Add(NewStringField("value", "4", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.INT, true));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
 			AreEqual(3, td.TotalHits);
 			// reverse numeric order
-			AreEqual("300000", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("300000", searcher.Doc(td.ScoreDocs[0].Doc).Get("value"
 				));
-			AreEqual("4", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+			AreEqual("4", searcher.Doc(td.ScoreDocs[1].Doc).Get("value"
 				));
-			AreEqual("-1", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+			AreEqual("-1", searcher.Doc(td.ScoreDocs[2].Doc).Get("value"
 				));
 			AssertNoFieldCaches();
-			ir.Close();
-			dir.Close();
+			ir.Dispose();
+			dir.Dispose();
 		}
 
 		/// <summary>Tests sorting on type int with a missing value</summary>
@@ -463,19 +463,19 @@ namespace Lucene.Net.Search
 			doc.Add(NewStringField("value", "4", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.INT));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
 			AreEqual(3, td.TotalHits);
 			// null is treated as a 0
-			AreEqual("-1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("-1", searcher.Doc(td.ScoreDocs[0].Doc).Get("value"
 				));
-			IsNull(searcher.Doc(td.scoreDocs[1].doc).Get("value"));
-			AreEqual("4", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+			IsNull(searcher.Doc(td.ScoreDocs[1].Doc).Get("value"));
+			AreEqual("4", searcher.Doc(td.ScoreDocs[2].Doc).Get("value"
 				));
-			ir.Close();
-			dir.Close();
+			ir.Dispose();
+			dir.Dispose();
 		}
 
 		/// <summary>Tests sorting on type int, specifying the missing value should be treated as Integer.MAX_VALUE
@@ -497,7 +497,7 @@ namespace Lucene.Net.Search
 			doc.Add(NewStringField("value", "4", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			SortField sortField = new SortField("value", SortField.Type.INT);
 			sortField.SetMissingValue(int.MaxValue);
@@ -505,13 +505,13 @@ namespace Lucene.Net.Search
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
 			AreEqual(3, td.TotalHits);
 			// null is treated as a Integer.MAX_VALUE
-			AreEqual("-1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("-1", searcher.Doc(td.ScoreDocs[0].Doc).Get("value"
 				));
-			AreEqual("4", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+			AreEqual("4", searcher.Doc(td.ScoreDocs[1].Doc).Get("value"
 				));
-			IsNull(searcher.Doc(td.scoreDocs[2].doc).Get("value"));
-			ir.Close();
-			dir.Close();
+			IsNull(searcher.Doc(td.ScoreDocs[2].Doc).Get("value"));
+			ir.Dispose();
+			dir.Dispose();
 		}
 
 		/// <summary>Tests sorting on type long</summary>
@@ -534,21 +534,21 @@ namespace Lucene.Net.Search
 			doc.Add(NewStringField("value", "4", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.LONG));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
 			AreEqual(3, td.TotalHits);
 			// numeric order
-			AreEqual("-1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("-1", searcher.Doc(td.ScoreDocs[0].Doc).Get("value"
 				));
-			AreEqual("4", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+			AreEqual("4", searcher.Doc(td.ScoreDocs[1].Doc).Get("value"
 				));
-			AreEqual("3000000000", searcher.Doc(td.scoreDocs[2].doc).Get
+			AreEqual("3000000000", searcher.Doc(td.ScoreDocs[2].Doc).Get
 				("value"));
 			AssertNoFieldCaches();
-			ir.Close();
-			dir.Close();
+			ir.Dispose();
+			dir.Dispose();
 		}
 
 		/// <summary>Tests sorting on type long in reverse</summary>
@@ -571,21 +571,21 @@ namespace Lucene.Net.Search
 			doc.Add(NewStringField("value", "4", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.LONG, true));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
 			AreEqual(3, td.TotalHits);
 			// reverse numeric order
-			AreEqual("3000000000", searcher.Doc(td.scoreDocs[0].doc).Get
+			AreEqual("3000000000", searcher.Doc(td.ScoreDocs[0].Doc).Get
 				("value"));
-			AreEqual("4", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+			AreEqual("4", searcher.Doc(td.ScoreDocs[1].Doc).Get("value"
 				));
-			AreEqual("-1", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+			AreEqual("-1", searcher.Doc(td.ScoreDocs[2].Doc).Get("value"
 				));
 			AssertNoFieldCaches();
-			ir.Close();
-			dir.Close();
+			ir.Dispose();
+			dir.Dispose();
 		}
 
 		/// <summary>Tests sorting on type long with a missing value</summary>
@@ -606,19 +606,19 @@ namespace Lucene.Net.Search
 			doc.Add(NewStringField("value", "4", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.LONG));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
 			AreEqual(3, td.TotalHits);
 			// null is treated as 0
-			AreEqual("-1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("-1", searcher.Doc(td.ScoreDocs[0].Doc).Get("value"
 				));
-			IsNull(searcher.Doc(td.scoreDocs[1].doc).Get("value"));
-			AreEqual("4", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+			IsNull(searcher.Doc(td.ScoreDocs[1].Doc).Get("value"));
+			AreEqual("4", searcher.Doc(td.ScoreDocs[2].Doc).Get("value"
 				));
-			ir.Close();
-			dir.Close();
+			ir.Dispose();
+			dir.Dispose();
 		}
 
 		/// <summary>Tests sorting on type long, specifying the missing value should be treated as Long.MAX_VALUE
@@ -640,7 +640,7 @@ namespace Lucene.Net.Search
 			doc.Add(NewStringField("value", "4", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			SortField sortField = new SortField("value", SortField.Type.LONG);
 			sortField.SetMissingValue(long.MaxValue);
@@ -648,13 +648,13 @@ namespace Lucene.Net.Search
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
 			AreEqual(3, td.TotalHits);
 			// null is treated as Long.MAX_VALUE
-			AreEqual("-1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("-1", searcher.Doc(td.ScoreDocs[0].Doc).Get("value"
 				));
-			AreEqual("4", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+			AreEqual("4", searcher.Doc(td.ScoreDocs[1].Doc).Get("value"
 				));
-			IsNull(searcher.Doc(td.scoreDocs[2].doc).Get("value"));
-			ir.Close();
-			dir.Close();
+			IsNull(searcher.Doc(td.ScoreDocs[2].Doc).Get("value"));
+			ir.Dispose();
+			dir.Dispose();
 		}
 
 		/// <summary>Tests sorting on type float</summary>
@@ -677,21 +677,21 @@ namespace Lucene.Net.Search
 			doc.Add(NewStringField("value", "4.2", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.FLOAT));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
 			AreEqual(3, td.TotalHits);
 			// numeric order
-			AreEqual("-1.3", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("-1.3", searcher.Doc(td.ScoreDocs[0].Doc).Get("value"
 				));
-			AreEqual("4.2", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+			AreEqual("4.2", searcher.Doc(td.ScoreDocs[1].Doc).Get("value"
 				));
-			AreEqual("30.1", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+			AreEqual("30.1", searcher.Doc(td.ScoreDocs[2].Doc).Get("value"
 				));
 			AssertNoFieldCaches();
-			ir.Close();
-			dir.Close();
+			ir.Dispose();
+			dir.Dispose();
 		}
 
 		/// <summary>Tests sorting on type float in reverse</summary>
@@ -714,21 +714,21 @@ namespace Lucene.Net.Search
 			doc.Add(NewStringField("value", "4.2", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.FLOAT, true));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
 			AreEqual(3, td.TotalHits);
 			// reverse numeric order
-			AreEqual("30.1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("30.1", searcher.Doc(td.ScoreDocs[0].Doc).Get("value"
 				));
-			AreEqual("4.2", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+			AreEqual("4.2", searcher.Doc(td.ScoreDocs[1].Doc).Get("value"
 				));
-			AreEqual("-1.3", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+			AreEqual("-1.3", searcher.Doc(td.ScoreDocs[2].Doc).Get("value"
 				));
 			AssertNoFieldCaches();
-			ir.Close();
-			dir.Close();
+			ir.Dispose();
+			dir.Dispose();
 		}
 
 		/// <summary>Tests sorting on type float with a missing value</summary>
@@ -749,19 +749,19 @@ namespace Lucene.Net.Search
 			doc.Add(NewStringField("value", "4.2", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.FLOAT));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
 			AreEqual(3, td.TotalHits);
 			// null is treated as 0
-			AreEqual("-1.3", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("-1.3", searcher.Doc(td.ScoreDocs[0].Doc).Get("value"
 				));
-			IsNull(searcher.Doc(td.scoreDocs[1].doc).Get("value"));
-			AreEqual("4.2", searcher.Doc(td.scoreDocs[2].doc).Get("value"
+			IsNull(searcher.Doc(td.ScoreDocs[1].Doc).Get("value"));
+			AreEqual("4.2", searcher.Doc(td.ScoreDocs[2].Doc).Get("value"
 				));
-			ir.Close();
-			dir.Close();
+			ir.Dispose();
+			dir.Dispose();
 		}
 
 		/// <summary>Tests sorting on type float, specifying the missing value should be treated as Float.MAX_VALUE
@@ -783,7 +783,7 @@ namespace Lucene.Net.Search
 			doc.Add(NewStringField("value", "4.2", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			SortField sortField = new SortField("value", SortField.Type.FLOAT);
 			sortField.SetMissingValue(float.MaxValue);
@@ -791,13 +791,13 @@ namespace Lucene.Net.Search
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
 			AreEqual(3, td.TotalHits);
 			// null is treated as Float.MAX_VALUE
-			AreEqual("-1.3", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("-1.3", searcher.Doc(td.ScoreDocs[0].Doc).Get("value"
 				));
-			AreEqual("4.2", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+			AreEqual("4.2", searcher.Doc(td.ScoreDocs[1].Doc).Get("value"
 				));
-			IsNull(searcher.Doc(td.scoreDocs[2].doc).Get("value"));
-			ir.Close();
-			dir.Close();
+			IsNull(searcher.Doc(td.ScoreDocs[2].Doc).Get("value"));
+			ir.Dispose();
+			dir.Dispose();
 		}
 
 		/// <summary>Tests sorting on type double</summary>
@@ -824,23 +824,23 @@ namespace Lucene.Net.Search
 			doc.Add(NewStringField("value", "4.2333333333332", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.DOUBLE));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
 			AreEqual(4, td.TotalHits);
 			// numeric order
-			AreEqual("-1.3", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("-1.3", searcher.Doc(td.ScoreDocs[0].Doc).Get("value"
 				));
-			AreEqual("4.2333333333332", searcher.Doc(td.scoreDocs[1].doc
+			AreEqual("4.2333333333332", searcher.Doc(td.ScoreDocs[1].Doc
 				).Get("value"));
-			AreEqual("4.2333333333333", searcher.Doc(td.scoreDocs[2].doc
+			AreEqual("4.2333333333333", searcher.Doc(td.ScoreDocs[2].Doc
 				).Get("value"));
-			AreEqual("30.1", searcher.Doc(td.scoreDocs[3].doc).Get("value"
+			AreEqual("30.1", searcher.Doc(td.ScoreDocs[3].Doc).Get("value"
 				));
 			AssertNoFieldCaches();
-			ir.Close();
-			dir.Close();
+			ir.Dispose();
+			dir.Dispose();
 		}
 
 		/// <summary>Tests sorting on type double with +/- zero</summary>
@@ -860,18 +860,18 @@ namespace Lucene.Net.Search
 			writer.AddDocument(doc);
 			doc = new Lucene.Net.Documents.Document();
 			IndexReader ir = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.DOUBLE));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
 			AreEqual(2, td.TotalHits);
 			// numeric order
-			AreEqual("-0", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("-0", searcher.Doc(td.ScoreDocs[0].Doc).Get("value"
 				));
-			AreEqual("+0", searcher.Doc(td.scoreDocs[1].doc).Get("value"
+			AreEqual("+0", searcher.Doc(td.ScoreDocs[1].Doc).Get("value"
 				));
-			ir.Close();
-			dir.Close();
+			ir.Dispose();
+			dir.Dispose();
 		}
 
 		/// <summary>Tests sorting on type double in reverse</summary>
@@ -898,23 +898,23 @@ namespace Lucene.Net.Search
 			doc.Add(NewStringField("value", "4.2333333333332", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.DOUBLE, true));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
 			AreEqual(4, td.TotalHits);
 			// numeric order
-			AreEqual("30.1", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("30.1", searcher.Doc(td.ScoreDocs[0].Doc).Get("value"
 				));
-			AreEqual("4.2333333333333", searcher.Doc(td.scoreDocs[1].doc
+			AreEqual("4.2333333333333", searcher.Doc(td.ScoreDocs[1].Doc
 				).Get("value"));
-			AreEqual("4.2333333333332", searcher.Doc(td.scoreDocs[2].doc
+			AreEqual("4.2333333333332", searcher.Doc(td.ScoreDocs[2].Doc
 				).Get("value"));
-			AreEqual("-1.3", searcher.Doc(td.scoreDocs[3].doc).Get("value"
+			AreEqual("-1.3", searcher.Doc(td.ScoreDocs[3].Doc).Get("value"
 				));
 			AssertNoFieldCaches();
-			ir.Close();
-			dir.Close();
+			ir.Dispose();
+			dir.Dispose();
 		}
 
 		/// <summary>Tests sorting on type double with a missing value</summary>
@@ -939,21 +939,21 @@ namespace Lucene.Net.Search
 			doc.Add(NewStringField("value", "4.2333333333332", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.DOUBLE));
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
 			AreEqual(4, td.TotalHits);
 			// null treated as a 0
-			AreEqual("-1.3", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("-1.3", searcher.Doc(td.ScoreDocs[0].Doc).Get("value"
 				));
-			IsNull(searcher.Doc(td.scoreDocs[1].doc).Get("value"));
-			AreEqual("4.2333333333332", searcher.Doc(td.scoreDocs[2].doc
+			IsNull(searcher.Doc(td.ScoreDocs[1].Doc).Get("value"));
+			AreEqual("4.2333333333332", searcher.Doc(td.ScoreDocs[2].Doc
 				).Get("value"));
-			AreEqual("4.2333333333333", searcher.Doc(td.scoreDocs[3].doc
+			AreEqual("4.2333333333333", searcher.Doc(td.ScoreDocs[3].Doc
 				).Get("value"));
-			ir.Close();
-			dir.Close();
+			ir.Dispose();
+			dir.Dispose();
 		}
 
 		/// <summary>Tests sorting on type double, specifying the missing value should be treated as Double.MAX_VALUE
@@ -979,7 +979,7 @@ namespace Lucene.Net.Search
 			doc.Add(NewStringField("value", "4.2333333333332", Field.Store.YES));
 			writer.AddDocument(doc);
 			IndexReader ir = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			SortField sortField = new SortField("value", SortField.Type.DOUBLE);
 			sortField.SetMissingValue(double.MaxValue);
@@ -987,15 +987,15 @@ namespace Lucene.Net.Search
 			TopDocs td = searcher.Search(new MatchAllDocsQuery(), 10, sort);
 			AreEqual(4, td.TotalHits);
 			// null treated as Double.MAX_VALUE
-			AreEqual("-1.3", searcher.Doc(td.scoreDocs[0].doc).Get("value"
+			AreEqual("-1.3", searcher.Doc(td.ScoreDocs[0].Doc).Get("value"
 				));
-			AreEqual("4.2333333333332", searcher.Doc(td.scoreDocs[1].doc
+			AreEqual("4.2333333333332", searcher.Doc(td.ScoreDocs[1].Doc
 				).Get("value"));
-			AreEqual("4.2333333333333", searcher.Doc(td.scoreDocs[2].doc
+			AreEqual("4.2333333333333", searcher.Doc(td.ScoreDocs[2].Doc
 				).Get("value"));
-			IsNull(searcher.Doc(td.scoreDocs[3].doc).Get("value"));
-			ir.Close();
-			dir.Close();
+			IsNull(searcher.Doc(td.ScoreDocs[3].Doc).Get("value"));
+			ir.Dispose();
+			dir.Dispose();
 		}
 	}
 }

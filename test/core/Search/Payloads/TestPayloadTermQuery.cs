@@ -130,7 +130,7 @@ namespace Lucene.Net.Search.Payloads
 				writer.AddDocument(doc);
 			}
 			reader = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			searcher = NewSearcher(reader);
 			searcher.SetSimilarity(similarity);
 		}
@@ -140,9 +140,9 @@ namespace Lucene.Net.Search.Payloads
 		public static void AfterClass()
 		{
 			searcher = null;
-			reader.Close();
+			reader.Dispose();
 			reader = null;
-			directory.Close();
+			directory.Dispose();
 			directory = null;
 		}
 
@@ -159,9 +159,9 @@ namespace Lucene.Net.Search.Payloads
 			//all the other similarity factors to be 1
 			IsTrue(hits.GetMaxScore() + " does not equal: " + 1, hits.
 				GetMaxScore() == 1);
-			for (int i = 0; i < hits.scoreDocs.Length; i++)
+			for (int i = 0; i < hits.ScoreDocs.Length; i++)
 			{
-				ScoreDoc doc = hits.scoreDocs[i];
+				ScoreDoc doc = hits.ScoreDocs[i];
 				IsTrue(doc.score + " does not equal: " + 1, doc.score == 1
 					);
 			}
@@ -202,10 +202,10 @@ namespace Lucene.Net.Search.Payloads
 			//there should be exactly 10 items that score a 4, all the rest should score a 2
 			//The 10 items are: 70 + i*100 where i in [0-9]
 			int numTens = 0;
-			for (int i = 0; i < hits.scoreDocs.Length; i++)
+			for (int i = 0; i < hits.ScoreDocs.Length; i++)
 			{
-				ScoreDoc doc = hits.scoreDocs[i];
-				if (doc.doc % 10 == 0)
+				ScoreDoc doc = hits.ScoreDocs[i];
+				if (doc.Doc % 10 == 0)
 				{
 					numTens++;
 					IsTrue(doc.score + " does not equal: " + 4.0, doc.score ==
@@ -253,10 +253,10 @@ namespace Lucene.Net.Search.Payloads
 			//there should be exactly 10 items that score a 4, all the rest should score a 2
 			//The 10 items are: 70 + i*100 where i in [0-9]
 			int numTens = 0;
-			for (int i = 0; i < hits.scoreDocs.Length; i++)
+			for (int i = 0; i < hits.ScoreDocs.Length; i++)
 			{
-				ScoreDoc doc = hits.scoreDocs[i];
-				if (doc.doc % 10 == 0)
+				ScoreDoc doc = hits.ScoreDocs[i];
+				if (doc.Doc % 10 == 0)
 				{
 					numTens++;
 					IsTrue(doc.score + " does not equal: " + 4.0, doc.score ==
@@ -280,7 +280,7 @@ namespace Lucene.Net.Search.Payloads
 			{
 				count++;
 			}
-			reader.Close();
+			reader.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -312,7 +312,7 @@ namespace Lucene.Net.Search.Payloads
 				.TotalHits == 1);
 			int[] results = new int[1];
 			results[0] = 0;
-			//hits.scoreDocs[0].doc;
+			//hits.ScoreDocs[0].Doc;
 			CheckHits.CheckHitCollector(Random(), query, PayloadHelper.NO_PAYLOAD_FIELD, searcher
 				, results);
 		}

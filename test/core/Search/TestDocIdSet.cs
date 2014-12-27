@@ -125,7 +125,7 @@ namespace Lucene.Net.Search
 			doc.Add(NewStringField("c", "val", Field.Store.NO));
 			writer.AddDocument(doc);
 			IndexReader reader = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			// First verify the document is searchable.
 			IndexSearcher searcher = NewSearcher(reader);
 			//HM:revisit 
@@ -134,8 +134,8 @@ namespace Lucene.Net.Search
 			Filter f = new _Filter_122();
 			//HM:revisit 
 			//assert.assertEquals(0, searcher.search(new MatchAllDocsQuery(), f, 10).TotalHits);
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		private sealed class _Filter_122 : Filter
@@ -161,7 +161,7 @@ namespace Lucene.Net.Search
 			doc.Add(NewStringField("c", "val", Field.Store.NO));
 			writer.AddDocument(doc);
 			IndexReader reader = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			// First verify the document is searchable.
 			IndexSearcher searcher = NewSearcher(reader);
 			//HM:revisit 
@@ -170,8 +170,8 @@ namespace Lucene.Net.Search
 			Filter f = new _Filter_152();
 			//HM:revisit 
 			//assert.assertEquals(0, searcher.search(new MatchAllDocsQuery(), f, 10).TotalHits);
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		private sealed class _Filter_152 : Filter

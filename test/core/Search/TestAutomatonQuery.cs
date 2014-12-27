@@ -47,14 +47,14 @@ namespace Lucene.Net.Search
 			writer.AddDocument(doc);
 			reader = writer.GetReader();
 			searcher = NewSearcher(reader);
-			writer.Close();
+			writer.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
 		public override void TearDown()
 		{
-			reader.Close();
-			directory.Close();
+			reader.Dispose();
+			directory.Dispose();
 			base.TearDown();
 		}
 
@@ -169,7 +169,7 @@ namespace Lucene.Net.Search
 		{
 			AutomatonQuery aq = new AutomatonQuery(NewTerm("bogus"), BasicAutomata.MakeString
 				("piece"));
-			Terms terms = MultiFields.GetTerms(searcher.GetIndexReader(), FN);
+			Terms terms = MultiFields.GetTerms(searcher.IndexReader, FN);
 			IsTrue(aq.GetTermsEnum(terms) is SingleTermsEnum);
 			AreEqual(1, AutomatonQueryNrHits(aq));
 		}
@@ -191,7 +191,7 @@ namespace Lucene.Net.Search
 			Lucene.Net.Util.Automaton.Automaton prefixAutomaton = BasicOperations.Concatenate
 				(pfx, BasicAutomata.MakeAnyString());
 			AutomatonQuery aq = new AutomatonQuery(NewTerm("bogus"), prefixAutomaton);
-			Terms terms = MultiFields.GetTerms(searcher.GetIndexReader(), FN);
+			Terms terms = MultiFields.GetTerms(searcher.IndexReader, FN);
 			IsTrue(aq.GetTermsEnum(terms) is PrefixTermsEnum);
 			AreEqual(3, AutomatonQueryNrHits(aq));
 		}
@@ -204,7 +204,7 @@ namespace Lucene.Net.Search
 				));
 			// not yet available: assertTrue(aq.getEnum(searcher.getIndexReader())
 			// instanceof EmptyTermEnum);
-			Terms terms = MultiFields.GetTerms(searcher.GetIndexReader(), FN);
+			Terms terms = MultiFields.GetTerms(searcher.IndexReader, FN);
 			AreSame(TermsEnum.EMPTY, aq.GetTermsEnum(terms));
 			AreEqual(0, AutomatonQueryNrHits(aq));
 		}

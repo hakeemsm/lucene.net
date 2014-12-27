@@ -14,7 +14,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	/// <summary>
 	/// Test that norms info is preserved during index life - including
@@ -104,7 +104,7 @@ namespace Lucene.Net.Index
 				writer.AddDocument(doc);
 			}
 			IndexReader reader = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			NumericDocValues fooNorms = MultiDocValues.GetNormValues(reader, "foo");
 			for (int i_1 = 0; i_1 < reader.MaxDoc; i_1++)
 			{
@@ -115,8 +115,8 @@ namespace Lucene.Net.Index
 			{
 				AreEqual(1, barNorms.Get(i_2));
 			}
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -134,8 +134,8 @@ namespace Lucene.Net.Index
 				AreEqual(expected, normValues.Get(i) & unchecked((int)(0xff
 					)));
 			}
-			open.Close();
-			dir.Close();
+			open.Dispose();
+			dir.Dispose();
 		}
 
 		// TODO: create a testNormsNotPresent ourselves by adding/deleting/merging docs
@@ -167,8 +167,8 @@ namespace Lucene.Net.Index
 				}
 			}
 			writer.Commit();
-			writer.Close();
-			docs.Close();
+			writer.Dispose();
+			docs.Dispose();
 		}
 
 		public class MySimProvider : PerFieldSimilarityWrapper

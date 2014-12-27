@@ -13,7 +13,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestDocsAndPositions : LuceneTestCase
 	{
@@ -41,29 +41,29 @@ namespace Lucene.Net.Index
 				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
-				customType.SetOmitNorms(true);
+				customType.OmitNorms = (true);
 				doc.Add(NewField(fieldName, "1 2 3 4 5 6 7 8 9 10 " + "1 2 3 4 5 6 7 8 9 10 " + "1 2 3 4 5 6 7 8 9 10 "
 					 + "1 2 3 4 5 6 7 8 9 10", customType));
 				writer.AddDocument(doc);
 			}
 			IndexReader reader = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			int num = AtLeast(13);
 			for (int i_1 = 0; i_1 < num; i_1++)
 			{
 				BytesRef bytes = new BytesRef("1");
 				IndexReaderContext topReaderContext = reader.GetContext();
-				foreach (AtomicReaderContext atomicReaderContext in topReaderContext.Leaves())
+				foreach (AtomicReaderContext atomicReaderContext in topReaderContext.Leaves)
 				{
 					DocsAndPositionsEnum docsAndPosEnum = GetDocsAndPositions(((AtomicReader)atomicReaderContext
-						.Reader()), bytes, null);
+						.Reader), bytes, null);
 					IsNotNull(docsAndPosEnum);
-					if (((AtomicReader)atomicReaderContext.Reader()).MaxDoc == 0)
+					if (((AtomicReader)atomicReaderContext.Reader).MaxDoc == 0)
 					{
 						continue;
 					}
 					int advance = docsAndPosEnum.Advance(Random().Next(((AtomicReader)atomicReaderContext
-						.Reader()).MaxDoc));
+						.Reader).MaxDoc));
 					do
 					{
 						string msg = "Advanced to: " + advance + " current doc: " + docsAndPosEnum.DocID(
@@ -81,8 +81,8 @@ namespace Lucene.Net.Index
 					while (docsAndPosEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
 				}
 			}
-			reader.Close();
-			directory.Close();
+			reader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -124,7 +124,7 @@ namespace Lucene.Net.Index
 			int term = Random().Next(max);
 			int[][] positionsInDoc = new int[numDocs][];
 			FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
-			customType.SetOmitNorms(true);
+			customType.OmitNorms = (true);
 			for (int i = 0; i < numDocs; i++)
 			{
 				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
@@ -151,19 +151,19 @@ namespace Lucene.Net.Index
 				writer.AddDocument(doc);
 			}
 			IndexReader reader = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			int num_1 = AtLeast(13);
 			for (int i_1 = 0; i_1 < num_1; i_1++)
 			{
 				BytesRef bytes = new BytesRef(string.Empty + term);
 				IndexReaderContext topReaderContext = reader.GetContext();
-				foreach (AtomicReaderContext atomicReaderContext in topReaderContext.Leaves())
+				foreach (AtomicReaderContext atomicReaderContext in topReaderContext.Leaves)
 				{
 					DocsAndPositionsEnum docsAndPosEnum = GetDocsAndPositions(((AtomicReader)atomicReaderContext
-						.Reader()), bytes, null);
+						.Reader), bytes, null);
 					IsNotNull(docsAndPosEnum);
 					int initDoc = 0;
-					int maxDoc = ((AtomicReader)atomicReaderContext.Reader()).MaxDoc;
+					int maxDoc = ((AtomicReader)atomicReaderContext.Reader).MaxDoc;
 					// initially advance or do next doc
 					if (Random().NextBoolean())
 					{
@@ -206,8 +206,8 @@ namespace Lucene.Net.Index
 					while (docsAndPosEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
 				}
 			}
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -222,7 +222,7 @@ namespace Lucene.Net.Index
 			int term = Random().Next(max);
 			int[] freqInDoc = new int[numDocs];
 			FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
-			customType.SetOmitNorms(true);
+			customType.OmitNorms = (true);
 			for (int i = 0; i < numDocs; i++)
 			{
 				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
@@ -241,16 +241,16 @@ namespace Lucene.Net.Index
 				writer.AddDocument(doc);
 			}
 			IndexReader reader = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			int num = AtLeast(13);
 			for (int i_1 = 0; i_1 < num; i_1++)
 			{
 				BytesRef bytes = new BytesRef(string.Empty + term);
 				IndexReaderContext topReaderContext = reader.GetContext();
-				foreach (AtomicReaderContext context in topReaderContext.Leaves())
+				foreach (AtomicReaderContext context in topReaderContext.Leaves)
 				{
-					int maxDoc = ((AtomicReader)context.Reader()).MaxDoc;
-					DocsEnum docsEnum = TestUtil.Docs(Random(), ((AtomicReader)context.Reader()), fieldName
+					int maxDoc = ((AtomicReader)context.Reader).MaxDoc;
+					DocsEnum docsEnum = TestUtil.Docs(Random(), ((AtomicReader)context.Reader), fieldName
 						, bytes, null, null, DocsEnum.FLAG_FREQS);
 					if (FindNext(freqInDoc, context.docBase, context.docBase + maxDoc) == int.MaxValue)
 					{
@@ -290,8 +290,8 @@ namespace Lucene.Net.Index
 						 + " " + docsEnum.GetType(), DocIdSetIterator.NO_MORE_DOCS, docsEnum.DocID);
 				}
 			}
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		private static int FindNext(int[] docs, int pos, int max)
@@ -322,7 +322,7 @@ namespace Lucene.Net.Index
 				(TEST_VERSION_CURRENT, new MockAnalyzer(Random())));
 			int howMany = 1000;
 			FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
-			customType.SetOmitNorms(true);
+			customType.OmitNorms = (true);
 			for (int i = 0; i < 39; i++)
 			{
 				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
@@ -344,19 +344,19 @@ namespace Lucene.Net.Index
 			}
 			// now do searches
 			IndexReader reader = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			int num = AtLeast(13);
 			for (int i_1 = 0; i_1 < num; i_1++)
 			{
 				BytesRef bytes = new BytesRef("even");
 				IndexReaderContext topReaderContext = reader.GetContext();
-				foreach (AtomicReaderContext atomicReaderContext in topReaderContext.Leaves())
+				foreach (AtomicReaderContext atomicReaderContext in topReaderContext.Leaves)
 				{
 					DocsAndPositionsEnum docsAndPosEnum = GetDocsAndPositions(((AtomicReader)atomicReaderContext
-						.Reader()), bytes, null);
+						.Reader), bytes, null);
 					IsNotNull(docsAndPosEnum);
 					int initDoc = 0;
-					int maxDoc = ((AtomicReader)atomicReaderContext.Reader()).MaxDoc;
+					int maxDoc = ((AtomicReader)atomicReaderContext.Reader).MaxDoc;
 					// initially advance or do next doc
 					if (Random().NextBoolean())
 					{
@@ -376,8 +376,8 @@ namespace Lucene.Net.Index
 					}
 				}
 			}
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -403,9 +403,9 @@ namespace Lucene.Net.Index
 			docid = disi.DocID;
 			AreEqual(-1, docid);
 			IsTrue(disi.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
-			writer.Close();
-			r.Close();
-			dir.Close();
+			writer.Dispose();
+			r.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -430,9 +430,9 @@ namespace Lucene.Net.Index
 			docid = disi.DocID;
 			AreEqual(-1, docid);
 			IsTrue(disi.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
-			writer.Close();
-			r.Close();
-			dir.Close();
+			writer.Dispose();
+			r.Dispose();
+			dir.Dispose();
 		}
 	}
 }

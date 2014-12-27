@@ -53,8 +53,8 @@ namespace Lucene.Net.Search
 			TotalHitCountCollector c = new TotalHitCountCollector();
 			s.Search(q, c);
 			AreEqual(q.ToString(), expected, c.GetTotalHits());
-			r.Close();
-			d.Close();
+			r.Dispose();
+			d.Dispose();
 		}
 
 		public static Analyzer GetAnalyzer()
@@ -89,7 +89,7 @@ namespace Lucene.Net.Search
 				d.Add(NewTextField(FIELD, s, Field.Store.YES));
 				writer.AddDocument(d);
 			}
-			writer.Close();
+			writer.Dispose();
 			return directory;
 		}
 	}

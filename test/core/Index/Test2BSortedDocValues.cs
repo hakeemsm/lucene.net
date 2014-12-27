@@ -1,17 +1,11 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Document;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
+using Lucene.Net.Support;
 using Lucene.Net.Util;
-using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class Test2BSortedDocValues : LuceneTestCase
 	{
@@ -29,16 +23,15 @@ namespace Lucene.Net.Index
 				(IndexWriterConfig.DISABLE_AUTO_FLUSH)).SetRAMBufferSizeMB(256.0)).SetMergeScheduler
 				(new ConcurrentMergeScheduler()).SetMergePolicy(NewLogMergePolicy(false, 10)).SetOpenMode
 				(IndexWriterConfig.OpenMode.CREATE));
-			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-				();
-			byte[] bytes = new byte[2];
-			BytesRef data = new BytesRef(bytes);
+			var doc = new Lucene.Net.Documents.Document();
+			var bytes = new byte[2];
+			BytesRef data = new BytesRef(bytes.ToSbytes());
 			SortedDocValuesField dvField = new SortedDocValuesField("dv", data);
 			doc.Add(dvField);
 			for (int i = 0; i < int.MaxValue; i++)
 			{
-				bytes[0] = unchecked((byte)(i >> 8));
-				bytes[1] = unchecked((byte)i);
+				bytes[0] = ((byte)(i >> 8));
+				bytes[1] = ((byte)i);
 				w.AddDocument(doc);
 				if (i % 100000 == 0)
 				{
@@ -47,14 +40,14 @@ namespace Lucene.Net.Index
 				}
 			}
 			w.ForceMerge(1);
-			w.Close();
+			w.Dispose();
 			System.Console.Out.WriteLine("verifying...");
 			System.Console.Out.Flush();
 			DirectoryReader r = DirectoryReader.Open(dir);
 			int expectedValue = 0;
-			foreach (AtomicReaderContext context in r.Leaves())
+			foreach (AtomicReaderContext context in r.Leaves)
 			{
-				AtomicReader reader = ((AtomicReader)context.Reader());
+				AtomicReader reader = ((AtomicReader)context.Reader);
 				BytesRef scratch = new BytesRef();
 				BinaryDocValues dv = reader.GetSortedDocValues("dv");
 				for (int i_1 = 0; i_1 < reader.MaxDoc; i_1++)
@@ -66,8 +59,8 @@ namespace Lucene.Net.Index
 					expectedValue++;
 				}
 			}
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 
 		// indexes Integer.MAX_VALUE docs with a fixed binary field
@@ -79,23 +72,22 @@ namespace Lucene.Net.Index
 			{
 				((MockDirectoryWrapper)dir).SetThrottling(MockDirectoryWrapper.Throttling.NEVER);
 			}
-			IndexWriter w = new IndexWriter(dir, ((IndexWriterConfig)((IndexWriterConfig)new 
+			var w = new IndexWriter(dir, ((IndexWriterConfig)((IndexWriterConfig)new 
 				IndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMaxBufferedDocs
 				(IndexWriterConfig.DISABLE_AUTO_FLUSH)).SetRAMBufferSizeMB(256.0)).SetMergeScheduler
 				(new ConcurrentMergeScheduler()).SetMergePolicy(NewLogMergePolicy(false, 10)).SetOpenMode
 				(IndexWriterConfig.OpenMode.CREATE));
-			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-				();
+			var doc = new Lucene.Net.Documents.Document();
 			byte[] bytes = new byte[4];
-			BytesRef data = new BytesRef(bytes);
+			BytesRef data = new BytesRef(bytes.ToSbytes());
 			SortedDocValuesField dvField = new SortedDocValuesField("dv", data);
 			doc.Add(dvField);
 			for (int i = 0; i < int.MaxValue; i++)
 			{
-				bytes[0] = unchecked((byte)(i >> 24));
-				bytes[1] = unchecked((byte)(i >> 16));
-				bytes[2] = unchecked((byte)(i >> 8));
-				bytes[3] = unchecked((byte)i);
+				bytes[0] = ((byte)(i >> 24));
+				bytes[1] = ((byte)(i >> 16));
+				bytes[2] = ((byte)(i >> 8));
+				bytes[3] = ((byte)i);
 				w.AddDocument(doc);
 				if (i % 100000 == 0)
 				{
@@ -104,14 +96,14 @@ namespace Lucene.Net.Index
 				}
 			}
 			w.ForceMerge(1);
-			w.Close();
+			w.Dispose();
 			System.Console.Out.WriteLine("verifying...");
 			System.Console.Out.Flush();
 			DirectoryReader r = DirectoryReader.Open(dir);
 			int counter = 0;
-			foreach (AtomicReaderContext context in r.Leaves())
+			foreach (AtomicReaderContext context in r.Leaves)
 			{
-				AtomicReader reader = ((AtomicReader)context.Reader());
+				AtomicReader reader = ((AtomicReader)context.Reader);
 				BytesRef scratch = new BytesRef();
 				BinaryDocValues dv = reader.GetSortedDocValues("dv");
 				for (int i_1 = 0; i_1 < reader.MaxDoc; i_1++)
@@ -125,8 +117,8 @@ namespace Lucene.Net.Index
 					AreEqual(data, scratch);
 				}
 			}
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 		// TODO: variable
 	}

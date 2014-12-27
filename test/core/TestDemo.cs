@@ -63,7 +63,7 @@ namespace Lucene.Net
 			string text = "This is the text to be indexed. " + longTerm;
 			doc.Add(NewTextField("fieldname", text, Field.Store.YES));
 			iwriter.AddDocument(doc);
-			iwriter.Close();
+			iwriter.Dispose();
 			
 			// Now search the index:
 			IndexReader ireader = DirectoryReader.Open(directory);
@@ -75,7 +75,7 @@ namespace Lucene.Net
 			TopDocs hits = isearcher.Search(query, null, 1);
 			AreEqual(1, hits.TotalHits);
 			// Iterate through the results:
-			for (int i = 0; i < hits.scoreDocs.Length; i++)
+			for (int i = 0; i < hits.ScoreDocs.Length; i++)
 			{
 				Document hitDoc = isearcher.Doc(hits[i].Doc);
 				Assert.AreEqual(hitDoc.Get("fieldname"), "This is the text to be indexed.");
@@ -85,8 +85,8 @@ namespace Lucene.Net
 			phraseQuery.Add(new Term("fieldname", "be"));
 			AreEqual(1, isearcher.Search(phraseQuery, null, 1).TotalHits
 				);
-			ireader.Close();
-			directory.Close();
+			ireader.Dispose();
+			directory.Dispose();
 		}
 	}
 }

@@ -166,10 +166,10 @@ namespace Lucene.Net.Search
 			searcher.Search(query, c);
 			AreEqual("slop: " + slop + "  query: " + query + "  doc: "
 				 + doc + "  Wrong number of hits", expectedNumResults, c.TotalHits);
-			writer.Close();
+			writer.Dispose();
 
-			reader.Close();
-			ramDir.Close();
+			reader.Dispose();
+			ramDir.Dispose();
 			// returns the max Scorer.freq() found, because even though norms are omitted, many index stats are different
 			// with these different tokens/distributions/lengths.. otherwise this test is very fragile.
 			return c.max;
@@ -179,7 +179,7 @@ namespace Lucene.Net.Search
 		{
 			Document doc = new Document();
 			FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
-			customType.SetOmitNorms(true);
+			customType.OmitNorms = (true);
 			Field f = new Field("f", docText, customType);
 			doc.Add(f);
 			return doc;
@@ -273,7 +273,7 @@ namespace Lucene.Net.Search
 			Directory dir = NewDirectory();
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir);
 			FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
-			customType.SetOmitNorms(true);
+			customType.OmitNorms = (true);
 			Field f = new Field("lyrics", string.Empty, customType);
 			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
@@ -287,7 +287,7 @@ namespace Lucene.Net.Search
 			f.StringValue = "drug druggy drug druggy drug");
 			iw.AddDocument(doc);
 			IndexReader ir = iw.GetReader();
-			iw.Close();
+			iw.Dispose();
 			IndexSearcher @is = NewSearcher(ir);
 			PhraseQuery pq = new PhraseQuery();
 			// "drug the drug"~1
@@ -299,8 +299,8 @@ namespace Lucene.Net.Search
 			AreEqual(3, @is.Search(pq, 4).TotalHits);
 			pq.SetSlop(2);
 			AreEqual(4, @is.Search(pq, 4).TotalHits);
-			ir.Close();
-			dir.Close();
+			ir.Dispose();
+			dir.Dispose();
 		}
 
 		// LUCENE-3215
@@ -315,7 +315,7 @@ namespace Lucene.Net.Search
 			doc.Add(NewField("lyrics", document, new FieldType(TextField.TYPE_NOT_STORED)));
 			iw.AddDocument(doc);
 			IndexReader ir = iw.GetReader();
-			iw.Close();
+			iw.Dispose();
 			IndexSearcher @is = NewSearcher(ir);
 			PhraseQuery pq = new PhraseQuery();
 			// "drug the drug"~1
@@ -323,8 +323,8 @@ namespace Lucene.Net.Search
 			pq.Add(new Term("lyrics", "drug"), 3);
 			pq.SetSlop(1);
 			AssertSaneScoring(pq, @is);
-			ir.Close();
-			dir.Close();
+			ir.Dispose();
+			dir.Dispose();
 		}
 
 		// LUCENE-3215
@@ -348,7 +348,7 @@ namespace Lucene.Net.Search
 			doc.Add(NewField("lyrics", document, new FieldType(TextField.TYPE_NOT_STORED)));
 			iw.AddDocument(doc);
 			IndexReader ir = iw.GetReader();
-			iw.Close();
+			iw.Dispose();
 			IndexSearcher @is = NewSearcher(ir);
 			PhraseQuery pq = new PhraseQuery();
 			// "drug the drug"~5
@@ -356,8 +356,8 @@ namespace Lucene.Net.Search
 			pq.Add(new Term("lyrics", "drug"), 3);
 			pq.SetSlop(5);
 			AssertSaneScoring(pq, @is);
-			ir.Close();
-			dir.Close();
+			ir.Dispose();
+			dir.Dispose();
 		}
 	}
 }

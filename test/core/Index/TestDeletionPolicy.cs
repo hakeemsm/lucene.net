@@ -15,7 +15,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestDeletionPolicy : LuceneTestCase
 	{
@@ -68,9 +68,9 @@ namespace Lucene.Net.Index
 				IndexCommit lastCommit = commits[commits.Count - 1];
 				DirectoryReader r = DirectoryReader.Open(this.dir);
 				AreEqual("lastCommit.segmentCount()=" + lastCommit.GetSegmentCount
-					() + " vs IndexReader.segmentCount=" + r.Leaves().Count, r.Leaves().Count, lastCommit
-					.GetSegmentCount());
-				r.Close();
+					() + " vs IndexReader.segmentCount=" + r.Leaves.Count, r.Leaves.Count, lastCommit
+					.SegmentCount);
+				r.Dispose();
 				this._enclosing.VerifyCommitOrder(commits);
 				this.numOnCommit++;
 			}
@@ -260,39 +260,39 @@ namespace Lucene.Net.Index
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random())).SetIndexDeletionPolicy(new TestDeletionPolicy.ExpirationTimeDeletionPolicy
 				(this, dir, SECONDS));
-			MergePolicy mp = conf.GetMergePolicy();
+			MergePolicy mp = conf.MergePolicy;
 			mp.SetNoCFSRatio(1.0);
 			IndexWriter writer = new IndexWriter(dir, conf);
 			TestDeletionPolicy.ExpirationTimeDeletionPolicy policy = (TestDeletionPolicy.ExpirationTimeDeletionPolicy
-				)writer.GetConfig().GetIndexDeletionPolicy();
+				)writer.Config.GetIndexDeletionPolicy();
 			IDictionary<string, string> commitData = new Dictionary<string, string>();
-			commitData.Put("commitTime", Runtime.CurrentTimeMillis().ToString());
+			commitData.Put("commitTime", DateTime.Now.CurrentTimeMillis().ToString());
 			writer.SetCommitData(commitData);
 			writer.Commit();
-			writer.Close();
+			writer.Dispose();
 			long lastDeleteTime = 0;
 			int targetNumDelete = TestUtil.NextInt(Random(), 1, 5);
 			while (policy.numDelete < targetNumDelete)
 			{
 				// Record last time when writer performed deletes of
 				// past commits
-				lastDeleteTime = Runtime.CurrentTimeMillis();
+				lastDeleteTime = DateTime.Now.CurrentTimeMillis();
 				conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetOpenMode
 					(IndexWriterConfig.OpenMode.APPEND).SetIndexDeletionPolicy(policy);
-				mp = conf.GetMergePolicy();
+				mp = conf.MergePolicy;
 				mp.SetNoCFSRatio(1.0);
 				writer = new IndexWriter(dir, conf);
-				policy = (TestDeletionPolicy.ExpirationTimeDeletionPolicy)writer.GetConfig().GetIndexDeletionPolicy
+				policy = (TestDeletionPolicy.ExpirationTimeDeletionPolicy)writer.Config.GetIndexDeletionPolicy
 					();
 				for (int j = 0; j < 17; j++)
 				{
 					AddDoc(writer);
 				}
 				commitData = new Dictionary<string, string>();
-				commitData.Put("commitTime", Runtime.CurrentTimeMillis().ToString());
+				commitData.Put("commitTime", DateTime.Now.CurrentTimeMillis().ToString());
 				writer.SetCommitData(commitData);
 				writer.Commit();
-				writer.Close();
+				writer.Dispose();
 				Sharpen.Thread.Sleep((int)(1000.0 * (SECONDS / 5.0)));
 			}
 			// Then simplistic check: just verify that the
@@ -309,7 +309,7 @@ namespace Lucene.Net.Index
 				try
 				{
 					IndexReader reader = DirectoryReader.Open(dir);
-					reader.Close();
+					reader.Dispose();
 					fileName = IndexFileNames.FileNameFromGeneration(IndexFileNames.SEGMENTS, string.Empty
 						, gen);
 					// if we are on a filesystem that seems to have only
@@ -333,7 +333,7 @@ namespace Lucene.Net.Index
 					, gen));
 				gen--;
 			}
-			dir.Close();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -351,37 +351,37 @@ namespace Lucene.Net.Index
 					, new MockAnalyzer(Random())).SetIndexDeletionPolicy(new TestDeletionPolicy.KeepAllDeletionPolicy
 					(this, dir)).SetMaxBufferedDocs(10)).SetMergeScheduler(new SerialMergeScheduler(
 					));
-				MergePolicy mp = conf.GetMergePolicy();
+				MergePolicy mp = conf.MergePolicy;
 				mp.SetNoCFSRatio(useCompoundFile ? 1.0 : 0.0);
 				IndexWriter writer = new IndexWriter(dir, conf);
 				TestDeletionPolicy.KeepAllDeletionPolicy policy = (TestDeletionPolicy.KeepAllDeletionPolicy
-					)writer.GetConfig().GetIndexDeletionPolicy();
+					)writer.Config.GetIndexDeletionPolicy();
 				for (int i = 0; i < 107; i++)
 				{
 					AddDoc(writer);
 				}
-				writer.Close();
+				writer.Dispose();
 				bool needsMerging;
 				{
 					DirectoryReader r = DirectoryReader.Open(dir);
-					needsMerging = r.Leaves().Count != 1;
-					r.Close();
+					needsMerging = r.Leaves.Count != 1;
+					r.Dispose();
 				}
 				if (needsMerging)
 				{
 					conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetOpenMode
 						(IndexWriterConfig.OpenMode.APPEND).SetIndexDeletionPolicy(policy);
-					mp = conf.GetMergePolicy();
+					mp = conf.MergePolicy;
 					mp.SetNoCFSRatio(useCompoundFile ? 1.0 : 0.0);
 					if (VERBOSE)
 					{
 						System.Console.Out.WriteLine("TEST: open writer for forceMerge");
 					}
 					writer = new IndexWriter(dir, conf);
-					policy = (TestDeletionPolicy.KeepAllDeletionPolicy)writer.GetConfig().GetIndexDeletionPolicy
+					policy = (TestDeletionPolicy.KeepAllDeletionPolicy)writer.Config.GetIndexDeletionPolicy
 						();
 					writer.ForceMerge(1);
-					writer.Close();
+					writer.Dispose();
 				}
 				AreEqual(needsMerging ? 2 : 1, policy.numOnInit);
 				// If we are not auto committing then there should
@@ -395,7 +395,7 @@ namespace Lucene.Net.Index
 				foreach (IndexCommit commit in commits)
 				{
 					IndexReader r = DirectoryReader.Open(commit);
-					r.Close();
+					r.Dispose();
 				}
 				// Simplistic check: just verify all segments_N's still
 				// exist, and, I can open a reader on each:
@@ -404,7 +404,7 @@ namespace Lucene.Net.Index
 				while (gen > 0)
 				{
 					IndexReader reader = DirectoryReader.Open(dir);
-					reader.Close();
+					reader.Dispose();
 					dir.DeleteFile(IndexFileNames.FileNameFromGeneration(IndexFileNames.SEGMENTS, string.Empty
 						, gen));
 					gen--;
@@ -420,12 +420,12 @@ namespace Lucene.Net.Index
 						writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 							(Random())).SetOpenMode(IndexWriterConfig.OpenMode.APPEND).SetIndexDeletionPolicy
 							(policy));
-						writer.Close();
+						writer.Dispose();
 						int postCount = dir.ListAll().Length;
 						IsTrue(postCount < preCount);
 					}
 				}
-				dir.Close();
+				dir.Dispose();
 			}
 		}
 
@@ -437,7 +437,7 @@ namespace Lucene.Net.Index
 				(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetIndexDeletionPolicy(new TestDeletionPolicy.KeepAllDeletionPolicy
 				(this, dir)).SetMaxBufferedDocs(2)).SetMergePolicy(NewLogMergePolicy(10)));
 			TestDeletionPolicy.KeepAllDeletionPolicy policy = (TestDeletionPolicy.KeepAllDeletionPolicy
-				)writer.GetConfig().GetIndexDeletionPolicy();
+				)writer.Config.GetIndexDeletionPolicy();
 			for (int i = 0; i < 10; i++)
 			{
 				AddDoc(writer);
@@ -446,7 +446,7 @@ namespace Lucene.Net.Index
 					writer.Commit();
 				}
 			}
-			writer.Close();
+			writer.Dispose();
 			ICollection<IndexCommit> commits = DirectoryReader.ListCommits(dir);
 			AreEqual(5, commits.Count);
 			IndexCommit lastCommit = null;
@@ -462,61 +462,61 @@ namespace Lucene.Net.Index
 			writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random())).SetIndexDeletionPolicy(policy));
 			AddDoc(writer);
-			AreEqual(11, writer.NumDocs());
+			AreEqual(11, writer.NumDocs);
 			writer.ForceMerge(1);
-			writer.Close();
+			writer.Dispose();
 			AreEqual(6, DirectoryReader.ListCommits(dir).Count);
 			// Now open writer on the commit just before merge:
 			writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random())).SetIndexDeletionPolicy(policy).SetIndexCommit(lastCommit));
-			AreEqual(10, writer.NumDocs());
+			AreEqual(10, writer.NumDocs);
 			// Should undo our rollback:
 			writer.Rollback();
 			DirectoryReader r = DirectoryReader.Open(dir);
 			// Still merged, still 11 docs
-			AreEqual(1, r.Leaves().Count);
-			AreEqual(11, r.NumDocs());
-			r.Close();
+			AreEqual(1, r.Leaves.Count);
+			AreEqual(11, r.NumDocs);
+			r.Dispose();
 			writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random())).SetIndexDeletionPolicy(policy).SetIndexCommit(lastCommit));
-			AreEqual(10, writer.NumDocs());
+			AreEqual(10, writer.NumDocs);
 			// Commits the rollback:
-			writer.Close();
+			writer.Dispose();
 			// Now 8 because we made another commit
 			AreEqual(7, DirectoryReader.ListCommits(dir).Count);
 			r = DirectoryReader.Open(dir);
 			// Not fully merged because we rolled it back, and now only
 			// 10 docs
-			IsTrue(r.Leaves().Count > 1);
-			AreEqual(10, r.NumDocs());
-			r.Close();
+			IsTrue(r.Leaves.Count > 1);
+			AreEqual(10, r.NumDocs);
+			r.Dispose();
 			// Re-merge
 			writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random())).SetIndexDeletionPolicy(policy));
 			writer.ForceMerge(1);
-			writer.Close();
+			writer.Dispose();
 			r = DirectoryReader.Open(dir);
-			AreEqual(1, r.Leaves().Count);
-			AreEqual(10, r.NumDocs());
-			r.Close();
+			AreEqual(1, r.Leaves.Count);
+			AreEqual(10, r.NumDocs);
+			r.Dispose();
 			// Now open writer on the commit just before merging,
 			// but this time keeping only the last commit:
 			writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random())).SetIndexCommit(lastCommit));
-			AreEqual(10, writer.NumDocs());
+			AreEqual(10, writer.NumDocs);
 			// Reader still sees fully merged index, because writer
 			// opened on the prior commit has not yet committed:
 			r = DirectoryReader.Open(dir);
-			AreEqual(1, r.Leaves().Count);
-			AreEqual(10, r.NumDocs());
-			r.Close();
-			writer.Close();
+			AreEqual(1, r.Leaves.Count);
+			AreEqual(10, r.NumDocs);
+			r.Dispose();
+			writer.Dispose();
 			// Now reader sees not-fully-merged index:
 			r = DirectoryReader.Open(dir);
-			IsTrue(r.Leaves().Count > 1);
-			AreEqual(10, r.NumDocs());
-			r.Close();
-			dir.Close();
+			IsTrue(r.Leaves.Count > 1);
+			AreEqual(10, r.NumDocs);
+			r.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -530,25 +530,25 @@ namespace Lucene.Net.Index
 					, new MockAnalyzer(Random())).SetOpenMode(IndexWriterConfig.OpenMode.CREATE).SetIndexDeletionPolicy
 					(new TestDeletionPolicy.KeepNoneOnInitDeletionPolicy(this)).SetMaxBufferedDocs(10
 					));
-				MergePolicy mp = conf.GetMergePolicy();
+				MergePolicy mp = conf.MergePolicy;
 				mp.SetNoCFSRatio(useCompoundFile ? 1.0 : 0.0);
 				IndexWriter writer = new IndexWriter(dir, conf);
 				TestDeletionPolicy.KeepNoneOnInitDeletionPolicy policy = (TestDeletionPolicy.KeepNoneOnInitDeletionPolicy
-					)writer.GetConfig().GetIndexDeletionPolicy();
+					)writer.Config.GetIndexDeletionPolicy();
 				for (int i = 0; i < 107; i++)
 				{
 					AddDoc(writer);
 				}
-				writer.Close();
+				writer.Dispose();
 				conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetOpenMode
 					(IndexWriterConfig.OpenMode.APPEND).SetIndexDeletionPolicy(policy);
-				mp = conf.GetMergePolicy();
+				mp = conf.MergePolicy;
 				mp.SetNoCFSRatio(1.0);
 				writer = new IndexWriter(dir, conf);
-				policy = (TestDeletionPolicy.KeepNoneOnInitDeletionPolicy)writer.GetConfig().GetIndexDeletionPolicy
+				policy = (TestDeletionPolicy.KeepNoneOnInitDeletionPolicy)writer.Config.GetIndexDeletionPolicy
 					();
 				writer.ForceMerge(1);
-				writer.Close();
+				writer.Dispose();
 				AreEqual(2, policy.numOnInit);
 				// If we are not auto committing then there should
 				// be exactly 2 commits (one per close above):
@@ -556,8 +556,8 @@ namespace Lucene.Net.Index
 				// Simplistic check: just verify the index is in fact
 				// readable:
 				IndexReader reader = DirectoryReader.Open(dir);
-				reader.Close();
-				dir.Close();
+				reader.Dispose();
+				dir.Dispose();
 			}
 		}
 
@@ -576,17 +576,17 @@ namespace Lucene.Net.Index
 					IndexWriterConfig conf = ((IndexWriterConfig)NewIndexWriterConfig(TEST_VERSION_CURRENT
 						, new MockAnalyzer(Random())).SetOpenMode(IndexWriterConfig.OpenMode.CREATE).SetIndexDeletionPolicy
 						(policy).SetMaxBufferedDocs(10));
-					MergePolicy mp = conf.GetMergePolicy();
+					MergePolicy mp = conf.MergePolicy;
 					mp.SetNoCFSRatio(useCompoundFile ? 1.0 : 0.0);
 					IndexWriter writer = new IndexWriter(dir, conf);
-					policy = (TestDeletionPolicy.KeepLastNDeletionPolicy)writer.GetConfig().GetIndexDeletionPolicy
+					policy = (TestDeletionPolicy.KeepLastNDeletionPolicy)writer.Config.GetIndexDeletionPolicy
 						();
 					for (int i = 0; i < 17; i++)
 					{
 						AddDoc(writer);
 					}
 					writer.ForceMerge(1);
-					writer.Close();
+					writer.Dispose();
 				}
 				IsTrue(policy.numDelete > 0);
 				AreEqual(N + 1, policy.numOnInit);
@@ -600,7 +600,7 @@ namespace Lucene.Net.Index
 					try
 					{
 						IndexReader reader = DirectoryReader.Open(dir);
-						reader.Close();
+						reader.Dispose();
 						if (i_1 == N)
 						{
 							Fail("should have failed on commits prior to last " + N);
@@ -620,7 +620,7 @@ namespace Lucene.Net.Index
 					}
 					gen--;
 				}
-				dir.Close();
+				dir.Dispose();
 			}
 		}
 
@@ -636,12 +636,12 @@ namespace Lucene.Net.Index
 					, new MockAnalyzer(Random())).SetOpenMode(IndexWriterConfig.OpenMode.CREATE).SetIndexDeletionPolicy
 					(new TestDeletionPolicy.KeepLastNDeletionPolicy(this, N)).SetMaxBufferedDocs(10)
 					);
-				MergePolicy mp = conf.GetMergePolicy();
+				MergePolicy mp = conf.MergePolicy;
 				mp.SetNoCFSRatio(useCompoundFile ? 1.0 : 0.0);
 				IndexWriter writer = new IndexWriter(dir, conf);
 				TestDeletionPolicy.KeepLastNDeletionPolicy policy = (TestDeletionPolicy.KeepLastNDeletionPolicy
-					)writer.GetConfig().GetIndexDeletionPolicy();
-				writer.Close();
+					)writer.Config.GetIndexDeletionPolicy();
+				writer.Dispose();
 				Term searchTerm = new Term("content", "aaa");
 				Query query = new TermQuery(searchTerm);
 				for (int i = 0; i < N + 1; i++)
@@ -649,51 +649,51 @@ namespace Lucene.Net.Index
 					conf = ((IndexWriterConfig)NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 						(Random())).SetOpenMode(IndexWriterConfig.OpenMode.APPEND).SetIndexDeletionPolicy
 						(policy).SetMaxBufferedDocs(10));
-					mp = conf.GetMergePolicy();
+					mp = conf.MergePolicy;
 					mp.SetNoCFSRatio(useCompoundFile ? 1.0 : 0.0);
 					writer = new IndexWriter(dir, conf);
-					policy = (TestDeletionPolicy.KeepLastNDeletionPolicy)writer.GetConfig().GetIndexDeletionPolicy
+					policy = (TestDeletionPolicy.KeepLastNDeletionPolicy)writer.Config.GetIndexDeletionPolicy
 						();
 					for (int j = 0; j < 17; j++)
 					{
 						AddDocWithID(writer, i * (N + 1) + j);
 					}
 					// this is a commit
-					writer.Close();
+					writer.Dispose();
 					conf = new IndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetIndexDeletionPolicy
 						(policy).SetMergePolicy(NoMergePolicy.COMPOUND_FILES);
 					writer = new IndexWriter(dir, conf);
-					policy = (TestDeletionPolicy.KeepLastNDeletionPolicy)writer.GetConfig().GetIndexDeletionPolicy
+					policy = (TestDeletionPolicy.KeepLastNDeletionPolicy)writer.Config.GetIndexDeletionPolicy
 						();
 					writer.DeleteDocuments(new Term("id", string.Empty + (i * (N + 1) + 3)));
 					// this is a commit
-					writer.Close();
+					writer.Dispose();
 					IndexReader reader = DirectoryReader.Open(dir);
 					IndexSearcher searcher = NewSearcher(reader);
-					ScoreDoc[] hits = searcher.Search(query, null, 1000).scoreDocs;
+					ScoreDoc[] hits = searcher.Search(query, null, 1000).ScoreDocs;
 					AreEqual(16, hits.Length);
-					reader.Close();
+					reader.Dispose();
 					writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 						(Random())).SetOpenMode(IndexWriterConfig.OpenMode.CREATE).SetIndexDeletionPolicy
 						(policy));
-					policy = (TestDeletionPolicy.KeepLastNDeletionPolicy)writer.GetConfig().GetIndexDeletionPolicy
+					policy = (TestDeletionPolicy.KeepLastNDeletionPolicy)writer.Config.GetIndexDeletionPolicy
 						();
 					// This will not commit: there are no changes
 					// pending because we opened for "create":
-					writer.Close();
+					writer.Dispose();
 				}
 				AreEqual(3 * (N + 1) + 1, policy.numOnInit);
 				AreEqual(3 * (N + 1) + 1, policy.numOnCommit);
 				IndexReader rwReader = DirectoryReader.Open(dir);
 				IndexSearcher searcher_1 = NewSearcher(rwReader);
-				ScoreDoc[] hits_1 = searcher_1.Search(query, null, 1000).scoreDocs;
+				ScoreDoc[] hits_1 = searcher_1.Search(query, null, 1000).ScoreDocs;
 				AreEqual(0, hits_1.Length);
 				// Simplistic check: just verify only the past N segments_N's still
 				// exist, and, I can open a reader on each:
 				long gen = SegmentInfos.GetLastCommitGeneration(dir);
 				dir.DeleteFile(IndexFileNames.SEGMENTS_GEN);
 				int expectedCount = 0;
-				rwReader.Close();
+				rwReader.Dispose();
 				for (int i_1 = 0; i_1 < N + 1; i_1++)
 				{
 					try
@@ -702,7 +702,7 @@ namespace Lucene.Net.Index
 						// Work backwards in commits on what the expected
 						// count should be.
 						searcher_1 = NewSearcher(reader);
-						hits_1 = searcher_1.Search(query, null, 1000).scoreDocs;
+						hits_1 = searcher_1.Search(query, null, 1000).ScoreDocs;
 						AreEqual(expectedCount, hits_1.Length);
 						if (expectedCount == 0)
 						{
@@ -722,7 +722,7 @@ namespace Lucene.Net.Index
 								}
 							}
 						}
-						reader.Close();
+						reader.Dispose();
 						if (i_1 == N)
 						{
 							Fail("should have failed on commits before last " + N);
@@ -742,7 +742,7 @@ namespace Lucene.Net.Index
 					}
 					gen--;
 				}
-				dir.Close();
+				dir.Dispose();
 			}
 		}
 

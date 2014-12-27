@@ -44,15 +44,15 @@ namespace Lucene.Net.Search.Spans
 			field.StringValue = "jumps over extremely very lazy broxn dog");
 			iw.AddDocument(doc);
 			reader = iw.GetReader();
-			iw.Close();
+			iw.Dispose();
 			searcher = NewSearcher(reader);
 		}
 
 		/// <exception cref="System.Exception"></exception>
 		public override void TearDown()
 		{
-			reader.Close();
-			directory.Close();
+			reader.Dispose();
+			directory.Dispose();
 			base.TearDown();
 		}
 

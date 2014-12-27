@@ -25,7 +25,7 @@ namespace Lucene.Net.Codecs.Simpletext
 		{
 			for (int i = 0; i < b.length; i++)
 			{
-				byte bx = b.bytes[b.offset + i];
+				var bx = b.bytes[b.offset + i];
 				if (bx == NEWLINE || bx == ESCAPE)
 				{
 					@out.WriteByte(ESCAPE);
@@ -53,18 +53,15 @@ namespace Lucene.Net.Codecs.Simpletext
 				}
 				if (b == ESCAPE)
 				{
-					scratch.bytes[upto++] = @in.ReadByte();
+					scratch.bytes[upto++] = (sbyte) @in.ReadByte();
 				}
 				else
 				{
-					if (b == NEWLINE)
+				    if (b == NEWLINE)
 					{
 						break;
 					}
-					else
-					{
-						scratch.bytes[upto++] = b;
-					}
+				    scratch.bytes[upto++] = (sbyte) b;
 				}
 			}
 			scratch.offset = 0;
@@ -77,7 +74,7 @@ namespace Lucene.Net.Codecs.Simpletext
 			// Pad with zeros so different checksum values use the
 			// same number of bytes
 			// (BaseIndexFileFormatTestCase.testMergeStability cares):
-			string checksum = string.Format(CultureInfo.ROOT, "%020d", @out.GetChecksum());
+			string checksum = string.Format(CultureInfo.CurrentCulture, "%020d", @out.GetChecksum());
 			SimpleTextUtil.Write(@out, CHECKSUM);
 			SimpleTextUtil.Write(@out, checksum, scratch);
 			SimpleTextUtil.WriteNewline(@out);
@@ -87,8 +84,7 @@ namespace Lucene.Net.Codecs.Simpletext
 		public static void CheckFooter(ChecksumIndexInput input)
 		{
 			BytesRef scratch = new BytesRef();
-			string expectedChecksum = string.Format(CultureInfo.ROOT, "%020d", input.GetChecksum
-				());
+			string expectedChecksum = string.Format(CultureInfo.CurrentCulture, "{0}", input.Checksum);
 			SimpleTextUtil.ReadLine(input, scratch);
 			if (StringHelper.StartsWith(scratch, CHECKSUM) == false)
 			{
@@ -102,7 +98,7 @@ namespace Lucene.Net.Codecs.Simpletext
 				throw new CorruptIndexException("SimpleText checksum failure: " + actualChecksum 
 					+ " != " + expectedChecksum + " (resource=" + input + ")");
 			}
-			if (input.Length() != input.FilePointer)
+			if (input.Length != input.FilePointer)
 			{
 				throw new CorruptIndexException("Unexpected stuff at the end of file, please be careful with your text editor! (resource="
 					 + input + ")");

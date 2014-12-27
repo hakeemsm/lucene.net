@@ -18,7 +18,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestPayloads : LuceneTestCase
 	{
@@ -64,7 +64,7 @@ namespace Lucene.Net.Index
 				.UTF_8), 0, 1);
 			writer.AddDocument(d);
 			// flush
-			writer.Close();
+			writer.Dispose();
 			SegmentReader reader = GetOnlySegmentReader(DirectoryReader.Open(ram));
 			FieldInfos fi = reader.GetFieldInfos();
 			IsFalse("Payload field bit should not be set.", fi.FieldInfo
@@ -73,7 +73,7 @@ namespace Lucene.Net.Index
 				).HasPayloads());
 			IsFalse("Payload field bit should not be set.", fi.FieldInfo
 				("f3").HasPayloads());
-			reader.Close();
+			reader.Dispose();
 			// now we add another document which has payloads for field f3 and verify if the SegmentMerger
 			// enabled payloads for that field
 			analyzer = new TestPayloads.PayloadAnalyzer();
@@ -94,7 +94,7 @@ namespace Lucene.Net.Index
 			// force merge
 			writer.ForceMerge(1);
 			// flush
-			writer.Close();
+			writer.Dispose();
 			reader = GetOnlySegmentReader(DirectoryReader.Open(ram));
 			fi = reader.GetFieldInfos();
 			IsFalse("Payload field bit should not be set.", fi.FieldInfo
@@ -103,8 +103,8 @@ namespace Lucene.Net.Index
 				).HasPayloads());
 			IsTrue("Payload field bit should be set.", fi.FieldInfo("f3"
 				).HasPayloads());
-			reader.Close();
-			ram.Close();
+			reader.Dispose();
+			ram.Dispose();
 		}
 
 		// Tests if payloads are correctly stored and loaded using both RamDirectory and FSDirectory
@@ -113,7 +113,7 @@ namespace Lucene.Net.Index
 		{
 			Directory dir = NewDirectory();
 			PerformTest(dir);
-			dir.Close();
+			dir.Dispose();
 		}
 
 		// builds an index with payloads in the given Directory and performs
@@ -164,7 +164,7 @@ namespace Lucene.Net.Index
 			}
 			writer.ForceMerge(1);
 			// flush
-			writer.Close();
+			writer.Dispose();
 			IndexReader reader = DirectoryReader.Open(dir);
 			byte[] verifyPayloadData = new byte[payloadDataLength];
 			offset = 0;
@@ -236,7 +236,7 @@ namespace Lucene.Net.Index
 			tp.NextPosition();
 			AreEqual("Wrong payload length.", 3 * skipInterval - 2 * numDocs
 				 - 1, tp.GetPayload().length);
-			reader.Close();
+			reader.Dispose();
 			// test long payload
 			analyzer = new TestPayloads.PayloadAnalyzer();
 			writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer
@@ -250,7 +250,7 @@ namespace Lucene.Net.Index
 			writer.AddDocument(d);
 			writer.ForceMerge(1);
 			// flush
-			writer.Close();
+			writer.Dispose();
 			reader = DirectoryReader.Open(dir);
 			tp = MultiFields.GetTermPositionsEnum(reader, MultiFields.GetLiveDocs(reader), fieldName
 				, new BytesRef(singleTerm));
@@ -261,7 +261,7 @@ namespace Lucene.Net.Index
 			byte[] portion = new byte[1500];
 			System.Array.Copy(payloadData, 100, portion, 0, 1500);
 			AssertByteArrayEquals(portion, br_1.bytes, br_1.offset, br_1.length);
-			reader.Close();
+			reader.Dispose();
 		}
 
 		internal static readonly Encoding utf8 = StandardCharsets.UTF_8;
@@ -467,7 +467,7 @@ namespace Lucene.Net.Index
 			{
 				ingesters[i_1].Join();
 			}
-			writer.Close();
+			writer.Dispose();
 			IndexReader reader = DirectoryReader.Open(dir);
 			TermsEnum terms = MultiFields.GetFields(reader).Terms(field).Iterator(null);
 			Bits liveDocs = MultiFields.GetLiveDocs(reader);
@@ -487,8 +487,8 @@ namespace Lucene.Net.Index
 					}
 				}
 			}
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 			AreEqual(pool.Size(), numThreads);
 		}
 
@@ -629,7 +629,7 @@ namespace Lucene.Net.Index
 				();
 			doc.Add(new TextField("hasMaybepayload", "here we go", Field.Store.YES));
 			writer.AddDocument(doc);
-			writer.Close();
+			writer.Dispose();
 			writer = new RandomIndexWriter(Random(), dir, new MockAnalyzer(Random(), MockTokenizer
 				.WHITESPACE, true));
 			doc = new Lucene.Net.Documents.Document();
@@ -637,8 +637,8 @@ namespace Lucene.Net.Index
 			writer.AddDocument(doc);
 			writer.AddDocument(doc);
 			writer.ForceMerge(1);
-			writer.Close();
-			dir.Close();
+			writer.Dispose();
+			dir.Dispose();
 		}
 
 		/// <summary>some docs have payload att, some not</summary>
@@ -675,9 +675,9 @@ namespace Lucene.Net.Index
 			de.NextDoc();
 			de.NextPosition();
 			AreEqual(new BytesRef("test"), de.GetPayload());
-			writer.Close();
-			reader.Close();
-			dir.Close();
+			writer.Dispose();
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		/// <summary>some field instances have payload att, some not</summary>
@@ -714,9 +714,9 @@ namespace Lucene.Net.Index
 			de.NextDoc();
 			de.NextPosition();
 			AreEqual(new BytesRef("test"), de.GetPayload());
-			writer.Close();
-			reader.Close();
-			dir.Close();
+			writer.Dispose();
+			reader.Dispose();
+			dir.Dispose();
 		}
 	}
 }

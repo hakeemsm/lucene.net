@@ -15,7 +15,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestStressIndexing2 : LuceneTestCase
 	{
@@ -60,9 +60,9 @@ namespace Lucene.Net.Index
 			DirectoryReader reader = dw.writer.GetReader();
 			dw.writer.Commit();
 			VerifyEquals(Random(), reader, dir, "id");
-			reader.Close();
-			dw.writer.Close();
-			dir.Close();
+			reader.Dispose();
+			dw.writer.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -80,8 +80,8 @@ namespace Lucene.Net.Index
 			// verifyEquals(dir1, dir1, "id");
 			// verifyEquals(dir2, dir2, "id");
 			VerifyEquals(dir1, dir2, "id");
-			dir1.Close();
-			dir2.Close();
+			dir1.Dispose();
+			dir2.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -126,8 +126,8 @@ namespace Lucene.Net.Index
 					System.Console.Out.WriteLine("TEST: verify");
 				}
 				VerifyEquals(dir1, dir2, "id");
-				dir1.Close();
-				dir2.Close();
+				dir1.Dispose();
+				dir2.Dispose();
 			}
 		}
 
@@ -173,9 +173,9 @@ namespace Lucene.Net.Index
 				maxBufferedDocs)).SetMergePolicy(NewLogMergePolicy()), new TestStressIndexing2.YieldTestPoint
 				(this));
 			w.Commit();
-			LogMergePolicy lmp = (LogMergePolicy)w.GetConfig().GetMergePolicy();
+			LogMergePolicy lmp = (LogMergePolicy)w.Config.MergePolicy;
 			lmp.SetNoCFSRatio(0.0);
-			lmp.SetMergeFactor(mergeFactor);
+			lmp.MergeFactor = (mergeFactor);
 			threads = new TestStressIndexing2.IndexingThread[nThreads];
 			for (int i = 0; i < threads.Length; i++)
 			{
@@ -226,9 +226,9 @@ namespace Lucene.Net.Index
 				maxBufferedDocs)).SetIndexerThreadPool(new DocumentsWriterPerThreadPool(maxThreadStates
 				)).SetReaderPooling(doReaderPooling).SetMergePolicy(NewLogMergePolicy()), new TestStressIndexing2.YieldTestPoint
 				(this));
-			LogMergePolicy lmp = (LogMergePolicy)w.GetConfig().GetMergePolicy();
+			LogMergePolicy lmp = (LogMergePolicy)w.Config.MergePolicy;
 			lmp.SetNoCFSRatio(0.0);
-			lmp.SetMergeFactor(mergeFactor);
+			lmp.MergeFactor = (mergeFactor);
 			threads = new TestStressIndexing2.IndexingThread[nThreads];
 			for (int i = 0; i < threads.Length; i++)
 			{
@@ -249,7 +249,7 @@ namespace Lucene.Net.Index
 				threads[i_2].Join();
 			}
 			//w.forceMerge(1);
-			w.Close();
+			w.Dispose();
 			for (int i_3 = 0; i_3 < threads.Length; i_3++)
 			{
 				TestStressIndexing2.IndexingThread th = threads[i_3];
@@ -288,7 +288,7 @@ namespace Lucene.Net.Index
 				w.AddDocument(d1);
 			}
 			// System.out.println("indexing "+d1);
-			w.Close();
+			w.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -297,7 +297,7 @@ namespace Lucene.Net.Index
 		{
 			DirectoryReader r2 = DirectoryReader.Open(dir2);
 			VerifyEquals(r1, r2, idField);
-			r2.Close();
+			r2.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -306,19 +306,19 @@ namespace Lucene.Net.Index
 			DirectoryReader r1 = DirectoryReader.Open(dir1);
 			DirectoryReader r2 = DirectoryReader.Open(dir2);
 			VerifyEquals(r1, r2, idField);
-			r1.Close();
-			r2.Close();
+			r1.Dispose();
+			r2.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
 		private static void PrintDocs(DirectoryReader r)
 		{
-			foreach (AtomicReaderContext ctx in r.Leaves())
+			foreach (AtomicReaderContext ctx in r.Leaves)
 			{
 				// TODO: improve this
-				AtomicReader sub = ((AtomicReader)ctx.Reader());
-				Bits liveDocs = sub.GetLiveDocs();
-				System.Console.Out.WriteLine("  " + ((SegmentReader)sub).GetSegmentInfo());
+				AtomicReader sub = ((AtomicReader)ctx.Reader);
+				Bits liveDocs = sub.LiveDocs;
+				System.Console.Out.WriteLine("  " + ((SegmentReader)sub).SegmentInfo);
 				for (int docID = 0; docID < sub.MaxDoc; docID++)
 				{
 					Lucene.Net.Documents.Document doc = sub.Document(docID);
@@ -345,12 +345,12 @@ namespace Lucene.Net.Index
 				System.Console.Out.WriteLine("\nr2 docs:");
 				PrintDocs(r2);
 			}
-			if (r1.NumDocs() != r2.NumDocs())
+			if (r1.NumDocs != r2.NumDocs)
 			{
 			}
 			//HM:revisit 
 			//assert false: "r1.numDocs()=" + r1.numDocs() + " vs r2.numDocs()=" + r2.numDocs();
-			bool hasDeletes = !(r1.MaxDoc == r2.MaxDoc && r1.NumDocs() == r1.MaxDoc);
+			bool hasDeletes = !(r1.MaxDoc == r2.MaxDoc && r1.NumDocs == r1.MaxDoc);
 			int[] r2r1 = new int[r2.MaxDoc];
 			// r2 id to r1 id mapping
 			// create mapping from id2 space to id2 based on idField
@@ -543,8 +543,8 @@ namespace Lucene.Net.Index
 			DocsEnum docs1 = null;
 			DocsEnum docs2 = null;
 			// pack both doc and freq into single element for easy sorting
-			long[] info1 = new long[r1.NumDocs()];
-			long[] info2 = new long[r2.NumDocs()];
+			long[] info1 = new long[r1.NumDocs];
+			long[] info2 = new long[r2.NumDocs];
 			for (; ; )
 			{
 				BytesRef term1 = null;
@@ -906,7 +906,7 @@ namespace Lucene.Net.Index
 				Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 				FieldType customType1 = new FieldType(TextField.TYPE_STORED);
 				customType1.SetTokenized(false);
-				customType1.SetOmitNorms(true);
+				customType1.OmitNorms = (true);
 				AList<Field> fields = new AList<Field>();
 				string idString = this.GetIdString();
 				Field idField = LuceneTestCase.NewField("id", idString, customType1);
@@ -946,9 +946,9 @@ namespace Lucene.Net.Index
 					{
 						case 0:
 						{
-							customType.SetStored(true);
-							customType.SetOmitNorms(true);
-							customType.SetIndexed(true);
+							customType.Stored = (true);
+							customType.OmitNorms = (true);
+							customType.Indexed(true);
 							fields.AddItem(LuceneTestCase.NewField("f" + this.NextInt(100), this.GetString(1)
 								, customType));
 							break;
@@ -956,7 +956,7 @@ namespace Lucene.Net.Index
 
 						case 1:
 						{
-							customType.SetIndexed(true);
+							customType.Indexed(true);
 							customType.SetTokenized(true);
 							fields.AddItem(LuceneTestCase.NewField("f" + this.NextInt(100), this.GetString(0)
 								, customType));
@@ -965,10 +965,10 @@ namespace Lucene.Net.Index
 
 						case 2:
 						{
-							customType.SetStored(true);
+							customType.Stored = (true);
 							customType.StoreTermVectors = false;
 							customType.SetStoreTermVectorOffsets(false);
-							customType.SetStoreTermVectorPositions(false);
+							customType.StoreTermVectorPositions = (false);
 							fields.AddItem(LuceneTestCase.NewField("f" + this.NextInt(100), this.GetString(0)
 								, customType));
 							break;
@@ -976,8 +976,8 @@ namespace Lucene.Net.Index
 
 						case 3:
 						{
-							customType.SetStored(true);
-							customType.SetIndexed(true);
+							customType.Stored = (true);
+							customType.Indexed(true);
 							customType.SetTokenized(true);
 							fields.AddItem(LuceneTestCase.NewField("f" + this.NextInt(100), this.GetString(TestStressIndexing2
 								.bigFieldSize), customType));

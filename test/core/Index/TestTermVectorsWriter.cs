@@ -12,7 +12,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	/// <summary>tests for writing term vectors</summary>
 	public class TestTermVectorsWriter : LuceneTestCase
@@ -37,7 +37,7 @@ namespace Lucene.Net.Index
 			doc.Add(f2);
 			doc.Add(f);
 			w.AddDocument(doc);
-			w.Close();
+			w.Dispose();
 			IndexReader r = DirectoryReader.Open(dir);
 			Terms vector = r.GetTermVectors(0).Terms("field");
 			IsNotNull(vector);
@@ -68,8 +68,8 @@ namespace Lucene.Net.Index
 			AreEqual(12, dpEnum.EndOffset());
 			AreEqual(DocIdSetIterator.NO_MORE_DOCS, dpEnum.NextDoc());
 			IsNull(termsEnum.Next());
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 
 		// LUCENE-1442
@@ -89,7 +89,7 @@ namespace Lucene.Net.Index
 			doc.Add(f);
 			doc.Add(f);
 			w.AddDocument(doc);
-			w.Close();
+			w.Dispose();
 			IndexReader r = DirectoryReader.Open(dir);
 			TermsEnum termsEnum = r.GetTermVectors(0).Terms("field").Iterator(null);
 			IsNotNull(termsEnum.Next());
@@ -103,8 +103,8 @@ namespace Lucene.Net.Index
 			AreEqual(5, dpEnum.StartOffset());
 			AreEqual(9, dpEnum.EndOffset());
 			AreEqual(DocIdSetIterator.NO_MORE_DOCS, dpEnum.NextDoc());
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 
 		// LUCENE-1448
@@ -124,7 +124,7 @@ namespace Lucene.Net.Index
 			doc.Add(f);
 			doc.Add(f);
 			w.AddDocument(doc);
-			w.Close();
+			w.Dispose();
 			IndexReader r = DirectoryReader.Open(dir);
 			TermsEnum termsEnum = r.GetTermVectors(0).Terms("field").Iterator(null);
 			IsNotNull(termsEnum.Next());
@@ -138,8 +138,8 @@ namespace Lucene.Net.Index
 			AreEqual(8, dpEnum.StartOffset());
 			AreEqual(12, dpEnum.EndOffset());
 			AreEqual(DocIdSetIterator.NO_MORE_DOCS, dpEnum.NextDoc());
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 
 		// LUCENE-1448
@@ -163,7 +163,7 @@ namespace Lucene.Net.Index
 			doc.Add(f);
 			doc.Add(f);
 			w.AddDocument(doc);
-			w.Close();
+			w.Dispose();
 			IndexReader r = DirectoryReader.Open(dir);
 			TermsEnum termsEnum = r.GetTermVectors(0).Terms("field").Iterator(null);
 			IsNotNull(termsEnum.Next());
@@ -177,8 +177,8 @@ namespace Lucene.Net.Index
 			AreEqual(8, dpEnum.StartOffset());
 			AreEqual(12, dpEnum.EndOffset());
 			AreEqual(DocIdSetIterator.NO_MORE_DOCS, dpEnum.NextDoc());
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 
 		// LUCENE-1448
@@ -199,7 +199,7 @@ namespace Lucene.Net.Index
 			doc.Add(f);
 			doc.Add(f);
 			w.AddDocument(doc);
-			w.Close();
+			w.Dispose();
 			IndexReader r = DirectoryReader.Open(dir);
 			TermsEnum termsEnum = r.GetTermVectors(0).Terms("field").Iterator(null);
 			IsNotNull(termsEnum.Next());
@@ -213,8 +213,8 @@ namespace Lucene.Net.Index
 			AreEqual(9, dpEnum.StartOffset());
 			AreEqual(13, dpEnum.EndOffset());
 			AreEqual(DocIdSetIterator.NO_MORE_DOCS, dpEnum.NextDoc());
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 
 		// LUCENE-1448
@@ -235,7 +235,7 @@ namespace Lucene.Net.Index
 			doc.Add(f);
 			doc.Add(f2);
 			w.AddDocument(doc);
-			w.Close();
+			w.Dispose();
 			IndexReader r = DirectoryReader.Open(dir);
 			TermsEnum termsEnum = r.GetTermVectors(0).Terms("field").Iterator(null);
 			IsNotNull(termsEnum.Next());
@@ -256,8 +256,8 @@ namespace Lucene.Net.Index
 			dpEnum.NextPosition();
 			AreEqual(18, dpEnum.StartOffset());
 			AreEqual(21, dpEnum.EndOffset());
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 
 		// LUCENE-1448
@@ -278,7 +278,7 @@ namespace Lucene.Net.Index
 			doc.Add(f);
 			doc.Add(f2);
 			w.AddDocument(doc);
-			w.Close();
+			w.Dispose();
 			IndexReader r = DirectoryReader.Open(dir);
 			TermsEnum termsEnum = r.GetTermVectors(0).Terms("field").Iterator(null);
 			IsNotNull(termsEnum.Next());
@@ -294,8 +294,8 @@ namespace Lucene.Net.Index
 			dpEnum.NextPosition();
 			AreEqual(8, dpEnum.StartOffset());
 			AreEqual(11, dpEnum.EndOffset());
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 
 		// LUCENE-1448
@@ -317,7 +317,7 @@ namespace Lucene.Net.Index
 			Field f2 = NewField("field", "crunch", customType);
 			doc.Add(f2);
 			w.AddDocument(doc);
-			w.Close();
+			w.Dispose();
 			IndexReader r = DirectoryReader.Open(dir);
 			TermsEnum termsEnum = r.GetTermVectors(0).Terms("field").Iterator(null);
 			IsNotNull(termsEnum.Next());
@@ -333,8 +333,8 @@ namespace Lucene.Net.Index
 			dpEnum.NextPosition();
 			AreEqual(6, dpEnum.StartOffset());
 			AreEqual(12, dpEnum.EndOffset());
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 
 		// LUCENE-1168
@@ -351,7 +351,7 @@ namespace Lucene.Net.Index
 				Lucene.Net.Documents.Document document = new Lucene.Net.Documents.Document
 					();
 				FieldType customType = new FieldType();
-				customType.SetStored(true);
+				customType.Stored = (true);
 				Field storedField = NewField("stored", "stored", customType);
 				document.Add(storedField);
 				writer.AddDocument(document);
@@ -366,14 +366,14 @@ namespace Lucene.Net.Index
 				document.Add(termVectorField);
 				writer.AddDocument(document);
 				writer.ForceMerge(1);
-				writer.Close();
+				writer.Dispose();
 				IndexReader reader = DirectoryReader.Open(dir);
-				for (int i = 0; i < reader.NumDocs(); i++)
+				for (int i = 0; i < reader.NumDocs; i++)
 				{
 					reader.Document(i);
 					reader.GetTermVectors(i);
 				}
-				reader.Close();
+				reader.Dispose();
 				writer = new IndexWriter(dir, ((IndexWriterConfig)((IndexWriterConfig)NewIndexWriterConfig
 					(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMaxBufferedDocs(2)).SetRAMBufferSizeMB
 					(IndexWriterConfig.DISABLE_AUTO_FLUSH)).SetMergeScheduler(new SerialMergeScheduler
@@ -382,9 +382,9 @@ namespace Lucene.Net.Index
 					RAMDirectory(dir, NewIOContext(Random()))) };
 				writer.AddIndexes(indexDirs);
 				writer.ForceMerge(1);
-				writer.Close();
+				writer.Dispose();
 			}
-			dir.Close();
+			dir.Dispose();
 		}
 
 		// LUCENE-1168
@@ -401,7 +401,7 @@ namespace Lucene.Net.Index
 				Lucene.Net.Documents.Document document = new Lucene.Net.Documents.Document
 					();
 				FieldType customType = new FieldType();
-				customType.SetStored(true);
+				customType.Stored = (true);
 				Field storedField = NewField("stored", "stored", customType);
 				document.Add(storedField);
 				writer.AddDocument(document);
@@ -416,14 +416,14 @@ namespace Lucene.Net.Index
 				document.Add(termVectorField);
 				writer.AddDocument(document);
 				writer.ForceMerge(1);
-				writer.Close();
+				writer.Dispose();
 				IndexReader reader = DirectoryReader.Open(dir);
 				IsNull(reader.GetTermVectors(0));
 				IsNull(reader.GetTermVectors(1));
 				IsNotNull(reader.GetTermVectors(2));
-				reader.Close();
+				reader.Dispose();
 			}
-			dir.Close();
+			dir.Dispose();
 		}
 
 		// LUCENE-1168
@@ -438,7 +438,7 @@ namespace Lucene.Net.Index
 			Lucene.Net.Documents.Document document = new Lucene.Net.Documents.Document
 				();
 			FieldType customType = new FieldType();
-			customType.SetStored(true);
+			customType.Stored = (true);
 			Field storedField = NewField("stored", "stored", customType);
 			document.Add(storedField);
 			FieldType customType2 = new FieldType(StringField.TYPE_NOT_STORED);
@@ -451,7 +451,7 @@ namespace Lucene.Net.Index
 			{
 				writer.AddDocument(document);
 			}
-			writer.Close();
+			writer.Dispose();
 			writer = new IndexWriter(dir, ((IndexWriterConfig)((IndexWriterConfig)NewIndexWriterConfig
 				(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMaxBufferedDocs(2)).SetRAMBufferSizeMB
 				(IndexWriterConfig.DISABLE_AUTO_FLUSH)).SetMergeScheduler(new SerialMergeScheduler
@@ -461,15 +461,15 @@ namespace Lucene.Net.Index
 				writer.AddDocument(document);
 			}
 			writer.ForceMerge(1);
-			writer.Close();
+			writer.Dispose();
 			IndexReader reader = DirectoryReader.Open(dir);
 			for (int i_2 = 0; i_2 < 10; i_2++)
 			{
 				reader.GetTermVectors(i_2);
 				reader.Document(i_2);
 			}
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		// LUCENE-1008
@@ -499,8 +499,8 @@ namespace Lucene.Net.Index
 			// Make 2nd segment
 			iw.Commit();
 			iw.ForceMerge(1);
-			iw.Close();
-			dir.Close();
+			iw.Dispose();
+			dir.Dispose();
 		}
 
 		// LUCENE-1010
@@ -530,8 +530,8 @@ namespace Lucene.Net.Index
 			// Make 2nd segment
 			iw.Commit();
 			iw.ForceMerge(1);
-			iw.Close();
-			dir.Close();
+			iw.Dispose();
+			dir.Dispose();
 		}
 	}
 }

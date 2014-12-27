@@ -266,15 +266,15 @@ namespace Lucene.Net.Util.Packed
 				w.Add(value);
 				w.Finish();
 				long end = @out.FilePointer;
-				@out.Close();
+				@out.Dispose();
 				IndexInput @in = dir.OpenInput("out", NewIOContext(Random()));
 				PackedInts.Reader reader = PackedInts.GetReader(@in);
 				string msg = "Impl=" + w.GetType().Name + ", bitsPerValue=" + bitsPerValue;
 				AreEqual(msg, 1, reader.Size());
 				AreEqual(msg, value, reader.Get(0));
 				AreEqual(msg, end, @in.FilePointer);
-				@in.Close();
-				dir.Close();
+				@in.Dispose();
+				dir.Dispose();
 			}
 		}
 
@@ -728,7 +728,7 @@ namespace Lucene.Net.Util.Packed
 					}
 					IndexOutput @out = directory.CreateOutput("packed-ints.bin", IOContext.DEFAULT);
 					mutable.Save(@out);
-					@out.Close();
+					@out.Dispose();
 					IndexInput @in = directory.OpenInput("packed-ints.bin", IOContext.DEFAULT);
 					PackedInts.Reader reader = PackedInts.GetReader(@in);
 					AreEqual(mutable.GetBitsPerValue(), reader.GetBitsPerValue
@@ -749,10 +749,10 @@ namespace Lucene.Net.Util.Packed
 					{
 						AreEqual(mutable.Get(i_1), reader.Get(i_1));
 					}
-					@in.Close();
+					@in.Dispose();
 					directory.DeleteFile("packed-ints.bin");
 				}
-				directory.Close();
+				directory.Dispose();
 			}
 		}
 
@@ -950,7 +950,7 @@ namespace Lucene.Net.Util.Packed
 			pout.Flush();
 			AreEqual((long)Math.Ceil((double)totalBits / 8), @out.GetFilePointer
 				());
-			@out.Close();
+			@out.Dispose();
 			IndexInput @in = dir.OpenInput("out.bin", IOContext.READONCE);
 			PackedDataInput pin = new PackedDataInput(@in);
 			for (int i_2 = 0; i_2 < longs.Length; ++i_2)
@@ -964,8 +964,8 @@ namespace Lucene.Net.Util.Packed
 			}
 			AreEqual((long)Math.Ceil((double)totalBits / 8), @in.GetFilePointer
 				());
-			@in.Close();
-			dir.Close();
+			@in.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -1014,7 +1014,7 @@ namespace Lucene.Net.Util.Packed
 				writer.Finish();
 				AreEqual(valueCount, writer.Ord());
 				long fp = @out.FilePointer;
-				@out.Close();
+				@out.Dispose();
 				IndexInput in1 = dir.OpenInput("out.bin", IOContext.DEFAULT);
 				byte[] buf = new byte[(int)fp];
 				in1.ReadBytes(buf, 0, (int)fp);
@@ -1099,8 +1099,8 @@ namespace Lucene.Net.Util.Packed
 				{
 					AreEqual("i=" + i_3, values[i_3], reader.Get(i_3));
 				}
-				in1.Close();
-				dir.Close();
+				in1.Dispose();
+				dir.Dispose();
 			}
 		}
 
@@ -1141,7 +1141,7 @@ namespace Lucene.Net.Util.Packed
 				writer.Finish();
 				AreEqual(valueCount, writer.Ord());
 				long fp = @out.FilePointer;
-				@out.Close();
+				@out.Dispose();
 				IndexInput @in = dir.OpenInput("out.bin", IOContext.DEFAULT);
 				MonotonicBlockPackedReader reader = new MonotonicBlockPackedReader(@in, PackedInts
 					.VERSION_CURRENT, blockSize, valueCount, Random().NextBoolean());
@@ -1150,8 +1150,8 @@ namespace Lucene.Net.Util.Packed
 				{
 					AreEqual("i=" + i_2, values[i_2], reader.Get(i_2));
 				}
-				@in.Close();
-				dir.Close();
+				@in.Dispose();
+				dir.Dispose();
 			}
 		}
 
@@ -1191,7 +1191,7 @@ namespace Lucene.Net.Util.Packed
 				}
 			}
 			writer.Finish();
-			@out.Close();
+			@out.Dispose();
 			IndexInput @in = dir.OpenInput("out.bin", IOContext.DEFAULT);
 			BlockPackedReaderIterator it = new BlockPackedReaderIterator(@in, PackedInts.VERSION_CURRENT
 				, blockSize, valueCount);
@@ -1213,8 +1213,8 @@ namespace Lucene.Net.Util.Packed
 					AreEqual(0, reader.Get(offset));
 				}
 			}
-			@in.Close();
-			dir.Close();
+			@in.Dispose();
+			dir.Dispose();
 		}
 	}
 }

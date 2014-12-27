@@ -106,10 +106,10 @@ namespace Lucene.Net.Search
 		[AfterClass]
 		public static void AfterClassBaseTestRangeFilter()
 		{
-			signedIndexReader.Close();
-			unsignedIndexReader.Close();
-			signedIndexDir.index.Close();
-			unsignedIndexDir.index.Close();
+			signedIndexReader.Dispose();
+			unsignedIndexReader.Dispose();
+			signedIndexDir.index.Dispose();
+			unsignedIndexDir.index.Dispose();
 			signedIndexReader = null;
 			unsignedIndexReader = null;
 			signedIndexDir = null;
@@ -176,7 +176,7 @@ namespace Lucene.Net.Search
 					// exceedingly rare (Yonik calculates 1 in ~429,000)
 					// times) that this loop requires more than one try:
 					IndexReader ir = writer.GetReader();
-					writer.Close();
+					writer.Dispose();
 					return ir;
 				}
 				// try again

@@ -92,13 +92,13 @@ namespace Org.Apache.Lucene
 			}
 			w.DeleteDocuments(new Term("id", "77"));
 			IndexReader r = DirectoryReader.Open(w, true);
-			AreEqual(NUM_DOCS - 1, r.NumDocs());
+			AreEqual(NUM_DOCS - 1, r.NumDocs);
 			IndexSearcher s = NewSearcher(r);
 			AreEqual(NUM_DOCS - 1, s.Search(new TermQuery(new Term("field1"
 				, "standard")), 1).TotalHits);
 			AreEqual(NUM_DOCS - 1, s.Search(new TermQuery(new Term("field2"
 				, "pulsing")), 1).TotalHits);
-			r.Close();
+			r.Dispose();
 			if (VERBOSE)
 			{
 				System.Console.Out.WriteLine("\nTEST: now delete 2nd doc");
@@ -115,7 +115,7 @@ namespace Org.Apache.Lucene
 			}
 			r = DirectoryReader.Open(w, true);
 			AreEqual(NUM_DOCS - 2, r.MaxDoc);
-			AreEqual(NUM_DOCS - 2, r.NumDocs());
+			AreEqual(NUM_DOCS - 2, r.NumDocs);
 			s = NewSearcher(r);
 			AreEqual(NUM_DOCS - 2, s.Search(new TermQuery(new Term("field1"
 				, "standard")), 1).TotalHits);
@@ -131,9 +131,9 @@ namespace Org.Apache.Lucene
 			{
 				System.Console.Out.WriteLine("\nTEST: now close NRT reader");
 			}
-			r.Close();
-			w.Close();
-			dir.Close();
+			r.Dispose();
+			w.Dispose();
+			dir.Dispose();
 		}
 	}
 }

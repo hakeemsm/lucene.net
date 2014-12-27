@@ -96,16 +96,16 @@ namespace Lucene.Net.Search
 			}
 			IndexReader r = writer.GetReader();
 			reader = SlowCompositeReaderWrapper.Wrap(r);
-			writer.Close();
+			writer.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
 		[NUnit.Framework.AfterClass]
 		public static void AfterClass()
 		{
-			reader.Close();
+			reader.Dispose();
 			reader = null;
-			directory.Close();
+			directory.Dispose();
 			directory = null;
 			unicodeStrings = null;
 			multiValued = null;
@@ -345,14 +345,14 @@ namespace Lucene.Net.Search
 			Directory dir = NewDirectory();
 			IndexWriter writer = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig
 				(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMaxBufferedDocs(500)));
-			writer.Close();
+			writer.Dispose();
 			IndexReader r = DirectoryReader.Open(dir);
 			AtomicReader reader = SlowCompositeReaderWrapper.Wrap(r);
 			FieldCache.DEFAULT.GetTerms(reader, "foobar", true);
 			FieldCache.DEFAULT.GetTermsIndex(reader, "foobar");
 			FieldCache.DEFAULT.PurgeByCacheKey(reader.GetCoreCacheKey());
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 
 		private static string GenerateString(int i)
@@ -566,7 +566,7 @@ namespace Lucene.Net.Search
 			}
 			iw.AddDocument(doc);
 			DirectoryReader ir = iw.GetReader();
-			iw.Close();
+			iw.Dispose();
 			AtomicReader ar = GetOnlySegmentReader(ir);
 			BytesRef scratch = new BytesRef();
 			// Binary type: can be retrieved via getTerms()
@@ -722,8 +722,8 @@ namespace Lucene.Net.Search
 				bits = FieldCache.DEFAULT.GetDocsWithField(ar, "sortedset");
 				IsTrue(bits.Get(0));
 			}
-			ir.Close();
-			dir.Close();
+			ir.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -735,7 +735,7 @@ namespace Lucene.Net.Search
 				();
 			iw.AddDocument(doc);
 			DirectoryReader ir = iw.GetReader();
-			iw.Close();
+			iw.Dispose();
 			AtomicReader ar = GetOnlySegmentReader(ir);
 			FieldCache cache = FieldCache.DEFAULT;
 			cache.PurgeAllCaches();
@@ -768,8 +768,8 @@ namespace Lucene.Net.Search
 			IsFalse(bits.Get(0));
 			// check that we cached nothing
 			AreEqual(0, cache.GetCacheEntries().Length);
-			ir.Close();
-			dir.Close();
+			ir.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -791,7 +791,7 @@ namespace Lucene.Net.Search
 			doc.Add(new StoredField("bogusbits", "bogus"));
 			iw.AddDocument(doc);
 			DirectoryReader ir = iw.GetReader();
-			iw.Close();
+			iw.Dispose();
 			AtomicReader ar = GetOnlySegmentReader(ir);
 			FieldCache cache = FieldCache.DEFAULT;
 			cache.PurgeAllCaches();
@@ -824,8 +824,8 @@ namespace Lucene.Net.Search
 			IsFalse(bits.Get(0));
 			// check that we cached nothing
 			AreEqual(0, cache.GetCacheEntries().Length);
-			ir.Close();
-			dir.Close();
+			ir.Dispose();
+			dir.Dispose();
 		}
 
 		// Make sure that the use of GrowableWriter doesn't prevent from using the full long range
@@ -892,9 +892,9 @@ namespace Lucene.Net.Search
 			{
 				AreEqual(values[i_1], longs.Get(i_1));
 			}
-			reader.Close();
-			iw.Close();
-			dir.Close();
+			reader.Dispose();
+			iw.Dispose();
+			dir.Dispose();
 		}
 
 		// Make sure that the use of GrowableWriter doesn't prevent from using the full int range
@@ -961,9 +961,9 @@ namespace Lucene.Net.Search
 			{
 				AreEqual(values[i_1], ints.Get(i_1));
 			}
-			reader.Close();
-			iw.Close();
-			dir.Close();
+			reader.Dispose();
+			iw.Dispose();
+			dir.Dispose();
 		}
 	}
 }

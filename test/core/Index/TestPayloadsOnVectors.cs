@@ -14,7 +14,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestPayloadsOnVectors : LuceneTestCase
 	{
@@ -62,9 +62,9 @@ namespace Lucene.Net.Index
 			AreEqual(0, de.NextDoc());
 			AreEqual(0, de.NextPosition());
 			AreEqual(new BytesRef("test"), de.GetPayload());
-			writer.Close();
-			reader.Close();
-			dir.Close();
+			writer.Dispose();
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		/// <summary>some field instances have payload att, some not</summary>
@@ -110,9 +110,9 @@ namespace Lucene.Net.Index
 			AreEqual(0, de.NextDoc());
 			AreEqual(3, de.NextPosition());
 			AreEqual(new BytesRef("test"), de.GetPayload());
-			writer.Close();
-			reader.Close();
-			dir.Close();
+			writer.Dispose();
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -124,7 +124,7 @@ namespace Lucene.Net.Index
 				();
 			FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
 			customType.StoreTermVectors = true;
-			customType.SetStoreTermVectorPositions(false);
+			customType.StoreTermVectorPositions = (false);
 			customType.StoreTermVectorPayloads = true;
 			customType.SetStoreTermVectorOffsets(Random().NextBoolean());
 			doc.Add(new Field("field", "foo", customType));
@@ -137,8 +137,8 @@ namespace Lucene.Net.Index
 			{
 			}
 			// expected
-			writer.Close();
-			dir.Close();
+			writer.Dispose();
+			dir.Dispose();
 		}
 	}
 }

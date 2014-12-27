@@ -68,7 +68,7 @@ namespace Lucene.Net.Search.Spans
 				("gender", "female"), Field("first", "linda"), Field("last", "dixit"), Field("gender"
 				, "male"), Field("first", "bubba"), Field("last", "jones") }));
 			reader = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			searcher = NewSearcher(reader);
 		}
 
@@ -77,9 +77,9 @@ namespace Lucene.Net.Search.Spans
 		public static void AfterClass()
 		{
 			searcher = null;
-			reader.Close();
+			reader.Dispose();
 			reader = null;
-			directory.Close();
+			directory.Dispose();
 			directory = null;
 		}
 

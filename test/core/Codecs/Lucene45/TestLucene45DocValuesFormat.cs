@@ -12,7 +12,7 @@ namespace Lucene.Net.Test.Codecs.Lucene45
 
 		protected override Codec Codec
 		{
-			return codec;
+		    get { return codec; }
 		}
 
 	    protected override void AddRandomFields(Documents.Document doc)

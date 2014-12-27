@@ -13,7 +13,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestForTooMuchCloning : LuceneTestCase
 	{
@@ -46,7 +46,7 @@ namespace Lucene.Net.Index
 				w.AddDocument(doc);
 			}
 			IndexReader r = w.GetReader();
-			w.Close();
+			w.Dispose();
 			int cloneCount = dir.GetInputCloneCount();
 			//System.out.println("merge clone count=" + cloneCount);
 			IsTrue("too many calls to IndexInput.clone during merging: "
@@ -62,8 +62,8 @@ namespace Lucene.Net.Index
 			//System.out.println("query clone count=" + queryCloneCount);
 			IsTrue("too many calls to IndexInput.clone during TermRangeQuery: "
 				 + queryCloneCount, queryCloneCount < 50);
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 	}
 }

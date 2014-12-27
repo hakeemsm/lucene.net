@@ -48,7 +48,7 @@ namespace Lucene.Net.Search
 			// boost x4
 			iw.AddDocument(doc);
 			IndexReader ir = iw.GetReader();
-			iw.Close();
+			iw.Dispose();
 			// no boosting
 			IndexSearcher searcher1 = NewSearcher(ir, false);
 			Similarity @base = searcher1.GetSimilarity();
@@ -63,8 +63,8 @@ namespace Lucene.Net.Search
 			TopDocs boost = searcher2.Search(tq, 10);
 			AreEqual(1, noboost.TotalHits);
 			AreEqual(1, boost.TotalHits);
-			//System.out.println(searcher2.explain(tq, boost.scoreDocs[0].doc));
-			AreEqual(boost.scoreDocs[0].score, noboost.scoreDocs[0].score
+			//System.out.println(searcher2.explain(tq, boost.ScoreDocs[0].Doc));
+			AreEqual(boost.ScoreDocs[0].score, noboost.ScoreDocs[0].score
 				 * 2f, SCORE_EPSILON);
 			// this query matches only the second document, which should have 4x the score.
 			tq = new TermQuery(new Term("foo", "jumps"));
@@ -74,7 +74,7 @@ namespace Lucene.Net.Search
 			boost = searcher2.Search(tq, 10);
 			AreEqual(1, noboost.TotalHits);
 			AreEqual(1, boost.TotalHits);
-			AreEqual(boost.scoreDocs[0].score, noboost.scoreDocs[0].score
+			AreEqual(boost.ScoreDocs[0].score, noboost.ScoreDocs[0].score
 				 * 4f, SCORE_EPSILON);
 			// search on on field bar just for kicks, nothing should happen, since we setup
 			// our sim provider to only use foo_boost for field foo.
@@ -85,10 +85,10 @@ namespace Lucene.Net.Search
 			boost = searcher2.Search(tq, 10);
 			AreEqual(1, noboost.TotalHits);
 			AreEqual(1, boost.TotalHits);
-			AreEqual(boost.scoreDocs[0].score, noboost.scoreDocs[0].score
+			AreEqual(boost.ScoreDocs[0].score, noboost.ScoreDocs[0].score
 				, SCORE_EPSILON);
-			ir.Close();
-			dir.Close();
+			ir.Dispose();
+			dir.Dispose();
 		}
 
 		private sealed class _PerFieldSimilarityWrapper_74 : PerFieldSimilarityWrapper

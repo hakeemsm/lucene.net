@@ -32,13 +32,13 @@ namespace Lucene.Net.Search
 		
 		public SingleDocTestFilter(int doc)
 		{
-			this.doc = doc;
+			this.Doc = doc;
 		}
 		
 		public override DocIdSet GetDocIdSet(AtomicReaderContext context, Bits acceptDocs
 			)
 		{
-			FixedBitSet bits = new FixedBitSet(((AtomicReader)context.Reader()).MaxDoc);
+			FixedBitSet bits = new FixedBitSet(((AtomicReader)context.Reader).MaxDoc);
 			bits.Set(doc);
 			if (acceptDocs != null && !acceptDocs.Get(doc))
 			{

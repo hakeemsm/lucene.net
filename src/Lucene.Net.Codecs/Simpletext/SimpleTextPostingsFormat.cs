@@ -1,13 +1,4 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
-using Lucene.Net.Codecs;
-using Lucene.Net.Codecs.Simpletext;
 using Lucene.Net.Index;
-using Sharpen;
 
 namespace Lucene.Net.Codecs.Simpletext
 {
@@ -30,15 +21,13 @@ namespace Lucene.Net.Codecs.Simpletext
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		public override Lucene.Net.Codecs.FieldsConsumer FieldsConsumer(SegmentWriteState
-			 state)
+		public override FieldsConsumer FieldsConsumer(SegmentWriteState state)
 		{
 			return new SimpleTextFieldsWriter(state);
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		public override Lucene.Net.Codecs.FieldsProducer FieldsProducer(SegmentReadState
-			 state)
+		public override FieldsProducer FieldsProducer(SegmentReadState state)
 		{
 			return new SimpleTextFieldsReader(state);
 		}

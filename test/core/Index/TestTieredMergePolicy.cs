@@ -13,7 +13,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestTieredMergePolicy : BaseMergePolicyTestCase
 	{
@@ -43,7 +43,7 @@ namespace Lucene.Net.Index
 				w.AddDocument(doc);
 			}
 			AreEqual(80, w.MaxDoc);
-			AreEqual(80, w.NumDocs());
+			AreEqual(80, w.NumDocs);
 			if (VERBOSE)
 			{
 				System.Console.Out.WriteLine("\nTEST: delete docs");
@@ -51,18 +51,18 @@ namespace Lucene.Net.Index
 			w.DeleteDocuments(new Term("content", "0"));
 			w.ForceMergeDeletes();
 			AreEqual(80, w.MaxDoc);
-			AreEqual(60, w.NumDocs());
+			AreEqual(60, w.NumDocs);
 			if (VERBOSE)
 			{
 				System.Console.Out.WriteLine("\nTEST: forceMergeDeletes2");
 			}
-			((TieredMergePolicy)w.GetConfig().GetMergePolicy()).SetForceMergeDeletesPctAllowed
+			((TieredMergePolicy)w.Config.MergePolicy).SetForceMergeDeletesPctAllowed
 				(10.0);
 			w.ForceMergeDeletes();
 			AreEqual(60, w.MaxDoc);
-			AreEqual(60, w.NumDocs());
-			w.Close();
-			dir.Close();
+			AreEqual(60, w.NumDocs);
+			w.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -93,13 +93,13 @@ namespace Lucene.Net.Index
 						();
 					doc.Add(NewTextField("content", "aaa " + (i % 4), Field.Store.NO));
 					w.AddDocument(doc);
-					int count = w.GetSegmentCount();
+					int count = w.SegmentCount;
 					maxCount = Math.Max(count, maxCount);
 					IsTrue("count=" + count + " maxCount=" + maxCount, count >=
 						 maxCount - 3);
 				}
 				w.Flush(true, true);
-				int segmentCount = w.GetSegmentCount();
+				int segmentCount = w.SegmentCount;
 				int targetCount = TestUtil.NextInt(Random(), 1, segmentCount);
 				if (VERBOSE)
 				{
@@ -107,9 +107,9 @@ namespace Lucene.Net.Index
 						 + segmentCount + ")");
 				}
 				w.ForceMerge(targetCount);
-				AreEqual(targetCount, w.GetSegmentCount());
-				w.Close();
-				dir.Close();
+				AreEqual(targetCount, w.SegmentCount);
+				w.Dispose();
+				dir.Dispose();
 			}
 		}
 
@@ -136,8 +136,8 @@ namespace Lucene.Net.Index
 			w.ForceMerge(1);
 			IndexReader r = w.GetReader();
 			AreEqual(numDocs, r.MaxDoc);
-			AreEqual(numDocs, r.NumDocs());
-			r.Close();
+			AreEqual(numDocs, r.NumDocs);
+			r.Dispose();
 			if (VERBOSE)
 			{
 				System.Console.Out.WriteLine("\nTEST: delete doc");
@@ -145,15 +145,15 @@ namespace Lucene.Net.Index
 			w.DeleteDocuments(new Term("id", string.Empty + (42 + 17)));
 			r = w.GetReader();
 			AreEqual(numDocs, r.MaxDoc);
-			AreEqual(numDocs - 1, r.NumDocs());
-			r.Close();
+			AreEqual(numDocs - 1, r.NumDocs);
+			r.Dispose();
 			w.ForceMergeDeletes();
 			r = w.GetReader();
 			AreEqual(numDocs - 1, r.MaxDoc);
-			AreEqual(numDocs - 1, r.NumDocs());
-			r.Close();
-			w.Close();
-			dir.Close();
+			AreEqual(numDocs - 1, r.NumDocs);
+			r.Dispose();
+			w.Dispose();
+			dir.Dispose();
 		}
 
 		private const double EPSILON = 1E-14;
@@ -222,7 +222,7 @@ namespace Lucene.Net.Index
 			Directory dir = NewDirectory();
 			IndexWriterConfig iwc = new IndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random()));
-			TieredMergePolicy tmp = (TieredMergePolicy)iwc.GetMergePolicy();
+			TieredMergePolicy tmp = (TieredMergePolicy)iwc.MergePolicy;
 			tmp.SetFloorSegmentMB(0.00001);
 			// We need stable sizes for each segment:
 			iwc.SetCodec(Codec.ForName("Lucene46"));
@@ -240,15 +240,15 @@ namespace Lucene.Net.Index
 			}
 			IndexReader r = DirectoryReader.Open(w, true);
 			// Make sure TMP always merged equal-number-of-docs segments:
-			foreach (AtomicReaderContext ctx in r.Leaves())
+			foreach (AtomicReaderContext ctx in r.Leaves)
 			{
-				int numDocs = ((AtomicReader)ctx.Reader()).NumDocs();
+				int numDocs = ((AtomicReader)ctx.Reader).NumDocs;
 				IsTrue("got numDocs=" + numDocs, numDocs == 100 || numDocs
 					 == 1000 || numDocs == 10000);
 			}
-			r.Close();
-			w.Close();
-			dir.Close();
+			r.Dispose();
+			w.Dispose();
+			dir.Dispose();
 		}
 	}
 }

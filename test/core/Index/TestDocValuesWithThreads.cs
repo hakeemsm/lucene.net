@@ -16,7 +16,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestDocValuesWithThreads : LuceneTestCase
 	{
@@ -46,9 +46,9 @@ namespace Lucene.Net.Index
 			}
 			w.ForceMerge(1);
 			IndexReader r = w.GetReader();
-			w.Close();
-			AreEqual(1, r.Leaves().Count);
-			AtomicReader ar = ((AtomicReader)r.Leaves()[0].Reader());
+			w.Dispose();
+			AreEqual(1, r.Leaves.Count);
+			AtomicReader ar = ((AtomicReader)r.Leaves[0].Reader);
 			int numThreads = TestUtil.NextInt(Random(), 2, 5);
 			IList<Sharpen.Thread> threads = new AList<Sharpen.Thread>();
 			CountDownLatch startingGun = new CountDownLatch(1);
@@ -68,8 +68,8 @@ namespace Lucene.Net.Index
 			{
 				thread_1.Join();
 			}
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 
 		private sealed class _Thread_78 : Sharpen.Thread
@@ -223,14 +223,14 @@ namespace Lucene.Net.Index
 				if (random.Next(40) == 17)
 				{
 					// force flush
-					writer.GetReader().Close();
+					writer.GetReader().Dispose();
 				}
 			}
 			writer.ForceMerge(1);
 			DirectoryReader r = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			AtomicReader sr = GetOnlySegmentReader(r);
-			long END_TIME = Runtime.CurrentTimeMillis() + (TEST_NIGHTLY ? 30 : 1);
+			long END_TIME = DateTime.Now.CurrentTimeMillis() + (TEST_NIGHTLY ? 30 : 1);
 			int NUM_THREADS = TestUtil.NextInt(Random(), 1, 10);
 			Sharpen.Thread[] threads = new Sharpen.Thread[NUM_THREADS];
 			for (int thread = 0; thread < NUM_THREADS; thread++)
@@ -242,8 +242,8 @@ namespace Lucene.Net.Index
 			{
 				thread_1.Join();
 			}
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 
 		private sealed class _Thread_196 : Sharpen.Thread
@@ -270,7 +270,7 @@ namespace Lucene.Net.Index
 				{
 					throw new RuntimeException(ioe);
 				}
-				while (Runtime.CurrentTimeMillis() < END_TIME)
+				while (DateTime.Now.CurrentTimeMillis() < END_TIME)
 				{
 					SortedDocValues source;
 					source = stringDVDirect;

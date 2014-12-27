@@ -11,7 +11,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestForceMergeForever : LuceneTestCase
 	{
@@ -53,14 +53,14 @@ namespace Lucene.Net.Index
 			TestForceMergeForever.MyIndexWriter w = new TestForceMergeForever.MyIndexWriter(d
 				, NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer));
 			// Try to make an index that requires merging:
-			w.GetConfig().SetMaxBufferedDocs(TestUtil.NextInt(Random(), 2, 11));
+			w.Config.SetMaxBufferedDocs(TestUtil.NextInt(Random(), 2, 11));
 			int numStartDocs = AtLeast(20);
 			LineFileDocs docs = new LineFileDocs(Random(), DefaultCodecSupportsDocValues());
 			for (int docIDX = 0; docIDX < numStartDocs; docIDX++)
 			{
 				w.AddDocument(docs.NextDoc());
 			}
-			MergePolicy mp = w.GetConfig().GetMergePolicy();
+			MergePolicy mp = w.Config.MergePolicy;
 			int mergeAtOnce = 1 + w.segmentInfos.Size();
 			if (mp is TieredMergePolicy)
 			{
@@ -70,18 +70,18 @@ namespace Lucene.Net.Index
 			{
 				if (mp is LogMergePolicy)
 				{
-					((LogMergePolicy)mp).SetMergeFactor(mergeAtOnce);
+					((LogMergePolicy)mp).MergeFactor = (mergeAtOnce);
 				}
 				else
 				{
 					// skip test
-					w.Close();
-					d.Close();
+					w.Dispose();
+					d.Dispose();
 					return;
 				}
 			}
 			AtomicBoolean doStop = new AtomicBoolean();
-			w.GetConfig().SetMaxBufferedDocs(2);
+			w.Config.SetMaxBufferedDocs(2);
 			Sharpen.Thread t = new _Thread_84(doStop, w, numStartDocs, docs);
 			// Force deletes to apply
 			t.Start();
@@ -90,9 +90,9 @@ namespace Lucene.Net.Index
 			t.Join();
 			IsTrue("merge count is " + w.mergeCount.Get(), w.mergeCount
 				.Get() <= 1);
-			w.Close();
-			d.Close();
-			docs.Close();
+			w.Dispose();
+			d.Dispose();
+			docs.Dispose();
 		}
 
 		private sealed class _Thread_84 : Sharpen.Thread
@@ -114,7 +114,7 @@ namespace Lucene.Net.Index
 					{
 						w.UpdateDocument(new Term("docid", string.Empty + LuceneTestCase.Random().Next(numStartDocs
 							)), docs.NextDoc());
-						w.GetReader().Close();
+						w.GetReader().Dispose();
 					}
 				}
 				catch (Exception t)

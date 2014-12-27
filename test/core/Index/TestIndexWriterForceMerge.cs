@@ -11,7 +11,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestIndexWriterForceMerge : LuceneTestCase
 	{
@@ -28,7 +28,7 @@ namespace Lucene.Net.Index
 			{
 				LogDocMergePolicy ldmp = new LogDocMergePolicy();
 				ldmp.SetMinMergeDocs(1);
-				ldmp.SetMergeFactor(5);
+				ldmp.MergeFactor = (5);
 				IndexWriter writer = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig
 					(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetOpenMode(IndexWriterConfig.OpenMode
 					.CREATE).SetMaxBufferedDocs(2)).SetMergePolicy(ldmp));
@@ -36,16 +36,16 @@ namespace Lucene.Net.Index
 				{
 					writer.AddDocument(doc);
 				}
-				writer.Close();
+				writer.Dispose();
 				SegmentInfos sis = new SegmentInfos();
 				sis.Read(dir);
 				int segCount = sis.Size();
 				ldmp = new LogDocMergePolicy();
-				ldmp.SetMergeFactor(5);
+				ldmp.MergeFactor = (5);
 				writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 					(Random())).SetMergePolicy(ldmp));
 				writer.ForceMerge(3);
-				writer.Close();
+				writer.Dispose();
 				sis = new SegmentInfos();
 				sis.Read(dir);
 				int optSegCount = sis.Size();
@@ -58,7 +58,7 @@ namespace Lucene.Net.Index
 					AreEqual(3, optSegCount);
 				}
 			}
-			dir.Close();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -70,7 +70,7 @@ namespace Lucene.Net.Index
 			doc.Add(NewStringField("content", "aaa", Field.Store.NO));
 			LogDocMergePolicy ldmp = new LogDocMergePolicy();
 			ldmp.SetMinMergeDocs(1);
-			ldmp.SetMergeFactor(4);
+			ldmp.MergeFactor = (4);
 			IndexWriter writer = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig
 				(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMaxBufferedDocs(2)).SetMergePolicy
 				(ldmp).SetMergeScheduler(new ConcurrentMergeScheduler()));
@@ -101,8 +101,8 @@ namespace Lucene.Net.Index
 					AreEqual("seg: " + segCount, 7, optSegCount);
 				}
 			}
-			writer.Close();
-			dir.Close();
+			writer.Dispose();
+			dir.Dispose();
 		}
 
 		/// <summary>
@@ -124,18 +124,18 @@ namespace Lucene.Net.Index
 				(NewLogMergePolicy()));
 			if (VERBOSE)
 			{
-				System.Console.Out.WriteLine("TEST: config1=" + writer.GetConfig());
+				System.Console.Out.WriteLine("TEST: config1=" + writer.Config);
 			}
 			for (int j = 0; j < 500; j++)
 			{
 				TestIndexWriter.AddDocWithIndex(writer, j);
 			}
-			int termIndexInterval = writer.GetConfig().GetTermIndexInterval();
+			int termIndexInterval = writer.Config.GetTermIndexInterval();
 			// force one extra segment w/ different doc store so
 			// we see the doc stores get merged
 			writer.Commit();
 			TestIndexWriter.AddDocWithIndex(writer, 500);
-			writer.Close();
+			writer.Dispose();
 			if (VERBOSE)
 			{
 				System.Console.Out.WriteLine("TEST: start disk usage");
@@ -159,13 +159,13 @@ namespace Lucene.Net.Index
 				, new MockAnalyzer(Random())).SetOpenMode(IndexWriterConfig.OpenMode.APPEND).SetTermIndexInterval
 				(termIndexInterval)).SetMergePolicy(NewLogMergePolicy()));
 			writer.ForceMerge(1);
-			writer.Close();
+			writer.Dispose();
 			long maxDiskUsage = dir.GetMaxUsedSizeInBytes();
 			IsTrue("forceMerge used too much temporary space: starting usage was "
 				 + startDiskUsage + " bytes; max temp usage was " + maxDiskUsage + " but should have been "
 				 + (4 * startDiskUsage) + " (= 4X starting usage)", maxDiskUsage <= 4 * startDiskUsage
 				);
-			dir.Close();
+			dir.Dispose();
 		}
 
 		// Test calling forceMerge(1, false) whereby forceMerge is kicked
@@ -190,10 +190,10 @@ namespace Lucene.Net.Index
 				writer.ForceMerge(1, false);
 				if (0 == pass)
 				{
-					writer.Close();
+					writer.Dispose();
 					DirectoryReader reader = DirectoryReader.Open(dir);
-					AreEqual(1, reader.Leaves().Count);
-					reader.Close();
+					AreEqual(1, reader.Leaves.Count);
+					reader.Dispose();
 				}
 				else
 				{
@@ -201,16 +201,16 @@ namespace Lucene.Net.Index
 					// NOT included in the merging
 					writer.AddDocument(doc);
 					writer.AddDocument(doc);
-					writer.Close();
+					writer.Dispose();
 					DirectoryReader reader = DirectoryReader.Open(dir);
-					IsTrue(reader.Leaves().Count > 1);
-					reader.Close();
+					IsTrue(reader.Leaves.Count > 1);
+					reader.Dispose();
 					SegmentInfos infos = new SegmentInfos();
 					infos.Read(dir);
 					AreEqual(2, infos.Size());
 				}
 			}
-			dir.Close();
+			dir.Dispose();
 		}
 	}
 }

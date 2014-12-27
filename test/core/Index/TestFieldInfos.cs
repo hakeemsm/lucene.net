@@ -10,7 +10,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestFieldInfos : LuceneTestCase
 	{
@@ -46,7 +46,7 @@ namespace Lucene.Net.Index
 			FieldInfosWriter writer = Codec.GetDefault().FieldInfosFormat().GetFieldInfosWriter
 				();
 			writer.Write(dir, filename, string.Empty, fieldInfos, IOContext.DEFAULT);
-			output.Close();
+			output.Dispose();
 			return fieldInfos;
 		}
 
@@ -81,7 +81,7 @@ namespace Lucene.Net.Index
 			IsTrue(info != null);
 			IsTrue(info.HasVectors() == false);
 			IsTrue(info.OmitsNorms() == true);
-			dir.Close();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -92,7 +92,7 @@ namespace Lucene.Net.Index
 			FieldInfos fieldInfos = CreateAndWriteFieldInfos(dir, name);
 			FieldInfos readOnly = ReadFieldInfos(dir, name);
 			AssertReadOnly(readOnly, fieldInfos);
-			dir.Close();
+			dir.Dispose();
 		}
 
 		private void AssertReadOnly(FieldInfos readOnly, FieldInfos modifiable)

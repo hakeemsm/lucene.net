@@ -54,14 +54,14 @@ namespace Lucene.Net.Search
 			}
 			reader = writer.GetReader();
 			searcher = NewSearcher(reader);
-			writer.Close();
+			writer.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
 		public override void TearDown()
 		{
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 			base.TearDown();
 		}
 
@@ -141,7 +141,7 @@ namespace Lucene.Net.Search
 				, new Term("field", prefix));
 			TopDocs smartDocs = searcher.Search(smart, 25);
 			TopDocs dumbDocs = searcher.Search(dumb, 25);
-			CheckHits.CheckEqual(smart, smartDocs.scoreDocs, dumbDocs.scoreDocs);
+			CheckHits.CheckEqual(smart, smartDocs.ScoreDocs, dumbDocs.ScoreDocs);
 		}
 	}
 }

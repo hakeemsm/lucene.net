@@ -15,7 +15,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestRollingUpdates : LuceneTestCase
 	{
@@ -74,7 +74,7 @@ namespace Lucene.Net.Index
 				{
 					TopDocs hits = s.Search(new TermQuery(idTerm), 1);
 					AreEqual(1, hits.TotalHits);
-					doUpdate = !w.TryDeleteDocument(r, hits.scoreDocs[0].doc);
+					doUpdate = !w.TryDeleteDocument(r, hits.ScoreDocs[0].Doc);
 					if (VERBOSE)
 					{
 						if (doUpdate)
@@ -108,7 +108,7 @@ namespace Lucene.Net.Index
 				{
 					if (r != null)
 					{
-						r.Close();
+						r.Dispose();
 					}
 					bool applyDeletions = Random().NextBoolean();
 					if (VERBOSE)
@@ -125,20 +125,20 @@ namespace Lucene.Net.Index
 						s = null;
 					}
 					IsTrue("applyDeletions=" + applyDeletions + " r.numDocs()="
-						 + r.NumDocs() + " vs SIZE=" + SIZE, !applyDeletions || r.NumDocs() == SIZE);
+						 + r.NumDocs + " vs SIZE=" + SIZE, !applyDeletions || r.NumDocs == SIZE);
 					updateCount = 0;
 				}
 			}
 			if (r != null)
 			{
-				r.Close();
+				r.Dispose();
 			}
 			w.Commit();
-			AreEqual(SIZE, w.NumDocs());
-			w.Close();
+			AreEqual(SIZE, w.NumDocs);
+			w.Dispose();
 			TestIndexWriter.AssertNoUnreferencedFiles(dir, "leftover files after rolling updates"
 				);
-			docs.Close();
+			docs.Dispose();
 			// LUCENE-4455:
 			SegmentInfos infos = new SegmentInfos();
 			infos.Read(dir);
@@ -156,7 +156,7 @@ namespace Lucene.Net.Index
 				}
 			}
 			AreEqual(totalBytes2, totalBytes);
-			dir.Close();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -181,13 +181,13 @@ namespace Lucene.Net.Index
 				{
 					threads[i_1].Join();
 				}
-				w.Close();
+				w.Dispose();
 			}
 			IndexReader open = DirectoryReader.Open(dir);
-			AreEqual(1, open.NumDocs());
-			open.Close();
-			docs.Close();
-			dir.Close();
+			AreEqual(1, open.NumDocs);
+			open.Dispose();
+			docs.Dispose();
+			dir.Dispose();
 		}
 
 		internal class IndexingThread : Sharpen.Thread
@@ -226,16 +226,16 @@ namespace Lucene.Net.Index
 							DirectoryReader reader = DirectoryReader.OpenIfChanged(open);
 							if (reader != null)
 							{
-								open.Close();
+								open.Dispose();
 								open = reader;
 							}
-							AreEqual("iter: " + i + " numDocs: " + open.NumDocs() + " del: "
-								 + open.NumDeletedDocs() + " max: " + open.MaxDoc, 1, open.NumDocs());
+							AreEqual("iter: " + i + " numDocs: " + open.NumDocs + " del: "
+								 + open.NumDeletedDocs() + " max: " + open.MaxDoc, 1, open.NumDocs);
 						}
 					}
 					if (open != null)
 					{
-						open.Close();
+						open.Dispose();
 					}
 				}
 				catch (Exception e)

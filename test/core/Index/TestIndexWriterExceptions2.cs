@@ -16,7 +16,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	/// <summary>
 	/// Causes a bunch of non-aborting and aborting exceptions and checks that
@@ -61,7 +61,7 @@ namespace Lucene.Net.Index
 					// TODO: add crankyDocValuesFields, etc
 					Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 						();
-					doc.Add(NewStringField("id", Sharpen.Extensions.ToString(i), Field.Store.NO));
+					doc.Add(NewStringField("id", i.ToString(), Field.Store.NO));
 					doc.Add(new NumericDocValuesField("dv", i));
 					doc.Add(new BinaryDocValuesField("dv2", new BytesRef(Sharpen.Extensions.ToString(
 						i))));
@@ -97,20 +97,20 @@ namespace Lucene.Net.Index
 							int thingToDo = Random().Next(4);
 							if (thingToDo == 0)
 							{
-								iw.DeleteDocuments(new Term("id", Sharpen.Extensions.ToString(i)));
+								iw.DeleteDocuments(new Term("id", i.ToString()));
 							}
 							else
 							{
 								if (thingToDo == 1 && DefaultCodecSupportsFieldUpdates())
 								{
-									iw.UpdateNumericDocValue(new Term("id", Sharpen.Extensions.ToString(i)), "dv", i 
+									iw.UpdateNumericDocValue(new Term("id", i.ToString()), "dv", i 
 										+ 1L);
 								}
 								else
 								{
 									if (thingToDo == 2 && DefaultCodecSupportsFieldUpdates())
 									{
-										iw.UpdateBinaryDocValue(new Term("id", Sharpen.Extensions.ToString(i)), "dv2", new 
+										iw.UpdateBinaryDocValue(new Term("id", i.ToString()), "dv2", new 
 											BytesRef(Sharpen.Extensions.ToString(i + 1)));
 									}
 								}
@@ -147,7 +147,7 @@ namespace Lucene.Net.Index
 							// we made it, sometimes delete our docs
 							if (Random().NextBoolean())
 							{
-								iw.DeleteDocuments(new Term("id", Sharpen.Extensions.ToString(i)), new Term("id", 
+								iw.DeleteDocuments(new Term("id", i.ToString()), new Term("id", 
 									Sharpen.Extensions.ToString(-i)));
 							}
 						}
@@ -207,7 +207,7 @@ namespace Lucene.Net.Index
 				}
 				try
 				{
-					iw.Close();
+					iw.Dispose();
 				}
 				catch (Exception e)
 				{
@@ -228,7 +228,7 @@ namespace Lucene.Net.Index
 						Rethrow.Rethrow(e);
 					}
 				}
-				dir.Close();
+				dir.Dispose();
 			}
 			catch (Exception t)
 			{

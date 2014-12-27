@@ -98,8 +98,8 @@ namespace Lucene.Net.Store
 				writer.AddDocument(doc);
 			}
 			
-			reader.Close();
-			writer.Close();
+			reader.Dispose();
+			writer.Dispose();
 			RmDir(new System.IO.FileInfo(storePathname));
 		}
 		

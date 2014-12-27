@@ -44,7 +44,7 @@ namespace Lucene.Net.Search
 				)NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMaxBufferedDocs
 				(TestUtil.NextInt(Random(), 100, 1000))).SetMergePolicy(NewLogMergePolicy()));
 			FieldType storedInt = new FieldType(IntField.TYPE_NOT_STORED);
-			storedInt.SetStored(true);
+			storedInt.Stored = (true);
 			storedInt.Freeze();
 			FieldType storedInt8 = new FieldType(storedInt);
 			storedInt8.SetNumericPrecisionStep(8);
@@ -95,7 +95,7 @@ namespace Lucene.Net.Search
 			}
 			reader = writer.GetReader();
 			searcher = NewSearcher(reader);
-			writer.Close();
+			writer.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -103,9 +103,9 @@ namespace Lucene.Net.Search
 		public static void AfterClass()
 		{
 			searcher = null;
-			reader.Close();
+			reader.Dispose();
 			reader = null;
-			directory.Close();
+			directory.Dispose();
 			directory = null;
 		}
 
@@ -166,13 +166,13 @@ namespace Lucene.Net.Search
 						break;
 					}
 				}
-				ScoreDoc[] sd = topDocs.scoreDocs;
+				ScoreDoc[] sd = topDocs.ScoreDocs;
 				IsNotNull(sd);
 				AreEqual("Score doc count" + type, count, sd.Length);
-				Lucene.Net.Documents.Document doc = searcher.Doc(sd[0].doc);
+				Lucene.Net.Documents.Document doc = searcher.Doc(sd[0].Doc);
 				AreEqual("First doc" + type, 2 * distance + startOffset, doc
 					.GetField(field).NumericValue());
-				doc = searcher.Doc(sd[sd.Length - 1].doc);
+				doc = searcher.Doc(sd[sd.Length - 1].Doc);
 				AreEqual("Last doc" + type, (1 + count) * distance + startOffset
 					, doc.GetField(field).NumericValue());
 			}
@@ -208,13 +208,13 @@ namespace Lucene.Net.Search
 			NumericRangeFilter<int> f = NumericRangeFilter.NewIntRange("field8", 8, 1000, -1000
 				, true, true);
 			IsNull("A inverse range should return the null instance", 
-				f.GetDocIdSet(context, ((AtomicReader)context.Reader()).GetLiveDocs()));
+				f.GetDocIdSet(context, ((AtomicReader)context.Reader).LiveDocs));
 			f = NumericRangeFilter.NewIntRange("field8", 8, int.MaxValue, null, false, false);
 			IsNull("A exclusive range starting with Integer.MAX_VALUE should return the null instance"
-				, f.GetDocIdSet(context, ((AtomicReader)context.Reader()).GetLiveDocs()));
+				, f.GetDocIdSet(context, ((AtomicReader)context.Reader).LiveDocs));
 			f = NumericRangeFilter.NewIntRange("field8", 8, null, int.MinValue, false, false);
 			IsNull("A exclusive range ending with Integer.MIN_VALUE should return the null instance"
-				, f.GetDocIdSet(context, ((AtomicReader)context.Reader()).GetLiveDocs()));
+				, f.GetDocIdSet(context, ((AtomicReader)context.Reader).LiveDocs));
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -224,7 +224,7 @@ namespace Lucene.Net.Search
 			NumericRangeQuery<int> q = NumericRangeQuery.NewIntRange("ascfield8", 8, 1000, 1000
 				, true, true);
 			TopDocs topDocs = searcher.Search(q, noDocs);
-			ScoreDoc[] sd = topDocs.scoreDocs;
+			ScoreDoc[] sd = topDocs.ScoreDocs;
 			IsNotNull(sd);
 			AreEqual("Score doc count", 1, sd.Length);
 		}
@@ -238,24 +238,24 @@ namespace Lucene.Net.Search
 			NumericRangeQuery<int> q = NumericRangeQuery.NewIntRange(field, precisionStep, null
 				, upper, true, true);
 			TopDocs topDocs = searcher.Search(q, null, noDocs, Sort.INDEXORDER);
-			ScoreDoc[] sd = topDocs.scoreDocs;
+			ScoreDoc[] sd = topDocs.ScoreDocs;
 			IsNotNull(sd);
 			AreEqual("Score doc count", count, sd.Length);
-			Lucene.Net.Documents.Document doc = searcher.Doc(sd[0].doc);
+			Lucene.Net.Documents.Document doc = searcher.Doc(sd[0].Doc);
 			AreEqual("First doc", startOffset, doc.GetField(field).NumericValue
 				());
-			doc = searcher.Doc(sd[sd.Length - 1].doc);
+			doc = searcher.Doc(sd[sd.Length - 1].Doc);
 			AreEqual("Last doc", (count - 1) * distance + startOffset, 
 				doc.GetField(field).NumericValue());
 			q = NumericRangeQuery.NewIntRange(field, precisionStep, null, upper, false, true);
 			topDocs = searcher.Search(q, null, noDocs, Sort.INDEXORDER);
-			sd = topDocs.scoreDocs;
+			sd = topDocs.ScoreDocs;
 			IsNotNull(sd);
 			AreEqual("Score doc count", count, sd.Length);
-			doc = searcher.Doc(sd[0].doc);
+			doc = searcher.Doc(sd[0].Doc);
 			AreEqual("First doc", startOffset, doc.GetField(field).NumericValue
 				());
-			doc = searcher.Doc(sd[sd.Length - 1].doc);
+			doc = searcher.Doc(sd[sd.Length - 1].Doc);
 			AreEqual("Last doc", (count - 1) * distance + startOffset, 
 				doc.GetField(field).NumericValue());
 		}
@@ -290,24 +290,24 @@ namespace Lucene.Net.Search
 			NumericRangeQuery<int> q = NumericRangeQuery.NewIntRange(field, precisionStep, lower
 				, null, true, true);
 			TopDocs topDocs = searcher.Search(q, null, noDocs, Sort.INDEXORDER);
-			ScoreDoc[] sd = topDocs.scoreDocs;
+			ScoreDoc[] sd = topDocs.ScoreDocs;
 			IsNotNull(sd);
 			AreEqual("Score doc count", noDocs - count, sd.Length);
-			Lucene.Net.Documents.Document doc = searcher.Doc(sd[0].doc);
+			Lucene.Net.Documents.Document doc = searcher.Doc(sd[0].Doc);
 			AreEqual("First doc", count * distance + startOffset, doc.
 				GetField(field).NumericValue());
-			doc = searcher.Doc(sd[sd.Length - 1].doc);
+			doc = searcher.Doc(sd[sd.Length - 1].Doc);
 			AreEqual("Last doc", (noDocs - 1) * distance + startOffset
 				, doc.GetField(field).NumericValue());
 			q = NumericRangeQuery.NewIntRange(field, precisionStep, lower, null, true, false);
 			topDocs = searcher.Search(q, null, noDocs, Sort.INDEXORDER);
-			sd = topDocs.scoreDocs;
+			sd = topDocs.ScoreDocs;
 			IsNotNull(sd);
 			AreEqual("Score doc count", noDocs - count, sd.Length);
-			doc = searcher.Doc(sd[0].doc);
+			doc = searcher.Doc(sd[0].Doc);
 			AreEqual("First doc", count * distance + startOffset, doc.
 				GetField(field).NumericValue());
-			doc = searcher.Doc(sd[sd.Length - 1].doc);
+			doc = searcher.Doc(sd[sd.Length - 1].Doc);
 			AreEqual("Last doc", (noDocs - 1) * distance + startOffset
 				, doc.GetField(field).NumericValue());
 		}
@@ -359,42 +359,42 @@ namespace Lucene.Net.Search
 				doc.Add(new FloatField("float", f, Field.Store.NO));
 				writer.AddDocument(doc);
 			}
-			writer.Close();
+			writer.Dispose();
 			IndexReader r = DirectoryReader.Open(dir);
 			IndexSearcher s = NewSearcher(r);
 			Query q = NumericRangeQuery.NewIntRange("int", null, null, true, true);
 			TopDocs topDocs = s.Search(q, 10);
-			AreEqual("Score doc count", 3, topDocs.scoreDocs.Length);
+			AreEqual("Score doc count", 3, topDocs.ScoreDocs.Length);
 			q = NumericRangeQuery.NewIntRange("int", null, null, false, false);
 			topDocs = s.Search(q, 10);
-			AreEqual("Score doc count", 3, topDocs.scoreDocs.Length);
+			AreEqual("Score doc count", 3, topDocs.ScoreDocs.Length);
 			q = NumericRangeQuery.NewIntRange("int", int.MinValue, int.MaxValue, true, true);
 			topDocs = s.Search(q, 10);
-			AreEqual("Score doc count", 3, topDocs.scoreDocs.Length);
+			AreEqual("Score doc count", 3, topDocs.ScoreDocs.Length);
 			q = NumericRangeQuery.NewIntRange("int", int.MinValue, int.MaxValue, false, false
 				);
 			topDocs = s.Search(q, 10);
-			AreEqual("Score doc count", 1, topDocs.scoreDocs.Length);
+			AreEqual("Score doc count", 1, topDocs.ScoreDocs.Length);
 			q = NumericRangeQuery.NewFloatRange("float", null, null, true, true);
 			topDocs = s.Search(q, 10);
-			AreEqual("Score doc count", 3, topDocs.scoreDocs.Length);
+			AreEqual("Score doc count", 3, topDocs.ScoreDocs.Length);
 			q = NumericRangeQuery.NewFloatRange("float", null, null, false, false);
 			topDocs = s.Search(q, 10);
-			AreEqual("Score doc count", 3, topDocs.scoreDocs.Length);
+			AreEqual("Score doc count", 3, topDocs.ScoreDocs.Length);
 			q = NumericRangeQuery.NewFloatRange("float", float.NegativeInfinity, float.PositiveInfinity
 				, true, true);
 			topDocs = s.Search(q, 10);
-			AreEqual("Score doc count", 3, topDocs.scoreDocs.Length);
+			AreEqual("Score doc count", 3, topDocs.ScoreDocs.Length);
 			q = NumericRangeQuery.NewFloatRange("float", float.NegativeInfinity, float.PositiveInfinity
 				, false, false);
 			topDocs = s.Search(q, 10);
-			AreEqual("Score doc count", 1, topDocs.scoreDocs.Length);
+			AreEqual("Score doc count", 1, topDocs.ScoreDocs.Length);
 			q = NumericRangeQuery.NewFloatRange("float", float.NaN, float.NaN, true, true);
 			topDocs = s.Search(q, 10);
 			AreEqual("Score doc count", TestNumericUtils.FLOAT_NANs.Length
-				, topDocs.scoreDocs.Length);
-			r.Close();
-			dir.Close();
+				, topDocs.ScoreDocs.Length);
+			r.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -698,12 +698,12 @@ namespace Lucene.Net.Search
 				{
 					continue;
 				}
-				ScoreDoc[] sd = topDocs.scoreDocs;
+				ScoreDoc[] sd = topDocs.ScoreDocs;
 				IsNotNull(sd);
-				int last = searcher.Doc(sd[0].doc).GetField(field).NumericValue();
+				int last = searcher.Doc(sd[0].Doc).GetField(field).NumericValue();
 				for (int j = 1; j < sd.Length; j++)
 				{
-					int act = searcher.Doc(sd[j].doc).GetField(field).NumericValue();
+					int act = searcher.Doc(sd[j].Doc).GetField(field).NumericValue();
 					IsTrue("Docs should be sorted backwards", last > act);
 					last = act;
 				}

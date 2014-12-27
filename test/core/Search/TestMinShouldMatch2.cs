@@ -62,7 +62,7 @@ namespace Lucene.Net.Search
 				iw.AddDocument(doc);
 			}
 			iw.ForceMerge(1);
-			iw.Close();
+			iw.Dispose();
 			r = DirectoryReader.Open(dir);
 			reader = GetOnlySegmentReader(r);
 			searcher = new IndexSearcher(reader);
@@ -86,8 +86,8 @@ namespace Lucene.Net.Search
 		[NUnit.Framework.AfterClass]
 		public static void AfterClass()
 		{
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 			searcher = null;
 			reader = null;
 			r = null;

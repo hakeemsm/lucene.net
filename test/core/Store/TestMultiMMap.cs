@@ -46,12 +46,12 @@ namespace Lucene.Net.Store
 			MMapDirectory mmapDir = new MMapDirectory(CreateTempDir("testCloneSafety"));
 			IndexOutput io = mmapDir.CreateOutput("bytes", NewIOContext(Random()));
 			io.WriteVInt(5);
-			io.Close();
+			io.Dispose();
 			IndexInput one = mmapDir.OpenInput("bytes", IOContext.DEFAULT);
 			IndexInput two = ((IndexInput)one.Clone());
 			IndexInput three = ((IndexInput)two.Clone());
 			// clone of clone
-			one.Close();
+			one.Dispose();
 			try
 			{
 				one.ReadVInt();
@@ -79,11 +79,11 @@ namespace Lucene.Net.Store
 			{
 			}
 			// pass
-			two.Close();
-			three.Close();
+			two.Dispose();
+			three.Dispose();
 			// test double close of master:
-			one.Close();
-			mmapDir.Close();
+			one.Dispose();
+			mmapDir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -92,12 +92,12 @@ namespace Lucene.Net.Store
 			MMapDirectory mmapDir = new MMapDirectory(CreateTempDir("testCloneClose"));
 			IndexOutput io = mmapDir.CreateOutput("bytes", NewIOContext(Random()));
 			io.WriteVInt(5);
-			io.Close();
+			io.Dispose();
 			IndexInput one = mmapDir.OpenInput("bytes", IOContext.DEFAULT);
 			IndexInput two = ((IndexInput)one.Clone());
 			IndexInput three = ((IndexInput)two.Clone());
 			// clone of clone
-			two.Close();
+			two.Dispose();
 			AreEqual(5, one.ReadVInt());
 			try
 			{
@@ -109,9 +109,9 @@ namespace Lucene.Net.Store
 			}
 			// pass
 			AreEqual(5, three.ReadVInt());
-			one.Close();
-			three.Close();
-			mmapDir.Close();
+			one.Dispose();
+			three.Dispose();
+			mmapDir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -121,7 +121,7 @@ namespace Lucene.Net.Store
 			IndexOutput io = mmapDir.CreateOutput("bytes", NewIOContext(Random()));
 			io.WriteInt(1);
 			io.WriteInt(2);
-			io.Close();
+			io.Dispose();
 			Directory.IndexInputSlicer slicer = mmapDir.CreateSlicer("bytes", NewIOContext(Random
 				()));
 			IndexInput one = slicer.OpenSlice("first int", 0, 4);
@@ -130,7 +130,7 @@ namespace Lucene.Net.Store
 			// clone of clone
 			IndexInput four = ((IndexInput)two.Clone());
 			// clone of clone
-			slicer.Close();
+			slicer.Dispose();
 			try
 			{
 				one.ReadInt();
@@ -167,13 +167,13 @@ namespace Lucene.Net.Store
 			{
 			}
 			// pass
-			one.Close();
-			two.Close();
-			three.Close();
-			four.Close();
+			one.Dispose();
+			two.Dispose();
+			three.Dispose();
+			four.Dispose();
 			// test double-close of slicer:
-			slicer.Close();
-			mmapDir.Close();
+			slicer.Dispose();
+			mmapDir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -183,12 +183,12 @@ namespace Lucene.Net.Store
 			IndexOutput io = mmapDir.CreateOutput("bytes", NewIOContext(Random()));
 			io.WriteInt(1);
 			io.WriteInt(2);
-			io.Close();
+			io.Dispose();
 			Directory.IndexInputSlicer slicer = mmapDir.CreateSlicer("bytes", NewIOContext(Random
 				()));
 			IndexInput one = slicer.OpenSlice("first int", 0, 4);
 			IndexInput two = slicer.OpenSlice("second int", 4, 4);
-			one.Close();
+			one.Dispose();
 			try
 			{
 				one.ReadInt();
@@ -202,10 +202,10 @@ namespace Lucene.Net.Store
 			// reopen a new slice "one":
 			one = slicer.OpenSlice("first int", 0, 4);
 			AreEqual(1, one.ReadInt());
-			one.Close();
-			two.Close();
-			slicer.Close();
-			mmapDir.Close();
+			one.Dispose();
+			two.Dispose();
+			slicer.Dispose();
+			mmapDir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -216,11 +216,11 @@ namespace Lucene.Net.Store
 				MMapDirectory mmapDir = new MMapDirectory(CreateTempDir("testSeekZero"), null, 1 
 					<< i);
 				IndexOutput io = mmapDir.CreateOutput("zeroBytes", NewIOContext(Random()));
-				io.Close();
+				io.Dispose();
 				IndexInput ii = mmapDir.OpenInput("zeroBytes", NewIOContext(Random()));
 				ii.Seek(0L);
-				ii.Close();
-				mmapDir.Close();
+				ii.Dispose();
+				mmapDir.Dispose();
 			}
 		}
 
@@ -232,14 +232,14 @@ namespace Lucene.Net.Store
 				MMapDirectory mmapDir = new MMapDirectory(CreateTempDir("testSeekSliceZero"), null
 					, 1 << i);
 				IndexOutput io = mmapDir.CreateOutput("zeroBytes", NewIOContext(Random()));
-				io.Close();
+				io.Dispose();
 				Directory.IndexInputSlicer slicer = mmapDir.CreateSlicer("zeroBytes", NewIOContext
 					(Random()));
 				IndexInput ii = slicer.OpenSlice("zero-length slice", 0, 0);
 				ii.Seek(0L);
-				ii.Close();
-				slicer.Close();
-				mmapDir.Close();
+				ii.Dispose();
+				slicer.Dispose();
+				mmapDir.Dispose();
 			}
 		}
 
@@ -254,14 +254,14 @@ namespace Lucene.Net.Store
 				byte[] bytes = new byte[1 << i];
 				Random().NextBytes(bytes);
 				io.WriteBytes(bytes, bytes.Length);
-				io.Close();
+				io.Dispose();
 				IndexInput ii = mmapDir.OpenInput("bytes", NewIOContext(Random()));
 				byte[] actual = new byte[1 << i];
 				ii.ReadBytes(actual, 0, actual.Length);
 				AreEqual(new BytesRef(bytes), new BytesRef(actual));
 				ii.Seek(1 << i);
-				ii.Close();
-				mmapDir.Close();
+				ii.Dispose();
+				mmapDir.Dispose();
 			}
 		}
 
@@ -276,7 +276,7 @@ namespace Lucene.Net.Store
 				byte[] bytes = new byte[1 << i];
 				Random().NextBytes(bytes);
 				io.WriteBytes(bytes, bytes.Length);
-				io.Close();
+				io.Dispose();
 				Directory.IndexInputSlicer slicer = mmapDir.CreateSlicer("bytes", NewIOContext(Random
 					()));
 				IndexInput ii = slicer.OpenSlice("full slice", 0, bytes.Length);
@@ -284,9 +284,9 @@ namespace Lucene.Net.Store
 				ii.ReadBytes(actual, 0, actual.Length);
 				AreEqual(new BytesRef(bytes), new BytesRef(actual));
 				ii.Seek(1 << i);
-				ii.Close();
-				slicer.Close();
-				mmapDir.Close();
+				ii.Dispose();
+				slicer.Dispose();
+				mmapDir.Dispose();
 			}
 		}
 
@@ -302,7 +302,7 @@ namespace Lucene.Net.Store
 				// make sure we switch buffers
 				Random().NextBytes(bytes);
 				io.WriteBytes(bytes, bytes.Length);
-				io.Close();
+				io.Dispose();
 				IndexInput ii = mmapDir.OpenInput("bytes", NewIOContext(Random()));
 				byte[] actual = new byte[1 << (i + 1)];
 				// first read all bytes
@@ -319,8 +319,8 @@ namespace Lucene.Net.Store
 							BytesRef(slice));
 					}
 				}
-				ii.Close();
-				mmapDir.Close();
+				ii.Dispose();
+				mmapDir.Dispose();
 			}
 		}
 
@@ -338,12 +338,12 @@ namespace Lucene.Net.Store
 				// make sure we switch buffers
 				Random().NextBytes(bytes);
 				io.WriteBytes(bytes, bytes.Length);
-				io.Close();
+				io.Dispose();
 				IndexInput ii = mmapDir.OpenInput("bytes", NewIOContext(Random()));
 				byte[] actual = new byte[1 << (i + 1)];
 				// first read all bytes
 				ii.ReadBytes(actual, 0, actual.Length);
-				ii.Close();
+				ii.Dispose();
 				AreEqual(new BytesRef(bytes), new BytesRef(actual));
 				Directory.IndexInputSlicer slicer = mmapDir.CreateSlicer("bytes", NewIOContext(Random
 					()));
@@ -354,13 +354,13 @@ namespace Lucene.Net.Store
 						byte[] slice = new byte[sliceLength];
 						IndexInput input = slicer.OpenSlice("bytesSlice", sliceStart, slice.Length);
 						input.ReadBytes(slice, 0, slice.Length);
-						input.Close();
+						input.Dispose();
 						AreEqual(new BytesRef(bytes, sliceStart, sliceLength), new 
 							BytesRef(slice));
 					}
 				}
-				slicer.Close();
-				mmapDir.Close();
+				slicer.Dispose();
+				mmapDir.Dispose();
 			}
 		}
 
@@ -402,7 +402,7 @@ namespace Lucene.Net.Store
 				writer.AddDocument(doc);
 			}
 			IndexReader reader = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			int numAsserts = AtLeast(100);
 			for (int i_1 = 0; i_1 < numAsserts; i_1++)
 			{
@@ -410,8 +410,8 @@ namespace Lucene.Net.Store
 				AreEqual(string.Empty + docID, reader.Document(docID).Get(
 					"docid"));
 			}
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 		}
     }
 }

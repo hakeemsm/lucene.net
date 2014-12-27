@@ -12,7 +12,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestReaderClosed : LuceneTestCase
 	{
@@ -41,7 +41,7 @@ namespace Lucene.Net.Index
 				writer.AddDocument(doc);
 			}
 			reader = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -52,7 +52,7 @@ namespace Lucene.Net.Index
 			TermRangeQuery query = TermRangeQuery.NewStringRange("field", "a", "z", true, true
 				);
 			searcher.Search(query, 5);
-			reader.Close();
+			reader.Dispose();
 			try
 			{
 				searcher.Search(query, 5);
@@ -74,7 +74,7 @@ namespace Lucene.Net.Index
 			TermRangeQuery query = TermRangeQuery.NewStringRange("field", "a", "z", true, true
 				);
 			searcher.Search(query, 5);
-			reader.Close();
+			reader.Dispose();
 			// close original child reader
 			try
 			{
@@ -88,14 +88,14 @@ namespace Lucene.Net.Index
 			finally
 			{
 				// shutdown executor: in case of wrap-wrap-wrapping
-				searcher.GetIndexReader().Close();
+				searcher.IndexReader.Dispose();
 			}
 		}
 
 		/// <exception cref="System.Exception"></exception>
 		public override void TearDown()
 		{
-			dir.Close();
+			dir.Dispose();
 			base.TearDown();
 		}
 	}

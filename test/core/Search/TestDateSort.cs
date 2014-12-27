@@ -67,13 +67,13 @@ namespace Lucene.Net.Search
 			writer.AddDocument(CreateDocument("Document 5", 1192209943000L));
 			
 			reader = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 		}
 		
 		public override void TearDown()
 		{
-			reader.Close();
-			directory.Close();
+			reader.Dispose();
+			directory.Dispose();
 			base.TearDown();
 		}
 		[Test]

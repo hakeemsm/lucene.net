@@ -37,38 +37,38 @@ namespace Lucene.Net.Search
 			AddDoc("ddddd", writer);
 			IndexReader reader = writer.GetReader();
 			IndexSearcher searcher = NewSearcher(reader);
-			writer.Close();
+			writer.Dispose();
 			FuzzyQuery query = new FuzzyQuery(new Term("field", "aaaaa"), FuzzyQuery.defaultMaxEdits
 				, 0);
-			ScoreDoc[] hits = searcher.Search(query, null, 1000).scoreDocs;
+			ScoreDoc[] hits = searcher.Search(query, null, 1000).ScoreDocs;
 			AreEqual(3, hits.Length);
 			// same with prefix
 			query = new FuzzyQuery(new Term("field", "aaaaa"), FuzzyQuery.defaultMaxEdits, 1);
-			hits = searcher.Search(query, null, 1000).scoreDocs;
+			hits = searcher.Search(query, null, 1000).ScoreDocs;
 			AreEqual(3, hits.Length);
 			query = new FuzzyQuery(new Term("field", "aaaaa"), FuzzyQuery.defaultMaxEdits, 2);
-			hits = searcher.Search(query, null, 1000).scoreDocs;
+			hits = searcher.Search(query, null, 1000).ScoreDocs;
 			AreEqual(3, hits.Length);
 			query = new FuzzyQuery(new Term("field", "aaaaa"), FuzzyQuery.defaultMaxEdits, 3);
-			hits = searcher.Search(query, null, 1000).scoreDocs;
+			hits = searcher.Search(query, null, 1000).ScoreDocs;
 			AreEqual(3, hits.Length);
 			query = new FuzzyQuery(new Term("field", "aaaaa"), FuzzyQuery.defaultMaxEdits, 4);
-			hits = searcher.Search(query, null, 1000).scoreDocs;
+			hits = searcher.Search(query, null, 1000).ScoreDocs;
 			AreEqual(2, hits.Length);
 			query = new FuzzyQuery(new Term("field", "aaaaa"), FuzzyQuery.defaultMaxEdits, 5);
-			hits = searcher.Search(query, null, 1000).scoreDocs;
+			hits = searcher.Search(query, null, 1000).ScoreDocs;
 			AreEqual(1, hits.Length);
 			query = new FuzzyQuery(new Term("field", "aaaaa"), FuzzyQuery.defaultMaxEdits, 6);
-			hits = searcher.Search(query, null, 1000).scoreDocs;
+			hits = searcher.Search(query, null, 1000).ScoreDocs;
 			AreEqual(1, hits.Length);
 			// test scoring
 			query = new FuzzyQuery(new Term("field", "bbbbb"), FuzzyQuery.defaultMaxEdits, 0);
-			hits = searcher.Search(query, null, 1000).scoreDocs;
+			hits = searcher.Search(query, null, 1000).ScoreDocs;
 			AreEqual("3 documents should match", 3, hits.Length);
 			IList<string> order = Arrays.AsList("bbbbb", "abbbb", "aabbb");
 			for (int i = 0; i < hits.Length; i++)
 			{
-				string term = searcher.Doc(hits[i].doc).Get("field");
+				string term = searcher.Doc(hits[i].Doc).Get("field");
 				//System.out.println(hits[i].score);
 				AreEqual(order[i], term);
 			}
@@ -76,118 +76,118 @@ namespace Lucene.Net.Search
 			// This query would normally return 3 documents, because 3 terms match (see above):
 			query = new FuzzyQuery(new Term("field", "bbbbb"), FuzzyQuery.defaultMaxEdits, 0, 
 				2, false);
-			hits = searcher.Search(query, null, 1000).scoreDocs;
+			hits = searcher.Search(query, null, 1000).ScoreDocs;
 			AreEqual("only 2 documents should match", 2, hits.Length);
 			order = Arrays.AsList("bbbbb", "abbbb");
 			for (int i_1 = 0; i_1 < hits.Length; i_1++)
 			{
-				string term = searcher.Doc(hits[i_1].doc).Get("field");
+				string term = searcher.Doc(hits[i_1].Doc).Get("field");
 				//System.out.println(hits[i].score);
 				AreEqual(order[i_1], term);
 			}
 			// not similar enough:
 			query = new FuzzyQuery(new Term("field", "xxxxx"), FuzzyQuery.defaultMaxEdits, 0);
-			hits = searcher.Search(query, null, 1000).scoreDocs;
+			hits = searcher.Search(query, null, 1000).ScoreDocs;
 			AreEqual(0, hits.Length);
 			query = new FuzzyQuery(new Term("field", "aaccc"), FuzzyQuery.defaultMaxEdits, 0);
 			// edit distance to "aaaaa" = 3
-			hits = searcher.Search(query, null, 1000).scoreDocs;
+			hits = searcher.Search(query, null, 1000).ScoreDocs;
 			AreEqual(0, hits.Length);
 			// query identical to a word in the index:
 			query = new FuzzyQuery(new Term("field", "aaaaa"), FuzzyQuery.defaultMaxEdits, 0);
-			hits = searcher.Search(query, null, 1000).scoreDocs;
+			hits = searcher.Search(query, null, 1000).ScoreDocs;
 			AreEqual(3, hits.Length);
-			AreEqual(searcher.Doc(hits[0].doc).Get("field"), ("aaaaa")
+			AreEqual(searcher.Doc(hits[0].Doc).Get("field"), ("aaaaa")
 				);
 			// default allows for up to two edits:
-			AreEqual(searcher.Doc(hits[1].doc).Get("field"), ("aaaab")
+			AreEqual(searcher.Doc(hits[1].Doc).Get("field"), ("aaaab")
 				);
-			AreEqual(searcher.Doc(hits[2].doc).Get("field"), ("aaabb")
+			AreEqual(searcher.Doc(hits[2].Doc).Get("field"), ("aaabb")
 				);
 			// query similar to a word in the index:
 			query = new FuzzyQuery(new Term("field", "aaaac"), FuzzyQuery.defaultMaxEdits, 0);
-			hits = searcher.Search(query, null, 1000).scoreDocs;
+			hits = searcher.Search(query, null, 1000).ScoreDocs;
 			AreEqual(3, hits.Length);
-			AreEqual(searcher.Doc(hits[0].doc).Get("field"), ("aaaaa")
+			AreEqual(searcher.Doc(hits[0].Doc).Get("field"), ("aaaaa")
 				);
-			AreEqual(searcher.Doc(hits[1].doc).Get("field"), ("aaaab")
+			AreEqual(searcher.Doc(hits[1].Doc).Get("field"), ("aaaab")
 				);
-			AreEqual(searcher.Doc(hits[2].doc).Get("field"), ("aaabb")
+			AreEqual(searcher.Doc(hits[2].Doc).Get("field"), ("aaabb")
 				);
 			// now with prefix
 			query = new FuzzyQuery(new Term("field", "aaaac"), FuzzyQuery.defaultMaxEdits, 1);
-			hits = searcher.Search(query, null, 1000).scoreDocs;
+			hits = searcher.Search(query, null, 1000).ScoreDocs;
 			AreEqual(3, hits.Length);
-			AreEqual(searcher.Doc(hits[0].doc).Get("field"), ("aaaaa")
+			AreEqual(searcher.Doc(hits[0].Doc).Get("field"), ("aaaaa")
 				);
-			AreEqual(searcher.Doc(hits[1].doc).Get("field"), ("aaaab")
+			AreEqual(searcher.Doc(hits[1].Doc).Get("field"), ("aaaab")
 				);
-			AreEqual(searcher.Doc(hits[2].doc).Get("field"), ("aaabb")
+			AreEqual(searcher.Doc(hits[2].Doc).Get("field"), ("aaabb")
 				);
 			query = new FuzzyQuery(new Term("field", "aaaac"), FuzzyQuery.defaultMaxEdits, 2);
-			hits = searcher.Search(query, null, 1000).scoreDocs;
+			hits = searcher.Search(query, null, 1000).ScoreDocs;
 			AreEqual(3, hits.Length);
-			AreEqual(searcher.Doc(hits[0].doc).Get("field"), ("aaaaa")
+			AreEqual(searcher.Doc(hits[0].Doc).Get("field"), ("aaaaa")
 				);
-			AreEqual(searcher.Doc(hits[1].doc).Get("field"), ("aaaab")
+			AreEqual(searcher.Doc(hits[1].Doc).Get("field"), ("aaaab")
 				);
-			AreEqual(searcher.Doc(hits[2].doc).Get("field"), ("aaabb")
+			AreEqual(searcher.Doc(hits[2].Doc).Get("field"), ("aaabb")
 				);
 			query = new FuzzyQuery(new Term("field", "aaaac"), FuzzyQuery.defaultMaxEdits, 3);
-			hits = searcher.Search(query, null, 1000).scoreDocs;
+			hits = searcher.Search(query, null, 1000).ScoreDocs;
 			AreEqual(3, hits.Length);
-			AreEqual(searcher.Doc(hits[0].doc).Get("field"), ("aaaaa")
+			AreEqual(searcher.Doc(hits[0].Doc).Get("field"), ("aaaaa")
 				);
-			AreEqual(searcher.Doc(hits[1].doc).Get("field"), ("aaaab")
+			AreEqual(searcher.Doc(hits[1].Doc).Get("field"), ("aaaab")
 				);
-			AreEqual(searcher.Doc(hits[2].doc).Get("field"), ("aaabb")
+			AreEqual(searcher.Doc(hits[2].Doc).Get("field"), ("aaabb")
 				);
 			query = new FuzzyQuery(new Term("field", "aaaac"), FuzzyQuery.defaultMaxEdits, 4);
-			hits = searcher.Search(query, null, 1000).scoreDocs;
+			hits = searcher.Search(query, null, 1000).ScoreDocs;
 			AreEqual(2, hits.Length);
-			AreEqual(searcher.Doc(hits[0].doc).Get("field"), ("aaaaa")
+			AreEqual(searcher.Doc(hits[0].Doc).Get("field"), ("aaaaa")
 				);
-			AreEqual(searcher.Doc(hits[1].doc).Get("field"), ("aaaab")
+			AreEqual(searcher.Doc(hits[1].Doc).Get("field"), ("aaaab")
 				);
 			query = new FuzzyQuery(new Term("field", "aaaac"), FuzzyQuery.defaultMaxEdits, 5);
-			hits = searcher.Search(query, null, 1000).scoreDocs;
+			hits = searcher.Search(query, null, 1000).ScoreDocs;
 			AreEqual(0, hits.Length);
 			query = new FuzzyQuery(new Term("field", "ddddX"), FuzzyQuery.defaultMaxEdits, 0);
-			hits = searcher.Search(query, null, 1000).scoreDocs;
+			hits = searcher.Search(query, null, 1000).ScoreDocs;
 			AreEqual(1, hits.Length);
-			AreEqual(searcher.Doc(hits[0].doc).Get("field"), ("ddddd")
+			AreEqual(searcher.Doc(hits[0].Doc).Get("field"), ("ddddd")
 				);
 			// now with prefix
 			query = new FuzzyQuery(new Term("field", "ddddX"), FuzzyQuery.defaultMaxEdits, 1);
-			hits = searcher.Search(query, null, 1000).scoreDocs;
+			hits = searcher.Search(query, null, 1000).ScoreDocs;
 			AreEqual(1, hits.Length);
-			AreEqual(searcher.Doc(hits[0].doc).Get("field"), ("ddddd")
+			AreEqual(searcher.Doc(hits[0].Doc).Get("field"), ("ddddd")
 				);
 			query = new FuzzyQuery(new Term("field", "ddddX"), FuzzyQuery.defaultMaxEdits, 2);
-			hits = searcher.Search(query, null, 1000).scoreDocs;
+			hits = searcher.Search(query, null, 1000).ScoreDocs;
 			AreEqual(1, hits.Length);
-			AreEqual(searcher.Doc(hits[0].doc).Get("field"), ("ddddd")
+			AreEqual(searcher.Doc(hits[0].Doc).Get("field"), ("ddddd")
 				);
 			query = new FuzzyQuery(new Term("field", "ddddX"), FuzzyQuery.defaultMaxEdits, 3);
-			hits = searcher.Search(query, null, 1000).scoreDocs;
+			hits = searcher.Search(query, null, 1000).ScoreDocs;
 			AreEqual(1, hits.Length);
-			AreEqual(searcher.Doc(hits[0].doc).Get("field"), ("ddddd")
+			AreEqual(searcher.Doc(hits[0].Doc).Get("field"), ("ddddd")
 				);
 			query = new FuzzyQuery(new Term("field", "ddddX"), FuzzyQuery.defaultMaxEdits, 4);
-			hits = searcher.Search(query, null, 1000).scoreDocs;
+			hits = searcher.Search(query, null, 1000).ScoreDocs;
 			AreEqual(1, hits.Length);
-			AreEqual(searcher.Doc(hits[0].doc).Get("field"), ("ddddd")
+			AreEqual(searcher.Doc(hits[0].Doc).Get("field"), ("ddddd")
 				);
 			query = new FuzzyQuery(new Term("field", "ddddX"), FuzzyQuery.defaultMaxEdits, 5);
-			hits = searcher.Search(query, null, 1000).scoreDocs;
+			hits = searcher.Search(query, null, 1000).ScoreDocs;
 			AreEqual(0, hits.Length);
 			// different field = no match:
 			query = new FuzzyQuery(new Term("anotherfield", "ddddX"), FuzzyQuery.defaultMaxEdits
 				, 0);
-			hits = searcher.Search(query, null, 1000).scoreDocs;
+			hits = searcher.Search(query, null, 1000).ScoreDocs;
 			AreEqual(0, hits.Length);
-			reader.Close();
-			directory.Close();
+			reader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -216,13 +216,13 @@ namespace Lucene.Net.Search
 			AddDoc("WRICKE", writer);
 			IndexReader reader = writer.GetReader();
 			IndexSearcher searcher = NewSearcher(reader);
-			writer.Close();
+			writer.Dispose();
 			FuzzyQuery query = new FuzzyQuery(new Term("field", "WEBER"), 2, 1);
 			//query.setRewriteMethod(FuzzyQuery.SCORING_BOOLEAN_QUERY_REWRITE);
-			ScoreDoc[] hits = searcher.Search(query, null, 1000).scoreDocs;
+			ScoreDoc[] hits = searcher.Search(query, null, 1000).ScoreDocs;
 			AreEqual(8, hits.Length);
-			reader.Close();
-			directory.Close();
+			reader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <summary>
@@ -260,13 +260,13 @@ namespace Lucene.Net.Search
 			TopDocs docs = searcher.Search(fq, 2);
 			AreEqual(5, docs.TotalHits);
 			// 5 docs, from the a and b's
-			mr.Close();
-			ir1.Close();
-			ir2.Close();
-			writer.Close();
-			writer2.Close();
-			directory.Close();
-			directory2.Close();
+			mr.Dispose();
+			ir1.Dispose();
+			ir2.Dispose();
+			writer.Dispose();
+			writer2.Dispose();
+			directory.Dispose();
+			directory2.Dispose();
 		}
 
 		/// <summary>Test the TopTermsBoostOnlyBooleanQueryRewrite rewrite method.</summary>
@@ -281,21 +281,21 @@ namespace Lucene.Net.Search
 			AddDoc("Lucenne", writer);
 			IndexReader reader = writer.GetReader();
 			IndexSearcher searcher = NewSearcher(reader);
-			writer.Close();
+			writer.Dispose();
 			FuzzyQuery query = new FuzzyQuery(new Term("field", "lucene"));
 			query.SetRewriteMethod(new MultiTermQuery.TopTermsBoostOnlyBooleanQueryRewrite(50
 				));
-			ScoreDoc[] hits = searcher.Search(query, null, 1000).scoreDocs;
+			ScoreDoc[] hits = searcher.Search(query, null, 1000).ScoreDocs;
 			AreEqual(3, hits.Length);
 			// normally, 'Lucenne' would be the first result as IDF will skew the score.
-			AreEqual("Lucene", reader.Document(hits[0].doc).Get("field"
+			AreEqual("Lucene", reader.Document(hits[0].Doc).Get("field"
 				));
-			AreEqual("Lucene", reader.Document(hits[1].doc).Get("field"
+			AreEqual("Lucene", reader.Document(hits[1].Doc).Get("field"
 				));
-			AreEqual("Lucenne", reader.Document(hits[2].doc).Get("field"
+			AreEqual("Lucenne", reader.Document(hits[2].Doc).Get("field"
 				));
-			reader.Close();
-			directory.Close();
+			reader.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -319,16 +319,16 @@ namespace Lucene.Net.Search
 			AddDoc("Brute willis", w);
 			AddDoc("B. willis", w);
 			IndexReader r = w.GetReader();
-			w.Close();
+			w.Dispose();
 			Query q = new FuzzyQuery(new Term("field", "giga"), 0);
 			// 3. search
 			IndexSearcher searcher = NewSearcher(r);
-			ScoreDoc[] hits = searcher.Search(q, 10).scoreDocs;
+			ScoreDoc[] hits = searcher.Search(q, 10).ScoreDocs;
 			AreEqual(1, hits.Length);
-			AreEqual("Giga byte", searcher.Doc(hits[0].doc).Get("field"
+			AreEqual("Giga byte", searcher.Doc(hits[0].Doc).Get("field"
 				));
-			r.Close();
-			index.Close();
+			r.Dispose();
+			index.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -341,15 +341,15 @@ namespace Lucene.Net.Search
 			AddDoc("working", w);
 			IndexReader reader = w.GetReader();
 			IndexSearcher searcher = NewSearcher(reader);
-			w.Close();
+			w.Dispose();
 			FuzzyQuery q = new FuzzyQuery(new Term("field", "fouba"), 2);
-			ScoreDoc[] hits = searcher.Search(q, 10).scoreDocs;
+			ScoreDoc[] hits = searcher.Search(q, 10).ScoreDocs;
 			AreEqual(1, hits.Length);
-			AreEqual("foobar", searcher.Doc(hits[0].doc).Get("field"));
+			AreEqual("foobar", searcher.Doc(hits[0].Doc).Get("field"));
 			q = new FuzzyQuery(new Term("field", "foubara"), 2);
-			hits = searcher.Search(q, 10).scoreDocs;
+			hits = searcher.Search(q, 10).ScoreDocs;
 			AreEqual(1, hits.Length);
-			AreEqual("foobar", searcher.Doc(hits[0].doc).Get("field"));
+			AreEqual("foobar", searcher.Doc(hits[0].Doc).Get("field"));
 			try
 			{
 				q = new FuzzyQuery(new Term("field", "t"), 3);
@@ -359,8 +359,8 @@ namespace Lucene.Net.Search
 			{
 			}
 			// expected
-			reader.Close();
-			index.Close();
+			reader.Dispose();
+			index.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>

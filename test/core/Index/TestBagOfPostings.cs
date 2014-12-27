@@ -15,7 +15,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	/// <summary>
 	/// Simple test that adds numeric terms, where each term has the
@@ -37,7 +37,7 @@ namespace Lucene.Net.Index
 			bool isSimpleText = "SimpleText".Equals(TestUtil.GetPostingsFormat("field"));
 			IndexWriterConfig iwc = NewIndexWriterConfig(Random(), TEST_VERSION_CURRENT, new 
 				MockAnalyzer(Random()));
-			if ((isSimpleText || iwc.GetMergePolicy() is MockRandomMergePolicy) && (TEST_NIGHTLY
+			if ((isSimpleText || iwc.MergePolicy is MockRandomMergePolicy) && (TEST_NIGHTLY
 				 || RANDOM_MULTIPLIER > 1))
 			{
 				// Otherwise test can take way too long (> 2 hours)
@@ -50,7 +50,7 @@ namespace Lucene.Net.Index
 			}
 			for (int i = 0; i < numTerms; i++)
 			{
-				string term = Sharpen.Extensions.ToString(i);
+				string term = i.ToString();
 				for (int j = 0; j < i; j++)
 				{
 					postingsList.AddItem(term);
@@ -64,7 +64,7 @@ namespace Lucene.Net.Index
 			int threadCount = TestUtil.NextInt(Random(), 1, 5);
 			if (VERBOSE)
 			{
-				System.Console.Out.WriteLine("config: " + iw.w.GetConfig());
+				System.Console.Out.WriteLine("config: " + iw.w.Config);
 				System.Console.Out.WriteLine("threadCount=" + threadCount);
 			}
 			Sharpen.Thread[] threads = new Sharpen.Thread[threadCount];
@@ -82,8 +82,8 @@ namespace Lucene.Net.Index
 			}
 			iw.ForceMerge(1);
 			DirectoryReader ir = iw.GetReader();
-			AreEqual(1, ir.Leaves().Count);
-			AtomicReader air = ((AtomicReader)ir.Leaves()[0].Reader());
+			AreEqual(1, ir.Leaves.Count);
+			AtomicReader air = ((AtomicReader)ir.Leaves[0].Reader);
 			Terms terms = air.Terms("field");
 			// numTerms-1 because there cannot be a term 0 with 0 postings:
 			AreEqual(numTerms - 1, air.Fields().GetUniqueTermCount());
@@ -101,9 +101,9 @@ namespace Lucene.Net.Index
 			// don't really need to check more than this, as CheckIndex
 			// will verify that docFreq == actual number of documents seen
 			// from a docsAndPositionsEnum.
-			ir.Close();
-			iw.Close();
-			dir.Close();
+			ir.Dispose();
+			iw.Dispose();
+			dir.Dispose();
 		}
 
 		private sealed class _Thread_87 : Sharpen.Thread

@@ -1,47 +1,40 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
-using Lucene.Net.Util;
-using Sharpen;
+using Lucene.Net.Support;
+using NUnit.Framework;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
-	public class Test2BDocs : LuceneTestCase
+    [TestFixture]
+    public class Test2BDocs : LuceneTestCase
 	{
 		internal static Directory dir;
 
 		/// <exception cref="System.Exception"></exception>
-		[NUnit.Framework.BeforeClass]
-		public static void BeforeClass()
+		[SetUp]
+		public static void Setup()
 		{
 			dir = NewFSDirectory(CreateTempDir("2Bdocs"));
-			IndexWriter iw = new IndexWriter(dir, new IndexWriterConfig(TEST_VERSION_CURRENT, 
-				null));
-			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-				();
+			var iw = new IndexWriter(dir, new IndexWriterConfig(TEST_VERSION_CURRENT, null));
+			var doc = new Lucene.Net.Documents.Document();
 			for (int i = 0; i < 262144; i++)
 			{
 				iw.AddDocument(doc);
 			}
 			iw.ForceMerge(1);
-			iw.Close();
+			iw.Dispose();
 		}
 
-		/// <exception cref="System.Exception"></exception>
-		[NUnit.Framework.AfterClass]
-		public static void AfterClass()
+		
+		[TearDown]
+		public static void TearDown()
 		{
-			dir.Close();
+			dir.Dispose();
 			dir = null;
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestOverflow()
 		{
 			DirectoryReader ir = DirectoryReader.Open(dir);
@@ -56,22 +49,20 @@ namespace Lucene.Net.Index
 			{
 			}
 			// expected
-			ir.Close();
+			ir.Dispose();
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestExactlyAtLimit()
 		{
 			Directory dir2 = NewFSDirectory(CreateTempDir("2BDocs2"));
-			IndexWriter iw = new IndexWriter(dir2, new IndexWriterConfig(TEST_VERSION_CURRENT
-				, null));
-			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-				();
+			var iw = new IndexWriter(dir2, new IndexWriterConfig(TEST_VERSION_CURRENT, null));
+			var doc = new Lucene.Net.Documents.Document();
 			for (int i = 0; i < 262143; i++)
 			{
 				iw.AddDocument(doc);
 			}
-			iw.Close();
+			iw.Dispose();
 			DirectoryReader ir = DirectoryReader.Open(dir);
 			DirectoryReader ir2 = DirectoryReader.Open(dir2);
 			IndexReader[] subReaders = new IndexReader[8192];
@@ -79,10 +70,10 @@ namespace Lucene.Net.Index
 			subReaders[subReaders.Length - 1] = ir2;
 			MultiReader mr = new MultiReader(subReaders);
 			AreEqual(int.MaxValue, mr.MaxDoc);
-			AreEqual(int.MaxValue, mr.NumDocs());
-			ir.Close();
-			ir2.Close();
-			dir2.Close();
+			AreEqual(int.MaxValue, mr.NumDocs);
+			ir.Dispose();
+			ir2.Dispose();
+			dir2.Dispose();
 		}
 	}
 }

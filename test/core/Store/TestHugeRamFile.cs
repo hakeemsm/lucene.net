@@ -99,7 +99,7 @@ namespace Lucene.Net.Store
 				n += m;
 				Assert.AreEqual(n, out_Renamed.Length, "output length must match");
 			}
-			out_Renamed.Close();
+			out_Renamed.Dispose();
 			// input part
 			RAMInputStream in_Renamed = new RAMInputStream(f);
 			Assert.AreEqual(n, in_Renamed.Length(), "input length must match");

@@ -48,7 +48,7 @@ namespace Lucene.Net.Search
 				writer.AddDocument(doc);
 			}
 			IndexReader reader = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(reader);
 			num = AtLeast(50);
 			for (int i = 0; i < num; i++)
@@ -70,8 +70,8 @@ namespace Lucene.Net.Search
 				AreEqual("Returned count for NumericRangeQuery and TermRangeQuery must be equal"
 					, trTopDocs.TotalHits, nrTopDocs.TotalHits);
 			}
-			reader.Close();
-			directory.Close();
+			reader.Dispose();
+			directory.Dispose();
 		}
 	}
 }

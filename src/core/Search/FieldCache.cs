@@ -661,9 +661,9 @@ namespace Lucene.Net.Search
         /// <throws>  IOException If any error occurs. </throws>
         FieldCache.Doubles GetDoubles(AtomicReader reader, string field, FieldCache.IDoubleParser parser, bool setDocsWithField);
 
-        BinaryDocValues GetTerms(AtomicReader reader, string field);
+        BinaryDocValues GetTerms(AtomicReader reader, string field, bool setDocsWithField);
 
-        BinaryDocValues GetTerms(AtomicReader reader, string field, float acceptableOverheadRatio);
+        BinaryDocValues GetTerms(AtomicReader reader, string field , bool setDocsWithField, float acceptableOverheadRatio);
 
         SortedDocValues GetTermsIndex(AtomicReader reader, string field);
 

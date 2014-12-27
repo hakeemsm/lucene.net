@@ -39,7 +39,7 @@ namespace Lucene.Net.Search
 			//System.out.println("  bytes=" + charsIndexed + " add: " + doc);
 			IndexReader r = w.GetReader();
 			//System.out.println("numDocs=" + r.numDocs());
-			w.Close();
+			w.Dispose();
 			IndexSearcher s = NewSearcher(r);
 			Terms terms = MultiFields.GetFields(r).Terms("body");
 			int termCount = 0;
@@ -79,8 +79,8 @@ namespace Lucene.Net.Search
 					thread_1.Join();
 				}
 			}
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 
 		private sealed class _Thread_89 : Sharpen.Thread
@@ -108,13 +108,13 @@ namespace Lucene.Net.Search
 							TopDocs actual = s.Search(new TermQuery(new Term("body", ent.Key)), 100);
 							TopDocs expected = ent.Value;
 							AreEqual(expected.TotalHits, actual.TotalHits);
-							AreEqual("query=" + ent.Key.Utf8ToString(), expected.scoreDocs
-								.Length, actual.scoreDocs.Length);
-							for (int hit = 0; hit < expected.scoreDocs.Length; hit++)
+							AreEqual("query=" + ent.Key.Utf8ToString(), expected.ScoreDocs
+								.Length, actual.ScoreDocs.Length);
+							for (int hit = 0; hit < expected.ScoreDocs.Length; hit++)
 							{
-								AreEqual(expected.scoreDocs[hit].doc, actual.scoreDocs[hit
-									].doc);
-								IsTrue(expected.scoreDocs[hit].score == actual.scoreDocs[hit
+								AreEqual(expected.ScoreDocs[hit].Doc, actual.ScoreDocs[hit
+									].Doc);
+								IsTrue(expected.ScoreDocs[hit].score == actual.ScoreDocs[hit
 									].score);
 							}
 						}

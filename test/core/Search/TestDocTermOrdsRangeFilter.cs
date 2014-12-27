@@ -44,7 +44,7 @@ namespace Lucene.Net.Search
 			{
 				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
-				doc.Add(NewStringField("id", Sharpen.Extensions.ToString(i), Field.Store.NO));
+				doc.Add(NewStringField("id", i.ToString(), Field.Store.NO));
 				int numTerms = Random().Next(4);
 				for (int j = 0; j < numTerms; j++)
 				{
@@ -78,14 +78,14 @@ namespace Lucene.Net.Search
 			reader = writer.GetReader();
 			searcher1 = NewSearcher(reader);
 			searcher2 = NewSearcher(reader);
-			writer.Close();
+			writer.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
 		public override void TearDown()
 		{
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 			base.TearDown();
 		}
 
@@ -124,7 +124,7 @@ namespace Lucene.Net.Search
 			inverted.SetRewriteMethod(MultiTermQuery.CONSTANT_SCORE_FILTER_REWRITE);
 			TopDocs invertedDocs = searcher1.Search(inverted, 25);
 			TopDocs docValuesDocs = searcher2.Search(docValues, 25);
-			CheckHits.CheckEqual(inverted, invertedDocs.scoreDocs, docValuesDocs.scoreDocs);
+			CheckHits.CheckEqual(inverted, invertedDocs.ScoreDocs, docValuesDocs.ScoreDocs);
 		}
 	}
 }

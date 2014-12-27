@@ -13,7 +13,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	/// <summary>Tests DocValues integration into IndexWriter</summary>
 	public class TestDocValuesIndexing : LuceneTestCase
@@ -29,7 +29,7 @@ namespace Lucene.Net.Index
 			doc.Add(new NumericDocValuesField("dv", 1));
 			w.AddDocument(doc);
 			IndexReader r1 = w.GetReader();
-			w.Close();
+			w.Dispose();
 			Directory d2 = NewDirectory();
 			w = new RandomIndexWriter(Random(), d2);
 			doc = new Lucene.Net.Documents.Document();
@@ -37,24 +37,24 @@ namespace Lucene.Net.Index
 			doc.Add(new NumericDocValuesField("dv", 2));
 			w.AddDocument(doc);
 			IndexReader r2 = w.GetReader();
-			w.Close();
+			w.Dispose();
 			Directory d3 = NewDirectory();
 			w = new RandomIndexWriter(Random(), d3);
 			w.AddIndexes(SlowCompositeReaderWrapper.Wrap(r1), SlowCompositeReaderWrapper.Wrap
 				(r2));
-			r1.Close();
-			d1.Close();
-			r2.Close();
-			d2.Close();
+			r1.Dispose();
+			d1.Dispose();
+			r2.Dispose();
+			d2.Dispose();
 			w.ForceMerge(1);
 			DirectoryReader r3 = w.GetReader();
-			w.Close();
+			w.Dispose();
 			AtomicReader sr = GetOnlySegmentReader(r3);
-			AreEqual(2, sr.NumDocs());
+			AreEqual(2, sr.NumDocs);
 			NumericDocValues docValues = sr.GetNumericDocValues("dv");
 			IsNotNull(docValues);
-			r3.Close();
-			d3.Close();
+			r3.Dispose();
+			d3.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -83,11 +83,11 @@ namespace Lucene.Net.Index
 			w.AddDocument(doc);
 			w.ForceMerge(1);
 			DirectoryReader r = w.GetReader();
-			w.Close();
+			w.Dispose();
 			AreEqual(17, FieldCache.DEFAULT.GetInts(GetOnlySegmentReader
 				(r), "field", false).Get(0));
-			r.Close();
-			d.Close();
+			r.Dispose();
+			d.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -116,11 +116,11 @@ namespace Lucene.Net.Index
 			w.AddDocument(doc);
 			w.ForceMerge(1);
 			DirectoryReader r = w.GetReader();
-			w.Close();
+			w.Dispose();
 			AreEqual(17, FieldCache.DEFAULT.GetInts(GetOnlySegmentReader
 				(r), "field", false).Get(0));
-			r.Close();
-			d.Close();
+			r.Dispose();
+			d.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -151,9 +151,9 @@ namespace Lucene.Net.Index
 			DirectoryReader r = w.GetReader();
 			AreEqual(17, GetOnlySegmentReader(r).GetNumericDocValues("field"
 				).Get(0));
-			r.Close();
-			w.Close();
-			d.Close();
+			r.Dispose();
+			w.Dispose();
+			d.Dispose();
 		}
 
 		// LUCENE-3870
@@ -186,9 +186,9 @@ namespace Lucene.Net.Index
 			AreEqual(bytes.Length, bytes1.length);
 			bytes[0] = 1;
 			AreEqual(b, bytes1);
-			r.Close();
-			w.Close();
-			d.Close();
+			r.Dispose();
+			w.Dispose();
+			d.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -221,9 +221,9 @@ namespace Lucene.Net.Index
 				IsNull(d.GetField("dv"));
 				AreEqual(Sharpen.Extensions.ToString(i_1), d.Get("docId"));
 			}
-			slow.Close();
-			writer.Close();
-			dir.Close();
+			slow.Dispose();
+			writer.Dispose();
+			dir.Dispose();
 		}
 
 		// Same field in one document as different types:
@@ -245,8 +245,8 @@ namespace Lucene.Net.Index
 			{
 			}
 			// expected
-			w.Close();
-			dir.Close();
+			w.Dispose();
+			dir.Dispose();
 		}
 
 		// Two documents with same field as different types:
@@ -270,8 +270,8 @@ namespace Lucene.Net.Index
 			{
 			}
 			// expected
-			w.Close();
-			dir.Close();
+			w.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -296,8 +296,8 @@ namespace Lucene.Net.Index
 			{
 			}
 			// expected
-			iwriter.Close();
-			directory.Close();
+			iwriter.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -322,8 +322,8 @@ namespace Lucene.Net.Index
 			{
 			}
 			// expected
-			iwriter.Close();
-			directory.Close();
+			iwriter.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -348,8 +348,8 @@ namespace Lucene.Net.Index
 			{
 			}
 			// expected
-			iwriter.Close();
-			directory.Close();
+			iwriter.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -376,8 +376,8 @@ namespace Lucene.Net.Index
 			{
 			}
 			// expected
-			iwriter.Close();
-			directory.Close();
+			iwriter.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -405,8 +405,8 @@ namespace Lucene.Net.Index
 			{
 			}
 			// expected
-			iwriter.Close();
-			directory.Close();
+			iwriter.Dispose();
+			directory.Dispose();
 		}
 
 		// Two documents across segments
@@ -431,8 +431,8 @@ namespace Lucene.Net.Index
 			{
 			}
 			// expected
-			w.Close();
-			dir.Close();
+			w.Dispose();
+			dir.Dispose();
 		}
 
 		// Add inconsistent document after deleteAll
@@ -450,8 +450,8 @@ namespace Lucene.Net.Index
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(new SortedDocValuesField("foo", new BytesRef("hello")));
 			w.AddDocument(doc);
-			w.Close();
-			dir.Close();
+			w.Dispose();
+			dir.Dispose();
 		}
 
 		// Add inconsistent document after reopening IW w/ create
@@ -465,7 +465,7 @@ namespace Lucene.Net.Index
 				();
 			doc.Add(new NumericDocValuesField("foo", 0));
 			w.AddDocument(doc);
-			w.Close();
+			w.Dispose();
 			IndexWriterConfig iwc = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random()));
 			iwc.SetOpenMode(IndexWriterConfig.OpenMode.CREATE);
@@ -473,8 +473,8 @@ namespace Lucene.Net.Index
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(new SortedDocValuesField("foo", new BytesRef("hello")));
 			w.AddDocument(doc);
-			w.Close();
-			dir.Close();
+			w.Dispose();
+			dir.Dispose();
 		}
 
 		// Two documents with same field as different types, added
@@ -519,8 +519,8 @@ namespace Lucene.Net.Index
 				t.Join();
 			}
 			IsTrue(hitExc.Get());
-			w.Close();
-			dir.Close();
+			w.Dispose();
+			dir.Dispose();
 		}
 
 		private sealed class _Thread_457 : Sharpen.Thread
@@ -530,7 +530,7 @@ namespace Lucene.Net.Index
 			{
 				this.startingGun = startingGun;
 				this.w = w;
-				this.doc = doc;
+				this.Doc = doc;
 				this.hitExc = hitExc;
 			}
 
@@ -578,7 +578,7 @@ namespace Lucene.Net.Index
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(new SortedDocValuesField("foo", new BytesRef("hello")));
 			w2.AddDocument(doc);
-			w2.Close();
+			w2.Dispose();
 			try
 			{
 				w.AddIndexes(new Directory[] { dir2 });
@@ -596,10 +596,10 @@ namespace Lucene.Net.Index
 			{
 			}
 			// expected
-			r.Close();
-			dir2.Close();
-			w.Close();
-			dir.Close();
+			r.Dispose();
+			dir2.Dispose();
+			w.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -624,8 +624,8 @@ namespace Lucene.Net.Index
 			{
 			}
 			// expected
-			writer.Close();
-			dir.Close();
+			writer.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -639,7 +639,7 @@ namespace Lucene.Net.Index
 				();
 			doc.Add(new NumericDocValuesField("dv", 0L));
 			writer.AddDocument(doc);
-			writer.Close();
+			writer.Dispose();
 			writer = new IndexWriter(dir, conf.Clone());
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(new SortedDocValuesField("dv", new BytesRef("foo")));
@@ -652,8 +652,8 @@ namespace Lucene.Net.Index
 			{
 			}
 			// expected
-			writer.Close();
-			dir.Close();
+			writer.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -667,14 +667,14 @@ namespace Lucene.Net.Index
 				();
 			doc.Add(new NumericDocValuesField("dv", 0L));
 			writer.AddDocument(doc);
-			writer.Close();
+			writer.Dispose();
 			writer = new IndexWriter(dir, conf.Clone());
 			writer.DeleteAll();
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(new SortedDocValuesField("dv", new BytesRef("foo")));
 			writer.AddDocument(doc);
-			writer.Close();
-			dir.Close();
+			writer.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -692,8 +692,8 @@ namespace Lucene.Net.Index
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(new SortedDocValuesField("dv", new BytesRef("foo")));
 			writer.AddDocument(doc);
-			writer.Close();
-			dir.Close();
+			writer.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -712,8 +712,8 @@ namespace Lucene.Net.Index
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(new SortedDocValuesField("dv", new BytesRef("foo")));
 			writer.AddDocument(doc);
-			writer.Close();
-			dir.Close();
+			writer.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -727,14 +727,14 @@ namespace Lucene.Net.Index
 				();
 			doc.Add(new NumericDocValuesField("dv", 0L));
 			writer.AddDocument(doc);
-			writer.Close();
+			writer.Dispose();
 			conf.SetOpenMode(IndexWriterConfig.OpenMode.CREATE);
 			writer = new IndexWriter(dir, conf.Clone());
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(new SortedDocValuesField("dv", new BytesRef("foo")));
 			writer.AddDocument(doc);
-			writer.Close();
-			dir.Close();
+			writer.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -748,7 +748,7 @@ namespace Lucene.Net.Index
 				();
 			doc.Add(new NumericDocValuesField("dv", 0L));
 			writer.AddDocument(doc);
-			writer.Close();
+			writer.Dispose();
 			Directory dir2 = NewDirectory();
 			writer = new IndexWriter(dir2, conf.Clone());
 			doc = new Lucene.Net.Documents.Document();
@@ -763,9 +763,9 @@ namespace Lucene.Net.Index
 			{
 			}
 			// expected
-			writer.Close();
-			dir.Close();
-			dir2.Close();
+			writer.Dispose();
+			dir.Dispose();
+			dir2.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -779,7 +779,7 @@ namespace Lucene.Net.Index
 				();
 			doc.Add(new NumericDocValuesField("dv", 0L));
 			writer.AddDocument(doc);
-			writer.Close();
+			writer.Dispose();
 			Directory dir2 = NewDirectory();
 			writer = new IndexWriter(dir2, conf.Clone());
 			doc = new Lucene.Net.Documents.Document();
@@ -795,10 +795,10 @@ namespace Lucene.Net.Index
 			{
 			}
 			// expected
-			readers[0].Close();
-			writer.Close();
-			dir.Close();
-			dir2.Close();
+			readers[0].Dispose();
+			writer.Dispose();
+			dir.Dispose();
+			dir2.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -812,7 +812,7 @@ namespace Lucene.Net.Index
 				();
 			doc.Add(new NumericDocValuesField("dv", 0L));
 			writer.AddDocument(doc);
-			writer.Close();
+			writer.Dispose();
 			Directory dir2 = NewDirectory();
 			writer = new IndexWriter(dir2, conf.Clone());
 			writer.AddIndexes(dir);
@@ -827,9 +827,9 @@ namespace Lucene.Net.Index
 			{
 			}
 			// expected
-			writer.Close();
-			dir2.Close();
-			dir.Close();
+			writer.Dispose();
+			dir2.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -843,12 +843,12 @@ namespace Lucene.Net.Index
 				();
 			doc.Add(new NumericDocValuesField("dv", 0L));
 			writer.AddDocument(doc);
-			writer.Close();
+			writer.Dispose();
 			Directory dir2 = NewDirectory();
 			writer = new IndexWriter(dir2, conf.Clone());
 			IndexReader[] readers = new IndexReader[] { DirectoryReader.Open(dir) };
 			writer.AddIndexes(readers);
-			readers[0].Close();
+			readers[0].Dispose();
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(new SortedDocValuesField("dv", new BytesRef("foo")));
 			try
@@ -860,9 +860,9 @@ namespace Lucene.Net.Index
 			{
 			}
 			// expected
-			writer.Close();
-			dir2.Close();
-			dir.Close();
+			writer.Dispose();
+			dir2.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -881,14 +881,14 @@ namespace Lucene.Net.Index
 			doc.Add(new NumericDocValuesField("dv", 0L));
 			writer.AddDocument(doc);
 			DirectoryReader r = writer.GetReader();
-			writer.Close();
-			AtomicReader subR = ((AtomicReader)r.Leaves()[0].Reader());
-			AreEqual(2, subR.NumDocs());
+			writer.Dispose();
+			AtomicReader subR = ((AtomicReader)r.Leaves[0].Reader);
+			AreEqual(2, subR.NumDocs);
 			Bits bits = FieldCache.DEFAULT.GetDocsWithField(subR, "dv");
 			IsTrue(bits.Get(0));
 			IsTrue(bits.Get(1));
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -919,7 +919,7 @@ namespace Lucene.Net.Index
 			{
 				writer.Rollback();
 			}
-			dir.Close();
+			dir.Dispose();
 		}
 	}
 }

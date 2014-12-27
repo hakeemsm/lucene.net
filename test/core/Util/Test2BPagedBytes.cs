@@ -56,7 +56,7 @@ namespace Lucene.Net.Test.Util
 
                 netBytes += numBytes;
             }
-            dir.Close();
+            dir.Dispose();
         }
     }
 }

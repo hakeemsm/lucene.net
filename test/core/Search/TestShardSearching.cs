@@ -140,7 +140,7 @@ namespace Lucene.Net.Search
 								throw new ShardSearchingTestBase.SearcherExpiredException("nodeID=" + nodeID + " version="
 									 + subVersion);
 							}
-							subs[nodeID] = sub.GetIndexReader();
+							subs[nodeID] = sub.IndexReader;
 							docCount += subs[nodeID].MaxDoc;
 						}
 					}
@@ -377,24 +377,24 @@ namespace Lucene.Net.Search
 			{
 				System.Console.Out.WriteLine("  single searcher: " + hits.TotalHits + " TotalHits maxScore="
 					 + hits.GetMaxScore());
-				for (int i = 0; i < hits.scoreDocs.Length; i++)
+				for (int i = 0; i < hits.ScoreDocs.Length; i++)
 				{
-					ScoreDoc sd = hits.scoreDocs[i];
-					System.Console.Out.WriteLine("    doc=" + sd.doc + " score=" + sd.score);
+					ScoreDoc sd = hits.ScoreDocs[i];
+					System.Console.Out.WriteLine("    doc=" + sd.Doc + " score=" + sd.score);
 				}
 				System.Console.Out.WriteLine("  shard searcher: " + shardHits.TotalHits + " TotalHits maxScore="
 					 + shardHits.GetMaxScore());
-				for (int i_1 = 0; i_1 < shardHits.scoreDocs.Length; i_1++)
+				for (int i_1 = 0; i_1 < shardHits.ScoreDocs.Length; i_1++)
 				{
-					ScoreDoc sd = shardHits.scoreDocs[i_1];
-					System.Console.Out.WriteLine("    doc=" + sd.doc + " (rebased: " + (sd.doc + @base
+					ScoreDoc sd = shardHits.ScoreDocs[i_1];
+					System.Console.Out.WriteLine("    doc=" + sd.Doc + " (rebased: " + (sd.Doc + @base
 						[sd.shardIndex]) + ") score=" + sd.score + " shard=" + sd.shardIndex);
 				}
 			}
 			int numHitsPaged;
 			if (state != null && state.searchAfterLocal != null)
 			{
-				numHitsPaged = hits.scoreDocs.Length;
+				numHitsPaged = hits.ScoreDocs.Length;
 				if (state != null)
 				{
 					numHitsPaged += state.numHitsPaged;
@@ -402,7 +402,7 @@ namespace Lucene.Net.Search
 			}
 			else
 			{
-				numHitsPaged = hits.scoreDocs.Length;
+				numHitsPaged = hits.ScoreDocs.Length;
 			}
 			bool moreHits;
 			ScoreDoc bottomHit;
@@ -413,10 +413,10 @@ namespace Lucene.Net.Search
 				moreHits = true;
 				if (sort == null)
 				{
-					bottomHit = hits.scoreDocs[hits.scoreDocs.Length - 1];
-					ScoreDoc sd = shardHits.scoreDocs[shardHits.scoreDocs.Length - 1];
+					bottomHit = hits.ScoreDocs[hits.ScoreDocs.Length - 1];
+					ScoreDoc sd = shardHits.ScoreDocs[shardHits.ScoreDocs.Length - 1];
 					// Must copy because below we rebase:
-					bottomHitShards = new ScoreDoc(sd.doc, sd.score, sd.shardIndex);
+					bottomHitShards = new ScoreDoc(sd.Doc, sd.score, sd.shardIndex);
 					if (VERBOSE)
 					{
 						System.Console.Out.WriteLine("  save bottomHit=" + bottomHit);
@@ -436,10 +436,10 @@ namespace Lucene.Net.Search
 				moreHits = false;
 			}
 			// Must rebase so assertEquals passes:
-			for (int hitID = 0; hitID < shardHits.scoreDocs.Length; hitID++)
+			for (int hitID = 0; hitID < shardHits.ScoreDocs.Length; hitID++)
 			{
-				ScoreDoc sd = shardHits.scoreDocs[hitID];
-				sd.doc += @base[sd.shardIndex];
+				ScoreDoc sd = shardHits.ScoreDocs[hitID];
+				sd.Doc += @base[sd.shardIndex];
 			}
 			TestUtil.AssertEquals(hits, shardHits);
 			if (moreHits)

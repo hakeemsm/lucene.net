@@ -13,7 +13,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestFieldsReader : LuceneTestCase
 	{
@@ -37,10 +37,10 @@ namespace Lucene.Net.Index
 			dir = NewDirectory();
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random())).SetMergePolicy(NewLogMergePolicy());
-			conf.GetMergePolicy().SetNoCFSRatio(0.0);
+			conf.MergePolicy.SetNoCFSRatio(0.0);
 			IndexWriter writer = new IndexWriter(dir, conf);
 			writer.AddDocument(testDoc);
-			writer.Close();
+			writer.Dispose();
 			TestFieldsReader.FaultyIndexInput.doFail = false;
 		}
 
@@ -48,7 +48,7 @@ namespace Lucene.Net.Index
 		[NUnit.Framework.AfterClass]
 		public static void AfterClass()
 		{
-			dir.Close();
+			dir.Dispose();
 			dir = null;
 			fieldInfos = null;
 			testDoc = null;
@@ -87,7 +87,7 @@ namespace Lucene.Net.Index
 			IList<IIndexableField> fields = visitor.GetDocument().GetFields();
 			AreEqual(1, fields.Count);
 			AreEqual(DocHelper.TEXT_FIELD_3_KEY, fields[0].Name());
-			reader.Close();
+			reader.Dispose();
 		}
 
 		public class FaultyFSDirectory : BaseDirectory
@@ -145,7 +145,7 @@ namespace Lucene.Net.Index
 			/// <exception cref="System.IO.IOException"></exception>
 			public override void Close()
 			{
-				fsDir.Close();
+				fsDir.Dispose();
 			}
 		}
 
@@ -193,7 +193,7 @@ namespace Lucene.Net.Index
 			/// <exception cref="System.IO.IOException"></exception>
 			public override void Close()
 			{
-				delegate_.Close();
+				delegate_.Dispose();
 			}
 
 			public override DataInput Clone()
@@ -229,7 +229,7 @@ namespace Lucene.Net.Index
 					writer.AddDocument(testDoc);
 				}
 				writer.ForceMerge(1);
-				writer.Close();
+				writer.Dispose();
 				IndexReader reader = DirectoryReader.Open(dir);
 				TestFieldsReader.FaultyIndexInput.doFail = true;
 				bool exc = false;
@@ -255,8 +255,8 @@ namespace Lucene.Net.Index
 					}
 				}
 				IsTrue(exc);
-				reader.Close();
-				dir.Close();
+				reader.Dispose();
+				dir.Dispose();
 			}
 			finally
 			{

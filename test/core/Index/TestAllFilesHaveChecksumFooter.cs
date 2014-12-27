@@ -1,34 +1,29 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
-using Lucene.Net.Test.Analysis;
+using System;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
 using Lucene.Net.Codecs;
 using Lucene.Net.Codecs.Lucene46;
-using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
+using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
-using Sharpen;
+using NUnit.Framework;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	/// <summary>Test that a plain default puts CRC32 footers in all files.</summary>
-	/// <remarks>Test that a plain default puts CRC32 footers in all files.</remarks>
+	[TestFixture]
 	public class TestAllFilesHaveChecksumFooter : LuceneTestCase
 	{
-		/// <exception cref="System.Exception"></exception>
-		public virtual void Test()
+		[Test]
+		public virtual void TestFooters()
 		{
 			Directory dir = NewDirectory();
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random()));
 			conf.SetCodec(new Lucene46Codec());
 			RandomIndexWriter riw = new RandomIndexWriter(Random(), dir, conf);
-			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-				();
+			var doc = new Lucene.Net.Documents.Document();
 			// these fields should sometimes get term vectors, etc
 			Field idField = NewStringField("id", string.Empty, Field.Store.NO);
 			Field bodyField = NewTextField("body", string.Empty, Field.Store.NO);
@@ -38,8 +33,8 @@ namespace Lucene.Net.Index
 			doc.Add(dvField);
 			for (int i = 0; i < 100; i++)
 			{
-				idField.StringValue = Sharpen.Extensions.ToString(i));
-				bodyField.StringValue = TestUtil.RandomUnicodeString(Random()));
+				idField.StringValue = i.ToString();
+				bodyField.StringValue = TestUtil.RandomUnicodeString(Random());
 				riw.AddDocument(doc);
 				if (Random().Next(7) == 0)
 				{
@@ -47,12 +42,12 @@ namespace Lucene.Net.Index
 				}
 				if (Random().Next(20) == 0)
 				{
-					riw.DeleteDocuments(new Term("id", Sharpen.Extensions.ToString(i)));
+					riw.DeleteDocuments(new Term("id", i.ToString()));
 				}
 			}
 			riw.Close();
 			CheckHeaders(dir);
-			dir.Close();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -71,25 +66,25 @@ namespace Lucene.Net.Index
 						Random()), false);
 					CheckHeaders(cfsDir);
 					// recurse into cfs
-					cfsDir.Close();
+					cfsDir.Dispose();
 				}
-				IndexInput @in = null;
+				IndexInput indexInput = null;
 				bool success = false;
 				try
 				{
-					@in = dir.OpenInput(file, NewIOContext(Random()));
-					CodecUtil.ChecksumEntireFile(@in);
+					indexInput = dir.OpenInput(file, NewIOContext(Random()));
+					CodecUtil.ChecksumEntireFile(indexInput);
 					success = true;
 				}
 				finally
 				{
 					if (success)
 					{
-						IOUtils.Close(@in);
+						IOUtils.Close(indexInput);
 					}
 					else
 					{
-						IOUtils.CloseWhileHandlingException(@in);
+						IOUtils.CloseWhileHandlingException((IDisposable)indexInput);
 					}
 				}
 			}

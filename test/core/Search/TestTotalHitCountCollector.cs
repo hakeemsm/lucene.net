@@ -29,13 +29,13 @@ namespace Lucene.Net.Search
 				writer.AddDocument(doc);
 			}
 			IndexReader reader = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(reader);
 			TotalHitCountCollector c = new TotalHitCountCollector();
 			searcher.Search(new MatchAllDocsQuery(), null, c);
 			AreEqual(5, c.GetTotalHits());
-			reader.Close();
-			indexStore.Close();
+			reader.Dispose();
+			indexStore.Dispose();
 		}
 	}
 }

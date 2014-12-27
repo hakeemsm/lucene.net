@@ -119,7 +119,7 @@ namespace Lucene.Net.Search.Payloads
 				writer.AddDocument(doc);
 			}
 			reader = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			searcher = NewSearcher(reader);
 			searcher.SetSimilarity(similarity);
 		}
@@ -129,9 +129,9 @@ namespace Lucene.Net.Search.Payloads
 		public static void AfterClass()
 		{
 			searcher = null;
-			reader.Close();
+			reader.Dispose();
 			reader = null;
-			directory.Close();
+			directory.Dispose();
 			directory = null;
 		}
 
@@ -147,9 +147,9 @@ namespace Lucene.Net.Search.Payloads
 			hits = searcher.Search(query, null, 100);
 			IsTrue("hits is null and it shouldn't be", hits != null);
 			IsTrue("should be 10 hits", hits.TotalHits == 10);
-			for (int j = 0; j < hits.scoreDocs.Length; j++)
+			for (int j = 0; j < hits.ScoreDocs.Length; j++)
 			{
-				ScoreDoc doc = hits.scoreDocs[j];
+				ScoreDoc doc = hits.ScoreDocs[j];
 				IsTrue(doc.score + " does not equal: " + 3, doc.score == 3
 					);
 			}
@@ -166,11 +166,11 @@ namespace Lucene.Net.Search.Payloads
 				hits = searcher.Search(query, null, 100);
 				IsTrue("hits is null and it shouldn't be", hits != null);
 				AreEqual("should be 100 hits", 100, hits.TotalHits);
-				for (int j_1 = 0; j_1 < hits.scoreDocs.Length; j_1++)
+				for (int j_1 = 0; j_1 < hits.ScoreDocs.Length; j_1++)
 				{
-					ScoreDoc doc = hits.scoreDocs[j_1];
+					ScoreDoc doc = hits.ScoreDocs[j_1];
 					//        System.out.println("Doc: " + doc.toString());
-					//        System.out.println("Explain: " + searcher.explain(query, doc.doc));
+					//        System.out.println("Explain: " + searcher.explain(query, doc.Doc));
 					IsTrue(doc.score + " does not equal: " + 3, doc.score == 3
 						);
 				}
@@ -206,15 +206,15 @@ namespace Lucene.Net.Search.Payloads
 			hits = searcher.Search(query, null, 100);
 			IsTrue("hits is null and it shouldn't be", hits != null);
 			IsTrue("should be 10 hits", hits.TotalHits == 10);
-			for (int j = 0; j < hits.scoreDocs.Length; j++)
+			for (int j = 0; j < hits.ScoreDocs.Length; j++)
 			{
-				ScoreDoc doc = hits.scoreDocs[j];
+				ScoreDoc doc = hits.ScoreDocs[j];
 				IsTrue(doc.score + " does not equal: " + 3, doc.score == 3
 					);
-				Explanation explain = searcher.Explain(query, hits.scoreDocs[j].doc);
+				Explanation explain = searcher.Explain(query, hits.ScoreDocs[j].Doc);
 				string exp = explain.ToString();
 				IsTrue(exp, exp.IndexOf("AveragePayloadFunction") > -1);
-				IsTrue(hits.scoreDocs[j].score + " explain value does not equal: "
+				IsTrue(hits.ScoreDocs[j].score + " explain value does not equal: "
 					 + 3, explain.GetValue() == 3f);
 			}
 		}
@@ -230,15 +230,15 @@ namespace Lucene.Net.Search.Payloads
 			hits = searcher.Search(query, null, 100);
 			IsTrue("hits is null and it shouldn't be", hits != null);
 			IsTrue("should be 10 hits", hits.TotalHits == 10);
-			for (int j = 0; j < hits.scoreDocs.Length; j++)
+			for (int j = 0; j < hits.ScoreDocs.Length; j++)
 			{
-				ScoreDoc doc = hits.scoreDocs[j];
+				ScoreDoc doc = hits.ScoreDocs[j];
 				IsTrue(doc.score + " does not equal: " + 4, doc.score == 4
 					);
-				Explanation explain = searcher.Explain(query, hits.scoreDocs[j].doc);
+				Explanation explain = searcher.Explain(query, hits.ScoreDocs[j].Doc);
 				string exp = explain.ToString();
 				IsTrue(exp, exp.IndexOf("MaxPayloadFunction") > -1);
-				IsTrue(hits.scoreDocs[j].score + " explain value does not equal: "
+				IsTrue(hits.ScoreDocs[j].score + " explain value does not equal: "
 					 + 4, explain.GetValue() == 4f);
 			}
 		}
@@ -254,15 +254,15 @@ namespace Lucene.Net.Search.Payloads
 			hits = searcher.Search(query, null, 100);
 			IsTrue("hits is null and it shouldn't be", hits != null);
 			IsTrue("should be 10 hits", hits.TotalHits == 10);
-			for (int j = 0; j < hits.scoreDocs.Length; j++)
+			for (int j = 0; j < hits.ScoreDocs.Length; j++)
 			{
-				ScoreDoc doc = hits.scoreDocs[j];
+				ScoreDoc doc = hits.ScoreDocs[j];
 				IsTrue(doc.score + " does not equal: " + 2, doc.score == 2
 					);
-				Explanation explain = searcher.Explain(query, hits.scoreDocs[j].doc);
+				Explanation explain = searcher.Explain(query, hits.ScoreDocs[j].Doc);
 				string exp = explain.ToString();
 				IsTrue(exp, exp.IndexOf("MinPayloadFunction") > -1);
-				IsTrue(hits.scoreDocs[j].score + " explain value does not equal: "
+				IsTrue(hits.ScoreDocs[j].score + " explain value does not equal: "
 					 + 2, explain.GetValue() == 2f);
 			}
 		}
@@ -300,9 +300,9 @@ namespace Lucene.Net.Search.Payloads
 				());
 			hits = searcher.Search(query, null, 100);
 			IsTrue("hits is null and it shouldn't be", hits != null);
-			ScoreDoc doc = hits.scoreDocs[0];
+			ScoreDoc doc = hits.ScoreDocs[0];
 			//    System.out.println("Doc: " + doc.toString());
-			//    System.out.println("Explain: " + searcher.explain(query, doc.doc));
+			//    System.out.println("Explain: " + searcher.explain(query, doc.Doc));
 			IsTrue("there should only be one hit", hits.TotalHits == 1
 				);
 			// should have score = 3 because adjacent terms have payloads of 2,4
@@ -330,12 +330,12 @@ namespace Lucene.Net.Search.Payloads
 			hits = searcher.Search(query, null, 100);
 			IsTrue("hits is null and it shouldn't be", hits != null);
 			// should be only 1 hit - doc 999
-			IsTrue("should only be one hit", hits.scoreDocs.Length == 
+			IsTrue("should only be one hit", hits.ScoreDocs.Length == 
 				1);
 			// the score should be 3 - the average of all the underlying payloads
-			ScoreDoc doc = hits.scoreDocs[0];
+			ScoreDoc doc = hits.ScoreDocs[0];
 			//    System.out.println("Doc: " + doc.toString());
-			//    System.out.println("Explain: " + searcher.explain(query, doc.doc));
+			//    System.out.println("Explain: " + searcher.explain(query, doc.Doc));
 			IsTrue(doc.score + " does not equal: " + 3, doc.score == 3
 				);
 		}

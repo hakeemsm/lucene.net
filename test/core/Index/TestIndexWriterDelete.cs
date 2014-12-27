@@ -17,7 +17,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestIndexWriterDelete : LuceneTestCase
 	{
@@ -35,7 +35,7 @@ namespace Lucene.Net.Index
 				(TEST_VERSION_CURRENT, new MockAnalyzer(Random(), MockTokenizer.WHITESPACE, false
 				)).SetMaxBufferedDeleteTerms(1)));
 			FieldType custom1 = new FieldType();
-			custom1.SetStored(true);
+			custom1.Stored = (true);
 			for (int i = 0; i < keywords.Length; i++)
 			{
 				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
@@ -63,8 +63,8 @@ namespace Lucene.Net.Index
 			}
 			hitCount = GetHitCount(dir, term);
 			AreEqual(0, hitCount);
-			modifier.Close();
-			dir.Close();
+			modifier.Dispose();
+			dir.Dispose();
 		}
 
 		// test when delete terms only apply to disk segments
@@ -83,18 +83,18 @@ namespace Lucene.Net.Index
 			}
 			modifier.Commit();
 			AreEqual(0, modifier.GetNumBufferedDocuments());
-			IsTrue(0 < modifier.GetSegmentCount());
+			IsTrue(0 < modifier.SegmentCount);
 			modifier.Commit();
 			IndexReader reader = DirectoryReader.Open(dir);
-			AreEqual(7, reader.NumDocs());
-			reader.Close();
+			AreEqual(7, reader.NumDocs);
+			reader.Dispose();
 			modifier.DeleteDocuments(new Term("value", value.ToString()));
 			modifier.Commit();
 			reader = DirectoryReader.Open(dir);
-			AreEqual(0, reader.NumDocs());
-			reader.Close();
-			modifier.Close();
-			dir.Close();
+			AreEqual(0, reader.NumDocs);
+			reader.Dispose();
+			modifier.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -108,9 +108,9 @@ namespace Lucene.Net.Index
 			writer.DeleteDocuments(new Term("foobar", "1"));
 			writer.DeleteDocuments(new Term("foobar", "1"));
 			writer.DeleteDocuments(new Term("foobar", "1"));
-			AreEqual(3, writer.GetFlushDeletesCount());
-			writer.Close();
-			dir.Close();
+			AreEqual(3, writer.FlushDeletesCount);
+			writer.Dispose();
+			dir.Dispose();
 		}
 
 		// test when delete terms only apply to ram segments
@@ -150,15 +150,15 @@ namespace Lucene.Net.Index
 					modifier.DeleteDocuments(new TermQuery(new Term("value", value.ToString())));
 				}
 				AddDoc(modifier, ++id, value);
-				AreEqual(0, modifier.GetSegmentCount());
+				AreEqual(0, modifier.SegmentCount);
 				modifier.Commit();
 				IndexReader reader = DirectoryReader.Open(dir);
-				AreEqual(1, reader.NumDocs());
+				AreEqual(1, reader.NumDocs);
 				int hitCount = GetHitCount(dir, new Term("id", id.ToString()));
 				AreEqual(1, hitCount);
-				reader.Close();
-				modifier.Close();
-				dir.Close();
+				reader.Dispose();
+				modifier.Dispose();
+				dir.Dispose();
 			}
 		}
 
@@ -189,10 +189,10 @@ namespace Lucene.Net.Index
 			modifier.DeleteDocuments(new Term("value", value.ToString()));
 			modifier.Commit();
 			IndexReader reader = DirectoryReader.Open(dir);
-			AreEqual(5, reader.NumDocs());
-			modifier.Close();
-			reader.Close();
-			dir.Close();
+			AreEqual(5, reader.NumDocs);
+			modifier.Dispose();
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		// test that batched delete terms are flushed together
@@ -211,15 +211,15 @@ namespace Lucene.Net.Index
 			}
 			modifier.Commit();
 			IndexReader reader = DirectoryReader.Open(dir);
-			AreEqual(7, reader.NumDocs());
-			reader.Close();
+			AreEqual(7, reader.NumDocs);
+			reader.Dispose();
 			id = 0;
 			modifier.DeleteDocuments(new Term("id", (++id).ToString()));
 			modifier.DeleteDocuments(new Term("id", (++id).ToString()));
 			modifier.Commit();
 			reader = DirectoryReader.Open(dir);
-			AreEqual(5, reader.NumDocs());
-			reader.Close();
+			AreEqual(5, reader.NumDocs);
+			reader.Dispose();
 			Term[] terms = new Term[3];
 			for (int i_1 = 0; i_1 < terms.Length; i_1++)
 			{
@@ -228,10 +228,10 @@ namespace Lucene.Net.Index
 			modifier.DeleteDocuments(terms);
 			modifier.Commit();
 			reader = DirectoryReader.Open(dir);
-			AreEqual(2, reader.NumDocs());
-			reader.Close();
-			modifier.Close();
-			dir.Close();
+			AreEqual(2, reader.NumDocs);
+			reader.Dispose();
+			modifier.Dispose();
+			dir.Dispose();
 		}
 
 		// test deleteAll()
@@ -250,16 +250,16 @@ namespace Lucene.Net.Index
 			}
 			modifier.Commit();
 			IndexReader reader = DirectoryReader.Open(dir);
-			AreEqual(7, reader.NumDocs());
-			reader.Close();
+			AreEqual(7, reader.NumDocs);
+			reader.Dispose();
 			// Add 1 doc (so we will have something buffered)
 			AddDoc(modifier, 99, value);
 			// Delete all
 			modifier.DeleteAll();
 			// Delete all shouldn't be on disk yet
 			reader = DirectoryReader.Open(dir);
-			AreEqual(7, reader.NumDocs());
-			reader.Close();
+			AreEqual(7, reader.NumDocs);
+			reader.Dispose();
 			// Add a doc and update a doc (after the deleteAll, before the commit)
 			AddDoc(modifier, 101, value);
 			UpdateDoc(modifier, 102, value);
@@ -267,10 +267,10 @@ namespace Lucene.Net.Index
 			modifier.Commit();
 			// Validate there are no docs left
 			reader = DirectoryReader.Open(dir);
-			AreEqual(2, reader.NumDocs());
-			reader.Close();
-			modifier.Close();
-			dir.Close();
+			AreEqual(2, reader.NumDocs);
+			reader.Dispose();
+			modifier.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -303,13 +303,13 @@ namespace Lucene.Net.Index
 			{
 				thread.Join();
 			}
-			modifier.Close();
+			modifier.Dispose();
 			DirectoryReader reader = DirectoryReader.Open(dir);
 			AreEqual(reader.MaxDoc, 0);
-			AreEqual(reader.NumDocs(), 0);
+			AreEqual(reader.NumDocs, 0);
 			AreEqual(reader.NumDeletedDocs(), 0);
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		private sealed class _Thread_322 : Sharpen.Thread
@@ -388,18 +388,18 @@ namespace Lucene.Net.Index
 			modifier.Commit();
 			AddDoc(modifier, ++id, value);
 			IndexReader reader = DirectoryReader.Open(dir);
-			AreEqual(7, reader.NumDocs());
-			reader.Close();
+			AreEqual(7, reader.NumDocs);
+			reader.Dispose();
 			// Delete all
 			modifier.DeleteAll();
 			// Roll it back
 			modifier.Rollback();
-			modifier.Close();
+			modifier.Dispose();
 			// Validate that the docs are still there
 			reader = DirectoryReader.Open(dir);
-			AreEqual(7, reader.NumDocs());
-			reader.Close();
-			dir.Close();
+			AreEqual(7, reader.NumDocs);
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		// test deleteAll() w/ near real-time reader
@@ -418,23 +418,23 @@ namespace Lucene.Net.Index
 			}
 			modifier.Commit();
 			IndexReader reader = modifier.GetReader();
-			AreEqual(7, reader.NumDocs());
-			reader.Close();
+			AreEqual(7, reader.NumDocs);
+			reader.Dispose();
 			AddDoc(modifier, ++id, value);
 			AddDoc(modifier, ++id, value);
 			// Delete all
 			modifier.DeleteAll();
 			reader = modifier.GetReader();
-			AreEqual(0, reader.NumDocs());
-			reader.Close();
+			AreEqual(0, reader.NumDocs);
+			reader.Dispose();
 			// Roll it back
 			modifier.Rollback();
-			modifier.Close();
+			modifier.Dispose();
 			// Validate that the docs are still there
 			reader = DirectoryReader.Open(dir);
-			AreEqual(7, reader.NumDocs());
-			reader.Close();
-			dir.Close();
+			AreEqual(7, reader.NumDocs);
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -473,7 +473,7 @@ namespace Lucene.Net.Index
 			IndexReader reader = DirectoryReader.Open(dir);
 			IndexSearcher searcher = NewSearcher(reader);
 			int hitCount = searcher.Search(new TermQuery(term), null, 1000).TotalHits;
-			reader.Close();
+			reader.Dispose();
 			return hitCount;
 		}
 
@@ -512,7 +512,7 @@ namespace Lucene.Net.Index
 			for (int i = 0; i < 157; i++)
 			{
 				Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
-				d.Add(NewStringField("id", Sharpen.Extensions.ToString(i), Field.Store.YES));
+				d.Add(NewStringField("id", i.ToString(), Field.Store.YES));
 				d.Add(NewTextField("content", "aaa " + i, Field.Store.NO));
 				if (DefaultCodecSupportsDocValues())
 				{
@@ -520,7 +520,7 @@ namespace Lucene.Net.Index
 				}
 				writer.AddDocument(d);
 			}
-			writer.Close();
+			writer.Dispose();
 			long diskUsage = startDir.SizeInBytes();
 			long diskFree = diskUsage + 10;
 			IOException err = null;
@@ -540,7 +540,7 @@ namespace Lucene.Net.Index
 					)NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(Random(), MockTokenizer
 					.WHITESPACE, false)).SetMaxBufferedDocs(1000)).SetMaxBufferedDeleteTerms(1000)).
 					SetMergeScheduler(new ConcurrentMergeScheduler()));
-				((ConcurrentMergeScheduler)modifier.GetConfig().GetMergeScheduler()).SetSuppressExceptions
+				((ConcurrentMergeScheduler)modifier.Config.GetMergeScheduler()).SetSuppressExceptions
 					();
 				// For each disk size, first try to commit against
 				// dir that will hit random IOExceptions & disk
@@ -619,7 +619,7 @@ namespace Lucene.Net.Index
 								docId += 12;
 							}
 						}
-						modifier.Close();
+						modifier.Dispose();
 						success = true;
 						if (0 == x)
 						{
@@ -685,7 +685,7 @@ namespace Lucene.Net.Index
 					ScoreDoc[] hits = null;
 					try
 					{
-						hits = searcher.Search(new TermQuery(searchTerm), null, 1000).scoreDocs;
+						hits = searcher.Search(new TermQuery(searchTerm), null, 1000).ScoreDocs;
 					}
 					catch (IOException e)
 					{
@@ -726,18 +726,18 @@ namespace Lucene.Net.Index
 								 + result2 + " instead of expected " + START_COUNT + " or " + END_COUNT);
 						}
 					}
-					newReader.Close();
+					newReader.Dispose();
 					if (result2 == END_COUNT)
 					{
 						break;
 					}
 				}
-				dir.Close();
-				modifier.Close();
+				dir.Dispose();
+				modifier.Dispose();
 				// Try again with 10 more bytes of free space:
 				diskFree += 10;
 			}
-			startDir.Close();
+			startDir.Dispose();
 		}
 
 		// This test tests that buffered deletes are cleared when
@@ -759,11 +759,11 @@ namespace Lucene.Net.Index
 				(TEST_VERSION_CURRENT, new MockAnalyzer(Random(), MockTokenizer.WHITESPACE, false
 				)).SetMaxBufferedDeleteTerms(2)).SetReaderPooling(false).SetMergePolicy(NewLogMergePolicy
 				()));
-			MergePolicy lmp = modifier.GetConfig().GetMergePolicy();
+			MergePolicy lmp = modifier.Config.MergePolicy;
 			lmp.SetNoCFSRatio(1.0);
 			dir.FailOn(failure.Reset());
 			FieldType custom1 = new FieldType();
-			custom1.SetStored(true);
+			custom1.Stored = (true);
 			for (int i = 0; i < keywords.Length; i++)
 			{
 				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
@@ -836,8 +836,8 @@ namespace Lucene.Net.Index
 			hitCount = GetHitCount(dir, term);
 			// Make sure the delete was successfully flushed:
 			AreEqual(0, hitCount);
-			modifier.Close();
-			dir.Close();
+			modifier.Dispose();
+			dir.Dispose();
 		}
 
 		private sealed class _Failure_722 : MockDirectoryWrapper.Failure
@@ -931,7 +931,7 @@ namespace Lucene.Net.Index
 			modifier.Commit();
 			dir.FailOn(failure.Reset());
 			FieldType custom1 = new FieldType();
-			custom1.SetStored(true);
+			custom1.Stored = (true);
 			for (int i = 0; i < keywords.Length; i++)
 			{
 				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
@@ -954,10 +954,10 @@ namespace Lucene.Net.Index
 					break;
 				}
 			}
-			modifier.Close();
+			modifier.Dispose();
 			TestIndexWriter.AssertNoUnreferencedFiles(dir, "docsWriter.abort() failed to delete unreferenced files"
 				);
-			dir.Close();
+			dir.Dispose();
 		}
 
 		private sealed class _Failure_884 : MockDirectoryWrapper.Failure
@@ -998,9 +998,9 @@ namespace Lucene.Net.Index
 			}
 			modifier.DeleteDocuments(new TermQuery(new Term("nada", "nada")));
 			modifier.Commit();
-			AreEqual(5, modifier.NumDocs());
-			modifier.Close();
-			dir.Close();
+			AreEqual(5, modifier.NumDocs);
+			modifier.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -1034,11 +1034,11 @@ namespace Lucene.Net.Index
 					w.DeleteDocuments(new Term("id", string.Empty + ids[upto++]));
 				}
 				IndexReader r = w.GetReader();
-				AreEqual(NUM_DOCS - upto, r.NumDocs());
-				r.Close();
+				AreEqual(NUM_DOCS - upto, r.NumDocs);
+				r.Dispose();
 			}
-			w.Close();
-			dir.Close();
+			w.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -1097,8 +1097,8 @@ namespace Lucene.Net.Index
 				IsTrue("flush happened too quickly during " + (doIndexing ? 
 					"indexing" : "deleting") + " count=" + count, count > 2500);
 			}
-			w.Close();
-			dir.Close();
+			w.Dispose();
+			dir.Dispose();
 		}
 
 		private sealed class _Analyzer_994 : Analyzer
@@ -1166,8 +1166,8 @@ namespace Lucene.Net.Index
 					Fail("delete's were not applied");
 				}
 			}
-			w.Close();
-			dir.Close();
+			w.Dispose();
+			dir.Dispose();
 		}
 
 		// LUCENE-3340: make sure deletes that we don't apply
@@ -1217,8 +1217,8 @@ namespace Lucene.Net.Index
 						);
 				}
 			}
-			w.Close();
-			dir.Close();
+			w.Dispose();
+			dir.Dispose();
 		}
 
 		// Make sure buffered (pushed) deletes don't use up so
@@ -1268,8 +1268,8 @@ namespace Lucene.Net.Index
 			}
 			closing.Set(true);
 			IsTrue(sawAfterFlush.Get());
-			w.Close();
-			dir.Close();
+			w.Dispose();
+			dir.Dispose();
 		}
 
 		private sealed class _IndexWriter_1129 : IndexWriter
@@ -1315,11 +1315,11 @@ namespace Lucene.Net.Index
 			doc.Add(NewField("field", "1", StringField.TYPE_NOT_STORED));
 			w.AddDocument(doc);
 			w.Commit();
-			AreEqual(1, w.GetSegmentCount());
+			AreEqual(1, w.SegmentCount);
 			w.DeleteDocuments(new Term("field", "0"));
 			w.Commit();
-			AreEqual(1, w.GetSegmentCount());
-			w.Close();
+			AreEqual(1, w.SegmentCount);
+			w.Dispose();
 			ByteArrayOutputStream bos = new ByteArrayOutputStream(1024);
 			CheckIndex checker = new CheckIndex(dir);
 			checker.SetInfoStream(new TextWriter(bos, false, IOUtils.UTF_8), false);
@@ -1330,14 +1330,14 @@ namespace Lucene.Net.Index
 			IsTrue(s.Contains("has deletions"));
 			w = new IndexWriter(dir, iwc.Clone());
 			w.ForceMerge(1);
-			w.Close();
+			w.Dispose();
 			bos = new ByteArrayOutputStream(1024);
 			checker.SetInfoStream(new TextWriter(bos, false, IOUtils.UTF_8), false);
 			indexStatus = checker.CheckIndex(null);
 			IsTrue(indexStatus.clean);
 			s = bos.ToString(IOUtils.UTF_8);
 			IsFalse(s.Contains("has deletions"));
-			dir.Close();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -1352,21 +1352,21 @@ namespace Lucene.Net.Index
 			w.AddDocument(doc);
 			w.AddDocument(doc);
 			w.AddDocument(doc);
-			w.Close();
+			w.Dispose();
 			iwc = new IndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(Random()));
 			iwc.SetOpenMode(IndexWriterConfig.OpenMode.APPEND);
 			w = new IndexWriter(d, iwc);
 			IndexReader r = DirectoryReader.Open(w, false);
 			IsTrue(w.TryDeleteDocument(r, 1));
-			IsTrue(w.TryDeleteDocument(((AtomicReader)r.Leaves()[0].Reader
+			IsTrue(w.TryDeleteDocument(((AtomicReader)r.Leaves[0].Reader
 				()), 0));
-			r.Close();
-			w.Close();
+			r.Dispose();
+			w.Dispose();
 			r = DirectoryReader.Open(d);
 			AreEqual(2, r.NumDeletedDocs());
 			IsNotNull(MultiFields.GetLiveDocs(r));
-			r.Close();
-			d.Close();
+			r.Dispose();
+			d.Dispose();
 		}
 	}
 }

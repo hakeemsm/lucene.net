@@ -13,7 +13,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestFlex : LuceneTestCase
 	{
@@ -49,10 +49,10 @@ namespace Lucene.Net.Index
 				TermsEnum terms = MultiFields.GetTerms(r, "field3").Iterator(null);
 				AreEqual(TermsEnum.SeekStatus.END, terms.SeekCeil(new BytesRef
 					("abc")));
-				r.Close();
+				r.Dispose();
 			}
-			w.Close();
-			d.Close();
+			w.Dispose();
+			d.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -78,9 +78,9 @@ namespace Lucene.Net.Index
 			{
 			}
 			// ok -- codec is not required to support this op
-			r.Close();
-			w.Close();
-			d.Close();
+			r.Dispose();
+			w.Dispose();
+			d.Dispose();
 		}
 	}
 }

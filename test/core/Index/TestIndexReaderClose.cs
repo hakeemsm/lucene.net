@@ -12,7 +12,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestIndexReaderClose : LuceneTestCase
 	{
@@ -26,7 +26,7 @@ namespace Lucene.Net.Index
 				IndexWriter writer = new IndexWriter(dir, NewIndexWriterConfig(Random(), TEST_VERSION_CURRENT
 					, new MockAnalyzer(Random())));
 				writer.Commit();
-				writer.Close();
+				writer.Dispose();
 				DirectoryReader open = DirectoryReader.Open(dir);
 				bool throwOnClose = !Rarely();
 				AtomicReader wrap = SlowCompositeReaderWrapper.Wrap(open);
@@ -55,7 +55,7 @@ namespace Lucene.Net.Index
 				}
 				try
 				{
-					reader.Close();
+					reader.Dispose();
 					Fail("expected Exception");
 				}
 				catch (InvalidOperationException ex)
@@ -79,12 +79,12 @@ namespace Lucene.Net.Index
 				}
 				if (Random().NextBoolean())
 				{
-					reader.Close();
+					reader.Dispose();
 				}
 				// call it again
 				AreEqual(0, count.Get());
-				wrap.Close();
-				dir.Close();
+				wrap.Dispose();
+				dir.Dispose();
 			}
 		}
 

@@ -12,7 +12,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestPerSegmentDeletes : LuceneTestCase
 	{
@@ -62,13 +62,13 @@ namespace Lucene.Net.Index
 			// so there should not be anymore
 			IndexReader r1 = writer.GetReader();
 			IsFalse(writer.bufferedUpdatesStream.Any());
-			r1.Close();
+			r1.Dispose();
 			// delete id:2 from the first segment
 			// merge segments 0 and 1
 			// which should apply the delete id:2
 			writer.DeleteDocuments(new Term("id", "2"));
 			writer.Flush(false, false);
-			fsmp = (TestPerSegmentDeletes.RangeMergePolicy)writer.GetConfig().GetMergePolicy(
+			fsmp = (TestPerSegmentDeletes.RangeMergePolicy)writer.Config.GetMergePolicy(
 				);
 			fsmp.doMerge = true;
 			fsmp.start = 0;
@@ -80,11 +80,11 @@ namespace Lucene.Net.Index
 			IndexReader r2 = writer.GetReader();
 			int[] id2docs = ToDocsArray(new Term("id", "2"), null, r2);
 			IsTrue(id2docs == null);
-			r2.Close();
+			r2.Dispose();
 			// System.out.println("segdels2:"+writer.docWriter.segmentDeletes.toString());
 			//System.out.println("close");
-			writer.Close();
-			dir.Close();
+			writer.Dispose();
+			dir.Dispose();
 		}
 
 		/// <summary>

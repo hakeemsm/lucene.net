@@ -12,7 +12,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	/// <summary>Test adding to the info stream when there's an exception thrown during field analysis.
 	/// 	</summary>
@@ -91,8 +91,8 @@ namespace Lucene.Net.Index
 					.UTF_8);
 				IsTrue(infoStream.Contains("distinctiveFieldName"));
 			}
-			writer.Close();
-			dir.Close();
+			writer.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -124,8 +124,8 @@ namespace Lucene.Net.Index
 			string infoStream = Sharpen.Runtime.GetStringForBytes(infoBytes.ToByteArray(), IOUtils
 				.UTF_8);
 			IsFalse(infoStream.Contains("boringFieldName"));
-			writer.Close();
-			dir.Close();
+			writer.Dispose();
+			dir.Dispose();
 		}
 	}
 }

@@ -16,7 +16,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestIndexWriterCommit : LuceneTestCase
 	{
@@ -30,13 +30,13 @@ namespace Lucene.Net.Index
 			{
 				TestIndexWriter.AddDoc(writer);
 			}
-			writer.Close();
+			writer.Dispose();
 			Term searchTerm = new Term("content", "aaa");
 			DirectoryReader reader = DirectoryReader.Open(dir);
 			IndexSearcher searcher = NewSearcher(reader);
-			ScoreDoc[] hits = searcher.Search(new TermQuery(searchTerm), null, 1000).scoreDocs;
+			ScoreDoc[] hits = searcher.Search(new TermQuery(searchTerm), null, 1000).ScoreDocs;
 			AreEqual("first number of hits", 14, hits.Length);
-			reader.Close();
+			reader.Dispose();
 			reader = DirectoryReader.Open(dir);
 			writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random())));
@@ -48,25 +48,25 @@ namespace Lucene.Net.Index
 				}
 				IndexReader r = DirectoryReader.Open(dir);
 				searcher = NewSearcher(r);
-				hits = searcher.Search(new TermQuery(searchTerm), null, 1000).scoreDocs;
+				hits = searcher.Search(new TermQuery(searchTerm), null, 1000).ScoreDocs;
 				AreEqual("reader incorrectly sees changes from writer", 14
 					, hits.Length);
-				r.Close();
+				r.Dispose();
 				IsTrue("reader should have still been current", reader.IsCurrent
 					());
 			}
 			// Now, close the writer:
-			writer.Close();
+			writer.Dispose();
 			IsFalse("reader should not be current now", reader.IsCurrent
 				());
 			IndexReader r_1 = DirectoryReader.Open(dir);
 			searcher = NewSearcher(r_1);
-			hits = searcher.Search(new TermQuery(searchTerm), null, 1000).scoreDocs;
+			hits = searcher.Search(new TermQuery(searchTerm), null, 1000).ScoreDocs;
 			AreEqual("reader did not see changes after writer was closed"
 				, 47, hits.Length);
-			r_1.Close();
-			reader.Close();
-			dir.Close();
+			r_1.Dispose();
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -79,13 +79,13 @@ namespace Lucene.Net.Index
 			{
 				TestIndexWriter.AddDoc(writer);
 			}
-			writer.Close();
+			writer.Dispose();
 			Term searchTerm = new Term("content", "aaa");
 			IndexReader reader = DirectoryReader.Open(dir);
 			IndexSearcher searcher = NewSearcher(reader);
-			ScoreDoc[] hits = searcher.Search(new TermQuery(searchTerm), null, 1000).scoreDocs;
+			ScoreDoc[] hits = searcher.Search(new TermQuery(searchTerm), null, 1000).ScoreDocs;
 			AreEqual("first number of hits", 14, hits.Length);
-			reader.Close();
+			reader.Dispose();
 			writer = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig(TEST_VERSION_CURRENT
 				, new MockAnalyzer(Random())).SetOpenMode(IndexWriterConfig.OpenMode.APPEND).SetMaxBufferedDocs
 				(10)));
@@ -97,20 +97,20 @@ namespace Lucene.Net.Index
 			writer.DeleteDocuments(searchTerm);
 			reader = DirectoryReader.Open(dir);
 			searcher = NewSearcher(reader);
-			hits = searcher.Search(new TermQuery(searchTerm), null, 1000).scoreDocs;
+			hits = searcher.Search(new TermQuery(searchTerm), null, 1000).ScoreDocs;
 			AreEqual("reader incorrectly sees changes from writer", 14
 				, hits.Length);
-			reader.Close();
+			reader.Dispose();
 			// Now, close the writer:
 			writer.Rollback();
 			TestIndexWriter.AssertNoUnreferencedFiles(dir, "unreferenced files remain after rollback()"
 				);
 			reader = DirectoryReader.Open(dir);
 			searcher = NewSearcher(reader);
-			hits = searcher.Search(new TermQuery(searchTerm), null, 1000).scoreDocs;
+			hits = searcher.Search(new TermQuery(searchTerm), null, 1000).ScoreDocs;
 			AreEqual("saw changes after writer.abort", 14, hits.Length
 				);
-			reader.Close();
+			reader.Dispose();
 			// Now make sure we can re-open the index, add docs,
 			// and all is good:
 			writer = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig(TEST_VERSION_CURRENT
@@ -130,19 +130,19 @@ namespace Lucene.Net.Index
 				}
 				IndexReader r = DirectoryReader.Open(dir);
 				searcher = NewSearcher(r);
-				hits = searcher.Search(new TermQuery(searchTerm), null, 1000).scoreDocs;
+				hits = searcher.Search(new TermQuery(searchTerm), null, 1000).ScoreDocs;
 				AreEqual("reader incorrectly sees changes from writer", 14
 					, hits.Length);
-				r.Close();
+				r.Dispose();
 			}
-			writer.Close();
+			writer.Dispose();
 			IndexReader r_1 = DirectoryReader.Open(dir);
 			searcher = NewSearcher(r_1);
-			hits = searcher.Search(new TermQuery(searchTerm), null, 1000).scoreDocs;
+			hits = searcher.Search(new TermQuery(searchTerm), null, 1000).ScoreDocs;
 			AreEqual("didn't see changes after close", 218, hits.Length
 				);
-			r_1.Close();
-			dir.Close();
+			r_1.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -177,7 +177,7 @@ namespace Lucene.Net.Index
 			{
 				TestIndexWriter.AddDocWithIndex(writer, j);
 			}
-			writer.Close();
+			writer.Dispose();
 			dir.ResetMaxUsedSizeInBytes();
 			dir.SetTrackDiskUsage(true);
 			long startDiskUsage = dir.GetMaxUsedSizeInBytes();
@@ -192,8 +192,8 @@ namespace Lucene.Net.Index
 			long midDiskUsage = dir.GetMaxUsedSizeInBytes();
 			dir.ResetMaxUsedSizeInBytes();
 			writer.ForceMerge(1);
-			writer.Close();
-			DirectoryReader.Open(dir).Close();
+			writer.Dispose();
+			DirectoryReader.Open(dir).Dispose();
 			long endDiskUsage = dir.GetMaxUsedSizeInBytes();
 			// Ending index is 50X as large as starting index; due
 			// to 3X disk usage normally we allow 150X max
@@ -207,7 +207,7 @@ namespace Lucene.Net.Index
 			IsTrue("writer used too much space after close: endDiskUsage="
 				 + endDiskUsage + " startDiskUsage=" + startDiskUsage + " max=" + (startDiskUsage
 				 * 150), endDiskUsage < 150 * startDiskUsage);
-			dir.Close();
+			dir.Dispose();
 		}
 
 		private sealed class _Analyzer_188 : Analyzer
@@ -260,7 +260,7 @@ namespace Lucene.Net.Index
 			{
 				TestIndexWriter.AddDocWithIndex(writer, j);
 			}
-			writer.Close();
+			writer.Dispose();
 			writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random())).SetOpenMode(IndexWriterConfig.OpenMode.APPEND));
 			writer.ForceMerge(1);
@@ -270,7 +270,7 @@ namespace Lucene.Net.Index
 			// point:
 			IsTrue("Reader incorrectly sees one segment", reader.Leaves
 				().Count > 1);
-			reader.Close();
+			reader.Dispose();
 			// Abort the writer:
 			writer.Rollback();
 			TestIndexWriter.AssertNoUnreferencedFiles(dir, "aborted writer after forceMerge");
@@ -279,7 +279,7 @@ namespace Lucene.Net.Index
 			// Reader should still see index as multi-segment
 			IsTrue("Reader incorrectly sees one segment", reader.Leaves
 				().Count > 1);
-			reader.Close();
+			reader.Dispose();
 			if (VERBOSE)
 			{
 				System.Console.Out.WriteLine("TEST: do real full merge");
@@ -287,7 +287,7 @@ namespace Lucene.Net.Index
 			writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random())).SetOpenMode(IndexWriterConfig.OpenMode.APPEND));
 			writer.ForceMerge(1);
-			writer.Close();
+			writer.Dispose();
 			if (VERBOSE)
 			{
 				System.Console.Out.WriteLine("TEST: writer closed");
@@ -297,9 +297,9 @@ namespace Lucene.Net.Index
 			reader = DirectoryReader.Open(dir);
 			// Reader should see index as one segment
 			AreEqual("Reader incorrectly sees more than one segment", 
-				1, reader.Leaves().Count);
-			reader.Close();
-			dir.Close();
+				1, reader.Leaves.Count);
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		// LUCENE-2095: make sure with multiple threads commit
@@ -317,7 +317,7 @@ namespace Lucene.Net.Index
 			w.Commit();
 			AtomicBoolean failed = new AtomicBoolean();
 			Sharpen.Thread[] threads = new Sharpen.Thread[NUM_THREADS];
-			long endTime = Runtime.CurrentTimeMillis() + ((long)(RUN_SEC * 1000));
+			long endTime = DateTime.Now.CurrentTimeMillis() + ((long)(RUN_SEC * 1000));
 			for (int i = 0; i < NUM_THREADS; i++)
 			{
 				int finalI = i;
@@ -329,8 +329,8 @@ namespace Lucene.Net.Index
 				threads[i_1].Join();
 			}
 			IsFalse(failed.Get());
-			w.Close();
-			dir.Close();
+			w.Dispose();
+			dir.Dispose();
 		}
 
 		private sealed class _Thread_340 : Sharpen.Thread
@@ -370,14 +370,14 @@ namespace Lucene.Net.Index
 							DirectoryReader r2 = DirectoryReader.OpenIfChanged(r);
 							IsNotNull(r2);
 							IsTrue(r2 != r);
-							r.Close();
+							r.Dispose();
 							r = r2;
 							AreEqual("term=f:" + s + "; r=" + r, 1, r.DocFreq(new Term
 								("f", s)));
 						}
 					}
-					while (Runtime.CurrentTimeMillis() < endTime);
-					r.Close();
+					while (DateTime.Now.CurrentTimeMillis() < endTime);
+					r.Dispose();
 				}
 				catch (Exception t)
 				{
@@ -411,28 +411,28 @@ namespace Lucene.Net.Index
 				TestIndexWriter.AddDoc(writer);
 			}
 			DirectoryReader reader = DirectoryReader.Open(dir);
-			AreEqual(0, reader.NumDocs());
+			AreEqual(0, reader.NumDocs);
 			writer.Commit();
 			DirectoryReader reader2 = DirectoryReader.OpenIfChanged(reader);
 			IsNotNull(reader2);
-			AreEqual(0, reader.NumDocs());
-			AreEqual(23, reader2.NumDocs());
-			reader.Close();
+			AreEqual(0, reader.NumDocs);
+			AreEqual(23, reader2.NumDocs);
+			reader.Dispose();
 			for (int i_1 = 0; i_1 < 17; i_1++)
 			{
 				TestIndexWriter.AddDoc(writer);
 			}
-			AreEqual(23, reader2.NumDocs());
-			reader2.Close();
+			AreEqual(23, reader2.NumDocs);
+			reader2.Dispose();
 			reader = DirectoryReader.Open(dir);
-			AreEqual(23, reader.NumDocs());
-			reader.Close();
+			AreEqual(23, reader.NumDocs);
+			reader.Dispose();
 			writer.Commit();
 			reader = DirectoryReader.Open(dir);
-			AreEqual(40, reader.NumDocs());
-			reader.Close();
-			writer.Close();
-			dir.Close();
+			AreEqual(40, reader.NumDocs);
+			reader.Dispose();
+			writer.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -453,7 +453,7 @@ namespace Lucene.Net.Index
 			w.AddDocument(doc);
 			commitData.Put("tag", "second");
 			w.SetCommitData(commitData);
-			w.Close();
+			w.Dispose();
 			// open "first" with IndexWriter
 			IndexCommit commit = null;
 			foreach (IndexCommit c in DirectoryReader.ListCommits(dir))
@@ -468,12 +468,12 @@ namespace Lucene.Net.Index
 			w = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random())).SetIndexDeletionPolicy(NoDeletionPolicy.INSTANCE).SetIndexCommit(commit
 				));
-			AreEqual(1, w.NumDocs());
+			AreEqual(1, w.NumDocs);
 			// commit IndexWriter to "third"
 			w.AddDocument(doc);
 			commitData.Put("tag", "third");
 			w.SetCommitData(commitData);
-			w.Close();
+			w.Dispose();
 			// make sure "second" commit is still there
 			commit = null;
 			foreach (IndexCommit c_1 in DirectoryReader.ListCommits(dir))
@@ -485,7 +485,7 @@ namespace Lucene.Net.Index
 				}
 			}
 			IsNotNull(commit);
-			dir.Close();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -508,10 +508,10 @@ namespace Lucene.Net.Index
 			}
 			// that's expected !
 			// No changes still should generate a commit, because it's a new index.
-			writer.Close();
+			writer.Dispose();
 			AreEqual("expected 1 commits!", 1, DirectoryReader.ListCommits
 				(dir).Count);
-			dir.Close();
+			dir.Dispose();
 		}
 
 		// LUCENE-1274: test writer.prepareCommit()
@@ -528,37 +528,37 @@ namespace Lucene.Net.Index
 				TestIndexWriter.AddDoc(writer);
 			}
 			DirectoryReader reader = DirectoryReader.Open(dir);
-			AreEqual(0, reader.NumDocs());
+			AreEqual(0, reader.NumDocs);
 			writer.PrepareCommit();
 			IndexReader reader2 = DirectoryReader.Open(dir);
-			AreEqual(0, reader2.NumDocs());
+			AreEqual(0, reader2.NumDocs);
 			writer.Commit();
 			IndexReader reader3 = DirectoryReader.OpenIfChanged(reader);
 			IsNotNull(reader3);
-			AreEqual(0, reader.NumDocs());
-			AreEqual(0, reader2.NumDocs());
-			AreEqual(23, reader3.NumDocs());
-			reader.Close();
-			reader2.Close();
+			AreEqual(0, reader.NumDocs);
+			AreEqual(0, reader2.NumDocs);
+			AreEqual(23, reader3.NumDocs);
+			reader.Dispose();
+			reader2.Dispose();
 			for (int i_1 = 0; i_1 < 17; i_1++)
 			{
 				TestIndexWriter.AddDoc(writer);
 			}
-			AreEqual(23, reader3.NumDocs());
-			reader3.Close();
+			AreEqual(23, reader3.NumDocs);
+			reader3.Dispose();
 			reader = DirectoryReader.Open(dir);
-			AreEqual(23, reader.NumDocs());
-			reader.Close();
+			AreEqual(23, reader.NumDocs);
+			reader.Dispose();
 			writer.PrepareCommit();
 			reader = DirectoryReader.Open(dir);
-			AreEqual(23, reader.NumDocs());
-			reader.Close();
+			AreEqual(23, reader.NumDocs);
+			reader.Dispose();
 			writer.Commit();
 			reader = DirectoryReader.Open(dir);
-			AreEqual(40, reader.NumDocs());
-			reader.Close();
-			writer.Close();
-			dir.Close();
+			AreEqual(40, reader.NumDocs);
+			reader.Dispose();
+			writer.Dispose();
+			dir.Dispose();
 		}
 
 		// LUCENE-1274: test writer.prepareCommit()
@@ -579,17 +579,17 @@ namespace Lucene.Net.Index
 				TestIndexWriter.AddDoc(writer);
 			}
 			DirectoryReader reader = DirectoryReader.Open(dir);
-			AreEqual(0, reader.NumDocs());
+			AreEqual(0, reader.NumDocs);
 			writer.PrepareCommit();
 			IndexReader reader2 = DirectoryReader.Open(dir);
-			AreEqual(0, reader2.NumDocs());
+			AreEqual(0, reader2.NumDocs);
 			writer.Rollback();
 			IndexReader reader3 = DirectoryReader.OpenIfChanged(reader);
 			IsNull(reader3);
-			AreEqual(0, reader.NumDocs());
-			AreEqual(0, reader2.NumDocs());
-			reader.Close();
-			reader2.Close();
+			AreEqual(0, reader.NumDocs);
+			AreEqual(0, reader2.NumDocs);
+			reader.Dispose();
+			reader2.Dispose();
 			writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random())));
 			for (int i_1 = 0; i_1 < 17; i_1++)
@@ -597,18 +597,18 @@ namespace Lucene.Net.Index
 				TestIndexWriter.AddDoc(writer);
 			}
 			reader = DirectoryReader.Open(dir);
-			AreEqual(0, reader.NumDocs());
-			reader.Close();
+			AreEqual(0, reader.NumDocs);
+			reader.Dispose();
 			writer.PrepareCommit();
 			reader = DirectoryReader.Open(dir);
-			AreEqual(0, reader.NumDocs());
-			reader.Close();
+			AreEqual(0, reader.NumDocs);
+			reader.Dispose();
 			writer.Commit();
 			reader = DirectoryReader.Open(dir);
-			AreEqual(17, reader.NumDocs());
-			reader.Close();
-			writer.Close();
-			dir.Close();
+			AreEqual(17, reader.NumDocs);
+			reader.Dispose();
+			writer.Dispose();
+			dir.Dispose();
 		}
 
 		// LUCENE-1274
@@ -620,11 +620,11 @@ namespace Lucene.Net.Index
 				, new MockAnalyzer(Random())));
 			writer.PrepareCommit();
 			writer.Commit();
-			writer.Close();
+			writer.Dispose();
 			IndexReader reader = DirectoryReader.Open(dir);
-			AreEqual(0, reader.NumDocs());
-			reader.Close();
-			dir.Close();
+			AreEqual(0, reader.NumDocs);
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		// LUCENE-1382
@@ -638,11 +638,11 @@ namespace Lucene.Net.Index
 			{
 				TestIndexWriter.AddDoc(w);
 			}
-			w.Close();
+			w.Dispose();
 			DirectoryReader r = DirectoryReader.Open(dir);
 			// commit(Map) never called for this index
 			AreEqual(0, r.GetIndexCommit().GetUserData().Count);
-			r.Close();
+			r.Dispose();
 			w = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig(TEST_VERSION_CURRENT
 				, new MockAnalyzer(Random())).SetMaxBufferedDocs(2)));
 			for (int j_1 = 0; j_1 < 17; j_1++)
@@ -652,16 +652,16 @@ namespace Lucene.Net.Index
 			IDictionary<string, string> data = new Dictionary<string, string>();
 			data.Put("label", "test1");
 			w.SetCommitData(data);
-			w.Close();
+			w.Dispose();
 			r = DirectoryReader.Open(dir);
 			AreEqual("test1", r.GetIndexCommit().GetUserData().Get("label"
 				));
-			r.Close();
+			r.Dispose();
 			w = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random())));
 			w.ForceMerge(1);
-			w.Close();
-			dir.Close();
+			w.Dispose();
+			dir.Dispose();
 		}
 	}
 }

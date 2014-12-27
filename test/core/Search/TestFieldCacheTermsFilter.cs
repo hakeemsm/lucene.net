@@ -53,10 +53,10 @@ namespace Lucene.Net.Search
 				w.AddDocument(doc);
 			}
 			IndexReader reader = w.GetReader();
-			w.Close();
+			w.Dispose();
 
 			IndexSearcher searcher = NewSearcher(reader);
-			int numDocs = reader.NumDocs();
+			int numDocs = reader.NumDocs;
 			ScoreDoc[] results;
 			MatchAllDocsQuery q = new MatchAllDocsQuery();
 			
@@ -76,8 +76,8 @@ namespace Lucene.Net.Search
 			results = searcher.Search(q, new FieldCacheTermsFilter(fieldName, (System.String[]) terms.ToArray(typeof(System.String))), numDocs).ScoreDocs;
 			Assert.AreEqual(2, results.Length, "Must match 2");
 			
-			reader.Close();
-			rd.Close();
+			reader.Dispose();
+			rd.Dispose();
 		}
 	}
 }

@@ -14,7 +14,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	/// <summary>MultiThreaded IndexWriter tests</summary>
 	public class TestIndexWriterWithThreads : LuceneTestCase
@@ -55,7 +55,7 @@ namespace Lucene.Net.Index
 				doc.Add(new NumericDocValuesField("dv", 5));
 				int idUpto = 0;
 				int fullCount = 0;
-				long stopTime = Runtime.CurrentTimeMillis() + 200;
+				long stopTime = DateTime.Now.CurrentTimeMillis() + 200;
 				do
 				{
 					try
@@ -114,7 +114,7 @@ namespace Lucene.Net.Index
 						break;
 					}
 				}
-				while (Runtime.CurrentTimeMillis() < stopTime);
+				while (DateTime.Now.CurrentTimeMillis() < stopTime);
 			}
 
 			private readonly TestIndexWriterWithThreads _enclosing;
@@ -138,7 +138,7 @@ namespace Lucene.Net.Index
 				IndexWriter writer = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig
 					(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMaxBufferedDocs(2)).SetMergeScheduler
 					(new ConcurrentMergeScheduler()).SetMergePolicy(NewLogMergePolicy(4)));
-				((ConcurrentMergeScheduler)writer.GetConfig().GetMergeScheduler()).SetSuppressExceptions
+				((ConcurrentMergeScheduler)writer.Config.GetMergeScheduler()).SetSuppressExceptions
 					();
 				dir.SetMaxSizeInBytes(4 * 1024 + 20 * iter);
 				TestIndexWriterWithThreads.IndexerThread[] threads = new TestIndexWriterWithThreads.IndexerThread
@@ -163,7 +163,7 @@ namespace Lucene.Net.Index
 				// cleanly close:
 				dir.SetMaxSizeInBytes(0);
 				writer.Close(false);
-				dir.Close();
+				dir.Dispose();
 			}
 		}
 
@@ -186,7 +186,7 @@ namespace Lucene.Net.Index
 				IndexWriter writer = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig
 					(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMaxBufferedDocs(10)).SetMergeScheduler
 					(new ConcurrentMergeScheduler()).SetMergePolicy(NewLogMergePolicy(4)));
-				((ConcurrentMergeScheduler)writer.GetConfig().GetMergeScheduler()).SetSuppressExceptions
+				((ConcurrentMergeScheduler)writer.Config.GetMergeScheduler()).SetSuppressExceptions
 					();
 				TestIndexWriterWithThreads.IndexerThread[] threads = new TestIndexWriterWithThreads.IndexerThread
 					[NUM_THREADS];
@@ -245,8 +245,8 @@ namespace Lucene.Net.Index
 					count++;
 				}
 				IsTrue(count > 0);
-				reader.Close();
-				dir.Close();
+				reader.Dispose();
+				dir.Dispose();
 			}
 		}
 
@@ -267,7 +267,7 @@ namespace Lucene.Net.Index
 				IndexWriter writer = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig
 					(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMaxBufferedDocs(2)).SetMergeScheduler
 					(new ConcurrentMergeScheduler()).SetMergePolicy(NewLogMergePolicy(4)));
-				((ConcurrentMergeScheduler)writer.GetConfig().GetMergeScheduler()).SetSuppressExceptions
+				((ConcurrentMergeScheduler)writer.Config.GetMergeScheduler()).SetSuppressExceptions
 					();
 				TestIndexWriterWithThreads.IndexerThread[] threads = new TestIndexWriterWithThreads.IndexerThread
 					[NUM_THREADS];
@@ -315,9 +315,9 @@ namespace Lucene.Net.Index
 							reader.GetTermVectors(j);
 						}
 					}
-					reader.Close();
+					reader.Dispose();
 				}
-				dir.Close();
+				dir.Dispose();
 			}
 		}
 
@@ -357,7 +357,7 @@ namespace Lucene.Net.Index
 			failure.ClearDoFail();
 			writer.AddDocument(doc);
 			writer.Close(false);
-			dir.Close();
+			dir.Dispose();
 		}
 
 		private class FailOnlyOnAbortOrFlush : MockDirectoryWrapper.Failure
@@ -555,12 +555,12 @@ namespace Lucene.Net.Index
 				// now verify that we have two documents in the index
 				IndexReader reader = DirectoryReader.Open(dir);
 				AreEqual("IndexReader should have one document per thread running"
-					, 2, reader.NumDocs());
-				reader.Close();
+					, 2, reader.NumDocs);
+				reader.Dispose();
 			}
 			finally
 			{
-				dir.Close();
+				dir.Dispose();
 			}
 		}
 
@@ -600,7 +600,7 @@ namespace Lucene.Net.Index
 					iwConstructed.CountDown();
 					startIndexing.Await();
 					writer.AddDocument(doc);
-					writer.Close();
+					writer.Dispose();
 				}
 				catch (Exception e)
 				{
@@ -651,8 +651,8 @@ namespace Lucene.Net.Index
 				threads[threadID_1].Join();
 			}
 			IsTrue(!failed.Get());
-			writerRef.Get().Close();
-			d.Close();
+			writerRef.Get().Dispose();
+			d.Dispose();
 		}
 
 		private sealed class _Thread_564 : Sharpen.Thread

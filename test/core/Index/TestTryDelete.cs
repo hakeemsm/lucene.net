@@ -12,7 +12,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestTryDelete : LuceneTestCase
 	{
@@ -41,7 +41,7 @@ namespace Lucene.Net.Index
 				writer.AddDocument(doc);
 			}
 			writer.Commit();
-			writer.Close();
+			writer.Dispose();
 			return directory;
 		}
 
@@ -61,11 +61,11 @@ namespace Lucene.Net.Index
 			{
 				IndexReader r = DirectoryReader.Open(writer, true);
 				result = mgrWriter.TryDeleteDocument(r, 0);
-				r.Close();
+				r.Dispose();
 			}
 			else
 			{
-				result = mgrWriter.TryDeleteDocument(searcher.GetIndexReader(), 0);
+				result = mgrWriter.TryDeleteDocument(searcher.IndexReader, 0);
 			}
 			// The tryDeleteDocument should have succeeded:
 			IsTrue(result != -1);
@@ -100,7 +100,7 @@ namespace Lucene.Net.Index
 			searcher = mgr.Acquire();
 			topDocs = searcher.Search(new TermQuery(new Term("foo", "0")), 100);
 			AreEqual(0, topDocs.TotalHits);
-			writer.Close();
+			writer.Dispose();
 			searcher = new IndexSearcher(DirectoryReader.Open(directory));
 			topDocs = searcher.Search(new TermQuery(new Term("foo", "0")), 100);
 			AreEqual(0, topDocs.TotalHits);

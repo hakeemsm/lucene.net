@@ -70,7 +70,7 @@ namespace Lucene.Net.Store
 				Assert.IsTrue(lock_Renamed.lockAttempts > 0, "# calls to Lock.obtain is 0 (after instantiating IndexWriter)");
 			}
 			
-			writer.Close();
+			writer.Dispose();
 		}
 		
 		// Verify: we can use the NoLockFactory with RAMDirectory w/ no
@@ -101,10 +101,10 @@ namespace Lucene.Net.Store
 				Assert.Fail("Should not have hit an IOException with no locking");
 			}
 			
-			writer.Close();
+			writer.Dispose();
 			if (writer2 != null)
 			{
-				writer2.Close();
+				writer2.Dispose();
 			}
 		}
 		
@@ -126,10 +126,10 @@ namespace Lucene.Net.Store
 		        () => writer2 = new IndexWriter(dir, new WhitespaceAnalyzer(), false, IndexWriter.MaxFieldLength.LIMITED),
 		        "Should have hit an IOException with two IndexWriters on default SingleInstanceLockFactory");
 			
-			writer.Close();
+			writer.Dispose();
 			if (writer2 != null)
 			{
-				writer2.Close();
+				writer2.Dispose();
 			}
 		}
 
@@ -170,7 +170,7 @@ namespace Lucene.Net.Store
 			IndexWriter w = new IndexWriter(dir, new IndexWriterConfig(TEST_VERSION_CURRENT, 
 				new MockAnalyzer(Random())).SetOpenMode(IndexWriterConfig.OpenMode.CREATE));
 			AddDoc(w);
-			w.Close();
+			w.Dispose();
 			
 			TestLockFactory.WriterThread writer = new TestLockFactory.WriterThread(this, 100, 
 				dir);
@@ -187,7 +187,7 @@ namespace Lucene.Net.Store
 			Assert.IsTrue(!writer.hitException, "IndexWriter hit unexpected exceptions");
 			Assert.IsTrue(!searcher.hitException, "IndexSearcher hit unexpected exceptions");
 			
-			dir.Close();
+			dir.Dispose();
 			// Cleanup
 			_TestUtil.RmDir(indexDir);
 		}
@@ -205,16 +205,16 @@ namespace Lucene.Net.Store
 			
 			Assert.IsTrue(l.Obtain(), "failed to obtain lock");
 			Assert.IsTrue(!l2.Obtain(), "succeeded in obtaining lock twice");
-			l.Close();
+			l.Dispose();
 			
 			Assert.IsTrue(l2.Obtain(), "failed to obtain 2nd lock after first one was freed");
-			l2.Close();
+			l2.Dispose();
 			
 			// Make sure we can obtain first one again, test isLocked():
 			Assert.IsTrue(l.Obtain(), "failed to obtain lock");
 			Assert.IsTrue(l.IsLocked());
 			Assert.IsTrue(l2.IsLocked());
-			l.Close();
+			l.Dispose();
 			Assert.IsFalse(l.IsLocked());
 			Assert.IsFalse(l2.IsLocked());
 		}
@@ -226,7 +226,7 @@ namespace Lucene.Net.Store
 			lockFile.CreateNewFile();
 			Lock l = new NativeFSLockFactory(tempDir).MakeLock("test.lock");
 			IsTrue("failed to obtain lock", l.Obtain());
-			l.Close();
+			l.Dispose();
 			IsFalse("failed to release lock", l.IsLocked());
 			if (lockFile.Exists())
 			{
@@ -250,8 +250,8 @@ namespace Lucene.Net.Store
 			System.String prefix2 = dir2.LockFactory.LockPrefix;
 			Assert.IsNotNull(prefix2, "Lock prefix for lockDir outside of directory should be not null");
 			
-			dir1.Close();
-			dir2.Close();
+			dir1.Dispose();
+			dir2.Dispose();
 			_TestUtil.RmDir(fdir1);
 			_TestUtil.RmDir(fdir2);
 		}
@@ -269,15 +269,15 @@ namespace Lucene.Net.Store
 			System.String prefix = dir.LockFactory.LockPrefix;
 			
 			Assert.IsTrue(null == prefix, "Default lock prefix should be null");
-			dir.Close();
+			dir.Dispose();
 			dir = new MMapDirectory(dirName);
 			IsNull("Default lock prefix should be null", dir.GetLockFactory
 				().GetLockPrefix());
-			dir.Close();
+			dir.Dispose();
 			dir = new NIOFSDirectory(dirName);
 			IsNull("Default lock prefix should be null", dir.GetLockFactory
 				().GetLockPrefix());
-			dir.Close();
+			dir.Dispose();
 			_TestUtil.RmDir(dirName);
 		}
 		
@@ -355,7 +355,7 @@ namespace Lucene.Net.Store
 						}
 						try
 						{
-							writer.Close();
+							writer.Dispose();
 						}
 						catch (System.IO.IOException e)
 						{
@@ -428,7 +428,7 @@ namespace Lucene.Net.Store
 						// System.out.println(hits.length() + " total results");
 						try
 						{
-							searcher.Close();
+							searcher.Dispose();
 						}
 						catch (System.IO.IOException e)
 						{

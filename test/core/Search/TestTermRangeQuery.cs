@@ -47,7 +47,7 @@ namespace Lucene.Net.Search
 		
 		public override void TearDown()
 		{
-			dir.Close();
+			dir.Dispose();
 			base.TearDown();
 		}
         [Test]
@@ -59,21 +59,21 @@ namespace Lucene.Net.Search
 			IndexSearcher searcher = NewSearcher(reader);
 			ScoreDoc[] hits = searcher.Search(query, null, 1000).ScoreDocs;
 			Assert.AreEqual(1, hits.Length, "A,B,C,D, only B in range");
-			reader.Close();
+			reader.Dispose();
 			
 			InitializeIndex(new System.String[]{"A", "B", "D"});
 			reader = DirectoryReader.Open(dir);
 			searcher = NewSearcher(reader);
 			hits = searcher.Search(query, null, 1000).ScoreDocs;
 			Assert.AreEqual(1, hits.Length, "A,B,D, only B in range");
-			reader.Close();
+			reader.Dispose();
 			
 			AddDoc("C");
 			reader = DirectoryReader.Open(dir);
 			searcher = NewSearcher(reader);
 			hits = searcher.Search(query, null, 1000).ScoreDocs;
 			Assert.AreEqual(1, hits.Length, "C added, still only B in range");
-			searcher.Close();
+			searcher.Dispose();
 		}
 		
         [Test]
@@ -86,21 +86,21 @@ namespace Lucene.Net.Search
 			IndexSearcher searcher = NewSearcher(reader);
 			ScoreDoc[] hits = searcher.Search(query, null, 1000).ScoreDocs;
 			Assert.AreEqual(3, hits.Length, "A,B,C,D - A,B,C in range");
-			reader.Close();
+			reader.Dispose();
 			
 			InitializeIndex(new System.String[]{"A", "B", "D"});
 			reader = DirectoryReader.Open(dir);
 			searcher = NewSearcher(reader);
 			hits = searcher.Search(query, null, 1000).ScoreDocs;
 			Assert.AreEqual(2, hits.Length, "A,B,D - A and B in range");
-			reader.Close();
+			reader.Dispose();
 			
 			AddDoc("C");
 			reader = DirectoryReader.Open(dir);
 			searcher = NewSearcher(reader);
 			hits = searcher.Search(query, null, 1000).ScoreDocs;
 			Assert.AreEqual(3, hits.Length, "C added - A, B, C in range");
-			reader.Close();
+			reader.Dispose();
 		}
 		public virtual void TestAllDocs()
 		{
@@ -108,24 +108,24 @@ namespace Lucene.Net.Search
 			IndexReader reader = DirectoryReader.Open(dir);
 			IndexSearcher searcher = NewSearcher(reader);
 			TermRangeQuery query = new TermRangeQuery("content", null, null, true, true);
-			Terms terms = MultiFields.GetTerms(searcher.GetIndexReader(), "content");
+			Terms terms = MultiFields.GetTerms(searcher.IndexReader, "content");
 			IsFalse(query.GetTermsEnum(terms) is TermRangeTermsEnum);
-			AreEqual(4, searcher.Search(query, null, 1000).scoreDocs.Length
+			AreEqual(4, searcher.Search(query, null, 1000).ScoreDocs.Length
 				);
 			query = new TermRangeQuery("content", null, null, false, false);
 			IsFalse(query.GetTermsEnum(terms) is TermRangeTermsEnum);
-			AreEqual(4, searcher.Search(query, null, 1000).scoreDocs.Length
+			AreEqual(4, searcher.Search(query, null, 1000).ScoreDocs.Length
 				);
 			query = TermRangeQuery.NewStringRange("content", string.Empty, null, true, false);
 			IsFalse(query.GetTermsEnum(terms) is TermRangeTermsEnum);
-			AreEqual(4, searcher.Search(query, null, 1000).scoreDocs.Length
+			AreEqual(4, searcher.Search(query, null, 1000).ScoreDocs.Length
 				);
 			// and now anothe one
 			query = TermRangeQuery.NewStringRange("content", "B", null, true, false);
 			IsTrue(query.GetTermsEnum(terms) is TermRangeTermsEnum);
-			AreEqual(3, searcher.Search(query, null, 1000).scoreDocs.Length
+			AreEqual(3, searcher.Search(query, null, 1000).ScoreDocs.Length
 				);
-			reader.Close();
+			reader.Dispose();
 		}
 		public virtual void TestTopTermsRewrite()
 		{
@@ -146,7 +146,7 @@ namespace Lucene.Net.Search
 			{
 				BooleanQuery.SetMaxClauseCount(savedClauseCount);
 			}
-			reader.Close();
+			reader.Dispose();
 		}
 		private void CheckBooleanTerms(IndexSearcher searcher, TermRangeQuery query, params 
 			string[] terms)
@@ -220,19 +220,19 @@ namespace Lucene.Net.Search
 			IndexSearcher searcher = new IndexSearcher(dir, true);
 			ScoreDoc[] hits = searcher.Search(query, null, 1000).ScoreDocs;
 			Assert.AreEqual(1, hits.Length, "A,B,C,D, only B in range");
-			searcher.Close();
+			searcher.Dispose();
 			
 			InitializeIndex(new System.String[]{"A", "B", "D"});
             searcher = new IndexSearcher(dir, true);
 			hits = searcher.Search(query, null, 1000).ScoreDocs;
 			Assert.AreEqual(1, hits.Length, "A,B,D, only B in range");
-			searcher.Close();
+			searcher.Dispose();
 			
 			AddDoc("C");
             searcher = new IndexSearcher(dir, true);
 			hits = searcher.Search(query, null, 1000).ScoreDocs;
 			Assert.AreEqual(1, hits.Length, "C added, still only B in range");
-			searcher.Close();
+			searcher.Dispose();
 		}
 		
         [Test]
@@ -244,19 +244,19 @@ namespace Lucene.Net.Search
             IndexSearcher searcher = new IndexSearcher(dir, true);
 			ScoreDoc[] hits = searcher.Search(query, null, 1000).ScoreDocs;
 			Assert.AreEqual(3, hits.Length, "A,B,C,D - A,B,C in range");
-			searcher.Close();
+			searcher.Dispose();
 			
 			InitializeIndex(new System.String[]{"A", "B", "D"});
             searcher = new IndexSearcher(dir, true);
 			hits = searcher.Search(query, null, 1000).ScoreDocs;
 			Assert.AreEqual(2, hits.Length, "A,B,D - A and B in range");
-			searcher.Close();
+			searcher.Dispose();
 			
 			AddDoc("C");
             searcher = new IndexSearcher(dir, true);
 			hits = searcher.Search(query, null, 1000).ScoreDocs;
 			Assert.AreEqual(3, hits.Length, "C added - A, B, C in range");
-			searcher.Close();
+			searcher.Dispose();
 		}
 		
         [Test]
@@ -279,7 +279,7 @@ namespace Lucene.Net.Search
 			query = new TermRangeQuery("content", "\u0633", "\u0638", true, true, collator);
 			hits = searcher.Search(query, null, 1000).ScoreDocs;
 			Assert.AreEqual(1, hits.Length, "The index Term should be included.");
-			searcher.Close();
+			searcher.Dispose();
 		}
 		
         [Test]
@@ -301,7 +301,7 @@ namespace Lucene.Net.Search
 			query = new TermRangeQuery("content", "H\u00C5T", "MAND", false, false, collator);
 			hits = searcher.Search(query, null, 1000).ScoreDocs;
 			Assert.AreEqual(0, hits.Length, "The index Term should not be included.");
-			searcher.Close();
+			searcher.Dispose();
 		}
 		
 		private class SingleCharAnalyzer:Analyzer
@@ -364,7 +364,7 @@ namespace Lucene.Net.Search
 			{
 				InsertDoc(writer, values[i]);
 			}
-			writer.Close();
+			writer.Dispose();
 		}
 		
 		private void  AddDoc(System.String content)
@@ -373,7 +373,7 @@ namespace Lucene.Net.Search
 				, new MockAnalyzer(Random(), MockTokenizer.WHITESPACE, false)).SetOpenMode(IndexWriterConfig.OpenMode
 				.APPEND));
 			InsertDoc(writer, content);
-			writer.Close();
+			writer.Dispose();
 		}
 		
 		private void  InsertDoc(IndexWriter writer, System.String content)
@@ -403,7 +403,7 @@ namespace Lucene.Net.Search
 			// until Lucene-38 is fixed, use this assert:
             //Assert.AreEqual(2, hits.length(),"A,B,<empty string>,C,D => A, B & <empty string> are in range");
 			
-			reader.Close();
+			reader.Dispose();
 			InitializeIndex(new System.String[]{"A", "B", "", "D"}, analyzer);
 			reader = DirectoryReader.Open(dir);
 			searcher = NewSearcher(reader);
@@ -412,7 +412,7 @@ namespace Lucene.Net.Search
             Assert.AreEqual(3, numHits, "A,B,<empty string>,D => A, B & <empty string> are in range");
 			// until Lucene-38 is fixed, use this assert:
             //Assert.AreEqual(2, hits.length(), "A,B,<empty string>,D => A, B & <empty string> are in range");
-			reader.Close();
+			reader.Dispose();
 			AddDoc("C");
 			reader = DirectoryReader.Open(dir);
 			searcher = NewSearcher(reader);
@@ -421,7 +421,7 @@ namespace Lucene.Net.Search
             Assert.AreEqual(3, numHits, "C added, still A, B & <empty string> are in range");
 			// until Lucene-38 is fixed, use this assert
             //Assert.AreEqual(2, hits.length(), "C added, still A, B & <empty string> are in range");
-			reader.Close();
+			reader.Dispose();
 		}
 		
 		// LUCENE-38
@@ -439,7 +439,7 @@ namespace Lucene.Net.Search
             Assert.AreEqual(4, numHits, "A,B,<empty string>,C,D => A,B,<empty string>,C in range");
 			// until Lucene-38 is fixed, use this assert
             //Assert.AreEqual(3, hits.length(), "A,B,<empty string>,C,D => A,B,<empty string>,C in range");
-			reader.Close();
+			reader.Dispose();
 			InitializeIndex(new System.String[]{"A", "B", "", "D"}, analyzer);
 			reader = DirectoryReader.Open(dir);
 			searcher = NewSearcher(reader);
@@ -448,7 +448,7 @@ namespace Lucene.Net.Search
             Assert.AreEqual(3, numHits, "A,B,<empty string>,D - A, B and <empty string> in range");
 			// until Lucene-38 is fixed, use this assert
             //Assert.AreEqual(2, hits.length(), "A,B,<empty string>,D => A, B and <empty string> in range");
-			reader.Close();
+			reader.Dispose();
 			AddDoc("C");
 			reader = DirectoryReader.Open(dir);
 			searcher = NewSearcher(reader);
@@ -457,7 +457,7 @@ namespace Lucene.Net.Search
             Assert.AreEqual(4, numHits, "C added => A,B,<empty string>,C in range");
 			// until Lucene-38 is fixed, use this assert
             //Assert.AreEqual(3, hits.length(), "C added => A,B,<empty string>,C in range");
-			reader.Close();
+			reader.Dispose();
 		}
 	}
 }

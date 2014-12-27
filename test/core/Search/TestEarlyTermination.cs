@@ -40,8 +40,8 @@ namespace Lucene.Net.Search
 		public override void TearDown()
 		{
 			base.TearDown();
-			writer.Close();
-			dir.Close();
+			writer.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -55,7 +55,7 @@ namespace Lucene.Net.Search
 				Collector collector = new _Collector_61();
 				searcher.Search(new MatchAllDocsQuery(), collector);
 			}
-			reader.Close();
+			reader.Dispose();
 		}
 
 		private sealed class _Collector_61 : Collector

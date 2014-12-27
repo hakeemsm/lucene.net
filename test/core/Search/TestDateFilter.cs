@@ -23,7 +23,7 @@ namespace Lucene.Net.Search
 			// create an index
 			Directory indexStore = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), indexStore);
-			long now = Runtime.CurrentTimeMillis();
+			long now = DateTime.Now.CurrentTimeMillis();
 			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			// add time that is in the past
@@ -33,7 +33,7 @@ namespace Lucene.Net.Search
 				.YES));
 			writer.AddDocument(doc);
 			IndexReader reader = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(reader);
 			// filter that should preserve matches
 			// DateFilter df1 = DateFilter.Before("datefield", now);
@@ -51,21 +51,21 @@ namespace Lucene.Net.Search
 			Query query2 = new TermQuery(new Term("body", "sunny"));
 			ScoreDoc[] result;
 			// ensure that queries return expected results without DateFilter first
-			result = searcher.Search(query1, null, 1000).scoreDocs;
+			result = searcher.Search(query1, null, 1000).ScoreDocs;
 			AreEqual(0, result.Length);
-			result = searcher.Search(query2, null, 1000).scoreDocs;
+			result = searcher.Search(query2, null, 1000).ScoreDocs;
 			AreEqual(1, result.Length);
 			// run queries with DateFilter
-			result = searcher.Search(query1, df1, 1000).scoreDocs;
+			result = searcher.Search(query1, df1, 1000).ScoreDocs;
 			AreEqual(0, result.Length);
-			result = searcher.Search(query1, df2, 1000).scoreDocs;
+			result = searcher.Search(query1, df2, 1000).ScoreDocs;
 			AreEqual(0, result.Length);
-			result = searcher.Search(query2, df1, 1000).scoreDocs;
+			result = searcher.Search(query2, df1, 1000).ScoreDocs;
 			AreEqual(1, result.Length);
-			result = searcher.Search(query2, df2, 1000).scoreDocs;
+			result = searcher.Search(query2, df2, 1000).ScoreDocs;
 			AreEqual(0, result.Length);
-			reader.Close();
-			indexStore.Close();
+			reader.Dispose();
+			indexStore.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -74,7 +74,7 @@ namespace Lucene.Net.Search
 			// create an index
 			Directory indexStore = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), indexStore);
-			long now = Runtime.CurrentTimeMillis();
+			long now = DateTime.Now.CurrentTimeMillis();
 			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			// add time that is in the future
@@ -84,7 +84,7 @@ namespace Lucene.Net.Search
 				.YES));
 			writer.AddDocument(doc);
 			IndexReader reader = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(reader);
 			// filter that should preserve matches
 			// DateFilter df1 = DateFilter.After("datefield", now);
@@ -102,21 +102,21 @@ namespace Lucene.Net.Search
 			Query query2 = new TermQuery(new Term("body", "sunny"));
 			ScoreDoc[] result;
 			// ensure that queries return expected results without DateFilter first
-			result = searcher.Search(query1, null, 1000).scoreDocs;
+			result = searcher.Search(query1, null, 1000).ScoreDocs;
 			AreEqual(0, result.Length);
-			result = searcher.Search(query2, null, 1000).scoreDocs;
+			result = searcher.Search(query2, null, 1000).ScoreDocs;
 			AreEqual(1, result.Length);
 			// run queries with DateFilter
-			result = searcher.Search(query1, df1, 1000).scoreDocs;
+			result = searcher.Search(query1, df1, 1000).ScoreDocs;
 			AreEqual(0, result.Length);
-			result = searcher.Search(query1, df2, 1000).scoreDocs;
+			result = searcher.Search(query1, df2, 1000).ScoreDocs;
 			AreEqual(0, result.Length);
-			result = searcher.Search(query2, df1, 1000).scoreDocs;
+			result = searcher.Search(query2, df1, 1000).ScoreDocs;
 			AreEqual(1, result.Length);
-			result = searcher.Search(query2, df2, 1000).scoreDocs;
+			result = searcher.Search(query2, df2, 1000).ScoreDocs;
 			AreEqual(0, result.Length);
-			reader.Close();
-			indexStore.Close();
+			reader.Dispose();
+			indexStore.Dispose();
 		}
 	}
 }

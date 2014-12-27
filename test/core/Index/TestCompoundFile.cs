@@ -27,7 +27,7 @@ using _TestHelper = Lucene.Net.Store._TestHelper;
 using LuceneTestCase = Lucene.Net.Util.LuceneTestCase;
 using _TestUtil = Lucene.Net.Util._TestUtil;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	[TestFixture]
 	public class TestCompoundFile:LuceneTestCase
@@ -67,7 +67,7 @@ namespace Lucene.Net.Index
 		[TearDown]
 		public override void  TearDown()
 		{
-			dir.Close();
+			dir.Dispose();
 			base.TearDown();
 		}
 		
@@ -80,7 +80,7 @@ namespace Lucene.Net.Index
 				byte b = (byte) ((new System.Random().NextDouble()) * 256);
 				os.WriteByte(b);
 			}
-			os.Close();
+			os.Dispose();
 		}
 		
 		/// <summary>Creates a file of the specified size with sequential data. The first
@@ -95,7 +95,7 @@ namespace Lucene.Net.Index
 				os.WriteByte(start);
 				start++;
 			}
-			os.Close();
+			os.Dispose();
 		}
 		
 		
@@ -192,7 +192,7 @@ namespace Lucene.Net.Index
 				CompoundFileDirectory csw = new CompoundFileDirectory(dir, name + ".cfs", NewIOContext
 					(Random()), true);
 				dir.Copy(csw, name, name, NewIOContext(Random()));
-				csw.Close();
+				csw.Dispose();
 				
 				CompoundFileDirectory csr = new CompoundFileDirectory(dir, name + ".cfs", NewIOContext
 					(Random()), false);
@@ -200,9 +200,9 @@ namespace Lucene.Net.Index
 				IndexInput actual = csr.OpenInput(name, NewIOContext(Random()));
 				AssertSameStreams(name, expected, actual);
 				AssertSameSeekBehavior(name, expected, actual);
-				expected.Close();
-				actual.Close();
-				csr.Close();
+				expected.Dispose();
+				actual.Dispose();
+				csr.Dispose();
 			}
 		}
 		
@@ -220,7 +220,7 @@ namespace Lucene.Net.Index
 				Random()), true);
 			dir.Copy(csw, "d1", "d1", NewIOContext(Random()));
 			dir.Copy(csw, "d2", "d2", NewIOContext(Random()));
-			csw.Close();
+			csw.Dispose();
 			
 			CompoundFileDirectory csr = new CompoundFileDirectory(dir, "d.cfs", NewIOContext(
 				Random()), false);
@@ -228,16 +228,16 @@ namespace Lucene.Net.Index
 			IndexInput actual = csr.OpenInput("d1", NewIOContext(Random()));
 			AssertSameStreams("d1", expected, actual);
 			AssertSameSeekBehavior("d1", expected, actual);
-			expected.Close();
-			actual.Close();
+			expected.Dispose();
+			actual.Dispose();
 			
 			expected = dir.OpenInput("d2", NewIOContext(Random()));
 			actual = csr.OpenInput("d2", NewIOContext(Random()));
 			AssertSameStreams("d2", expected, actual);
 			AssertSameSeekBehavior("d2", expected, actual);
-			expected.Close();
-			actual.Close();
-			csr.Close();
+			expected.Dispose();
+			actual.Dispose();
+			csr.Dispose();
 		}
 		
 		/// <summary>This test creates a compound file based on a large number of files of
@@ -278,7 +278,7 @@ namespace Lucene.Net.Index
 				string fileName = segment + data[i];
 				dir.Copy(csw, fileName, fileName, NewIOContext(Random()));
 			}
-			csw.Close();
+			csw.Dispose();
 			
 			CompoundFileDirectory csr = new CompoundFileDirectory(dir, "test.cfs", NewIOContext
 				(Random()), false);
@@ -288,10 +288,10 @@ namespace Lucene.Net.Index
 				IndexInput test = csr.OpenInput(segment + data[i_1], NewIOContext(Random()));
 				AssertSameStreams(data[i], check, test);
 				AssertSameSeekBehavior(data[i], check, test);
-				test.Close();
-				check.Close();
+				test.Dispose();
+				check.Dispose();
 			}
-			csr.Close();
+			csr.Dispose();
 		}
 		
 		
@@ -310,7 +310,7 @@ namespace Lucene.Net.Index
 				string fileName = "f" + i;
 				dir.Copy(cw, fileName, fileName, NewIOContext(Random()));
 			}
-			cw.Close();
+			cw.Dispose();
 		}
 		
 		
@@ -328,7 +328,7 @@ namespace Lucene.Net.Index
 			{
 				os.WriteByte((byte) i);
 			}
-			os.Close();
+			os.Dispose();
 			
 			IndexInput in_Renamed = fsdir.OpenInput(file, IOContext.DEFAULT);
 			
@@ -336,7 +336,7 @@ namespace Lucene.Net.Index
 			byte b = in_Renamed.ReadByte();
 			
 			// Close the file
-			in_Renamed.Close();
+			in_Renamed.Dispose();
 			
 			// ERROR: this call should fail, but succeeds because the buffer
 			// is still filled
@@ -395,7 +395,7 @@ namespace Lucene.Net.Index
 			AssertSameStreams("basic clone two", expected, two);
 			
 			// Now close the first stream
-			one.Close();
+			one.Dispose();
 			Assert.IsTrue(IsCSIndexInputOpen(one), "Only close when cr is closed");
 			
 			// The following should really fail since we couldn't expect to
@@ -407,7 +407,7 @@ namespace Lucene.Net.Index
 			
 			
 			// Now close the compound reader
-			cr.Close();
+			cr.Dispose();
 			Assert.IsFalse(IsCSIndexInputOpen(one), "Now closed one");
 			Assert.IsFalse(IsCSIndexInputOpen(two), "Now closed two");
 			
@@ -418,12 +418,12 @@ namespace Lucene.Net.Index
 			
 			
 			// Now close the second clone
-			two.Close();
+			two.Dispose();
 			expected.Seek(0);
 			two.Seek(0);
 			//assertSameStreams("basic clone two/4", expected, two);
 			
-			expected.Close();
+			expected.Dispose();
 		}
 		
 		
@@ -500,11 +500,11 @@ namespace Lucene.Net.Index
 			ba1 = a1.ReadByte();
 			Assert.AreEqual(be1, ba1);
 			
-			e1.Close();
-			e2.Close();
-			a1.Close();
-			a2.Close();
-			cr.Close();
+			e1.Dispose();
+			e2.Dispose();
+			a1.Dispose();
+			a2.Dispose();
+			cr.Dispose();
 		}
 		
 		/// <summary>This test opens two files from a compound stream and verifies that
@@ -581,11 +581,11 @@ namespace Lucene.Net.Index
 			ba1 = a1.ReadByte();
 			Assert.AreEqual(be1, ba1);
 			
-			e1.Close();
-			e2.Close();
-			a1.Close();
-			a2.Close();
-			cr.Close();
+			e1.Dispose();
+			e2.Dispose();
+			a1.Dispose();
+			a2.Dispose();
+			cr.Dispose();
 		}
 		
 		
@@ -597,7 +597,7 @@ namespace Lucene.Net.Index
 				Random()), false);
 			// Open two files
 		    Assert.Throws<System.IO.IOException>(() => cr.OpenInput("bogus"), "File not found");
-			cr.Close();
+			cr.Dispose();
 		}
 		
 		
@@ -617,8 +617,8 @@ namespace Lucene.Net.Index
 			is_Renamed.Seek(is_Renamed.Length() - 10);
 		    Assert.Throws<System.IO.IOException>(() => is_Renamed.ReadBytes(b, 0, 50), "Block read past end of file");
 			
-			is_Renamed.Close();
-			cr.Close();
+			is_Renamed.Dispose();
+			cr.Dispose();
 		}
 		
 		/// <summary>This test that writes larger than the size of the buffer output
@@ -644,7 +644,7 @@ namespace Lucene.Net.Index
 			}
 			finally
 			{
-				os.Close();
+				os.Dispose();
 			}
 		}
 		public virtual void TestAddExternalFile()
@@ -654,17 +654,17 @@ namespace Lucene.Net.Index
 			CompoundFileDirectory csw = new CompoundFileDirectory(newDir, "d.cfs", NewIOContext
 				(Random()), true);
 			dir.Copy(csw, "d1", "d1", NewIOContext(Random()));
-			csw.Close();
+			csw.Dispose();
 			CompoundFileDirectory csr = new CompoundFileDirectory(newDir, "d.cfs", NewIOContext
 				(Random()), false);
 			IndexInput expected = dir.OpenInput("d1", NewIOContext(Random()));
 			IndexInput actual = csr.OpenInput("d1", NewIOContext(Random()));
 			AssertSameStreams("d1", expected, actual);
 			AssertSameSeekBehavior("d1", expected, actual);
-			expected.Close();
-			actual.Close();
-			csr.Close();
-			newDir.Close();
+			expected.Dispose();
+			actual.Dispose();
+			csr.Dispose();
+			newDir.Dispose();
 		}
 		public virtual void TestAppend()
 		{
@@ -680,7 +680,7 @@ namespace Lucene.Net.Index
 				{
 					os.WriteInt(i * j);
 				}
-				os.Close();
+				os.Dispose();
 				string[] listAll = newDir.ListAll();
 				AreEqual(1, listAll.Length);
 				AreEqual("d.cfs", listAll[0]);
@@ -690,7 +690,7 @@ namespace Lucene.Net.Index
 			string[] listAll_1 = newDir.ListAll();
 			AreEqual(1, listAll_1.Length);
 			AreEqual("d.cfs", listAll_1[0]);
-			csw.Close();
+			csw.Dispose();
 			CompoundFileDirectory csr = new CompoundFileDirectory(newDir, "d.cfs", NewIOContext
 				(Random()), false);
 			for (int j_1 = 0; j_1 < 2; j_1++)
@@ -702,16 +702,16 @@ namespace Lucene.Net.Index
 				{
 					AreEqual(i * j_1, openInput.ReadInt());
 				}
-				openInput.Close();
+				openInput.Dispose();
 			}
 			IndexInput expected = dir.OpenInput("d1", NewIOContext(Random()));
 			IndexInput actual = csr.OpenInput("d1", NewIOContext(Random()));
 			AssertSameStreams("d1", expected, actual);
 			AssertSameSeekBehavior("d1", expected, actual);
-			expected.Close();
-			actual.Close();
-			csr.Close();
-			newDir.Close();
+			expected.Dispose();
+			actual.Dispose();
+			csr.Dispose();
+			newDir.Dispose();
 		}
 		public virtual void TestAppendTwice()
 		{
@@ -721,28 +721,28 @@ namespace Lucene.Net.Index
 			CreateSequenceFile(newDir, "d1", unchecked((byte)0), 15);
 			IndexOutput @out = csw.CreateOutput("d.xyz", NewIOContext(Random()));
 			@out.WriteInt(0);
-			@out.Close();
+			@out.Dispose();
 			AreEqual(1, csw.ListAll().Length);
 			AreEqual("d.xyz", csw.ListAll()[0]);
-			csw.Close();
+			csw.Dispose();
 			CompoundFileDirectory cfr = new CompoundFileDirectory(newDir, "d.cfs", NewIOContext
 				(Random()), false);
 			AreEqual(1, cfr.ListAll().Length);
 			AreEqual("d.xyz", cfr.ListAll()[0]);
-			cfr.Close();
-			newDir.Close();
+			cfr.Dispose();
+			newDir.Dispose();
 		}
 		public virtual void TestEmptyCFS()
 		{
 			Directory newDir = NewDirectory();
 			CompoundFileDirectory csw = new CompoundFileDirectory(newDir, "d.cfs", NewIOContext
 				(Random()), true);
-			csw.Close();
+			csw.Dispose();
 			CompoundFileDirectory csr = new CompoundFileDirectory(newDir, "d.cfs", NewIOContext
 				(Random()), false);
 			AreEqual(0, csr.ListAll().Length);
-			csr.Close();
-			newDir.Close();
+			csr.Dispose();
+			newDir.Dispose();
 		}
 		public virtual void TestReadNestedCFP()
 		{
@@ -755,14 +755,14 @@ namespace Lucene.Net.Index
 			IndexOutput out1 = nested.CreateOutput("b_1.xyz", NewIOContext(Random()));
 			@out.WriteInt(0);
 			out1.WriteInt(1);
-			@out.Close();
-			out1.Close();
-			nested.Close();
+			@out.Dispose();
+			out1.Dispose();
+			nested.Dispose();
 			newDir.Copy(csw, "b.cfs", "b.cfs", NewIOContext(Random()));
 			newDir.Copy(csw, "b.cfe", "b.cfe", NewIOContext(Random()));
 			newDir.DeleteFile("b.cfs");
 			newDir.DeleteFile("b.cfe");
-			csw.Close();
+			csw.Dispose();
 			AreEqual(2, newDir.ListAll().Length);
 			csw = new CompoundFileDirectory(newDir, "d.cfs", NewIOContext(Random()), false);
 			AreEqual(2, csw.ListAll().Length);
@@ -770,13 +770,13 @@ namespace Lucene.Net.Index
 			AreEqual(2, nested.ListAll().Length);
 			IndexInput openInput = nested.OpenInput("b.xyz", NewIOContext(Random()));
 			AreEqual(0, openInput.ReadInt());
-			openInput.Close();
+			openInput.Dispose();
 			openInput = nested.OpenInput("b_1.xyz", NewIOContext(Random()));
 			AreEqual(1, openInput.ReadInt());
-			openInput.Close();
-			nested.Close();
-			csw.Close();
-			newDir.Close();
+			openInput.Dispose();
+			nested.Dispose();
+			csw.Dispose();
+			newDir.Dispose();
 		}
 		public virtual void TestDoubleClose()
 		{
@@ -785,18 +785,18 @@ namespace Lucene.Net.Index
 				(Random()), true);
 			IndexOutput @out = csw.CreateOutput("d.xyz", NewIOContext(Random()));
 			@out.WriteInt(0);
-			@out.Close();
-			csw.Close();
+			@out.Dispose();
+			csw.Dispose();
 			// close a second time - must have no effect according to Closeable
-			csw.Close();
+			csw.Dispose();
 			csw = new CompoundFileDirectory(newDir, "d.cfs", NewIOContext(Random()), false);
 			IndexInput openInput = csw.OpenInput("d.xyz", NewIOContext(Random()));
 			AreEqual(0, openInput.ReadInt());
-			openInput.Close();
-			csw.Close();
+			openInput.Dispose();
+			csw.Dispose();
 			// close a second time - must have no effect according to Closeable
-			csw.Close();
-			newDir.Close();
+			csw.Dispose();
+			newDir.Dispose();
 		}
 		public virtual void TestManySubFiles()
 		{
@@ -806,7 +806,7 @@ namespace Lucene.Net.Index
 			{
 				IndexOutput @out = d.CreateOutput("file." + fileIdx, NewIOContext(Random()));
 				@out.WriteByte(unchecked((byte)fileIdx));
-				@out.Close();
+				@out.Dispose();
 			}
 			CompoundFileDirectory cfd = new CompoundFileDirectory(d, "c.cfs", NewIOContext(Random
 				()), true);
@@ -815,7 +815,7 @@ namespace Lucene.Net.Index
 				string fileName = "file." + fileIdx_1;
 				d.Copy(cfd, fileName, fileName, NewIOContext(Random()));
 			}
-			cfd.Close();
+			cfd.Dispose();
 			IndexInput[] ins = new IndexInput[FILE_COUNT];
 			CompoundFileDirectory cfr = new CompoundFileDirectory(d, "c.cfs", NewIOContext(Random
 				()), false);
@@ -830,10 +830,10 @@ namespace Lucene.Net.Index
 			}
 			for (int fileIdx_4 = 0; fileIdx_4 < FILE_COUNT; fileIdx_4++)
 			{
-				ins[fileIdx_4].Close();
+				ins[fileIdx_4].Dispose();
 			}
-			cfr.Close();
-			d.Close();
+			cfr.Dispose();
+			d.Dispose();
 		}
 		public virtual void TestListAll()
 		{
@@ -849,7 +849,7 @@ namespace Lucene.Net.Index
 			doc.Add(bodyField);
 			for (int i = 0; i < 100; i++)
 			{
-				idField.StringValue = Sharpen.Extensions.ToString(i));
+				idField.StringValue = i.ToString());
 				bodyField.StringValue = TestUtil.RandomUnicodeString(Random()));
 				riw.AddDocument(doc);
 				if (Random().Next(7) == 0)
@@ -857,9 +857,9 @@ namespace Lucene.Net.Index
 					riw.Commit();
 				}
 			}
-			riw.Close();
+			riw.Dispose();
 			CheckFiles(dir);
-			dir.Close();
+			dir.Dispose();
 		}
 		private void CheckFiles(Directory dir)
 		{
@@ -871,7 +871,7 @@ namespace Lucene.Net.Index
 						Random()), false);
 					CheckFiles(cfsDir);
 					// recurse into cfs
-					cfsDir.Close();
+					cfsDir.Dispose();
 				}
 				IndexInput @in = null;
 				bool success = false;

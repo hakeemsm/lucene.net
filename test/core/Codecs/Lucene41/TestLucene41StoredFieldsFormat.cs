@@ -16,7 +16,7 @@ namespace Lucene.Net.Test.Codecs.Lucene41
 		// explicitly instantiates ancient codec
 		protected override Codec Codec
 		{
-			return new Lucene41RWCodec();
+		    get { return new Lucene41RWCodec(); }
 		}
 
 	    protected override void AddRandomFields(Documents.Document doc)

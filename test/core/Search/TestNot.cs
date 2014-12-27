@@ -49,11 +49,11 @@ namespace Lucene.Net.Search
 			BooleanQuery query = new BooleanQuery();
 			query.Add(new TermQuery(new Term("field", "a")), BooleanClause.Occur.SHOULD);
 			query.Add(new TermQuery(new Term("field", "b")), BooleanClause.Occur.MUST_NOT);
-			ScoreDoc[] hits = searcher.Search(query, null, 1000).scoreDocs;
+			ScoreDoc[] hits = searcher.Search(query, null, 1000).ScoreDocs;
 			AreEqual(0, hits.Length);
-			writer.Close();
-			reader.Close();
-			store.Close();
+			writer.Dispose();
+			reader.Dispose();
+			store.Dispose();
 		}
 	}
 }

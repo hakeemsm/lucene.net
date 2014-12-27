@@ -10,7 +10,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	/// <summary>
 	/// Tests
@@ -46,18 +46,18 @@ namespace Lucene.Net.Index
 			}
 			IndexReader ir = writer.GetReader();
 			AssertSumDocFreq(ir);
-			ir.Close();
+			ir.Dispose();
 			int numDeletions = AtLeast(20);
 			for (int i_1 = 0; i_1 < numDeletions; i_1++)
 			{
 				writer.DeleteDocuments(new Term("id", string.Empty + Random().Next(numDocs)));
 			}
 			writer.ForceMerge(1);
-			writer.Close();
+			writer.Dispose();
 			ir = DirectoryReader.Open(dir);
 			AssertSumDocFreq(ir);
-			ir.Close();
-			dir.Close();
+			ir.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>

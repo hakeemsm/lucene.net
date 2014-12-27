@@ -123,14 +123,14 @@ namespace Lucene.Net.Search
 				writer.AddDocument(new Document());
 			}
 			reader = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 		}
 		
 		[TearDown]
 		public override void  TearDown()
 		{
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 			dir = null;
 			base.TearDown();
 		}

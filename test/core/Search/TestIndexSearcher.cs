@@ -30,20 +30,20 @@ namespace Lucene.Net.Search
 			{
 				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
-				doc.Add(NewStringField("field", Sharpen.Extensions.ToString(i), Field.Store.NO));
+				doc.Add(NewStringField("field", i.ToString(), Field.Store.NO));
 				doc.Add(NewStringField("field2", bool.ToString(i % 2 == 0), Field.Store.NO));
 				iw.AddDocument(doc);
 			}
 			reader = iw.GetReader();
-			iw.Close();
+			iw.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
 		public override void TearDown()
 		{
 			base.TearDown();
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		// should not throw exception
@@ -108,7 +108,7 @@ namespace Lucene.Net.Search
 			RandomIndexWriter w = new RandomIndexWriter(Random(), dir);
 			w.AddDocument(new Lucene.Net.Documents.Document());
 			IndexReader r = w.GetReader();
-			w.Close();
+			w.Dispose();
 			IndexSearcher s = new IndexSearcher(r);
 			try
 			{

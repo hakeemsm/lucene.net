@@ -174,7 +174,7 @@ namespace Lucene.Net.Search
 				}
 			}
 			reader = iw.GetReader();
-			iw.Close();
+			iw.Dispose();
 			searcher = NewSearcher(reader);
 			if (VERBOSE)
 			{
@@ -185,8 +185,8 @@ namespace Lucene.Net.Search
 		/// <exception cref="System.Exception"></exception>
 		public override void TearDown()
 		{
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 			base.TearDown();
 		}
 
@@ -240,7 +240,7 @@ namespace Lucene.Net.Search
 		/// <exception cref="System.Exception"></exception>
 		internal virtual void AssertQuery(Query query, Filter filter, Sort sort)
 		{
-			int maxDoc = searcher.GetIndexReader().MaxDoc;
+			int maxDoc = searcher.IndexReader.MaxDoc;
 			TopDocs all;
 			int pageSize = TestUtil.NextInt(Random(), 1, maxDoc * 2);
 			if (VERBOSE)
@@ -269,10 +269,10 @@ namespace Lucene.Net.Search
 			{
 				System.Console.Out.WriteLine("  all.TotalHits=" + all.TotalHits);
 				int upto = 0;
-				foreach (ScoreDoc scoreDoc in all.scoreDocs)
+				foreach (ScoreDoc scoreDoc in all.ScoreDocs)
 				{
 					System.Console.Out.WriteLine("    hit " + (upto++) + ": id=" + searcher.Doc(scoreDoc
-						.doc).Get("id") + " " + scoreDoc);
+						.Doc).Get("id") + " " + scoreDoc);
 				}
 			}
 			int pageStart = 0;
@@ -307,36 +307,36 @@ namespace Lucene.Net.Search
 				}
 				if (VERBOSE)
 				{
-					System.Console.Out.WriteLine("    " + paged.scoreDocs.Length + " hits on page");
+					System.Console.Out.WriteLine("    " + paged.ScoreDocs.Length + " hits on page");
 				}
-				if (paged.scoreDocs.Length == 0)
+				if (paged.ScoreDocs.Length == 0)
 				{
 					break;
 				}
 				AssertPage(pageStart, all, paged);
-				pageStart += paged.scoreDocs.Length;
-				lastBottom = paged.scoreDocs[paged.scoreDocs.Length - 1];
+				pageStart += paged.ScoreDocs.Length;
+				lastBottom = paged.ScoreDocs[paged.ScoreDocs.Length - 1];
 			}
-			AreEqual(all.scoreDocs.Length, pageStart);
+			AreEqual(all.ScoreDocs.Length, pageStart);
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
 		internal virtual void AssertPage(int pageStart, TopDocs all, TopDocs paged)
 		{
 			AreEqual(all.TotalHits, paged.TotalHits);
-			for (int i = 0; i < paged.scoreDocs.Length; i++)
+			for (int i = 0; i < paged.ScoreDocs.Length; i++)
 			{
-				ScoreDoc sd1 = all.scoreDocs[pageStart + i];
-				ScoreDoc sd2 = paged.scoreDocs[i];
+				ScoreDoc sd1 = all.ScoreDocs[pageStart + i];
+				ScoreDoc sd2 = paged.ScoreDocs[i];
 				if (VERBOSE)
 				{
 					System.Console.Out.WriteLine("    hit " + (pageStart + i));
-					System.Console.Out.WriteLine("      expected id=" + searcher.Doc(sd1.doc).Get("id"
+					System.Console.Out.WriteLine("      expected id=" + searcher.Doc(sd1.Doc).Get("id"
 						) + " " + sd1);
-					System.Console.Out.WriteLine("        actual id=" + searcher.Doc(sd2.doc).Get("id"
+					System.Console.Out.WriteLine("        actual id=" + searcher.Doc(sd2.Doc).Get("id"
 						) + " " + sd2);
 				}
-				AreEqual(sd1.doc, sd2.doc);
+				AreEqual(sd1.Doc, sd2.Doc);
 				AreEqual(sd1.score, sd2.score, 0f);
 				if (sd1 is FieldDoc)
 				{

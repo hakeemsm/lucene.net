@@ -7,7 +7,7 @@
 using Lucene.Net.Index;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestLogMergePolicy : BaseMergePolicyTestCase
 	{

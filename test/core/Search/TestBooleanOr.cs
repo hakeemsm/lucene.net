@@ -158,14 +158,14 @@ namespace Lucene.Net.Search
 			reader = writer.GetReader();
 			//
 			searcher = NewSearcher(reader);
-			writer.Close();
+			writer.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
 		public override void TearDown()
 		{
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 			base.TearDown();
 		}
 
@@ -185,14 +185,14 @@ namespace Lucene.Net.Search
 			}
 			riw.ForceMerge(1);
 			IndexReader r = riw.GetReader();
-			riw.Close();
+			riw.Dispose();
 			IndexSearcher s = NewSearcher(r);
 			BooleanQuery bq = new BooleanQuery();
 			bq.Add(new TermQuery(new Term("field", "a")), BooleanClause.Occur.SHOULD);
 			bq.Add(new TermQuery(new Term("field", "a")), BooleanClause.Occur.SHOULD);
 			Weight w = s.CreateNormalizedWeight(bq);
-			AreEqual(1, s.GetIndexReader().Leaves().Count);
-			BulkScorer scorer = w.BulkScorer(s.GetIndexReader().Leaves()[0], false, null);
+			AreEqual(1, s.IndexReader.Leaves.Count);
+			BulkScorer scorer = w.BulkScorer(s.IndexReader.Leaves[0], false, null);
 			FixedBitSet hits = new FixedBitSet(docCount);
 			AtomicInteger end = new AtomicInteger();
 			Collector c = new _Collector_190(end, hits);
@@ -203,8 +203,8 @@ namespace Lucene.Net.Search
 				scorer.Score(c, end);
 			}
 			AreEqual(docCount, hits.Cardinality());
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 
 		private sealed class _Collector_190 : Collector

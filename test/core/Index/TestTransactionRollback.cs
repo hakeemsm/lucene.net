@@ -12,7 +12,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	/// <summary>Test class to illustrate using IndexDeletionPolicy to provide multi-level rollback capability.
 	/// 	</summary>
@@ -57,7 +57,7 @@ namespace Lucene.Net.Index
 			IDictionary<string, string> data = new Dictionary<string, string>();
 			data.Put("index", "Rolled back to 1-" + id);
 			w.SetCommitData(data);
-			w.Close();
+			w.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -95,7 +95,7 @@ namespace Lucene.Net.Index
 					}
 				}
 			}
-			r.Close();
+			r.Dispose();
 			AreEqual("Should have 0 docs remaining ", 0, expecteds.Cardinality
 				());
 		}
@@ -124,13 +124,13 @@ namespace Lucene.Net.Index
 					w.Commit();
 				}
 			}
-			w.Close();
+			w.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
 		public override void TearDown()
 		{
-			dir.Close();
+			dir.Dispose();
 			base.TearDown();
 		}
 
@@ -206,10 +206,10 @@ namespace Lucene.Net.Index
 				// should not work:
 				new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(
 					Random())).SetIndexDeletionPolicy(new TestTransactionRollback.DeleteLastCommitPolicy
-					(this))).Close();
+					(this))).Dispose();
 				IndexReader r = DirectoryReader.Open(dir);
-				AreEqual(100, r.NumDocs());
-				r.Close();
+				AreEqual(100, r.NumDocs);
+				r.Dispose();
 			}
 		}
 

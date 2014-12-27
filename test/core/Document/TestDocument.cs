@@ -85,7 +85,7 @@ namespace Lucene.Net.Documents
 	    [Test]
 		public virtual void TestRemoveForNewDocument()
 	    {
-	        Document doc = makeDocumentWithFields();
+	        Document doc = MakeDocumentWithFields();
 	        assertEquals(8, doc.GetFields().size());
 	        doc.RemoveFields("keyword");
 	        assertEquals(6, doc.GetFields().size());
@@ -152,7 +152,7 @@ namespace Lucene.Net.Documents
 		[Test]
 		public virtual void TestGetValuesForNewDocument()
 		{
-			doAssert(makeDocumentWithFields(), false);
+			DoAssert(MakeDocumentWithFields(), false);
 		}
 
 	    /// <summary> Tests {@link Document#GetValues(String)} method for a Document retrieved from
@@ -174,10 +174,10 @@ namespace Lucene.Net.Documents
 //	        Query query = new TermQuery(new Term("keyword", "test1"));
 //
 //	        // ensure that queries return expected results without DateFilter first
-//	        ScoreDoc[] hits = searcher.search(query, null, 1000).scoreDocs;
+//	        ScoreDoc[] hits = searcher.search(query, null, 1000).ScoreDocs;
 //	        assertEquals(1, hits.length);
 //
-//	        doAssert(searcher.doc(hits[0].doc), true);
+//	        doAssert(searcher.Doc(hits[0].Doc), true);
 //	        writer.close();
 //	        reader.close();
 //	        dir.close();
@@ -204,12 +204,12 @@ namespace Lucene.Net.Documents
 			PhraseQuery query = new PhraseQuery();
 			query.Add(new Term("indexed_not_tokenized", "test1"));
 			query.Add(new Term("indexed_not_tokenized", "test2"));
-			ScoreDoc[] hits = searcher.Search(query, null, 1000).scoreDocs;
+			ScoreDoc[] hits = searcher.Search(query, null, 1000).ScoreDocs;
 			AreEqual(1, hits.Length);
-			DoAssert(searcher.Doc(hits[0].doc), true);
-			writer.Close();
-			reader.Close();
-			dir.Close();
+			DoAssert(searcher.Doc(hits[0].Doc), true);
+			writer.Dispose();
+			reader.Dispose();
+			dir.Dispose();
 		}
 		private Lucene.Net.Documents.Document MakeDocumentWithFields()
 		{
@@ -217,7 +217,7 @@ namespace Lucene.Net.Documents
             FieldType stored = new FieldType();
             stored.Stored = true;
 			FieldType indexedNotTokenized = new FieldType();
-			indexedNotTokenized.SetIndexed(true);
+			indexedNotTokenized.Indexed(true);
 			indexedNotTokenized.SetTokenized(false);
             doc.Add(new StringField("keyword", "test1", Field.Store.YES));
             doc.Add(new StringField("keyword", "test2", Field.Store.YES));
@@ -289,12 +289,12 @@ namespace Lucene.Net.Documents
 //	        Query query = new TermQuery(new Term("keyword", "test"));
 //
 //	        // ensure that queries return expected results without DateFilter first
-//	        ScoreDoc[] hits = searcher.search(query, null, 1000).scoreDocs;
+//	        ScoreDoc[] hits = searcher.search(query, null, 1000).ScoreDocs;
 //	        assertEquals(3, hits.length);
 //	        int result = 0;
 //	        for (int i = 0; i < 3; i++)
 //	        {
-//	            Document doc2 = searcher.doc(hits[i].doc);
+//	            Document doc2 = searcher.Doc(hits[i].Doc);
 //	            Field f = (Field) doc2.getField("id");
 //	            if (f.stringValue().equals("id1")) result |= 1;
 //	            else if (f.stringValue().equals("id2")) result |= 2;
@@ -347,7 +347,7 @@ namespace Lucene.Net.Documents
 				Field.TermVector.WITH_POSITIONS_OFFSETS));
 			w.AddDocument(doc);
 			IndexReader r = w.GetReader();
-			w.Close();
+			w.Dispose();
 			doc = r.Document(0);
 			// 4 stored fields
 			AreEqual(4, doc.GetFields().Count);
@@ -398,8 +398,8 @@ namespace Lucene.Net.Documents
 				AreEqual(new BytesRef("xyz"), tvsEnum.Next());
 				IsNull(tvsEnum.Next());
 			}
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 		public virtual void TestNumericFieldAsString()
 		{
@@ -418,9 +418,9 @@ namespace Lucene.Net.Documents
 			AreEqual("5", sdoc.Get("int"));
 			IsNull(sdoc.Get("somethingElse"));
 			AssertArrayEquals(new string[] { "5", "4" }, sdoc.GetValues("int"));
-			ir.Close();
-			iw.Close();
-			dir.Close();
+			ir.Dispose();
+			iw.Dispose();
+			dir.Dispose();
 		}
 	}
 }

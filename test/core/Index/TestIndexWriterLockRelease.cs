@@ -11,7 +11,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	/// <summary>
 	/// This tests the patch for issue #LUCENE-715 (IndexWriter does not
@@ -47,7 +47,7 @@ namespace Lucene.Net.Index
 			}
 			finally
 			{
-				dir.Close();
+				dir.Dispose();
 			}
 		}
 	}

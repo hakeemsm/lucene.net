@@ -101,7 +101,7 @@ namespace Lucene.Net.Search
 			writer.AddDocument(d1);
 			writer.AddDocument(d2);
 			IndexReader reader = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			
 			float[] scores = new float[4];
 			IndexSearcher searcher = NewSearcher(reader);
@@ -120,8 +120,8 @@ namespace Lucene.Net.Search
 					+ lastScore, scores[i] > lastScore);
 				lastScore = scores[i];
 			}
-			reader.Close();
-			store.Close();
+			reader.Dispose();
+			store.Dispose();
 		}
 	}
 }

@@ -49,7 +49,7 @@ namespace Lucene.Net.Store
 				}
 				@out.WriteBytes(bytes, 0, byteUpto);
 				AreEqual(size, @out.FilePointer);
-				@out.Close();
+				@out.Dispose();
 				AreEqual(size, dir.FileLength("test"));
 				// copy from test -> test2
 				IndexInput @in = dir.OpenInput("test", NewIOContext(Random()));
@@ -70,8 +70,8 @@ namespace Lucene.Net.Store
 					}
 				}
 				AreEqual(size, upto);
-				@out.Close();
-				@in.Close();
+				@out.Dispose();
+				@in.Dispose();
 				// verify
 				IndexInput in2 = dir.OpenInput("test2", NewIOContext(Random()));
 				upto = 0;
@@ -94,10 +94,10 @@ namespace Lucene.Net.Store
 						}
 					}
 				}
-				in2.Close();
+				in2.Dispose();
 				dir.DeleteFile("test");
 				dir.DeleteFile("test2");
-				dir.Close();
+				dir.Dispose();
 			}
 		}
 
@@ -111,12 +111,12 @@ namespace Lucene.Net.Store
 			Directory d = NewDirectory();
 			IndexOutput output = d.CreateOutput("data", IOContext.DEFAULT);
 			output.WriteBytes(data, 0, datalen);
-			output.Close();
+			output.Dispose();
 			IndexInput input = d.OpenInput("data", IOContext.DEFAULT);
 			IndexOutput outputHeader = d.CreateOutput("header", IOContext.DEFAULT);
 			// copy our 100-byte header
 			outputHeader.CopyBytes(input, 100);
-			outputHeader.Close();
+			outputHeader.Dispose();
 			// now make N copies of the remaining bytes
 			TestCopyBytes.CopyThread[] copies = new TestCopyBytes.CopyThread[10];
 			for (int i = 0; i < copies.Length; i++)
@@ -140,10 +140,10 @@ namespace Lucene.Net.Store
 				// copy the header for easy testing
 				copiedData.ReadBytes(dataCopy, 100, datalen - 100);
 				AssertArrayEquals(data, dataCopy);
-				copiedData.Close();
+				copiedData.Dispose();
 			}
-			input.Close();
-			d.Close();
+			input.Dispose();
+			d.Dispose();
 		}
 
 		internal class CopyThread : Sharpen.Thread
@@ -163,7 +163,7 @@ namespace Lucene.Net.Store
 				try
 				{
 					dst.CopyBytes(src, src.Length() - 100);
-					dst.Close();
+					dst.Dispose();
 				}
 				catch (IOException ex)
 				{

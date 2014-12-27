@@ -16,7 +16,7 @@ namespace Lucene.Net.Test.Codecs.Compressing
 		// give it a chance to test various compression modes with different chunk sizes
 		protected override Codec Codec
 		{
-			return CompressingCodec.RandomInstance(Random());
+		    get { return CompressingCodec.RandomInstance(Random()); }
 		}
 
 	    protected override void AddRandomFields(Documents.Document doc)

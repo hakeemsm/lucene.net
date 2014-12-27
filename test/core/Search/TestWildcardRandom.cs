@@ -51,7 +51,7 @@ namespace Lucene.Net.Search
 			}
 			reader = writer.GetReader();
 			searcher = NewSearcher(reader);
-			writer.Close();
+			writer.Dispose();
 			if (VERBOSE)
 			{
 				System.Console.Out.WriteLine("TEST: setUp searcher=" + searcher);
@@ -105,8 +105,8 @@ namespace Lucene.Net.Search
 		/// <exception cref="System.Exception"></exception>
 		public override void TearDown()
 		{
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 			base.TearDown();
 		}
 

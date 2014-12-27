@@ -109,8 +109,8 @@ namespace Lucene.Net.Store
 				writer.AddDocument(doc);
 			}
 			Assert.AreEqual(docsToAdd, writer.MaxDoc);
-			writer.Close();
-		    dir.Close();
+			writer.Dispose();
+		    dir.Dispose();
 		}
 		
         [Test]
@@ -121,14 +121,14 @@ namespace Lucene.Net.Store
 			MockDirectoryWrapper ramDir = new MockDirectoryWrapper(Random(), new RAMDirectory
 				(dir, NewIOContext(Random())));
 			// close the underlaying directory
-			dir.Close();
+			dir.Dispose();
 			
 			// Check size
 			Assert.AreEqual(ramDir.SizeInBytes(), ramDir.GetRecomputedSizeInBytes());
 			
 			// open reader to test document count
 			IndexReader reader = DirectoryReader.Open(ramDir);
-			Assert.AreEqual(docsToAdd, reader.NumDocs());
+			Assert.AreEqual(docsToAdd, reader.NumDocs);
 			
 			// open search zo check if all doc's are there
 			IndexSearcher searcher = NewSearcher(reader);
@@ -141,7 +141,7 @@ namespace Lucene.Net.Store
 			}
 			
 			// cleanup
-			reader.Close();
+			reader.Dispose();
 		}
 		
 		private int numThreads = 10;
@@ -153,7 +153,7 @@ namespace Lucene.Net.Store
 			Directory dir = NewFSDirectory(indexDir);
 			MockDirectoryWrapper ramDir = new MockDirectoryWrapper(Random(), new RAMDirectory
 				(dir, NewIOContext(Random())));
-            dir.Close();
+            dir.Dispose();
 			IndexWriter writer = new IndexWriter(ramDir, new IndexWriterConfig(TEST_VERSION_CURRENT
 				, new MockAnalyzer(Random())).SetOpenMode(IndexWriterConfig.OpenMode.APPEND));
 			writer.ForceMerge(1);
@@ -174,7 +174,7 @@ namespace Lucene.Net.Store
 			writer.ForceMerge(1);
 			AreEqual(ramDir.SizeInBytes(), ramDir.GetRecomputedSizeInBytes
 				());
-			writer.Close();
+			writer.Dispose();
 		}
 		
 		
@@ -190,7 +190,7 @@ namespace Lucene.Net.Store
 	        formatter.Serialize(out_Renamed.BaseStream, dir);
 			out_Renamed.Flush();  // In Java, this is Close(), but we can't do this in .NET, and the Close() is moved to after the validation check
 			Assert.IsTrue(headerSize < bos.Length, "contains more then just header");
-            out_Renamed.Close();
+            out_Renamed.Dispose();
 		}
 		
 		[TearDown]
@@ -212,11 +212,11 @@ namespace Lucene.Net.Store
 			IndexOutput o = dir.CreateOutput("out", NewIOContext(Random()));
 			byte[] b = new byte[1024];
 			o.WriteBytes(b, 0, 1024);
-			o.Close();
+			o.Dispose();
 			IndexInput i = dir.OpenInput("out", NewIOContext(Random()));
 			i.Seek(1024);
-			i.Close();
-			dir.Close();
+			i.Dispose();
+			dir.Dispose();
 		}
 		public virtual void TestSeekToEOFThenBack()
 		{
@@ -224,14 +224,14 @@ namespace Lucene.Net.Store
 			IndexOutput o = dir.CreateOutput("out", NewIOContext(Random()));
 			byte[] bytes = new byte[3 * RAMInputStream.BUFFER_SIZE];
 			o.WriteBytes(bytes, 0, bytes.Length);
-			o.Close();
+			o.Dispose();
 			IndexInput i = dir.OpenInput("out", NewIOContext(Random()));
 			i.Seek(2 * RAMInputStream.BUFFER_SIZE - 1);
 			i.Seek(3 * RAMInputStream.BUFFER_SIZE);
 			i.Seek(RAMInputStream.BUFFER_SIZE);
 			i.ReadBytes(bytes, 0, 2 * RAMInputStream.BUFFER_SIZE);
-			i.Close();
-			dir.Close();
+			i.Dispose();
+			dir.Dispose();
 		}
 	}
 }

@@ -10,7 +10,7 @@ using Lucene.Net.Util;
 using Sharpen;
 using Sharpen.Reflect;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestNoMergePolicy : LuceneTestCase
 	{
@@ -23,7 +23,7 @@ namespace Lucene.Net.Index
 			IsNull(mp.FindForcedMerges(null, 0, null));
 			IsNull(mp.FindForcedDeletesMerges(null));
 			IsFalse(mp.UseCompoundFile(null, null));
-			mp.Close();
+			mp.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>

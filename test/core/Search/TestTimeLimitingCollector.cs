@@ -72,7 +72,7 @@ namespace Lucene.Net.Search
 				Add(docText[i % docText.Length], iw);
 			}
 			reader = iw.GetReader();
-			iw.Close();
+			iw.Dispose();
 			searcher = NewSearcher(reader);
 			BooleanQuery booleanQuery = new BooleanQuery();
 			booleanQuery.Add(new TermQuery(new Term(FIELD_NAME, "one")), BooleanClause.Occur.
@@ -96,8 +96,8 @@ namespace Lucene.Net.Search
 		/// <exception cref="System.Exception"></exception>
 		public override void TearDown()
 		{
-			reader.Close();
-			directory.Close();
+			reader.Dispose();
+			directory.Dispose();
 			counterThread.StopTimer();
 			counterThread.Join();
 			base.TearDown();

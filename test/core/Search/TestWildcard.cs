@@ -97,8 +97,8 @@ namespace Lucene.Net.Search
 		    q = searcher.Rewrite(wq);
 		    Assert.True(q is ConstantScoreQuery);
 		    Assert.AreEqual(q.Boost, wq.Boost);
-			reader.Close();
-			indexStore.Close();
+			reader.Dispose();
+			indexStore.Dispose();
 		}
 
         /// <summary>
@@ -117,8 +117,8 @@ namespace Lucene.Net.Search
 			Query q = searcher.Rewrite(wq);
 			IsTrue(q is BooleanQuery);
 			AreEqual(0, ((BooleanQuery)q).Clauses().Count);
-			reader.Close();
-			indexStore.Close();
+			reader.Dispose();
+			indexStore.Dispose();
         }
 
         /// <summary>
@@ -136,15 +136,15 @@ namespace Lucene.Net.Search
             MultiTermQuery wq = new WildcardQuery(new Term("field", "prefix*"));
             AssertMatches(searcher, wq, 2);
 
-			Terms terms = MultiFields.GetTerms(searcher.GetIndexReader(), "field");
+			Terms terms = MultiFields.GetTerms(searcher.IndexReader, "field");
 			IsTrue(wq.GetTermsEnum(terms) is PrefixTermsEnum);
 			wq = new WildcardQuery(new Term("field", "*"));
 			AssertMatches(searcher, wq, 2);
 			IsFalse(wq.GetTermsEnum(terms) is PrefixTermsEnum);
 			IsFalse(wq.GetTermsEnum(terms).GetType().Name.Contains("AutomatonTermsEnum"
 				));
-			reader.Close();
-			indexStore.Close();
+			reader.Dispose();
+			indexStore.Dispose();
         }
 
 	    /// <summary> Tests Wildcard queries with an asterisk.</summary>
@@ -181,8 +181,8 @@ namespace Lucene.Net.Search
 			AssertMatches(searcher, new WildcardQuery(new Term("body", "*tall")), 0);
 			AssertMatches(searcher, new WildcardQuery(new Term("body", "*tal")), 1);
 			AssertMatches(searcher, new WildcardQuery(new Term("body", "*tal*")), 2);
-			reader.Close();
-			indexStore.Close();
+			reader.Dispose();
+			indexStore.Dispose();
 		}
 		
 
@@ -202,8 +202,8 @@ namespace Lucene.Net.Search
             Query query3 = new WildcardQuery(new Term("body", term.ToString()));
 
             AssertMatches(searcher, query3, 1);
-            searcher.Close();
-            indexStore.Close();
+            searcher.Dispose();
+            indexStore.Dispose();
         }
 
 		/// <summary> Tests Wildcard queries with a question mark.
@@ -229,8 +229,8 @@ namespace Lucene.Net.Search
 			AssertMatches(searcher, query4, 3);
 			AssertMatches(searcher, query5, 0);
 			AssertMatches(searcher, query6, 1); // Query: 'meta??' matches 'metals' not 'metal'
-			reader.Close();
-			indexStore.Close();
+			reader.Dispose();
+			indexStore.Dispose();
 		}
 		
 		public virtual void TestEscapes()
@@ -254,8 +254,8 @@ namespace Lucene.Net.Search
 			// check escaping at end: lenient parse yields "foo\"
 			WildcardQuery atEnd = new WildcardQuery(new Term("field", "foo\\"));
 			AssertMatches(searcher, atEnd, 1);
-			reader.Close();
-			indexStore.Close();
+			reader.Dispose();
+			indexStore.Dispose();
 		}
 		private RAMDirectory GetIndexStore(System.String field, System.String[] contents)
 		{
@@ -267,7 +267,7 @@ namespace Lucene.Net.Search
 				doc.Add(NewTextField(field, contents[i], Field.Store.YES));
 				writer.AddDocument(doc);
 			}
-			writer.Close();
+			writer.Dispose();
 			
 			return indexStore;
 		}
@@ -337,7 +337,7 @@ namespace Lucene.Net.Search
 				doc.Add(NewTextField(field, docs[i], Field.Store.NO));
 				iw.AddDocument(doc);
 			}
-			iw.Close();
+			iw.Dispose();
 			IndexReader reader = DirectoryReader.Open(dir);
 			IndexSearcher searcher = NewSearcher(reader);
 			
@@ -348,7 +348,7 @@ namespace Lucene.Net.Search
 				{
 					System.Console.Out.WriteLine("matchAll: q=" + q + " " + q.GetType().FullName);
 				}
-				ScoreDoc[] hits = searcher.Search(q, null, 1000).scoreDocs;
+				ScoreDoc[] hits = searcher.Search(q, null, 1000).ScoreDocs;
 				AreEqual(docs.Length, hits.Length);
 			}
 			
@@ -360,7 +360,7 @@ namespace Lucene.Net.Search
 					System.Console.Out.WriteLine("matchNone: q=" + q_1 + " " + q_1.GetType().FullName
 						);
 				}
-				ScoreDoc[] hits = searcher.Search(q_1, null, 1000).scoreDocs;
+				ScoreDoc[] hits = searcher.Search(q_1, null, 1000).ScoreDocs;
 				AreEqual(0, hits.Length);
 			}
 			
@@ -375,9 +375,9 @@ namespace Lucene.Net.Search
 						System.Console.Out.WriteLine("match 1 prefix: doc=" + docs[i_1] + " q=" + q_2 + " "
 							 + q_2.GetType().FullName);
 					}
-					ScoreDoc[] hits = searcher.Search(q_2, null, 1000).scoreDocs;
+					ScoreDoc[] hits = searcher.Search(q_2, null, 1000).ScoreDocs;
 					AreEqual(1, hits.Length);
-					AreEqual(i_1, hits[0].doc);
+					AreEqual(i_1, hits[0].Doc);
 				}
 			}
 			
@@ -392,14 +392,14 @@ namespace Lucene.Net.Search
 						System.Console.Out.WriteLine("match 1 wild: doc=" + docs[i_2] + " q=" + q_2 + " "
 							 + q_2.GetType().FullName);
 					}
-					ScoreDoc[] hits = searcher.Search(q_2, null, 1000).scoreDocs;
+					ScoreDoc[] hits = searcher.Search(q_2, null, 1000).ScoreDocs;
 					AreEqual(1, hits.Length);
-					AreEqual(i_2, hits[0].doc);
+					AreEqual(i_2, hits[0].Doc);
 				}
 			}
 			
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 		}
 	}
 }

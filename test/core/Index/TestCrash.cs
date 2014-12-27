@@ -11,7 +11,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestCrash : LuceneTestCase
 	{
@@ -29,7 +29,7 @@ namespace Lucene.Net.Index
 			IndexWriter writer = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig
 				(TEST_VERSION_CURRENT, new MockAnalyzer(random)).SetMaxBufferedDocs(10)).SetMergeScheduler
 				(new ConcurrentMergeScheduler()));
-			((ConcurrentMergeScheduler)writer.GetConfig().GetMergeScheduler()).SetSuppressExceptions
+			((ConcurrentMergeScheduler)writer.Config.GetMergeScheduler()).SetSuppressExceptions
 				();
 			if (initialCommit)
 			{
@@ -50,7 +50,7 @@ namespace Lucene.Net.Index
 		private void Crash(IndexWriter writer)
 		{
 			MockDirectoryWrapper dir = (MockDirectoryWrapper)writer.GetDirectory();
-			ConcurrentMergeScheduler cms = (ConcurrentMergeScheduler)writer.GetConfig().GetMergeScheduler
+			ConcurrentMergeScheduler cms = (ConcurrentMergeScheduler)writer.Config.GetMergeScheduler
 				();
 			cms.Sync();
 			dir.Crash();
@@ -71,15 +71,15 @@ namespace Lucene.Net.Index
 			dir.SetAssertNoUnrefencedFilesOnClose(false);
 			Crash(writer);
 			IndexReader reader = DirectoryReader.Open(dir);
-			IsTrue(reader.NumDocs() < 157);
-			reader.Close();
+			IsTrue(reader.NumDocs < 157);
+			reader.Dispose();
 			// Make a new dir, copying from the crashed dir, and
 			// open IW on it, to confirm IW "recovers" after a
 			// crash:
 			Directory dir2 = NewDirectory(dir);
-			dir.Close();
-			new RandomIndexWriter(Random(), dir2).Close();
-			dir2.Close();
+			dir.Dispose();
+			new RandomIndexWriter(Random(), dir2).Dispose();
+			dir2.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -99,17 +99,17 @@ namespace Lucene.Net.Index
 			System.Console.Out.WriteLine("TEST: now crash");
 			Crash(writer);
 			writer = InitIndex(Random(), dir, false);
-			writer.Close();
+			writer.Dispose();
 			IndexReader reader = DirectoryReader.Open(dir);
-			IsTrue(reader.NumDocs() < 314);
-			reader.Close();
+			IsTrue(reader.NumDocs < 314);
+			reader.Dispose();
 			// Make a new dir, copying from the crashed dir, and
 			// open IW on it, to confirm IW "recovers" after a
 			// crash:
 			Directory dir2 = NewDirectory(dir);
-			dir.Close();
-			new RandomIndexWriter(Random(), dir2).Close();
-			dir2.Close();
+			dir.Dispose();
+			new RandomIndexWriter(Random(), dir2).Dispose();
+			dir2.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -120,20 +120,20 @@ namespace Lucene.Net.Index
 			// We create leftover files because merging could be
 			// running when we crash:
 			dir.SetAssertNoUnrefencedFilesOnClose(false);
-			writer.Close();
+			writer.Dispose();
 			writer = InitIndex(Random(), dir, false);
 			AreEqual(314, writer.MaxDoc);
 			Crash(writer);
 			IndexReader reader = DirectoryReader.Open(dir);
-			IsTrue(reader.NumDocs() >= 157);
-			reader.Close();
+			IsTrue(reader.NumDocs >= 157);
+			reader.Dispose();
 			// Make a new dir, copying from the crashed dir, and
 			// open IW on it, to confirm IW "recovers" after a
 			// crash:
 			Directory dir2 = NewDirectory(dir);
-			dir.Close();
-			new RandomIndexWriter(Random(), dir2).Close();
-			dir2.Close();
+			dir.Dispose();
+			new RandomIndexWriter(Random(), dir2).Dispose();
+			dir2.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -141,12 +141,12 @@ namespace Lucene.Net.Index
 		{
 			IndexWriter writer = InitIndex(Random(), false);
 			MockDirectoryWrapper dir = (MockDirectoryWrapper)writer.GetDirectory();
-			writer.Close();
+			writer.Dispose();
 			dir.Crash();
 			IndexReader reader = DirectoryReader.Open(dir);
-			AreEqual(157, reader.NumDocs());
-			reader.Close();
-			dir.Close();
+			AreEqual(157, reader.NumDocs);
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -157,9 +157,9 @@ namespace Lucene.Net.Index
 			writer.Close(false);
 			dir.Crash();
 			IndexReader reader = DirectoryReader.Open(dir);
-			AreEqual(157, reader.NumDocs());
-			reader.Close();
-			dir.Close();
+			AreEqual(157, reader.NumDocs);
+			reader.Dispose();
+			dir.Dispose();
 		}
 	}
 }

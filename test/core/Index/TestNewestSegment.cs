@@ -10,7 +10,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestNewestSegment : LuceneTestCase
 	{
@@ -21,8 +21,8 @@ namespace Lucene.Net.Index
 			IndexWriter writer = new IndexWriter(directory, NewIndexWriterConfig(TEST_VERSION_CURRENT
 				, new MockAnalyzer(Random())));
 			IsNull(writer.NewestSegment());
-			writer.Close();
-			directory.Close();
+			writer.Dispose();
+			directory.Dispose();
 		}
 	}
 }

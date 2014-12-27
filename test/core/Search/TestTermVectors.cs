@@ -69,15 +69,15 @@ namespace Lucene.Net.Search
 				writer.AddDocument(doc);
 			}
 			reader = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
 		[NUnit.Framework.AfterClass]
 		public static void AfterClass()
 		{
-			reader.Close();
-			directory.Close();
+			reader.Dispose();
+			directory.Dispose();
 			reader = null;
 			directory = null;
 		}
@@ -111,12 +111,12 @@ namespace Lucene.Net.Search
 			doc.Add(NewField("field", "one", ft5));
 			writer.AddDocument(doc);
 			IndexReader reader = writer.GetReader();
-			writer.Close();
+			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(reader);
 			Query query = new TermQuery(new Term("field", "one"));
-			ScoreDoc[] hits = searcher.Search(query, null, 1000).scoreDocs;
+			ScoreDoc[] hits = searcher.Search(query, null, 1000).ScoreDocs;
 			AreEqual(1, hits.Length);
-			Fields vectors = searcher.reader.GetTermVectors(hits[0].doc);
+			Fields vectors = searcher.reader.GetTermVectors(hits[0].Doc);
 			IsNotNull(vectors);
 			AreEqual(1, vectors.Size());
 			Terms vector = vectors.Terms("field");
@@ -144,7 +144,7 @@ namespace Lucene.Net.Search
 				AreEqual(4 * i_1, dpEnum.StartOffset());
 				AreEqual(4 * i_1 + 3, dpEnum.EndOffset());
 			}
-			reader.Close();
+			reader.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -159,7 +159,7 @@ namespace Lucene.Net.Search
 		{
 			IndexWriter writer = CreateWriter(dir);
 			writer.AddDocument(CreateDoc());
-			writer.Close();
+			writer.Dispose();
 		}
 
 		private Lucene.Net.Documents.Document CreateDoc()
@@ -178,13 +178,13 @@ namespace Lucene.Net.Search
 		private void VerifyIndex(Directory dir)
 		{
 			IndexReader r = DirectoryReader.Open(dir);
-			int numDocs = r.NumDocs();
+			int numDocs = r.NumDocs;
 			for (int i = 0; i < numDocs; i++)
 			{
 				IsNotNull("term vectors should not have been null for document "
 					 + i, r.GetTermVectors(i).Terms("c"));
 			}
-			r.Close();
+			r.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -199,9 +199,9 @@ namespace Lucene.Net.Search
 				writer.AddDocument(CreateDoc());
 			}
 			writer.ForceMerge(1);
-			writer.Close();
+			writer.Dispose();
 			VerifyIndex(target);
-			target.Close();
+			target.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -216,7 +216,7 @@ namespace Lucene.Net.Search
 			IndexWriter writer = CreateWriter(target);
 			writer.AddIndexes(input);
 			writer.ForceMerge(1);
-			writer.Close();
+			writer.Dispose();
 			VerifyIndex(target);
 			IOUtils.Close(target, input[0], input[1]);
 		}
@@ -235,10 +235,10 @@ namespace Lucene.Net.Search
 			{
 				IndexReader r = DirectoryReader.Open(dir_1);
 				writer.AddIndexes(r);
-				r.Close();
+				r.Dispose();
 			}
 			writer.ForceMerge(1);
-			writer.Close();
+			writer.Dispose();
 			VerifyIndex(target);
 			IOUtils.Close(target, input[0], input[1]);
 		}

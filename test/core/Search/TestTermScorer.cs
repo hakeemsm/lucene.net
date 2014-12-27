@@ -46,7 +46,7 @@ namespace Lucene.Net.Search
 				writer.AddDocument(doc);
 			}
 			indexReader = SlowCompositeReaderWrapper.Wrap(writer.GetReader());
-			writer.Close();
+			writer.Dispose();
 			indexSearcher = NewSearcher(indexReader);
 			indexSearcher.SetSimilarity(new DefaultSimilarity());
 		}
@@ -54,8 +54,8 @@ namespace Lucene.Net.Search
 		/// <exception cref="System.Exception"></exception>
 		public override void TearDown()
 		{
-			indexReader.Close();
-			directory.Close();
+			indexReader.Dispose();
+			directory.Dispose();
 			base.TearDown();
 		}
 
@@ -69,8 +69,8 @@ namespace Lucene.Net.Search
 				);
 			AtomicReaderContext context = (AtomicReaderContext)indexSearcher.GetTopReaderContext
 				();
-			BulkScorer ts = weight.BulkScorer(context, true, ((AtomicReader)context.Reader())
-				.GetLiveDocs());
+			BulkScorer ts = weight.BulkScorer(context, true, ((AtomicReader)context.Reader)
+				.LiveDocs);
 			// we have 2 documents with the term all in them, one document for all the
 			// other values
 			IList<TestTermScorer.TestHit> docs = new AList<TestTermScorer.TestHit>();
@@ -139,7 +139,7 @@ namespace Lucene.Net.Search
 				);
 			AtomicReaderContext context = (AtomicReaderContext)indexSearcher.GetTopReaderContext
 				();
-			Scorer ts = weight.Scorer(context, ((AtomicReader)context.Reader()).GetLiveDocs()
+			Scorer ts = weight.Scorer(context, ((AtomicReader)context.Reader).LiveDocs
 				);
 			IsTrue("next did not return a doc", ts.NextDoc() != DocIdSetIterator
 				.NO_MORE_DOCS);
@@ -161,7 +161,7 @@ namespace Lucene.Net.Search
 				);
 			AtomicReaderContext context = (AtomicReaderContext)indexSearcher.GetTopReaderContext
 				();
-			Scorer ts = weight.Scorer(context, ((AtomicReader)context.Reader()).GetLiveDocs()
+			Scorer ts = weight.Scorer(context, ((AtomicReader)context.Reader).LiveDocs
 				);
 			IsTrue("Didn't skip", ts.Advance(3) != DocIdSetIterator.NO_MORE_DOCS
 				);
@@ -178,13 +178,13 @@ namespace Lucene.Net.Search
 			public TestHit(TestTermScorer _enclosing, int doc, float score)
 			{
 				this._enclosing = _enclosing;
-				this.doc = doc;
+				this.Doc = doc;
 				this.score = score;
 			}
 
 			public override string ToString()
 			{
-				return "TestHit{" + "doc=" + this.doc + ", score=" + this.score + "}";
+				return "TestHit{" + "doc=" + this.Doc + ", score=" + this.score + "}";
 			}
 
 			private readonly TestTermScorer _enclosing;

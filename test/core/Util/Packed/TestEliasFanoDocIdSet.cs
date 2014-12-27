@@ -28,7 +28,7 @@ namespace Lucene.Net.Util.Packed
 			public _DocIdSetIterator_31(BitSet bs)
 			{
 				this.bs = bs;
-				this.doc = -1;
+				this.Doc = -1;
 			}
 
 			internal int doc;
@@ -36,17 +36,17 @@ namespace Lucene.Net.Util.Packed
 			/// <exception cref="System.IO.IOException"></exception>
 			public override int NextDoc()
 			{
-				this.doc = bs.NextSetBit(this.doc + 1);
-				if (this.doc == -1)
+				this.Doc = bs.NextSetBit(this.Doc + 1);
+				if (this.Doc == -1)
 				{
-					this.doc = DocIdSetIterator.NO_MORE_DOCS;
+					this.Doc = DocIdSetIterator.NO_MORE_DOCS;
 				}
-				return this.doc;
+				return this.Doc;
 			}
 
 			public override int DocID
 			{
-				return this.doc;
+				return this.Doc;
 			}
 
 			public override long Cost()

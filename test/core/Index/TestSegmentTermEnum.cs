@@ -13,7 +13,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestSegmentTermEnum : LuceneTestCase
 	{
@@ -29,7 +29,7 @@ namespace Lucene.Net.Index
 		/// <exception cref="System.Exception"></exception>
 		public override void TearDown()
 		{
-			dir.Close();
+			dir.Dispose();
 			base.TearDown();
 		}
 
@@ -47,14 +47,14 @@ namespace Lucene.Net.Index
 				AddDoc(writer, "aaa");
 				AddDoc(writer, "aaa bbb");
 			}
-			writer.Close();
+			writer.Dispose();
 			// verify document frequency of terms in an multi segment index
 			VerifyDocFreq();
 			// merge segments
 			writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random())).SetOpenMode(IndexWriterConfig.OpenMode.APPEND));
 			writer.ForceMerge(1);
-			writer.Close();
+			writer.Dispose();
 			// verify document frequency of terms in a single segment index
 			VerifyDocFreq();
 		}
@@ -66,7 +66,7 @@ namespace Lucene.Net.Index
 				, new MockAnalyzer(Random())).SetCodec(TestUtil.AlwaysPostingsFormat(new Lucene41PostingsFormat
 				())));
 			AddDoc(writer, "aaa bbb");
-			writer.Close();
+			writer.Dispose();
 			SegmentReader reader = GetOnlySegmentReader(DirectoryReader.Open(dir));
 			TermsEnum terms = reader.Fields().Terms("content").Iterator(null);
 			IsNotNull(terms.Next());
@@ -80,14 +80,14 @@ namespace Lucene.Net.Index
 			catch (NotSupportedException)
 			{
 				// ok -- codec is not required to support ord
-				reader.Close();
+				reader.Dispose();
 				return;
 			}
 			AreEqual("bbb", terms.Term().Utf8ToString());
 			IsNull(terms.Next());
 			terms.SeekExact(ordB);
 			AreEqual("bbb", terms.Term().Utf8ToString());
-			reader.Close();
+			reader.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -125,7 +125,7 @@ namespace Lucene.Net.Index
 			//assert that term is 'bbb'
 			AreEqual("bbb", termEnum.Term().Utf8ToString());
 			AreEqual(100, termEnum.DocFreq);
-			reader.Close();
+			reader.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>

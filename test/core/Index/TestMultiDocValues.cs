@@ -10,7 +10,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	/// <summary>Tests MultiDocValues versus ordinary segment merging</summary>
 	public class TestMultiDocValues : LuceneTestCase
@@ -41,16 +41,16 @@ namespace Lucene.Net.Index
 			iw.ForceMerge(1);
 			DirectoryReader ir2 = iw.GetReader();
 			AtomicReader merged = GetOnlySegmentReader(ir2);
-			iw.Close();
+			iw.Dispose();
 			NumericDocValues multi = MultiDocValues.GetNumericValues(ir, "numbers");
 			NumericDocValues single = merged.GetNumericDocValues("numbers");
 			for (int i_1 = 0; i_1 < numDocs; i_1++)
 			{
 				AreEqual(single.Get(i_1), multi.Get(i_1));
 			}
-			ir.Close();
-			ir2.Close();
-			dir.Close();
+			ir.Dispose();
+			ir2.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -80,7 +80,7 @@ namespace Lucene.Net.Index
 			iw.ForceMerge(1);
 			DirectoryReader ir2 = iw.GetReader();
 			AtomicReader merged = GetOnlySegmentReader(ir2);
-			iw.Close();
+			iw.Dispose();
 			BinaryDocValues multi = MultiDocValues.GetBinaryValues(ir, "bytes");
 			BinaryDocValues single = merged.GetBinaryDocValues("bytes");
 			BytesRef actual = new BytesRef();
@@ -91,9 +91,9 @@ namespace Lucene.Net.Index
 				multi.Get(i_1, actual);
 				AreEqual(expected, actual);
 			}
-			ir.Close();
-			ir2.Close();
-			dir.Close();
+			ir.Dispose();
+			ir2.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -127,7 +127,7 @@ namespace Lucene.Net.Index
 			iw.ForceMerge(1);
 			DirectoryReader ir2 = iw.GetReader();
 			AtomicReader merged = GetOnlySegmentReader(ir2);
-			iw.Close();
+			iw.Dispose();
 			SortedDocValues multi = MultiDocValues.GetSortedValues(ir, "bytes");
 			SortedDocValues single = merged.GetSortedDocValues("bytes");
 			AreEqual(single.GetValueCount(), multi.GetValueCount());
@@ -142,9 +142,9 @@ namespace Lucene.Net.Index
 				multi.Get(i_1, actual);
 				AreEqual(expected, actual);
 			}
-			ir.Close();
-			ir2.Close();
-			dir.Close();
+			ir.Dispose();
+			ir2.Dispose();
+			dir.Dispose();
 		}
 
 		// tries to make more dups than testSorted
@@ -175,7 +175,7 @@ namespace Lucene.Net.Index
 			iw.ForceMerge(1);
 			DirectoryReader ir2 = iw.GetReader();
 			AtomicReader merged = GetOnlySegmentReader(ir2);
-			iw.Close();
+			iw.Dispose();
 			SortedDocValues multi = MultiDocValues.GetSortedValues(ir, "bytes");
 			SortedDocValues single = merged.GetSortedDocValues("bytes");
 			AreEqual(single.GetValueCount(), multi.GetValueCount());
@@ -190,9 +190,9 @@ namespace Lucene.Net.Index
 				multi.Get(i_1, actual);
 				AreEqual(expected, actual);
 			}
-			ir.Close();
-			ir2.Close();
-			dir.Close();
+			ir.Dispose();
+			ir2.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -225,7 +225,7 @@ namespace Lucene.Net.Index
 			iw.ForceMerge(1);
 			DirectoryReader ir2 = iw.GetReader();
 			AtomicReader merged = GetOnlySegmentReader(ir2);
-			iw.Close();
+			iw.Dispose();
 			SortedSetDocValues multi = MultiDocValues.GetSortedSetValues(ir, "bytes");
 			SortedSetDocValues single = merged.GetSortedSetDocValues("bytes");
 			if (multi == null)
@@ -264,9 +264,9 @@ namespace Lucene.Net.Index
 					AreEqual(expectedList.Count, upto);
 				}
 			}
-			ir.Close();
-			ir2.Close();
-			dir.Close();
+			ir.Dispose();
+			ir2.Dispose();
+			dir.Dispose();
 		}
 
 		// tries to make more dups than testSortedSet
@@ -300,7 +300,7 @@ namespace Lucene.Net.Index
 			iw.ForceMerge(1);
 			DirectoryReader ir2 = iw.GetReader();
 			AtomicReader merged = GetOnlySegmentReader(ir2);
-			iw.Close();
+			iw.Dispose();
 			SortedSetDocValues multi = MultiDocValues.GetSortedSetValues(ir, "bytes");
 			SortedSetDocValues single = merged.GetSortedSetDocValues("bytes");
 			if (multi == null)
@@ -339,9 +339,9 @@ namespace Lucene.Net.Index
 					AreEqual(expectedList.Count, upto);
 				}
 			}
-			ir.Close();
-			ir2.Close();
-			dir.Close();
+			ir.Dispose();
+			ir2.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -374,7 +374,7 @@ namespace Lucene.Net.Index
 			iw.ForceMerge(1);
 			DirectoryReader ir2 = iw.GetReader();
 			AtomicReader merged = GetOnlySegmentReader(ir2);
-			iw.Close();
+			iw.Dispose();
 			Bits multi = MultiDocValues.GetDocsWithField(ir, "numbers");
 			Bits single = merged.GetDocsWithField("numbers");
 			if (multi == null)
@@ -396,9 +396,9 @@ namespace Lucene.Net.Index
 			{
 				AreEqual(single.Get(i_2), multi.Get(i_2));
 			}
-			ir.Close();
-			ir2.Close();
-			dir.Close();
+			ir.Dispose();
+			ir2.Dispose();
+			dir.Dispose();
 		}
 	}
 }

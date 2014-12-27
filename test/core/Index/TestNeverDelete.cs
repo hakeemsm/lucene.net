@@ -13,7 +13,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestNeverDelete : LuceneTestCase
 	{
@@ -33,10 +33,10 @@ namespace Lucene.Net.Index
 			}
 			RandomIndexWriter w = new RandomIndexWriter(Random(), d, NewIndexWriterConfig(TEST_VERSION_CURRENT
 				, new MockAnalyzer(Random())).SetIndexDeletionPolicy(NoDeletionPolicy.INSTANCE));
-			w.w.GetConfig().SetMaxBufferedDocs(TestUtil.NextInt(Random(), 5, 30));
+			w.w.Config.SetMaxBufferedDocs(TestUtil.NextInt(Random(), 5, 30));
 			w.Commit();
 			Sharpen.Thread[] indexThreads = new Sharpen.Thread[Random().Next(4)];
-			long stopTime = Runtime.CurrentTimeMillis() + AtLeast(1000);
+			long stopTime = DateTime.Now.CurrentTimeMillis() + AtLeast(1000);
 			for (int x = 0; x < indexThreads.Length; x++)
 			{
 				indexThreads[x] = new _Thread_58(stopTime, w);
@@ -45,7 +45,7 @@ namespace Lucene.Net.Index
 			}
 			ICollection<string> allFiles = new HashSet<string>();
 			DirectoryReader r = DirectoryReader.Open(d);
-			while (Runtime.CurrentTimeMillis() < stopTime)
+			while (DateTime.Now.CurrentTimeMillis() < stopTime)
 			{
 				IndexCommit ic = r.GetIndexCommit();
 				if (VERBOSE)
@@ -62,18 +62,18 @@ namespace Lucene.Net.Index
 				DirectoryReader r2 = DirectoryReader.OpenIfChanged(r);
 				if (r2 != null)
 				{
-					r.Close();
+					r.Dispose();
 					r = r2;
 				}
 				Sharpen.Thread.Sleep(1);
 			}
-			r.Close();
+			r.Dispose();
 			foreach (Sharpen.Thread t in indexThreads)
 			{
 				t.Join();
 			}
-			w.Close();
-			d.Close();
+			w.Dispose();
+			d.Dispose();
 			TestUtil.Rm(tmpDir);
 		}
 
@@ -90,7 +90,7 @@ namespace Lucene.Net.Index
 				try
 				{
 					int docCount = 0;
-					while (Runtime.CurrentTimeMillis() < stopTime)
+					while (DateTime.Now.CurrentTimeMillis() < stopTime)
 					{
 						Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 							();

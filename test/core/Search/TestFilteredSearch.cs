@@ -31,14 +31,14 @@ namespace Lucene.Net.Search
 			SearchFiltered(writer, directory, filter, enforceSingleSegment);
 			// run the test on more than one segment
 			enforceSingleSegment = false;
-			writer.Close();
+			writer.Dispose();
 			writer = new IndexWriter(directory, ((IndexWriterConfig)NewIndexWriterConfig(TEST_VERSION_CURRENT
 				, new MockAnalyzer(Random())).SetOpenMode(IndexWriterConfig.OpenMode.CREATE).SetMaxBufferedDocs
 				(10)).SetMergePolicy(NewLogMergePolicy()));
 			// we index 60 docs - this will create 6 segments
 			SearchFiltered(writer, directory, filter, enforceSingleSegment);
-			writer.Close();
-			directory.Close();
+			writer.Dispose();
+			directory.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -50,22 +50,22 @@ namespace Lucene.Net.Search
 				//Simple docs
 				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
-				doc.Add(NewStringField(FIELD, Sharpen.Extensions.ToString(i), Field.Store.YES));
+				doc.Add(NewStringField(FIELD, i.ToString(), Field.Store.YES));
 				writer.AddDocument(doc);
 			}
 			if (fullMerge)
 			{
 				writer.ForceMerge(1);
 			}
-			writer.Close();
+			writer.Dispose();
 			BooleanQuery booleanQuery = new BooleanQuery();
 			booleanQuery.Add(new TermQuery(new Term(FIELD, "36")), BooleanClause.Occur.SHOULD
 				);
 			IndexReader reader = DirectoryReader.Open(directory);
 			IndexSearcher indexSearcher = NewSearcher(reader);
-			ScoreDoc[] hits = indexSearcher.Search(booleanQuery, filter, 1000).scoreDocs;
+			ScoreDoc[] hits = indexSearcher.Search(booleanQuery, filter, 1000).ScoreDocs;
 			AreEqual("Number of matched documents", 1, hits.Length);
-			reader.Close();
+			reader.Dispose();
 		}
 
 		public sealed class SimpleDocIdSetFilter : Filter
@@ -82,9 +82,9 @@ namespace Lucene.Net.Search
 			{
 				IsNull("acceptDocs should be null, as we have an index without deletions"
 					, acceptDocs);
-				FixedBitSet set = new FixedBitSet(((AtomicReader)context.Reader()).MaxDoc);
+				FixedBitSet set = new FixedBitSet(((AtomicReader)context.Reader).MaxDoc);
 				int docBase = context.docBase;
-				int limit = docBase + ((AtomicReader)context.Reader()).MaxDoc;
+				int limit = docBase + ((AtomicReader)context.Reader).MaxDoc;
 				for (int index = 0; index < docs.Length; index++)
 				{
 					int docId = docs[index];

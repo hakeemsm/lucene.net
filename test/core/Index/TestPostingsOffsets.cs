@@ -14,7 +14,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Sharpen;
 
-namespace Lucene.Net.Index
+namespace Lucene.Net.Test.Index
 {
 	public class TestPostingsOffsets : LuceneTestCase
 	{
@@ -38,12 +38,12 @@ namespace Lucene.Net.Index
 			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
-			ft.SetIndexOptions(FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS
+			ft.IndexOptions = (FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS
 				);
 			if (Random().NextBoolean())
 			{
 				ft.StoreTermVectors = true;
-				ft.SetStoreTermVectorPositions(Random().NextBoolean());
+				ft.StoreTermVectorPositions = (Random().NextBoolean());
 				ft.SetStoreTermVectorOffsets(Random().NextBoolean());
 			}
 			Token[] tokens = new Token[] { MakeToken("a", 1, 0, 6), MakeToken("b", 1, 8, 9), 
@@ -51,7 +51,7 @@ namespace Lucene.Net.Index
 			doc.Add(new Field("content", new CannedTokenStream(tokens), ft));
 			w.AddDocument(doc);
 			IndexReader r = w.GetReader();
-			w.Close();
+			w.Dispose();
 			DocsAndPositionsEnum dp = MultiFields.GetTermPositionsEnum(r, null, "content", new 
 				BytesRef("a"));
 			IsNotNull(dp);
@@ -80,8 +80,8 @@ namespace Lucene.Net.Index
 			AreEqual(19, dp.StartOffset());
 			AreEqual(50, dp.EndOffset());
 			AreEqual(DocIdSetIterator.NO_MORE_DOCS, dp.NextDoc());
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -107,13 +107,13 @@ namespace Lucene.Net.Index
 			// will rely on docids a bit for skipping
 			RandomIndexWriter w = new RandomIndexWriter(Random(), dir, iwc);
 			FieldType ft = new FieldType(TextField.TYPE_STORED);
-			ft.SetIndexOptions(FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS
+			ft.IndexOptions = (FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS
 				);
 			if (Random().NextBoolean())
 			{
 				ft.StoreTermVectors = true;
 				ft.SetStoreTermVectorOffsets(Random().NextBoolean());
-				ft.SetStoreTermVectorPositions(Random().NextBoolean());
+				ft.StoreTermVectorPositions = (Random().NextBoolean());
 			}
 			int numDocs = AtLeast(500);
 			for (int i = 0; i < numDocs; i++)
@@ -126,7 +126,7 @@ namespace Lucene.Net.Index
 				w.AddDocument(doc);
 			}
 			IndexReader reader = w.GetReader();
-			w.Close();
+			w.Dispose();
 			string[] terms = new string[] { "one", "two", "three", "four", "five", "six", "seven"
 				, "eight", "nine", "ten", "hundred" };
 			foreach (string term in terms)
@@ -202,8 +202,8 @@ namespace Lucene.Net.Index
 				AreEqual(i_2, dp.NextDoc());
 				AreEqual(DocIdSetIterator.NO_MORE_DOCS, dp.NextDoc());
 			}
-			reader.Close();
-			dir.Close();
+			reader.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -219,13 +219,13 @@ namespace Lucene.Net.Index
 			FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
 			// TODO: randomize what IndexOptions we use; also test
 			// changing this up in one IW buffered segment...:
-			ft.SetIndexOptions(FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS
+			ft.IndexOptions = (FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS
 				);
 			if (Random().NextBoolean())
 			{
 				ft.StoreTermVectors = true;
 				ft.SetStoreTermVectorOffsets(Random().NextBoolean());
-				ft.SetStoreTermVectorPositions(Random().NextBoolean());
+				ft.StoreTermVectorPositions = (Random().NextBoolean());
 			}
 			for (int docCount = 0; docCount < numDocs; docCount++)
 			{
@@ -294,12 +294,12 @@ namespace Lucene.Net.Index
 				w.AddDocument(doc);
 			}
 			DirectoryReader r = w.GetReader();
-			w.Close();
+			w.Dispose();
 			string[] terms = new string[] { "a", "b", "c", "d" };
-			foreach (AtomicReaderContext ctx in r.Leaves())
+			foreach (AtomicReaderContext ctx in r.Leaves)
 			{
 				// TODO: improve this
-				AtomicReader sub = ((AtomicReader)ctx.Reader());
+				AtomicReader sub = ((AtomicReader)ctx.Reader);
 				//System.out.println("\nsub=" + sub);
 				TermsEnum termsEnum = sub.Fields().Terms("content").Iterator(null);
 				DocsEnum docs = null;
@@ -366,8 +366,8 @@ namespace Lucene.Net.Index
 				}
 			}
 			// TODO: test advance:
-			r.Close();
-			dir.Close();
+			r.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -384,14 +384,14 @@ namespace Lucene.Net.Index
 				{
 					// stored only
 					FieldType ft = new FieldType();
-					ft.SetIndexed(false);
-					ft.SetStored(true);
+					ft.Indexed(false);
+					ft.Stored = (true);
 					doc.Add(new Field("foo", "boo!", ft));
 				}
 				else
 				{
 					FieldType ft = new FieldType(TextField.TYPE_STORED);
-					ft.SetIndexOptions(FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS
+					ft.IndexOptions = (FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS
 						);
 					if (Random().NextBoolean())
 					{
@@ -409,10 +409,10 @@ namespace Lucene.Net.Index
 			FieldInfos fis = slow.GetFieldInfos();
 			AreEqual(FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS
 				, fis.FieldInfo("foo").GetIndexOptions());
-			slow.Close();
-			ir.Close();
-			riw.Close();
-			dir.Close();
+			slow.Dispose();
+			ir.Dispose();
+			riw.Dispose();
+			dir.Dispose();
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -426,15 +426,15 @@ namespace Lucene.Net.Index
 			customType3.StoreTermVectors = true;
 			customType3.StoreTermVectorPositions = true;
 			customType3.StoreTermVectorOffsets = true;
-			customType3.SetIndexOptions(FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS
+			customType3.IndexOptions = (FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS
 				);
 			doc.Add(new Field("content3", "here is more content with aaa aaa aaa", customType3
 				));
 			doc.Add(new Field("content3", "here is more content with aaa aaa aaa", customType3
 				));
 			iw.AddDocument(doc);
-			iw.Close();
-			dir.Close();
+			iw.Dispose();
+			dir.Dispose();
 		}
 
 		// checkindex
@@ -505,7 +505,7 @@ namespace Lucene.Net.Index
 			Token t2 = new Token("foo", int.MaxValue - 500, int.MaxValue);
 			TokenStream tokenStream = new CannedTokenStream(new Token[] { t1, t2 });
 			FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
-			ft.SetIndexOptions(FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS
+			ft.IndexOptions = (FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS
 				);
 			// store some term vectors for the checkindex cross-check
 			ft.StoreTermVectors = true;
@@ -514,8 +514,8 @@ namespace Lucene.Net.Index
 			Field field = new Field("foo", tokenStream, ft);
 			doc.Add(field);
 			iw.AddDocument(doc);
-			iw.Close();
-			dir.Close();
+			iw.Dispose();
+			dir.Dispose();
 		}
 
 		// TODO: more tests with other possibilities
@@ -528,7 +528,7 @@ namespace Lucene.Net.Index
 			try
 			{
 				FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
-				ft.SetIndexOptions(FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS
+				ft.IndexOptions = (FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS
 					);
 				// store some term vectors for the checkindex cross-check
 				ft.StoreTermVectors = true;
