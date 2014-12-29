@@ -35,7 +35,7 @@ namespace Lucene.Net.Search
 			AddDoc("abbbb", writer);
 			AddDoc("bbbbb", writer);
 			AddDoc("ddddd", writer);
-			IndexReader reader = writer.GetReader();
+			IndexReader reader = writer.Reader;
 			IndexSearcher searcher = NewSearcher(reader);
 			writer.Dispose();
 			FuzzyQuery query = new FuzzyQuery(new Term("field", "aaaaa"), FuzzyQuery.defaultMaxEdits
@@ -214,7 +214,7 @@ namespace Lucene.Net.Search
 			AddDoc("WITTKOPF", writer);
 			AddDoc("WOJNAROWSKI", writer);
 			AddDoc("WRICKE", writer);
-			IndexReader reader = writer.GetReader();
+			IndexReader reader = writer.Reader;
 			IndexSearcher searcher = NewSearcher(reader);
 			writer.Dispose();
 			FuzzyQuery query = new FuzzyQuery(new Term("field", "WEBER"), 2, 1);
@@ -252,8 +252,8 @@ namespace Lucene.Net.Search
 			AddDoc("b123456", writer2);
 			AddDoc("c123456", writer2);
 			AddDoc("f123456", writer2);
-			IndexReader ir1 = writer.GetReader();
-			IndexReader ir2 = writer2.GetReader();
+			IndexReader ir1 = writer.Reader;
+			IndexReader ir2 = writer2.Reader;
 			MultiReader mr = new MultiReader(ir1, ir2);
 			IndexSearcher searcher = NewSearcher(mr);
 			FuzzyQuery fq = new FuzzyQuery(new Term("field", "z123456"), 1, 0, 2, false);
@@ -279,7 +279,7 @@ namespace Lucene.Net.Search
 			AddDoc("Lucene", writer);
 			AddDoc("Lucene", writer);
 			AddDoc("Lucenne", writer);
-			IndexReader reader = writer.GetReader();
+			IndexReader reader = writer.Reader;
 			IndexSearcher searcher = NewSearcher(reader);
 			writer.Dispose();
 			FuzzyQuery query = new FuzzyQuery(new Term("field", "lucene"));
@@ -318,7 +318,7 @@ namespace Lucene.Net.Search
 			AddDoc("Willis bruce", w);
 			AddDoc("Brute willis", w);
 			AddDoc("B. willis", w);
-			IndexReader r = w.GetReader();
+			IndexReader r = w.Reader;
 			w.Dispose();
 			Query q = new FuzzyQuery(new Term("field", "giga"), 0);
 			// 3. search
@@ -339,7 +339,7 @@ namespace Lucene.Net.Search
 			AddDoc("foobar", w);
 			AddDoc("test", w);
 			AddDoc("working", w);
-			IndexReader reader = w.GetReader();
+			IndexReader reader = w.Reader;
 			IndexSearcher searcher = NewSearcher(reader);
 			w.Dispose();
 			FuzzyQuery q = new FuzzyQuery(new Term("field", "fouba"), 2);

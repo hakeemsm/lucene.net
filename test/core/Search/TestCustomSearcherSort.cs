@@ -64,7 +64,7 @@ namespace Lucene.Net.Search
 					.YES));
 				writer.AddDocument(doc);
 			}
-			reader = writer.GetReader();
+			reader = writer.Reader;
 			writer.Dispose();
 			query = new TermQuery(new Term("content", "test"));
 		}

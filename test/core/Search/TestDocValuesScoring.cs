@@ -47,7 +47,7 @@ namespace Lucene.Net.Search
 			dvField.SetFloatValue(4f);
 			// boost x4
 			iw.AddDocument(doc);
-			IndexReader ir = iw.GetReader();
+			IndexReader ir = iw.Reader;
 			iw.Dispose();
 			// no boosting
 			IndexSearcher searcher1 = NewSearcher(ir, false);

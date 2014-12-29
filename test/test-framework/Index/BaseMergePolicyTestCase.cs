@@ -43,7 +43,7 @@ namespace Lucene.Net.TestFramework.Index
 				int numDocs = TestUtil.NextInt(Random(), 1, 5);
 				for (int j = 0; j < numDocs; ++j)
 				{
-					writer.AddDocument(new Lucene.NetDocument.Document());
+					writer.AddDocument(new Lucene.Net.Documents.Document());
 				}
 				writer.GetReader().Close();
 			}

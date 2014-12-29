@@ -41,7 +41,7 @@ namespace Lucene.Net.Search
 				(TEST_VERSION_CURRENT, new MockAnalyzer(Random(), MockTokenizer.WHITESPACE, false
 				)).SetMergePolicy(NewLogMergePolicy()));
 			FieldType customType = new FieldType(TextField.TYPE_STORED);
-			customType.SetTokenized(false);
+			customType.Tokenized = (false);
 			for (int i = 0; i < data.Length; i++)
 			{
 				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
@@ -57,7 +57,7 @@ namespace Lucene.Net.Search
 				// Field.Text("data",data[i]));
 				writer.AddDocument(doc);
 			}
-			reader = writer.GetReader();
+			reader = writer.Reader;
 			writer.Dispose();
 		}
 

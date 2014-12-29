@@ -78,7 +78,7 @@ namespace Lucene.Net.TestFramework.Util
 		{
 			BitSet bs = new BitSet(1);
 			T copy = CopyOf(bs, 0);
-			AssertEquals(0, bs, copy);
+			AssertEquals((int) 0, (BitArray) bs, copy);
 		}
 
 		/// <summary>Test length=1.</summary>
@@ -92,7 +92,7 @@ namespace Lucene.Net.TestFramework.Util
 				bs.Set(0);
 			}
 			T copy = CopyOf(bs, 1);
-			AssertEquals(1, bs, copy);
+			AssertEquals((int) 1, (BitArray) bs, copy);
 		}
 
 		/// <summary>Test length=2.</summary>
@@ -110,7 +110,7 @@ namespace Lucene.Net.TestFramework.Util
 				bs.Set(1);
 			}
 			T copy = CopyOf(bs, 2);
-			AssertEquals(2, bs, copy);
+			AssertEquals((int) 2, (BitArray) bs, copy);
 		}
 
 		/// <summary>
@@ -128,19 +128,19 @@ namespace Lucene.Net.TestFramework.Util
 			{
 				BitSet set = RandomSet(numBits, percentSet);
 				T copy = CopyOf(set, numBits);
-				AssertEquals(numBits, set, copy);
+				AssertEquals(numBits, (BitArray) set, copy);
 			}
 			// test one doc
 			BitSet set_1 = new BitSet(numBits);
 			set_1.Set(0);
 			// 0 first
 			T copy_1 = CopyOf(set_1, numBits);
-			AssertEquals(numBits, set_1, copy_1);
+			AssertEquals(numBits, (BitArray) set_1, copy_1);
 			set_1.Clear(0);
 			set_1.Set(Random().Next(numBits));
 			copy_1 = CopyOf(set_1, numBits);
 			// then random index
-			AssertEquals(numBits, set_1, copy_1);
+			AssertEquals(numBits, (BitArray) set_1, copy_1);
 			// test regular increments
 			for (int inc = 2; inc < 1000; inc += TestUtil.NextInt(Random(), 1, 100))
 			{
@@ -150,7 +150,7 @@ namespace Lucene.Net.TestFramework.Util
 					set_1.Set(d);
 				}
 				copy_1 = CopyOf(set_1, numBits);
-				AssertEquals(numBits, set_1, copy_1);
+				AssertEquals(numBits, (BitArray) set_1, copy_1);
 			}
 		}
 

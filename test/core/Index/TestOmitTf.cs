@@ -117,7 +117,7 @@ namespace Lucene.Net.Test.Index
 			// flush
 			writer.Dispose();
 			SegmentReader reader = GetOnlySegmentReader(DirectoryReader.Open(ram));
-			FieldInfos fi = reader.GetFieldInfos();
+			FieldInfos fi = reader.FieldInfos;
 			AreEqual("OmitTermFreqAndPositions field bit should be set."
 				, FieldInfo.IndexOptions.DOCS_ONLY, fi.FieldInfo("f1").GetIndexOptions());
 			AreEqual("OmitTermFreqAndPositions field bit should be set."
@@ -164,7 +164,7 @@ namespace Lucene.Net.Test.Index
 			// flush
 			writer.Dispose();
 			SegmentReader reader = GetOnlySegmentReader(DirectoryReader.Open(ram));
-			FieldInfos fi = reader.GetFieldInfos();
+			FieldInfos fi = reader.FieldInfos;
 			AreEqual("OmitTermFreqAndPositions field bit should be set."
 				, FieldInfo.IndexOptions.DOCS_ONLY, fi.FieldInfo("f1").GetIndexOptions());
 			AreEqual("OmitTermFreqAndPositions field bit should be set."
@@ -204,7 +204,7 @@ namespace Lucene.Net.Test.Index
 			// flush
 			writer.Dispose();
 			SegmentReader reader = GetOnlySegmentReader(DirectoryReader.Open(ram));
-			FieldInfos fi = reader.GetFieldInfos();
+			FieldInfos fi = reader.FieldInfos;
 			AreEqual("OmitTermFreqAndPositions field bit should not be set."
 				, FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS, fi.FieldInfo("f1").GetIndexOptions
 				());
@@ -513,7 +513,7 @@ namespace Lucene.Net.Test.Index
 			Field f = NewField("foo", "bar", ft);
 			doc.Add(f);
 			iw.AddDocument(doc);
-			IndexReader ir = iw.GetReader();
+			IndexReader ir = iw.Reader;
 			iw.Dispose();
 			AreEqual(-1, ir.TotalTermFreq(new Term("foo", new BytesRef
 				("bar"))));

@@ -112,7 +112,7 @@ namespace Lucene.Net.Test.Index
 			// Force writer to do reader pooling, always, so that
 			// all merged segments, even for merges before
 			// doSearching is called, are warmed:
-			writer.GetReader().Dispose();
+			writer.Reader.Dispose();
 		}
 
 		private IndexSearcher fixedSearcher;
@@ -141,7 +141,7 @@ namespace Lucene.Net.Test.Index
 			{
 				if (Random().NextBoolean())
 				{
-					r2 = writer.GetReader();
+					r2 = writer.Reader;
 				}
 				else
 				{
@@ -151,7 +151,7 @@ namespace Lucene.Net.Test.Index
 			}
 			else
 			{
-				r2 = writer.GetReader();
+				r2 = writer.Reader;
 			}
 			return NewSearcher(r2);
 		}

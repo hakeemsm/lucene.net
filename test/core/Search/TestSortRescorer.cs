@@ -47,7 +47,7 @@ namespace Lucene.Net.Search
 			doc.Add(NewTextField("body", "crappy contents", Field.Store.NO));
 			doc.Add(new NumericDocValuesField("popularity", 2));
 			iw.AddDocument(doc);
-			reader = iw.GetReader();
+			reader = iw.Reader;
 			searcher = new IndexSearcher(reader);
 			iw.Dispose();
 		}
@@ -115,7 +115,7 @@ namespace Lucene.Net.Search
 				doc.Add(new NumericDocValuesField("num", idToNum[i]));
 				w.AddDocument(doc);
 			}
-			IndexReader r = w.GetReader();
+			IndexReader r = w.Reader;
 			w.Dispose();
 			IndexSearcher s = NewSearcher(r);
 			int numHits = TestUtil.NextInt(Random(), 1, numDocs);
@@ -175,7 +175,7 @@ namespace Lucene.Net.Search
 				}
 				catch (IOException ioe)
 				{
-					throw new RuntimeException(ioe);
+					throw new SystemException(ioe);
 				}
 			}
 

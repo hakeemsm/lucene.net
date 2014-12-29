@@ -50,7 +50,7 @@ namespace Lucene.Net.Test.Index
 				MakeToken("a", 1, 9, 17), MakeToken("c", 1, 19, 50) };
 			doc.Add(new Field("content", new CannedTokenStream(tokens), ft));
 			w.AddDocument(doc);
-			IndexReader r = w.GetReader();
+			IndexReader r = w.Reader;
 			w.Dispose();
 			DocsAndPositionsEnum dp = MultiFields.GetTermPositionsEnum(r, null, "content", new 
 				BytesRef("a"));
@@ -125,7 +125,7 @@ namespace Lucene.Net.Test.Index
 				doc.Add(new StringField("id", string.Empty + i, Field.Store.NO));
 				w.AddDocument(doc);
 			}
-			IndexReader reader = w.GetReader();
+			IndexReader reader = w.Reader;
 			w.Dispose();
 			string[] terms = new string[] { "one", "two", "three", "four", "five", "six", "seven"
 				, "eight", "nine", "ten", "hundred" };
@@ -153,8 +153,8 @@ namespace Lucene.Net.Test.Index
 						if (withPayloads)
 						{
 							// check that we have a payload and it starts with "pos"
-							IsNotNull(dp.GetPayload());
-							BytesRef payload = dp.GetPayload();
+							IsNotNull(dp.Payload);
+							BytesRef payload = dp.Payload;
 							IsTrue(payload.Utf8ToString().StartsWith("pos:"));
 						}
 					}
@@ -187,8 +187,8 @@ namespace Lucene.Net.Test.Index
 					if (withPayloads)
 					{
 						// check that we have a payload and it starts with "pos"
-						IsNotNull(dp.GetPayload());
-						BytesRef payload = dp.GetPayload();
+						IsNotNull(dp.Payload);
+						BytesRef payload = dp.Payload;
 						IsTrue(payload.Utf8ToString().StartsWith("pos:"));
 					}
 				}
@@ -232,7 +232,7 @@ namespace Lucene.Net.Test.Index
 				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(new IntField("id", docCount, Field.Store.NO));
-				IList<Token> tokens = new AList<Token>();
+				IList<Token> tokens = new List<Token>();
 				int numTokens = AtLeast(100);
 				//final int numTokens = atLeast(20);
 				int pos = -1;
@@ -279,10 +279,10 @@ namespace Lucene.Net.Test.Index
 					IDictionary<int, IList<Token>> postingsByDoc = actualTokens.Get(text);
 					if (!postingsByDoc.ContainsKey(docCount))
 					{
-						postingsByDoc.Put(docCount, new AList<Token>());
+						postingsByDoc.Put(docCount, new List<Token>());
 					}
-					postingsByDoc.Get(docCount).AddItem(token);
-					tokens.AddItem(token);
+					postingsByDoc.Get(docCount).Add(token);
+					tokens.Add(token);
 					pos += posIncr;
 					// stuff abs position into type:
 					token.SetType(string.Empty + pos);
@@ -293,7 +293,7 @@ namespace Lucene.Net.Test.Index
 					, new Token[tokens.Count])), ft));
 				w.AddDocument(doc);
 			}
-			DirectoryReader r = w.GetReader();
+			DirectoryReader r = w.Reader;
 			w.Dispose();
 			string[] terms = new string[] { "a", "b", "c", "d" };
 			foreach (AtomicReaderContext ctx in r.Leaves)
@@ -404,9 +404,9 @@ namespace Lucene.Net.Test.Index
 				}
 				riw.AddDocument(doc);
 			}
-			CompositeReader ir = riw.GetReader();
+			CompositeReader ir = riw.Reader;
 			AtomicReader slow = SlowCompositeReaderWrapper.Wrap(ir);
-			FieldInfos fis = slow.GetFieldInfos();
+			FieldInfos fis = slow.FieldInfos;
 			AreEqual(FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS
 				, fis.FieldInfo("foo").GetIndexOptions());
 			slow.Dispose();
@@ -500,7 +500,7 @@ namespace Lucene.Net.Test.Index
 			Token t1 = new Token("foo", 0, int.MaxValue - 500);
 			if (Random().NextBoolean())
 			{
-				t1.SetPayload(new BytesRef("test"));
+				t1.Payload = (new BytesRef("test"));
 			}
 			Token t2 = new Token("foo", int.MaxValue - 500, int.MaxValue);
 			TokenStream tokenStream = new CannedTokenStream(new Token[] { t1, t2 });
@@ -557,7 +557,7 @@ namespace Lucene.Net.Test.Index
 		{
 			Token t = new Token();
 			t.Append(text);
-			t.SetPositionIncrement(posIncr);
+			t.PositionIncrement = (posIncr);
 			t.SetOffset(startOffset, endOffset);
 			return t;
 		}

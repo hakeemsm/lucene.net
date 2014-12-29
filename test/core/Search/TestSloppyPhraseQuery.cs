@@ -159,7 +159,7 @@ namespace Lucene.Net.Search
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), ramDir, new MockAnalyzer
 				(Random(), MockTokenizer.WHITESPACE, false));
 			writer.AddDocument(doc);
-			IndexReader reader = writer.GetReader();
+			IndexReader reader = writer.Reader;
 			IndexSearcher searcher = NewSearcher(reader);
 			TestSloppyPhraseQuery.MaxFreqCollector c = new TestSloppyPhraseQuery.MaxFreqCollector
 				();
@@ -179,7 +179,7 @@ namespace Lucene.Net.Search
 		{
 			Document doc = new Document();
 			FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
-			customType.OmitNorms = (true);
+			customType.OmitsNorms = (true);
 			Field f = new Field("f", docText, customType);
 			doc.Add(f);
 			return doc;
@@ -273,7 +273,7 @@ namespace Lucene.Net.Search
 			Directory dir = NewDirectory();
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir);
 			FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
-			customType.OmitNorms = (true);
+			customType.OmitsNorms = (true);
 			Field f = new Field("lyrics", string.Empty, customType);
 			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
@@ -286,7 +286,7 @@ namespace Lucene.Net.Search
 			iw.AddDocument(doc);
 			f.StringValue = "drug druggy drug druggy drug");
 			iw.AddDocument(doc);
-			IndexReader ir = iw.GetReader();
+			IndexReader ir = iw.Reader;
 			iw.Dispose();
 			IndexSearcher @is = NewSearcher(ir);
 			PhraseQuery pq = new PhraseQuery();
@@ -314,7 +314,7 @@ namespace Lucene.Net.Search
 				();
 			doc.Add(NewField("lyrics", document, new FieldType(TextField.TYPE_NOT_STORED)));
 			iw.AddDocument(doc);
-			IndexReader ir = iw.GetReader();
+			IndexReader ir = iw.Reader;
 			iw.Dispose();
 			IndexSearcher @is = NewSearcher(ir);
 			PhraseQuery pq = new PhraseQuery();
@@ -347,7 +347,7 @@ namespace Lucene.Net.Search
 				();
 			doc.Add(NewField("lyrics", document, new FieldType(TextField.TYPE_NOT_STORED)));
 			iw.AddDocument(doc);
-			IndexReader ir = iw.GetReader();
+			IndexReader ir = iw.Reader;
 			iw.Dispose();
 			IndexSearcher @is = NewSearcher(ir);
 			PhraseQuery pq = new PhraseQuery();

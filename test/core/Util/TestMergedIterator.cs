@@ -22,12 +22,12 @@ namespace Lucene.Net.Util
 		{
 			Iterator<int> merged = new MergedIterator<int>();
 			IsFalse(merged.HasNext());
-			merged = new MergedIterator<int>(new AList<int>().Iterator());
+			merged = new MergedIterator<int>(new List<int>().Iterator());
 			IsFalse(merged.HasNext());
 			Iterator<int>[] itrs = new Iterator[Random().Next(100)];
 			for (int i = 0; i < itrs.Length; i++)
 			{
-				itrs[i] = new AList<int>().Iterator();
+				itrs[i] = new List<int>().Iterator();
 			}
 			merged = new MergedIterator<int>(itrs);
 			IsFalse(merged.HasNext());
@@ -96,13 +96,13 @@ namespace Lucene.Net.Util
 		private void TestCase(int itrsWithVal, int specifiedValsOnItr, bool removeDups)
 		{
 			// Build a random number of lists
-			IList<int> expected = new AList<int>();
+			IList<int> expected = new List<int>();
 			Random random = new Random(Random().NextLong());
 			int numLists = itrsWithVal + random.Next(1000 - itrsWithVal);
 			IList<int>[] lists = new IList[numLists];
 			for (int i = 0; i < numLists; i++)
 			{
-				lists[i] = new AList<int>();
+				lists[i] = new List<int>();
 			}
 			int start = random.Next(1000000);
 			int end = start + VALS_TO_MERGE / itrsWithVal / Math.Abs(specifiedValsOnItr);
@@ -120,7 +120,7 @@ namespace Lucene.Net.Util
 					sumValsOnItr += valsOnItr;
 					for (int valOnItr = 0; valOnItr < valsOnItr; valOnItr++)
 					{
-						lists[list].AddItem(i_1);
+						lists[list].Add(i_1);
 					}
 					maxList = maxList - 1;
 					ArrayUtil.Swap(lists, list, maxList);
@@ -128,7 +128,7 @@ namespace Lucene.Net.Util
 				int maxCount = removeDups ? maxValsOnItr : sumValsOnItr;
 				for (int count = 0; count < maxCount; count++)
 				{
-					expected.AddItem(i_1);
+					expected.Add(i_1);
 				}
 			}
 			// Now check that they get merged cleanly

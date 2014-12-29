@@ -108,9 +108,9 @@ namespace Lucene.Net.Test.Index
 			IsTrue(termDocs.NextDoc() != DocIdSetIterator.NO_MORE_DOCS
 				);
 			int tvCount = 0;
-			foreach (FieldInfo fieldInfo in mergedReader.GetFieldInfos())
+			foreach (FieldInfo fieldInfo in mergedReader.FieldInfos)
 			{
-				if (fieldInfo.HasVectors())
+				if (fieldInfo.HasVectors)
 				{
 					tvCount++;
 				}

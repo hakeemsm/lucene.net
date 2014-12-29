@@ -7,7 +7,7 @@
 using System.Collections.Generic;
 using Com.Carrotsearch.Randomizedtesting.Generators;
 using Lucene.Net.TestFramework.Analysis;
-using Lucene.NetDocument;
+using Lucene.Net.Documents;
 using Lucene.Net.TestFramework.Index;
 using Lucene.Net.TestFramework.Store;
 using Lucene.Net.TestFramework.Util;
@@ -43,7 +43,7 @@ namespace Lucene.Net.TestFramework.Index
 			IndexWriter iwriter = new IndexWriter(dir, iwc);
 			int uniqueValueCount = TestUtil.NextInt(Random(), 1, 256);
 			IList<long> values = new AList<long>();
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			NumericDocValuesField dvf = new NumericDocValuesField("dv", 0);
 			doc.Add(dvf);
@@ -85,7 +85,7 @@ namespace Lucene.Net.TestFramework.Index
 			long @base = 13;
 			// prime
 			long day = 1000L * 60 * 60 * 24;
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			NumericDocValuesField dvf = new NumericDocValuesField("dv", 0);
 			doc.Add(dvf);
@@ -115,7 +115,7 @@ namespace Lucene.Net.TestFramework.Index
 			IndexWriterConfig iwc = new IndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random()));
 			IndexWriter iwriter = new IndexWriter(dir, iwc);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			NumericDocValuesField dvf = new NumericDocValuesField("dv", 0);
 			doc.Add(dvf);

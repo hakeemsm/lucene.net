@@ -45,7 +45,7 @@ namespace Lucene.Net.Search
 			field.StringValue = "jumps over lazy brown dog");
 			field2.StringValue = "jumps over lazy brown dog");
 			iw.AddDocument(doc);
-			reader = iw.GetReader();
+			reader = iw.Reader;
 			iw.Dispose();
 			searcher = NewSearcher(reader);
 			searcher.SetSimilarity(sim);

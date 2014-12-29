@@ -25,7 +25,7 @@ namespace Lucene.Net.Test.Index
 
 		internal IndexReader reader;
 
-		internal AList<int> expected = new AList<int>();
+		internal List<int> expected = new List<int>();
 
 		/// <exception cref="System.Exception"></exception>
 		public override void SetUp()
@@ -46,7 +46,7 @@ namespace Lucene.Net.Test.Index
 				foo.StringValue = AddValue());
 				writer.AddDocument(doc);
 			}
-			reader = writer.GetReader();
+			reader = writer.Reader;
 			writer.Dispose();
 		}
 
@@ -85,9 +85,9 @@ namespace Lucene.Net.Test.Index
 				sb.Append(' ');
 				char term = (char)TestUtil.NextInt(Random(), 'a', 'z');
 				sb.Append(term);
-				terms.AddItem(string.Empty + term);
+				terms.Add(string.Empty + term);
 			}
-			expected.AddItem(terms.Count);
+			expected.Add(terms.Count);
 			return sb.ToString();
 		}
 

@@ -893,7 +893,7 @@ namespace Lucene.Net.Test.Index
 				}
 				catch (Exception e)
 				{
-					throw new RuntimeException("unable to parse args: " + args, e);
+					throw new SystemException("unable to parse args: " + args, e);
 				}
 				upgrader.Upgrade();
 				Directory upgradedDir = NewFSDirectory(dir);
@@ -961,7 +961,7 @@ namespace Lucene.Net.Test.Index
 		[Test]
 		public virtual void TestMoreTerms()
 		{
-			FilePath oldIndexDir = CreateTempDir("moreterms");
+			DirectoryInfo oldIndexDir = CreateTempDir("moreterms");
 			TestUtil.Unzip(GetDataFile(moreTermsIndex), oldIndexDir);
 			Directory dir = NewFSDirectory(oldIndexDir);
 			// TODO: more tests

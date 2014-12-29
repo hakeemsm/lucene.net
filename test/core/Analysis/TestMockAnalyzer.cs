@@ -298,7 +298,7 @@ namespace Lucene.Net.Test.Analysis
 		    doc.Add(new Field("f", "a", ft));
 			doc.Add(new Field("f", "a", ft));
 			writer.AddDocument(doc, a);
-			AtomicReader reader = GetOnlySegmentReader(writer.GetReader());
+			AtomicReader reader = GetOnlySegmentReader(writer.Reader);
 			Fields fields = reader.GetTermVectors(0);
 			Terms terms = fields.Terms("f");
 			TermsEnum te = terms.Iterator(null);

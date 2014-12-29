@@ -47,7 +47,7 @@ namespace Lucene.Net.Search
 				}
 				writer.AddDocument(doc);
 			}
-			IndexReader reader = writer.GetReader();
+			IndexReader reader = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(reader);
 			num = AtLeast(50);

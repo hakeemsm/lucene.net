@@ -35,8 +35,8 @@ namespace Lucene.Net.Search
 			{
 				System.Console.Out.WriteLine(numThreads + " threads");
 			}
-			CountDownLatch startingGun = new CountDownLatch(1);
-			IList<Sharpen.Thread> threads = new AList<Sharpen.Thread>();
+			CountdownEvent startingGun = new CountdownEvent(1);
+			IList<Thread> threads = new List<Thread>();
 			int iters = AtLeast(1000);
 			int idCount = TestUtil.NextInt(Random(), 100, 10000);
 			double reopenChance = Random().NextDouble() * 0.01;
@@ -46,17 +46,17 @@ namespace Lucene.Net.Search
 			{
 				int threadID = t;
 				Random threadRandom = new Random(Random().NextLong());
-				Sharpen.Thread thread = new _Thread_93(startingGun, iters, threadRandom, addChance
+				Thread thread = new _Thread_93(startingGun, iters, threadRandom, addChance
 					, threadID, idCount, w, rt, deleteChance, missing, reopenChance, mgr);
 				// Add/update a document
 				// Threads must not update the same id at the
 				// same time:
 				//System.out.println("refresh @ " + rt.size());
-				threads.AddItem(thread);
+				threads.Add(thread);
 				thread.Start();
 			}
 			startingGun.CountDown();
-			foreach (Sharpen.Thread thread_1 in threads)
+			foreach (Thread thread_1 in threads)
 			{
 				thread_1.Join();
 			}
@@ -105,9 +105,9 @@ namespace Lucene.Net.Search
 			}
 		}
 
-		private sealed class _Thread_93 : Sharpen.Thread
+		private sealed class _Thread_93 : Thread
 		{
-			public _Thread_93(CountDownLatch startingGun, int iters, Random threadRandom, double
+			public _Thread_93(CountdownEvent startingGun, int iters, Random threadRandom, double
 				 addChance, int threadID, int idCount, IndexWriter w, LiveFieldValues<IndexSearcher
 				, int> rt, double deleteChance, int missing, double reopenChance, SearcherManager
 				 mgr)
@@ -131,7 +131,7 @@ namespace Lucene.Net.Search
 				try
 				{
 					IDictionary<string, int> values = new Dictionary<string, int>();
-					IList<string> allIDs = Sharpen.Collections.SynchronizedList(new AList<string>());
+					IList<string> allIDs = Sharpen.Collections.SynchronizedList(new List<string>());
 					startingGun.Await();
 					for (int iter = 0; iter < iters; iter++)
 					{
@@ -148,7 +148,7 @@ namespace Lucene.Net.Search
 							rt.Add(id, field);
 							if (values.Put(id, field) == null)
 							{
-								allIDs.AddItem(id);
+								allIDs.Add(id);
 							}
 						}
 						if (allIDs.Count > 0 && threadRandom.NextDouble() <= deleteChance)
@@ -193,11 +193,11 @@ namespace Lucene.Net.Search
 				}
 				catch (Exception t)
 				{
-					throw new RuntimeException(t);
+					throw new SystemException(t);
 				}
 			}
 
-			private readonly CountDownLatch startingGun;
+			private readonly CountdownEvent startingGun;
 
 			private readonly int iters;
 

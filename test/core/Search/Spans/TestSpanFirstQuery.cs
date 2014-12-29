@@ -36,7 +36,7 @@ namespace Lucene.Net.Search.Spans
 				();
 			doc2.Add(NewTextField("field", "quick brown fox", Field.Store.NO));
 			writer.AddDocument(doc2);
-			IndexReader reader = writer.GetReader();
+			IndexReader reader = writer.Reader;
 			IndexSearcher searcher = NewSearcher(reader);
 			// user queries on "starts-with quick"
 			SpanQuery sfq = new SpanFirstQuery(new SpanTermQuery(new Term("field", "quick")), 

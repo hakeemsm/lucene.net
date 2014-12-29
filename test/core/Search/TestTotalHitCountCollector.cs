@@ -28,7 +28,7 @@ namespace Lucene.Net.Search
 				doc.Add(new StringField("string", "b" + i, Field.Store.NO));
 				writer.AddDocument(doc);
 			}
-			IndexReader reader = writer.GetReader();
+			IndexReader reader = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(reader);
 			TotalHitCountCollector c = new TotalHitCountCollector();

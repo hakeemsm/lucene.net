@@ -37,9 +37,9 @@ namespace Lucene.Net.Test.Index
 					iw.Commit();
 				}
 			}
-			DirectoryReader ir = iw.GetReader();
+			DirectoryReader ir = iw.Reader;
 			iw.ForceMerge(1);
-			DirectoryReader ir2 = iw.GetReader();
+			DirectoryReader ir2 = iw.Reader;
 			AtomicReader merged = GetOnlySegmentReader(ir2);
 			iw.Dispose();
 			NumericDocValues multi = MultiDocValues.GetNumericValues(ir, "numbers");
@@ -76,9 +76,9 @@ namespace Lucene.Net.Test.Index
 					iw.Commit();
 				}
 			}
-			DirectoryReader ir = iw.GetReader();
+			DirectoryReader ir = iw.Reader;
 			iw.ForceMerge(1);
-			DirectoryReader ir2 = iw.GetReader();
+			DirectoryReader ir2 = iw.Reader;
 			AtomicReader merged = GetOnlySegmentReader(ir2);
 			iw.Dispose();
 			BinaryDocValues multi = MultiDocValues.GetBinaryValues(ir, "bytes");
@@ -123,9 +123,9 @@ namespace Lucene.Net.Test.Index
 					iw.Commit();
 				}
 			}
-			DirectoryReader ir = iw.GetReader();
+			DirectoryReader ir = iw.Reader;
 			iw.ForceMerge(1);
-			DirectoryReader ir2 = iw.GetReader();
+			DirectoryReader ir2 = iw.Reader;
 			AtomicReader merged = GetOnlySegmentReader(ir2);
 			iw.Dispose();
 			SortedDocValues multi = MultiDocValues.GetSortedValues(ir, "bytes");
@@ -171,9 +171,9 @@ namespace Lucene.Net.Test.Index
 					iw.Commit();
 				}
 			}
-			DirectoryReader ir = iw.GetReader();
+			DirectoryReader ir = iw.Reader;
 			iw.ForceMerge(1);
-			DirectoryReader ir2 = iw.GetReader();
+			DirectoryReader ir2 = iw.Reader;
 			AtomicReader merged = GetOnlySegmentReader(ir2);
 			iw.Dispose();
 			SortedDocValues multi = MultiDocValues.GetSortedValues(ir, "bytes");
@@ -221,9 +221,9 @@ namespace Lucene.Net.Test.Index
 					iw.Commit();
 				}
 			}
-			DirectoryReader ir = iw.GetReader();
+			DirectoryReader ir = iw.Reader;
 			iw.ForceMerge(1);
-			DirectoryReader ir2 = iw.GetReader();
+			DirectoryReader ir2 = iw.Reader;
 			AtomicReader merged = GetOnlySegmentReader(ir2);
 			iw.Dispose();
 			SortedSetDocValues multi = MultiDocValues.GetSortedSetValues(ir, "bytes");
@@ -248,11 +248,11 @@ namespace Lucene.Net.Test.Index
 				for (int i_2 = 0; i_2 < numDocs; i_2++)
 				{
 					single.SetDocument(i_2);
-					AList<long> expectedList = new AList<long>();
+					List<long> expectedList = new List<long>();
 					long ord;
 					while ((ord = single.NextOrd()) != SortedSetDocValues.NO_MORE_ORDS)
 					{
-						expectedList.AddItem(ord);
+						expectedList.Add(ord);
 					}
 					multi.SetDocument(i_2);
 					int upto = 0;
@@ -296,9 +296,9 @@ namespace Lucene.Net.Test.Index
 					iw.Commit();
 				}
 			}
-			DirectoryReader ir = iw.GetReader();
+			DirectoryReader ir = iw.Reader;
 			iw.ForceMerge(1);
-			DirectoryReader ir2 = iw.GetReader();
+			DirectoryReader ir2 = iw.Reader;
 			AtomicReader merged = GetOnlySegmentReader(ir2);
 			iw.Dispose();
 			SortedSetDocValues multi = MultiDocValues.GetSortedSetValues(ir, "bytes");
@@ -323,11 +323,11 @@ namespace Lucene.Net.Test.Index
 				for (int i_2 = 0; i_2 < numDocs; i_2++)
 				{
 					single.SetDocument(i_2);
-					AList<long> expectedList = new AList<long>();
+					List<long> expectedList = new List<long>();
 					long ord;
 					while ((ord = single.NextOrd()) != SortedSetDocValues.NO_MORE_ORDS)
 					{
-						expectedList.AddItem(ord);
+						expectedList.Add(ord);
 					}
 					multi.SetDocument(i_2);
 					int upto = 0;
@@ -370,9 +370,9 @@ namespace Lucene.Net.Test.Index
 					iw.Commit();
 				}
 			}
-			DirectoryReader ir = iw.GetReader();
+			DirectoryReader ir = iw.Reader;
 			iw.ForceMerge(1);
-			DirectoryReader ir2 = iw.GetReader();
+			DirectoryReader ir2 = iw.Reader;
 			AtomicReader merged = GetOnlySegmentReader(ir2);
 			iw.Dispose();
 			Bits multi = MultiDocValues.GetDocsWithField(ir, "numbers");

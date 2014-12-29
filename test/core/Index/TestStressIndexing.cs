@@ -17,7 +17,7 @@ namespace Lucene.Net.Test.Index
 {
 	public class TestStressIndexing : LuceneTestCase
 	{
-		private abstract class TimedThread : Sharpen.Thread
+		private abstract class TimedThread : Thread
 		{
 			internal volatile bool failed;
 
@@ -54,7 +54,7 @@ namespace Lucene.Net.Test.Index
 				}
 				catch (Exception e)
 				{
-					System.Console.Out.WriteLine(Sharpen.Thread.CurrentThread() + ": exc");
+					System.Console.Out.WriteLine(Thread.CurrentThread() + ": exc");
 					Sharpen.Runtime.PrintStackTrace(e, System.Console.Out);
 					failed = true;
 				}

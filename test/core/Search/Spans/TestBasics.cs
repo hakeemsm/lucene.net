@@ -57,7 +57,7 @@ namespace Lucene.Net.Search.Spans
 			{
 				if (input.IncrementToken())
 				{
-					payloadAttr.SetPayload(new BytesRef(Sharpen.Runtime.GetBytesForString(("pos: " + 
+					payloadAttr.Payload = (new BytesRef(Sharpen.Runtime.GetBytesForString(("pos: " + 
 						pos), StandardCharsets.UTF_8)));
 					pos++;
 					return true;
@@ -95,7 +95,7 @@ namespace Lucene.Net.Search.Spans
 				doc.Add(NewTextField("field", English.IntToEnglish(i), Field.Store.YES));
 				writer.AddDocument(doc);
 			}
-			reader = writer.GetReader();
+			reader = writer.Reader;
 			searcher = NewSearcher(reader);
 			writer.Dispose();
 		}
@@ -482,9 +482,9 @@ namespace Lucene.Net.Search.Spans
 				.UTF_8));
 			pay2 = new BytesRef(Sharpen.Runtime.GetBytesForString(("pos: " + 1), StandardCharsets
 				.UTF_8));
-			list = new AList<byte[]>();
-			list.AddItem(pay.bytes);
-			list.AddItem(pay2.bytes);
+			list = new List<byte[]>();
+			list.Add(pay.bytes);
+			list.Add(pay2.bytes);
 			query = new SpanNearPayloadCheckQuery(snq, list);
 			CheckHits(query, new int[] { 500, 501, 502, 503, 504, 505, 506, 507, 508, 509, 510
 				, 511, 512, 513, 514, 515, 516, 517, 518, 519, 520, 521, 522, 523, 524, 525, 526
@@ -504,10 +504,10 @@ namespace Lucene.Net.Search.Spans
 				.UTF_8));
 			BytesRef pay3 = new BytesRef(Sharpen.Runtime.GetBytesForString(("pos: " + 2), StandardCharsets
 				.UTF_8));
-			list = new AList<byte[]>();
-			list.AddItem(pay.bytes);
-			list.AddItem(pay2.bytes);
-			list.AddItem(pay3.bytes);
+			list = new List<byte[]>();
+			list.Add(pay.bytes);
+			list.Add(pay2.bytes);
+			list.Add(pay3.bytes);
 			query = new SpanNearPayloadCheckQuery(snq, list);
 			CheckHits(query, new int[] { 505 });
 		}
@@ -534,7 +534,7 @@ namespace Lucene.Net.Search.Spans
 			query = new SpanPositionRangeQuery(oneThousHunThree, 0, 6);
 			CheckHits(query, new int[] { 1103, 1203, 1303, 1403, 1503, 1603, 1703, 1803, 1903
 				 });
-			ICollection<byte[]> payloads = new AList<byte[]>();
+			ICollection<byte[]> payloads = new List<byte[]>();
 			BytesRef pay = new BytesRef(Sharpen.Runtime.GetBytesForString(("pos: " + 0), StandardCharsets
 				.UTF_8));
 			BytesRef pay2 = new BytesRef(Sharpen.Runtime.GetBytesForString(("pos: " + 1), StandardCharsets
@@ -543,10 +543,10 @@ namespace Lucene.Net.Search.Spans
 				.UTF_8));
 			BytesRef pay4 = new BytesRef(Sharpen.Runtime.GetBytesForString(("pos: " + 4), StandardCharsets
 				.UTF_8));
-			payloads.AddItem(pay.bytes);
-			payloads.AddItem(pay2.bytes);
-			payloads.AddItem(pay3.bytes);
-			payloads.AddItem(pay4.bytes);
+			payloads.Add(pay.bytes);
+			payloads.Add(pay2.bytes);
+			payloads.Add(pay3.bytes);
+			payloads.Add(pay4.bytes);
 			query = new SpanNearPayloadCheckQuery(oneThousHunThree, payloads);
 			CheckHits(query, new int[] { 1103, 1203, 1303, 1403, 1503, 1603, 1703, 1803, 1903
 				 });

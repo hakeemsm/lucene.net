@@ -96,7 +96,7 @@ namespace Lucene.Net.Search.Spans
 			doc.Add(NewTextField(PayloadHelper.FIELD, "one two three one four three", Field.Store
 				.YES));
 			writer.AddDocument(doc);
-			IndexReader reader = writer.GetReader();
+			IndexReader reader = writer.Reader;
 			writer.Dispose();
 			CheckSpans(MultiSpansWrapper.Wrap(reader.GetContext(), snq), 1, new int[] { 2 });
 			reader.Dispose();
@@ -214,7 +214,7 @@ namespace Lucene.Net.Search.Spans
 				();
 			doc.Add(new TextField("content", new StringReader("a b c d e f g h i j a k")));
 			writer.AddDocument(doc);
-			IndexReader reader = writer.GetReader();
+			IndexReader reader = writer.Reader;
 			IndexSearcher @is = NewSearcher(reader);
 			writer.Dispose();
 			SpanTermQuery stq1 = new SpanTermQuery(new Term("content", "a"));
@@ -229,10 +229,10 @@ namespace Lucene.Net.Search.Spans
 			{
 				while (spans.Next())
 				{
-					ICollection<byte[]> payloads = spans.GetPayload();
+					ICollection<byte[]> payloads = spans.Payload;
 					foreach (byte[] payload in payloads)
 					{
-						payloadSet.AddItem(new string(payload, StandardCharsets.UTF_8));
+						payloadSet.Add(new string(payload, StandardCharsets.UTF_8));
 					}
 				}
 			}
@@ -253,7 +253,7 @@ namespace Lucene.Net.Search.Spans
 				();
 			doc.Add(new TextField("content", new StringReader("a b a d k f a h i k a k")));
 			writer.AddDocument(doc);
-			IndexReader reader = writer.GetReader();
+			IndexReader reader = writer.Reader;
 			IndexSearcher @is = NewSearcher(reader);
 			writer.Dispose();
 			SpanTermQuery stq1 = new SpanTermQuery(new Term("content", "a"));
@@ -268,10 +268,10 @@ namespace Lucene.Net.Search.Spans
 			{
 				while (spans.Next())
 				{
-					ICollection<byte[]> payloads = spans.GetPayload();
+					ICollection<byte[]> payloads = spans.Payload;
 					foreach (byte[] payload in payloads)
 					{
-						payloadSet.AddItem(new string(payload, StandardCharsets.UTF_8));
+						payloadSet.Add(new string(payload, StandardCharsets.UTF_8));
 					}
 				}
 			}
@@ -293,7 +293,7 @@ namespace Lucene.Net.Search.Spans
 			doc.Add(new TextField("content", new StringReader("j k a l f k k p a t a k l k t a"
 				)));
 			writer.AddDocument(doc);
-			IndexReader reader = writer.GetReader();
+			IndexReader reader = writer.Reader;
 			IndexSearcher @is = NewSearcher(reader);
 			writer.Dispose();
 			SpanTermQuery stq1 = new SpanTermQuery(new Term("content", "a"));
@@ -308,10 +308,10 @@ namespace Lucene.Net.Search.Spans
 			{
 				while (spans.Next())
 				{
-					ICollection<byte[]> payloads = spans.GetPayload();
+					ICollection<byte[]> payloads = spans.Payload;
 					foreach (byte[] payload in payloads)
 					{
-						payloadSet.AddItem(new string(payload, StandardCharsets.UTF_8));
+						payloadSet.Add(new string(payload, StandardCharsets.UTF_8));
 					}
 				}
 			}
@@ -340,7 +340,7 @@ namespace Lucene.Net.Search.Spans
 				();
 			doc.Add(NewTextField(PayloadHelper.FIELD, "xx rr yy mm  pp", Field.Store.YES));
 			writer.AddDocument(doc);
-			IndexReader reader = writer.GetReader();
+			IndexReader reader = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(reader);
 			PayloadSpanUtil psu = new PayloadSpanUtil(searcher.GetTopReaderContext());
@@ -383,7 +383,7 @@ namespace Lucene.Net.Search.Spans
 				//See payload helper, for the PayloadHelper.FIELD field, there is a single byte payload at every token
 				if (spans.IsPayloadAvailable())
 				{
-					ICollection<byte[]> payload = spans.GetPayload();
+					ICollection<byte[]> payload = spans.Payload;
 					IsTrue("payload Size: " + payload.Count + " is not: " + expectedNumPayloads
 						, payload.Count == expectedNumPayloads);
 					foreach (byte[] thePayload in payload)
@@ -418,7 +418,7 @@ namespace Lucene.Net.Search.Spans
 				doc.Add(NewTextField(PayloadHelper.FIELD, docText, Field.Store.YES));
 				writer.AddDocument(doc);
 			}
-			closeIndexReader = writer.GetReader();
+			closeIndexReader = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(closeIndexReader);
 			return searcher;
@@ -437,7 +437,7 @@ namespace Lucene.Net.Search.Spans
 				}
 				if (spans.IsPayloadAvailable())
 				{
-					ICollection<byte[]> payload = spans.GetPayload();
+					ICollection<byte[]> payload = spans.Payload;
 					if (VERBOSE)
 					{
 						System.Console.Out.WriteLine("payloads for span:" + payload.Count);
@@ -496,10 +496,10 @@ namespace Lucene.Net.Search.Spans
 			{
 				this._enclosing = _enclosing;
 				this.pos = 0;
-				this.entities.AddItem("xx");
-				this.entities.AddItem("one");
-				this.nopayload.AddItem("nopayload");
-				this.nopayload.AddItem("np");
+				this.entities.Add("xx");
+				this.entities.Add("one");
+				this.nopayload.Add("nopayload");
+				this.nopayload.Add("np");
 				this.termAtt = this.AddAttribute<CharTermAttribute>();
 				this.posIncrAtt = this.AddAttribute<PositionIncrementAttribute>();
 				this.payloadAtt = this.AddAttribute<PayloadAttribute>();
@@ -515,11 +515,11 @@ namespace Lucene.Net.Search.Spans
 					{
 						if (this.entities.Contains(token))
 						{
-							this.payloadAtt.SetPayload(new BytesRef(token + ":Entity:" + this.pos));
+							this.payloadAtt.Payload = (new BytesRef(token + ":Entity:" + this.pos));
 						}
 						else
 						{
-							this.payloadAtt.SetPayload(new BytesRef(token + ":Noise:" + this.pos));
+							this.payloadAtt.Payload = (new BytesRef(token + ":Noise:" + this.pos));
 						}
 					}
 					this.pos += this.posIncrAtt.GetPositionIncrement();

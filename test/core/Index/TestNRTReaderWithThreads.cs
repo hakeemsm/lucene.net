@@ -28,7 +28,7 @@ namespace Lucene.Net.Test.Index
 			IndexWriter writer = new IndexWriter(mainDir, ((IndexWriterConfig)NewIndexWriterConfig
 				(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMaxBufferedDocs(10)).SetMergePolicy
 				(NewLogMergePolicy(false, 2)));
-			IndexReader reader = writer.GetReader();
+			IndexReader reader = writer.Reader;
 			// start pooling readers
 			reader.Dispose();
 			TestNRTReaderWithThreads.RunThread[] indexThreads = new TestNRTReaderWithThreads.RunThread
@@ -43,7 +43,7 @@ namespace Lucene.Net.Test.Index
 			long duration = 1000;
 			while ((DateTime.Now.CurrentTimeMillis() - startTime) < duration)
 			{
-				Sharpen.Thread.Sleep(100);
+				Thread.Sleep(100);
 			}
 			int delCount = 0;
 			int addCount = 0;
@@ -70,7 +70,7 @@ namespace Lucene.Net.Test.Index
 			mainDir.Dispose();
 		}
 
-		public class RunThread : Sharpen.Thread
+		public class RunThread : Thread
 		{
 			internal IndexWriter writer;
 
@@ -115,7 +115,7 @@ namespace Lucene.Net.Test.Index
 							{
 								// we may or may not delete because the term may not exist,
 								// however we're opening and closing the reader rapidly
-								IndexReader reader = this.writer.GetReader();
+								IndexReader reader = this.writer.Reader;
 								int id = this.r.Next(this._enclosing.seq);
 								Term term = new Term("id", Sharpen.Extensions.ToString(id));
 								int count = TestIndexWriterReader.Count(term, reader);

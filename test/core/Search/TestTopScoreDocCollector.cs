@@ -64,7 +64,7 @@ namespace Lucene.Net.Search
             // Set minNrShouldMatch to 1 so that BQ will not optimize rewrite to return
             // the clause instead of BQ.
             bq.MinimumNumberShouldMatch = 1;
-			IndexReader reader = writer.GetReader();
+			IndexReader reader = writer.Reader;
 			IndexSearcher searcher = NewSearcher(reader);
             for (int i = 0; i < inOrder.Length; i++)
             {

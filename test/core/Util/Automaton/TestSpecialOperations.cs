@@ -76,15 +76,15 @@ namespace Lucene.Net.Test.Util.Automaton
 				System.Console.Out.WriteLine("TEST: numStrings=" + numStrings);
 			}
 			ICollection<IntsRef> strings = new HashSet<IntsRef>();
-			IList<Lucene.Net.Util.Automaton.Automaton> automata = new AList<Lucene.Net.Util.Automaton.Automaton
+			IList<Lucene.Net.Util.Automaton.Automaton> automata = new List<Lucene.Net.Util.Automaton.Automaton
 				>();
 			for (int i = 0; i < numStrings; i++)
 			{
 				string s = TestUtil.RandomSimpleString(Random(), 1, 200);
-				automata.AddItem(BasicAutomata.MakeString(s));
+				automata.Add(BasicAutomata.MakeString(s));
 				IntsRef scratch = new IntsRef();
 				Lucene.Net.Util.Fst.Util.ToUTF32(s.ToCharArray(), 0, s.Length, scratch);
-				strings.AddItem(scratch);
+				strings.Add(scratch);
 				if (VERBOSE)
 				{
 					System.Console.Out.WriteLine("  add string=" + s);
@@ -141,9 +141,9 @@ namespace Lucene.Net.Test.Util.Automaton
 			{
 				System.Console.Out.WriteLine("strings.size()=" + strings.Count + " actual.size=" 
 					+ actual.Count);
-				IList<IntsRef> x = new AList<IntsRef>(strings);
+				IList<IntsRef> x = new List<IntsRef>(strings);
 				x.Sort();
-				IList<IntsRef> y = new AList<IntsRef>(actual);
+				IList<IntsRef> y = new List<IntsRef>(actual);
 				y.Sort();
 				int end = Math.Min(x.Count, y.Count);
 				for (int i_1 = 0; i_1 < end; i_1++)

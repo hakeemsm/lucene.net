@@ -33,7 +33,7 @@ namespace Lucene.Net.Search
 				doc.Add(NewStringField(FIELD, values[i], Field.Store.YES));
 				writer.AddDocument(doc);
 			}
-			IndexReader ir = writer.GetReader();
+			IndexReader ir = writer.Reader;
 			writer.Dispose();
 			BooleanQuery booleanQuery1 = new BooleanQuery();
 			booleanQuery1.Add(new TermQuery(new Term(FIELD, "1")), BooleanClause.Occur.SHOULD
@@ -60,7 +60,7 @@ namespace Lucene.Net.Search
 			Directory directory = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), directory);
 			writer.Commit();
-			IndexReader ir = writer.GetReader();
+			IndexReader ir = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			BooleanQuery.BooleanWeight weight = (BooleanQuery.BooleanWeight)new BooleanQuery(
@@ -70,7 +70,7 @@ namespace Lucene.Net.Search
 			//assert doc == -1;
 			BooleanScorer bs = new BooleanScorer(weight, false, 1, Arrays.AsList(scorers), Collections
 				.EmptyList<BulkScorer>(), scorers.Length);
-			IList<int> hits = new AList<int>();
+			IList<int> hits = new List<int>();
 			bs.Score(new _Collector_104(hits));
 			AreEqual("should have only 1 hit", 1, hits.Count);
 			AreEqual("hit should have been docID=3000", 3000, hits[0]);
@@ -115,7 +115,7 @@ namespace Lucene.Net.Search
 
 			public override void Collect(int doc)
 			{
-				hits.AddItem(this.docBase + doc);
+				hits.Add(this.docBase + doc);
 			}
 
 			public override void SetNextReader(AtomicReaderContext context)
@@ -144,7 +144,7 @@ namespace Lucene.Net.Search
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(new TextField("field", "33", Field.Store.NO));
 			w.AddDocument(doc);
-			IndexReader r = w.GetReader();
+			IndexReader r = w.Reader;
 			w.Dispose();
 			// we don't wrap with AssertingIndexSearcher in order to have the original scorer in setScorer.
 			IndexSearcher s = NewSearcher(r, true, false);
@@ -283,7 +283,7 @@ namespace Lucene.Net.Search
 			doc.Add(NewTextField("field", "doctors are people who prescribe medicines of which they know little, to cure diseases of which they know less, in human beings of whom they know nothing"
 				, Field.Store.NO));
 			w.AddDocument(doc);
-			IndexReader r = w.GetReader();
+			IndexReader r = w.Reader;
 			w.Dispose();
 			IndexSearcher s = NewSearcher(r);
 			BooleanQuery q1 = new BooleanQuery();

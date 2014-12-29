@@ -63,7 +63,7 @@ namespace Lucene.Net.Search
 			// 8239472272678419952L), because SingleDocTestFilter(x)
 			// blindly accepts that docID in any sub-segment
 			writer.ForceMerge(1);
-			reader = writer.GetReader();
+			reader = writer.Reader;
 			writer.Dispose();
 			searcher = NewSearcher(reader);
 			query = new TermQuery(new Term("field", "three"));
@@ -481,7 +481,7 @@ namespace Lucene.Net.Search
 				doc.Add(NewTextField("field", string.Empty + num, Field.Store.YES));
 				writer.AddDocument(doc);
 			}
-			IndexReader reader = writer.GetReader();
+			IndexReader reader = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(reader);
 			Query query = new FilteredQuery(new TermQuery(new Term("field", "0")), new _Filter_422
@@ -595,7 +595,7 @@ namespace Lucene.Net.Search
 				doc.Add(NewTextField("field", string.Empty + num, Field.Store.YES));
 				writer.AddDocument(doc);
 			}
-			IndexReader reader = writer.GetReader();
+			IndexReader reader = writer.Reader;
 			writer.Dispose();
 			bool queryFirst = Random().NextBoolean();
 			IndexSearcher searcher = NewSearcher(reader);

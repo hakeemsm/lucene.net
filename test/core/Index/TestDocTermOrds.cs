@@ -1,21 +1,20 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System.Collections.Generic;
-using Lucene.Net.Test.Analysis;
+using System.Linq;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
 using Lucene.Net.Codecs;
-using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
+using Lucene.Net.Support;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
-using Sharpen;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
+    [TestFixture]
 	public class TestDocTermOrds : LuceneTestCase
 	{
 		// TODO:
@@ -23,7 +22,7 @@ namespace Lucene.Net.Test.Index
 		//   - test prefix
 		//   - test w/ cutoff
 		//   - crank docs way up so we get some merging sometimes
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestSimple()
 		{
 			Directory dir = NewDirectory();
@@ -39,8 +38,8 @@ namespace Lucene.Net.Test.Index
 			w.AddDocument(doc);
 			field.StringValue = "a f");
 			w.AddDocument(doc);
-			IndexReader r = w.GetReader();
-			w.Dispose();
+			IndexReader r = w.Reader;
+			w.Close();
 			AtomicReader ar = SlowCompositeReaderWrapper.Wrap(r);
 			DocTermOrds dto = new DocTermOrds(ar, ar.LiveDocs, "field");
 			SortedSetDocValues iter = dto.Iterator(ar);
@@ -62,23 +61,22 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestRandom()
 		{
 			Directory dir = NewDirectory();
 			int NUM_TERMS = AtLeast(20);
-			ICollection<BytesRef> terms = new HashSet<BytesRef>();
+			var terms = new HashSet<BytesRef>();
 			while (terms.Count < NUM_TERMS)
 			{
 				string s = TestUtil.RandomRealisticUnicodeString(Random());
 				//final String s = TestUtil.randomSimpleString(random);
 				if (s.Length > 0)
 				{
-					terms.AddItem(new BytesRef(s));
+					terms.Add(new BytesRef(s));
 				}
 			}
-			BytesRef[] termsArray = Sharpen.Collections.ToArray(terms, new BytesRef[terms.Count
-				]);
+			BytesRef[] termsArray = terms.ToArray();
 			Arrays.Sort(termsArray);
 			int NUM_DOCS = AtLeast(100);
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
@@ -102,7 +100,7 @@ namespace Lucene.Net.Test.Index
 				int termCount = TestUtil.NextInt(Random(), 0, 20 * RANDOM_MULTIPLIER);
 				while (ordsForDocSet.Count < termCount)
 				{
-					ordsForDocSet.AddItem(Random().Next(termsArray.Length));
+					ordsForDocSet.Add(Random().Next(termsArray.Length));
 				}
 				int[] ordsForDoc = new int[termCount];
 				int upto = 0;
@@ -126,8 +124,8 @@ namespace Lucene.Net.Test.Index
 				idToOrds[id] = ordsForDoc;
 				w.AddDocument(doc);
 			}
-			DirectoryReader r = w.GetReader();
-			w.Dispose();
+			DirectoryReader r = w.Reader;
+			w.Close();
 			if (VERBOSE)
 			{
 				System.Console.Out.WriteLine("TEST: reader=" + r);
@@ -148,28 +146,27 @@ namespace Lucene.Net.Test.Index
 			}
 			AtomicReader slowR = SlowCompositeReaderWrapper.Wrap(r);
 			Verify(slowR, idToOrds, termsArray, null);
-			FieldCache.DEFAULT.PurgeByCacheKey(slowR.GetCoreCacheKey());
+			FieldCache.DEFAULT.PurgeByCacheKey(slowR.CoreCacheKey);
 			r.Dispose();
 			dir.Dispose();
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestRandomWithPrefix()
 		{
 			Directory dir = NewDirectory();
 			ICollection<string> prefixes = new HashSet<string>();
-			int numPrefix = TestUtil.NextInt(Random(), 2, 7);
+			int numPrefix = Random().NextInt(2, 7);
 			if (VERBOSE)
 			{
 				System.Console.Out.WriteLine("TEST: use " + numPrefix + " prefixes");
 			}
 			while (prefixes.Count < numPrefix)
 			{
-				prefixes.AddItem(TestUtil.RandomRealisticUnicodeString(Random()));
+				prefixes.Add(TestUtil.RandomRealisticUnicodeString(Random()));
 			}
 			//prefixes.add(TestUtil.randomSimpleString(random));
-			string[] prefixesArray = Sharpen.Collections.ToArray(prefixes, new string[prefixes
-				.Count]);
+			string[] prefixesArray = prefixes.ToArray();
 			int NUM_TERMS = AtLeast(20);
 			ICollection<BytesRef> terms = new HashSet<BytesRef>();
 			while (terms.Count < NUM_TERMS)
@@ -179,11 +176,10 @@ namespace Lucene.Net.Test.Index
 				//final String s = prefixesArray[random.nextInt(prefixesArray.length)] + TestUtil.randomSimpleString(random);
 				if (s.Length > 0)
 				{
-					terms.AddItem(new BytesRef(s));
+					terms.Add(new BytesRef(s));
 				}
 			}
-			BytesRef[] termsArray = Sharpen.Collections.ToArray(terms, new BytesRef[terms.Count
-				]);
+			BytesRef[] termsArray = terms.ToArray();
 			Arrays.Sort(termsArray);
 			int NUM_DOCS = AtLeast(100);
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
@@ -206,7 +202,7 @@ namespace Lucene.Net.Test.Index
 				int termCount = TestUtil.NextInt(Random(), 0, 20 * RANDOM_MULTIPLIER);
 				while (ordsForDocSet.Count < termCount)
 				{
-					ordsForDocSet.AddItem(Random().Next(termsArray.Length));
+					ordsForDocSet.Add(Random().Next(termsArray.Length));
 				}
 				int[] ordsForDoc = new int[termCount];
 				int upto = 0;
@@ -230,8 +226,8 @@ namespace Lucene.Net.Test.Index
 				idToOrds[id] = ordsForDoc;
 				w.AddDocument(doc);
 			}
-			DirectoryReader r = w.GetReader();
-			w.Dispose();
+			DirectoryReader r = w.Reader;
+			w.Close();
 			if (VERBOSE)
 			{
 				System.Console.Out.WriteLine("TEST: reader=" + r);
@@ -244,12 +240,12 @@ namespace Lucene.Net.Test.Index
 				for (int id_1 = 0; id_1 < NUM_DOCS; id_1++)
 				{
 					int[] docOrds = idToOrds[id_1];
-					IList<int> newOrds = new AList<int>();
+					IList<int> newOrds = new List<int>();
 					foreach (int ord in idToOrds[id_1])
 					{
 						if (StringHelper.StartsWith(termsArray[ord], prefixRef))
 						{
-							newOrds.AddItem(ord);
+							newOrds.Add(ord);
 						}
 					}
 					int[] newOrdsArray = new int[newOrds.Count];
@@ -276,7 +272,7 @@ namespace Lucene.Net.Test.Index
 				}
 				Verify(slowR, idToOrdsPrefix, termsArray, prefixRef);
 			}
-			FieldCache.DEFAULT.PurgeByCacheKey(slowR.GetCoreCacheKey());
+			FieldCache.DEFAULT.PurgeByCacheKey(slowR.CoreCacheKey);
 			r.Dispose();
 			dir.Dispose();
 		}
@@ -297,13 +293,13 @@ namespace Lucene.Net.Test.Index
 				int ord = 0;
 				while (allTE.Next() != null)
 				{
-					System.Console.Out.WriteLine("  ord=" + (ord++) + " term=" + allTE.Term().Utf8ToString
+					System.Console.Out.WriteLine("  ord=" + (ord++) + " term=" + allTE.Term.Utf8ToString
 						());
 				}
 			}
 			//final TermsEnum te = subR.fields().terms("field").iterator();
 			TermsEnum te = dto.GetOrdTermsEnum(r);
-			if (dto.NumTerms() == 0)
+			if (dto.NumTerms == 0)
 			{
 				if (prefixRef == null)
 				{
@@ -318,8 +314,8 @@ namespace Lucene.Net.Test.Index
 						TermsEnum.SeekStatus result = termsEnum.SeekCeil(prefixRef);
 						if (result != TermsEnum.SeekStatus.END)
 						{
-							IsFalse("term=" + termsEnum.Term().Utf8ToString() + " matches prefix="
-								 + prefixRef.Utf8ToString(), StringHelper.StartsWith(termsEnum.Term(), prefixRef
+							AssertFalse("term=" + termsEnum.Term.Utf8ToString() + " matches prefix="
+								 + prefixRef.Utf8ToString(), StringHelper.StartsWith(termsEnum.Term, prefixRef
 								));
 						}
 					}
@@ -334,7 +330,7 @@ namespace Lucene.Net.Test.Index
 				te.SeekExact(0);
 				while (true)
 				{
-					System.Console.Out.WriteLine("  ord=" + te.Ord() + " term=" + te.Term().Utf8ToString
+					System.Console.Out.WriteLine("  ord=" + te.Ord + " term=" + te.Term.Utf8ToString
 						());
 					if (te.Next() == null)
 					{
@@ -361,16 +357,16 @@ namespace Lucene.Net.Test.Index
 					if (VERBOSE)
 					{
 						System.Console.Out.WriteLine("  exp=" + expected.Utf8ToString() + " actual=" + te
-							.Term().Utf8ToString());
+							.Term.Utf8ToString());
 					}
-					AreEqual("expected=" + expected.Utf8ToString() + " actual="
-						 + te.Term().Utf8ToString() + " ord=" + ord, expected, te.Term());
+					AssertEquals("expected=" + expected.Utf8ToString() + " actual="
+						 + te.Term.Utf8ToString() + " ord=" + ord, expected, te.Term);
 				}
 				AreEqual(answers.Length, upto);
 			}
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestBackToTheFuture()
 		{
 			Directory dir = NewDirectory();
@@ -389,7 +385,7 @@ namespace Lucene.Net.Test.Index
 			FieldCache.DEFAULT.GetDocTermOrds(GetOnlySegmentReader(r2), "foo");
 			SortedSetDocValues v = FieldCache.DEFAULT.GetDocTermOrds(GetOnlySegmentReader(r1)
 				, "foo");
-			AreEqual(2, v.GetValueCount());
+			AreEqual(2, v.ValueCount);
 			v.SetDocument(1);
 			AreEqual(1, v.NextOrd());
 			iw.Dispose();
@@ -398,7 +394,7 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestSortedTermsEnum()
 		{
 			Directory directory = NewDirectory();
@@ -417,51 +413,51 @@ namespace Lucene.Net.Test.Index
 			doc.Add(new StringField("field", "beer", Field.Store.NO));
 			iwriter.AddDocument(doc);
 			iwriter.ForceMerge(1);
-			DirectoryReader ireader = iwriter.GetReader();
-			iwriter.Dispose();
+			DirectoryReader ireader = iwriter.Reader;
+			iwriter.Close();
 			AtomicReader ar = GetOnlySegmentReader(ireader);
 			SortedSetDocValues dv = FieldCache.DEFAULT.GetDocTermOrds(ar, "field");
-			AreEqual(3, dv.GetValueCount());
-			TermsEnum termsEnum = dv.TermsEnum();
+			AreEqual(3, dv.ValueCount);
+			TermsEnum termsEnum = dv.TermsEnum;
 			// next()
 			AreEqual("beer", termsEnum.Next().Utf8ToString());
-			AreEqual(0, termsEnum.Ord());
+			AreEqual(0, termsEnum.Ord);
 			AreEqual("hello", termsEnum.Next().Utf8ToString());
-			AreEqual(1, termsEnum.Ord());
+			AreEqual(1, termsEnum.Ord);
 			AreEqual("world", termsEnum.Next().Utf8ToString());
-			AreEqual(2, termsEnum.Ord());
+			AreEqual(2, termsEnum.Ord);
 			// seekCeil()
 			AreEqual(TermsEnum.SeekStatus.NOT_FOUND, termsEnum.SeekCeil
 				(new BytesRef("ha!")));
-			AreEqual("hello", termsEnum.Term().Utf8ToString());
-			AreEqual(1, termsEnum.Ord());
+			AreEqual("hello", termsEnum.Term.Utf8ToString());
+			AreEqual(1, termsEnum.Ord);
 			AreEqual(TermsEnum.SeekStatus.FOUND, termsEnum.SeekCeil(new 
 				BytesRef("beer")));
-			AreEqual("beer", termsEnum.Term().Utf8ToString());
-			AreEqual(0, termsEnum.Ord());
+			AreEqual("beer", termsEnum.Term.Utf8ToString());
+			AreEqual(0, termsEnum.Ord);
 			AreEqual(TermsEnum.SeekStatus.END, termsEnum.SeekCeil(new 
 				BytesRef("zzz")));
 			// seekExact()
 			IsTrue(termsEnum.SeekExact(new BytesRef("beer")));
-			AreEqual("beer", termsEnum.Term().Utf8ToString());
-			AreEqual(0, termsEnum.Ord());
+			AreEqual("beer", termsEnum.Term.Utf8ToString());
+			AreEqual(0, termsEnum.Ord);
 			IsTrue(termsEnum.SeekExact(new BytesRef("hello")));
-			AreEqual("hello", termsEnum.Term().Utf8ToString());
-			AreEqual(1, termsEnum.Ord());
+			AreEqual("hello", termsEnum.Term.Utf8ToString());
+			AreEqual(1, termsEnum.Ord);
 			IsTrue(termsEnum.SeekExact(new BytesRef("world")));
-			AreEqual("world", termsEnum.Term().Utf8ToString());
-			AreEqual(2, termsEnum.Ord());
+			AreEqual("world", termsEnum.Term.Utf8ToString());
+			AreEqual(2, termsEnum.Ord);
 			IsFalse(termsEnum.SeekExact(new BytesRef("bogus")));
 			// seek(ord)
 			termsEnum.SeekExact(0);
-			AreEqual("beer", termsEnum.Term().Utf8ToString());
-			AreEqual(0, termsEnum.Ord());
+			AreEqual("beer", termsEnum.Term.Utf8ToString());
+			AreEqual(0, termsEnum.Ord);
 			termsEnum.SeekExact(1);
-			AreEqual("hello", termsEnum.Term().Utf8ToString());
-			AreEqual(1, termsEnum.Ord());
+			AreEqual("hello", termsEnum.Term.Utf8ToString());
+			AreEqual(1, termsEnum.Ord);
 			termsEnum.SeekExact(2);
-			AreEqual("world", termsEnum.Term().Utf8ToString());
-			AreEqual(2, termsEnum.Ord());
+			AreEqual("world", termsEnum.Term.Utf8ToString());
+			AreEqual(2, termsEnum.Ord);
 			ireader.Dispose();
 			directory.Dispose();
 		}

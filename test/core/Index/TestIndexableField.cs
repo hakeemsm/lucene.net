@@ -1,175 +1,177 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
+using System.Collections.Generic;
 using System.IO;
-using Lucene.Net.Test.Analysis;
+using System.Text;
+using Lucene.Net.Analysis;
 using Lucene.Net.Codecs;
 using Lucene.Net.Codecs.Lucene3x;
-using Lucene.Net.Document;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
-using Lucene.Net.Store;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
-using Sharpen;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
+    [TestFixture]
 	public class TestIndexableField : LuceneTestCase
 	{
 		private class MyField : IIndexableField
 		{
 			private readonly int counter;
 
-			private sealed class _IndexableFieldType_48 : IndexableFieldType
+			private sealed class AnonInnerField : IIndexableFieldType
 			{
-				public _IndexableFieldType_48(MyField _enclosing)
+				public AnonInnerField(MyField _enclosing)
 				{
 					this._enclosing = _enclosing;
 				}
 
-				public bool Indexed()
+				public bool Indexed
 				{
-					return (this._enclosing.counter % 10) != 3;
+				    get { return (this._enclosing.counter%10) != 3; }
 				}
 
-				public bool Stored()
+				public bool Stored
 				{
-					return (this._enclosing.counter & 1) == 0 || (this._enclosing.counter % 10) == 3;
+				    get { return (this._enclosing.counter & 1) == 0 || (this._enclosing.counter%10) == 3; }
 				}
 
-				public bool Tokenized()
+				public bool Tokenized
 				{
-					return true;
+				    get { return true; }
 				}
 
-				public bool StoreTermVectors()
+				public bool StoreTermVectors
 				{
-					return this.Indexed() && this._enclosing.counter % 2 == 1 && this._enclosing.counter
-						 % 10 != 9;
+				    get
+				    {
+				        return this.Indexed && this._enclosing.counter%2 == 1 && this._enclosing.counter
+				               %10 != 9;
+				    }
 				}
 
-				public bool StoreTermVectorOffsets()
+				public bool StoreTermVectorOffsets
 				{
-					return this.StoreTermVectors() && this._enclosing.counter % 10 != 9;
+				    get { return this.StoreTermVectors && this._enclosing.counter%10 != 9; }
 				}
 
-				public bool StoreTermVectorPositions()
+				public bool StoreTermVectorPositions
 				{
-					return this.StoreTermVectors() && this._enclosing.counter % 10 != 9;
+				    get { return this.StoreTermVectors && this._enclosing.counter%10 != 9; }
 				}
 
-				public bool StoreTermVectorPayloads()
+				public bool StoreTermVectorPayloads
 				{
-					if (Codec.GetDefault() is Lucene3xCodec)
-					{
-						return false;
-					}
-					else
-					{
-						// 3.x doesnt support
-						return this.StoreTermVectors() && this._enclosing.counter % 10 != 9;
-					}
+				    get
+				    {
+				        if (Codec.Default is Lucene3xCodec)
+				        {
+				            return false;
+				        }
+				        // 3.x doesnt support
+				        return this.StoreTermVectors && this._enclosing.counter%10 != 9;
+				    }
 				}
 
-				public bool OmitNorms()
+				public bool OmitNorms
 				{
-					return false;
+				    get { return false; }
 				}
 
-				public FieldInfo.IndexOptions IndexOptions()
+				public FieldInfo.IndexOptions IndexOptions
 				{
-					return FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS;
+				    get { return FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS; }
 				}
 
-				public FieldInfo.DocValuesType DocValueType()
+				public FieldInfo.DocValuesType? DocValueType
 				{
-					return null;
+				    get { return null; }
 				}
 
 				private readonly MyField _enclosing;
 			}
 
-			private readonly IndexableFieldType fieldType;
+			private readonly IIndexableFieldType fieldType;
 
 			public MyField(TestIndexableField _enclosing, int counter)
 			{
 				this._enclosing = _enclosing;
-				fieldType = new _IndexableFieldType_48(this);
+				fieldType = new AnonInnerField(this);
 				this.counter = counter;
 			}
 
-			public virtual string Name()
+			public virtual string Name
 			{
-				return "f" + this.counter;
+			    get { return "f" + this.counter; }
 			}
 
-			public virtual float Boost()
+			public virtual float Boost
 			{
-				return 1.0f + LuceneTestCase.Random().NextFloat();
+			    get { return (float) (1.0f + LuceneTestCase.Random().NextDouble()); }
 			}
 
-			public virtual BytesRef BinaryValue()
+			public virtual BytesRef BinaryValue
 			{
-				if ((this.counter % 10) == 3)
-				{
-					byte[] bytes = new byte[10];
-					for (int idx = 0; idx < bytes.Length; idx++)
-					{
-						bytes[idx] = unchecked((byte)(this.counter + idx));
-					}
-					return new BytesRef(bytes, 0, bytes.Length);
-				}
-				else
-				{
-					return null;
-				}
+			    get
+			    {
+			        if ((this.counter%10) == 3)
+			        {
+			            var bytes = new sbyte[10];
+			            for (int idx = 0; idx < bytes.Length; idx++)
+			            {
+			                bytes[idx] = ((sbyte) (this.counter + idx));
+			            }
+			            return new BytesRef(bytes, 0, bytes.Length);
+			        }
+			        return null;
+			    }
 			}
 
-			public virtual string StringValue = )
+			public virtual string StringValue
 			{
-				int fieldID = this.counter % 10;
-				if (fieldID != 3 && fieldID != 7)
-				{
-					return "text " + this.counter;
-				}
-				else
-				{
-					return null;
-				}
+			    get
+			    {
+			        int fieldID = this.counter%10;
+			        if (fieldID != 3 && fieldID != 7)
+			        {
+			            return "text " + this.counter;
+			        }
+			        return null;
+			    }
 			}
 
-			public virtual StreamReader ReaderValue()
+			public virtual TextReader ReaderValue
 			{
-				if (this.counter % 10 == 7)
-				{
-					return new StringReader("text " + this.counter);
-				}
-				else
-				{
-					return null;
-				}
+			    get
+			    {
+			        if (this.counter%10 == 7)
+			        {
+			            var s = "text " + this.counter;
+			            var bytes = Array.ConvertAll(s.ToCharArray(), Convert.ToByte);
+			            return new StreamReader(new MemoryStream(bytes));
+			        }
+			        return null;
+			    }
 			}
 
-			public virtual Number NumericValue()
+		    public virtual object NumericValue
 			{
-				return null;
+		        get { return null; }
 			}
 
-			public virtual IndexableFieldType FieldType()
+			public virtual IIndexableFieldType FieldTypeValue
 			{
-				return this.fieldType;
+			    get { return this.fieldType; }
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
-			public virtual Lucene.Net.Test.Analysis.TokenStream TokenStream(Analyzer analyzer
+			public virtual Lucene.Net.Analysis.TokenStream TokenStream(Analyzer analyzer
 				)
 			{
-				return this.ReaderValue() != null ? analyzer.TokenStream(this.Name(), this.ReaderValue
-					()) : analyzer.TokenStream(this.Name(), new StringReader(this.StringValue = )));
+				return this.ReaderValue != null ? analyzer.TokenStream(this.Name, this.ReaderValue) : analyzer.TokenStream(this.Name, new StringReader(this.StringValue));
 			}
 
 			private readonly TestIndexableField _enclosing;
@@ -177,10 +179,10 @@ namespace Lucene.Net.Test.Index
 
 		// Silly test showing how to index documents w/o using Lucene's core
 		// Document nor Field class
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestArbitraryFields()
 		{
-			Directory dir = NewDirectory();
+			var dir = NewDirectory();
 			RandomIndexWriter w = new RandomIndexWriter(Random(), dir);
 			int NUM_DOCS = AtLeast(27);
 			if (VERBOSE)
@@ -201,12 +203,12 @@ namespace Lucene.Net.Test.Index
 				}
 				int finalBaseCount = baseCount;
 				baseCount += fieldCount - 1;
-				w.AddDocument(new _Iterable_193(fieldCount, finalDocCount, finalBaseCount));
+                w.AddDocument(GetFieldList(fieldCount,finalDocCount,finalBaseCount));
 			}
 			//HM:revisit 
 			//assert fieldUpto < fieldCount;
 			IndexReader r = w.GetReader();
-			w.Dispose();
+			w.Close();
 			IndexSearcher s = NewSearcher(r);
 			int counter = 0;
 			for (int id = 0; id < NUM_DOCS; id++)
@@ -241,13 +243,11 @@ namespace Lucene.Net.Test.Index
 					if (stored)
 					{
 						IIndexableField f = doc.GetField(name);
-						IsNotNull("doc " + id + " doesn't have field f" + counter, 
-							f);
+						AssertNotNull("doc " + id + " doesn't have field f" + counter, f);
 						if (binary)
 						{
-							IsNotNull("doc " + id + " doesn't have field f" + counter, 
-								f);
-							BytesRef b = f.BinaryValue();
+							AssertNotNull("doc " + id + " doesn't have field f" + counter, f);
+							BytesRef b = f.BinaryValue;
 							IsNotNull(b);
 							AreEqual(10, b.length);
 							for (int idx = 0; idx < 10; idx++)
@@ -258,9 +258,9 @@ namespace Lucene.Net.Test.Index
 						}
 						else
 						{
-							//HM:revisit 
+							
 							//assert stringValue != null;
-							AreEqual(stringValue, f.StringValue = ));
+							AreEqual(stringValue, f.StringValue);
 						}
 					}
 					if (indexed)
@@ -293,17 +293,16 @@ namespace Lucene.Net.Test.Index
 							IsTrue(vectors == null || vectors.Terms(name) == null);
 						}
 						BooleanQuery bq = new BooleanQuery();
-						bq.Add(new TermQuery(new Term("id", string.Empty + id)), BooleanClause.Occur.MUST
+						bq.Add(new TermQuery(new Term("id", string.Empty + id)), Occur.MUST
 							);
-						bq.Add(new TermQuery(new Term(name, "text")), BooleanClause.Occur.MUST);
+						bq.Add(new TermQuery(new Term(name, "text")), Occur.MUST);
 						TopDocs hits2 = s.Search(bq, 1);
 						AreEqual(1, hits2.TotalHits);
 						AreEqual(docID, hits2.ScoreDocs[0].Doc);
 						bq = new BooleanQuery();
-						bq.Add(new TermQuery(new Term("id", string.Empty + id)), BooleanClause.Occur.MUST
+						bq.Add(new TermQuery(new Term("id", string.Empty + id)), Occur.MUST
 							);
-						bq.Add(new TermQuery(new Term(name, string.Empty + counter)), BooleanClause.Occur
-							.MUST);
+						bq.Add(new TermQuery(new Term(name, string.Empty + counter)), Occur.MUST);
 						TopDocs hits3 = s.Search(bq, 1);
 						AreEqual(1, hits3.TotalHits);
 						AreEqual(docID, hits3.ScoreDocs[0].Doc);
@@ -315,68 +314,21 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		private sealed class _Iterable_193 : Iterable<IIndexableField>
-		{
-			public _Iterable_193(int fieldCount, int finalDocCount, int finalBaseCount)
-			{
-				this.fieldCount = fieldCount;
-				this.finalDocCount = finalDocCount;
-				this.finalBaseCount = finalBaseCount;
-			}
-
-			public override Iterator<IIndexableField> Iterator()
-			{
-				return new _Iterator_196(fieldCount, finalDocCount, finalBaseCount);
-			}
-
-			private sealed class _Iterator_196 : Iterator<IIndexableField>
-			{
-				public _Iterator_196(int fieldCount, int finalDocCount, int finalBaseCount)
-				{
-					this.fieldCount = fieldCount;
-					this.finalDocCount = finalDocCount;
-					this.finalBaseCount = finalBaseCount;
-				}
-
-				internal int fieldUpto;
-
-				public override bool HasNext()
-				{
-					return this.fieldUpto < fieldCount;
-				}
-
-				public override IIndexableField Next()
-				{
-					if (this.fieldUpto == 0)
-					{
-						this.fieldUpto = 1;
-						return LuceneTestCase.NewStringField("id", string.Empty + finalDocCount, Field.Store
-							.YES);
-					}
-					else
-					{
-						return new TestIndexableField.MyField(this, finalBaseCount + (this.fieldUpto++ - 
-							1));
-					}
-				}
-
-				public override void Remove()
-				{
-					throw new NotSupportedException();
-				}
-
-				private readonly int fieldCount;
-
-				private readonly int finalDocCount;
-
-				private readonly int finalBaseCount;
-			}
-
-			private readonly int fieldCount;
-
-			private readonly int finalDocCount;
-
-			private readonly int finalBaseCount;
-		}
+        private IEnumerable<IIndexableField> GetFieldList(int fieldCount, int finalDocCount, int finalBaseCount)
+        {
+            int fieldUpto = 0;
+            while (fieldUpto < fieldCount)
+            {
+                if (fieldUpto == 0)
+                {
+                    fieldUpto = 1;
+                    yield return NewStringField("id", string.Empty + finalDocCount, Field.Store.YES);
+                }
+                else
+                {
+                    yield return new MyField(this, finalBaseCount + (fieldUpto++ -1));
+                }
+            }
+        }
 	}
 }

@@ -66,7 +66,7 @@ namespace Lucene.Net.Test.Index
 			// flush
 			writer.Dispose();
 			SegmentReader reader = GetOnlySegmentReader(DirectoryReader.Open(ram));
-			FieldInfos fi = reader.GetFieldInfos();
+			FieldInfos fi = reader.FieldInfos;
 			IsFalse("Payload field bit should not be set.", fi.FieldInfo
 				("f1").HasPayloads());
 			IsTrue("Payload field bit should be set.", fi.FieldInfo("f2"
@@ -96,7 +96,7 @@ namespace Lucene.Net.Test.Index
 			// flush
 			writer.Dispose();
 			reader = GetOnlySegmentReader(DirectoryReader.Open(ram));
-			fi = reader.GetFieldInfos();
+			fi = reader.FieldInfos;
 			IsFalse("Payload field bit should not be set.", fi.FieldInfo
 				("f1").HasPayloads());
 			IsTrue("Payload field bit should be set.", fi.FieldInfo("f2"
@@ -186,7 +186,7 @@ namespace Lucene.Net.Test.Index
 					for (int j = 0; j < numTerms; j++)
 					{
 						tps[j].NextPosition();
-						BytesRef br = tps[j].GetPayload();
+						BytesRef br = tps[j].Payload;
 						if (br != null)
 						{
 							System.Array.Copy(br.bytes, br.offset, verifyPayloadData, offset, br.length);
@@ -205,7 +205,7 @@ namespace Lucene.Net.Test.Index
 			tp.NextDoc();
 			// now we don't read this payload
 			tp.NextPosition();
-			BytesRef payload = tp.GetPayload();
+			BytesRef payload = tp.Payload;
 			AreEqual("Wrong payload length.", 1, payload.length);
 			AreEqual(payload.bytes[payload.offset], payloadData[numTerms
 				]);
@@ -214,7 +214,7 @@ namespace Lucene.Net.Test.Index
 			// we don't read this payload and skip to a different document
 			tp.Advance(5);
 			tp.NextPosition();
-			payload = tp.GetPayload();
+			payload = tp.Payload;
 			AreEqual("Wrong payload length.", 1, payload.length);
 			AreEqual(payload.bytes[payload.offset], payloadData[5 * numTerms
 				]);
@@ -222,20 +222,20 @@ namespace Lucene.Net.Test.Index
 				[1].Field(), new BytesRef(terms[1].Text()));
 			tp.NextDoc();
 			tp.NextPosition();
-			AreEqual("Wrong payload length.", 1, tp.GetPayload().length
+			AreEqual("Wrong payload length.", 1, tp.Payload.length
 				);
 			tp.Advance(skipInterval - 1);
 			tp.NextPosition();
-			AreEqual("Wrong payload length.", 1, tp.GetPayload().length
+			AreEqual("Wrong payload length.", 1, tp.Payload.length
 				);
 			tp.Advance(2 * skipInterval - 1);
 			tp.NextPosition();
-			AreEqual("Wrong payload length.", 1, tp.GetPayload().length
+			AreEqual("Wrong payload length.", 1, tp.Payload.length
 				);
 			tp.Advance(3 * skipInterval - 1);
 			tp.NextPosition();
 			AreEqual("Wrong payload length.", 3 * skipInterval - 2 * numDocs
-				 - 1, tp.GetPayload().length);
+				 - 1, tp.Payload.length);
 			reader.Dispose();
 			// test long payload
 			analyzer = new TestPayloads.PayloadAnalyzer();
@@ -256,7 +256,7 @@ namespace Lucene.Net.Test.Index
 				, new BytesRef(singleTerm));
 			tp.NextDoc();
 			tp.NextPosition();
-			BytesRef br_1 = tp.GetPayload();
+			BytesRef br_1 = tp.Payload;
 			verifyPayloadData = new byte[br_1.length];
 			byte[] portion = new byte[1500];
 			System.Array.Copy(payloadData, 100, portion, 0, 1500);
@@ -429,12 +429,12 @@ namespace Lucene.Net.Test.Index
 					))
 				{
 					BytesRef p = new BytesRef(data, offset, length);
-					payloadAtt.SetPayload(p);
+					payloadAtt.Payload = (p);
 					offset += length;
 				}
 				else
 				{
-					payloadAtt.SetPayload(null);
+					payloadAtt.Payload = (null);
 				}
 				return true;
 			}
@@ -457,7 +457,7 @@ namespace Lucene.Net.Test.Index
 			IndexWriter writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT
 				, new MockAnalyzer(Random())));
 			string field = "test";
-			Sharpen.Thread[] ingesters = new Sharpen.Thread[numThreads];
+			Thread[] ingesters = new Thread[numThreads];
 			for (int i = 0; i < numThreads; i++)
 			{
 				ingesters[i] = new _Thread_464(numDocs, field, pool, writer);
@@ -482,7 +482,7 @@ namespace Lucene.Net.Test.Index
 					for (int i_2 = 0; i_2 < freq; i_2++)
 					{
 						tp.NextPosition();
-						BytesRef payload = tp.GetPayload();
+						BytesRef payload = tp.Payload;
 						AreEqual(termText, payload.Utf8ToString());
 					}
 				}
@@ -492,7 +492,7 @@ namespace Lucene.Net.Test.Index
 			AreEqual(pool.Size(), numThreads);
 		}
 
-		private sealed class _Thread_464 : Sharpen.Thread
+		private sealed class _Thread_464 : Thread
 		{
 			public _Thread_464(int numDocs, string field, TestPayloads.ByteArrayPool pool, IndexWriter
 				 writer)
@@ -568,7 +568,7 @@ namespace Lucene.Net.Test.Index
 				this.first = false;
 				this.ClearAttributes();
 				this.termAtt.Append(this.term);
-				this.payloadAtt.SetPayload(new BytesRef(this.payload));
+				this.payloadAtt.Payload = (new BytesRef(this.payload));
 				return true;
 			}
 
@@ -587,10 +587,10 @@ namespace Lucene.Net.Test.Index
 
 			internal ByteArrayPool(int capacity, int size)
 			{
-				pool = new AList<byte[]>();
+				pool = new List<byte[]>();
 				for (int i = 0; i < capacity; i++)
 				{
-					pool.AddItem(new byte[size]);
+					pool.Add(new byte[size]);
 				}
 			}
 
@@ -606,7 +606,7 @@ namespace Lucene.Net.Test.Index
 			{
 				lock (this)
 				{
-					pool.AddItem(b);
+					pool.Add(b);
 				}
 			}
 
@@ -659,7 +659,7 @@ namespace Lucene.Net.Test.Index
 			doc.Add(field);
 			writer.AddDocument(doc);
 			Token withPayload = new Token("withPayload", 0, 11);
-			withPayload.SetPayload(new BytesRef("test"));
+			withPayload.Payload = (new BytesRef("test"));
 			ts = new CannedTokenStream(withPayload);
 			IsTrue(ts.HasAttribute(typeof(PayloadAttribute)));
 			field.SetTokenStream(ts);
@@ -669,12 +669,12 @@ namespace Lucene.Net.Test.Index
 			IsFalse(ts.HasAttribute(typeof(PayloadAttribute)));
 			field.SetTokenStream(ts);
 			writer.AddDocument(doc);
-			DirectoryReader reader = writer.GetReader();
+			DirectoryReader reader = writer.Reader;
 			AtomicReader sr = SlowCompositeReaderWrapper.Wrap(reader);
 			DocsAndPositionsEnum de = sr.TermPositionsEnum(new Term("field", "withPayload"));
 			de.NextDoc();
 			de.NextPosition();
-			AreEqual(new BytesRef("test"), de.GetPayload());
+			AreEqual(new BytesRef("test"), de.Payload);
 			writer.Dispose();
 			reader.Dispose();
 			dir.Dispose();
@@ -696,7 +696,7 @@ namespace Lucene.Net.Test.Index
 			doc.Add(field);
 			Field field2 = new TextField("field", string.Empty, Field.Store.NO);
 			Token withPayload = new Token("withPayload", 0, 11);
-			withPayload.SetPayload(new BytesRef("test"));
+			withPayload.Payload = (new BytesRef("test"));
 			ts = new CannedTokenStream(withPayload);
 			IsTrue(ts.HasAttribute(typeof(PayloadAttribute)));
 			field2.SetTokenStream(ts);
@@ -708,12 +708,12 @@ namespace Lucene.Net.Test.Index
 			field3.SetTokenStream(ts);
 			doc.Add(field3);
 			writer.AddDocument(doc);
-			DirectoryReader reader = writer.GetReader();
+			DirectoryReader reader = writer.Reader;
 			SegmentReader sr = GetOnlySegmentReader(reader);
 			DocsAndPositionsEnum de = sr.TermPositionsEnum(new Term("field", "withPayload"));
 			de.NextDoc();
 			de.NextPosition();
-			AreEqual(new BytesRef("test"), de.GetPayload());
+			AreEqual(new BytesRef("test"), de.Payload);
 			writer.Dispose();
 			reader.Dispose();
 			dir.Dispose();

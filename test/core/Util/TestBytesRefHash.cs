@@ -206,7 +206,7 @@ namespace Lucene.Net.Util
 					while (str.Length == 0);
 					@ref.CopyChars(str);
 					hash.Add(@ref);
-					strings.AddItem(str);
+					strings.Add(str);
 				}
 				// We use the UTF-16 comparator here, because we need to be able to
 				// compare to native String.compareTo() [UTF-16]:
@@ -253,14 +253,14 @@ namespace Lucene.Net.Util
 					int key = hash.Add(@ref);
 					if (key >= 0)
 					{
-						IsTrue(strings.AddItem(str));
+						IsTrue(strings.Add(str));
 						AreEqual(uniqueCount, key);
 						AreEqual(hash.Size(), count + 1);
 						uniqueCount++;
 					}
 					else
 					{
-						IsFalse(strings.AddItem(str));
+						IsFalse(strings.Add(str));
 						IsTrue((-key) - 1 < count);
 						AreEqual(str, hash.Get((-key) - 1, scratch).Utf8ToString()
 							);
@@ -300,7 +300,7 @@ namespace Lucene.Net.Util
 					if (key >= 0)
 					{
 						// string found in hash
-						IsFalse(strings.AddItem(str));
+						IsFalse(strings.Add(str));
 						IsTrue(key < count);
 						AreEqual(str, hash.Get(key, scratch).Utf8ToString());
 						AreEqual(count, hash.Size());
@@ -308,7 +308,7 @@ namespace Lucene.Net.Util
 					else
 					{
 						key = hash.Add(@ref);
-						IsTrue(strings.AddItem(str));
+						IsTrue(strings.Add(str));
 						AreEqual(uniqueCount, key);
 						AreEqual(hash.Size(), count + 1);
 						uniqueCount++;
@@ -375,7 +375,7 @@ namespace Lucene.Net.Util
 					int key = hash.Add(@ref);
 					if (key >= 0)
 					{
-						IsTrue(strings.AddItem(str));
+						IsTrue(strings.Add(str));
 						AreEqual(uniqueCount, key);
 						AreEqual(hash.Size(), count + 1);
 						int offsetKey = offsetHash.AddByPoolOffset(hash.ByteStart(key));
@@ -385,7 +385,7 @@ namespace Lucene.Net.Util
 					}
 					else
 					{
-						IsFalse(strings.AddItem(str));
+						IsFalse(strings.Add(str));
 						IsTrue((-key) - 1 < count);
 						AreEqual(str, hash.Get((-key) - 1, scratch).Utf8ToString()
 							);

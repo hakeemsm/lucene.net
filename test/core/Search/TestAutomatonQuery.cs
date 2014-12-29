@@ -45,7 +45,7 @@ namespace Lucene.Net.Search
 			field.StringValue = "doc three has some different stuff" + " with numbers 1234 5678.9 and letter b"
 				);
 			writer.AddDocument(doc);
-			reader = writer.GetReader();
+			reader = writer.Reader;
 			searcher = NewSearcher(reader);
 			writer.Dispose();
 		}
@@ -218,25 +218,25 @@ namespace Lucene.Net.Search
 				queries[i] = new AutomatonQuery(new Term("bogus", "bogus"), AutomatonTestUtil.RandomAutomaton
 					(Random()));
 			}
-			CountDownLatch startingGun = new CountDownLatch(1);
+			CountdownEvent startingGun = new CountdownEvent(1);
 			int numThreads = TestUtil.NextInt(Random(), 2, 5);
-			Sharpen.Thread[] threads = new Sharpen.Thread[numThreads];
+			Thread[] threads = new Thread[numThreads];
 			for (int threadID = 0; threadID < numThreads; threadID++)
 			{
-				Sharpen.Thread thread = new _Thread_223(startingGun, queries);
+				Thread thread = new _Thread_223(startingGun, queries);
 				threads[threadID] = thread;
 				thread.Start();
 			}
 			startingGun.CountDown();
-			foreach (Sharpen.Thread thread_1 in threads)
+			foreach (Thread thread_1 in threads)
 			{
 				thread_1.Join();
 			}
 		}
 
-		private sealed class _Thread_223 : Sharpen.Thread
+		private sealed class _Thread_223 : Thread
 		{
-			public _Thread_223(CountDownLatch startingGun, AutomatonQuery[] queries)
+			public _Thread_223(CountdownEvent startingGun, AutomatonQuery[] queries)
 			{
 				this.startingGun = startingGun;
 				this.queries = queries;
@@ -258,7 +258,7 @@ namespace Lucene.Net.Search
 				}
 			}
 
-			private readonly CountDownLatch startingGun;
+			private readonly CountdownEvent startingGun;
 
 			private readonly AutomatonQuery[] queries;
 		}

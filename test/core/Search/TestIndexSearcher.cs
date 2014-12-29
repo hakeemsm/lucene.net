@@ -34,7 +34,7 @@ namespace Lucene.Net.Search
 				doc.Add(NewStringField("field2", bool.ToString(i % 2 == 0), Field.Store.NO));
 				iw.AddDocument(doc);
 			}
-			reader = iw.GetReader();
+			reader = iw.Reader;
 			iw.Dispose();
 		}
 
@@ -107,7 +107,7 @@ namespace Lucene.Net.Search
 			Directory dir = NewDirectory();
 			RandomIndexWriter w = new RandomIndexWriter(Random(), dir);
 			w.AddDocument(new Lucene.Net.Documents.Document());
-			IndexReader r = w.GetReader();
+			IndexReader r = w.Reader;
 			w.Dispose();
 			IndexSearcher s = new IndexSearcher(r);
 			try

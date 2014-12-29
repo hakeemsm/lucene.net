@@ -1,22 +1,18 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
+using System.Linq;
 using System.Reflection;
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Document;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
+using Lucene.Net.TestFramework;
 using Lucene.Net.Util;
-using Sharpen;
-using Sharpen.Reflect;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
+    [TestFixture]
 	public class TestFilterAtomicReader : LuceneTestCase
 	{
 		private class TestReader : FilterAtomicReader
@@ -61,7 +57,7 @@ namespace Lucene.Net.Test.Index
 				public override BytesRef Next()
 				{
 					BytesRef text;
-					while ((text = @in.Next()) != null)
+					while ((text = instance.Next()) != null)
 					{
 						if (text.Utf8ToString().IndexOf('e') != -1)
 						{
@@ -72,12 +68,11 @@ namespace Lucene.Net.Test.Index
 				}
 
 				/// <exception cref="System.IO.IOException"></exception>
-				public override DocsAndPositionsEnum DocsAndPositions(Bits liveDocs, DocsAndPositionsEnum
+				public override DocsAndPositionsEnum DocsAndPositions(IBits liveDocs, DocsAndPositionsEnum
 					 reuse, int flags)
 				{
-					return new TestFilterAtomicReader.TestReader.TestPositions(base.DocsAndPositions(
-						liveDocs, reuse == null ? null : ((FilterAtomicReader.FilterDocsAndPositionsEnum
-						)reuse).@in, flags));
+					return new TestPositions(base.DocsAndPositions(
+						liveDocs, reuse, flags));
 				}
 			}
 
@@ -95,7 +90,7 @@ namespace Lucene.Net.Test.Index
 				public override int NextDoc()
 				{
 					int doc;
-					while ((doc = @in.NextDoc()) != NO_MORE_DOCS)
+					while ((doc = instance.NextDoc()) != NO_MORE_DOCS)
 					{
 						if ((doc % 2) == 1)
 						{
@@ -113,14 +108,14 @@ namespace Lucene.Net.Test.Index
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
-			public override Fields Fields()
+			public override Fields Fields
 			{
-				return new TestFilterAtomicReader.TestReader.TestFields(base.Fields());
+			    get { return new TestFilterAtomicReader.TestReader.TestFields(base.Fields); }
 			}
 		}
 
 		/// <summary>Tests the IndexReader.getFieldNames implementation</summary>
-		/// <exception cref="System.Exception">on error</exception>
+		[Test]
 		public virtual void TestFilterIndexReader()
 		{
 			Directory directory = NewDirectory();
@@ -153,7 +148,7 @@ namespace Lucene.Net.Test.Index
 			TermsEnum terms = MultiFields.GetTerms(reader, "default").Iterator(null);
 			while (terms.Next() != null)
 			{
-				IsTrue(terms.Term().Utf8ToString().IndexOf('e') != -1);
+				IsTrue(terms.Term.Utf8ToString().IndexOf('e') != -1);
 			}
 			AreEqual(TermsEnum.SeekStatus.FOUND, terms.SeekCeil(new BytesRef
 				("one")));
@@ -170,23 +165,19 @@ namespace Lucene.Net.Test.Index
 
 		/// <exception cref="Sharpen.NoSuchMethodException"></exception>
 		/// <exception cref="System.Security.SecurityException"></exception>
-		private static void CheckOverrideMethods<_T0>(Type<_T0> clazz)
+		private static void CheckOverrideMethods(Type clazz)
 		{
 			Type superClazz = clazz.BaseType;
-			foreach (MethodInfo m in superClazz.GetMethods())
+			foreach (MethodInfo m in superClazz.GetMethods().Where(m=>!(m.IsAbstract || m.IsStatic || m.IsFinal || m.Name.Equals("attributes",StringComparison.CurrentCultureIgnoreCase))))
 			{
-				int mods = m.GetModifiers();
-				if (Modifier.IsStatic(mods) || Modifier.IsAbstract(mods) || Modifier.IsFinal(mods
-					) || m.IsSynthetic() || m.Name.Equals("attributes"))
-				{
-					continue;
-				}
+                
+				
 				// The point of these checks is to ensure that methods that have a default
 				// impl through other methods are not overridden. This makes the number of
 				// methods to override to have a working impl minimal and prevents from some
 				// traps: for example, think about having getCoreCacheKey delegate to the
 				// filtered impl by default
-				MethodInfo subM = clazz.GetMethod(m.Name, Sharpen.Runtime.GetParameterTypes(m));
+			    MethodInfo subM = clazz.GetMethod(m.Name);
 				if (subM.DeclaringType == clazz && m.DeclaringType != typeof(object) && m.DeclaringType
 					 != subM.DeclaringType)
 				{

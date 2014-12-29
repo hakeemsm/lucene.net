@@ -175,7 +175,7 @@ namespace Lucene.Net.Search
 					// max, so, we loop until we satisfy that.  it should be
 					// exceedingly rare (Yonik calculates 1 in ~429,000)
 					// times) that this loop requires more than one try:
-					IndexReader ir = writer.GetReader();
+					IndexReader ir = writer.Reader;
 					writer.Dispose();
 					return ir;
 				}

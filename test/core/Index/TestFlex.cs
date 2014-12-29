@@ -1,24 +1,21 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
-using Lucene.Net.Test.Analysis;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
 using Lucene.Net.Codecs.Lucene41;
-using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
-using Sharpen;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
+    [TestFixture]
 	public class TestFlex : LuceneTestCase
 	{
 		// Test non-flex API emulated on flex index
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestNonFlex()
 		{
 			Directory d = NewDirectory();
@@ -45,7 +42,7 @@ namespace Lucene.Net.Test.Index
 				{
 					w.ForceMerge(1);
 				}
-				IndexReader r = w.GetReader();
+				IndexReader r = w.Reader;
 				TermsEnum terms = MultiFields.GetTerms(r, "field3").Iterator(null);
 				AreEqual(TermsEnum.SeekStatus.END, terms.SeekCeil(new BytesRef
 					("abc")));
@@ -55,24 +52,22 @@ namespace Lucene.Net.Test.Index
 			d.Dispose();
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestTermOrd()
 		{
 			Directory d = NewDirectory();
 			IndexWriter w = new IndexWriter(d, NewIndexWriterConfig(TEST_VERSION_CURRENT, new 
 				MockAnalyzer(Random())).SetCodec(TestUtil.AlwaysPostingsFormat(new Lucene41PostingsFormat
 				())));
-			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-				();
-			doc.Add(NewTextField("f", "a b c", Field.Store.NO));
-			w.AddDocument(doc);
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document {NewTextField("f", "a b c", Field.Store.NO)};
+		    w.AddDocument(doc);
 			w.ForceMerge(1);
-			DirectoryReader r = w.GetReader();
-			TermsEnum terms = GetOnlySegmentReader(r).Fields().Terms("f").Iterator(null);
+			DirectoryReader r = w.Reader;
+			TermsEnum terms =  GetOnlySegmentReader(r).Fields.Terms("f").Iterator(null);
 			IsTrue(terms.Next() != null);
 			try
 			{
-				AreEqual(0, terms.Ord());
+				AreEqual(0, terms.Ord);
 			}
 			catch (NotSupportedException)
 			{

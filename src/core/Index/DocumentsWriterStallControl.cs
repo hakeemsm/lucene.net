@@ -7,12 +7,12 @@ using System.Threading;
 
 namespace Lucene.Net.Index
 {
-    internal sealed class DocumentsWriterStallControl
+    public sealed class DocumentsWriterStallControl
     {
         private volatile bool stalled;
         private int numWaiting; // only with assert
         private bool wasStalled; // only with assert
-        //private readonly IDictionary<Thread, Boolean> waiting = new IdentityHashMap<Thread, Boolean>(); // only with assert
+        private readonly IDictionary<Thread, Boolean> waiting = new IdentityHashMap<Thread, Boolean>(); // only with assert
 
         internal void UpdateStalled(bool stalled)
         {
@@ -94,12 +94,20 @@ namespace Lucene.Net.Index
             }
         }
 
-        //synchronized boolean isThreadQueued(Thread t) { // for tests
-        //  return waiting.containsKey(t);
-        //}
+        public bool IsThreadQueued(Thread t) 
+        { 
+            // for tests
 
-        //synchronized boolean wasStalled() { // for tests
-        //  return wasStalled;
-        //}
+            lock (this)
+            {
+                return waiting.ContainsKey(t);
+            }
+        }
+
+        public bool WasStalled
+        { 
+            // for tests
+            get { return wasStalled; }
+        }
     }
 }

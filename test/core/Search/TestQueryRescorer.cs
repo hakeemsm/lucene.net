@@ -44,7 +44,7 @@ namespace Lucene.Net.Search
 			doc.Add(NewTextField("field", "wizard oz the the the the the the", Field.Store.NO
 				));
 			w.AddDocument(doc);
-			IndexReader r = w.GetReader();
+			IndexReader r = w.Reader;
 			w.Dispose();
 			// Do ordinary BooleanQuery:
 			BooleanQuery bq = new BooleanQuery();
@@ -101,7 +101,7 @@ namespace Lucene.Net.Search
 			doc.Add(NewTextField("field", "wizard oz the the the the the the", Field.Store.NO
 				));
 			w.AddDocument(doc);
-			IndexReader r = w.GetReader();
+			IndexReader r = w.Reader;
 			w.Dispose();
 			// Do ordinary BooleanQuery:
 			BooleanQuery bq = new BooleanQuery();
@@ -165,7 +165,7 @@ namespace Lucene.Net.Search
 			doc.Add(NewTextField("field", "wizard oz the the the the the the", Field.Store.NO
 				));
 			w.AddDocument(doc);
-			IndexReader r = w.GetReader();
+			IndexReader r = w.Reader;
 			w.Dispose();
 			// Do ordinary BooleanQuery:
 			BooleanQuery bq = new BooleanQuery();
@@ -249,7 +249,7 @@ namespace Lucene.Net.Search
 			doc.Add(NewTextField("field", "wizard oz the the the the the the", Field.Store.NO
 				));
 			w.AddDocument(doc);
-			IndexReader r = w.GetReader();
+			IndexReader r = w.Reader;
 			w.Dispose();
 			// Do ordinary BooleanQuery:
 			BooleanQuery bq = new BooleanQuery();
@@ -312,7 +312,7 @@ namespace Lucene.Net.Search
 				doc.Add(new NumericDocValuesField("num", idToNum[i]));
 				w.AddDocument(doc);
 			}
-			IndexReader r = w.GetReader();
+			IndexReader r = w.Reader;
 			w.Dispose();
 			IndexSearcher s = NewSearcher(r);
 			int numHits = TestUtil.NextInt(Random(), 1, numDocs);
@@ -390,7 +390,7 @@ namespace Lucene.Net.Search
 				}
 				catch (IOException ioe)
 				{
-					throw new RuntimeException(ioe);
+					throw new SystemException(ioe);
 				}
 			}
 

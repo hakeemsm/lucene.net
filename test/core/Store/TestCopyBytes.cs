@@ -146,7 +146,7 @@ namespace Lucene.Net.Store
 			d.Dispose();
 		}
 
-		internal class CopyThread : Sharpen.Thread
+		internal class CopyThread : Thread
 		{
 			internal readonly IndexInput src;
 
@@ -167,7 +167,7 @@ namespace Lucene.Net.Store
 				}
 				catch (IOException ex)
 				{
-					throw new RuntimeException(ex);
+					throw new SystemException(ex);
 				}
 			}
 		}

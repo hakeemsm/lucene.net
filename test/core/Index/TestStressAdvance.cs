@@ -44,7 +44,7 @@ namespace Lucene.Net.Test.Index
 					if (Random().Next(4) == 3)
 					{
 						f.StringValue = "a");
-						aDocs.AddItem(id);
+						aDocs.Add(id);
 					}
 					else
 					{
@@ -58,20 +58,20 @@ namespace Lucene.Net.Test.Index
 					}
 				}
 				w.ForceMerge(1);
-				IList<int> aDocIDs = new AList<int>();
-				IList<int> bDocIDs = new AList<int>();
-				DirectoryReader r = w.GetReader();
+				IList<int> aDocIDs = new List<int>();
+				IList<int> bDocIDs = new List<int>();
+				DirectoryReader r = w.Reader;
 				int[] idToDocID = new int[r.MaxDoc];
 				for (int docID = 0; docID < idToDocID.Length; docID++)
 				{
 					int id_1 = System.Convert.ToInt32(r.Document(docID).Get("id"));
 					if (aDocs.Contains(id_1))
 					{
-						aDocIDs.AddItem(docID);
+						aDocIDs.Add(docID);
 					}
 					else
 					{
-						bDocIDs.AddItem(docID);
+						bDocIDs.Add(docID);
 					}
 				}
 				TermsEnum te = GetOnlySegmentReader(r).Fields().Terms("field").Iterator(null);

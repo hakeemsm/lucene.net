@@ -39,7 +39,7 @@ namespace Lucene.Net.Search
 			doc.Add(NewTextField(FN, "the quick brown fox jumps over the lazy ??? dog 493432 49344"
 				, Field.Store.NO));
 			writer.AddDocument(doc);
-			reader = writer.GetReader();
+			reader = writer.Reader;
 			writer.Dispose();
 			searcher = NewSearcher(reader);
 		}

@@ -67,11 +67,11 @@ namespace Lucene.Net.Test.Index
 				int toDelete = Random().Next(NUM_DOCS);
 				if (!deleted.Contains(toDelete))
 				{
-					deleted.AddItem(toDelete);
+					deleted.Add(toDelete);
 					w.DeleteDocuments(new Term("id", toDelete.ToString()));
 					if (Random().Next(17) == 6)
 					{
-						IndexReader r = w.GetReader();
+						IndexReader r = w.Reader;
 						AreEqual(NUM_DOCS - deleted.Count, r.NumDocs);
 						r.Dispose();
 					}

@@ -89,7 +89,7 @@ namespace Lucene.Net.Search
 			Directory directory = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), directory);
 			writer.Commit();
-			IndexReader ir = writer.GetReader();
+			IndexReader ir = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Weight fake = new TermQuery(new Term("fake", "weight")).CreateWeight(searcher);

@@ -1,17 +1,12 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System.Collections.Generic;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
-using Lucene.Net.Util;
-using Sharpen;
+using Lucene.Net.TestFramework;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
+    [TestFixture]
 	public class TestIndexCommit : LuceneTestCase
 	{
 		/// <exception cref="System.Exception"></exception>
@@ -20,107 +15,107 @@ namespace Lucene.Net.Test.Index
 		{
 			// LUCENE-2417: equals and hashCode() impl was inconsistent
 			Directory dir = NewDirectory();
-			IndexCommit ic1 = new _IndexCommit_34(dir);
-			IndexCommit ic2 = new _IndexCommit_45(dir);
+			IndexCommit ic1 = new AnonymousIndexCommit(dir);
+			IndexCommit ic2 = new AnonymousIndexCommit2(dir);
 			AreEqual(ic1, ic2);
-			AreEqual("hash codes are not equals", ic1.GetHashCode(), ic2
+			AssertEquals("hash codes are not equals", ic1.GetHashCode(), ic2
 				.GetHashCode());
 			dir.Dispose();
 		}
 
-		private sealed class _IndexCommit_34 : IndexCommit
+		private sealed class AnonymousIndexCommit : IndexCommit
 		{
-			public _IndexCommit_34(Directory dir)
+			public AnonymousIndexCommit(Directory dir)
 			{
 				this.dir = dir;
 			}
 
-			public override string GetSegmentsFileName()
+			public override string SegmentsFileName
 			{
-				return "a";
+			    get { return "a"; }
 			}
 
-			public override Directory GetDirectory()
+			public override Directory Directory
 			{
-				return dir;
+			    get { return dir; }
 			}
 
-			public override ICollection<string> GetFileNames()
+			public override ICollection<string> FileNames
 			{
-				return null;
+			    get { return null; }
 			}
 
 			public override void Delete()
 			{
 			}
 
-			public override long GetGeneration()
+			public override long Generation
 			{
-				return 0;
+			    get { return 0; }
 			}
 
-			public override IDictionary<string, string> GetUserData()
+			public override IDictionary<string, string> UserData
 			{
-				return null;
+			    get { return null; }
 			}
 
-			public override bool IsDeleted()
+			public override bool IsDeleted
 			{
-				return false;
+			    get { return false; }
 			}
 
-			public override int GetSegmentCount()
+			public override int SegmentCount
 			{
-				return 2;
+			    get { return 2; }
 			}
 
 			private readonly Directory dir;
 		}
 
-		private sealed class _IndexCommit_45 : IndexCommit
+		private sealed class AnonymousIndexCommit2 : IndexCommit
 		{
-			public _IndexCommit_45(Directory dir)
+			public AnonymousIndexCommit2(Directory dir)
 			{
 				this.dir = dir;
 			}
 
-			public override string GetSegmentsFileName()
+			public override string SegmentsFileName
 			{
-				return "b";
+			    get { return "b"; }
 			}
 
-			public override Directory GetDirectory()
+			public override Directory Directory
 			{
-				return dir;
+			    get { return dir; }
 			}
 
-			public override ICollection<string> GetFileNames()
+			public override ICollection<string> FileNames
 			{
-				return null;
+			    get { return null; }
 			}
 
 			public override void Delete()
 			{
 			}
 
-			public override long GetGeneration()
+			public override long Generation
 			{
-				return 0;
+			    get { return 0; }
 			}
 
-			public override IDictionary<string, string> GetUserData()
+			public override IDictionary<string, string> UserData
 			{
-				return null;
+			    get { return null; }
 			}
 
-			public override bool IsDeleted()
+			public override bool IsDeleted
 			{
-				return false;
+			    get { return false; }
 			}
 
-			public override int GetSegmentCount()
+			public override int SegmentCount
 			{
-				return 2;
+			    get { return 2; }
 			}
 
 			private readonly Directory dir;

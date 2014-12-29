@@ -44,7 +44,7 @@ namespace Lucene.Net.Search
 
 		private SearcherLifetimeManager lifetimeMGR;
 
-		private readonly IList<long> pastSearchers = new AList<long>();
+		private readonly IList<long> pastSearchers = new List<long>();
 
 		private bool isNRT;
 
@@ -96,14 +96,14 @@ namespace Lucene.Net.Search
 		/// <exception cref="System.Exception"></exception>
 		protected override void DoSearching(ExecutorService es, long stopTime)
 		{
-			Sharpen.Thread reopenThread = new _Thread_104(this, stopTime);
+			Thread reopenThread = new _Thread_104(this, stopTime);
 			reopenThread.SetDaemon(true);
 			reopenThread.Start();
 			RunSearchThreads(stopTime);
 			reopenThread.Join();
 		}
 
-		private sealed class _Thread_104 : Sharpen.Thread
+		private sealed class _Thread_104 : Thread
 		{
 			public _Thread_104(TestSearcherManager _enclosing, long stopTime)
 			{
@@ -117,14 +117,14 @@ namespace Lucene.Net.Search
 				{
 					if (LuceneTestCase.VERBOSE)
 					{
-						System.Console.Out.WriteLine("[" + Sharpen.Thread.CurrentThread().GetName() + "]: launch reopen thread"
+						System.Console.Out.WriteLine("[" + Thread.CurrentThread().GetName() + "]: launch reopen thread"
 							);
 					}
 					while (DateTime.Now.CurrentTimeMillis() < stopTime)
 					{
-						Sharpen.Thread.Sleep(TestUtil.NextInt(LuceneTestCase.Random(), 1, 100));
+						Thread.Sleep(TestUtil.NextInt(LuceneTestCase.Random(), 1, 100));
 						this._enclosing.writer.Commit();
-						Sharpen.Thread.Sleep(TestUtil.NextInt(LuceneTestCase.Random(), 1, 5));
+						Thread.Sleep(TestUtil.NextInt(LuceneTestCase.Random(), 1, 5));
 						bool block = LuceneTestCase.Random().NextBoolean();
 						if (block)
 						{
@@ -148,7 +148,7 @@ namespace Lucene.Net.Search
 						Sharpen.Runtime.PrintStackTrace(t, System.Console.Out);
 					}
 					this._enclosing.failed.Set(true);
-					throw new RuntimeException(t);
+					throw new SystemException(t);
 				}
 			}
 
@@ -203,7 +203,7 @@ namespace Lucene.Net.Search
 					{
 						if (!pastSearchers.Contains(token))
 						{
-							pastSearchers.AddItem(token);
+							pastSearchers.Add(token);
 						}
 					}
 				}
@@ -239,8 +239,8 @@ namespace Lucene.Net.Search
 				, new MockAnalyzer(Random())).SetMergeScheduler(new ConcurrentMergeScheduler()));
 			writer.AddDocument(new Lucene.Net.Documents.Document());
 			writer.Commit();
-			CountDownLatch awaitEnterWarm = new CountDownLatch(1);
-			CountDownLatch awaitClose = new CountDownLatch(1);
+			CountdownEvent awaitEnterWarm = new CountdownEvent(1);
+			CountdownEvent awaitClose = new CountdownEvent(1);
 			AtomicBoolean triedReopen = new AtomicBoolean(false);
 			ExecutorService es = Random().NextBoolean() ? null : Executors.NewCachedThreadPool
 				(new NamedThreadFactory("testIntermediateClose"));
@@ -266,7 +266,7 @@ namespace Lucene.Net.Search
 			writer.Commit();
 			AtomicBoolean success = new AtomicBoolean(false);
 			Exception[] exc = new Exception[1];
-			Sharpen.Thread thread = new Sharpen.Thread(new _Runnable_244(triedReopen, searcherManager
+			Thread thread = new Thread(new _Runnable_244(triedReopen, searcherManager
 				, success, exc));
 			// expected
 			// use success as the barrier here to make sure we see the write
@@ -306,8 +306,8 @@ namespace Lucene.Net.Search
 
 		private sealed class _SearcherFactory_214 : SearcherFactory
 		{
-			public _SearcherFactory_214(AtomicBoolean triedReopen, CountDownLatch awaitEnterWarm
-				, CountDownLatch awaitClose, ExecutorService es)
+			public _SearcherFactory_214(AtomicBoolean triedReopen, CountdownEvent awaitEnterWarm
+				, CountdownEvent awaitClose, ExecutorService es)
 			{
 				this.triedReopen = triedReopen;
 				this.awaitEnterWarm = awaitEnterWarm;
@@ -333,9 +333,9 @@ namespace Lucene.Net.Search
 
 			private readonly AtomicBoolean triedReopen;
 
-			private readonly CountDownLatch awaitEnterWarm;
+			private readonly CountdownEvent awaitEnterWarm;
 
-			private readonly CountDownLatch awaitClose;
+			private readonly CountdownEvent awaitClose;
 
 			private readonly ExecutorService es;
 		}
@@ -557,7 +557,7 @@ namespace Lucene.Net.Search
 			RandomIndexWriter w = new RandomIndexWriter(Random(), dir);
 			w.Dispose();
 			SearcherManager sm = new SearcherManager(dir, null);
-			Sharpen.Thread t = new _Thread_428(sm);
+			Thread t = new _Thread_428(sm);
 			// this used to not release the lock, preventing other threads from obtaining it.
 			t.Start();
 			t.Join();
@@ -568,7 +568,7 @@ namespace Lucene.Net.Search
 			dir.Dispose();
 		}
 
-		private sealed class _Thread_428 : Sharpen.Thread
+		private sealed class _Thread_428 : Thread
 		{
 			public _Thread_428(SearcherManager sm)
 			{
@@ -583,7 +583,7 @@ namespace Lucene.Net.Search
 				}
 				catch (Exception e)
 				{
-					throw new RuntimeException(e);
+					throw new SystemException(e);
 				}
 			}
 

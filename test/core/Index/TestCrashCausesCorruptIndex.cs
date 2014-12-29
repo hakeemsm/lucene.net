@@ -1,27 +1,24 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Document;
+using System.IO;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
-using Lucene.Net.Util;
-using Sharpen;
+using Lucene.Net.TestFramework;
+using NUnit.Framework;
+using Directory = Lucene.Net.Store.Directory;
 
 namespace Lucene.Net.Test.Index
 {
+    [TestFixture]
 	public class TestCrashCausesCorruptIndex : LuceneTestCase
 	{
-		internal FilePath path;
+		internal DirectoryInfo path;
 
 		/// <summary>LUCENE-3627: This test fails.</summary>
 		/// <remarks>LUCENE-3627: This test fails.</remarks>
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestCrashCorruptsIndexing()
 		{
 			path = CreateTempDir("testCrashCorruptsIndexing");
@@ -37,12 +34,11 @@ namespace Lucene.Net.Test.Index
 		/// prepare for crashing.
 		/// index 1 more document, and upon commit, creation of segments_2 will crash.
 		/// </remarks>
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		private void IndexAndCrashOnCreateOutputSegments2()
 		{
 			Directory realDirectory = FSDirectory.Open(path);
-			TestCrashCausesCorruptIndex.CrashAfterCreateOutput crashAfterCreateOutput = new TestCrashCausesCorruptIndex.CrashAfterCreateOutput
-				(realDirectory);
+			var crashAfterCreateOutput = new CrashAfterCreateOutput(realDirectory);
 			// NOTE: cannot use RandomIndexWriter because it
 			// sometimes commits:
 			IndexWriter indexWriter = new IndexWriter(crashAfterCreateOutput, NewIndexWriterConfig
@@ -58,7 +54,7 @@ namespace Lucene.Net.Test.Index
 				indexWriter.Commit();
 				Fail("should have hit CrashingException");
 			}
-			catch (TestCrashCausesCorruptIndex.CrashingException)
+			catch (CrashingException)
 			{
 			}
 			// expected
@@ -109,22 +105,20 @@ namespace Lucene.Net.Test.Index
 		/// <remarks>Gets a document with content "my dog has fleas".</remarks>
 		private Lucene.Net.Documents.Document GetDocument()
 		{
-			Lucene.Net.Documents.Document document = new Lucene.Net.Documents.Document
-				();
-			document.Add(NewTextField(TEXT_FIELD, "my dog has fleas", Field.Store.NO));
-			return document;
+			var document = new Lucene.Net.Documents.Document {NewTextField(TEXT_FIELD, "my dog has fleas", Field.Store.NO)};
+		    return document;
 		}
 
 		/// <summary>
-		/// The marker RuntimeException that we use in lieu of an
+		/// The marker SystemException that we use in lieu of an
 		/// actual machine crash.
 		/// </summary>
 		/// <remarks>
-		/// The marker RuntimeException that we use in lieu of an
+		/// The marker SystemException that we use in lieu of an
 		/// actual machine crash.
 		/// </remarks>
 		[System.Serializable]
-		private class CrashingException : RuntimeException
+		private class CrashingException : SystemException
 		{
 			public CrashingException(string msg) : base(msg)
 			{
@@ -144,9 +138,9 @@ namespace Lucene.Net.Test.Index
 			private string crashAfterCreateOutput;
 
 			/// <exception cref="System.IO.IOException"></exception>
-			protected CrashAfterCreateOutput(Directory realDirectory) : base(realDirectory)
+			protected internal CrashAfterCreateOutput(Directory realDirectory) : base(realDirectory)
 			{
-				SetLockFactory(realDirectory.GetLockFactory());
+				LockFactory = (realDirectory.LockFactory);
 			}
 
 			public virtual void SetCrashAfterCreateOutput(string name)
@@ -157,7 +151,7 @@ namespace Lucene.Net.Test.Index
 			/// <exception cref="System.IO.IOException"></exception>
 			public override IndexOutput CreateOutput(string name, IOContext cxt)
 			{
-				IndexOutput indexOutput = @in.CreateOutput(name, cxt);
+				IndexOutput indexOutput = dir.CreateOutput(name, cxt);
 				if (null != crashAfterCreateOutput && name.Equals(crashAfterCreateOutput))
 				{
 					// CRASH!
@@ -165,7 +159,7 @@ namespace Lucene.Net.Test.Index
 					if (VERBOSE)
 					{
 						System.Console.Out.WriteLine("TEST: now crash");
-						Sharpen.Runtime.PrintStackTrace(new Exception(), System.Console.Out);
+						Console.Out.WriteLine(new Exception().StackTrace);
 					}
 					throw new TestCrashCausesCorruptIndex.CrashingException("crashAfterCreateOutput "
 						 + crashAfterCreateOutput);

@@ -39,7 +39,7 @@ namespace Lucene.Net.Search
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir, ((IndexWriterConfig
 				)NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(Random(), MockTokenizer
 				.KEYWORD, false)).SetMaxBufferedDocs(TestUtil.NextInt(Random(), 50, 1000))));
-			IList<string> terms = new AList<string>();
+			IList<string> terms = new List<string>();
 			int num = AtLeast(200);
 			for (int i = 0; i < num; i++)
 			{
@@ -56,7 +56,7 @@ namespace Lucene.Net.Search
 					{
 						doc.Add(new SortedSetDocValuesField(fieldName, new BytesRef(s)));
 					}
-					terms.AddItem(s);
+					terms.Add(s);
 				}
 				writer.AddDocument(doc);
 			}
@@ -76,7 +76,7 @@ namespace Lucene.Net.Search
 				writer.DeleteDocuments(new Term("id", Sharpen.Extensions.ToString(Random().Next(num
 					))));
 			}
-			reader = writer.GetReader();
+			reader = writer.Reader;
 			searcher1 = NewSearcher(reader);
 			searcher2 = NewSearcher(reader);
 			writer.Dispose();

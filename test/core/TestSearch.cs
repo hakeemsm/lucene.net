@@ -158,37 +158,37 @@ namespace Lucene.Net
 		}
 		private IList<Query> BuildQueries()
 		{
-			IList<Query> queries = new AList<Query>();
+			IList<Query> queries = new List<Query>();
 			BooleanQuery booleanAB = new BooleanQuery();
 			booleanAB.Add(new TermQuery(new Term("contents", "a")), BooleanClause.Occur.SHOULD
 				);
 			booleanAB.Add(new TermQuery(new Term("contents", "b")), BooleanClause.Occur.SHOULD
 				);
-			queries.AddItem(booleanAB);
+			queries.Add(booleanAB);
 			PhraseQuery phraseAB = new PhraseQuery();
 			phraseAB.Add(new Term("contents", "a"));
 			phraseAB.Add(new Term("contents", "b"));
-			queries.AddItem(phraseAB);
+			queries.Add(phraseAB);
 			PhraseQuery phraseABC = new PhraseQuery();
 			phraseABC.Add(new Term("contents", "a"));
 			phraseABC.Add(new Term("contents", "b"));
 			phraseABC.Add(new Term("contents", "c"));
-			queries.AddItem(phraseABC);
+			queries.Add(phraseABC);
 			BooleanQuery booleanAC = new BooleanQuery();
 			booleanAC.Add(new TermQuery(new Term("contents", "a")), BooleanClause.Occur.SHOULD
 				);
 			booleanAC.Add(new TermQuery(new Term("contents", "c")), BooleanClause.Occur.SHOULD
 				);
-			queries.AddItem(booleanAC);
+			queries.Add(booleanAC);
 			PhraseQuery phraseAC = new PhraseQuery();
 			phraseAC.Add(new Term("contents", "a"));
 			phraseAC.Add(new Term("contents", "c"));
-			queries.AddItem(phraseAC);
+			queries.Add(phraseAC);
 			PhraseQuery phraseACE = new PhraseQuery();
 			phraseACE.Add(new Term("contents", "a"));
 			phraseACE.Add(new Term("contents", "c"));
 			phraseACE.Add(new Term("contents", "e"));
-			queries.AddItem(phraseACE);
+			queries.Add(phraseACE);
 			return queries;
 		}
 		internal static long Time(int year, int month, int day)

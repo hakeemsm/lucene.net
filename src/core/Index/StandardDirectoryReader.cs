@@ -97,7 +97,7 @@ namespace Lucene.Net.Index
                     try
                     {
                         SegmentReader reader = rld.GetReadOnlyClone(IOContext.READ);
-                        if (reader.NumDocs > 0 || writer.GetKeepFullyDeletedSegments())
+                        if (reader.NumDocs > 0 || writer.KeepFullyDeletedSegments)
                         {
                             // Steal the ref:
                             readers.Add(reader);

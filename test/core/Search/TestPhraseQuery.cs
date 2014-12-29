@@ -65,7 +65,7 @@ namespace Lucene.Net.Search
 			doc.Add(NewTextField("nonexist", "phrase exist notexist exist found", Field.Store
 				.YES));
 			writer.AddDocument(doc);
-			reader = writer.GetReader();
+			reader = writer.Reader;
 			writer.Dispose();
 			searcher = NewSearcher(reader);
 		}
@@ -229,7 +229,7 @@ namespace Lucene.Net.Search
 				();
 			doc.Add(NewTextField("field", "the stop words are here", Field.Store.YES));
 			writer.AddDocument(doc);
-			IndexReader reader = writer.GetReader();
+			IndexReader reader = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(reader);
 			// valid exact phrase query
@@ -256,7 +256,7 @@ namespace Lucene.Net.Search
 			doc.Add(NewTextField("contents", "foobar", Field.Store.YES));
 			doc.Add(NewTextField("source", "marketing info", Field.Store.YES));
 			writer.AddDocument(doc);
-			IndexReader reader = writer.GetReader();
+			IndexReader reader = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(reader);
 			PhraseQuery phraseQuery = new PhraseQuery();
@@ -284,7 +284,7 @@ namespace Lucene.Net.Search
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewTextField("contents", "map foobarword entry woo", Field.Store.YES));
 			writer.AddDocument(doc);
-			reader = writer.GetReader();
+			reader = writer.Reader;
 			writer.Dispose();
 			searcher = NewSearcher(reader);
 			termQuery = new TermQuery(new Term("contents", "woo"));
@@ -331,7 +331,7 @@ namespace Lucene.Net.Search
 			doc3.Add(NewTextField("field", "foo firstname zzz yyy lastname foo", Field.Store.
 				YES));
 			writer.AddDocument(doc3);
-			IndexReader reader = writer.GetReader();
+			IndexReader reader = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(reader);
 			searcher.SetSimilarity(new DefaultSimilarity());
@@ -603,7 +603,7 @@ namespace Lucene.Net.Search
 			Analyzer analyzer = new MockAnalyzer(Random());
 			RandomIndexWriter w = new RandomIndexWriter(Random(), dir, NewIndexWriterConfig(TEST_VERSION_CURRENT
 				, analyzer).SetMergePolicy(NewLogMergePolicy()));
-			IList<IList<string>> docs = new AList<IList<string>>();
+			IList<IList<string>> docs = new List<IList<string>>();
 			Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 			Field f = NewTextField("f", string.Empty, Field.Store.NO);
 			d.Add(f);
@@ -613,7 +613,7 @@ namespace Lucene.Net.Search
 			{
 				// must be > 4096 so it spans multiple chunks
 				int termCount = TestUtil.NextInt(Random(), 4097, 8200);
-				IList<string> doc = new AList<string>();
+				IList<string> doc = new List<string>();
 				StringBuilder sb = new StringBuilder();
 				while (doc.Count < termCount)
 				{
@@ -634,7 +634,7 @@ namespace Lucene.Net.Search
 						while (ts.IncrementToken())
 						{
 							string text = termAttr.ToString();
-							doc.AddItem(text);
+							doc.Add(text);
 							sb.Append(text).Append(' ');
 						}
 						ts.End();
@@ -648,16 +648,16 @@ namespace Lucene.Net.Search
 						for (int k = start; k < start + len; k++)
 						{
 							string t = lastDoc[k];
-							doc.AddItem(t);
+							doc.Add(t);
 							sb.Append(t).Append(' ');
 						}
 					}
 				}
-				docs.AddItem(doc);
+				docs.Add(doc);
 				f.StringValue = sb.ToString());
 				w.AddDocument(d);
 			}
-			IndexReader reader = w.GetReader();
+			IndexReader reader = w.Reader;
 			IndexSearcher s = NewSearcher(reader);
 			w.Dispose();
 			// now search

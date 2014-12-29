@@ -47,7 +47,7 @@ namespace Lucene.Net.Search
 				));
 			writer.AddDocument(Doc("nutch", "nutch is an internet search engine with web crawler and is using lucene and hadoop"
 				));
-			reader = writer.GetReader();
+			reader = writer.Reader;
 			writer.Dispose();
 			searcher = NewSearcher(reader);
 		}
@@ -188,7 +188,7 @@ namespace Lucene.Net.Search
 			{
 				if (scorer.GetWeight().GetQuery() is TermQuery)
 				{
-					set.AddItem(scorer);
+					set.Add(scorer);
 				}
 				else
 				{

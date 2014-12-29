@@ -1,18 +1,14 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Document;
+using System;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
-using Lucene.Net.Util;
-using Sharpen;
+using Lucene.Net.TestFramework;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
+    [TestFixture]
 	public class TestCrash : LuceneTestCase
 	{
 		/// <exception cref="System.IO.IOException"></exception>
@@ -22,24 +18,24 @@ namespace Lucene.Net.Test.Index
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		private IndexWriter InitIndex(Random random, MockDirectoryWrapper dir, bool initialCommit
-			)
+		private IndexWriter InitIndex(Random random, MockDirectoryWrapper dir, bool initialCommit)
 		{
-			dir.SetLockFactory(NoLockFactory.GetNoLockFactory());
+			dir.SetLockFactory(NoLockFactory.Instance);
 			IndexWriter writer = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig
 				(TEST_VERSION_CURRENT, new MockAnalyzer(random)).SetMaxBufferedDocs(10)).SetMergeScheduler
 				(new ConcurrentMergeScheduler()));
-			((ConcurrentMergeScheduler)writer.Config.GetMergeScheduler()).SetSuppressExceptions
+			((ConcurrentMergeScheduler)writer.Config.MergeScheduler).SetSuppressExceptions
 				();
 			if (initialCommit)
 			{
 				writer.Commit();
 			}
-			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-				();
-			doc.Add(NewTextField("content", "aaa", Field.Store.NO));
-			doc.Add(NewTextField("id", "0", Field.Store.NO));
-			for (int i = 0; i < 157; i++)
+			var doc = new Lucene.Net.Documents.Document
+			{
+			    NewTextField("content", "aaa", Field.Store.NO),
+			    NewTextField("id", "0", Field.Store.NO)
+			};
+		    for (int i = 0; i < 157; i++)
 			{
 				writer.AddDocument(doc);
 			}
@@ -49,23 +45,22 @@ namespace Lucene.Net.Test.Index
 		/// <exception cref="System.IO.IOException"></exception>
 		private void Crash(IndexWriter writer)
 		{
-			MockDirectoryWrapper dir = (MockDirectoryWrapper)writer.GetDirectory();
-			ConcurrentMergeScheduler cms = (ConcurrentMergeScheduler)writer.Config.GetMergeScheduler
-				();
+			MockDirectoryWrapper dir = (MockDirectoryWrapper)writer.Directory;
+			ConcurrentMergeScheduler cms = (ConcurrentMergeScheduler)writer.Config.MergeScheduler;
 			cms.Sync();
 			dir.Crash();
 			cms.Sync();
 			dir.ClearCrash();
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestCrashWhileIndexing()
 		{
 			// This test relies on being able to open a reader before any commit
 			// happened, so we must create an initial commit just to allow that, but
 			// before any documents were added.
 			IndexWriter writer = InitIndex(Random(), true);
-			MockDirectoryWrapper dir = (MockDirectoryWrapper)writer.GetDirectory();
+			MockDirectoryWrapper dir = (MockDirectoryWrapper)writer.Directory;
 			// We create leftover files because merging could be
 			// running when we crash:
 			dir.SetAssertNoUnrefencedFilesOnClose(false);
@@ -78,11 +73,11 @@ namespace Lucene.Net.Test.Index
 			// crash:
 			Directory dir2 = NewDirectory(dir);
 			dir.Dispose();
-			new RandomIndexWriter(Random(), dir2).Dispose();
+			new RandomIndexWriter(Random(), dir2).Close();
 			dir2.Dispose();
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestWriterAfterCrash()
 		{
 			// This test relies on being able to open a reader before any commit
@@ -91,7 +86,7 @@ namespace Lucene.Net.Test.Index
 			System.Console.Out.WriteLine("TEST: initIndex");
 			IndexWriter writer = InitIndex(Random(), true);
 			System.Console.Out.WriteLine("TEST: done initIndex");
-			MockDirectoryWrapper dir = (MockDirectoryWrapper)writer.GetDirectory();
+		    MockDirectoryWrapper dir = (MockDirectoryWrapper) writer.Directory;
 			// We create leftover files because merging could be
 			// running / store files could be open when we crash:
 			dir.SetAssertNoUnrefencedFilesOnClose(false);
@@ -108,15 +103,15 @@ namespace Lucene.Net.Test.Index
 			// crash:
 			Directory dir2 = NewDirectory(dir);
 			dir.Dispose();
-			new RandomIndexWriter(Random(), dir2).Dispose();
+			new RandomIndexWriter(Random(), dir2).Close();
 			dir2.Dispose();
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestCrashAfterReopen()
 		{
 			IndexWriter writer = InitIndex(Random(), false);
-			MockDirectoryWrapper dir = (MockDirectoryWrapper)writer.GetDirectory();
+			MockDirectoryWrapper dir = (MockDirectoryWrapper)writer.Directory;
 			// We create leftover files because merging could be
 			// running when we crash:
 			dir.SetAssertNoUnrefencedFilesOnClose(false);
@@ -132,15 +127,15 @@ namespace Lucene.Net.Test.Index
 			// crash:
 			Directory dir2 = NewDirectory(dir);
 			dir.Dispose();
-			new RandomIndexWriter(Random(), dir2).Dispose();
+			new RandomIndexWriter(Random(), dir2).Close();
 			dir2.Dispose();
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestCrashAfterClose()
 		{
 			IndexWriter writer = InitIndex(Random(), false);
-			MockDirectoryWrapper dir = (MockDirectoryWrapper)writer.GetDirectory();
+			MockDirectoryWrapper dir = (MockDirectoryWrapper)writer.Directory;
 			writer.Dispose();
 			dir.Crash();
 			IndexReader reader = DirectoryReader.Open(dir);
@@ -149,12 +144,12 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestCrashAfterCloseNoWait()
 		{
 			IndexWriter writer = InitIndex(Random(), false);
-			MockDirectoryWrapper dir = (MockDirectoryWrapper)writer.GetDirectory();
-			writer.Close(false);
+			MockDirectoryWrapper dir = (MockDirectoryWrapper)writer.Directory;
+			writer.Dispose(false);
 			dir.Crash();
 			IndexReader reader = DirectoryReader.Open(dir);
 			AreEqual(157, reader.NumDocs);

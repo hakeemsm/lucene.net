@@ -190,7 +190,7 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		internal class IndexingThread : Sharpen.Thread
+		internal class IndexingThread : Thread
 		{
 			internal readonly LineFileDocs docs;
 
@@ -240,7 +240,7 @@ namespace Lucene.Net.Test.Index
 				}
 				catch (Exception e)
 				{
-					throw new RuntimeException(e);
+					throw new SystemException(e);
 				}
 			}
 		}

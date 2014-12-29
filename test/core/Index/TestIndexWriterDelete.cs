@@ -280,9 +280,9 @@ namespace Lucene.Net.Test.Index
 			Directory dir = NewDirectory();
 			RandomIndexWriter modifier = new RandomIndexWriter(Random(), dir);
 			int numThreads = AtLeast(2);
-			Sharpen.Thread[] threads = new Sharpen.Thread[numThreads];
-			CountDownLatch latch = new CountDownLatch(1);
-			CountDownLatch doneLatch = new CountDownLatch(numThreads);
+			Thread[] threads = new Thread[numThreads];
+			CountdownEvent latch = new CountdownEvent(1);
+			CountdownEvent doneLatch = new CountdownEvent(numThreads);
 			for (int i = 0; i < numThreads; i++)
 			{
 				int offset = i;
@@ -299,7 +299,7 @@ namespace Lucene.Net.Test.Index
 				}
 			}
 			modifier.DeleteAll();
-			foreach (Sharpen.Thread thread in threads)
+			foreach (Thread thread in threads)
 			{
 				thread.Join();
 			}
@@ -312,10 +312,10 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		private sealed class _Thread_322 : Sharpen.Thread
+		private sealed class _Thread_322 : Thread
 		{
-			public _Thread_322(int offset, CountDownLatch latch, RandomIndexWriter modifier, 
-				CountDownLatch doneLatch)
+			public _Thread_322(int offset, CountdownEvent latch, RandomIndexWriter modifier, 
+				CountdownEvent doneLatch)
 			{
 				this.offset = offset;
 				this.latch = latch;
@@ -350,7 +350,7 @@ namespace Lucene.Net.Test.Index
 				}
 				catch (Exception e)
 				{
-					throw new RuntimeException(e);
+					throw new SystemException(e);
 				}
 				finally
 				{
@@ -364,11 +364,11 @@ namespace Lucene.Net.Test.Index
 
 			private readonly int offset;
 
-			private readonly CountDownLatch latch;
+			private readonly CountdownEvent latch;
 
 			private readonly RandomIndexWriter modifier;
 
-			private readonly CountDownLatch doneLatch;
+			private readonly CountdownEvent doneLatch;
 		}
 
 		// test rollback of deleteAll()
@@ -417,14 +417,14 @@ namespace Lucene.Net.Test.Index
 				AddDoc(modifier, ++id, value);
 			}
 			modifier.Commit();
-			IndexReader reader = modifier.GetReader();
+			IndexReader reader = modifier.Reader;
 			AreEqual(7, reader.NumDocs);
 			reader.Dispose();
 			AddDoc(modifier, ++id, value);
 			AddDoc(modifier, ++id, value);
 			// Delete all
 			modifier.DeleteAll();
-			reader = modifier.GetReader();
+			reader = modifier.Reader;
 			AreEqual(0, reader.NumDocs);
 			reader.Dispose();
 			// Roll it back
@@ -852,11 +852,11 @@ namespace Lucene.Net.Test.Index
 
 			internal bool failed;
 
-			internal Sharpen.Thread thread;
+			internal Thread thread;
 
 			public override MockDirectoryWrapper.Failure Reset()
 			{
-				this.thread = Sharpen.Thread.CurrentThread();
+				this.thread = Thread.CurrentThread();
 				this.sawMaybe = false;
 				this.failed = false;
 				return this;
@@ -865,7 +865,7 @@ namespace Lucene.Net.Test.Index
 			/// <exception cref="System.IO.IOException"></exception>
 			public override void Eval(MockDirectoryWrapper dir)
 			{
-				if (Sharpen.Thread.CurrentThread() != this.thread)
+				if (Thread.CurrentThread() != this.thread)
 				{
 					return;
 				}
@@ -1009,10 +1009,10 @@ namespace Lucene.Net.Test.Index
 			Directory dir = NewDirectory();
 			RandomIndexWriter w = new RandomIndexWriter(Random(), dir);
 			int NUM_DOCS = AtLeast(1000);
-			IList<int> ids = new AList<int>(NUM_DOCS);
+			IList<int> ids = new List<int>(NUM_DOCS);
 			for (int id = 0; id < NUM_DOCS; id++)
 			{
-				ids.AddItem(id);
+				ids.Add(id);
 			}
 			Sharpen.Collections.Shuffle(ids, Random());
 			foreach (int id_1 in ids)
@@ -1033,7 +1033,7 @@ namespace Lucene.Net.Test.Index
 				{
 					w.DeleteDocuments(new Term("id", string.Empty + ids[upto++]));
 				}
-				IndexReader r = w.GetReader();
+				IndexReader r = w.Reader;
 				AreEqual(NUM_DOCS - upto, r.NumDocs);
 				r.Dispose();
 			}
@@ -1077,8 +1077,8 @@ namespace Lucene.Net.Test.Index
 				if (doIndexing)
 				{
 					// Add docs until a flush is triggered
-					int startFlushCount = w.GetFlushCount();
-					while (w.GetFlushCount() == startFlushCount)
+					int startFlushCount = w.FlushCount;
+					while (w.FlushCount == startFlushCount)
 					{
 						w.AddDocument(doc);
 						count++;
@@ -1087,8 +1087,8 @@ namespace Lucene.Net.Test.Index
 				else
 				{
 					// Delete docs until a flush is triggered
-					int startFlushCount = w.GetFlushCount();
-					while (w.GetFlushCount() == startFlushCount)
+					int startFlushCount = w.FlushCount;
+					while (w.FlushCount == startFlushCount)
 					{
 						w.DeleteDocuments(new Term("foo", string.Empty + count));
 						count++;
@@ -1283,7 +1283,7 @@ namespace Lucene.Net.Test.Index
 				this.sawAfterFlush = sawAfterFlush;
 			}
 
-			protected override void DoAfterFlush()
+			protected internal override void DoAfterFlush()
 			{
 				IsTrue("only " + docsInSegment.Get() + " in segment", closing
 					.Get() || docsInSegment.Get() >= 7);

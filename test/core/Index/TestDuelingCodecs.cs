@@ -1,21 +1,19 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
-using Lucene.Net.Test.Analysis;
+using System;
+using Lucene.Net.Analysis;
 using Lucene.Net.Codecs;
-using Lucene.Net.Document;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
-using Sharpen;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
 	/// <summary>Compares one codec against another</summary>
-	public class TestDuelingCodecs : LuceneTestCase
+	[TestFixture]
+    public class TestDuelingCodecs : LuceneTestCase
 	{
 		private Directory leftDir;
 
@@ -70,9 +68,9 @@ namespace Lucene.Net.Test.Index
 			int numdocs = AtLeast(100);
 			CreateRandomIndex(numdocs, leftWriter, seed);
 			CreateRandomIndex(numdocs, rightWriter, seed);
-			leftReader = MaybeWrapReader(leftWriter.GetReader());
+			leftReader = MaybeWrapReader(leftWriter.Reader);
 			leftWriter.Dispose();
-			rightReader = MaybeWrapReader(rightWriter.GetReader());
+			rightReader = MaybeWrapReader(rightWriter.Reader);
 			rightWriter.Dispose();
 			// check that our readers are valid
 			TestUtil.CheckReader(leftReader);

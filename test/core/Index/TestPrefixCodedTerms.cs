@@ -39,7 +39,7 @@ namespace Lucene.Net.Test.Index
 			{
 				Term term = new Term(TestUtil.RandomUnicodeString(Random(), 2), TestUtil.RandomUnicodeString
 					(Random()));
-				terms.AddItem(term);
+				terms.Add(term);
 			}
 			PrefixCodedTerms.Builder b = new PrefixCodedTerms.Builder();
 			foreach (Term @ref in terms)
@@ -85,7 +85,7 @@ namespace Lucene.Net.Test.Index
 				{
 					Term term = new Term(TestUtil.RandomUnicodeString(Random(), 2), TestUtil.RandomUnicodeString
 						(Random(), 4));
-					terms.AddItem(term);
+					terms.Add(term);
 				}
 				Sharpen.Collections.AddAll(superSet, terms);
 				PrefixCodedTerms.Builder b = new PrefixCodedTerms.Builder();
@@ -95,10 +95,10 @@ namespace Lucene.Net.Test.Index
 				}
 				pb[i] = b.Finish();
 			}
-			IList<Iterator<Term>> subs = new AList<Iterator<Term>>();
+			IList<Iterator<Term>> subs = new List<Iterator<Term>>();
 			for (int i_1 = 0; i_1 < pb.Length; i_1++)
 			{
-				subs.AddItem(pb[i_1].Iterator());
+				subs.Add(pb[i_1].Iterator());
 			}
 			Iterator<Term> expected = superSet.Iterator();
 			Iterator<Term> actual = new MergedIterator<Term>(Sharpen.Collections.ToArray(subs

@@ -46,7 +46,7 @@ namespace Lucene.Net.Search
 				iw.DeleteDocuments(new Term("id", Sharpen.Extensions.ToString(Random().Next(iw.MaxDoc
 					()))));
 			}
-			ir = iw.GetReader();
+			ir = iw.Reader;
 			@is = NewSearcher(ir);
 		}
 

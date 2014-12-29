@@ -1,25 +1,25 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
+using System.Collections.Generic;
 using System.Text;
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Document;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
+using Lucene.Net.Randomized.Generators;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
+using Lucene.Net.Support;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
-using Sharpen;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
+    [TestFixture]
 	public class TestDocsAndPositions : LuceneTestCase
 	{
 		private string fieldName;
 
-		/// <exception cref="System.Exception"></exception>
+		[SetUp]
 		public override void SetUp()
 		{
 			base.SetUp();
@@ -30,7 +30,7 @@ namespace Lucene.Net.Test.Index
 		/// Simple testcase for
 		/// <see cref="DocsAndPositionsEnum">DocsAndPositionsEnum</see>
 		/// </summary>
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestPositionsSimple()
 		{
 			Directory directory = NewDirectory();
@@ -38,21 +38,21 @@ namespace Lucene.Net.Test.Index
 				(TEST_VERSION_CURRENT, new MockAnalyzer(Random())));
 			for (int i = 0; i < 39; i++)
 			{
-				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-					();
-				FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
-				customType.OmitNorms = (true);
-				doc.Add(NewField(fieldName, "1 2 3 4 5 6 7 8 9 10 " + "1 2 3 4 5 6 7 8 9 10 " + "1 2 3 4 5 6 7 8 9 10 "
-					 + "1 2 3 4 5 6 7 8 9 10", customType));
-				writer.AddDocument(doc);
+			    FieldType customType = new FieldType(TextField.TYPE_NOT_STORED) {OmitNorms = (true)};
+			    var doc = new Lucene.Net.Documents.Document
+			    {
+			        NewField(fieldName, "1 2 3 4 5 6 7 8 9 10 " + "1 2 3 4 5 6 7 8 9 10 " + "1 2 3 4 5 6 7 8 9 10 "
+			                            + "1 2 3 4 5 6 7 8 9 10", customType)
+			    };
+			    writer.AddDocument(doc);
 			}
-			IndexReader reader = writer.GetReader();
-			writer.Dispose();
+			IndexReader reader = writer.Reader;
+			writer.Close();
 			int num = AtLeast(13);
-			for (int i_1 = 0; i_1 < num; i_1++)
+			for (int i = 0; i < num; i++)
 			{
 				BytesRef bytes = new BytesRef("1");
-				IndexReaderContext topReaderContext = reader.GetContext();
+				IndexReaderContext topReaderContext = reader.Context;
 				foreach (AtomicReaderContext atomicReaderContext in topReaderContext.Leaves)
 				{
 					DocsAndPositionsEnum docsAndPosEnum = GetDocsAndPositions(((AtomicReader)atomicReaderContext
@@ -66,17 +66,16 @@ namespace Lucene.Net.Test.Index
 						.Reader).MaxDoc));
 					do
 					{
-						string msg = "Advanced to: " + advance + " current doc: " + docsAndPosEnum.DocID(
-							);
+						string msg = "Advanced to: " + advance + " current doc: " + docsAndPosEnum.DocID;
 						// TODO: + " usePayloads: " + usePayload;
-						AreEqual(msg, 4, docsAndPosEnum.Freq);
-						AreEqual(msg, 0, docsAndPosEnum.NextPosition());
-						AreEqual(msg, 4, docsAndPosEnum.Freq);
-						AreEqual(msg, 10, docsAndPosEnum.NextPosition());
-						AreEqual(msg, 4, docsAndPosEnum.Freq);
-						AreEqual(msg, 20, docsAndPosEnum.NextPosition());
-						AreEqual(msg, 4, docsAndPosEnum.Freq);
-						AreEqual(msg, 30, docsAndPosEnum.NextPosition());
+						AssertEquals(msg, 4, docsAndPosEnum.Freq);
+						AssertEquals(msg, 0, docsAndPosEnum.NextPosition());
+						AssertEquals(msg, 4, docsAndPosEnum.Freq);
+						AssertEquals(msg, 10, docsAndPosEnum.NextPosition());
+						AssertEquals(msg, 4, docsAndPosEnum.Freq);
+						AssertEquals(msg, 20, docsAndPosEnum.NextPosition());
+						AssertEquals(msg, 4, docsAndPosEnum.Freq);
+						AssertEquals(msg, 30, docsAndPosEnum.NextPosition());
 					}
 					while (docsAndPosEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
 				}
@@ -87,7 +86,7 @@ namespace Lucene.Net.Test.Index
 
 		/// <exception cref="System.IO.IOException"></exception>
 		public virtual DocsAndPositionsEnum GetDocsAndPositions(AtomicReader reader, BytesRef
-			 bytes, Bits liveDocs)
+			 bytes, IBits liveDocs)
 		{
 			Terms terms = reader.Terms(fieldName);
 			if (terms != null)
@@ -112,7 +111,7 @@ namespace Lucene.Net.Test.Index
 		/// random. All positions for that number are saved up front and compared to
 		/// the enums positions.
 		/// </remarks>
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestRandomPositions()
 		{
 			Directory dir = NewDirectory();
@@ -124,12 +123,12 @@ namespace Lucene.Net.Test.Index
 			int term = Random().Next(max);
 			int[][] positionsInDoc = new int[numDocs][];
 			FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
-			customType.OmitNorms = (true);
+			customType.OmitsNorms = (true);
 			for (int i = 0; i < numDocs; i++)
 			{
 				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
-				AList<int> positions = new AList<int>();
+				var positions = new List<int>();
 				StringBuilder builder = new StringBuilder();
 				int num = AtLeast(131);
 				for (int j = 0; j < num; j++)
@@ -138,25 +137,25 @@ namespace Lucene.Net.Test.Index
 					builder.Append(nextInt).Append(" ");
 					if (nextInt == term)
 					{
-						positions.AddItem(Sharpen.Extensions.ValueOf(j));
+						positions.Add(j);
 					}
 				}
 				if (positions.Count == 0)
 				{
 					builder.Append(term);
-					positions.AddItem(num);
+					positions.Add(num);
 				}
 				doc.Add(NewField(fieldName, builder.ToString(), customType));
-				positionsInDoc[i] = Sharpen.Collections.ToArray(positions, new int[0]);
+				positionsInDoc[i] = positions.ToArray();
 				writer.AddDocument(doc);
 			}
-			IndexReader reader = writer.GetReader();
-			writer.Dispose();
+			IndexReader reader = writer.Reader;
+			writer.Close();
 			int num_1 = AtLeast(13);
 			for (int i_1 = 0; i_1 < num_1; i_1++)
 			{
 				BytesRef bytes = new BytesRef(string.Empty + term);
-				IndexReaderContext topReaderContext = reader.GetContext();
+				IndexReaderContext topReaderContext = reader.Context;
 				foreach (AtomicReaderContext atomicReaderContext in topReaderContext.Leaves)
 				{
 					DocsAndPositionsEnum docsAndPosEnum = GetDocsAndPositions(((AtomicReader)atomicReaderContext
@@ -182,14 +181,14 @@ namespace Lucene.Net.Test.Index
 							break;
 						}
 						int[] pos = positionsInDoc[atomicReaderContext.docBase + docID];
-						AreEqual(pos.Length, docsAndPosEnum.Freq);
+						AssertEquals(pos.Length, docsAndPosEnum.Freq);
 						// number of positions read should be random - don't read all of them
 						// allways
 						int howMany = Random().Next(20) == 0 ? pos.Length - Random().Next(pos.Length) : pos
 							.Length;
 						for (int j = 0; j < howMany; j++)
 						{
-							AreEqual("iteration: " + i_1 + " initDoc: " + initDoc + " doc: "
+							AssertEquals("iteration: " + i_1 + " initDoc: " + initDoc + " doc: "
 								 + docID + " base: " + atomicReaderContext.docBase + " positions: " + Arrays.ToString
 								(pos), pos[j], docsAndPosEnum.NextPosition());
 						}
@@ -210,7 +209,7 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestRandomDocs()
 		{
 			Directory dir = NewDirectory();
@@ -222,7 +221,7 @@ namespace Lucene.Net.Test.Index
 			int term = Random().Next(max);
 			int[] freqInDoc = new int[numDocs];
 			FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
-			customType.OmitNorms = (true);
+			customType.OmitsNorms = (true);
 			for (int i = 0; i < numDocs; i++)
 			{
 				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
@@ -240,13 +239,13 @@ namespace Lucene.Net.Test.Index
 				doc.Add(NewField(fieldName, builder.ToString(), customType));
 				writer.AddDocument(doc);
 			}
-			IndexReader reader = writer.GetReader();
-			writer.Dispose();
+			IndexReader reader = writer.Reader;
+			writer.Close();
 			int num = AtLeast(13);
 			for (int i_1 = 0; i_1 < num; i_1++)
 			{
 				BytesRef bytes = new BytesRef(string.Empty + term);
-				IndexReaderContext topReaderContext = reader.GetContext();
+				IndexReaderContext topReaderContext = reader.Context;
 				foreach (AtomicReaderContext context in topReaderContext.Leaves)
 				{
 					int maxDoc = ((AtomicReader)context.Reader).MaxDoc;
@@ -263,8 +262,8 @@ namespace Lucene.Net.Test.Index
 					{
 						if (freqInDoc[context.docBase + j] != 0)
 						{
-							AreEqual(j, docsEnum.DocID);
-							AreEqual(docsEnum.Freq, freqInDoc[context.docBase + j]);
+							AssertEquals(j, docsEnum.DocID);
+							AssertEquals(docsEnum.Freq, freqInDoc[context.docBase + j]);
 							if (i_1 % 2 == 0 && Random().Next(10) == 0)
 							{
 								int next = FindNext(freqInDoc, context.docBase + j + 1, context.docBase + maxDoc)
@@ -272,11 +271,11 @@ namespace Lucene.Net.Test.Index
 								int advancedTo = docsEnum.Advance(next);
 								if (next >= maxDoc)
 								{
-									AreEqual(DocIdSetIterator.NO_MORE_DOCS, advancedTo);
+									AssertEquals(DocIdSetIterator.NO_MORE_DOCS, advancedTo);
 								}
 								else
 								{
-									IsTrue("advanced to: " + advancedTo + " but should be <= "
+									AssertTrue("advanced to: " + advancedTo + " but should be <= "
 										 + next, next >= advancedTo);
 								}
 							}
@@ -286,7 +285,7 @@ namespace Lucene.Net.Test.Index
 							}
 						}
 					}
-					AreEqual("docBase: " + context.docBase + " maxDoc: " + maxDoc
+					AssertEquals("docBase: " + context.docBase + " maxDoc: " + maxDoc
 						 + " " + docsEnum.GetType(), DocIdSetIterator.NO_MORE_DOCS, docsEnum.DocID);
 				}
 			}
@@ -314,7 +313,7 @@ namespace Lucene.Net.Test.Index
 		/// tests retrieval of positions for terms that have a large number of
 		/// occurrences to force test of buffer refill during positions iteration.
 		/// </remarks>
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestLargeNumberOfPositions()
 		{
 			Directory dir = NewDirectory();
@@ -322,7 +321,7 @@ namespace Lucene.Net.Test.Index
 				(TEST_VERSION_CURRENT, new MockAnalyzer(Random())));
 			int howMany = 1000;
 			FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
-			customType.OmitNorms = (true);
+			customType.OmitsNorms = (true);
 			for (int i = 0; i < 39; i++)
 			{
 				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
@@ -343,13 +342,13 @@ namespace Lucene.Net.Test.Index
 				writer.AddDocument(doc);
 			}
 			// now do searches
-			IndexReader reader = writer.GetReader();
-			writer.Dispose();
+			IndexReader reader = writer.Reader;
+			writer.Close();
 			int num = AtLeast(13);
 			for (int i_1 = 0; i_1 < num; i_1++)
 			{
 				BytesRef bytes = new BytesRef("even");
-				IndexReaderContext topReaderContext = reader.GetContext();
+				IndexReaderContext topReaderContext = reader.Context;
 				foreach (AtomicReaderContext atomicReaderContext in topReaderContext.Leaves)
 				{
 					DocsAndPositionsEnum docsAndPosEnum = GetDocsAndPositions(((AtomicReader)atomicReaderContext
@@ -368,10 +367,10 @@ namespace Lucene.Net.Test.Index
 					}
 					string msg = "Iteration: " + i_1 + " initDoc: " + initDoc;
 					// TODO: + " payloads: " + usePayload;
-					AreEqual(howMany / 2, docsAndPosEnum.Freq);
+					AssertEquals(howMany / 2, docsAndPosEnum.Freq);
 					for (int j = 0; j < howMany; j += 2)
 					{
-						AreEqual("position missmatch index: " + j + " with freq: "
+						AssertEquals("position missmatch index: " + j + " with freq: "
 							 + docsAndPosEnum.Freq + " -- " + msg, j, docsAndPosEnum.NextPosition());
 					}
 				}
@@ -380,7 +379,7 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestDocsEnumStart()
 		{
 			Directory dir = NewDirectory();
@@ -389,26 +388,26 @@ namespace Lucene.Net.Test.Index
 				();
 			doc.Add(NewStringField("foo", "bar", Field.Store.NO));
 			writer.AddDocument(doc);
-			DirectoryReader reader = writer.GetReader();
+			DirectoryReader reader = writer.Reader;
 			AtomicReader r = GetOnlySegmentReader(reader);
 			DocsEnum disi = TestUtil.Docs(Random(), r, "foo", new BytesRef("bar"), null, null
 				, DocsEnum.FLAG_NONE);
 			int docid = disi.DocID;
-			AreEqual(-1, docid);
+			AssertEquals(-1, docid);
 			IsTrue(disi.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
 			// now reuse and check again
 			TermsEnum te = r.Terms("foo").Iterator(null);
 			IsTrue(te.SeekExact(new BytesRef("bar")));
 			disi = TestUtil.Docs(Random(), te, null, disi, DocsEnum.FLAG_NONE);
 			docid = disi.DocID;
-			AreEqual(-1, docid);
+			AssertEquals(-1, docid);
 			IsTrue(disi.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
-			writer.Dispose();
+			writer.Close();
 			r.Dispose();
 			dir.Dispose();
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestDocsAndPositionsEnumStart()
 		{
 			Directory dir = NewDirectory();
@@ -417,20 +416,20 @@ namespace Lucene.Net.Test.Index
 				();
 			doc.Add(NewTextField("foo", "bar", Field.Store.NO));
 			writer.AddDocument(doc);
-			DirectoryReader reader = writer.GetReader();
+			DirectoryReader reader = writer.Reader;
 			AtomicReader r = GetOnlySegmentReader(reader);
 			DocsAndPositionsEnum disi = r.TermPositionsEnum(new Term("foo", "bar"));
 			int docid = disi.DocID;
-			AreEqual(-1, docid);
+			AssertEquals(-1, docid);
 			IsTrue(disi.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
 			// now reuse and check again
 			TermsEnum te = r.Terms("foo").Iterator(null);
 			IsTrue(te.SeekExact(new BytesRef("bar")));
 			disi = te.DocsAndPositions(null, disi);
 			docid = disi.DocID;
-			AreEqual(-1, docid);
+			AssertEquals(-1, docid);
 			IsTrue(disi.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
-			writer.Dispose();
+			writer.Close();
 			r.Dispose();
 			dir.Dispose();
 		}

@@ -68,7 +68,7 @@ namespace Lucene.Net.Search
 				();
 			doc.Add(NewTextField("field", "a b c d", Field.Store.NO));
 			w.AddDocument(doc);
-			IndexReader r = w.GetReader();
+			IndexReader r = w.Reader;
 			IndexSearcher s = NewSearcher(r);
 			// this test relies upon coord being the default implementation,
 			// otherwise scores are different!
@@ -126,7 +126,7 @@ namespace Lucene.Net.Search
 				();
 			doc1.Add(NewTextField("field", "foo bar", Field.Store.NO));
 			iw1.AddDocument(doc1);
-			IndexReader reader1 = iw1.GetReader();
+			IndexReader reader1 = iw1.Reader;
 			iw1.Dispose();
 			Directory dir2 = NewDirectory();
 			RandomIndexWriter iw2 = new RandomIndexWriter(Random(), dir2);
@@ -134,7 +134,7 @@ namespace Lucene.Net.Search
 				();
 			doc2.Add(NewTextField("field", "foo baz", Field.Store.NO));
 			iw2.AddDocument(doc2);
-			IndexReader reader2 = iw2.GetReader();
+			IndexReader reader2 = iw2.Reader;
 			iw2.Dispose();
 			BooleanQuery query = new BooleanQuery();
 			// Query: +foo -ba*
@@ -197,7 +197,7 @@ namespace Lucene.Net.Search
 				w.AddDocument(doc);
 			}
 			w.ForceMerge(1);
-			IndexReader r = w.GetReader();
+			IndexReader r = w.Reader;
 			IndexSearcher s = NewSearcher(r);
 			w.Dispose();
 			for (int iter = 0; iter < 10 * RANDOM_MULTIPLIER; iter++)
@@ -206,7 +206,7 @@ namespace Lucene.Net.Search
 				{
 					System.Console.Out.WriteLine("iter=" + iter);
 				}
-				IList<string> terms = new AList<string>(Arrays.AsList("a", "b", "c", "d", "e", "f"
+				IList<string> terms = new List<string>(Arrays.AsList("a", "b", "c", "d", "e", "f"
 					));
 				int numTerms = TestUtil.NextInt(Random(), 1, terms.Count);
 				while (terms.Count > numTerms)
@@ -226,10 +226,10 @@ namespace Lucene.Net.Search
 				Weight weight = s.CreateNormalizedWeight(q);
 				Scorer scorer = weight.Scorer(s.leafContexts[0], null);
 				// First pass: just use .nextDoc() to gather all hits
-				IList<ScoreDoc> hits = new AList<ScoreDoc>();
+				IList<ScoreDoc> hits = new List<ScoreDoc>();
 				while (scorer.NextDoc() != DocIdSetIterator.NO_MORE_DOCS)
 				{
-					hits.AddItem(new ScoreDoc(scorer.DocID, scorer.Score()));
+					hits.Add(new ScoreDoc(scorer.DocID, scorer.Score()));
 				}
 				if (VERBOSE)
 				{
@@ -332,7 +332,7 @@ namespace Lucene.Net.Search
 				();
 			doc.Add(NewTextField("field", "some text here", Field.Store.NO));
 			w.AddDocument(doc);
-			IndexReader r = w.GetReader();
+			IndexReader r = w.Reader;
 			w.Dispose();
 			IndexSearcher s = new _IndexSearcher_338(r);
 			BooleanQuery bq = new BooleanQuery();

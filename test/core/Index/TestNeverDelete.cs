@@ -22,7 +22,7 @@ namespace Lucene.Net.Test.Index
 		/// <exception cref="System.Exception"></exception>
 		public virtual void TestIndexing()
 		{
-			FilePath tmpDir = CreateTempDir("TestNeverDelete");
+			DirectoryInfo tmpDir = CreateTempDir("TestNeverDelete");
 			BaseDirectoryWrapper d = NewFSDirectory(tmpDir);
 			// We want to "see" files removed if Lucene removed
 			// them.  This is still worth running on Windows since
@@ -35,7 +35,7 @@ namespace Lucene.Net.Test.Index
 				, new MockAnalyzer(Random())).SetIndexDeletionPolicy(NoDeletionPolicy.INSTANCE));
 			w.w.Config.SetMaxBufferedDocs(TestUtil.NextInt(Random(), 5, 30));
 			w.Commit();
-			Sharpen.Thread[] indexThreads = new Sharpen.Thread[Random().Next(4)];
+			Thread[] indexThreads = new Thread[Random().Next(4)];
 			long stopTime = DateTime.Now.CurrentTimeMillis() + AtLeast(1000);
 			for (int x = 0; x < indexThreads.Length; x++)
 			{
@@ -47,12 +47,12 @@ namespace Lucene.Net.Test.Index
 			DirectoryReader r = DirectoryReader.Open(d);
 			while (DateTime.Now.CurrentTimeMillis() < stopTime)
 			{
-				IndexCommit ic = r.GetIndexCommit();
+				IndexCommit ic = r.IndexCommit;
 				if (VERBOSE)
 				{
-					System.Console.Out.WriteLine("TEST: check files: " + ic.GetFileNames());
+					System.Console.Out.WriteLine("TEST: check files: " + ic.FileNames);
 				}
-				Sharpen.Collections.AddAll(allFiles, ic.GetFileNames());
+				Sharpen.Collections.AddAll(allFiles, ic.FileNames);
 				// Make sure no old files were removed
 				foreach (string fileName in allFiles)
 				{
@@ -65,10 +65,10 @@ namespace Lucene.Net.Test.Index
 					r.Dispose();
 					r = r2;
 				}
-				Sharpen.Thread.Sleep(1);
+				Thread.Sleep(1);
 			}
 			r.Dispose();
-			foreach (Sharpen.Thread t in indexThreads)
+			foreach (Thread t in indexThreads)
 			{
 				t.Join();
 			}
@@ -77,7 +77,7 @@ namespace Lucene.Net.Test.Index
 			TestUtil.Rm(tmpDir);
 		}
 
-		private sealed class _Thread_58 : Sharpen.Thread
+		private sealed class _Thread_58 : Thread
 		{
 			public _Thread_58(long stopTime, RandomIndexWriter w)
 			{
@@ -108,7 +108,7 @@ namespace Lucene.Net.Test.Index
 				}
 				catch (Exception e)
 				{
-					throw new RuntimeException(e);
+					throw new SystemException(e);
 				}
 			}
 

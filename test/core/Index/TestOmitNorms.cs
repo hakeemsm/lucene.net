@@ -30,7 +30,7 @@ namespace Lucene.Net.Test.Index
 			d.Add(f1);
 			// this field will NOT have norms
 			FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
-			customType.OmitNorms = (true);
+			customType.OmitsNorms = (true);
 			Field f2 = NewField("f2", "This field has NO norms in all docs", customType);
 			d.Add(f2);
 			writer.AddDocument(d);
@@ -47,11 +47,11 @@ namespace Lucene.Net.Test.Index
 			// flush
 			writer.Dispose();
 			SegmentReader reader = GetOnlySegmentReader(DirectoryReader.Open(ram));
-			FieldInfos fi = reader.GetFieldInfos();
+			FieldInfos fi = reader.FieldInfos;
 			IsTrue("OmitNorms field bit should be set.", fi.FieldInfo(
-				"f1").OmitsNorms());
+				"f1").OmitsNorms);
 			IsTrue("OmitNorms field bit should be set.", fi.FieldInfo(
-				"f2").OmitsNorms());
+				"f2").OmitsNorms);
 			reader.Dispose();
 			ram.Dispose();
 		}
@@ -72,7 +72,7 @@ namespace Lucene.Net.Test.Index
 			d.Add(f1);
 			// this field will NOT have norms
 			FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
-			customType.OmitNorms = (true);
+			customType.OmitsNorms = (true);
 			Field f2 = NewField("f2", "This field has NO norms in all docs", customType);
 			d.Add(f2);
 			for (int i = 0; i < 30; i++)
@@ -94,11 +94,11 @@ namespace Lucene.Net.Test.Index
 			// flush
 			writer.Dispose();
 			SegmentReader reader = GetOnlySegmentReader(DirectoryReader.Open(ram));
-			FieldInfos fi = reader.GetFieldInfos();
+			FieldInfos fi = reader.FieldInfos;
 			IsTrue("OmitNorms field bit should be set.", fi.FieldInfo(
-				"f1").OmitsNorms());
+				"f1").OmitsNorms);
 			IsTrue("OmitNorms field bit should be set.", fi.FieldInfo(
-				"f2").OmitsNorms());
+				"f2").OmitsNorms);
 			reader.Dispose();
 			ram.Dispose();
 		}
@@ -120,7 +120,7 @@ namespace Lucene.Net.Test.Index
 			d.Add(f1);
 			// this field will NOT have norms
 			FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
-			customType.OmitNorms = (true);
+			customType.OmitsNorms = (true);
 			Field f2 = NewField("f2", "This field has NO norms in all docs", customType);
 			d.Add(f2);
 			for (int i = 0; i < 5; i++)
@@ -136,11 +136,11 @@ namespace Lucene.Net.Test.Index
 			// flush
 			writer.Dispose();
 			SegmentReader reader = GetOnlySegmentReader(DirectoryReader.Open(ram));
-			FieldInfos fi = reader.GetFieldInfos();
+			FieldInfos fi = reader.FieldInfos;
 			IsTrue("OmitNorms field bit should not be set.", !fi.FieldInfo
-				("f1").OmitsNorms());
+				("f1").OmitsNorms);
 			IsTrue("OmitNorms field bit should be set.", fi.FieldInfo(
-				"f2").OmitsNorms());
+				"f2").OmitsNorms);
 			reader.Dispose();
 			ram.Dispose();
 		}
@@ -171,7 +171,7 @@ namespace Lucene.Net.Test.Index
 			lmp.SetNoCFSRatio(0.0);
 			Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 			FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
-			customType.OmitNorms = (true);
+			customType.OmitsNorms = (true);
 			Field f1 = NewField("f1", "This field has no norms", customType);
 			d.Add(f1);
 			for (int i = 0; i < 30; i++)
@@ -206,7 +206,7 @@ namespace Lucene.Net.Test.Index
 			Field norms = new Field("foo", "a", customType);
 			// indexed without norms
 			FieldType customType1 = new FieldType(TextField.TYPE_STORED);
-			customType1.OmitNorms = (true);
+			customType1.OmitsNorms = (true);
 			Field noNorms = new Field("foo", "a", customType1);
 			// not indexed, but stored
 			FieldType customType2 = new FieldType();
@@ -215,7 +215,7 @@ namespace Lucene.Net.Test.Index
 			// not indexed but stored, omitNorms is set
 			FieldType customType3 = new FieldType();
 			customType3.Stored = (true);
-			customType3.OmitNorms = (true);
+			customType3.OmitsNorms = (true);
 			Field noNormsNoIndex = new Field("foo", "a", customType3);
 			// not indexed nor stored (doesnt exist at all, we index a different field instead)
 			Field emptyNorms = new Field("bar", "a", customType);
@@ -264,12 +264,12 @@ namespace Lucene.Net.Test.Index
 				d.Add(Random().NextBoolean() ? f1 : f2);
 				riw.AddDocument(d);
 			}
-			IndexReader ir1 = riw.GetReader();
+			IndexReader ir1 = riw.Reader;
 			// todo: generalize
 			NumericDocValues norms1 = MultiDocValues.GetNormValues(ir1, field);
 			// fully merge and validate MultiNorms against single segment.
 			riw.ForceMerge(1);
-			DirectoryReader ir2 = riw.GetReader();
+			DirectoryReader ir2 = riw.Reader;
 			NumericDocValues norms2 = GetOnlySegmentReader(ir2).GetNormValues(field);
 			if (norms1 == null)
 			{

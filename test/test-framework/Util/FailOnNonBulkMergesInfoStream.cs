@@ -5,6 +5,7 @@
  */
 
 using Lucene.Net.TestFramework.Util;
+using Lucene.Net.Util;
 using Sharpen;
 
 namespace Lucene.Net.TestFramework.Util

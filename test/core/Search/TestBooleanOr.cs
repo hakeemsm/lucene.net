@@ -155,7 +155,7 @@ namespace Lucene.Net.Search
 				, TextField.TYPE_STORED));
 			//
 			writer.AddDocument(d);
-			reader = writer.GetReader();
+			reader = writer.Reader;
 			//
 			searcher = NewSearcher(reader);
 			writer.Dispose();
@@ -184,7 +184,7 @@ namespace Lucene.Net.Search
 				riw.AddDocument(doc);
 			}
 			riw.ForceMerge(1);
-			IndexReader r = riw.GetReader();
+			IndexReader r = riw.Reader;
 			riw.Dispose();
 			IndexSearcher s = NewSearcher(r);
 			BooleanQuery bq = new BooleanQuery();

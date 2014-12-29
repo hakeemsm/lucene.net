@@ -1,24 +1,20 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using System.Collections.Generic;
-using Lucene.Net.Test.Analysis;
+using Lucene.Net.Analysis;
 using Lucene.Net.Codecs;
-using Lucene.Net.Document;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
-using Lucene.Net.Util;
-using Sharpen;
+using Lucene.Net.Support;
+using Lucene.Net.TestFramework;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
+    [TestFixture]
 	public class TestIndexFileDeleter : LuceneTestCase
 	{
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestDeleteLeftoverFiles()
 		{
 			Directory dir = NewDirectory();
@@ -30,25 +26,29 @@ namespace Lucene.Net.Test.Index
 			// This test expects all of its segments to be in CFS
 			mergePolicy.SetNoCFSRatio(1.0);
 			mergePolicy.SetMaxCFSSegmentSizeMB(double.PositiveInfinity);
-			IndexWriter writer = new IndexWriter(dir, ((IndexWriterConfig)((IndexWriterConfig
-				)NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMaxBufferedDocs
-				(10)).SetMergePolicy(mergePolicy).SetUseCompoundFile(true)));
+		    var writerConfig = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(Random()));
+		    writerConfig.SetMaxBufferedDocs(10);
+
+		    writerConfig.SetMergePolicy(mergePolicy);
+		    writerConfig.UseCompoundFile = (true);
+		    IndexWriter writer = new IndexWriter(dir, writerConfig);
+		    
 			int i;
 			for (i = 0; i < 35; i++)
 			{
 				AddDoc(writer, i);
 			}
 			writer.Config.MergePolicy.SetNoCFSRatio(0.0);
-			writer.Config.SetUseCompoundFile(false);
+			writer.Config.UseCompoundFile = (false);
 			for (; i < 45; i++)
 			{
 				AddDoc(writer, i);
 			}
 			writer.Dispose();
 			// Delete one doc so we get a .del file:
-			writer = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig(TEST_VERSION_CURRENT
-				, new MockAnalyzer(Random())).SetMergePolicy(NoMergePolicy.NO_COMPOUND_FILES).SetUseCompoundFile
-				(true)));
+		    var writerConfig2 = writerConfig.SetMergePolicy(NoMergePolicy.NO_COMPOUND_FILES);
+		    writerConfig2.useCompoundFile = true;
+			writer = new IndexWriter(dir, writerConfig2);
 			Term searchTerm = new Term("id", "7");
 			writer.DeleteDocuments(searchTerm);
 			writer.Dispose();
@@ -56,7 +56,7 @@ namespace Lucene.Net.Test.Index
 			// .s0 file:
 			string[] files = dir.ListAll();
 			// TODO: fix this test better
-			string ext = Codec.GetDefault().GetName().Equals("SimpleText") ? ".liv" : ".del";
+			string ext = Codec.Default.Name.Equals("SimpleText") ? ".liv" : ".del";
 			// Create a bogus separate del file for a
 			// segment that already has a separate del file: 
 			CopyFile(dir, "_0_1" + ext, "_0_2" + ext);
@@ -84,8 +84,7 @@ namespace Lucene.Net.Test.Index
 			string[] filesPre = dir.ListAll();
 			// Open & close a writer: it should delete the above 4
 			// files and nothing more:
-			writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
-				(Random())).SetOpenMode(IndexWriterConfig.OpenMode.APPEND));
+			writer = new IndexWriter(dir, writerConfig.SetOpenMode(IndexWriterConfig.OpenMode.APPEND));
 			writer.Dispose();
 			string[] files2 = dir.ListAll();
 			dir.Dispose();
@@ -108,28 +107,28 @@ namespace Lucene.Net.Test.Index
 			ICollection<string> extra = new HashSet<string>();
 			for (int x = 0; x < files1.Length; x++)
 			{
-				set1.AddItem(files1[x]);
+				set1.Add(files1[x]);
 			}
 			for (int x_1 = 0; x_1 < files2.Length; x_1++)
 			{
-				set2.AddItem(files2[x_1]);
+				set2.Add(files2[x_1]);
 			}
-			Iterator<string> i1 = set1.Iterator();
-			while (i1.HasNext())
+			IEnumerator<string> i1 = set1.GetEnumerator();
+			while (i1.MoveNext())
 			{
-				string o = i1.Next();
+				string o = i1.Current;
 				if (!set2.Contains(o))
 				{
-					extra.AddItem(o);
+					extra.Add(o);
 				}
 			}
-			Iterator<string> i2 = set2.Iterator();
-			while (i2.HasNext())
+			IEnumerator<string> i2 = set2.GetEnumerator();
+			while (i2.MoveNext())
 			{
-				string o = i2.Next();
+				string o = i2.Current;
 				if (!set1.Contains(o))
 				{
-					extra.AddItem(o);
+					extra.Add(o);
 				}
 			}
 			return extra;
@@ -155,7 +154,7 @@ namespace Lucene.Net.Test.Index
 			IndexInput @in = dir.OpenInput(src, NewIOContext(Random()));
 			IndexOutput @out = dir.CreateOutput(dest, NewIOContext(Random()));
 			byte[] b = new byte[1024];
-			long remainder = @in.Length();
+			long remainder = @in.Length;
 			while (remainder > 0)
 			{
 				int len = (int)Math.Min(b.Length, remainder);
@@ -173,7 +172,7 @@ namespace Lucene.Net.Test.Index
 			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewTextField("content", "aaa", Field.Store.NO));
-			doc.Add(NewStringField("id", Sharpen.Extensions.ToString(id), Field.Store.NO));
+			doc.Add(NewStringField("id", id.ToString(), Field.Store.NO));
 			writer.AddDocument(doc);
 		}
 	}

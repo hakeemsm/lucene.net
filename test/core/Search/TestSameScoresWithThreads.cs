@@ -37,7 +37,7 @@ namespace Lucene.Net.Search
 				w.AddDocument(doc);
 			}
 			//System.out.println("  bytes=" + charsIndexed + " add: " + doc);
-			IndexReader r = w.GetReader();
+			IndexReader r = w.Reader;
 			//System.out.println("numDocs=" + r.numDocs());
 			w.Dispose();
 			IndexSearcher s = NewSearcher(r);
@@ -63,18 +63,18 @@ namespace Lucene.Net.Search
 			}
 			if (!answers.IsEmpty())
 			{
-				CountDownLatch startingGun = new CountDownLatch(1);
+				CountdownEvent startingGun = new CountdownEvent(1);
 				int numThreads = TestUtil.NextInt(Random(), 2, 5);
-				Sharpen.Thread[] threads = new Sharpen.Thread[numThreads];
+				Thread[] threads = new Thread[numThreads];
 				for (int threadID = 0; threadID < numThreads; threadID++)
 				{
-					Sharpen.Thread thread = new _Thread_89(startingGun, answers, s);
+					Thread thread = new _Thread_89(startingGun, answers, s);
 					// Floats really should be identical:
 					threads[threadID] = thread;
 					thread.Start();
 				}
 				startingGun.CountDown();
-				foreach (Sharpen.Thread thread_1 in threads)
+				foreach (Thread thread_1 in threads)
 				{
 					thread_1.Join();
 				}
@@ -83,9 +83,9 @@ namespace Lucene.Net.Search
 			dir.Dispose();
 		}
 
-		private sealed class _Thread_89 : Sharpen.Thread
+		private sealed class _Thread_89 : Thread
 		{
-			public _Thread_89(CountDownLatch startingGun, IDictionary<BytesRef, TopDocs> answers
+			public _Thread_89(CountdownEvent startingGun, IDictionary<BytesRef, TopDocs> answers
 				, IndexSearcher s)
 			{
 				this.startingGun = startingGun;
@@ -100,7 +100,7 @@ namespace Lucene.Net.Search
 					startingGun.Await();
 					for (int i = 0; i < 20; i++)
 					{
-						IList<KeyValuePair<BytesRef, TopDocs>> shuffled = new AList<KeyValuePair<BytesRef
+						IList<KeyValuePair<BytesRef, TopDocs>> shuffled = new List<KeyValuePair<BytesRef
 							, TopDocs>>(answers.EntrySet());
 						Sharpen.Collections.Shuffle(shuffled);
 						foreach (KeyValuePair<BytesRef, TopDocs> ent in shuffled)
@@ -122,11 +122,11 @@ namespace Lucene.Net.Search
 				}
 				catch (Exception e)
 				{
-					throw new RuntimeException(e);
+					throw new SystemException(e);
 				}
 			}
 
-			private readonly CountDownLatch startingGun;
+			private readonly CountdownEvent startingGun;
 
 			private readonly IDictionary<BytesRef, TopDocs> answers;
 

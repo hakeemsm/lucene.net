@@ -42,7 +42,7 @@ namespace Lucene.Net.Test.Index
 			var doc = new Lucene.Net.Documents.Document();
 			FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
 			ft.IndexOptions = (FieldInfo.IndexOptions.DOCS_AND_FREQS);
-			ft.OmitNorms = (true);
+			ft.OmitsNorms = (true);
 			Test2BPostingsBytes.MyTokenStream tokenStream = new Test2BPostingsBytes.MyTokenStream
 				();
 			Field field = new Field("field", tokenStream, ft);

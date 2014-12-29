@@ -1150,10 +1150,10 @@ namespace Lucene.Net.Test.Index
 				// control, always updated to f * 2
 				writer.AddDocument(doc);
 			}
-			CountDownLatch done = new CountDownLatch(numThreads);
+			CountdownEvent done = new CountdownEvent(numThreads);
 			AtomicInteger numUpdates = new AtomicInteger(AtLeast(100));
 			// same thread updates a field as well as reopens
-			Sharpen.Thread[] threads = new Sharpen.Thread[numThreads];
+			Thread[] threads = new Thread[numThreads];
 			for (int i_1 = 0; i_1 < threads.Length; i_1++)
 			{
 				string f = "f" + i_1;
@@ -1172,7 +1172,7 @@ namespace Lucene.Net.Test.Index
 			//                  System.out.println("[" + Thread.currentThread().getName() + "] reopen NRT");
 			//            System.out.println("[" + Thread.currentThread().getName() + "] DONE");
 			// suppress this exception only if there was another exception
-			foreach (Sharpen.Thread t in threads)
+			foreach (Thread t in threads)
 			{
 				t.Start();
 			}
@@ -1206,10 +1206,10 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		private sealed class _Thread_1014 : Sharpen.Thread
+		private sealed class _Thread_1014 : Thread
 		{
 			public _Thread_1014(AtomicInteger numUpdates, IndexWriter writer, string f, string
-				 cf, int numDocs, CountDownLatch done, string baseArg1) : base(baseArg1)
+				 cf, int numDocs, CountdownEvent done, string baseArg1) : base(baseArg1)
 			{
 				this.numUpdates = numUpdates;
 				this.writer = writer;
@@ -1293,7 +1293,7 @@ namespace Lucene.Net.Test.Index
 				}
 				catch (IOException e)
 				{
-					throw new RuntimeException(e);
+					throw new SystemException(e);
 				}
 				finally
 				{
@@ -1307,7 +1307,7 @@ namespace Lucene.Net.Test.Index
 						{
 							if (success)
 							{
-								throw new RuntimeException(e);
+								throw new SystemException(e);
 							}
 						}
 					}
@@ -1325,7 +1325,7 @@ namespace Lucene.Net.Test.Index
 
 			private readonly int numDocs;
 
-			private readonly CountDownLatch done;
+			private readonly CountdownEvent done;
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -1451,7 +1451,7 @@ namespace Lucene.Net.Test.Index
 			ICollection<string> randomTerms = new HashSet<string>();
 			while (randomTerms.Count < numTerms)
 			{
-				randomTerms.AddItem(TestUtil.RandomSimpleString(Random()));
+				randomTerms.Add(TestUtil.RandomSimpleString(Random()));
 			}
 			// create first index
 			for (int i = 0; i < numDocs; i++)
@@ -1557,7 +1557,7 @@ namespace Lucene.Net.Test.Index
 			ICollection<string> updateTerms = new HashSet<string>();
 			while (updateTerms.Count < numTerms)
 			{
-				updateTerms.AddItem(TestUtil.RandomSimpleString(random));
+				updateTerms.Add(TestUtil.RandomSimpleString(random));
 			}
 			//    System.out.println("numDocs=" + numDocs + " numNumericFields=" + numNumericFields + " numTerms=" + numTerms);
 			// build a large index with many NDV fields and update terms

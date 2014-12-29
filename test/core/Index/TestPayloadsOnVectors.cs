@@ -42,7 +42,7 @@ namespace Lucene.Net.Test.Index
 			doc.Add(field);
 			writer.AddDocument(doc);
 			Token withPayload = new Token("withPayload", 0, 11);
-			withPayload.SetPayload(new BytesRef("test"));
+			withPayload.Payload = (new BytesRef("test"));
 			ts = new CannedTokenStream(withPayload);
 			IsTrue(ts.HasAttribute(typeof(PayloadAttribute)));
 			field.SetTokenStream(ts);
@@ -52,7 +52,7 @@ namespace Lucene.Net.Test.Index
 			IsFalse(ts.HasAttribute(typeof(PayloadAttribute)));
 			field.SetTokenStream(ts);
 			writer.AddDocument(doc);
-			DirectoryReader reader = writer.GetReader();
+			DirectoryReader reader = writer.Reader;
 			Terms terms = reader.GetTermVector(1, "field");
 			//HM:revisit 
 			//assert terms != null;
@@ -61,7 +61,7 @@ namespace Lucene.Net.Test.Index
 			DocsAndPositionsEnum de = termsEnum.DocsAndPositions(null, null);
 			AreEqual(0, de.NextDoc());
 			AreEqual(0, de.NextPosition());
-			AreEqual(new BytesRef("test"), de.GetPayload());
+			AreEqual(new BytesRef("test"), de.Payload);
 			writer.Dispose();
 			reader.Dispose();
 			dir.Dispose();
@@ -88,7 +88,7 @@ namespace Lucene.Net.Test.Index
 			doc.Add(field);
 			Field field2 = new Field("field", string.Empty, customType);
 			Token withPayload = new Token("withPayload", 0, 11);
-			withPayload.SetPayload(new BytesRef("test"));
+			withPayload.Payload = (new BytesRef("test"));
 			ts = new CannedTokenStream(withPayload);
 			IsTrue(ts.HasAttribute(typeof(PayloadAttribute)));
 			field2.SetTokenStream(ts);
@@ -100,7 +100,7 @@ namespace Lucene.Net.Test.Index
 			field3.SetTokenStream(ts);
 			doc.Add(field3);
 			writer.AddDocument(doc);
-			DirectoryReader reader = writer.GetReader();
+			DirectoryReader reader = writer.Reader;
 			Terms terms = reader.GetTermVector(0, "field");
 			//HM:revisit 
 			//assert terms != null;
@@ -109,7 +109,7 @@ namespace Lucene.Net.Test.Index
 			DocsAndPositionsEnum de = termsEnum.DocsAndPositions(null, null);
 			AreEqual(0, de.NextDoc());
 			AreEqual(3, de.NextPosition());
-			AreEqual(new BytesRef("test"), de.GetPayload());
+			AreEqual(new BytesRef("test"), de.Payload);
 			writer.Dispose();
 			reader.Dispose();
 			dir.Dispose();

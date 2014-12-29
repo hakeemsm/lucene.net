@@ -91,7 +91,7 @@ namespace Lucene.Net.Test.Index
 			dir = NewDirectory();
 			IndexWriter writer = new IndexWriter(dir, ((IndexWriterConfig)((IndexWriterConfig
 				)NewIndexWriterConfig(TEST_VERSION_CURRENT, new TestTermVectorsReader.MyAnalyzer
-				(this)).SetMaxBufferedDocs(-1)).SetMergePolicy(NewLogMergePolicy(false, 10)).SetUseCompoundFile
+				(this)).SetMaxBufferedDocs(-1)).SetMergePolicy(NewLogMergePolicy(false, 10)).UseCompoundFile = 
 				(false)));
 			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
@@ -179,12 +179,12 @@ namespace Lucene.Net.Test.Index
 					this.offsetAtt.SetOffset(testToken.startOffset, testToken.endOffset);
 					if (this.tokenUpto > 1)
 					{
-						this.posIncrAtt.SetPositionIncrement(testToken.pos - this._enclosing.tokens[this.
+						this.posIncrAtt.PositionIncrement = (testToken.pos - this._enclosing.tokens[this.
 							tokenUpto - 2].pos);
 					}
 					else
 					{
-						this.posIncrAtt.SetPositionIncrement(testToken.pos + 1);
+						this.posIncrAtt.PositionIncrement = (testToken.pos + 1);
 					}
 					return true;
 				}
@@ -225,7 +225,7 @@ namespace Lucene.Net.Test.Index
 			foreach (AtomicReaderContext ctx in reader.Leaves)
 			{
 				SegmentReader sr = (SegmentReader)((AtomicReader)ctx.Reader);
-				IsTrue(sr.GetFieldInfos().HasVectors());
+				IsTrue(sr.FieldInfos.HasVectors);
 			}
 			reader.Dispose();
 		}

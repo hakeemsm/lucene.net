@@ -32,7 +32,7 @@ namespace Lucene.Net.Search
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "bar", Field.Store.YES));
 			writer.AddDocument(doc);
-			IndexReader ir = writer.GetReader();
+			IndexReader ir = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.STRING));
@@ -62,7 +62,7 @@ namespace Lucene.Net.Search
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "bar", Field.Store.YES));
 			writer.AddDocument(doc);
-			IndexReader ir = writer.GetReader();
+			IndexReader ir = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.STRING));
@@ -91,7 +91,7 @@ namespace Lucene.Net.Search
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "foo", Field.Store.YES));
 			writer.AddDocument(doc);
-			IndexReader ir = writer.GetReader();
+			IndexReader ir = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.STRING, true));
@@ -119,7 +119,7 @@ namespace Lucene.Net.Search
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "bar", Field.Store.YES));
 			writer.AddDocument(doc);
-			IndexReader ir = writer.GetReader();
+			IndexReader ir = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.STRING_VAL));
@@ -149,7 +149,7 @@ namespace Lucene.Net.Search
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "bar", Field.Store.YES));
 			writer.AddDocument(doc);
-			IndexReader ir = writer.GetReader();
+			IndexReader ir = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.STRING_VAL));
@@ -183,7 +183,7 @@ namespace Lucene.Net.Search
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "bar", Field.Store.YES));
 			writer.AddDocument(doc);
-			IndexReader ir = writer.GetReader();
+			IndexReader ir = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			SortField sf = new SortField("value", SortField.Type.STRING);
@@ -218,7 +218,7 @@ namespace Lucene.Net.Search
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "bar", Field.Store.YES));
 			writer.AddDocument(doc);
-			IndexReader ir = writer.GetReader();
+			IndexReader ir = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			SortField sf = new SortField("value", SortField.Type.STRING, true);
@@ -253,7 +253,7 @@ namespace Lucene.Net.Search
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "bar", Field.Store.YES));
 			writer.AddDocument(doc);
-			IndexReader ir = writer.GetReader();
+			IndexReader ir = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			SortField sf = new SortField("value", SortField.Type.STRING);
@@ -289,7 +289,7 @@ namespace Lucene.Net.Search
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "bar", Field.Store.YES));
 			writer.AddDocument(doc);
-			IndexReader ir = writer.GetReader();
+			IndexReader ir = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			SortField sf = new SortField("value", SortField.Type.STRING, true);
@@ -320,7 +320,7 @@ namespace Lucene.Net.Search
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "foo", Field.Store.YES));
 			writer.AddDocument(doc);
-			IndexReader ir = writer.GetReader();
+			IndexReader ir = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.STRING_VAL, true));
@@ -348,7 +348,7 @@ namespace Lucene.Net.Search
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "bar", Field.Store.NO));
 			writer.AddDocument(doc);
-			IndexReader ir = writer.GetReader();
+			IndexReader ir = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(SortField.FIELD_DOC);
@@ -374,7 +374,7 @@ namespace Lucene.Net.Search
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "bar", Field.Store.NO));
 			writer.AddDocument(doc);
-			IndexReader ir = writer.GetReader();
+			IndexReader ir = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField(null, SortField.Type.DOC, true));
@@ -400,7 +400,7 @@ namespace Lucene.Net.Search
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewTextField("value", "foo foo foo foo foo", Field.Store.NO));
 			writer.AddDocument(doc);
-			IndexReader ir = writer.GetReader();
+			IndexReader ir = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort();
@@ -432,7 +432,7 @@ namespace Lucene.Net.Search
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewTextField("value", "foo foo foo foo foo", Field.Store.NO));
 			writer.AddDocument(doc);
-			IndexReader ir = writer.GetReader();
+			IndexReader ir = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField(null, SortField.Type.SCORE, true));
@@ -466,7 +466,7 @@ namespace Lucene.Net.Search
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4", Field.Store.YES));
 			writer.AddDocument(doc);
-			IndexReader ir = writer.GetReader();
+			IndexReader ir = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.BYTE));
@@ -498,7 +498,7 @@ namespace Lucene.Net.Search
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4", Field.Store.YES));
 			writer.AddDocument(doc);
-			IndexReader ir = writer.GetReader();
+			IndexReader ir = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.BYTE));
@@ -530,7 +530,7 @@ namespace Lucene.Net.Search
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4", Field.Store.YES));
 			writer.AddDocument(doc);
-			IndexReader ir = writer.GetReader();
+			IndexReader ir = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			SortField sortField = new SortField("value", SortField.Type.BYTE);
@@ -564,7 +564,7 @@ namespace Lucene.Net.Search
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4", Field.Store.YES));
 			writer.AddDocument(doc);
-			IndexReader ir = writer.GetReader();
+			IndexReader ir = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.BYTE, true));
@@ -597,7 +597,7 @@ namespace Lucene.Net.Search
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4", Field.Store.YES));
 			writer.AddDocument(doc);
-			IndexReader ir = writer.GetReader();
+			IndexReader ir = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.SHORT));
@@ -629,7 +629,7 @@ namespace Lucene.Net.Search
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4", Field.Store.YES));
 			writer.AddDocument(doc);
-			IndexReader ir = writer.GetReader();
+			IndexReader ir = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.SHORT));
@@ -661,7 +661,7 @@ namespace Lucene.Net.Search
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4", Field.Store.YES));
 			writer.AddDocument(doc);
-			IndexReader ir = writer.GetReader();
+			IndexReader ir = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			SortField sortField = new SortField("value", SortField.Type.SHORT);
@@ -695,7 +695,7 @@ namespace Lucene.Net.Search
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4", Field.Store.YES));
 			writer.AddDocument(doc);
-			IndexReader ir = writer.GetReader();
+			IndexReader ir = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.SHORT, true));
@@ -728,7 +728,7 @@ namespace Lucene.Net.Search
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4", Field.Store.YES));
 			writer.AddDocument(doc);
-			IndexReader ir = writer.GetReader();
+			IndexReader ir = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.INT));
@@ -760,7 +760,7 @@ namespace Lucene.Net.Search
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4", Field.Store.YES));
 			writer.AddDocument(doc);
-			IndexReader ir = writer.GetReader();
+			IndexReader ir = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.INT));
@@ -792,7 +792,7 @@ namespace Lucene.Net.Search
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4", Field.Store.YES));
 			writer.AddDocument(doc);
-			IndexReader ir = writer.GetReader();
+			IndexReader ir = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			SortField sortField = new SortField("value", SortField.Type.INT);
@@ -826,7 +826,7 @@ namespace Lucene.Net.Search
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4", Field.Store.YES));
 			writer.AddDocument(doc);
-			IndexReader ir = writer.GetReader();
+			IndexReader ir = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.INT, true));
@@ -859,7 +859,7 @@ namespace Lucene.Net.Search
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4", Field.Store.YES));
 			writer.AddDocument(doc);
-			IndexReader ir = writer.GetReader();
+			IndexReader ir = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.LONG));
@@ -891,7 +891,7 @@ namespace Lucene.Net.Search
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4", Field.Store.YES));
 			writer.AddDocument(doc);
-			IndexReader ir = writer.GetReader();
+			IndexReader ir = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.LONG));
@@ -923,7 +923,7 @@ namespace Lucene.Net.Search
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4", Field.Store.YES));
 			writer.AddDocument(doc);
-			IndexReader ir = writer.GetReader();
+			IndexReader ir = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			SortField sortField = new SortField("value", SortField.Type.LONG);
@@ -957,7 +957,7 @@ namespace Lucene.Net.Search
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4", Field.Store.YES));
 			writer.AddDocument(doc);
-			IndexReader ir = writer.GetReader();
+			IndexReader ir = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.LONG, true));
@@ -990,7 +990,7 @@ namespace Lucene.Net.Search
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4.2", Field.Store.YES));
 			writer.AddDocument(doc);
-			IndexReader ir = writer.GetReader();
+			IndexReader ir = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.FLOAT));
@@ -1022,7 +1022,7 @@ namespace Lucene.Net.Search
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4.2", Field.Store.YES));
 			writer.AddDocument(doc);
-			IndexReader ir = writer.GetReader();
+			IndexReader ir = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.FLOAT));
@@ -1054,7 +1054,7 @@ namespace Lucene.Net.Search
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4.2", Field.Store.YES));
 			writer.AddDocument(doc);
-			IndexReader ir = writer.GetReader();
+			IndexReader ir = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			SortField sortField = new SortField("value", SortField.Type.FLOAT);
@@ -1088,7 +1088,7 @@ namespace Lucene.Net.Search
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4.2", Field.Store.YES));
 			writer.AddDocument(doc);
-			IndexReader ir = writer.GetReader();
+			IndexReader ir = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.FLOAT, true));
@@ -1124,7 +1124,7 @@ namespace Lucene.Net.Search
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4.2333333333332", Field.Store.YES));
 			writer.AddDocument(doc);
-			IndexReader ir = writer.GetReader();
+			IndexReader ir = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.DOUBLE));
@@ -1157,7 +1157,7 @@ namespace Lucene.Net.Search
 			doc.Add(NewStringField("value", "-0", Field.Store.YES));
 			writer.AddDocument(doc);
 			doc = new Lucene.Net.Documents.Document();
-			IndexReader ir = writer.GetReader();
+			IndexReader ir = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.DOUBLE));
@@ -1190,7 +1190,7 @@ namespace Lucene.Net.Search
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4.2333333333332", Field.Store.YES));
 			writer.AddDocument(doc);
-			IndexReader ir = writer.GetReader();
+			IndexReader ir = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.DOUBLE));
@@ -1227,7 +1227,7 @@ namespace Lucene.Net.Search
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4.2333333333332", Field.Store.YES));
 			writer.AddDocument(doc);
-			IndexReader ir = writer.GetReader();
+			IndexReader ir = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			SortField sortField = new SortField("value", SortField.Type.DOUBLE);
@@ -1266,7 +1266,7 @@ namespace Lucene.Net.Search
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "4.2333333333332", Field.Store.YES));
 			writer.AddDocument(doc);
-			IndexReader ir = writer.GetReader();
+			IndexReader ir = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.DOUBLE, true));
@@ -1432,7 +1432,7 @@ namespace Lucene.Net.Search
 				doc.Add(NewStringField("parser", letter, Field.Store.YES));
 				iw.AddDocument(doc);
 			}
-			IndexReader ir = iw.GetReader();
+			IndexReader ir = iw.Reader;
 			iw.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("parser", new _IntParser_1354()), SortField.FIELD_DOC
@@ -1484,7 +1484,7 @@ namespace Lucene.Net.Search
 				doc.Add(NewStringField("parser", letter, Field.Store.YES));
 				iw.AddDocument(doc);
 			}
-			IndexReader ir = iw.GetReader();
+			IndexReader ir = iw.Reader;
 			iw.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("parser", new _ByteParser_1398()), SortField.FIELD_DOC
@@ -1536,7 +1536,7 @@ namespace Lucene.Net.Search
 				doc.Add(NewStringField("parser", letter, Field.Store.YES));
 				iw.AddDocument(doc);
 			}
-			IndexReader ir = iw.GetReader();
+			IndexReader ir = iw.Reader;
 			iw.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("parser", new _ShortParser_1442()), SortField.
@@ -1588,7 +1588,7 @@ namespace Lucene.Net.Search
 				doc.Add(NewStringField("parser", letter, Field.Store.YES));
 				iw.AddDocument(doc);
 			}
-			IndexReader ir = iw.GetReader();
+			IndexReader ir = iw.Reader;
 			iw.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("parser", new _LongParser_1486()), SortField.FIELD_DOC
@@ -1640,7 +1640,7 @@ namespace Lucene.Net.Search
 				doc.Add(NewStringField("parser", letter, Field.Store.YES));
 				iw.AddDocument(doc);
 			}
-			IndexReader ir = iw.GetReader();
+			IndexReader ir = iw.Reader;
 			iw.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("parser", new _FloatParser_1530()), SortField.
@@ -1692,7 +1692,7 @@ namespace Lucene.Net.Search
 				doc.Add(NewStringField("parser", letter, Field.Store.YES));
 				iw.AddDocument(doc);
 			}
-			IndexReader ir = iw.GetReader();
+			IndexReader ir = iw.Reader;
 			iw.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("parser", new _DoubleParser_1574()), SortField
@@ -1738,7 +1738,7 @@ namespace Lucene.Net.Search
 				();
 			doc.Add(NewStringField("value", "foo", Field.Store.YES));
 			writer.AddDocument(doc);
-			IndexReader ir = writer.GetReader();
+			IndexReader ir = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.STRING));
@@ -1760,7 +1760,7 @@ namespace Lucene.Net.Search
 				();
 			doc.Add(NewStringField("value", "foo", Field.Store.YES));
 			writer.AddDocument(doc);
-			IndexReader ir = writer.GetReader();
+			IndexReader ir = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(new SortField("value", SortField.Type.STRING));
@@ -1790,7 +1790,7 @@ namespace Lucene.Net.Search
 			doc.Add(NewStringField("tievalue", "tied", Field.Store.NO));
 			doc.Add(NewStringField("value", "bar", Field.Store.YES));
 			writer.AddDocument(doc);
-			IndexReader ir = writer.GetReader();
+			IndexReader ir = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			// tievalue, then value
@@ -1819,7 +1819,7 @@ namespace Lucene.Net.Search
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewStringField("value", "foo", Field.Store.NO));
 			writer.AddDocument(doc);
-			IndexReader ir = writer.GetReader();
+			IndexReader ir = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(ir);
 			Sort sort = new Sort(SortField.FIELD_SCORE);

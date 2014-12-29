@@ -1238,7 +1238,7 @@ namespace Lucene.Net.Test.Index
 			    NewStringField("id", "1", Field.Store.YES)
 			};
 		    w.AddDocument(doc);
-			IndexReader r1 = w.GetReader();
+			IndexReader r1 = w.Reader;
 			w.Close();
 			Directory d2 = NewDirectory();
 			w = new RandomIndexWriter(Random(), d2);
@@ -1248,7 +1248,7 @@ namespace Lucene.Net.Test.Index
 			    NewStringField("id", "2", Field.Store.YES)
 			};
 		    w.AddDocument(doc);
-			IndexReader r2 = w.GetReader();
+			IndexReader r2 = w.Reader;
 			w.Close();
 			Directory d3 = NewDirectory();
 			w = new RandomIndexWriter(Random(), d3);
@@ -1257,7 +1257,7 @@ namespace Lucene.Net.Test.Index
 			d1.Dispose();
 			r2.Dispose();
 			d2.Dispose();
-			IndexReader r3 = w.GetReader();
+			IndexReader r3 = w.Reader;
 			w.Close();
 			AreEqual(2, r3.NumDocs);
 			for (int docID = 0; docID < 2; docID++)

@@ -33,7 +33,7 @@ namespace Lucene.Net.Search
 					();
 				iw.AddDocument(doc);
 			}
-			ir = iw.GetReader();
+			ir = iw.Reader;
 			iw.Dispose();
 			@is = NewSearcher(ir);
 		}

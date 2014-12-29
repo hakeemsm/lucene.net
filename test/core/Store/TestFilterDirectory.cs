@@ -21,11 +21,11 @@ namespace Lucene.Net.Store
 			// verify that all methods of Directory are overridden by FilterDirectory,
 			// except those under the 'exclude' list
 			ICollection<MethodInfo> exclude = new HashSet<MethodInfo>();
-			exclude.AddItem(typeof(Directory).GetMethod("copy", typeof(Directory), typeof(string
+			exclude.Add(typeof(Directory).GetMethod("copy", typeof(Directory), typeof(string
 				), typeof(string), typeof(IOContext)));
-			exclude.AddItem(typeof(Directory).GetMethod("createSlicer", typeof(string), typeof(
+			exclude.Add(typeof(Directory).GetMethod("createSlicer", typeof(string), typeof(
 				IOContext)));
-			exclude.AddItem(typeof(Directory).GetMethod("openChecksumInput", typeof(string), 
+			exclude.Add(typeof(Directory).GetMethod("openChecksumInput", typeof(string), 
 				typeof(IOContext)));
 			foreach (MethodInfo m in typeof(FilterDirectory).GetMethods())
 			{

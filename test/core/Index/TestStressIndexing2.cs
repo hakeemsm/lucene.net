@@ -38,7 +38,7 @@ namespace Lucene.Net.Test.Index
 				//      if (name.equals("startCommit")) {
 				if (LuceneTestCase.Random().Next(4) == 2)
 				{
-					Sharpen.Thread.Yield();
+					Thread.Yield();
 				}
 			}
 
@@ -57,7 +57,7 @@ namespace Lucene.Net.Test.Index
 			Directory dir = NewDirectory();
 			// TODO: verify equals using IW.getReader
 			TestStressIndexing2.DocsAndWriter dw = IndexRandomIWReader(5, 3, 100, dir);
-			DirectoryReader reader = dw.writer.GetReader();
+			DirectoryReader reader = dw.writer.Reader;
 			dw.writer.Commit();
 			VerifyEquals(Random(), reader, dir, "id");
 			reader.Dispose();
@@ -275,7 +275,7 @@ namespace Lucene.Net.Test.Index
 			while (iter.HasNext())
 			{
 				Lucene.Net.Documents.Document d = iter.Next();
-				AList<IIndexableField> fields = new AList<IIndexableField>();
+				List<IIndexableField> fields = new List<IIndexableField>();
 				Sharpen.Collections.AddAll(fields, d.GetFields());
 				// put fields in same order each time
 				fields.Sort(fieldNameComparator);
@@ -677,8 +677,8 @@ namespace Lucene.Net.Test.Index
 				{
 					//HM:revisit 
 					//assert(f2.binaryValue() != null);
-					string s1 = f1.StringValue = );
-					string s2 = f2.StringValue = );
+					string s1 = f1.StringValue;
+					string s2 = f2.StringValue;
 					AreEqual(ff1 + " : " + ff2, s1, s2);
 				}
 			}
@@ -780,7 +780,7 @@ namespace Lucene.Net.Test.Index
 			IsFalse(fieldsEnum2.HasNext());
 		}
 
-		private class IndexingThread : Sharpen.Thread
+		private class IndexingThread : Thread
 		{
 			internal IndexWriter w;
 
@@ -905,12 +905,12 @@ namespace Lucene.Net.Test.Index
 			{
 				Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 				FieldType customType1 = new FieldType(TextField.TYPE_STORED);
-				customType1.SetTokenized(false);
-				customType1.OmitNorms = (true);
-				AList<Field> fields = new AList<Field>();
+				customType1.Tokenized = (false);
+				customType1.OmitsNorms = (true);
+				List<Field> fields = new List<Field>();
 				string idString = this.GetIdString();
 				Field idField = LuceneTestCase.NewField("id", idString, customType1);
-				fields.AddItem(idField);
+				fields.Add(idField);
 				int nFields = this.NextInt(TestStressIndexing2.maxFields);
 				for (int i = 0; i < nFields; i++)
 				{
@@ -947,9 +947,9 @@ namespace Lucene.Net.Test.Index
 						case 0:
 						{
 							customType.Stored = (true);
-							customType.OmitNorms = (true);
+							customType.OmitsNorms = (true);
 							customType.Indexed(true);
-							fields.AddItem(LuceneTestCase.NewField("f" + this.NextInt(100), this.GetString(1)
+							fields.Add(LuceneTestCase.NewField("f" + this.NextInt(100), this.GetString(1)
 								, customType));
 							break;
 						}
@@ -957,8 +957,8 @@ namespace Lucene.Net.Test.Index
 						case 1:
 						{
 							customType.Indexed(true);
-							customType.SetTokenized(true);
-							fields.AddItem(LuceneTestCase.NewField("f" + this.NextInt(100), this.GetString(0)
+							customType.Tokenized = (true);
+							fields.Add(LuceneTestCase.NewField("f" + this.NextInt(100), this.GetString(0)
 								, customType));
 							break;
 						}
@@ -969,7 +969,7 @@ namespace Lucene.Net.Test.Index
 							customType.StoreTermVectors = false;
 							customType.SetStoreTermVectorOffsets(false);
 							customType.StoreTermVectorPositions = (false);
-							fields.AddItem(LuceneTestCase.NewField("f" + this.NextInt(100), this.GetString(0)
+							fields.Add(LuceneTestCase.NewField("f" + this.NextInt(100), this.GetString(0)
 								, customType));
 							break;
 						}
@@ -978,8 +978,8 @@ namespace Lucene.Net.Test.Index
 						{
 							customType.Stored = (true);
 							customType.Indexed(true);
-							customType.SetTokenized(true);
-							fields.AddItem(LuceneTestCase.NewField("f" + this.NextInt(100), this.GetString(TestStressIndexing2
+							customType.Tokenized = (true);
+							fields.Add(LuceneTestCase.NewField("f" + this.NextInt(100), this.GetString(TestStressIndexing2
 								.bigFieldSize), customType));
 							break;
 						}
@@ -1000,7 +1000,7 @@ namespace Lucene.Net.Test.Index
 				}
 				if (LuceneTestCase.VERBOSE)
 				{
-					System.Console.Out.WriteLine(Sharpen.Thread.CurrentThread().GetName() + ": indexing id:"
+					System.Console.Out.WriteLine(Thread.CurrentThread().GetName() + ": indexing id:"
 						 + idString);
 				}
 				this.w.UpdateDocument(new Term("id", idString), d);
@@ -1014,7 +1014,7 @@ namespace Lucene.Net.Test.Index
 				string idString = this.GetIdString();
 				if (LuceneTestCase.VERBOSE)
 				{
-					System.Console.Out.WriteLine(Sharpen.Thread.CurrentThread().GetName() + ": del id:"
+					System.Console.Out.WriteLine(Thread.CurrentThread().GetName() + ": del id:"
 						 + idString);
 				}
 				this.w.DeleteDocuments(new Term("id", idString));
@@ -1027,7 +1027,7 @@ namespace Lucene.Net.Test.Index
 				string idString = this.GetIdString();
 				if (LuceneTestCase.VERBOSE)
 				{
-					System.Console.Out.WriteLine(Sharpen.Thread.CurrentThread().GetName() + ": del query id:"
+					System.Console.Out.WriteLine(Thread.CurrentThread().GetName() + ": del query id:"
 						 + idString);
 				}
 				this.w.DeleteDocuments(new TermQuery(new Term("id", idString)));

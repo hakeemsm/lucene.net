@@ -1,22 +1,19 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
-using Lucene.Net.Document;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
-using Sharpen;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
 	/// <summary>Tests the Terms.docCount statistic</summary>
-	public class TestDocCount : LuceneTestCase
+    [TestFixture]
+    public class TestDocCount : LuceneTestCase
 	{
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestSimple()
 		{
 			Directory dir = NewDirectory();
@@ -26,14 +23,14 @@ namespace Lucene.Net.Test.Index
 			{
 				iw.AddDocument(Doc());
 			}
-			IndexReader ir = iw.GetReader();
+			IndexReader ir = iw.Reader;
 			VerifyCount(ir);
 			ir.Dispose();
 			iw.ForceMerge(1);
-			ir = iw.GetReader();
+			ir = iw.Reader;
 			VerifyCount(ir);
 			ir.Dispose();
-			iw.Dispose();
+			iw.Close();
 			dir.Dispose();
 		}
 

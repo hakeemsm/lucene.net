@@ -64,7 +64,7 @@ namespace Lucene.Net.Test.Index
 			ParallelAtomicReader pr = new ParallelAtomicReader(SlowCompositeReaderWrapper.Wrap
 				(DirectoryReader.Open(dir1)), SlowCompositeReaderWrapper.Wrap(DirectoryReader.Open
 				(dir2)));
-			FieldInfos fieldInfos = pr.GetFieldInfos();
+			FieldInfos fieldInfos = pr.FieldInfos;
 			AreEqual(4, fieldInfos.Size());
 			IsNotNull(fieldInfos.FieldInfo("f1"));
 			IsNotNull(fieldInfos.FieldInfo("f2"));

@@ -1,17 +1,12 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
+using Lucene.Net.Randomized.Generators;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Util;
 using NUnit.Framework;
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
-using Lucene.Net.Util;
-using Sharpen;
 
 namespace Lucene.Net.Test.Index
 {
@@ -20,7 +15,8 @@ namespace Lucene.Net.Test.Index
 	/// too large
 	/// </summary>
 	/// <seealso cref="IndexWriter.MAX_TERM_LENGTH">IndexWriter.MAX_TERM_LENGTH</seealso>
-	public class TestExceedMaxTermLength : LuceneTestCase
+	[TestFixture]
+    public class TestExceedMaxTermLength : LuceneTestCase
 	{
 		private const int minTestTermLength = IndexWriter.MAX_TERM_LENGTH + 1;
 
@@ -42,15 +38,15 @@ namespace Lucene.Net.Test.Index
 			dir = null;
 		}
 
-		/// <exception cref="System.Exception"></exception>
-		public virtual void Test()
+		[Test]
+		public virtual void TestArgumentsLength()
 		{
 			IndexWriter w = new IndexWriter(dir, NewIndexWriterConfig(Random(), TEST_VERSION_CURRENT
 				, new MockAnalyzer(Random())));
 			try
 			{
 				FieldType ft = new FieldType();
-				ft.Indexed(true);
+				ft.Indexed = (true);
 				ft.Stored = (Random().NextBoolean());
 				ft.Freeze();
 				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
@@ -83,11 +79,11 @@ namespace Lucene.Net.Test.Index
 				{
 					string maxLengthMsg = IndexWriter.MAX_TERM_LENGTH.ToString();
 					string msg = e.Message;
-					IsTrue("IllegalArgumentException didn't mention 'immense term': "
+					AssertTrue("IllegalArgumentException didn't mention 'immense term': "
 						 + msg, msg.Contains("immense term"));
-					IsTrue("IllegalArgumentException didn't mention max length ("
+					AssertTrue("IllegalArgumentException didn't mention max length ("
 						 + maxLengthMsg + "): " + msg, msg.Contains(maxLengthMsg));
-					IsTrue("IllegalArgumentException didn't mention field name ("
+					AssertTrue("IllegalArgumentException didn't mention field name ("
 						 + name + "): " + msg, msg.Contains(name));
 				}
 			}

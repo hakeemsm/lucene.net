@@ -6,7 +6,7 @@
 
 using System.Text;
 using Lucene.Net.TestFramework.Analysis;
-using Lucene.NetDocument;
+using Lucene.Net.Documents;
 using Lucene.Net.TestFramework.Index;
 using Lucene.Net.TestFramework.Search;
 using Lucene.Net.TestFramework.Store;
@@ -53,7 +53,7 @@ namespace Lucene.Net.TestFramework.Search
 				(stopword));
 			analyzer = new MockAnalyzer(random, MockTokenizer.WHITESPACE, false, stopset);
 			RandomIndexWriter iw = new RandomIndexWriter(random, directory, analyzer);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			Field id = new StringField("id", string.Empty, Field.Store.NO);
 			Field field = new TextField("field", string.Empty, Field.Store.NO);

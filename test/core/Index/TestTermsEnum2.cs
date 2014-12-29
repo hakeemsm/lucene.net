@@ -55,11 +55,11 @@ namespace Lucene.Net.Test.Index
 			{
 				string s = TestUtil.RandomUnicodeString(Random());
 				field.StringValue = s);
-				terms.AddItem(new BytesRef(s));
+				terms.Add(new BytesRef(s));
 				writer.AddDocument(doc);
 			}
 			termsAutomaton = BasicAutomata.MakeStringUnion(terms);
-			reader = writer.GetReader();
+			reader = writer.Reader;
 			searcher = NewSearcher(reader);
 			writer.Dispose();
 		}
@@ -81,12 +81,12 @@ namespace Lucene.Net.Test.Index
 				string reg = AutomatonTestUtil.RandomRegexp(Random());
 				Lucene.Net.Util.Automaton.Automaton automaton = new RegExp(reg, RegExp.NONE
 					).ToAutomaton();
-				IList<BytesRef> matchedTerms = new AList<BytesRef>();
+				IList<BytesRef> matchedTerms = new List<BytesRef>();
 				foreach (BytesRef t in terms)
 				{
 					if (BasicOperations.Run(automaton, t.Utf8ToString()))
 					{
-						matchedTerms.AddItem(t);
+						matchedTerms.Add(t);
 					}
 				}
 				Lucene.Net.Util.Automaton.Automaton alternate = BasicAutomata.MakeStringUnion
@@ -113,7 +113,7 @@ namespace Lucene.Net.Test.Index
 				Lucene.Net.Util.Automaton.Automaton automaton = new RegExp(reg, RegExp.NONE
 					).ToAutomaton();
 				TermsEnum te = MultiFields.GetTerms(reader, "field").Iterator(null);
-				AList<BytesRef> unsortedTerms = new AList<BytesRef>(terms);
+				List<BytesRef> unsortedTerms = new List<BytesRef>(terms);
 				Sharpen.Collections.Shuffle(unsortedTerms, Random());
 				foreach (BytesRef term in unsortedTerms)
 				{
@@ -183,7 +183,7 @@ namespace Lucene.Net.Test.Index
 				TreeSet<BytesRef> found = new TreeSet<BytesRef>();
 				while (te.Next() != null)
 				{
-					found.AddItem(BytesRef.DeepCopyOf(te.Term()));
+					found.Add(BytesRef.DeepCopyOf(te.Term()));
 				}
 				Lucene.Net.Util.Automaton.Automaton actual = BasicAutomata.MakeStringUnion
 					(found);

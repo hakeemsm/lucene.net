@@ -52,7 +52,7 @@ namespace Lucene.Net.Search.Spans
 			AddDocument(writer, "2", "I think it should work.");
 			AddDocument(writer, "3", "I think it should work.");
 			AddDocument(writer, "4", "I think it should work.");
-			reader = writer.GetReader();
+			reader = writer.Reader;
 			writer.Dispose();
 			searcher = NewSearcher(reader);
 			searcher.SetSimilarity(new DefaultSimilarity());

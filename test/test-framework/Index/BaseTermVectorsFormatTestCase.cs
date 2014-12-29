@@ -9,7 +9,7 @@ using System.Collections.Generic;
 using Com.Carrotsearch.Randomizedtesting.Generators;
 using Lucene.Net.TestFramework.Analysis;
 using Lucene.Net.TestFramework.Analysis.Tokenattributes;
-using Lucene.NetDocument;
+using Lucene.Net.Documents;
 using Lucene.Net.TestFramework.Index;
 using Lucene.Net.TestFramework.Search;
 using Lucene.Net.TestFramework.Store;
@@ -57,14 +57,14 @@ namespace Lucene.Net.TestFramework.Index
 				>(ValidOptions()));
 		}
 
-		protected internal virtual Lucene.NetDocument.FieldType FieldType(BaseTermVectorsFormatTestCase.Options
+		protected internal virtual Lucene.Net.Documents.FieldType FieldType(BaseTermVectorsFormatTestCase.Options
 			 options)
 		{
-			Lucene.NetDocument.FieldType ft = new Lucene.NetDocument.FieldType
+			Lucene.Net.Documents.FieldType ft = new Lucene.Net.Documents.FieldType
 				(TextField.TYPE_NOT_STORED);
-			ft.SetStoreTermVectors(true);
-			ft.SetStoreTermVectorPositions(options.positions);
-			ft.SetStoreTermVectorOffsets(options.offsets);
+			ft.StoreTermVectors = (true);
+			ft.StoreTermVectorPositions = (options.positions);
+			ft.StoreTermVectorOffsets = (options.offsets);
 			ft.SetStoreTermVectorPayloads(options.payloads);
 			ft.Freeze();
 			return ft;
@@ -83,12 +83,12 @@ namespace Lucene.Net.TestFramework.Index
 			return payload;
 		}
 
-		protected internal override void AddRandomFields(Lucene.NetDocument.Document
+		protected internal override void AddRandomFields(Lucene.Net.Documents.Document
 			 doc)
 		{
 			foreach (BaseTermVectorsFormatTestCase.Options opts in ValidOptions())
 			{
-				Lucene.NetDocument.FieldType ft = FieldType(opts);
+				Lucene.Net.Documents.FieldType ft = FieldType(opts);
 				int numFields = Random().Next(5);
 				for (int j = 0; j < numFields; ++j)
 				{
@@ -358,9 +358,9 @@ namespace Lucene.Net.TestFramework.Index
 				}
 			}
 
-			public virtual Lucene.NetDocument.Document ToDocument()
+			public virtual Lucene.Net.Documents.Document ToDocument()
 			{
-				Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				for (int i = 0; i < this.fieldNames.Length; ++i)
 				{
@@ -613,7 +613,7 @@ namespace Lucene.Net.TestFramework.Index
 			}
 		}
 
-		protected internal virtual Lucene.NetDocument.Document AddId(Lucene.NetDocument.Document
+		protected internal virtual Lucene.Net.Documents.Document AddId(Lucene.Net.Documents.Document
 			 doc, string id)
 		{
 			doc.Add(new StringField("id", id, Field.Store.NO));
@@ -637,7 +637,7 @@ namespace Lucene.Net.TestFramework.Index
 			{
 				int numDocs = AtLeast(200);
 				int docWithVectors = Random().Next(numDocs);
-				Lucene.NetDocument.Document emptyDoc = new Lucene.NetDocument.Document
+				Lucene.Net.Documents.Document emptyDoc = new Lucene.Net.Documents.Document
 					();
 				Directory dir = NewDirectory();
 				RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);

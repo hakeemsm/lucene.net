@@ -16,7 +16,7 @@ namespace Lucene.Net.Util
 	/// <remarks>Tests for on-disk merge sorting.</remarks>
 	public class TestOfflineSorter : LuceneTestCase
 	{
-		private FilePath tempDir;
+		private DirectoryInfo tempDir;
 
 		/// <exception cref="System.Exception"></exception>
 		public override void SetUp()
@@ -82,12 +82,12 @@ namespace Lucene.Net.Util
 
 		private byte[][] GenerateRandom(int howMuchData)
 		{
-			AList<byte[]> data = new AList<byte[]>();
+			List<byte[]> data = new List<byte[]>();
 			while (howMuchData > 0)
 			{
 				byte[] current = new byte[Random().Next(256)];
 				Random().NextBytes(current);
-				data.AddItem(current);
+				data.Add(current);
 				howMuchData -= current.Length;
 			}
 			byte[][] bytes = Sharpen.Collections.ToArray(data, new byte[data.Count][]);
@@ -127,10 +127,10 @@ namespace Lucene.Net.Util
 		/// <exception cref="System.IO.IOException"></exception>
 		private OfflineSorter.SortInfo CheckSort(OfflineSorter sort, byte[][] data)
 		{
-			FilePath unsorted = WriteAll("unsorted", data);
+			DirectoryInfo unsorted = WriteAll("unsorted", data);
 			Arrays.Sort(data, unsignedByteOrderComparator);
-			FilePath golden = WriteAll("golden", data);
-			FilePath sorted = new FilePath(tempDir, "sorted");
+			DirectoryInfo golden = WriteAll("golden", data);
+			DirectoryInfo sorted = new DirectoryInfo(tempDir, "sorted");
 			OfflineSorter.SortInfo sortInfo = sort.Sort(unsorted, sorted);
 			//System.out.println("Input size [MB]: " + unsorted.length() / (1024 * 1024));
 			//System.out.println(sortInfo);
@@ -141,7 +141,7 @@ namespace Lucene.Net.Util
 		/// <summary>Make sure two files are byte-byte identical.</summary>
 		/// <remarks>Make sure two files are byte-byte identical.</remarks>
 		/// <exception cref="System.IO.IOException"></exception>
-		private void AssertFilesIdentical(FilePath golden, FilePath sorted)
+		private void AssertFilesIdentical(DirectoryInfo golden, DirectoryInfo sorted)
 		{
 			AreEqual(golden.Length(), sorted.Length());
 			byte[] buf1 = new byte[64 * 1024];
@@ -161,9 +161,9 @@ namespace Lucene.Net.Util
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		private FilePath WriteAll(string name, byte[][] data)
+		private DirectoryInfo WriteAll(string name, byte[][] data)
 		{
-			FilePath file = new FilePath(tempDir, name);
+			DirectoryInfo file = new DirectoryInfo(tempDir, name);
 			OfflineSorter.ByteSequencesWriter w = new OfflineSorter.ByteSequencesWriter(file);
 			foreach (byte[] datum in data)
 			{

@@ -35,7 +35,7 @@ namespace Lucene.Net.Search
 		public override void SetUp()
 		{
 			base.SetUp();
-			allSortFields = new AList<SortField>(Arrays.AsList(new SortField[] { new SortField
+			allSortFields = new List<SortField>(Arrays.AsList(new SortField[] { new SortField
 				("byte", SortField.Type.BYTE, false), new SortField("short", SortField.Type.SHORT
 				, false), new SortField("int", SortField.Type.INT, false), new SortField("long", 
 				SortField.Type.LONG, false), new SortField("float", SortField.Type.FLOAT, false)
@@ -67,10 +67,10 @@ namespace Lucene.Net.Search
 					bool reversed = rev == 0;
 					SortField sf = new SortField(field, SortField.Type.STRING, reversed);
 					sf.SetMissingValue(SortField.STRING_FIRST);
-					allSortFields.AddItem(sf);
+					allSortFields.Add(sf);
 					sf = new SortField(field, SortField.Type.STRING, reversed);
 					sf.SetMissingValue(SortField.STRING_LAST);
-					allSortFields.AddItem(sf);
+					allSortFields.Add(sf);
 				}
 			}
 			int limit = allSortFields.Count;
@@ -81,7 +81,7 @@ namespace Lucene.Net.Search
 				{
 					SortField sf2 = new SortField(sf.GetField(), SortField.Type.INT, sf.GetReverse());
 					sf2.SetMissingValue(Random().Next());
-					allSortFields.AddItem(sf2);
+					allSortFields.Add(sf2);
 				}
 				else
 				{
@@ -90,7 +90,7 @@ namespace Lucene.Net.Search
 						SortField sf2 = new SortField(sf.GetField(), SortField.Type.LONG, sf.GetReverse()
 							);
 						sf2.SetMissingValue(Random().NextLong());
-						allSortFields.AddItem(sf2);
+						allSortFields.Add(sf2);
 					}
 					else
 					{
@@ -99,7 +99,7 @@ namespace Lucene.Net.Search
 							SortField sf2 = new SortField(sf.GetField(), SortField.Type.FLOAT, sf.GetReverse(
 								));
 							sf2.SetMissingValue(Random().NextFloat());
-							allSortFields.AddItem(sf2);
+							allSortFields.Add(sf2);
 						}
 						else
 						{
@@ -108,7 +108,7 @@ namespace Lucene.Net.Search
 								SortField sf2 = new SortField(sf.GetField(), SortField.Type.DOUBLE, sf.GetReverse
 									());
 								sf2.SetMissingValue(Random().NextDouble());
-								allSortFields.AddItem(sf2);
+								allSortFields.Add(sf2);
 							}
 						}
 					}
@@ -119,33 +119,33 @@ namespace Lucene.Net.Search
 			int numDocs = AtLeast(200);
 			for (int i_1 = 0; i_1 < numDocs; i_1++)
 			{
-				IList<Field> fields = new AList<Field>();
-				fields.AddItem(NewTextField("english", English.IntToEnglish(i_1), Field.Store.NO)
+				IList<Field> fields = new List<Field>();
+				fields.Add(NewTextField("english", English.IntToEnglish(i_1), Field.Store.NO)
 					);
-				fields.AddItem(NewTextField("oddeven", (i_1 % 2 == 0) ? "even" : "odd", Field.Store
+				fields.Add(NewTextField("oddeven", (i_1 % 2 == 0) ? "even" : "odd", Field.Store
 					.NO));
-				fields.AddItem(NewStringField("byte", string.Empty + (unchecked((byte)Random().Next
+				fields.Add(NewStringField("byte", string.Empty + (unchecked((byte)Random().Next
 					())), Field.Store.NO));
-				fields.AddItem(NewStringField("short", string.Empty + ((short)Random().Next()), Field.Store
+				fields.Add(NewStringField("short", string.Empty + ((short)Random().Next()), Field.Store
 					.NO));
-				fields.AddItem(new IntField("int", Random().Next(), Field.Store.NO));
-				fields.AddItem(new LongField("long", Random().NextLong(), Field.Store.NO));
-				fields.AddItem(new FloatField("float", Random().NextFloat(), Field.Store.NO));
-				fields.AddItem(new DoubleField("double", Random().NextDouble(), Field.Store.NO));
-				fields.AddItem(NewStringField("bytes", TestUtil.RandomRealisticUnicodeString(Random
+				fields.Add(new IntField("int", Random().Next(), Field.Store.NO));
+				fields.Add(new LongField("long", Random().NextLong(), Field.Store.NO));
+				fields.Add(new FloatField("float", Random().NextFloat(), Field.Store.NO));
+				fields.Add(new DoubleField("double", Random().NextDouble(), Field.Store.NO));
+				fields.Add(NewStringField("bytes", TestUtil.RandomRealisticUnicodeString(Random
 					()), Field.Store.NO));
-				fields.AddItem(NewStringField("bytesval", TestUtil.RandomRealisticUnicodeString(Random
+				fields.Add(NewStringField("bytesval", TestUtil.RandomRealisticUnicodeString(Random
 					()), Field.Store.NO));
-				fields.AddItem(new DoubleField("double", Random().NextDouble(), Field.Store.NO));
+				fields.Add(new DoubleField("double", Random().NextDouble(), Field.Store.NO));
 				if (supportsDocValues)
 				{
-					fields.AddItem(new NumericDocValuesField("intdocvalues", Random().Next()));
-					fields.AddItem(new FloatDocValuesField("floatdocvalues", Random().NextFloat()));
-					fields.AddItem(new SortedDocValuesField("sortedbytesdocvalues", new BytesRef(TestUtil
+					fields.Add(new NumericDocValuesField("intdocvalues", Random().Next()));
+					fields.Add(new FloatDocValuesField("floatdocvalues", Random().NextFloat()));
+					fields.Add(new SortedDocValuesField("sortedbytesdocvalues", new BytesRef(TestUtil
 						.RandomRealisticUnicodeString(Random()))));
-					fields.AddItem(new SortedDocValuesField("sortedbytesdocvaluesval", new BytesRef(TestUtil
+					fields.Add(new SortedDocValuesField("sortedbytesdocvaluesval", new BytesRef(TestUtil
 						.RandomRealisticUnicodeString(Random()))));
-					fields.AddItem(new BinaryDocValuesField("straightbytesdocvalues", new BytesRef(TestUtil
+					fields.Add(new BinaryDocValuesField("straightbytesdocvalues", new BytesRef(TestUtil
 						.RandomRealisticUnicodeString(Random()))));
 				}
 				Lucene.Net.Documents.Document document = new Lucene.Net.Documents.Document
@@ -173,7 +173,7 @@ namespace Lucene.Net.Search
 					iw.Commit();
 				}
 			}
-			reader = iw.GetReader();
+			reader = iw.Reader;
 			iw.Dispose();
 			searcher = NewSearcher(reader);
 			if (VERBOSE)

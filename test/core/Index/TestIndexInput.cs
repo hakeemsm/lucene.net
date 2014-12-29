@@ -1,72 +1,62 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using System.IO;
-using Lucene.Net.Index;
 using Lucene.Net.Store;
-using Lucene.Net.Util;
-using Sharpen;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Index;
+using Lucene.Net.TestFramework.Util;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
-	public class TestIndexInput : LuceneTestCase
+    [TestFixture]
+    public class TestIndexInput : LuceneTestCase
 	{
-		internal static readonly byte[] READ_TEST_BYTES = new byte[] { unchecked((byte)unchecked(
-			(int)(0x80))), unchecked((int)(0x01)), unchecked((byte)unchecked((int)(0xFF))), 
-			unchecked((int)(0x7F)), unchecked((byte)unchecked((int)(0x80))), unchecked((byte
-			)unchecked((int)(0x80))), unchecked((int)(0x01)), unchecked((byte)unchecked((int
-			)(0x81))), unchecked((byte)unchecked((int)(0x80))), unchecked((int)(0x01)), unchecked(
-			(byte)unchecked((int)(0xFF))), unchecked((byte)unchecked((int)(0xFF))), unchecked(
-			(byte)unchecked((int)(0xFF))), unchecked((byte)unchecked((int)(0xFF))), unchecked(
-			(byte)unchecked((int)(0x07))), unchecked((byte)unchecked((int)(0xFF))), unchecked(
-			(byte)unchecked((int)(0xFF))), unchecked((byte)unchecked((int)(0xFF))), unchecked(
-			(byte)unchecked((int)(0xFF))), unchecked((byte)unchecked((int)(0x0F))), unchecked(
-			(byte)unchecked((int)(0xFF))), unchecked((byte)unchecked((int)(0xFF))), unchecked(
-			(byte)unchecked((int)(0xFF))), unchecked((byte)unchecked((int)(0xFF))), unchecked(
-			(byte)unchecked((int)(0x07))), unchecked((byte)unchecked((int)(0xFF))), unchecked(
-			(byte)unchecked((int)(0xFF))), unchecked((byte)unchecked((int)(0xFF))), unchecked(
-			(byte)unchecked((int)(0xFF))), unchecked((byte)unchecked((int)(0xFF))), unchecked(
-			(byte)unchecked((int)(0xFF))), unchecked((byte)unchecked((int)(0xFF))), unchecked(
-			(byte)unchecked((int)(0xFF))), unchecked((byte)unchecked((int)(0x7F))), unchecked(
-			(int)(0x06)), (byte)('L'), (byte)('u'), (byte)('c'), (byte)('e'), (byte)('n'), (
-			byte)('e'), unchecked((int)(0x02)), unchecked((byte)unchecked((int)(0xC2))), unchecked(
-			(byte)unchecked((int)(0xBF))), unchecked((int)(0x0A)), (byte)('L'), (byte)('u'), 
-			unchecked((byte)unchecked((int)(0xC2))), unchecked((byte)unchecked((int)(0xBF)))
-			, (byte)('c'), (byte)('e'), unchecked((byte)unchecked((int)(0xC2))), unchecked((
-			byte)unchecked((int)(0xBF))), (byte)('n'), (byte)('e'), unchecked((int)(0x03)), 
-			unchecked((byte)unchecked((int)(0xE2))), unchecked((byte)unchecked((int)(0x98)))
-			, unchecked((byte)unchecked((int)(0xA0))), unchecked((int)(0x0C)), (byte)('L'), 
-			(byte)('u'), unchecked((byte)unchecked((int)(0xE2))), unchecked((byte)unchecked(
-			(int)(0x98))), unchecked((byte)unchecked((int)(0xA0))), (byte)('c'), (byte)('e')
-			, unchecked((byte)unchecked((int)(0xE2))), unchecked((byte)unchecked((int)(0x98)
-			)), unchecked((byte)unchecked((int)(0xA0))), (byte)('n'), (byte)('e'), unchecked(
-			(int)(0x04)), unchecked((byte)unchecked((int)(0xF0))), unchecked((byte)unchecked(
-			(int)(0x9D))), unchecked((byte)unchecked((int)(0x84))), unchecked((byte)unchecked(
-			(int)(0x9E))), unchecked((int)(0x08)), unchecked((byte)unchecked((int)(0xF0))), 
-			unchecked((byte)unchecked((int)(0x9D))), unchecked((byte)unchecked((int)(0x84)))
-			, unchecked((byte)unchecked((int)(0x9E))), unchecked((byte)unchecked((int)(0xF0)
-			)), unchecked((byte)unchecked((int)(0x9D))), unchecked((byte)unchecked((int)(0x85
-			))), unchecked((byte)unchecked((int)(0xA0))), unchecked((int)(0x0E)), (byte)('L'
-			), (byte)('u'), unchecked((byte)unchecked((int)(0xF0))), unchecked((byte)unchecked(
-			(int)(0x9D))), unchecked((byte)unchecked((int)(0x84))), unchecked((byte)unchecked(
-			(int)(0x9E))), (byte)('c'), (byte)('e'), unchecked((byte)unchecked((int)(0xF0)))
-			, unchecked((byte)unchecked((int)(0x9D))), unchecked((byte)unchecked((int)(0x85)
-			)), unchecked((byte)unchecked((int)(0xA0))), (byte)('n'), (byte)('e'), unchecked(
-			(int)(0x01)), unchecked((int)(0x00)), unchecked((int)(0x08)), (byte)('L'), (byte
-			)('u'), unchecked((int)(0x00)), (byte)('c'), (byte)('e'), unchecked((int)(0x00))
-			, (byte)('n'), (byte)('e'), unchecked((byte)unchecked((int)(0xFF))), unchecked((
-			byte)unchecked((int)(0xFF))), unchecked((byte)unchecked((int)(0xFF))), unchecked(
-			(byte)unchecked((int)(0xFF))), unchecked((byte)unchecked((int)(0x17))), unchecked(
-			(byte)unchecked((int)(0x01))), unchecked((byte)unchecked((int)(0xFF))), unchecked(
-			(byte)unchecked((int)(0xFF))), unchecked((byte)unchecked((int)(0xFF))), unchecked(
-			(byte)unchecked((int)(0xFF))), unchecked((byte)unchecked((int)(0xFF))), unchecked(
-			(byte)unchecked((int)(0xFF))), unchecked((byte)unchecked((int)(0xFF))), unchecked(
-			(byte)unchecked((int)(0xFF))), unchecked((byte)unchecked((int)(0xFF))), unchecked(
-			(byte)unchecked((int)(0x01))) };
+		internal static readonly byte[] READ_TEST_BYTES =
+		{ 
+            0x80,  0x01,
+            0xFF,  0x7F,
+            0x80,  0x80, 0x01,
+            0x81,  0x80, 0x01,
+            0xFF,  0xFF,  0xFF,  0xFF,  0x07,
+            0xFF,  0xFF,  0xFF,  0xFF,  0x0F,
+            0xFF,  0xFF,  0xFF,  0xFF,  0x07,
+            0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0x7F,
+            0x06, (byte)'L', (byte)'u', (byte)'c', (byte)'e', (byte)'n', (byte)'e',
+
+    // 2-byte UTF-8 (U+00BF "INVERTED QUESTION MARK") 
+            0x02,  0xC2,  0xBF,
+            0x0A, (byte)'L', (byte)'u',  0xC2,  0xBF, 
+                  (byte)'c', (byte)'e',  0xC2,  0xBF, 
+                  (byte)'n', (byte)'e',
+
+    // 3-byte UTF-8 (U+2620 "SKULL AND CROSSBONES") 
+            0x03,  0xE2,  0x98,  0xA0,
+            0x0C, (byte)'L', (byte)'u',  0xE2,  0x98,  0xA0,
+                  (byte)'c', (byte)'e',  0xE2,  0x98,  0xA0,
+                  (byte)'n', (byte)'e',
+
+    // surrogate pairs
+    // (U+1D11E "MUSICAL SYMBOL G CLEF")
+    // (U+1D160 "MUSICAL SYMBOL EIGHTH NOTE")
+            0x04,  0xF0,  0x9D,  0x84,  0x9E,
+            0x08,  0xF0,  0x9D,  0x84,  0x9E, 
+                   0xF0,  0x9D,  0x85,  0xA0, 
+            0x0E, (byte)'L', (byte)'u',
+                   0xF0,  0x9D,  0x84,  0x9E,
+                  (byte)'c', (byte)'e', 
+                   0xF0,  0x9D,  0x85,  0xA0, 
+                  (byte)'n', (byte)'e',  
+
+    // null bytes
+            0x01, 0x00,
+            0x08, (byte)'L', (byte)'u', 0x00, (byte)'c', (byte)'e', 0x00, (byte)'n', (byte)'e',
+    
+    // tests for Exceptions on invalid values
+             0xFF,  0xFF,  0xFF,  0xFF,  0x17,
+             0x01, // guard value
+             0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,
+             0x01, // guard value
+        };
 
 		internal static readonly int COUNT = RANDOM_MULTIPLIER * 65536;
 
@@ -86,8 +76,8 @@ namespace Lucene.Net.Test.Index
 		// guard value
 		// guard value
 		/// <exception cref="System.IO.IOException"></exception>
-		[NUnit.Framework.BeforeClass]
-		public static void BeforeClass()
+		[SetUp]
+		public void Setup()
 		{
 			Random random = Random();
 			INTS = new int[COUNT];
@@ -103,19 +93,19 @@ namespace Lucene.Net.Test.Index
 				if (Rarely())
 				{
 					// a long with lots of zeroes at the end
-					l1 = LONGS[i] = TestUtil.NextLong(random, 0, int.MaxValue) << 32;
+					l1 = LONGS[i] = random.NextLong(0, int.MaxValue) << 32;
 				}
 				else
 				{
-					l1 = LONGS[i] = TestUtil.NextLong(random, 0, long.MaxValue);
+					l1 = LONGS[i] = random.NextLong(0, long.MaxValue);
 				}
 				bdo.WriteVLong(l1);
 				bdo.WriteLong(l1);
 			}
 		}
 
-		[NUnit.Framework.AfterClass]
-		public static void AfterClass()
+		[TearDown]
+		public void TearDown()
 		{
 			INTS = null;
 			LONGS = null;
@@ -123,7 +113,7 @@ namespace Lucene.Net.Test.Index
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		private void CheckReads<_T0>(DataInput @is, Type<_T0> expectedEx) where _T0:Exception
+		private void CheckReads(DataInput @is, Type expectedEx)
 		{
 			AreEqual(128, @is.ReadVInt());
 			AreEqual(16383, @is.ReadVInt());
@@ -147,7 +137,7 @@ namespace Lucene.Net.Test.Index
 			try
 			{
 				@is.ReadVInt();
-				Fail("Should throw " + expectedEx.FullName);
+				Fail("Should throw " + expectedEx);
 			}
 			catch (Exception e)
 			{
@@ -183,7 +173,7 @@ namespace Lucene.Net.Test.Index
 		}
 
 		// this test only checks BufferedIndexInput because MockIndexInput extends BufferedIndexInput
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestBufferedIndexInputRead()
 		{
 			IndexInput @is = new MockIndexInput(READ_TEST_BYTES);
@@ -195,7 +185,7 @@ namespace Lucene.Net.Test.Index
 		}
 
 		// this test checks the raw IndexInput methods as it uses RAMIndexInput which extends IndexInput directly
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestRawIndexInputRead()
 		{
 			Random random = Random();
@@ -215,11 +205,11 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestByteArrayDataInput()
 		{
 			ByteArrayDataInput @is = new ByteArrayDataInput(READ_TEST_BYTES);
-			CheckReads(@is, typeof(RuntimeException));
+			CheckReads(@is, typeof(SystemException));
 			@is = new ByteArrayDataInput(RANDOM_TEST_BYTES);
 			CheckRandomReads(@is);
 		}

@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading;
 using Lucene.Net.Analysis;
 using Lucene.Net.Codecs;
+using Lucene.Net.Codecs.Asserting.TestFramework;
 using Lucene.Net.Codecs.Lucene40.TestFramework;
 using Lucene.Net.Codecs.Lucene41.TestFramrwork;
 using Lucene.Net.Codecs.Lucene42.TestFramework;
@@ -632,7 +633,7 @@ namespace Lucene.Net.Test.Index
 			Directory dir = NewDirectory();
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random()));
-			conf.SetCodec(new _Lucene46Codec_576());
+			conf.SetCodec(new AnonymousLucene46Codec());
 			IndexWriter writer = new IndexWriter(dir, conf);
 			var doc = new Lucene.Net.Documents.Document
 			{
@@ -662,13 +663,9 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		private sealed class _Lucene46Codec_576 : Lucene46Codec
+		private sealed class AnonymousLucene46Codec : Lucene46Codec
 		{
-			public _Lucene46Codec_576()
-			{
-			}
-
-			public override DocValuesFormat GetDocValuesFormatForField(string field)
+		    public override DocValuesFormat GetDocValuesFormatForField(string field)
 			{
 				return new Lucene45DocValuesFormat();
 			}
@@ -1132,14 +1129,12 @@ namespace Lucene.Net.Test.Index
 				(Random()));
 			IndexWriter writer = new IndexWriter(dir, conf);
 			// create index
-			int numThreads = TestUtil.NextInt(Random(), 3, 6);
+			int numThreads = Random().NextInt(3, 6);
 			int numDocs = AtLeast(2000);
 			for (int i = 0; i < numDocs; i++)
 			{
-				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-					();
-				doc.Add(new StringField("id", "doc" + i, Field.Store.NO));
-				double group = Random().NextDouble();
+				var doc = new Lucene.Net.Documents.Document {new StringField("id", "doc" + i, Field.Store.NO)};
+			    double group = Random().NextDouble();
 				string g;
 				if (group < 0.1)
 				{
@@ -1153,14 +1148,7 @@ namespace Lucene.Net.Test.Index
 					}
 					else
 					{
-						if (group < 0.8)
-						{
-							g = "g2";
-						}
-						else
-						{
-							g = "g3";
-						}
+						g = @group < 0.8 ? "g2" : "g3";
 					}
 				}
 				doc.Add(new StringField("updKey", g, Field.Store.NO));
@@ -1181,8 +1169,91 @@ namespace Lucene.Net.Test.Index
 			{
 				string f = "f" + i;
 				string cf = "cf" + i;
-				threads[i] = new Thread(numUpdates, writer, f, cf, numDocs, done, "UpdateThread-"
-					 + i);
+				threads[i] = new Thread((iw) =>
+				{
+				    IndexWriter iw2 = (IndexWriter) iw;
+                    DirectoryReader reader2 = null;
+                    bool success = false;
+                    try
+                    {
+                        Random random = Random();
+                        while (numUpdates.DecrementAndGet() > 0)
+                        {
+                            double group = random.NextDouble();
+                            Term t;
+                            if (group < 0.1)
+                            {
+                                t = new Term("updKey", "g0");
+                            }
+                            else
+                            {
+                                if (group < 0.5)
+                                {
+                                    t = new Term("updKey", "g1");
+                                }
+                                else
+                                {
+                                    t = @group < 0.8 ? new Term("updKey", "g2") : new Term("updKey", "g3");
+                                }
+                            }
+                            if (random.NextBoolean())
+                            {
+                                iw2.UpdateBinaryDocValue(t, f, null);
+                                iw2.UpdateBinaryDocValue(t, cf, null);
+                            }
+                            else
+                            {
+                                long updValue = random.Next();
+                                iw2.UpdateBinaryDocValue(t, f, ToBytes(updValue));
+                                iw2.UpdateBinaryDocValue(t, cf, ToBytes(updValue * 2));
+                            }
+                            if (random.NextDouble() < 0.2)
+                            {
+                                int doc = random.Next(numDocs);
+                                iw2.DeleteDocuments(new Term("id", "doc" + doc));
+                            }
+                            if (random.NextDouble() < 0.05)
+                            {
+                                iw2.Commit();
+                            }
+                            if (random.NextDouble() < 0.1)
+                            {
+                                if (reader2 == null)
+                                {
+                                    reader2 = DirectoryReader.Open(writer, true);
+                                }
+                                else
+                                {
+                                    DirectoryReader r2 = DirectoryReader.OpenIfChanged(reader2, writer, true);
+                                    if (r2 != null)
+                                    {
+                                        reader2.Dispose();
+                                        reader2 = r2;
+                                    }
+                                }
+                            }
+                        }
+                        success = true;
+                    }
+                    finally
+                    {
+                        if (reader2 != null)
+                        {
+                            try
+                            {
+                                reader2.Dispose();
+                            }
+                            catch (IOException e)
+                            {
+                                if (success)
+                                {
+                                    throw;
+                                }
+                            }
+                        }
+                        done.Signal();
+                    }
+				});
 			}
 			//              System.out.println("[" + Thread.currentThread().getName() + "] numUpdates=" + numUpdates + " updateTerm=" + t);
 			// sometimes unset a value
@@ -1197,31 +1268,30 @@ namespace Lucene.Net.Test.Index
 			// suppress this exception only if there was another exception
 			foreach (Thread t in threads)
 			{
-				t.Start();
+				t.Start(writer);
 			}
-			done.Await();
+			done.Wait();
 			writer.Dispose();
 			DirectoryReader reader = DirectoryReader.Open(dir);
 			BytesRef scratch = new BytesRef();
 			foreach (AtomicReaderContext context in reader.Leaves)
 			{
 				AtomicReader r = ((AtomicReader)context.Reader);
-				for (int i_2 = 0; i_2 < numThreads; i_2++)
+				for (int i = 0; i < numThreads; i++)
 				{
-					BinaryDocValues bdv = r.GetBinaryDocValues("f" + i_2);
-					BinaryDocValues control = r.GetBinaryDocValues("cf" + i_2);
-					Bits docsWithBdv = r.GetDocsWithField("f" + i_2);
-					Bits docsWithControl = r.GetDocsWithField("cf" + i_2);
-					Bits liveDocs = r.LiveDocs;
+					BinaryDocValues bdv = r.GetBinaryDocValues("f" + i);
+					BinaryDocValues control = r.GetBinaryDocValues("cf" + i);
+					IBits docsWithBdv = r.GetDocsWithField("f" + i);
+					IBits docsWithControl = r.GetDocsWithField("cf" + i);
+					IBits liveDocs = r.LiveDocs;
 					for (int j = 0; j < r.MaxDoc; j++)
 					{
-						if (liveDocs == null || liveDocs.Get(j))
+						if (liveDocs == null || liveDocs[j])
 						{
-							AreEqual(docsWithBdv.Get(j), docsWithControl.Get(j));
-							if (docsWithBdv.Get(j))
+							AreEqual(docsWithBdv[j], docsWithControl[j]);
+							if (docsWithBdv[j])
 							{
-								AreEqual(GetValue(control, j, scratch), GetValue(bdv, j, scratch
-									) * 2);
+								AreEqual(GetValue(control, j, scratch), GetValue(bdv, j, scratch) * 2);
 							}
 						}
 					}
@@ -1231,130 +1301,7 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		private sealed class _Thread_1034 : Sharpen.Thread
-		{
-			public _Thread_1034(AtomicInteger numUpdates, IndexWriter writer, string f, string
-				 cf, int numDocs, CountDownLatch done, string baseArg1) : base(baseArg1)
-			{
-				this.numUpdates = numUpdates;
-				this.writer = writer;
-				this.f = f;
-				this.cf = cf;
-				this.numDocs = numDocs;
-				this.done = done;
-			}
-
-			public override void Run()
-			{
-				DirectoryReader reader = null;
-				bool success = false;
-				try
-				{
-					Random random = LuceneTestCase.Random();
-					while (numUpdates.GetAndDecrement() > 0)
-					{
-						double group = random.NextDouble();
-						Term t;
-						if (group < 0.1)
-						{
-							t = new Term("updKey", "g0");
-						}
-						else
-						{
-							if (group < 0.5)
-							{
-								t = new Term("updKey", "g1");
-							}
-							else
-							{
-								if (group < 0.8)
-								{
-									t = new Term("updKey", "g2");
-								}
-								else
-								{
-									t = new Term("updKey", "g3");
-								}
-							}
-						}
-						if (random.NextBoolean())
-						{
-							writer.UpdateBinaryDocValue(t, f, null);
-							writer.UpdateBinaryDocValue(t, cf, null);
-						}
-						else
-						{
-							long updValue = random.Next();
-							writer.UpdateBinaryDocValue(t, f, TestBinaryDocValuesUpdates.ToBytes(updValue));
-							writer.UpdateBinaryDocValue(t, cf, TestBinaryDocValuesUpdates.ToBytes(updValue * 
-								2));
-						}
-						if (random.NextDouble() < 0.2)
-						{
-							int doc = random.Next(numDocs);
-							writer.DeleteDocuments(new Term("id", "doc" + doc));
-						}
-						if (random.NextDouble() < 0.05)
-						{
-							writer.Commit();
-						}
-						if (random.NextDouble() < 0.1)
-						{
-							if (reader == null)
-							{
-								reader = DirectoryReader.Open(writer, true);
-							}
-							else
-							{
-								DirectoryReader r2 = DirectoryReader.OpenIfChanged(reader, writer, true);
-								if (r2 != null)
-								{
-									reader.Dispose();
-									reader = r2;
-								}
-							}
-						}
-					}
-					success = true;
-				}
-				catch (IOException e)
-				{
-					throw new RuntimeException(e);
-				}
-				finally
-				{
-					if (reader != null)
-					{
-						try
-						{
-							reader.Dispose();
-						}
-						catch (IOException e)
-						{
-							if (success)
-							{
-								throw new RuntimeException(e);
-							}
-						}
-					}
-					done.CountDown();
-				}
-			}
-
-			private readonly AtomicInteger numUpdates;
-
-			private readonly IndexWriter writer;
-
-			private readonly string f;
-
-			private readonly string cf;
-
-			private readonly int numDocs;
-
-			private readonly CountDownLatch done;
-		}
-
-		/// <exception cref="System.Exception"></exception>
+        [Test]
 		public virtual void TestUpdateDifferentDocsInDifferentGens()
 		{
 			// update same document multiple times across generations
@@ -1380,7 +1327,7 @@ namespace Lucene.Net.Test.Index
 			{
 				int doc = Random().Next(numDocs);
 				Term t = new Term("id", "doc" + doc);
-				long value = Random().NextLong();
+				long value = Random().NextLong(0,long.MaxValue);
 				writer.UpdateBinaryDocValue(t, "f", ToBytes(value));
 				writer.UpdateBinaryDocValue(t, "cf", ToBytes(value * 2));
 				DirectoryReader reader = DirectoryReader.Open(writer, true);
@@ -1401,31 +1348,33 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestChangeCodec()
 		{
 			Directory dir = NewDirectory();
-			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
-				(Random()));
+			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(Random()));
 			conf.SetMergePolicy(NoMergePolicy.COMPOUND_FILES);
 			// disable merges to simplify test assertions.
-			conf.SetCodec(new _Lucene46Codec_1176());
-			IndexWriter writer = new IndexWriter(dir, conf.Clone());
-			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-				();
-			doc.Add(new StringField("id", "d0", Field.Store.NO));
-			doc.Add(new BinaryDocValuesField("f1", ToBytes(5L)));
-			doc.Add(new BinaryDocValuesField("f2", ToBytes(13L)));
-			writer.AddDocument(doc);
+			conf.SetCodec(new AnonymousLucene46Codec2());
+			IndexWriter writer = new IndexWriter(dir, (IndexWriterConfig) conf.Clone());
+			var doc = new Lucene.Net.Documents.Document
+			{
+			    new StringField("id", "d0", Field.Store.NO),
+			    new BinaryDocValuesField("f1", ToBytes(5L)),
+			    new BinaryDocValuesField("f2", ToBytes(13L))
+			};
+		    writer.AddDocument(doc);
 			writer.Dispose();
 			// change format
-			conf.SetCodec(new _Lucene46Codec_1191());
-			writer = new IndexWriter(dir, conf.Clone());
-			doc = new Lucene.Net.Documents.Document();
-			doc.Add(new StringField("id", "d1", Field.Store.NO));
-			doc.Add(new BinaryDocValuesField("f1", ToBytes(17L)));
-			doc.Add(new BinaryDocValuesField("f2", ToBytes(2L)));
-			writer.AddDocument(doc);
+			conf.SetCodec(new AnonymousLucene46Codec3());
+			writer = new IndexWriter(dir, (IndexWriterConfig) conf.Clone());
+			doc = new Lucene.Net.Documents.Document
+			{
+			    new StringField("id", "d1", Field.Store.NO),
+			    new BinaryDocValuesField("f1", ToBytes(17L)),
+			    new BinaryDocValuesField("f2", ToBytes(2L))
+			};
+		    writer.AddDocument(doc);
 			writer.UpdateBinaryDocValue(new Term("id", "d0"), "f1", ToBytes(12L));
 			writer.Dispose();
 			DirectoryReader reader = DirectoryReader.Open(dir);
@@ -1441,54 +1390,46 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		private sealed class _Lucene46Codec_1176 : Lucene46Codec
+		private sealed class AnonymousLucene46Codec2 : Lucene46Codec
 		{
-			public _Lucene46Codec_1176()
-			{
-			}
-
-			public override DocValuesFormat GetDocValuesFormatForField(string field)
+		    public override DocValuesFormat GetDocValuesFormatForField(string field)
 			{
 				return new Lucene45DocValuesFormat();
 			}
 		}
 
-		private sealed class _Lucene46Codec_1191 : Lucene46Codec
+		private sealed class AnonymousLucene46Codec3 : Lucene46Codec
 		{
-			public _Lucene46Codec_1191()
-			{
-			}
-
-			public override DocValuesFormat GetDocValuesFormatForField(string field)
+		    public override DocValuesFormat GetDocValuesFormatForField(string field)
 			{
 				return new AssertingDocValuesFormat();
 			}
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestAddIndexes()
 		{
 			Directory dir1 = NewDirectory();
-			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
-				(Random()));
+			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(Random()));
 			IndexWriter writer = new IndexWriter(dir1, conf);
 			int numDocs = AtLeast(50);
-			int numTerms = TestUtil.NextInt(Random(), 1, numDocs / 5);
+			int numTerms = Random().NextInt(1, numDocs / 5);
 			ICollection<string> randomTerms = new HashSet<string>();
 			while (randomTerms.Count < numTerms)
 			{
-				randomTerms.AddItem(TestUtil.RandomSimpleString(Random()));
+				randomTerms.Add(TestUtil.RandomSimpleString(Random()));
 			}
 			// create first index
 			for (int i = 0; i < numDocs; i++)
 			{
-				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-					();
-				doc.Add(new StringField("id", RandomPicks.RandomFrom(Random(), randomTerms), Field.Store
-					.NO));
-				doc.Add(new BinaryDocValuesField("bdv", ToBytes(4L)));
-				doc.Add(new BinaryDocValuesField("control", ToBytes(8L)));
-				writer.AddDocument(doc);
+				var doc = new Lucene.Net.Documents.Document
+				{
+				    new StringField("id", RandomPicks.RandomFrom(Random(), randomTerms), Field.Store
+				        .NO),
+				    new BinaryDocValuesField("bdv", ToBytes(4L)),
+				    new BinaryDocValuesField("control", ToBytes(8L))
+				};
+			    writer.AddDocument(doc);
 			}
 			if (Random().NextBoolean())
 			{
@@ -1531,40 +1472,39 @@ namespace Lucene.Net.Test.Index
 			IOUtils.Close(dir1, dir2);
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestDeleteUnusedUpdatesFiles()
 		{
 			Directory dir = NewDirectory();
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random()));
 			IndexWriter writer = new IndexWriter(dir, conf);
-			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-				();
-			doc.Add(new StringField("id", "d0", Field.Store.NO));
-			doc.Add(new BinaryDocValuesField("f", ToBytes(1L)));
-			writer.AddDocument(doc);
+			var doc = new Lucene.Net.Documents.Document
+			{
+			    new StringField("id", "d0", Field.Store.NO),
+			    new BinaryDocValuesField("f", ToBytes(1L))
+			};
+		    writer.AddDocument(doc);
 			// create first gen of update files
 			writer.UpdateBinaryDocValue(new Term("id", "d0"), "f", ToBytes(2L));
 			writer.Commit();
 			int numFiles = dir.ListAll().Length;
 			DirectoryReader r = DirectoryReader.Open(dir);
 			BytesRef scratch = new BytesRef();
-			AreEqual(2L, GetValue(((AtomicReader)r.Leaves[0].Reader(
-				)).GetBinaryDocValues("f"), 0, scratch));
+			AreEqual(2L, GetValue(((AtomicReader)r.Leaves[0].Reader).GetBinaryDocValues("f"), 0, scratch));
 			r.Dispose();
 			// create second gen of update files, first gen should be deleted
 			writer.UpdateBinaryDocValue(new Term("id", "d0"), "f", ToBytes(5L));
 			writer.Commit();
 			AreEqual(numFiles, dir.ListAll().Length);
 			r = DirectoryReader.Open(dir);
-			AreEqual(5L, GetValue(((AtomicReader)r.Leaves[0].Reader(
-				)).GetBinaryDocValues("f"), 0, scratch));
+			AreEqual(5L, GetValue(((AtomicReader)r.Leaves[0].Reader).GetBinaryDocValues("f"), 0, scratch));
 			r.Dispose();
 			writer.Dispose();
 			dir.Dispose();
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestTonsOfUpdates()
 		{
 			// LUCENE-5248: make sure that when there are many updates, we don't use too much RAM
@@ -1584,14 +1524,13 @@ namespace Lucene.Net.Test.Index
 			ICollection<string> updateTerms = new HashSet<string>();
 			while (updateTerms.Count < numTerms)
 			{
-				updateTerms.AddItem(TestUtil.RandomSimpleString(random));
+				updateTerms.Add(TestUtil.RandomSimpleString(random));
 			}
 			//    System.out.println("numDocs=" + numDocs + " numBinaryFields=" + numBinaryFields + " numTerms=" + numTerms);
 			// build a large index with many BDV fields and update terms
 			for (int i = 0; i < numDocs; i++)
 			{
-				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-					();
+				var doc = new Lucene.Net.Documents.Document();
 				int numUpdateTerms = TestUtil.NextInt(random, 1, numTerms / 10);
 				for (int j = 0; j < numUpdateTerms; j++)
 				{
@@ -1633,8 +1572,7 @@ namespace Lucene.Net.Test.Index
 					BinaryDocValues cf = r.GetBinaryDocValues("cf" + i_2);
 					for (int j = 0; j < r.MaxDoc; j++)
 					{
-						AreEqual("reader=" + r + ", field=f" + i_2 + ", doc=" + j, 
-							GetValue(cf, j, scratch), GetValue(f, j, scratch) * 2);
+						AreEqual(GetValue(cf, j, scratch), GetValue(f, j, scratch) * 2,"reader=" + r + ", field=f" + i_2 + ", doc=" + j);
 					}
 				}
 			}
@@ -1642,20 +1580,21 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestUpdatesOrder()
 		{
 			Directory dir = NewDirectory();
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random()));
 			IndexWriter writer = new IndexWriter(dir, conf);
-			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-				();
-			doc.Add(new StringField("upd", "t1", Field.Store.NO));
-			doc.Add(new StringField("upd", "t2", Field.Store.NO));
-			doc.Add(new BinaryDocValuesField("f1", ToBytes(1L)));
-			doc.Add(new BinaryDocValuesField("f2", ToBytes(1L)));
-			writer.AddDocument(doc);
+			var doc = new Lucene.Net.Documents.Document
+			{
+			    new StringField("upd", "t1", Field.Store.NO),
+			    new StringField("upd", "t2", Field.Store.NO),
+			    new BinaryDocValuesField("f1", ToBytes(1L)),
+			    new BinaryDocValuesField("f2", ToBytes(1L))
+			};
+		    writer.AddDocument(doc);
 			writer.UpdateBinaryDocValue(new Term("upd", "t1"), "f1", ToBytes(2L));
 			// update f1 to 2
 			writer.UpdateBinaryDocValue(new Term("upd", "t1"), "f2", ToBytes(2L));
@@ -1669,26 +1608,25 @@ namespace Lucene.Net.Test.Index
 			writer.Dispose();
 			DirectoryReader reader = DirectoryReader.Open(dir);
 			BytesRef scratch = new BytesRef();
-			AreEqual(4, GetValue(((AtomicReader)reader.Leaves[0].Reader
-				()).GetBinaryDocValues("f1"), 0, scratch));
-			AreEqual(3, GetValue(((AtomicReader)reader.Leaves[0].Reader
-				()).GetBinaryDocValues("f2"), 0, scratch));
+			AreEqual(4, GetValue(((AtomicReader)reader.Leaves[0].Reader).GetBinaryDocValues("f1"), 0, scratch));
+			AreEqual(3, GetValue(((AtomicReader)reader.Leaves[0].Reader).GetBinaryDocValues("f2"), 0, scratch));
 			reader.Dispose();
 			dir.Dispose();
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestUpdateAllDeletedSegment()
 		{
 			Directory dir = NewDirectory();
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random()));
 			IndexWriter writer = new IndexWriter(dir, conf);
-			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-				();
-			doc.Add(new StringField("id", "doc", Field.Store.NO));
-			doc.Add(new BinaryDocValuesField("f1", ToBytes(1L)));
-			writer.AddDocument(doc);
+			var doc = new Lucene.Net.Documents.Document
+			{
+			    new StringField("id", "doc", Field.Store.NO),
+			    new BinaryDocValuesField("f1", ToBytes(1L))
+			};
+		    writer.AddDocument(doc);
 			writer.AddDocument(doc);
 			writer.Commit();
 			writer.DeleteDocuments(new Term("id", "doc"));
@@ -1698,13 +1636,12 @@ namespace Lucene.Net.Test.Index
 			writer.Dispose();
 			DirectoryReader reader = DirectoryReader.Open(dir);
 			AreEqual(1, reader.Leaves.Count);
-			AreEqual(2L, GetValue(((AtomicReader)reader.Leaves[0].Reader
-				()).GetBinaryDocValues("f1"), 0, new BytesRef()));
+			AreEqual(2L, GetValue(((AtomicReader)reader.Leaves[0].Reader).GetBinaryDocValues("f1"), 0, new BytesRef()));
 			reader.Dispose();
 			dir.Dispose();
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestUpdateTwoNonexistingTerms()
 		{
 			Directory dir = NewDirectory();
@@ -1722,8 +1659,7 @@ namespace Lucene.Net.Test.Index
 			writer.Dispose();
 			DirectoryReader reader = DirectoryReader.Open(dir);
 			AreEqual(1, reader.Leaves.Count);
-			AreEqual(1L, GetValue(((AtomicReader)reader.Leaves[0].Reader
-				()).GetBinaryDocValues("f1"), 0, new BytesRef()));
+			AreEqual(1L, GetValue(((AtomicReader)reader.Leaves[0].Reader).GetBinaryDocValues("f1"), 0, new BytesRef()));
 			reader.Dispose();
 			dir.Dispose();
 		}

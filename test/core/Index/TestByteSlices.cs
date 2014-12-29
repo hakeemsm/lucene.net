@@ -16,12 +16,12 @@
  */
 
 using System;
-
+using Lucene.Net.Index;
+using Lucene.Net.Randomized.Generators;
+using Lucene.Net.TestFramework;
+using Lucene.Net.Util;
 using NUnit.Framework;
 
-using LuceneTestCase = Lucene.Net.Util.LuceneTestCase;
-
-using ByteBlockPool = Lucene.Net.Index.ByteBlockPool;
 
 namespace Lucene.Net.Test.Index
 {
@@ -30,57 +30,13 @@ namespace Lucene.Net.Test.Index
 	public class TestByteSlices:LuceneTestCase
 	{
 
-        private class ByteBlockAllocator : ByteBlockPool.Allocator
-        {
-            internal System.Collections.ArrayList freeByteBlocks = new System.Collections.ArrayList();
-
-            /* Allocate another byte[] from the shared pool */
-            public /*internal*/ override byte[] GetByteBlock(bool trackAllocations)
-            {
-                lock (this)
-                {
-                    int size = freeByteBlocks.Count;
-                    byte[] b;
-                    if (0 == size)
-                        b = new byte[DocumentsWriter.BYTE_BLOCK_SIZE_ForNUnit];
-                    else
-                    {
-                        System.Object tempObject;
-                        tempObject = freeByteBlocks[size - 1];
-                        freeByteBlocks.RemoveAt(size - 1);
-                        b = (byte[])tempObject;
-                    }
-                    return b;
-                }
-            }
-
-            /* Return a byte[] to the pool */
-            public /*internal*/ override void RecycleByteBlocks(byte[][] blocks, int start, int end)
-            {
-                lock (this)
-                {
-                    for (int i = start; i < end; i++)
-                        freeByteBlocks.Add(blocks[i]);
-                }
-            }
-
-            public override void RecycleByteBlocks(System.Collections.Generic.IList<byte[]> blocks)
-            {
-                lock (this)
-                {
-                    int size = blocks.Count;
-                    for (int i = 0; i < size; i++)
-                        freeByteBlocks.Add(blocks[i]);
-                }
-            }
-        }
 		
 		[Test]
 		public virtual void  TestBasic()
 		{
-			ByteBlockPool pool = new ByteBlockPool(new ByteBlockAllocator(), false);
-			
-			int NUM_STREAM = 25;
+			ByteBlockPool pool = new ByteBlockPool(new RecyclingByteBlockAllocator(ByteBlockPool
+				.BYTE_BLOCK_SIZE, Random().Next(100)));
+			int NUM_STREAM = AtLeast(100);
 			
 			ByteSliceWriter writer = new ByteSliceWriter(pool);
 			
@@ -88,7 +44,6 @@ namespace Lucene.Net.Test.Index
 			int[] uptos = new int[NUM_STREAM];
 			int[] counters = new int[NUM_STREAM];
 			
-			System.Random r = NewRandom();
 			
 			ByteSliceReader reader = new ByteSliceReader();
 			
@@ -100,52 +55,83 @@ namespace Lucene.Net.Test.Index
 					starts[stream] = - 1;
 					counters[stream] = 0;
 				}
+				int num = AtLeast(3000);
 				
-				bool debug = false;
-				
-				for (int iter = 0; iter < 10000; iter++)
+				for (int iter = 0; iter < num; iter++)
 				{
-					int stream = r.Next(NUM_STREAM);
-					if (debug)
-						System.Console.Out.WriteLine("write stream=" + stream);
-					
-					if (starts[stream] == - 1)
+					int stream_1;
+					if (Random().NextBoolean())
 					{
-						int spot = pool.NewSlice(ByteBlockPool.FIRST_LEVEL_SIZE_ForNUnit);
-						starts[stream] = uptos[stream] = spot + pool.byteOffset;
-						if (debug)
-							System.Console.Out.WriteLine("  init to " + starts[stream]);
+						stream_1 = Random().Next(3);
 					}
-					
-					writer.Init(uptos[stream]);
-					int numValue = r.Next(20);
+					else
+					{
+						stream_1 = Random().Next(NUM_STREAM);
+					}
+					if (VERBOSE)
+					{
+						System.Console.Out.WriteLine("write stream=" + stream_1);
+					}
+					if (starts[stream_1] == -1)
+					{
+						int spot = pool.NewSlice(ByteBlockPool.FIRST_LEVEL_SIZE);
+						starts[stream_1] = uptos[stream_1] = spot + pool.byteOffset;
+						if (VERBOSE)
+						{
+							System.Console.Out.WriteLine("  init to " + starts[stream_1]);
+						}
+					}
+					writer.Init(uptos[stream_1]);
+					int numValue;
+					if (Random().Next(10) == 3)
+					{
+						numValue = Random().Next(100);
+					}
+					else
+					{
+						if (Random().Next(5) == 3)
+						{
+							numValue = Random().Next(3);
+						}
+						else
+						{
+							numValue = Random().Next(20);
+						}
+					}
 					for (int j = 0; j < numValue; j++)
 					{
-						if (debug)
-							System.Console.Out.WriteLine("    write " + (counters[stream] + j));
-						writer.WriteVInt(counters[stream] + j);
-						//writer.writeVInt(ti);
+						if (VERBOSE)
+						{
+							System.Console.Out.WriteLine("    write " + (counters[stream_1] + j));
+						}
+						// write some large (incl. negative) ints:
+						writer.WriteVInt(Random().Next());
+						writer.WriteVInt(counters[stream_1] + j);
 					}
-					counters[stream] += numValue;
-					uptos[stream] = writer.Address;
-					if (debug)
-						System.Console.Out.WriteLine("    addr now " + uptos[stream]);
-				}
-				
-				for (int stream = 0; stream < NUM_STREAM; stream++)
-				{
-					if (debug)
-						System.Console.Out.WriteLine("  stream=" + stream + " count=" + counters[stream]);
-					
-					if (starts[stream] != uptos[stream])
+					counters[stream_1] += numValue;
+					uptos[stream_1] = writer.Address;
+					if (VERBOSE)
 					{
-						reader.Init(pool, starts[stream], uptos[stream]);
-						for (int j = 0; j < counters[stream]; j++)
-							Assert.AreEqual(j, reader.ReadVInt());
-						//Assert.AreEqual(ti, reader.readVInt());
+						System.Console.Out.WriteLine("    addr now " + uptos[stream_1]);
 					}
 				}
-				
+				for (int stream_2 = 0; stream_2 < NUM_STREAM; stream_2++)
+				{
+					if (VERBOSE)
+					{
+						System.Console.Out.WriteLine("  stream=" + stream_2 + " count=" + counters[stream_2
+							]);
+					}
+					if (starts[stream_2] != -1 && starts[stream_2] != uptos[stream_2])
+					{
+						reader.Init(pool, starts[stream_2], uptos[stream_2]);
+						for (int j = 0; j < counters[stream_2]; j++)
+						{
+							reader.ReadVInt();
+							NUnit.Framework.Assert.AreEqual(j, reader.ReadVInt());
+						}
+					}
+				}
 				pool.Reset();
 			}
 		}

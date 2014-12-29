@@ -45,7 +45,7 @@ namespace Lucene.Net.Search
 				doc.Add(NewTextField(FIELD, values[i], Field.Store.YES));
 				writer.AddDocument(doc);
 			}
-			indexReader = SlowCompositeReaderWrapper.Wrap(writer.GetReader());
+			indexReader = SlowCompositeReaderWrapper.Wrap(writer.Reader);
 			writer.Dispose();
 			indexSearcher = NewSearcher(indexReader);
 			indexSearcher.SetSimilarity(new DefaultSimilarity());
@@ -73,7 +73,7 @@ namespace Lucene.Net.Search
 				.LiveDocs);
 			// we have 2 documents with the term all in them, one document for all the
 			// other values
-			IList<TestTermScorer.TestHit> docs = new AList<TestTermScorer.TestHit>();
+			IList<TestTermScorer.TestHit> docs = new List<TestTermScorer.TestHit>();
 			// must call next first
 			ts.Score(new _Collector_87(docs));
 			IsTrue("docs Size: " + docs.Count + " is not: " + 2, docs.
@@ -109,7 +109,7 @@ namespace Lucene.Net.Search
 			{
 				float score = this.scorer.Score();
 				doc = doc + this.@base;
-				docs.AddItem(new TestTermScorer.TestHit(this, doc, score));
+				docs.Add(new TestTermScorer.TestHit(this, doc, score));
 				IsTrue("score " + score + " is not greater than 0", score 
 					> 0);
 				IsTrue("Doc: " + doc + " does not equal 0 or doc does not equal 5"

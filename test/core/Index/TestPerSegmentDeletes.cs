@@ -60,7 +60,7 @@ namespace Lucene.Net.Test.Index
 			IsTrue(writer.bufferedUpdatesStream.Any());
 			// get reader flushes pending deletes
 			// so there should not be anymore
-			IndexReader r1 = writer.GetReader();
+			IndexReader r1 = writer.Reader;
 			IsFalse(writer.bufferedUpdatesStream.Any());
 			r1.Dispose();
 			// delete id:2 from the first segment
@@ -77,7 +77,7 @@ namespace Lucene.Net.Test.Index
 			AreEqual(2, writer.segmentInfos.Size());
 			// id:2 shouldn't exist anymore because
 			// it's been applied in the merge and now it's gone
-			IndexReader r2 = writer.GetReader();
+			IndexReader r2 = writer.Reader;
 			int[] id2docs = ToDocsArray(new Term("id", "2"), null, r2);
 			IsTrue(id2docs == null);
 			r2.Dispose();
@@ -172,11 +172,11 @@ namespace Lucene.Net.Test.Index
 		/// <exception cref="System.IO.IOException"></exception>
 		public static int[] ToArray(DocsEnum docsEnum)
 		{
-			IList<int> docs = new AList<int>();
+			IList<int> docs = new List<int>();
 			while (docsEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS)
 			{
 				int docID = docsEnum.DocID;
-				docs.AddItem(docID);
+				docs.Add(docID);
 			}
 			return ArrayUtil.ToIntArray(docs);
 		}

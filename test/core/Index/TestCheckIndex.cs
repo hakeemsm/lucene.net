@@ -17,14 +17,14 @@
 
 using System;
 using System.Collections.Generic;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
+using Lucene.Net.Index;
+using Lucene.Net.Store;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Analysis;
 using NUnit.Framework;
 
-using WhitespaceAnalyzer = Lucene.Net.Test.Analysis.WhitespaceAnalyzer;
-using Document = Lucene.Net.Documents.Document;
-using Field = Lucene.Net.Documents.Field;
-using MockRAMDirectory = Lucene.Net.Store.MockRAMDirectory;
-using Constants = Lucene.Net.Util.Constants;
-using LuceneTestCase = Lucene.Net.Util.LuceneTestCase;
 
 namespace Lucene.Net.Test.Index
 {
@@ -36,19 +36,25 @@ namespace Lucene.Net.Test.Index
 		[Test]
 		public virtual void  TestDeletedDocs()
 		{
-			MockRAMDirectory dir = new MockRAMDirectory();
-			IndexWriter writer = new IndexWriter(dir, new WhitespaceAnalyzer(), true, IndexWriter.MaxFieldLength.LIMITED);
-			writer.SetMaxBufferedDocs(2);
-			Document doc = new Document();
-			doc.Add(new Field("field", "aaa", Field.Store.YES, Field.Index.ANALYZED, Field.TermVector.WITH_POSITIONS_OFFSETS));
+			Directory dir = NewDirectory();
+			IndexWriter writer = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig
+				(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMaxBufferedDocs(2)));
 			for (int i = 0; i < 19; i++)
 			{
+				var doc = new Documents.Document();
+				FieldType customType = new FieldType(TextField.TYPE_STORED)
+				{
+				    StoreTermVectors = (true),
+				    StoreTermVectorPositions = (true),
+				    StoreTermVectorOffsets = (true)
+				};
+			    doc.Add(NewField("field", "aaa" + i, customType));
 				writer.AddDocument(doc);
 			}
+			writer.ForceMerge(1);
+			writer.Commit();
+			writer.DeleteDocuments(new Term("field", "aaa5"));
 			writer.Dispose();
-			IndexReader reader = IndexReader.Open(dir, false);
-			reader.DeleteDocument(5);
-			reader.Dispose();
 			
 			System.IO.MemoryStream bos = new System.IO.MemoryStream(1024);
 			CheckIndex checker = new CheckIndex(dir);
@@ -67,30 +73,30 @@ namespace Lucene.Net.Test.Index
 				Assert.Fail();
 			}
 			
-			CheckIndex.Status.SegmentInfoStatus seg = (CheckIndex.Status.SegmentInfoStatus) indexStatus.segmentInfos[0];
-			Assert.IsTrue(seg.openReaderPassed);
+			CheckIndex.Status.SegmentInfoStatus seg = indexStatus.segmentInfos[0];
+			IsTrue(seg.openReaderPassed);
 			
-			Assert.IsNotNull(seg.diagnostics);
+			IsNotNull(seg.diagnostics);
 			
-			Assert.IsNotNull(seg.fieldNormStatus);
-			Assert.IsNull(seg.fieldNormStatus.error);
-			Assert.AreEqual(1, seg.fieldNormStatus.totFields);
+			IsNotNull(seg.fieldNormStatus);
+			IsNull(seg.fieldNormStatus.error);
+			AreEqual(1, seg.fieldNormStatus.totFields);
 			
-			Assert.IsNotNull(seg.termIndexStatus);
-			Assert.IsNull(seg.termIndexStatus.error);
-			Assert.AreEqual(1, seg.termIndexStatus.termCount);
-			Assert.AreEqual(19, seg.termIndexStatus.totFreq);
-			Assert.AreEqual(18, seg.termIndexStatus.totPos);
+			IsNotNull(seg.termIndexStatus);
+			IsNull(seg.termIndexStatus.error);
+			AreEqual(1, seg.termIndexStatus.termCount);
+			AreEqual(19, seg.termIndexStatus.totFreq);
+			AreEqual(18, seg.termIndexStatus.totPos);
 			
-			Assert.IsNotNull(seg.storedFieldStatus);
-			Assert.IsNull(seg.storedFieldStatus.error);
-			Assert.AreEqual(18, seg.storedFieldStatus.docCount);
-			Assert.AreEqual(18, seg.storedFieldStatus.totFields);
+			IsNotNull(seg.storedFieldStatus);
+			IsNull(seg.storedFieldStatus.error);
+			AreEqual(18, seg.storedFieldStatus.docCount);
+			AreEqual(18, seg.storedFieldStatus.totFields);
 			
-			Assert.IsNotNull(seg.termVectorStatus);
-			Assert.IsNull(seg.termVectorStatus.error);
-			Assert.AreEqual(18, seg.termVectorStatus.docCount);
-			Assert.AreEqual(18, seg.termVectorStatus.totVectors);
+			IsNotNull(seg.termVectorStatus);
+			IsNull(seg.termVectorStatus.error);
+			AreEqual(18, seg.termVectorStatus.docCount);
+			AreEqual(18, seg.termVectorStatus.totVectors);
 			
 			Assert.IsTrue(seg.diagnostics.Count > 0);
 			List<string> onlySegments = new List<string>();
@@ -100,24 +106,22 @@ namespace Lucene.Net.Test.Index
 		}
 		
 		[Test]
-		public virtual void  TestLuceneConstantVersion()
+		public virtual void TestBogusTermVectors()
 		{
-			System.String version = null;
-
-            AppDomain MyDomain = AppDomain.CurrentDomain;
-            System.Reflection.Assembly[] AssembliesLoaded = MyDomain.GetAssemblies();
-
-            foreach (System.Reflection.Assembly assembly in AssembliesLoaded)
-            {
-                if(assembly.FullName.StartsWith("Lucene.Net")){
-                    version =assembly.GetName().Version.ToString(3);
-                    break;
-                }
-            }
-            Assert.IsNotNull(version);
-            Assert.IsTrue(version.Equals(Constants.LUCENE_MAIN_VERSION + "-dev") || version.Equals(Constants.LUCENE_MAIN_VERSION));
-            Assert.IsTrue(Constants.LUCENE_VERSION.StartsWith(version));
-
+			Directory dir = NewDirectory();
+			IndexWriter iw = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, 
+				null));
+			Documents.Document doc = new Documents.Document();
+			FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
+			ft.StoreTermVectors = (true);
+			ft.StoreTermVectorOffsets = (true);
+			Field field = new Field("foo", string.Empty, ft);
+			field.SetTokenStream(new CannedTokenStream(new Token("bar", 5, 10), new Token("bar"
+				, 1, 4)));
+			doc.Add(field);
+			iw.AddDocument(doc);
+			iw.Dispose();
+			dir.Dispose();
 		}
 	}
 }

@@ -32,7 +32,7 @@ namespace Lucene.Net.Store
 		[Test]
 		public virtual void  TestDetectClose()
 		{
-			FilePath tempDir = CreateTempDir(LuceneTestCase.GetTestClass().Name);
+			DirectoryInfo tempDir = CreateTempDir(LuceneTestCase.GetTestClass().Name);
 			Directory[] dirs = new Directory[] { new RAMDirectory(), new SimpleFSDirectory(tempDir
 				), new NIOFSDirectory(tempDir) };
 			foreach (Directory dir in dirs)
@@ -259,7 +259,7 @@ namespace Lucene.Net.Store
 		}
 		public virtual void TestFsyncDoesntCreateNewFiles()
 		{
-			FilePath path = CreateTempDir("nocreate");
+			DirectoryInfo path = CreateTempDir("nocreate");
 			System.Console.Out.WriteLine(path.GetAbsolutePath());
 			Directory fsdir = new SimpleFSDirectory(path);
 			// write a file
@@ -267,7 +267,7 @@ namespace Lucene.Net.Store
 			@out.WriteString("boo");
 			@out.Dispose();
 			// delete it
-			IsTrue(new FilePath(path, "afile").Delete());
+			IsTrue(new DirectoryInfo(path, "afile").Delete());
 			// directory is empty
 			AreEqual(0, fsdir.ListAll().Length);
 			// fsync it

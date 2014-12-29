@@ -89,7 +89,7 @@ namespace Lucene.Net.Test.Index
 				System.Console.Out.WriteLine("\n");
 			}
 			AtomicInteger numCommitting = new AtomicInteger();
-			IList<Sharpen.Thread> threads = new AList<Sharpen.Thread>();
+			IList<Thread> threads = new List<Thread>();
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir, NewIndexWriterConfig
 				(TEST_VERSION_CURRENT, new MockAnalyzer(Random())));
@@ -98,7 +98,7 @@ namespace Lucene.Net.Test.Index
 			reader = DirectoryReader.Open(dir);
 			for (int i = 0; i < nWriteThreads; i++)
 			{
-				Sharpen.Thread thread = new _Thread_115(this, operations, commitPercent, numCommitting
+				Thread thread = new _Thread_115(this, operations, commitPercent, numCommitting
 					, maxConcurrentCommits, softCommitPercent, writer, ndocs, deletePercent, tombstones
 					, storedOnlyType, deleteByQueryPercent, "WRITER" + i);
 				// take a snapshot
@@ -128,11 +128,11 @@ namespace Lucene.Net.Test.Index
 				// add tombstone first
 				// assertU(adoc("id",Integer.toString(id), field, Long.toString(nextVal)));
 				// remove tombstone after new addition (this should be optional?)
-				threads.AddItem(thread);
+				threads.Add(thread);
 			}
 			for (int i_1 = 0; i_1 < nReadThreads; i_1++)
 			{
-				Sharpen.Thread thread = new _Thread_299(this, operations, ndocs, tombstones, "READER"
+				Thread thread = new _Thread_299(this, operations, ndocs, tombstones, "READER"
 					 + i_1);
 				// bias toward a recently changed doc
 				// when indexing, we update the index, then the model
@@ -145,13 +145,13 @@ namespace Lucene.Net.Test.Index
 				// expected... no doc was added yet
 				// nothing to do - we can't tell anything from a deleted doc without tombstones
 				// we should have found the document, or its tombstone
-				threads.AddItem(thread);
+				threads.Add(thread);
 			}
-			foreach (Sharpen.Thread thread_1 in threads)
+			foreach (Thread thread_1 in threads)
 			{
 				thread_1.Start();
 			}
-			foreach (Sharpen.Thread thread_2 in threads)
+			foreach (Thread thread_2 in threads)
 			{
 				thread_2.Join();
 			}
@@ -164,7 +164,7 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		private sealed class _Thread_115 : Sharpen.Thread
+		private sealed class _Thread_115 : Thread
 		{
 			public _Thread_115(TestStressNRT _enclosing, AtomicLong operations, int commitPercent
 				, AtomicInteger numCommitting, int maxConcurrentCommits, int softCommitPercent, 
@@ -216,7 +216,7 @@ namespace Lucene.Net.Test.Index
 									{
 										if (LuceneTestCase.VERBOSE)
 										{
-											System.Console.Out.WriteLine("TEST: " + Sharpen.Thread.CurrentThread().GetName() 
+											System.Console.Out.WriteLine("TEST: " + Thread.CurrentThread().GetName() 
 												+ ": call writer.getReader");
 										}
 										newReader = writer.GetReader(true);
@@ -225,7 +225,7 @@ namespace Lucene.Net.Test.Index
 									{
 										if (LuceneTestCase.VERBOSE)
 										{
-											System.Console.Out.WriteLine("TEST: " + Sharpen.Thread.CurrentThread().GetName() 
+											System.Console.Out.WriteLine("TEST: " + Thread.CurrentThread().GetName() 
 												+ ": reopen reader=" + oldReader + " version=" + version);
 										}
 										newReader = DirectoryReader.OpenIfChanged(oldReader, writer.w, true);
@@ -235,13 +235,13 @@ namespace Lucene.Net.Test.Index
 								{
 									if (LuceneTestCase.VERBOSE)
 									{
-										System.Console.Out.WriteLine("TEST: " + Sharpen.Thread.CurrentThread().GetName() 
+										System.Console.Out.WriteLine("TEST: " + Thread.CurrentThread().GetName() 
 											+ ": commit+reopen reader=" + oldReader + " version=" + version);
 									}
 									writer.Commit();
 									if (LuceneTestCase.VERBOSE)
 									{
-										System.Console.Out.WriteLine("TEST: " + Sharpen.Thread.CurrentThread().GetName() 
+										System.Console.Out.WriteLine("TEST: " + Thread.CurrentThread().GetName() 
 											+ ": now reopen after commit");
 									}
 									newReader = DirectoryReader.OpenIfChanged(oldReader);
@@ -258,7 +258,7 @@ namespace Lucene.Net.Test.Index
 									{
 										if (LuceneTestCase.VERBOSE)
 										{
-											System.Console.Out.WriteLine("TEST: " + Sharpen.Thread.CurrentThread().GetName() 
+											System.Console.Out.WriteLine("TEST: " + Thread.CurrentThread().GetName() 
 												+ ": install new reader=" + newReader);
 										}
 										this._enclosing.reader.DecRef();
@@ -268,7 +268,7 @@ namespace Lucene.Net.Test.Index
 										{
 											if (LuceneTestCase.VERBOSE)
 											{
-												System.Console.Out.WriteLine("TEST: " + Sharpen.Thread.CurrentThread().GetName() 
+												System.Console.Out.WriteLine("TEST: " + Thread.CurrentThread().GetName() 
 													+ ": install new model version=" + version);
 											}
 											this._enclosing.committedModel = newCommittedModel;
@@ -278,7 +278,7 @@ namespace Lucene.Net.Test.Index
 										{
 											if (LuceneTestCase.VERBOSE)
 											{
-												System.Console.Out.WriteLine("TEST: " + Sharpen.Thread.CurrentThread().GetName() 
+												System.Console.Out.WriteLine("TEST: " + Thread.CurrentThread().GetName() 
 													+ ": skip install new model version=" + version);
 											}
 										}
@@ -287,7 +287,7 @@ namespace Lucene.Net.Test.Index
 									{
 										if (LuceneTestCase.VERBOSE)
 										{
-											System.Console.Out.WriteLine("TEST: " + Sharpen.Thread.CurrentThread().GetName() 
+											System.Console.Out.WriteLine("TEST: " + Thread.CurrentThread().GetName() 
 												+ ": skip install new reader=" + newReader);
 										}
 										newReader.DecRef();
@@ -322,7 +322,7 @@ namespace Lucene.Net.Test.Index
 									}
 									if (LuceneTestCase.VERBOSE)
 									{
-										System.Console.Out.WriteLine("TEST: " + Sharpen.Thread.CurrentThread().GetName() 
+										System.Console.Out.WriteLine("TEST: " + Thread.CurrentThread().GetName() 
 											+ ": term delDocs id:" + id + " nextVal=" + nextVal);
 									}
 									writer.DeleteDocuments(new Term("id", Sharpen.Extensions.ToString(id)));
@@ -343,7 +343,7 @@ namespace Lucene.Net.Test.Index
 										}
 										if (LuceneTestCase.VERBOSE)
 										{
-											System.Console.Out.WriteLine("TEST: " + Sharpen.Thread.CurrentThread().GetName() 
+											System.Console.Out.WriteLine("TEST: " + Thread.CurrentThread().GetName() 
 												+ ": query delDocs id:" + id + " nextVal=" + nextVal);
 										}
 										writer.DeleteDocuments(new TermQuery(new Term("id", Sharpen.Extensions.ToString(id
@@ -359,7 +359,7 @@ namespace Lucene.Net.Test.Index
 											), storedOnlyType));
 										if (LuceneTestCase.VERBOSE)
 										{
-											System.Console.Out.WriteLine("TEST: " + Sharpen.Thread.CurrentThread().GetName() 
+											System.Console.Out.WriteLine("TEST: " + Thread.CurrentThread().GetName() 
 												+ ": u id:" + id + " val=" + nextVal);
 										}
 										writer.UpdateDocument(new Term("id", Sharpen.Extensions.ToString(id)), d);
@@ -380,10 +380,10 @@ namespace Lucene.Net.Test.Index
 				}
 				catch (Exception e)
 				{
-					System.Console.Out.WriteLine(Sharpen.Thread.CurrentThread().GetName() + ": FAILED: unexpected exception"
+					System.Console.Out.WriteLine(Thread.CurrentThread().GetName() + ": FAILED: unexpected exception"
 						);
 					Sharpen.Runtime.PrintStackTrace(e, System.Console.Out);
-					throw new RuntimeException(e);
+					throw new SystemException(e);
 				}
 			}
 
@@ -412,7 +412,7 @@ namespace Lucene.Net.Test.Index
 			private readonly int deleteByQueryPercent;
 		}
 
-		private sealed class _Thread_299 : Sharpen.Thread
+		private sealed class _Thread_299 : Thread
 		{
 			public _Thread_299(TestStressNRT _enclosing, AtomicLong operations, int ndocs, bool
 				 tombstones, string baseArg1) : base(baseArg1)
@@ -446,7 +446,7 @@ namespace Lucene.Net.Test.Index
 						}
 						if (LuceneTestCase.VERBOSE)
 						{
-							System.Console.Out.WriteLine("TEST: " + Sharpen.Thread.CurrentThread().GetName() 
+							System.Console.Out.WriteLine("TEST: " + Thread.CurrentThread().GetName() 
 								+ ": s id=" + id + " val=" + val + " r=" + r.Version);
 						}
 						IndexSearcher searcher;
@@ -509,10 +509,10 @@ namespace Lucene.Net.Test.Index
 				catch (Exception e)
 				{
 					operations.Set(-1L);
-					System.Console.Out.WriteLine(Sharpen.Thread.CurrentThread().GetName() + ": FAILED: unexpected exception"
+					System.Console.Out.WriteLine(Thread.CurrentThread().GetName() + ": FAILED: unexpected exception"
 						);
 					Sharpen.Runtime.PrintStackTrace(e, System.Console.Out);
-					throw new RuntimeException(e);
+					throw new SystemException(e);
 				}
 			}
 

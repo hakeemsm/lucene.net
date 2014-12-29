@@ -1,16 +1,12 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
+using System;
 using System.IO;
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Document;
+using System.Text;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
-using Lucene.Net.Store;
+using Lucene.Net.TestFramework;
 using Lucene.Net.Util;
-using Sharpen;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
@@ -18,13 +14,14 @@ namespace Lucene.Net.Test.Index
 	/// 	</summary>
 	/// <remarks>Test adding to the info stream when there's an exception thrown during field analysis.
 	/// 	</remarks>
-	public class TestDocInverterPerFieldErrorInfo : LuceneTestCase
+	[TestFixture]
+    public class TestDocInverterPerFieldErrorInfo : LuceneTestCase
 	{
 		private static readonly FieldType storedTextType = new FieldType(TextField.TYPE_NOT_STORED
 			);
 
 		[System.Serializable]
-		private class BadNews : RuntimeException
+		private class BadNews : SystemException
 		{
 			public BadNews(string message) : base(message)
 			{
@@ -33,13 +30,13 @@ namespace Lucene.Net.Test.Index
 
 		private class ThrowingAnalyzer : Analyzer
 		{
-			protected override Analyzer.TokenStreamComponents CreateComponents(string fieldName
-				, StreamReader input)
+		    public override Analyzer.TokenStreamComponents CreateComponents(string fieldName
+				, TextReader input)
 			{
 				Tokenizer tokenizer = new MockTokenizer(input);
 				if (fieldName.Equals("distinctiveFieldName"))
 				{
-					TokenFilter tosser = new _TokenFilter_55(tokenizer);
+					TokenFilter tosser = new AnonymousTokenFilter(tokenizer);
 					return new Analyzer.TokenStreamComponents(tokenizer, tosser);
 				}
 				else
@@ -48,9 +45,9 @@ namespace Lucene.Net.Test.Index
 				}
 			}
 
-			private sealed class _TokenFilter_55 : TokenFilter
+			private sealed class AnonymousTokenFilter : TokenFilter
 			{
-				public _TokenFilter_55(TokenStream baseArg1) : base(baseArg1)
+				public AnonymousTokenFilter(TokenStream baseArg1) : base(baseArg1)
 				{
 				}
 
@@ -63,56 +60,53 @@ namespace Lucene.Net.Test.Index
 		}
 
 		/// <exception cref="System.Exception"></exception>
-		[NUnit.Framework.Test]
+		[Test]
 		public virtual void TestInfoStreamGetsFieldName()
 		{
-			Directory dir = NewDirectory();
+			Lucene.Net.Store.Directory dir = NewDirectory();
 			IndexWriter writer;
-			IndexWriterConfig c = new IndexWriterConfig(TEST_VERSION_CURRENT, new TestDocInverterPerFieldErrorInfo.ThrowingAnalyzer
-				());
-			ByteArrayOutputStream infoBytes = new ByteArrayOutputStream();
-			TextWriter infoPrintStream = new TextWriter(infoBytes, true, IOUtils.UTF_8);
-			PrintStreamInfoStream printStreamInfoStream = new PrintStreamInfoStream(infoPrintStream
-				);
+			var c = new IndexWriterConfig(TEST_VERSION_CURRENT, new ThrowingAnalyzer());
+			var infoBytes = new MemoryStream();
+			TextWriter infoPrintStream = new StreamWriter(infoBytes, Encoding.UTF8);
+			var printStreamInfoStream = new PrintStreamInfoStream(infoPrintStream);
 			c.SetInfoStream(printStreamInfoStream);
 			writer = new IndexWriter(dir, c);
-			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-				();
-			doc.Add(NewField("distinctiveFieldName", "aaa ", storedTextType));
-			try
+			var doc = new Lucene.Net.Documents.Document
+			{
+			    NewField("distinctiveFieldName", "aaa ", storedTextType)
+			};
+		    try
 			{
 				writer.AddDocument(doc);
 				Fail("Failed to fail.");
 			}
-			catch (TestDocInverterPerFieldErrorInfo.BadNews)
+			catch (BadNews)
 			{
 				infoPrintStream.Flush();
-				string infoStream = Sharpen.Runtime.GetStringForBytes(infoBytes.ToByteArray(), IOUtils
-					.UTF_8);
+			    string infoStream = Encoding.UTF8.GetString(infoBytes.GetBuffer());
 				IsTrue(infoStream.Contains("distinctiveFieldName"));
 			}
 			writer.Dispose();
 			dir.Dispose();
 		}
 
-		/// <exception cref="System.Exception"></exception>
-		[NUnit.Framework.Test]
+		
+		[Test]
 		public virtual void TestNoExtraNoise()
 		{
-			Directory dir = NewDirectory();
+			Lucene.Net.Store.Directory dir = NewDirectory();
 			IndexWriter writer;
-			IndexWriterConfig c = new IndexWriterConfig(TEST_VERSION_CURRENT, new TestDocInverterPerFieldErrorInfo.ThrowingAnalyzer
-				());
-			ByteArrayOutputStream infoBytes = new ByteArrayOutputStream();
-			TextWriter infoPrintStream = new TextWriter(infoBytes, true, IOUtils.UTF_8);
-			PrintStreamInfoStream printStreamInfoStream = new PrintStreamInfoStream(infoPrintStream
-				);
+			var c = new IndexWriterConfig(TEST_VERSION_CURRENT, new ThrowingAnalyzer());
+			var infoBytes = new MemoryStream();
+			TextWriter infoPrintStream = new StreamWriter(infoBytes, new UTF8Encoding());
+			var printStreamInfoStream = new PrintStreamInfoStream(infoPrintStream);
 			c.SetInfoStream(printStreamInfoStream);
 			writer = new IndexWriter(dir, c);
-			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-				();
-			doc.Add(NewField("boringFieldName", "aaa ", storedTextType));
-			try
+			var doc = new Lucene.Net.Documents.Document
+			{
+			    NewField("boringFieldName", "aaa ", storedTextType)
+			};
+		    try
 			{
 				writer.AddDocument(doc);
 			}
@@ -121,8 +115,7 @@ namespace Lucene.Net.Test.Index
 				Fail("Unwanted exception");
 			}
 			infoPrintStream.Flush();
-			string infoStream = Sharpen.Runtime.GetStringForBytes(infoBytes.ToByteArray(), IOUtils
-				.UTF_8);
+		    string infoStream = new UTF8Encoding().GetString(infoBytes.GetBuffer());
 			IsFalse(infoStream.Contains("boringFieldName"));
 			writer.Dispose();
 			dir.Dispose();

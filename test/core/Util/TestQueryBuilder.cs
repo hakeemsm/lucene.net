@@ -149,7 +149,7 @@ namespace Lucene.Net.Util
 					// inject our synonym
 					ClearAttributes();
 					termAtt.SetEmpty().Append("dog");
-					posIncAtt.SetPositionIncrement(0);
+					posIncAtt.PositionIncrement = (0);
 					addSynonym = false;
 					return true;
 				}
@@ -303,7 +303,7 @@ namespace Lucene.Net.Util
 					// inject our synonym
 					ClearAttributes();
 					termAtt.SetEmpty().Append("åœ‹");
-					posIncAtt.SetPositionIncrement(0);
+					posIncAtt.PositionIncrement = (0);
 					addSynonym = false;
 					return true;
 				}

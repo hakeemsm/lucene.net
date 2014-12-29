@@ -99,13 +99,13 @@ namespace Lucene.Net.TestFramework.Analysis
 			[] startOffsets, int[] endOffsets, string[] types, int[] posIncrements, int[] posLengths
 			, int? finalOffset, int? finalPosInc, bool[] keywordAtts, bool offsetsAreCorrect)
         {
-            assertNotNull(output);
+            AssertNotNull(output);
             ICheckClearAttributesAttribute checkClearAtt = ts.AddAttribute<ICheckClearAttributesAttribute>();
 
             ICharTermAttribute termAtt = null;
             if (output.Length > 0)
             {
-                assertTrue("has no CharTermAttribute", ts.HasAttribute<ICharTermAttribute>());
+                AssertTrue("has no CharTermAttribute", ts.HasAttribute<ICharTermAttribute>());
                 termAtt = ts.GetAttribute<ICharTermAttribute>();
             }
 
@@ -133,13 +133,13 @@ namespace Lucene.Net.TestFramework.Analysis
             IPositionLengthAttribute posLengthAtt = null;
             if (posLengths != null)
             {
-                assertTrue("has no PositionLengthAttribute", ts.HasAttribute<IPositionLengthAttribute>());
+                AssertTrue("has no PositionLengthAttribute", ts.HasAttribute<IPositionLengthAttribute>());
                 posLengthAtt = ts.GetAttribute<IPositionLengthAttribute>();
             }
 			KeywordAttribute keywordAtt = null;
 			if (keywordAtts != null)
 			{
-				assertTrue("has no KeywordAttribute", ts.HasAttribute(typeof(KeywordAttribute)));
+				AssertTrue("has no KeywordAttribute", ts.HasAttribute(typeof(KeywordAttribute)));
 				keywordAtt = ts.GetAttribute<KeywordAttribute>();
 			}
             // Maps position to the start/end offset:
@@ -173,11 +173,11 @@ namespace Lucene.Net.TestFramework.Analysis
                 if (posIncrements != null)
                     Assert.AreEqual(posIncrements[i], posIncrAtt.PositionIncrement, "posIncrement " + i);
                 if (posLengths != null)
-                    assertEquals("posLength " + i, posLengths[i], posLengthAtt.PositionLength);
+                    AssertEquals("posLength " + i, posLengths[i], posLengthAtt.PositionLength);
 
 				if (keywordAtts != null)
 				{
-					assertEquals("keywordAtt " + i, keywordAtts[i], keywordAtt.IsKeyword);
+					AssertEquals("keywordAtt " + i, keywordAtts[i], keywordAtt.IsKeyword);
 				}
                 // we can enforce some basic things about a few attributes even if the caller doesn't check:
                 if (offsetAtt != null)
@@ -186,14 +186,14 @@ namespace Lucene.Net.TestFramework.Analysis
                     int endOffset = offsetAtt.EndOffset;
                     if (finalOffset != null)
                     {
-                        assertTrue("startOffset must be <= finalOffset", startOffset <= finalOffset);
-                        assertTrue("endOffset must be <= finalOffset: got endOffset=" + endOffset + " vs finalOffset=" + finalOffset.GetValueOrDefault(),
+                        AssertTrue("startOffset must be <= finalOffset", startOffset <= finalOffset);
+                        AssertTrue("endOffset must be <= finalOffset: got endOffset=" + endOffset + " vs finalOffset=" + finalOffset.GetValueOrDefault(),
                                    endOffset <= finalOffset);
                     }
 
                     if (offsetsAreCorrect)
                     {
-                        assertTrue("offsets must not go backwards startOffset=" + startOffset + " is < lastStartOffset=" + lastStartOffset, offsetAtt.StartOffset >= lastStartOffset);
+                        AssertTrue("offsets must not go backwards startOffset=" + startOffset + " is < lastStartOffset=" + lastStartOffset, offsetAtt.StartOffset >= lastStartOffset);
                         lastStartOffset = offsetAtt.StartOffset;
                     }
 
@@ -219,7 +219,7 @@ namespace Lucene.Net.TestFramework.Analysis
                             // We've seen a token leaving from this position
                             // before; verify the startOffset is the same:
                             //System.out.println("  + vs " + pos + " -> " + startOffset);
-                            assertEquals("pos=" + pos + " posLen=" + posLength + " token=" + termAtt, posToStartOffset[pos], startOffset);
+                            AssertEquals("pos=" + pos + " posLen=" + posLength + " token=" + termAtt, posToStartOffset[pos], startOffset);
                         }
 
                         int endPos = pos + posLength;
@@ -235,7 +235,7 @@ namespace Lucene.Net.TestFramework.Analysis
                             // We've seen a token arriving to this position
                             // before; verify the endOffset is the same:
                             //System.out.println("  + ve " + endPos + " -> " + endOffset);
-                            assertEquals("pos=" + pos + " posLen=" + posLength + " token=" + termAtt, posToEndOffset[endPos], endOffset);
+                            AssertEquals("pos=" + pos + " posLen=" + posLength + " token=" + termAtt, posToEndOffset[endPos], endOffset);
                         }
                     }
                 }
@@ -243,16 +243,16 @@ namespace Lucene.Net.TestFramework.Analysis
                 {
                     if (i == 0)
                     {
-                        assertTrue("first posIncrement must be >= 1", posIncrAtt.PositionIncrement >= 1);
+                        AssertTrue("first posIncrement must be >= 1", posIncrAtt.PositionIncrement >= 1);
                     }
                     else
                     {
-                        assertTrue("posIncrement must be >= 0", posIncrAtt.PositionIncrement >= 0);
+                        AssertTrue("posIncrement must be >= 0", posIncrAtt.PositionIncrement >= 0);
                     }
                 }
                 if (posLengthAtt != null)
                 {
-                    assertTrue("posLength must be >= 1", posLengthAtt.PositionLength >= 1);
+                    AssertTrue("posLength must be >= 1", posLengthAtt.PositionLength >= 1);
                 }
             }
 			if (ts.IncrementToken())
@@ -284,16 +284,16 @@ namespace Lucene.Net.TestFramework.Analysis
 			}
 			checkClearAtt.GetAndResetClearCalled();
             ts.End();
-			assertTrue("super.end()/clearAttributes() was not called correctly in end()", checkClearAtt.GetAndResetClearCalled());
+			AssertTrue("super.end()/clearAttributes() was not called correctly in end()", checkClearAtt.GetAndResetClearCalled());
             if (finalOffset.HasValue)
                 Assert.AreEqual(finalOffset, offsetAtt.EndOffset, "finalOffset ");
             if (offsetAtt != null)
             {
-                assertTrue("finalOffset must be >= 0", offsetAtt.EndOffset >= 0);
+                AssertTrue("finalOffset must be >= 0", offsetAtt.EndOffset >= 0);
             }
 			if (finalPosInc != null)
 			{
-				assertEquals("finalPosInc", finalPosInc, posIncrAtt.PositionIncrement);
+				AssertEquals("finalPosInc", finalPosInc, posIncrAtt.PositionIncrement);
 			}
             ts.Dispose();
         }
@@ -446,7 +446,7 @@ namespace Lucene.Net.TestFramework.Analysis
 			{
 				// ok
 				// ok: MockTokenizer
-				assertTrue(expected.Message, expected.Message.Contains("wrong state"));
+				AssertTrue(expected.Message, expected.Message.Contains("wrong state"));
 			}
 			finally
 			{

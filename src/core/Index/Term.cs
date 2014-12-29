@@ -34,7 +34,7 @@ namespace Lucene.Net.Index
     [Serializable]
     public sealed class Term : IComparable<Term>
     {
-        private string field;
+        internal string field;
         internal BytesRef bytes;
 
         /// <summary>Constructs a Term with the given field and text.

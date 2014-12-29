@@ -64,7 +64,7 @@ namespace Lucene.Net.Search
 					 + " maxSearcherAgeSeconds=" + maxSearcherAgeSeconds);
 			}
 			Start(numNodes, runTimeSec, maxSearcherAgeSeconds);
-			IList<TestShardSearching.PreviousSearchState> priorSearches = new AList<TestShardSearching.PreviousSearchState
+			IList<TestShardSearching.PreviousSearchState> priorSearches = new List<TestShardSearching.PreviousSearchState
 				>();
 			IList<BytesRef> terms = null;
 			while (Runtime.NanoTime() < endTimeNanos)
@@ -170,10 +170,10 @@ namespace Lucene.Net.Search
 							// TODO: try to "focus" on high freq terms sometimes too
 							// TODO: maybe also periodically reset the terms...?
 							TermsEnum termsEnum = MultiFields.GetTerms(mockReader, "body").Iterator(null);
-							terms = new AList<BytesRef>();
+							terms = new List<BytesRef>();
 							while (termsEnum.Next() != null)
 							{
-								terms.AddItem(BytesRef.DeepCopyOf(termsEnum.Term()));
+								terms.Add(BytesRef.DeepCopyOf(termsEnum.Term()));
 							}
 							if (VERBOSE)
 							{
@@ -298,7 +298,7 @@ namespace Lucene.Net.Search
 				if (searchState != null && searchState.searchAfterLocal != null && Random().Next(
 					5) == 3)
 				{
-					priorSearches.AddItem(searchState);
+					priorSearches.Add(searchState);
 					if (priorSearches.Count > 200)
 					{
 						Sharpen.Collections.Shuffle(priorSearches, Random());

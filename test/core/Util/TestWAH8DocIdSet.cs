@@ -37,15 +37,15 @@ namespace Lucene.Net.Util
 		{
 			int numBits = TestUtil.NextInt(Random(), 100, 1 << 20);
 			int numDocIdSets = TestUtil.NextInt(Random(), 0, 4);
-			IList<BitSet> fixedSets = new AList<BitSet>(numDocIdSets);
+			IList<BitSet> fixedSets = new List<BitSet>(numDocIdSets);
 			for (int i = 0; i < numDocIdSets; ++i)
 			{
-				fixedSets.AddItem(RandomSet(numBits, Random().NextFloat() / 16));
+				fixedSets.Add(RandomSet(numBits, Random().NextFloat() / 16));
 			}
-			IList<WAH8DocIdSet> compressedSets = new AList<WAH8DocIdSet>(numDocIdSets);
+			IList<WAH8DocIdSet> compressedSets = new List<WAH8DocIdSet>(numDocIdSets);
 			foreach (BitSet set in fixedSets)
 			{
-				compressedSets.AddItem(CopyOf(set, numBits));
+				compressedSets.Add(CopyOf(set, numBits));
 			}
 			WAH8DocIdSet union = WAH8DocIdSet.Union(compressedSets);
 			BitSet expected = new BitSet(numBits);
@@ -64,15 +64,15 @@ namespace Lucene.Net.Util
 		{
 			int numBits = TestUtil.NextInt(Random(), 100, 1 << 20);
 			int numDocIdSets = TestUtil.NextInt(Random(), 1, 4);
-			IList<BitSet> fixedSets = new AList<BitSet>(numDocIdSets);
+			IList<BitSet> fixedSets = new List<BitSet>(numDocIdSets);
 			for (int i = 0; i < numDocIdSets; ++i)
 			{
-				fixedSets.AddItem(RandomSet(numBits, Random().NextFloat()));
+				fixedSets.Add(RandomSet(numBits, Random().NextFloat()));
 			}
-			IList<WAH8DocIdSet> compressedSets = new AList<WAH8DocIdSet>(numDocIdSets);
+			IList<WAH8DocIdSet> compressedSets = new List<WAH8DocIdSet>(numDocIdSets);
 			foreach (BitSet set in fixedSets)
 			{
-				compressedSets.AddItem(CopyOf(set, numBits));
+				compressedSets.Add(CopyOf(set, numBits));
 			}
 			WAH8DocIdSet union = WAH8DocIdSet.Intersect(compressedSets);
 			BitSet expected = new BitSet(numBits);

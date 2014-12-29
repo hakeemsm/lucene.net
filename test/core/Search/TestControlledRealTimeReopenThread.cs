@@ -79,14 +79,14 @@ namespace Lucene.Net.Search
 			{
 				if (VERBOSE)
 				{
-					System.Console.Out.WriteLine(Sharpen.Thread.CurrentThread().GetName() + ": nrt: verify "
+					System.Console.Out.WriteLine(Thread.CurrentThread().GetName() + ": nrt: verify "
 						 + id);
 				}
 				nrtDeletesThread.WaitForGeneration(gen);
 				IndexSearcher s = nrtDeletes.Acquire();
 				if (VERBOSE)
 				{
-					System.Console.Out.WriteLine(Sharpen.Thread.CurrentThread().GetName() + ": nrt: got searcher="
+					System.Console.Out.WriteLine(Thread.CurrentThread().GetName() + ": nrt: got searcher="
 						 + s);
 				}
 				try
@@ -111,14 +111,14 @@ namespace Lucene.Net.Search
 			{
 				if (VERBOSE)
 				{
-					System.Console.Out.WriteLine(Sharpen.Thread.CurrentThread().GetName() + ": nrt: verify "
+					System.Console.Out.WriteLine(Thread.CurrentThread().GetName() + ": nrt: verify "
 						 + id);
 				}
 				nrtNoDeletesThread.WaitForGeneration(gen);
 				IndexSearcher s = nrtNoDeletes.Acquire();
 				if (VERBOSE)
 				{
-					System.Console.Out.WriteLine(Sharpen.Thread.CurrentThread().GetName() + ": nrt: got searcher="
+					System.Console.Out.WriteLine(Thread.CurrentThread().GetName() + ": nrt: got searcher="
 						 + s);
 				}
 				try
@@ -143,14 +143,14 @@ namespace Lucene.Net.Search
 			{
 				if (VERBOSE)
 				{
-					System.Console.Out.WriteLine(Sharpen.Thread.CurrentThread().GetName() + ": nrt: verify "
+					System.Console.Out.WriteLine(Thread.CurrentThread().GetName() + ": nrt: verify "
 						 + id);
 				}
 				nrtNoDeletesThread.WaitForGeneration(gen);
 				IndexSearcher s = nrtNoDeletes.Acquire();
 				if (VERBOSE)
 				{
-					System.Console.Out.WriteLine(Sharpen.Thread.CurrentThread().GetName() + ": nrt: got searcher="
+					System.Console.Out.WriteLine(Thread.CurrentThread().GetName() + ": nrt: got searcher="
 						 + s);
 				}
 				try
@@ -174,14 +174,14 @@ namespace Lucene.Net.Search
 			{
 				if (VERBOSE)
 				{
-					System.Console.Out.WriteLine(Sharpen.Thread.CurrentThread().GetName() + ": nrt: verify "
+					System.Console.Out.WriteLine(Thread.CurrentThread().GetName() + ": nrt: verify "
 						 + id);
 				}
 				nrtDeletesThread.WaitForGeneration(gen);
 				IndexSearcher s = nrtDeletes.Acquire();
 				if (VERBOSE)
 				{
-					System.Console.Out.WriteLine(Sharpen.Thread.CurrentThread().GetName() + ": nrt: got searcher="
+					System.Console.Out.WriteLine(Thread.CurrentThread().GetName() + ": nrt: got searcher="
 						 + s);
 				}
 				try
@@ -205,14 +205,14 @@ namespace Lucene.Net.Search
 			{
 				if (VERBOSE)
 				{
-					System.Console.Out.WriteLine(Sharpen.Thread.CurrentThread().GetName() + ": nrt: verify del "
+					System.Console.Out.WriteLine(Thread.CurrentThread().GetName() + ": nrt: verify del "
 						 + id);
 				}
 				nrtDeletesThread.WaitForGeneration(gen);
 				IndexSearcher s = nrtDeletes.Acquire();
 				if (VERBOSE)
 				{
-					System.Console.Out.WriteLine(Sharpen.Thread.CurrentThread().GetName() + ": nrt: got searcher="
+					System.Console.Out.WriteLine(Thread.CurrentThread().GetName() + ": nrt: got searcher="
 						 + s);
 				}
 				try
@@ -244,15 +244,15 @@ namespace Lucene.Net.Search
 			nrtDeletesThread = new ControlledRealTimeReopenThread<IndexSearcher>(genWriter, nrtDeletes
 				, maxReopenSec, minReopenSec);
 			nrtDeletesThread.SetName("NRTDeletes Reopen Thread");
-			nrtDeletesThread.SetPriority(Math.Min(Sharpen.Thread.CurrentThread().GetPriority(
-				) + 2, Sharpen.Thread.MAX_PRIORITY));
+			nrtDeletesThread.SetPriority(Math.Min(Thread.CurrentThread().GetPriority(
+				) + 2, Thread.MAX_PRIORITY));
 			nrtDeletesThread.SetDaemon(true);
 			nrtDeletesThread.Start();
 			nrtNoDeletesThread = new ControlledRealTimeReopenThread<IndexSearcher>(genWriter, 
 				nrtNoDeletes, maxReopenSec, minReopenSec);
 			nrtNoDeletesThread.SetName("NRTNoDeletes Reopen Thread");
-			nrtNoDeletesThread.SetPriority(Math.Min(Sharpen.Thread.CurrentThread().GetPriority
-				() + 2, Sharpen.Thread.MAX_PRIORITY));
+			nrtNoDeletesThread.SetPriority(Math.Min(Thread.CurrentThread().GetPriority
+				() + 2, Thread.MAX_PRIORITY));
 			nrtNoDeletesThread.SetDaemon(true);
 			nrtNoDeletesThread.Start();
 		}
@@ -357,8 +357,8 @@ namespace Lucene.Net.Search
 			conf.SetMergePolicy(Random().NextBoolean() ? NoMergePolicy.COMPOUND_FILES : NoMergePolicy
 				.NO_COMPOUND_FILES);
 			Directory d = NewDirectory();
-			CountDownLatch latch = new CountDownLatch(1);
-			CountDownLatch signal = new CountDownLatch(1);
+			CountdownEvent latch = new CountdownEvent(1);
+			CountdownEvent signal = new CountdownEvent(1);
 			TestControlledRealTimeReopenThread.LatchedIndexWriter _writer = new TestControlledRealTimeReopenThread.LatchedIndexWriter
 				(d, conf, latch, signal);
 			TrackingIndexWriter writer = new TrackingIndexWriter(_writer);
@@ -368,7 +368,7 @@ namespace Lucene.Net.Search
 			doc.Add(NewTextField("test", "test", Field.Store.YES));
 			writer.AddDocument(doc);
 			manager.MaybeRefresh();
-			Sharpen.Thread t = new _Thread_321(signal, manager, writer, latch);
+			Thread t = new _Thread_321(signal, manager, writer, latch);
 			// kick off another reopen so we inc. the internal gen
 			// let the add below finish
 			t.Start();
@@ -396,7 +396,7 @@ namespace Lucene.Net.Search
 				System.Console.Out.WriteLine("waiting now for generation " + lastGen);
 			}
 			AtomicBoolean finished = new AtomicBoolean(false);
-			Sharpen.Thread waiter = new _Thread_355(thread, lastGen, finished);
+			Thread waiter = new _Thread_355(thread, lastGen, finished);
 			waiter.Start();
 			manager.MaybeRefresh();
 			waiter.Join(1000);
@@ -410,10 +410,10 @@ namespace Lucene.Net.Search
 			IOUtils.Close(manager, _writer, d);
 		}
 
-		private sealed class _Thread_321 : Sharpen.Thread
+		private sealed class _Thread_321 : Thread
 		{
-			public _Thread_321(CountDownLatch signal, SearcherManager manager, TrackingIndexWriter
-				 writer, CountDownLatch latch)
+			public _Thread_321(CountdownEvent signal, SearcherManager manager, TrackingIndexWriter
+				 writer, CountdownEvent latch)
 			{
 				this.signal = signal;
 				this.manager = manager;
@@ -440,16 +440,16 @@ namespace Lucene.Net.Search
 				}
 			}
 
-			private readonly CountDownLatch signal;
+			private readonly CountdownEvent signal;
 
 			private readonly SearcherManager manager;
 
 			private readonly TrackingIndexWriter writer;
 
-			private readonly CountDownLatch latch;
+			private readonly CountdownEvent latch;
 		}
 
-		private sealed class _Thread_355 : Sharpen.Thread
+		private sealed class _Thread_355 : Thread
 		{
 			public _Thread_355(ControlledRealTimeReopenThread<IndexSearcher> thread, long lastGen
 				, AtomicBoolean finished)
@@ -467,8 +467,8 @@ namespace Lucene.Net.Search
 				}
 				catch (Exception ie)
 				{
-					Sharpen.Thread.CurrentThread().Interrupt();
-					throw new RuntimeException(ie);
+					Thread.CurrentThread().Interrupt();
+					throw new SystemException(ie);
 				}
 				finished.Set(true);
 			}
@@ -482,15 +482,15 @@ namespace Lucene.Net.Search
 
 		public class LatchedIndexWriter : IndexWriter
 		{
-			private CountDownLatch latch;
+			private CountdownEvent latch;
 
 			internal bool waitAfterUpdate = false;
 
-			private CountDownLatch signal;
+			private CountdownEvent signal;
 
 			/// <exception cref="System.IO.IOException"></exception>
-			public LatchedIndexWriter(Directory d, IndexWriterConfig conf, CountDownLatch latch
-				, CountDownLatch signal) : base(d, conf)
+			public LatchedIndexWriter(Directory d, IndexWriterConfig conf, CountdownEvent latch
+				, CountdownEvent signal) : base(d, conf)
 			{
 				this.latch = latch;
 				this.signal = signal;
@@ -625,16 +625,16 @@ namespace Lucene.Net.Search
 				ControlledRealTimeReopenThread<IndexSearcher>(tiw, sm, maxStaleSecs, 0);
 			controlledRealTimeReopenThread.SetDaemon(true);
 			controlledRealTimeReopenThread.Start();
-			IList<Sharpen.Thread> commitThreads = new AList<Sharpen.Thread>();
+			IList<Thread> commitThreads = new List<Thread>();
 			for (int i_1 = 0; i_1 < 500; i_1++)
 			{
 				if (i_1 > 0 && i_1 % 50 == 0)
 				{
-					Sharpen.Thread commitThread = new Sharpen.Thread(new _Runnable_496(iw, sdp, dir));
+					Thread commitThread = new Thread(new _Runnable_496(iw, sdp, dir));
 					//distribute, and backup
 					//System.out.println(names);
 					commitThread.Start();
-					commitThreads.AddItem(commitThread);
+					commitThreads.Add(commitThread);
 				}
 				Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 				d.Add(new TextField("count", i_1 + string.Empty, Field.Store.NO));
@@ -651,7 +651,7 @@ namespace Lucene.Net.Search
 				sm.Release(searcher);
 				AreEqual(1, td.TotalHits);
 			}
-			foreach (Sharpen.Thread commitThread_1 in commitThreads)
+			foreach (Thread commitThread_1 in commitThreads)
 			{
 				commitThread_1.Join();
 			}
@@ -676,14 +676,14 @@ namespace Lucene.Net.Search
 				{
 					iw.Commit();
 					IndexCommit ic = sdp.Snapshot();
-					foreach (string name in ic.GetFileNames())
+					foreach (string name in ic.FileNames)
 					{
 						IsTrue(LuceneTestCase.SlowFileExists(dir, name));
 					}
 				}
 				catch (Exception e)
 				{
-					throw new RuntimeException(e);
+					throw new SystemException(e);
 				}
 			}
 

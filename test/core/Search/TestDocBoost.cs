@@ -100,7 +100,7 @@ namespace Lucene.Net.Search
 			
 			writer.AddDocument(d1);
 			writer.AddDocument(d2);
-			IndexReader reader = writer.GetReader();
+			IndexReader reader = writer.Reader;
 			writer.Dispose();
 			
 			float[] scores = new float[4];

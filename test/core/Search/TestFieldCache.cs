@@ -94,7 +94,7 @@ namespace Lucene.Net.Search
 				}
 				writer.AddDocument(doc);
 			}
-			IndexReader r = writer.GetReader();
+			IndexReader r = writer.Reader;
 			reader = SlowCompositeReaderWrapper.Wrap(r);
 			writer.Dispose();
 		}
@@ -314,7 +314,7 @@ namespace Lucene.Net.Search
 			{
 				termOrds.SetDocument(i_13);
 				// This will remove identical terms. A DocTermOrds doesn't return duplicate ords for a docId
-				IList<BytesRef> values = new AList<BytesRef>(new LinkedHashSet<BytesRef>(Arrays.AsList
+				IList<BytesRef> values = new List<BytesRef>(new LinkedHashSet<BytesRef>(Arrays.AsList
 					(multiValued[i_13])));
 				foreach (BytesRef v in values)
 				{
@@ -430,7 +430,7 @@ namespace Lucene.Net.Search
 			FieldCache cache = FieldCache.DEFAULT;
 			cache.PurgeAllCaches();
 			int NUM_THREADS = 3;
-			Sharpen.Thread[] threads = new Sharpen.Thread[NUM_THREADS];
+			Thread[] threads = new Thread[NUM_THREADS];
 			AtomicBoolean failed = new AtomicBoolean();
 			AtomicInteger iters = new AtomicInteger();
 			int NUM_ITER = 200 * RANDOM_MULTIPLIER;
@@ -469,7 +469,7 @@ namespace Lucene.Net.Search
 			private readonly AtomicInteger iters;
 		}
 
-		private sealed class _Thread_402 : Sharpen.Thread
+		private sealed class _Thread_402 : Thread
 		{
 			public _Thread_402(AtomicBoolean failed, CyclicBarrier restart, AtomicInteger iters
 				, int NUM_ITER, FieldCache cache)
@@ -530,7 +530,7 @@ namespace Lucene.Net.Search
 				{
 					failed.Set(true);
 					restart.Reset();
-					throw new RuntimeException(t);
+					throw new SystemException(t);
 				}
 			}
 
@@ -565,7 +565,7 @@ namespace Lucene.Net.Search
 					));
 			}
 			iw.AddDocument(doc);
-			DirectoryReader ir = iw.GetReader();
+			DirectoryReader ir = iw.Reader;
 			iw.Dispose();
 			AtomicReader ar = GetOnlySegmentReader(ir);
 			BytesRef scratch = new BytesRef();
@@ -734,7 +734,7 @@ namespace Lucene.Net.Search
 			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			iw.AddDocument(doc);
-			DirectoryReader ir = iw.GetReader();
+			DirectoryReader ir = iw.Reader;
 			iw.Dispose();
 			AtomicReader ar = GetOnlySegmentReader(ir);
 			FieldCache cache = FieldCache.DEFAULT;
@@ -790,7 +790,7 @@ namespace Lucene.Net.Search
 			doc.Add(new StoredField("bogusmultivalued", "bogus"));
 			doc.Add(new StoredField("bogusbits", "bogus"));
 			iw.AddDocument(doc);
-			DirectoryReader ir = iw.GetReader();
+			DirectoryReader ir = iw.Reader;
 			iw.Dispose();
 			AtomicReader ar = GetOnlySegmentReader(ir);
 			FieldCache cache = FieldCache.DEFAULT;
@@ -885,7 +885,7 @@ namespace Lucene.Net.Search
 				}
 			}
 			iw.ForceMerge(1);
-			DirectoryReader reader = iw.GetReader();
+			DirectoryReader reader = iw.Reader;
 			FieldCache.Longs longs = FieldCache.DEFAULT.GetLongs(GetOnlySegmentReader(reader)
 				, "f", false);
 			for (int i_1 = 0; i_1 < values.Length; ++i_1)
@@ -954,7 +954,7 @@ namespace Lucene.Net.Search
 				}
 			}
 			iw.ForceMerge(1);
-			DirectoryReader reader = iw.GetReader();
+			DirectoryReader reader = iw.Reader;
 			FieldCache.Ints ints = FieldCache.DEFAULT.GetInts(GetOnlySegmentReader(reader), "f"
 				, false);
 			for (int i_1 = 0; i_1 < values.Length; ++i_1)

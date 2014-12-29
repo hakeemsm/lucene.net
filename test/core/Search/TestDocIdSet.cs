@@ -23,14 +23,14 @@ namespace Lucene.Net.Search
 			DocIdSet filteredSet = new _FilteredDocIdSet_72(innerSet);
 			//validate only even docids
 			DocIdSetIterator iter = filteredSet.Iterator();
-			AList<int> list = new AList<int>();
+			List<int> list = new List<int>();
 			int doc = iter.Advance(3);
 			if (doc != DocIdSetIterator.NO_MORE_DOCS)
 			{
-				list.AddItem(Sharpen.Extensions.ValueOf(doc));
+				list.Add(Sharpen.Extensions.ValueOf(doc));
 				while ((doc = iter.NextDoc()) != DocIdSetIterator.NO_MORE_DOCS)
 				{
-					list.AddItem(Sharpen.Extensions.ValueOf(doc));
+					list.Add(Sharpen.Extensions.ValueOf(doc));
 				}
 			}
 			int[] docs = new int[list.Count];
@@ -124,7 +124,7 @@ namespace Lucene.Net.Search
 				();
 			doc.Add(NewStringField("c", "val", Field.Store.NO));
 			writer.AddDocument(doc);
-			IndexReader reader = writer.GetReader();
+			IndexReader reader = writer.Reader;
 			writer.Dispose();
 			// First verify the document is searchable.
 			IndexSearcher searcher = NewSearcher(reader);
@@ -160,7 +160,7 @@ namespace Lucene.Net.Search
 				();
 			doc.Add(NewStringField("c", "val", Field.Store.NO));
 			writer.AddDocument(doc);
-			IndexReader reader = writer.GetReader();
+			IndexReader reader = writer.Reader;
 			writer.Dispose();
 			// First verify the document is searchable.
 			IndexSearcher searcher = NewSearcher(reader);

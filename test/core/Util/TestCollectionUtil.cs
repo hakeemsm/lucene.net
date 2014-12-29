@@ -25,12 +25,12 @@ namespace Lucene.Net.Test.Util
 			for (int i = 0; i < c; i++)
 			{
 				IList<int> list1 = CreateRandomList(2000);
-				IList<int> list2 = new AList<int>(list1);
+				IList<int> list2 = new List<int>(list1);
 				CollectionUtil.IntroSort(list1);
 				list2.Sort();
 				AreEqual(list2, list1);
 				list1 = CreateRandomList(2000);
-				list2 = new AList<int>(list1);
+				list2 = new List<int>(list1);
 				CollectionUtil.IntroSort(list1, Sharpen.Collections.ReverseOrder());
 				list2.Sort(Sharpen.Collections.ReverseOrder());
 				AreEqual(list2, list1);
@@ -45,12 +45,12 @@ namespace Lucene.Net.Test.Util
 			for (int i = 0; i < c; i++)
 			{
 				IList<int> list1 = CreateRandomList(2000);
-				IList<int> list2 = new AList<int>(list1);
+				IList<int> list2 = new List<int>(list1);
 				CollectionUtil.TimSort(list1);
 				list2.Sort();
 				AreEqual(list2, list1);
 				list1 = CreateRandomList(2000);
-				list2 = new AList<int>(list1);
+				list2 = new List<int>(list1);
 				CollectionUtil.TimSort(list1, Sharpen.Collections.ReverseOrder());
 				list2.Sort(Sharpen.Collections.ReverseOrder());
 				AreEqual(list2, list1);
@@ -197,7 +197,7 @@ namespace Lucene.Net.Test.Util
         {
 			// check that one-element non-random access lists pass sorting without ex (as sorting is not needed)
 			IList<int> list = new List<int>();
-			list.AddItem(1);
+			list.Add(1);
 			CollectionUtil.IntroSort(list);
 			CollectionUtil.TimSort(list);
 			CollectionUtil.IntroSort(list, Sharpen.Collections.ReverseOrder());

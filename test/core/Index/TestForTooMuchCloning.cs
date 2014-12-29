@@ -1,34 +1,31 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System.Text;
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Document;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
-using Sharpen;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
+    [TestFixture]
 	public class TestForTooMuchCloning : LuceneTestCase
 	{
 		// Make sure we don't clone IndexInputs too frequently
 		// during merging:
-		/// <exception cref="System.Exception"></exception>
-		public virtual void Test()
+		[Test]
+		public virtual void TestClones()
 		{
 			// NOTE: if we see a fail on this test with "NestedPulsing" its because its 
 			// reuse isnt perfect (but reasonable). see TestPulsingReuse.testNestedPulsing 
 			// for more details
 			MockDirectoryWrapper dir = NewMockDirectory();
-			TieredMergePolicy tmp = new TieredMergePolicy();
+			var tmp = new TieredMergePolicy();
 			tmp.SetMaxMergeAtOnce(2);
-			RandomIndexWriter w = new RandomIndexWriter(Random(), dir, ((IndexWriterConfig)NewIndexWriterConfig
+			var w = new RandomIndexWriter(Random(), dir, ((IndexWriterConfig)NewIndexWriterConfig
 				(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMaxBufferedDocs(2)).SetMergePolicy
 				(tmp));
 			int numDocs = 20;
@@ -40,16 +37,17 @@ namespace Lucene.Net.Test.Index
 					sb.Append(TestUtil.RandomRealisticUnicodeString(Random()));
 					sb.Append(' ');
 				}
-				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-					();
-				doc.Add(new TextField("field", sb.ToString(), Field.Store.NO));
-				w.AddDocument(doc);
+				var doc = new Lucene.Net.Documents.Document
+				{
+				    new TextField("field", sb.ToString(), Field.Store.NO)
+				};
+			    w.AddDocument(doc);
 			}
 			IndexReader r = w.GetReader();
-			w.Dispose();
+			w.Close();
 			int cloneCount = dir.GetInputCloneCount();
 			//System.out.println("merge clone count=" + cloneCount);
-			IsTrue("too many calls to IndexInput.clone during merging: "
+			AssertTrue("too many calls to IndexInput.clone during merging: "
 				 + dir.GetInputCloneCount(), cloneCount < 500);
 			IndexSearcher s = NewSearcher(r);
 			// MTQ that matches all terms so the AUTO_REWRITE should
@@ -57,10 +55,10 @@ namespace Lucene.Net.Test.Index
 			// across all terms;
 			TopDocs hits = s.Search(new TermRangeQuery("field", new BytesRef(), new BytesRef(
 				"\uFFFF"), true, true), 10);
-			IsTrue(hits.TotalHits > 0);
+			AssertTrue(hits.TotalHits > 0);
 			int queryCloneCount = dir.GetInputCloneCount() - cloneCount;
 			//System.out.println("query clone count=" + queryCloneCount);
-			IsTrue("too many calls to IndexInput.clone during TermRangeQuery: "
+			AssertTrue("too many calls to IndexInput.clone during TermRangeQuery: "
 				 + queryCloneCount, queryCloneCount < 50);
 			r.Dispose();
 			dir.Dispose();

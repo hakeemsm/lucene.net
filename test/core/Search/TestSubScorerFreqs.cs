@@ -41,7 +41,7 @@ namespace Lucene.Net.Search
 				doc.Add(NewTextField("f", "a b c d", Field.Store.NO));
 				w.AddDocument(doc);
 			}
-			s = NewSearcher(w.GetReader());
+			s = NewSearcher(w.Reader);
 			w.Dispose();
 		}
 

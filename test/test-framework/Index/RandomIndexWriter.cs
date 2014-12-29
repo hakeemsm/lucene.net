@@ -8,6 +8,7 @@ using Lucene.Net.Randomized;
 using Lucene.Net.Randomized.Generators;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
+using Lucene.Net.TestFramework;
 using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
 using Version = System.Version;
@@ -169,10 +170,10 @@ public class RandomIndexWriter : IDisposable {
     }
     }
   
-		public virtual void AddDocuments<_T0>(Iterable<_T0> docs) where _T0:Iterable<IIndexableField>
+		public virtual void AddDocuments<T>(IEnumerable<T> docs) where T:IEnumerable<IIndexableField>
 		{
 			LuceneTestCase.MaybeChangeLiveIndexWriterConfig(r, w.GetConfig());
-    w.AddDocuments(docs);
+            w.AddDocuments(docs);
 			MaybeCommit();
   }
 
@@ -421,7 +422,8 @@ public class RandomIndexWriter : IDisposable {
 			LuceneTestCase.MaybeChangeLiveIndexWriterConfig(r, w.GetConfig());
 			w.ForceMerge(maxSegmentCount);
 		}
-		internal sealed class TestPointInfoStream : InfoStream
+
+    public sealed class TestPointInfoStream : InfoStream
 		{
 			private readonly InfoStream delegate_;
 

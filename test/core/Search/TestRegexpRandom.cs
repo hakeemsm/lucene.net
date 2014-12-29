@@ -41,7 +41,7 @@ namespace Lucene.Net.Search
 			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			FieldType customType = new FieldType(TextField.TYPE_STORED);
-			customType.OmitNorms = (true);
+			customType.OmitsNorms = (true);
 			Field field = NewField("field", string.Empty, customType);
 			doc.Add(field);
 			NumberFormat df = new DecimalFormat("000", new DecimalFormatSymbols(CultureInfo.ROOT
@@ -51,7 +51,7 @@ namespace Lucene.Net.Search
 				field.StringValue = df.Format(i));
 				writer.AddDocument(doc);
 			}
-			reader = writer.GetReader();
+			reader = writer.Reader;
 			writer.Dispose();
 			searcher = NewSearcher(reader);
 		}

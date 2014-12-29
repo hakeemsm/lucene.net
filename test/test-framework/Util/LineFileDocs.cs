@@ -9,7 +9,7 @@ using System.IO;
 using System.Threading;
 using Lucene.Net.Documents;
 using Lucene.Net.Util;
-using Lucene.NetDocument;
+using Lucene.Net.Documents;
 using Lucene.Net.TestFramework.Util;
 using Sharpen;
 
@@ -172,7 +172,7 @@ namespace Lucene.Net.TestFramework.Util
 
 		private sealed class DocState
 		{
-			internal readonly Lucene.NetDocument.Document doc;
+			internal readonly Lucene.Net.Documents.Document doc;
 
 			internal readonly Field titleTokenized;
 
@@ -188,13 +188,13 @@ namespace Lucene.Net.TestFramework.Util
 
 			public DocState(bool useDocValues)
 			{
-				doc = new Lucene.NetDocument.Document();
+				doc = new Lucene.Net.Documents.Document();
 				title = new StringField("title", string.Empty, Field.Store.NO);
 				doc.Add(title);
 				FieldType ft = new FieldType(TextField.TYPE_STORED);
-				ft.SetStoreTermVectors(true);
-				ft.SetStoreTermVectorOffsets(true);
-				ft.SetStoreTermVectorPositions(true);
+				ft.StoreTermVectors = (true);
+				ft.StoreTermVectorOffsets = (true);
+				ft.StoreTermVectorPositions = (true);
 				titleTokenized = new Field("titleTokenized", string.Empty, ft);
 				doc.Add(titleTokenized);
 				body = new Field("body", string.Empty, ft);

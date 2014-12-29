@@ -39,7 +39,7 @@ namespace Lucene.Net.Test.Index
 		/// <exception cref="System.Exception"></exception>
 		protected internal virtual void CheckSnapshotExists(Directory dir, IndexCommit c)
 		{
-			string segFileName = c.GetSegmentsFileName();
+			string segFileName = c.SegmentsFileName;
 			IsTrue("segments file not found in directory: " + segFileName
 				, SlowFileExists(dir, segFileName));
 		}
@@ -59,9 +59,9 @@ namespace Lucene.Net.Test.Index
 			}
 		}
 
-		protected internal IList<IndexCommit> snapshots = new AList<IndexCommit>();
+		protected internal IList<IndexCommit> snapshots = new List<IndexCommit>();
 
-		/// <exception cref="Sharpen.RuntimeException"></exception>
+		/// <exception cref="Sharpen.SystemException"></exception>
 		/// <exception cref="System.IO.IOException"></exception>
 		protected internal virtual void PrepareIndexAndSnapshots(SnapshotDeletionPolicy sdp
 			, IndexWriter writer, int numSnapshots)
@@ -71,7 +71,7 @@ namespace Lucene.Net.Test.Index
 				// create dummy document to trigger commit.
 				writer.AddDocument(new Lucene.Net.Documents.Document());
 				writer.Commit();
-				snapshots.AddItem(sdp.Snapshot());
+				snapshots.Add(sdp.Snapshot());
 			}
 		}
 
@@ -131,16 +131,16 @@ namespace Lucene.Net.Test.Index
 			{
 			}
 			// expected
-			dp = (SnapshotDeletionPolicy)writer.Config.GetIndexDeletionPolicy();
+			dp = (SnapshotDeletionPolicy)writer.Config.IndexDeletionPolicy;
 			writer.Commit();
-			Sharpen.Thread t = new _Thread_122(writer, stopTime);
+			Thread t = new _Thread_122(writer, stopTime);
 			t.Start();
 			do
 			{
 				// While the above indexing thread is running, take many
 				// backups:
 				BackupIndex(dir, dp);
-				Sharpen.Thread.Sleep(20);
+				Thread.Sleep(20);
 			}
 			while (t.IsAlive());
 			t.Join();
@@ -162,7 +162,7 @@ namespace Lucene.Net.Test.Index
 				);
 		}
 
-		private sealed class _Thread_122 : Sharpen.Thread
+		private sealed class _Thread_122 : Thread
 		{
 			public _Thread_122(IndexWriter writer, long stopTime)
 			{
@@ -200,13 +200,13 @@ namespace Lucene.Net.Test.Index
 							}
 							catch (Exception e)
 							{
-								throw new RuntimeException(e);
+								throw new SystemException(e);
 							}
 						}
 					}
 					try
 					{
-						Sharpen.Thread.Sleep(1);
+						Thread.Sleep(1);
 					}
 					catch (Exception ie)
 					{
@@ -252,7 +252,7 @@ namespace Lucene.Net.Test.Index
 			// While we hold the snapshot, and nomatter how long
 			// we take to do the backup, the IndexWriter will
 			// never delete the files in the snapshot:
-			ICollection<string> files = cp.GetFileNames();
+			ICollection<string> files = cp.FileNames;
 			foreach (string fileName in files)
 			{
 				// NOTE: in a real backup you would not use
@@ -294,7 +294,7 @@ namespace Lucene.Net.Test.Index
 				// make sure we are exercising the fact that the
 				// IndexWriter should not delete this file even when I
 				// take my time reading it.
-				Sharpen.Thread.Sleep(1);
+				Thread.Sleep(1);
 			}
 			finally
 			{
@@ -341,7 +341,7 @@ namespace Lucene.Net.Test.Index
 				));
 			SnapshotDeletionPolicy sdp = (SnapshotDeletionPolicy)writer.Config.GetIndexDeletionPolicy
 				();
-			Sharpen.Thread[] threads = new Sharpen.Thread[10];
+			Thread[] threads = new Thread[10];
 			IndexCommit[] snapshots = new IndexCommit[threads.Length];
 			for (int i = 0; i < threads.Length; i++)
 			{
@@ -349,11 +349,11 @@ namespace Lucene.Net.Test.Index
 				threads[i] = new _Thread_287(writer, snapshots, finalI, sdp);
 				threads[i].SetName("t" + i);
 			}
-			foreach (Sharpen.Thread t in threads)
+			foreach (Thread t in threads)
 			{
 				t.Start();
 			}
-			foreach (Sharpen.Thread t_1 in threads)
+			foreach (Thread t_1 in threads)
 			{
 				t_1.Join();
 			}
@@ -370,7 +370,7 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		private sealed class _Thread_287 : Sharpen.Thread
+		private sealed class _Thread_287 : Thread
 		{
 			public _Thread_287(IndexWriter writer, IndexCommit[] snapshots, int finalI, SnapshotDeletionPolicy
 				 sdp)
@@ -391,7 +391,7 @@ namespace Lucene.Net.Test.Index
 				}
 				catch (Exception e)
 				{
-					throw new RuntimeException(e);
+					throw new SystemException(e);
 				}
 			}
 
@@ -423,7 +423,7 @@ namespace Lucene.Net.Test.Index
 			AssertSnapshotExists(dir, sdp, numSnapshots - 1, false);
 			writer.Dispose();
 			// but 'snapshot1' files will still exist (need to release snapshot before they can be deleted).
-			string segFileName = snapshots[1].GetSegmentsFileName();
+			string segFileName = snapshots[1].SegmentsFileName;
 			IsTrue("snapshot files should exist in the directory: " + 
 				segFileName, SlowFileExists(dir, segFileName));
 			dir.Dispose();
@@ -444,7 +444,7 @@ namespace Lucene.Net.Test.Index
 			writer.AddDocument(new Lucene.Net.Documents.Document());
 			writer.Commit();
 			// Release
-			string segFileName = snapshots[0].GetSegmentsFileName();
+			string segFileName = snapshots[0].SegmentsFileName;
 			sdp.Release(snapshots[0]);
 			writer.DeleteUnusedFiles();
 			writer.Dispose();
@@ -500,7 +500,7 @@ namespace Lucene.Net.Test.Index
 			// commit.
 			new IndexWriter(dir, GetConfig(Random(), null)).Dispose();
 			IsFalse("snapshotted commit should not exist", SlowFileExists
-				(dir, s1.GetSegmentsFileName()));
+				(dir, s1.SegmentsFileName));
 			dir.Dispose();
 		}
 	}

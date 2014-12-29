@@ -52,7 +52,7 @@ namespace Lucene.Net.Search
 				doc.Add(NewStringField(fieldName, string.Empty + term, Field.Store.YES));
 				w.AddDocument(doc);
 			}
-			IndexReader reader = w.GetReader();
+			IndexReader reader = w.Reader;
 			w.Dispose();
 
 			IndexSearcher searcher = NewSearcher(reader);

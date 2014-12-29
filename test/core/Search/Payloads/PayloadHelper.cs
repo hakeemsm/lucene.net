@@ -76,7 +76,7 @@ namespace Lucene.Net.Search.Payloads
 				{
 					if (this.fieldName.Equals(PayloadHelper.FIELD))
 					{
-						this.payloadAtt.SetPayload(new BytesRef(this._enclosing.payloadField));
+						this.payloadAtt.Payload = (new BytesRef(this._enclosing.payloadField));
 					}
 					else
 					{
@@ -84,11 +84,11 @@ namespace Lucene.Net.Search.Payloads
 						{
 							if (this.numSeen % 2 == 0)
 							{
-								this.payloadAtt.SetPayload(new BytesRef(this._enclosing.payloadMultiField1));
+								this.payloadAtt.Payload = (new BytesRef(this._enclosing.payloadMultiField1));
 							}
 							else
 							{
-								this.payloadAtt.SetPayload(new BytesRef(this._enclosing.payloadMultiField2));
+								this.payloadAtt.Payload = (new BytesRef(this._enclosing.payloadMultiField2));
 							}
 							this.numSeen++;
 						}

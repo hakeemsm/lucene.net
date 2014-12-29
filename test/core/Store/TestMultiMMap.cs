@@ -377,7 +377,7 @@ namespace Lucene.Net.Store
 		/// <exception cref="System.Exception"></exception>
 		private void AssertChunking(Random random, int chunkSize)
 		{
-			FilePath path = CreateTempDir("mmap" + chunkSize);
+			DirectoryInfo path = CreateTempDir("mmap" + chunkSize);
 			MMapDirectory mmapDir = new MMapDirectory(path, null, chunkSize);
 			// we will map a lot, try to turn on the unmap hack
 			if (MMapDirectory.UNMAP_SUPPORTED)
@@ -401,7 +401,7 @@ namespace Lucene.Net.Store
 				junk.StringValue = TestUtil.RandomUnicodeString(random));
 				writer.AddDocument(doc);
 			}
-			IndexReader reader = writer.GetReader();
+			IndexReader reader = writer.Reader;
 			writer.Dispose();
 			int numAsserts = AtLeast(100);
 			for (int i_1 = 0; i_1 < numAsserts; i_1++)

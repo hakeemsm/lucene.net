@@ -297,7 +297,7 @@ namespace Lucene.Net.Store
 		private class MockFSDirectory : BaseDirectory
 		{
 			
-			internal IList<IndexInput> allIndexInputs = new AList<IndexInput>();
+			internal IList<IndexInput> allIndexInputs = new List<IndexInput>();
 			
 			internal System.Random rand;
 			

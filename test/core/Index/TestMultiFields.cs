@@ -34,7 +34,7 @@ namespace Lucene.Net.Test.Index
 				w.SetKeepFullyDeletedSegments(true);
 				IDictionary<BytesRef, IList<int>> docs = new Dictionary<BytesRef, IList<int>>();
 				ICollection<int> deleted = new HashSet<int>();
-				IList<BytesRef> terms = new AList<BytesRef>();
+				IList<BytesRef> terms = new List<BytesRef>();
 				int numDocs = TestUtil.NextInt(Random(), 1, 100 * RANDOM_MULTIPLIER);
 				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
@@ -55,7 +55,7 @@ namespace Lucene.Net.Test.Index
 					{
 						// re-use existing term
 						BytesRef term = terms[Random().Next(terms.Count)];
-						docs.Get(term).AddItem(i);
+						docs.Get(term).Add(i);
 						f.StringValue = term.Utf8ToString());
 					}
 					else
@@ -64,11 +64,11 @@ namespace Lucene.Net.Test.Index
 						BytesRef term = new BytesRef(s);
 						if (!docs.ContainsKey(term))
 						{
-							docs.Put(term, new AList<int>());
+							docs.Put(term, new List<int>());
 						}
-						docs.Get(term).AddItem(i);
-						terms.AddItem(term);
-						uniqueTerms.AddItem(term);
+						docs.Get(term).Add(i);
+						terms.Add(term);
+						uniqueTerms.Add(term);
 						f.StringValue = s);
 					}
 					id.StringValue = string.Empty + i);
@@ -80,7 +80,7 @@ namespace Lucene.Net.Test.Index
 					if (i > 0 && Random().Next(20) == 1)
 					{
 						int delID = Random().Next(i);
-						deleted.AddItem(delID);
+						deleted.Add(delID);
 						w.DeleteDocuments(new Term("id", string.Empty + delID));
 						if (VERBOSE)
 						{
@@ -90,7 +90,7 @@ namespace Lucene.Net.Test.Index
 				}
 				if (VERBOSE)
 				{
-					IList<BytesRef> termsList = new AList<BytesRef>(uniqueTerms);
+					IList<BytesRef> termsList = new List<BytesRef>(uniqueTerms);
 					termsList.Sort(BytesRef.GetUTF8SortedAsUTF16Comparator());
 					System.Console.Out.WriteLine("TEST: terms in UTF16 order:");
 					foreach (BytesRef b in termsList)
@@ -110,7 +110,7 @@ namespace Lucene.Net.Test.Index
 						}
 					}
 				}
-				IndexReader reader = w.GetReader();
+				IndexReader reader = w.Reader;
 				w.Dispose();
 				if (VERBOSE)
 				{
@@ -158,7 +158,7 @@ namespace Lucene.Net.Test.Index
 			w.AddDocument(d);
 			w.Commit();
 			w.AddDocument(d);
-			IndexReader r = w.GetReader();
+			IndexReader r = w.Reader;
 			w.Dispose();
 			DocsEnum d1 = TestUtil.Docs(Random(), r, "f", new BytesRef("j"), null, null, DocsEnum
 				.FLAG_NONE);
@@ -181,7 +181,7 @@ namespace Lucene.Net.Test.Index
 			w.AddDocument(d);
 			w.Commit();
 			w.AddDocument(d);
-			IndexReader r = w.GetReader();
+			IndexReader r = w.Reader;
 			w.Dispose();
 			DocsEnum de = MultiFields.GetTermDocsEnum(r, null, "f", new BytesRef("j"));
 			AreEqual(0, de.NextDoc());

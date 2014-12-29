@@ -67,7 +67,7 @@ namespace Lucene.Net.Search.Spans
 				Field("gender", "female"), Field("first", "sally"), Field("last", "smith"), Field
 				("gender", "female"), Field("first", "linda"), Field("last", "dixit"), Field("gender"
 				, "male"), Field("first", "bubba"), Field("last", "jones") }));
-			reader = writer.GetReader();
+			reader = writer.Reader;
 			writer.Dispose();
 			searcher = NewSearcher(reader);
 		}

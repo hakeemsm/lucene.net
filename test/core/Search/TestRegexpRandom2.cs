@@ -51,13 +51,13 @@ namespace Lucene.Net.Search
 				();
 			Field field = NewStringField(fieldName, string.Empty, Field.Store.NO);
 			doc.Add(field);
-			IList<string> terms = new AList<string>();
+			IList<string> terms = new List<string>();
 			int num = AtLeast(200);
 			for (int i = 0; i < num; i++)
 			{
 				string s = TestUtil.RandomUnicodeString(Random());
 				field.StringValue = s);
-				terms.AddItem(s);
+				terms.Add(s);
 				writer.AddDocument(doc);
 			}
 			if (VERBOSE)
@@ -70,7 +70,7 @@ namespace Lucene.Net.Search
 					System.Console.Out.WriteLine("  " + UnicodeUtil.ToHexString(s));
 				}
 			}
-			reader = writer.GetReader();
+			reader = writer.Reader;
 			searcher1 = NewSearcher(reader);
 			searcher2 = NewSearcher(reader);
 			writer.Dispose();

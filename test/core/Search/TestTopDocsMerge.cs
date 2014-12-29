@@ -118,7 +118,7 @@ namespace Lucene.Net.Search
 					}
 					w.AddDocument(doc);
 				}
-				reader = w.GetReader();
+				reader = w.Reader;
 				w.Dispose();
 			}
 			// NOTE: sometimes reader has just one segment, which is
@@ -150,17 +150,17 @@ namespace Lucene.Net.Search
 					docBase += ((AtomicReader)leave.Reader).MaxDoc;
 				}
 			}
-			IList<SortField> sortFields = new AList<SortField>();
-			sortFields.AddItem(new SortField("string", SortField.Type.STRING, true));
-			sortFields.AddItem(new SortField("string", SortField.Type.STRING, false));
-			sortFields.AddItem(new SortField("int", SortField.Type.INT, true));
-			sortFields.AddItem(new SortField("int", SortField.Type.INT, false));
-			sortFields.AddItem(new SortField("float", SortField.Type.FLOAT, true));
-			sortFields.AddItem(new SortField("float", SortField.Type.FLOAT, false));
-			sortFields.AddItem(new SortField(null, SortField.Type.SCORE, true));
-			sortFields.AddItem(new SortField(null, SortField.Type.SCORE, false));
-			sortFields.AddItem(new SortField(null, SortField.Type.DOC, true));
-			sortFields.AddItem(new SortField(null, SortField.Type.DOC, false));
+			IList<SortField> sortFields = new List<SortField>();
+			sortFields.Add(new SortField("string", SortField.Type.STRING, true));
+			sortFields.Add(new SortField("string", SortField.Type.STRING, false));
+			sortFields.Add(new SortField("int", SortField.Type.INT, true));
+			sortFields.Add(new SortField("int", SortField.Type.INT, false));
+			sortFields.Add(new SortField("float", SortField.Type.FLOAT, true));
+			sortFields.Add(new SortField("float", SortField.Type.FLOAT, false));
+			sortFields.Add(new SortField(null, SortField.Type.SCORE, true));
+			sortFields.Add(new SortField(null, SortField.Type.SCORE, false));
+			sortFields.Add(new SortField(null, SortField.Type.DOC, true));
+			sortFields.Add(new SortField(null, SortField.Type.DOC, false));
 			for (int iter = 0; iter < 1000 * RANDOM_MULTIPLIER; iter++)
 			{
 				// TODO: custom FieldComp...

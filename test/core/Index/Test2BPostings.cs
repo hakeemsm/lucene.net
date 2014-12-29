@@ -34,7 +34,7 @@ namespace Lucene.Net.Test.Index
 			}
 			var doc = new Lucene.Net.Documents.Document();
 			FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
-			ft.OmitNorms = (true);
+			ft.OmitsNorms = (true);
 			ft.IndexOptions = (FieldInfo.IndexOptions.DOCS_ONLY);
 			Field field = new Field("field", new Test2BPostings.MyTokenStream(), ft);
 			doc.Add(field);

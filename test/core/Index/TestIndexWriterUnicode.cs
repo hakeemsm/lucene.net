@@ -173,7 +173,7 @@ namespace Lucene.Net.Test.Index
 				string s = term.Utf8ToString();
 				IsTrue("term " + TermDesc(s) + " was not added to index (count="
 					 + allTerms.Count + ")", allTerms.Contains(s));
-				seenTerms.AddItem(s);
+				seenTerms.Add(s);
 			}
 			if (isTop)
 			{
@@ -276,7 +276,7 @@ namespace Lucene.Net.Test.Index
 			doc = new Lucene.Net.Documents.Document();
 			doc.Add(NewTextField("field", "a", Field.Store.NO));
 			w.AddDocument(doc);
-			IndexReader r = w.GetReader();
+			IndexReader r = w.Reader;
 			AreEqual(1, r.DocFreq(new Term("field", "a\uffffb")));
 			r.Dispose();
 			w.Dispose();
@@ -306,7 +306,7 @@ namespace Lucene.Net.Test.Index
 				AreEqual("field " + i_1 + " was not indexed correctly", 1, 
 					ir.DocFreq(new Term("f" + i_1, utf8Data[2 * i_1 + 1])));
 				AreEqual("field " + i_1 + " is incorrect", utf8Data[2 * i_1
-					 + 1], doc2.GetField("f" + i_1).StringValue = ));
+					 + 1], doc2.GetField("f" + i_1).StringValue);
 			}
 			ir.Dispose();
 			dir.Dispose();
@@ -357,7 +357,7 @@ namespace Lucene.Net.Test.Index
 						);
 					s = new string(chars, 0, 2);
 				}
-				allTerms.AddItem(s);
+				allTerms.Add(s);
 				f.StringValue = s);
 				writer.AddDocument(d);
 				if ((1 + i) % 42 == 0)
@@ -365,7 +365,7 @@ namespace Lucene.Net.Test.Index
 					writer.Commit();
 				}
 			}
-			IndexReader r = writer.GetReader();
+			IndexReader r = writer.Reader;
 			// Test each sub-segment
 			foreach (AtomicReaderContext ctx in r.Leaves)
 			{
@@ -376,7 +376,7 @@ namespace Lucene.Net.Test.Index
 			r.Dispose();
 			writer.ForceMerge(1);
 			// Test single segment
-			r = writer.GetReader();
+			r = writer.Reader;
 			CheckTermsOrder(r, allTerms, true);
 			r.Dispose();
 			writer.Dispose();

@@ -77,27 +77,27 @@ namespace Lucene.Net.Test.Index
 			ICollection<string> notIndexedFieldNames = new HashSet<string>();
 			ICollection<string> tvFieldNames = new HashSet<string>();
 			ICollection<string> noTVFieldNames = new HashSet<string>();
-			foreach (FieldInfo fieldInfo in reader.GetFieldInfos())
+			foreach (FieldInfo fieldInfo in reader.FieldInfos)
 			{
 				string name = fieldInfo.name;
-				allFieldNames.AddItem(name);
-				if (fieldInfo.IsIndexed())
+				allFieldNames.Add(name);
+				if (fieldInfo.IsIndexed)
 				{
-					indexedFieldNames.AddItem(name);
+					indexedFieldNames.Add(name);
 				}
 				else
 				{
-					notIndexedFieldNames.AddItem(name);
+					notIndexedFieldNames.Add(name);
 				}
-				if (fieldInfo.HasVectors())
+				if (fieldInfo.HasVectors)
 				{
-					tvFieldNames.AddItem(name);
+					tvFieldNames.Add(name);
 				}
 				else
 				{
-					if (fieldInfo.IsIndexed())
+					if (fieldInfo.IsIndexed)
 					{
-						noTVFieldNames.AddItem(name);
+						noTVFieldNames.Add(name);
 					}
 				}
 			}
@@ -173,7 +173,7 @@ namespace Lucene.Net.Test.Index
 				if (f.FieldType().Indexed())
 				{
 					AreEqual(reader.GetNormValues(f.Name()) != null, !f.FieldType
-						().OmitNorms());
+						().OmitsNorms());
 					AreEqual(reader.GetNormValues(f.Name()) != null, !DocHelper
 						.noNorms.ContainsKey(f.Name()));
 					if (reader.GetNormValues(f.Name()) == null)

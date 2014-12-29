@@ -92,7 +92,7 @@ namespace Lucene.Net.Search
 
 		static TestDisjunctionMaxQuery()
 		{
-			nonAnalyzedType.SetTokenized(false);
+			nonAnalyzedType.Tokenized = (false);
 		}
 		[SetUp]
 		public override void  SetUp()
@@ -142,7 +142,7 @@ namespace Lucene.Net.Search
 				d4.Add(NewTextField("dek", "albino", Field.Store.YES));
 				writer.AddDocument(d4);
 			}
-			r = SlowCompositeReaderWrapper.Wrap(writer.GetReader());
+			r = SlowCompositeReaderWrapper.Wrap(writer.Reader);
 			writer.Dispose();
 
 			s = NewSearcher(r);

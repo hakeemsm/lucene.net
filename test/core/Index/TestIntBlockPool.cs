@@ -62,12 +62,12 @@ namespace Lucene.Net.Test.Index
 				));
 			for (int j = 0; j < 2; j++)
 			{
-				IList<TestIntBlockPool.StartEndAndValues> holders = new AList<TestIntBlockPool.StartEndAndValues
+				IList<TestIntBlockPool.StartEndAndValues> holders = new List<TestIntBlockPool.StartEndAndValues
 					>();
 				int num = AtLeast(4);
 				for (int i = 0; i < num; i++)
 				{
-					holders.AddItem(new TestIntBlockPool.StartEndAndValues(Random().Next(1000)));
+					holders.Add(new TestIntBlockPool.StartEndAndValues(Random().Next(1000)));
 				}
 				IntBlockPool.SliceWriter writer = new IntBlockPool.SliceWriter(pool);
 				IntBlockPool.SliceReader reader = new IntBlockPool.SliceReader(pool);

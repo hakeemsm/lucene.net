@@ -39,8 +39,8 @@ namespace Lucene.Net.Store
 			double targetMBPerSec = 10.0 + 20 * Random().NextDouble();
 			RateLimiter.SimpleRateLimiter limiter = new RateLimiter.SimpleRateLimiter(targetMBPerSec
 				);
-			CountDownLatch startingGun = new CountDownLatch(1);
-			Sharpen.Thread[] threads = new Sharpen.Thread[TestUtil.NextInt(Random(), 3, 6)];
+			CountdownEvent startingGun = new CountdownEvent(1);
+			Thread[] threads = new Thread[TestUtil.NextInt(Random(), 3, 6)];
 			AtomicLong totBytes = new AtomicLong();
 			for (int i = 0; i < threads.Length; i++)
 			{
@@ -49,7 +49,7 @@ namespace Lucene.Net.Store
 			}
 			long startNS = Runtime.NanoTime();
 			startingGun.CountDown();
-			foreach (Sharpen.Thread thread in threads)
+			foreach (Thread thread in threads)
 			{
 				thread.Join();
 			}
@@ -64,9 +64,9 @@ namespace Lucene.Net.Store
 				 + actualMBPerSec, ratio >= 0.9 && ratio <= 1.1);
 		}
 
-		private sealed class _Thread_58 : Sharpen.Thread
+		private sealed class _Thread_58 : Thread
 		{
-			public _Thread_58(CountDownLatch startingGun, AtomicLong totBytes, RateLimiter.SimpleRateLimiter
+			public _Thread_58(CountdownEvent startingGun, AtomicLong totBytes, RateLimiter.SimpleRateLimiter
 				 limiter)
 			{
 				this.startingGun = startingGun;
@@ -98,7 +98,7 @@ namespace Lucene.Net.Store
 				}
 			}
 
-			private readonly CountDownLatch startingGun;
+			private readonly CountdownEvent startingGun;
 
 			private readonly AtomicLong totBytes;
 

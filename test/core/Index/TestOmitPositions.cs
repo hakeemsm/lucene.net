@@ -32,7 +32,7 @@ namespace Lucene.Net.Test.Index
 			{
 				w.AddDocument(doc);
 			}
-			IndexReader reader = w.GetReader();
+			IndexReader reader = w.Reader;
 			w.Dispose();
 			IsNull(MultiFields.GetTermPositionsEnum(reader, null, "foo"
 				, new BytesRef("test")));
@@ -115,7 +115,7 @@ namespace Lucene.Net.Test.Index
 			// flush
 			writer.Dispose();
 			SegmentReader reader = GetOnlySegmentReader(DirectoryReader.Open(ram));
-			FieldInfos fi = reader.GetFieldInfos();
+			FieldInfos fi = reader.FieldInfos;
 			// docs + docs = docs
 			AreEqual(FieldInfo.IndexOptions.DOCS_ONLY, fi.FieldInfo("f1"
 				).GetIndexOptions());
@@ -231,7 +231,7 @@ namespace Lucene.Net.Test.Index
 			{
 				iw.ForceMerge(1);
 			}
-			DirectoryReader ir = iw.GetReader();
+			DirectoryReader ir = iw.Reader;
 			FieldInfos fis = MultiFields.GetMergedFieldInfos(ir);
 			AreEqual(FieldInfo.IndexOptions.DOCS_AND_FREQS, fis.FieldInfo
 				("foo").GetIndexOptions());

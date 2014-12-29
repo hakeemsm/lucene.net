@@ -76,11 +76,11 @@ namespace Lucene.Net.Util.Fst
 					// FSA
 					Outputs<object> outputs = NoOutputs.GetSingleton();
 					object NO_OUTPUT = outputs.GetNoOutput();
-					IList<FSTTester.InputOutput<object>> pairs = new AList<FSTTester.InputOutput<object
+					IList<FSTTester.InputOutput<object>> pairs = new List<FSTTester.InputOutput<object
 						>>(terms2.Length);
 					foreach (IntsRef term in terms2)
 					{
-						pairs.AddItem(new FSTTester.InputOutput<object>(term, NO_OUTPUT));
+						pairs.Add(new FSTTester.InputOutput<object>(term, NO_OUTPUT));
 					}
 					FST<object> fst = new FSTTester<object>(Random(), dir, inputMode, pairs, outputs, 
 						false).DoTest(0, 0, false);
@@ -91,11 +91,11 @@ namespace Lucene.Net.Util.Fst
 				{
 					// FST ord pos int
 					PositiveIntOutputs outputs = PositiveIntOutputs.GetSingleton();
-					IList<FSTTester.InputOutput<long>> pairs = new AList<FSTTester.InputOutput<long>>
+					IList<FSTTester.InputOutput<long>> pairs = new List<FSTTester.InputOutput<long>>
 						(terms2.Length);
 					for (int idx_2 = 0; idx_2 < terms2.Length; idx_2++)
 					{
-						pairs.AddItem(new FSTTester.InputOutput<long>(terms2[idx_2], (long)idx_2));
+						pairs.Add(new FSTTester.InputOutput<long>(terms2[idx_2], (long)idx_2));
 					}
 					FST<long> fst = new FSTTester<long>(Random(), dir, inputMode, pairs, outputs, true
 						).DoTest(0, 0, false);
@@ -107,13 +107,13 @@ namespace Lucene.Net.Util.Fst
 					// FST byte sequence ord
 					ByteSequenceOutputs outputs = ByteSequenceOutputs.GetSingleton();
 					BytesRef NO_OUTPUT = outputs.GetNoOutput();
-					IList<FSTTester.InputOutput<BytesRef>> pairs = new AList<FSTTester.InputOutput<BytesRef
+					IList<FSTTester.InputOutput<BytesRef>> pairs = new List<FSTTester.InputOutput<BytesRef
 						>>(terms2.Length);
 					for (int idx_2 = 0; idx_2 < terms2.Length; idx_2++)
 					{
 						BytesRef output = Random().Next(30) == 17 ? NO_OUTPUT : new BytesRef(Sharpen.Extensions.ToString
 							(idx_2));
-						pairs.AddItem(new FSTTester.InputOutput<BytesRef>(terms2[idx_2], output));
+						pairs.Add(new FSTTester.InputOutput<BytesRef>(terms2[idx_2], output));
 					}
 					FST<BytesRef> fst = new FSTTester<BytesRef>(Random(), dir, inputMode, pairs, outputs
 						, false).DoTest(0, 0, false);
@@ -133,11 +133,11 @@ namespace Lucene.Net.Util.Fst
 				// NoOutputs (simple FSA)
 				Outputs<object> outputs = NoOutputs.GetSingleton();
 				object NO_OUTPUT = outputs.GetNoOutput();
-				IList<FSTTester.InputOutput<object>> pairs = new AList<FSTTester.InputOutput<object
+				IList<FSTTester.InputOutput<object>> pairs = new List<FSTTester.InputOutput<object
 					>>(terms.Length);
 				foreach (IntsRef term in terms)
 				{
-					pairs.AddItem(new FSTTester.InputOutput<object>(term, NO_OUTPUT));
+					pairs.Add(new FSTTester.InputOutput<object>(term, NO_OUTPUT));
 				}
 				new FSTTester<object>(Random(), dir, inputMode, pairs, outputs, false).DoTest(true
 					);
@@ -145,36 +145,36 @@ namespace Lucene.Net.Util.Fst
 			{
 				// PositiveIntOutput (ord)
 				PositiveIntOutputs outputs = PositiveIntOutputs.GetSingleton();
-				IList<FSTTester.InputOutput<long>> pairs = new AList<FSTTester.InputOutput<long>>
+				IList<FSTTester.InputOutput<long>> pairs = new List<FSTTester.InputOutput<long>>
 					(terms.Length);
 				for (int idx = 0; idx < terms.Length; idx++)
 				{
-					pairs.AddItem(new FSTTester.InputOutput<long>(terms[idx], (long)idx));
+					pairs.Add(new FSTTester.InputOutput<long>(terms[idx], (long)idx));
 				}
 				new FSTTester<long>(Random(), dir, inputMode, pairs, outputs, true).DoTest(true);
 			}
 			{
 				// PositiveIntOutput (random monotonically increasing positive number)
 				PositiveIntOutputs outputs = PositiveIntOutputs.GetSingleton();
-				IList<FSTTester.InputOutput<long>> pairs = new AList<FSTTester.InputOutput<long>>
+				IList<FSTTester.InputOutput<long>> pairs = new List<FSTTester.InputOutput<long>>
 					(terms.Length);
 				long lastOutput = 0;
 				for (int idx = 0; idx < terms.Length; idx++)
 				{
 					long value = lastOutput + TestUtil.NextInt(Random(), 1, 1000);
 					lastOutput = value;
-					pairs.AddItem(new FSTTester.InputOutput<long>(terms[idx], value));
+					pairs.Add(new FSTTester.InputOutput<long>(terms[idx], value));
 				}
 				new FSTTester<long>(Random(), dir, inputMode, pairs, outputs, true).DoTest(true);
 			}
 			{
 				// PositiveIntOutput (random positive number)
 				PositiveIntOutputs outputs = PositiveIntOutputs.GetSingleton();
-				IList<FSTTester.InputOutput<long>> pairs = new AList<FSTTester.InputOutput<long>>
+				IList<FSTTester.InputOutput<long>> pairs = new List<FSTTester.InputOutput<long>>
 					(terms.Length);
 				for (int idx = 0; idx < terms.Length; idx++)
 				{
-					pairs.AddItem(new FSTTester.InputOutput<long>(terms[idx], TestUtil.NextLong(Random
+					pairs.Add(new FSTTester.InputOutput<long>(terms[idx], TestUtil.NextLong(Random
 						(), 0, long.MaxValue)));
 				}
 				new FSTTester<long>(Random(), dir, inputMode, pairs, outputs, false).DoTest(true);
@@ -184,14 +184,14 @@ namespace Lucene.Net.Util.Fst
 				PositiveIntOutputs o1 = PositiveIntOutputs.GetSingleton();
 				PositiveIntOutputs o2 = PositiveIntOutputs.GetSingleton();
 				PairOutputs<long, long> outputs = new PairOutputs<long, long>(o1, o2);
-				IList<FSTTester.InputOutput<PairOutputs.Pair<long, long>>> pairs = new AList<FSTTester.InputOutput
+				IList<FSTTester.InputOutput<PairOutputs.Pair<long, long>>> pairs = new List<FSTTester.InputOutput
 					<PairOutputs.Pair<long, long>>>(terms.Length);
 				long lastOutput = 0;
 				for (int idx = 0; idx < terms.Length; idx++)
 				{
 					long value = lastOutput + TestUtil.NextInt(Random(), 1, 1000);
 					lastOutput = value;
-					pairs.AddItem(new FSTTester.InputOutput<PairOutputs.Pair<long, long>>(terms[idx], 
+					pairs.Add(new FSTTester.InputOutput<PairOutputs.Pair<long, long>>(terms[idx], 
 						outputs.NewPair((long)idx, value)));
 				}
 				new FSTTester<PairOutputs.Pair<long, long>>(Random(), dir, inputMode, pairs, outputs
@@ -201,13 +201,13 @@ namespace Lucene.Net.Util.Fst
 				// Sequence-of-bytes
 				ByteSequenceOutputs outputs = ByteSequenceOutputs.GetSingleton();
 				BytesRef NO_OUTPUT = outputs.GetNoOutput();
-				IList<FSTTester.InputOutput<BytesRef>> pairs = new AList<FSTTester.InputOutput<BytesRef
+				IList<FSTTester.InputOutput<BytesRef>> pairs = new List<FSTTester.InputOutput<BytesRef
 					>>(terms.Length);
 				for (int idx = 0; idx < terms.Length; idx++)
 				{
 					BytesRef output = Random().Next(30) == 17 ? NO_OUTPUT : new BytesRef(Sharpen.Extensions.ToString
 						(idx));
-					pairs.AddItem(new FSTTester.InputOutput<BytesRef>(terms[idx], output));
+					pairs.Add(new FSTTester.InputOutput<BytesRef>(terms[idx], output));
 				}
 				new FSTTester<BytesRef>(Random(), dir, inputMode, pairs, outputs, false).DoTest(true
 					);
@@ -215,7 +215,7 @@ namespace Lucene.Net.Util.Fst
 			{
 				// Sequence-of-ints
 				IntSequenceOutputs outputs = IntSequenceOutputs.GetSingleton();
-				IList<FSTTester.InputOutput<IntsRef>> pairs = new AList<FSTTester.InputOutput<IntsRef
+				IList<FSTTester.InputOutput<IntsRef>> pairs = new List<FSTTester.InputOutput<IntsRef
 					>>(terms.Length);
 				for (int idx = 0; idx < terms.Length; idx++)
 				{
@@ -226,7 +226,7 @@ namespace Lucene.Net.Util.Fst
 					{
 						output.ints[idx2] = s[idx2];
 					}
-					pairs.AddItem(new FSTTester.InputOutput<IntsRef>(terms[idx], output));
+					pairs.Add(new FSTTester.InputOutput<IntsRef>(terms[idx], output));
 				}
 				new FSTTester<IntsRef>(Random(), dir, inputMode, pairs, outputs, false).DoTest(true
 					);
@@ -270,7 +270,7 @@ namespace Lucene.Net.Util.Fst
 					while (termsSet.Count < numWords)
 					{
 						string term = FSTTester.GetRandomString(random);
-						termsSet.AddItem(FSTTester.ToIntsRef(term, inputMode));
+						termsSet.Add(FSTTester.ToIntsRef(term, inputMode));
 					}
 					DoTest(inputMode, Sharpen.Collections.ToArray(termsSet, new IntsRef[termsSet.Count
 						]));
@@ -297,7 +297,7 @@ namespace Lucene.Net.Util.Fst
 				));
 			IndexWriterConfig conf = ((IndexWriterConfig)((IndexWriterConfig)NewIndexWriterConfig
 				(TEST_VERSION_CURRENT, analyzer).SetMaxBufferedDocs(-1)).SetRAMBufferSizeMB(64));
-			FilePath tempDir = CreateTempDir("fstlines");
+			DirectoryInfo tempDir = CreateTempDir("fstlines");
 			Directory dir = NewFSDirectory(tempDir);
 			IndexWriter writer = new IndexWriter(dir, conf);
 			long stopTime = DateTime.Now.CurrentTimeMillis() + RUN_TIME_MSEC;
@@ -573,7 +573,7 @@ namespace Lucene.Net.Util.Fst
 						w.Dispose();
 						System.Console.Out.WriteLine("Wrote FST to out.dot");
 					}
-					Directory dir = FSDirectory.Open(new FilePath(dirOut));
+					Directory dir = FSDirectory.Open(new DirectoryInfo(dirOut));
 					IndexOutput @out = dir.CreateOutput("fst.bin", IOContext.DEFAULT);
 					fst.Save(@out);
 					@out.Dispose();
@@ -606,11 +606,11 @@ namespace Lucene.Net.Util.Fst
 									T actual = Lucene.Net.Util.Fst.Util.Get(fst, intsRef);
 									if (actual == null)
 									{
-										throw new RuntimeException("unexpected null output on input=" + w);
+										throw new SystemException("unexpected null output on input=" + w);
 									}
 									if (!actual.Equals(expected))
 									{
-										throw new RuntimeException("wrong output (got " + outputs.OutputToString(actual) 
+										throw new SystemException("wrong output (got " + outputs.OutputToString(actual) 
 											+ " but expected " + outputs.OutputToString(expected) + ") on input=" + w);
 									}
 								}
@@ -622,11 +622,11 @@ namespace Lucene.Net.Util.Fst
 										);
 									if (actual == null)
 									{
-										throw new RuntimeException("unexpected null input from output=" + output);
+										throw new SystemException("unexpected null input from output=" + output);
 									}
 									if (!actual.Equals(intsRef))
 									{
-										throw new RuntimeException("wrong input (got " + actual + " but expected " + intsRef
+										throw new SystemException("wrong input (got " + actual + " but expected " + intsRef
 											 + " from output=" + output);
 									}
 								}
@@ -1028,17 +1028,17 @@ namespace Lucene.Net.Util.Fst
 							}
 						}
 					}
-					allIDs.AddItem(idString);
+					allIDs.Add(idString);
 					idField.StringValue = idString);
 					w.AddDocument(doc);
 				}
 				//w.forceMerge(1);
 				// turn writer into reader:
-				IndexReader r = w.GetReader();
+				IndexReader r = w.Reader;
 				IndexSearcher s_1 = NewSearcher(r);
 				w.Dispose();
-				IList<string> allIDsList = new AList<string>(allIDs);
-				IList<string> sortedAllIDsList = new AList<string>(allIDsList);
+				IList<string> allIDsList = new List<string>(allIDs);
+				IList<string> sortedAllIDsList = new List<string>(allIDsList);
 				sortedAllIDsList.Sort();
 				// Sprinkle in some non-existent PKs:
 				ICollection<string> outOfBounds = new HashSet<string>();
@@ -1060,8 +1060,8 @@ namespace Lucene.Net.Util.Fst
 							}
 						}
 					}
-					outOfBounds.AddItem(idString);
-					allIDsList.AddItem(idString);
+					outOfBounds.Add(idString);
+					allIDsList.Add(idString);
 				}
 				// Verify w/ TermQuery
 				for (int iter = 0; iter < 2 * NUM_IDS; iter++)
@@ -1174,7 +1174,7 @@ namespace Lucene.Net.Util.Fst
 			ICollection<string> allTerms = new HashSet<string>();
 			while (allTerms.Count < NUM_TERMS)
 			{
-				allTerms.AddItem(FSTTester.SimpleRandomString(Random()));
+				allTerms.Add(FSTTester.SimpleRandomString(Random()));
 			}
 			foreach (string term in allTerms)
 			{
@@ -1186,14 +1186,14 @@ namespace Lucene.Net.Util.Fst
 			{
 				System.Console.Out.WriteLine("TEST: get reader");
 			}
-			IndexReader r = w.GetReader();
+			IndexReader r = w.Reader;
 			if (VERBOSE)
 			{
 				System.Console.Out.WriteLine("TEST: got reader=" + r);
 			}
 			IndexSearcher s = NewSearcher(r);
 			w.Dispose();
-			IList<string> allTermsList = new AList<string>(allTerms);
+			IList<string> allTermsList = new List<string>(allTerms);
 			Sharpen.Collections.Shuffle(allTermsList, Random());
 			// verify exact lookup
 			foreach (string term_1 in allTermsList)
@@ -1223,7 +1223,7 @@ namespace Lucene.Net.Util.Fst
 				);
 			IsTrue(FST.FIXED_ARRAY_SHALLOW_DISTANCE >= 0);
 			_T1856215747 s = new _T1856215747(this);
-			AList<string> @out = new AList<string>();
+			List<string> @out = new List<string>();
 			StringBuilder b = new StringBuilder();
 			s.Generate(@out, b, 'a', 'i', 10);
 			string[] input = Sharpen.Collections.ToArray(@out, new string[@out.Count]);
@@ -1257,13 +1257,13 @@ namespace Lucene.Net.Util.Fst
 				return b.Finish();
 			}
 
-			internal virtual void Generate(AList<string> @out, StringBuilder b, char from, char
+			internal virtual void Generate(List<string> @out, StringBuilder b, char from, char
 				 to, int depth)
 			{
 				if (depth == 0 || from == to)
 				{
 					string seq = b.ToString() + "_" + @out.Count + "_end";
-					@out.AddItem(seq);
+					@out.Add(seq);
 				}
 				else
 				{
@@ -1643,7 +1643,7 @@ namespace Lucene.Net.Util.Fst
 				}
 				for (int j = 1; j < s.Length; j++)
 				{
-					allPrefixes.AddItem(Sharpen.Runtime.Substring(s, 0, j));
+					allPrefixes.Add(Sharpen.Runtime.Substring(s, 0, j));
 				}
 				int weight = TestUtil.NextInt(random, 1, 100);
 				// weights 1..100
@@ -1681,14 +1681,14 @@ namespace Lucene.Net.Util.Fst
 					fst.outputs.GetNoOutput(), minLongComparator, topN, true);
 				IsTrue(r.isComplete);
 				// 2. go thru whole treemap (slowCompletor) and check its actually the best suggestion
-				IList<Util.Result<long>> matches = new AList<Util.Result<long>>();
+				IList<Util.Result<long>> matches = new List<Util.Result<long>>();
 				// TODO: could be faster... but its slowCompletor for a reason
 				foreach (KeyValuePair<string, long> e_1 in slowCompletor.EntrySet())
 				{
 					if (e_1.Key.StartsWith(prefix))
 					{
 						//System.out.println("  consider " + e.getKey());
-						matches.AddItem(new Util.Result<long>(Lucene.Net.Util.Fst.Util.ToIntsRef(new 
+						matches.Add(new Util.Result<long>(Lucene.Net.Util.Fst.Util.ToIntsRef(new 
 							BytesRef(Sharpen.Runtime.Substring(e_1.Key, prefix.Length)), new IntsRef()), e_1
 							.Value - prefixOutput));
 					}
@@ -1779,7 +1779,7 @@ namespace Lucene.Net.Util.Fst
 				}
 				for (int j = 1; j < s.Length; j++)
 				{
-					allPrefixes.AddItem(Sharpen.Runtime.Substring(s, 0, j));
+					allPrefixes.Add(Sharpen.Runtime.Substring(s, 0, j));
 				}
 				int weight = TestUtil.NextInt(random, 1, 100);
 				// weights 1..100
@@ -1823,7 +1823,7 @@ namespace Lucene.Net.Util.Fst
 					, true);
 				IsTrue(r.isComplete);
 				// 2. go thru whole treemap (slowCompletor) and check its actually the best suggestion
-				IList<Util.Result<PairOutputs.Pair<long, long>>> matches = new AList<Util.Result<
+				IList<Util.Result<PairOutputs.Pair<long, long>>> matches = new List<Util.Result<
 					PairOutputs.Pair<long, long>>>();
 				// TODO: could be faster... but its slowCompletor for a reason
 				foreach (KeyValuePair<string, TestFSTs.TwoLongs> e_1 in slowCompletor.EntrySet())
@@ -1831,7 +1831,7 @@ namespace Lucene.Net.Util.Fst
 					if (e_1.Key.StartsWith(prefix))
 					{
 						//System.out.println("  consider " + e.getKey());
-						matches.AddItem(new Util.Result<PairOutputs.Pair<long, long>>(Lucene.Net.Util.Fst.Util
+						matches.Add(new Util.Result<PairOutputs.Pair<long, long>>(Lucene.Net.Util.Fst.Util
 							.ToIntsRef(new BytesRef(Sharpen.Runtime.Substring(e_1.Key, prefix.Length)), new 
 							IntsRef()), outputs.NewPair(e_1.Value.a - prefixOutput.output1, e_1.Value.b - prefixOutput
 							.output2)));

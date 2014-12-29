@@ -101,7 +101,7 @@ namespace Lucene.Net.Test.Index
 				}
 				riw.AddDocument(doc);
 			}
-			r = riw.GetReader();
+			r = riw.Reader;
 			riw.Dispose();
 			AreEqual(NUM_DOCS, r.NumDocs);
 			IsTrue(r.DocFreq(new Term("field", s1)) > 0);
@@ -177,10 +177,10 @@ namespace Lucene.Net.Test.Index
 								AreEqual(pos, postings.NextPosition());
 								if (Random().NextBoolean())
 								{
-									postings.GetPayload();
+									postings.Payload;
 									if (Random().NextBoolean())
 									{
-										postings.GetPayload();
+										postings.Payload;
 									}
 								}
 							}
@@ -243,10 +243,10 @@ namespace Lucene.Net.Test.Index
 								AreEqual(pos, postings.NextPosition());
 								if (Random().NextBoolean())
 								{
-									postings.GetPayload();
+									postings.Payload;
 									if (Random().NextBoolean())
 									{
-										postings.GetPayload();
+										postings.Payload;
 									}
 								}
 							}
@@ -317,7 +317,7 @@ namespace Lucene.Net.Test.Index
 					}
 					riw.AddDocument(doc);
 				}
-				r = riw.GetReader();
+				r = riw.Reader;
 				riw.Dispose();
 			}
 			else

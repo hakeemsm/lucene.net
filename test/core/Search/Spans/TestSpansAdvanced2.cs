@@ -42,7 +42,7 @@ namespace Lucene.Net.Search.Spans
 			AddDocument(writer, "B", "It should.  Should it?");
 			AddDocument(writer, "C", "It shouldn't.");
 			AddDocument(writer, "D", "Should we, should we, should we.");
-			reader2 = writer.GetReader();
+			reader2 = writer.Reader;
 			writer.Dispose();
 			// re-open the searcher since we added more docs
 			searcher2 = NewSearcher(reader2);

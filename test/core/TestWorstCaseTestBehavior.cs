@@ -18,16 +18,16 @@ namespace Org.Apache.Lucene
 		[Ignore]
 		public virtual void TestThreadLeak()
 		{
-			Sharpen.Thread t = new _Thread_29();
+			Thread t = new _Thread_29();
 			// Ignore.
 			t.Start();
 			while (!t.IsAlive())
 			{
-				Sharpen.Thread.Yield();
+				Thread.Yield();
 			}
 		}
 
-		private sealed class _Thread_29 : Sharpen.Thread
+		private sealed class _Thread_29 : Thread
 		{
 			public _Thread_29()
 			{
@@ -37,7 +37,7 @@ namespace Org.Apache.Lucene
 			{
 				try
 				{
-					Sharpen.Thread.Sleep(10000);
+					Thread.Sleep(10000);
 				}
 				catch (Exception)
 				{
@@ -83,12 +83,12 @@ namespace Org.Apache.Lucene
 		[Ignore]
 		public virtual void TestUncaughtException()
 		{
-			Sharpen.Thread t = new _Thread_73();
+			Thread t = new _Thread_73();
 			t.Start();
 			t.Join();
 		}
 
-		private sealed class _Thread_73 : Sharpen.Thread
+		private sealed class _Thread_73 : Thread
 		{
 			public _Thread_73()
 			{
@@ -96,7 +96,7 @@ namespace Org.Apache.Lucene
 
 			public override void Run()
 			{
-				throw new RuntimeException("foobar");
+				throw new SystemException("foobar");
 			}
 		}
 
@@ -104,7 +104,7 @@ namespace Org.Apache.Lucene
 		[Ignore]
 		public virtual void TestTimeout()
 		{
-			Sharpen.Thread.Sleep(5000);
+			Thread.Sleep(5000);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -115,7 +115,7 @@ namespace Org.Apache.Lucene
 			{
 				try
 				{
-					Sharpen.Thread.Sleep(1000);
+					Thread.Sleep(1000);
 				}
 				catch (Exception)
 				{

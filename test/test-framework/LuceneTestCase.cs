@@ -49,7 +49,7 @@ using Version = Lucene.Net.Util.Version;
 using Lucene.Net.Store;
 using Directory = Lucene.Net.Store.Directory;
 
-namespace Lucene.Net
+namespace Lucene.Net.TestFramework
 {
 
     /// <summary> Base class for all Lucene unit tests.  
@@ -2278,7 +2278,14 @@ namespace Lucene.Net
 
         protected static DirectoryInfo CreateTempDir(string name)
         {
-            var directoryInfo = new DirectoryInfo(Path.Combine(AppSettings.Get("tempDir", ""), name));
+            string tempPath = AppSettings.Get("tempDir",Path.GetTempPath());
+            if (!System.IO.Directory.Exists(tempPath))
+            {
+                System.IO.Directory.CreateDirectory(tempPath);
+            }
+            var path = Path.Combine(tempPath, name);
+            
+            var directoryInfo = new DirectoryInfo(path);
             directoryInfo.Create();
             return directoryInfo;
         }

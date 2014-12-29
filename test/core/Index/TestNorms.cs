@@ -103,7 +103,7 @@ namespace Lucene.Net.Test.Index
 				bar.StringValue = "singleton");
 				writer.AddDocument(doc);
 			}
-			IndexReader reader = writer.GetReader();
+			IndexReader reader = writer.Reader;
 			writer.Dispose();
 			NumericDocValues fooNorms = MultiDocValues.GetNormValues(reader, "foo");
 			for (int i_1 = 0; i_1 < reader.MaxDoc; i_1++)

@@ -113,17 +113,17 @@ namespace Lucene.Net.Search.Similarities
 				d.Add(NewTextField(FIELD_BODY, docs[i], Field.Store.YES));
 				writer.AddDocument(d);
 			}
-			reader = writer.GetReader();
+			reader = writer.Reader;
 			searcher = NewSearcher(reader);
 			writer.Dispose();
-			sims = new AList<SimilarityBase>();
+			sims = new List<SimilarityBase>();
 			foreach (BasicModel basicModel in BASIC_MODELS)
 			{
 				foreach (AfterEffect afterEffect in AFTER_EFFECTS)
 				{
 					foreach (Normalization normalization in NORMALIZATIONS)
 					{
-						sims.AddItem(new DFRSimilarity(basicModel, afterEffect, normalization));
+						sims.Add(new DFRSimilarity(basicModel, afterEffect, normalization));
 					}
 				}
 			}
@@ -133,13 +133,13 @@ namespace Lucene.Net.Search.Similarities
 				{
 					foreach (Normalization normalization in NORMALIZATIONS)
 					{
-						sims.AddItem(new IBSimilarity(distribution, lambda, normalization));
+						sims.Add(new IBSimilarity(distribution, lambda, normalization));
 					}
 				}
 			}
-			sims.AddItem(new LMDirichletSimilarity());
-			sims.AddItem(new LMJelinekMercerSimilarity(0.1f));
-			sims.AddItem(new LMJelinekMercerSimilarity(0.7f));
+			sims.Add(new LMDirichletSimilarity());
+			sims.Add(new LMJelinekMercerSimilarity(0.1f));
+			sims.Add(new LMJelinekMercerSimilarity(0.7f));
 		}
 
 		/// <summary>The default number of documents in the unit tests.</summary>

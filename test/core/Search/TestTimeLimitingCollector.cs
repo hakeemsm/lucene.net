@@ -71,7 +71,7 @@ namespace Lucene.Net.Search
 			{
 				Add(docText[i % docText.Length], iw);
 			}
-			reader = iw.GetReader();
+			reader = iw.Reader;
 			iw.Dispose();
 			searcher = NewSearcher(reader);
 			BooleanQuery booleanQuery = new BooleanQuery();
@@ -299,7 +299,7 @@ namespace Lucene.Net.Search
 		/// <exception cref="System.Exception"></exception>
 		private void DoTestMultiThreads(bool withTimeout)
 		{
-			Sharpen.Thread[] threadArray = new Sharpen.Thread[N_THREADS];
+			Thread[] threadArray = new Thread[N_THREADS];
 			BitSet success = new BitSet(N_THREADS);
 			for (int i = 0; i < threadArray.Length; ++i)
 			{
@@ -318,7 +318,7 @@ namespace Lucene.Net.Search
 				());
 		}
 
-		private sealed class _Thread_286 : Sharpen.Thread
+		private sealed class _Thread_286 : Thread
 		{
 			public _Thread_286(TestTimeLimitingCollector _enclosing, bool withTimeout, BitSet
 				 success, int num)
@@ -395,7 +395,7 @@ namespace Lucene.Net.Search
 				{
 					try
 					{
-						Sharpen.Thread.Sleep(this.slowdown);
+						Thread.Sleep(this.slowdown);
 					}
 					catch (Exception ie)
 					{

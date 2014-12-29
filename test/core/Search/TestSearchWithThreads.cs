@@ -57,7 +57,7 @@ namespace Lucene.Net.Search
 				w.AddDocument(doc);
 				sb.Delete(0, sb.Length);
 			}
-			IndexReader r = w.GetReader();
+			IndexReader r = w.Reader;
 			w.Dispose();
 			long endTime = DateTime.Now.CurrentTimeMillis();
 			if (VERBOSE)
@@ -67,17 +67,17 @@ namespace Lucene.Net.Search
 			IndexSearcher s = NewSearcher(r);
 			AtomicBoolean failed = new AtomicBoolean();
 			AtomicLong netSearch = new AtomicLong();
-			Sharpen.Thread[] threads = new Sharpen.Thread[NUM_SEARCH_THREADS];
+			Thread[] threads = new Thread[NUM_SEARCH_THREADS];
 			for (int threadID = 0; threadID < NUM_SEARCH_THREADS; threadID++)
 			{
 				threads[threadID] = new _Thread_80(this, failed, s, netSearch);
 				threads[threadID].SetDaemon(true);
 			}
-			foreach (Sharpen.Thread t in threads)
+			foreach (Thread t in threads)
 			{
 				t.Start();
 			}
-			foreach (Sharpen.Thread t_1 in threads)
+			foreach (Thread t_1 in threads)
 			{
 				t_1.Join();
 			}
@@ -90,7 +90,7 @@ namespace Lucene.Net.Search
 			dir.Dispose();
 		}
 
-		private sealed class _Thread_80 : Sharpen.Thread
+		private sealed class _Thread_80 : Thread
 		{
 			public _Thread_80(TestSearchWithThreads _enclosing, AtomicBoolean failed, IndexSearcher
 				 s, AtomicLong netSearch)
@@ -125,7 +125,7 @@ namespace Lucene.Net.Search
 				catch (Exception exc)
 				{
 					failed.Set(true);
-					throw new RuntimeException(exc);
+					throw new SystemException(exc);
 				}
 			}
 

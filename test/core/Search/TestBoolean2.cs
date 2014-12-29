@@ -103,7 +103,7 @@ namespace Lucene.Net.Search
 			{
 				w_1.AddDocument(doc_1);
 			}
-			reader = w_1.GetReader();
+			reader = w_1.Reader;
 			bigSearcher = NewSearcher(reader);
 			w_1.Dispose();
 		}

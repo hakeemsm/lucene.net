@@ -122,7 +122,7 @@ namespace Lucene.Net.Search
 			{
 				writer.AddDocument(new Document());
 			}
-			reader = writer.GetReader();
+			reader = writer.Reader;
 			writer.Dispose();
 		}
 		

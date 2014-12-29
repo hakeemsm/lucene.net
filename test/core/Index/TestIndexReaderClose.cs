@@ -1,22 +1,19 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using System.Collections.Generic;
-using Lucene.Net.Test.Analysis;
+using Lucene.Net.Analysis;
 using Lucene.Net.Index;
+using Lucene.Net.Randomized.Generators;
 using Lucene.Net.Store;
-using Lucene.Net.Util;
-using Sharpen;
+using Lucene.Net.Support;
+using Lucene.Net.TestFramework;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
+    [TestFixture]
 	public class TestIndexReaderClose : LuceneTestCase
 	{
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestCloseUnderException()
 		{
 			int iters = 1000 + 1 + Random().Next(20);
@@ -31,7 +28,7 @@ namespace Lucene.Net.Test.Index
 				bool throwOnClose = !Rarely();
 				AtomicReader wrap = SlowCompositeReaderWrapper.Wrap(open);
 				FilterAtomicReader reader = new _FilterAtomicReader_44(throwOnClose, wrap);
-				IList<IndexReader.ReaderClosedListener> listeners = new AList<IndexReader.ReaderClosedListener
+				IList<IndexReader.IReaderClosedListener> listeners = new List<IndexReader.IReaderClosedListener
 					>();
 				int listenerCount = Random().Next(20);
 				AtomicInteger count = new AtomicInteger();
@@ -71,8 +68,8 @@ namespace Lucene.Net.Test.Index
 				}
 				try
 				{
-					reader.Fields();
-					Fail("we are closed");
+				    var fields = reader.Fields;
+				    Fail("we are closed");
 				}
 				catch (AlreadyClosedException)
 				{
@@ -97,7 +94,7 @@ namespace Lucene.Net.Test.Index
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
-			protected override void DoClose()
+			protected internal override void DoClose()
 			{
 				base.DoClose();
 				if (throwOnClose)
@@ -109,7 +106,7 @@ namespace Lucene.Net.Test.Index
 			private readonly bool throwOnClose;
 		}
 
-		private sealed class CountListener : IndexReader.ReaderClosedListener
+		private sealed class CountListener : IndexReader.IReaderClosedListener
 		{
 			private readonly AtomicInteger count;
 
@@ -124,7 +121,7 @@ namespace Lucene.Net.Test.Index
 			}
 		}
 
-		private sealed class FaultyListener : IndexReader.ReaderClosedListener
+		private sealed class FaultyListener : IndexReader.IReaderClosedListener
 		{
 			public void OnClose(IndexReader reader)
 			{

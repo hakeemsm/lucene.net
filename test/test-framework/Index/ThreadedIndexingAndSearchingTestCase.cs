@@ -16,7 +16,7 @@ using Lucene.Net.Support;
 using Lucene.Net.TestFramework.Util;
 using NUnit.Framework;
 using Lucene.Net.TestFramework.Analysis;
-using Lucene.NetDocument;
+using Lucene.Net.Documents;
 using Lucene.Net.TestFramework.Index;
 using Lucene.Net.TestFramework.Search;
 using Lucene.Net.TestFramework.Store;
@@ -197,7 +197,7 @@ namespace Lucene.Net.TestFramework.Index
 									);
 							}
 						}
-						Lucene.NetDocument.Document doc = docs.NextDoc();
+						Lucene.Net.Documents.Document doc = docs.NextDoc();
 						if (doc == null)
 						{
 							break;
@@ -235,7 +235,7 @@ namespace Lucene.Net.TestFramework.Index
 								IList<string> docIDs = new AList<string>();
 								ThreadedIndexingAndSearchingTestCase.SubDocs subDocs = new ThreadedIndexingAndSearchingTestCase.SubDocs
 									(packID, docIDs);
-								IList<Lucene.NetDocument.Document> docsList = new AList<Lucene.NetDocument.Document
+								IList<Lucene.Net.Documents.Document> docsList = new AList<Lucene.Net.Documents.Document
 									>();
 								allSubDocs.AddItem(subDocs);
 								doc.Add(packIDField);
@@ -715,7 +715,7 @@ namespace Lucene.Net.TestFramework.Index
 								startDocID = docID;
 							}
 							lastDocID = docID;
-							Lucene.NetDocument.Document doc = s.Doc(docID);
+							Lucene.Net.Documents.Document doc = s.Doc(docID);
 							NUnit.Framework.Assert.AreEqual(subDocs.packID, doc.Get("packID"));
 						}
 						lastDocID = startDocID - 1;
@@ -813,7 +813,7 @@ namespace Lucene.Net.TestFramework.Index
 				{
 					if (liveDocs == null || liveDocs.Get(docID))
 					{
-						Lucene.NetDocument.Document doc = reader.Document(docID);
+						Lucene.Net.Documents.Document doc = reader.Document(docID);
 						sum += doc.GetFields().Count;
 					}
 				}

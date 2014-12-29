@@ -32,12 +32,12 @@ namespace Lucene.Net.Store
 			{
 				System.Console.Out.WriteLine("TEST: numDocs=" + numDocs);
 			}
-			IList<BytesRef> ids = new AList<BytesRef>();
+			IList<BytesRef> ids = new List<BytesRef>();
 			DirectoryReader r = null;
 			for (int docCount = 0; docCount < numDocs; docCount++)
 			{
 				Lucene.Net.Documents.Document doc = docs.NextDoc();
-				ids.AddItem(new BytesRef(doc.Get("docid")));
+				ids.Add(new BytesRef(doc.Get("docid")));
 				w.AddDocument(doc);
 				if (Random().Next(20) == 17)
 				{
@@ -92,7 +92,7 @@ namespace Lucene.Net.Store
 		public virtual void VerifyCompiles()
 		{
 			Analyzer analyzer = null;
-			Directory fsDir = FSDirectory.Open(new FilePath("/path/to/index"));
+			Directory fsDir = FSDirectory.Open(new DirectoryInfo("/path/to/index"));
 			NRTCachingDirectory cachedFSDir = new NRTCachingDirectory(fsDir, 2.0, 25.0);
 			IndexWriterConfig conf = new IndexWriterConfig(TEST_VERSION_CURRENT, analyzer);
 			IndexWriter writer = new IndexWriter(cachedFSDir, conf);
@@ -112,7 +112,7 @@ namespace Lucene.Net.Store
 		/// <exception cref="System.Exception"></exception>
 		public virtual void TestNoDir()
 		{
-			FilePath tempDir = CreateTempDir("doesnotexist");
+			DirectoryInfo tempDir = CreateTempDir("doesnotexist");
 			TestUtil.Rm(tempDir);
 			Directory dir = new NRTCachingDirectory(NewFSDirectory(tempDir), 2.0, 25.0);
 			try

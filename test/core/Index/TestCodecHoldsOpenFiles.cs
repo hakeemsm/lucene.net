@@ -1,35 +1,31 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System.IO;
-using Lucene.Net.Document;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
-using Lucene.Net.Store;
-using Lucene.Net.Util;
-using Sharpen;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Util;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
+    [TestFixture]
 	public class TestCodecHoldsOpenFiles : LuceneTestCase
 	{
-		/// <exception cref="System.Exception"></exception>
-		public virtual void Test()
+		[Test]
+		public virtual void TestCodecOpenFiles()
 		{
-			Directory d = NewDirectory();
+			var d = NewDirectory();
 			RandomIndexWriter w = new RandomIndexWriter(Random(), d);
 			int numDocs = AtLeast(100);
 			for (int i = 0; i < numDocs; i++)
 			{
-				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-					();
-				doc.Add(NewField("foo", "bar", TextField.TYPE_NOT_STORED));
-				w.AddDocument(doc);
+				var doc = new Lucene.Net.Documents.Document
+				{
+				    NewField("foo", "bar", TextField.TYPE_NOT_STORED)
+				};
+			    w.AddDocument(doc);
 			}
-			IndexReader r = w.GetReader();
-			w.Dispose();
+			IndexReader r = w.Reader;
+			w.Close();
 			foreach (string fileName in d.ListAll())
 			{
 				try
@@ -44,7 +40,7 @@ namespace Lucene.Net.Test.Index
 			// the file open
 			foreach (AtomicReaderContext cxt in r.Leaves)
 			{
-				TestUtil.CheckReader(((AtomicReader)cxt.Reader));
+				TestUtil.CheckReader(cxt.Reader);
 			}
 			r.Dispose();
 			d.Dispose();

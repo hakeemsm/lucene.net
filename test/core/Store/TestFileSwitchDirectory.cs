@@ -23,8 +23,8 @@ namespace Lucene.Net.Store
 		public virtual void TestBasic()
 		{
 			ICollection<string> fileExtensions = new HashSet<string>();
-			fileExtensions.AddItem(Lucene40StoredFieldsWriter.FIELDS_EXTENSION);
-			fileExtensions.AddItem(Lucene40StoredFieldsWriter.FIELDS_INDEX_EXTENSION);
+			fileExtensions.Add(Lucene40StoredFieldsWriter.FIELDS_EXTENSION);
+			fileExtensions.Add(Lucene40StoredFieldsWriter.FIELDS_INDEX_EXTENSION);
 			MockDirectoryWrapper primaryDir = new MockDirectoryWrapper(Random(), new RAMDirectory
 				());
 			primaryDir.SetCheckIndexOnClose(false);
@@ -40,7 +40,7 @@ namespace Lucene.Net.Store
 			OLD_FORMAT_IMPERSONATION_IS_ACTIVE = true;
 			IndexWriter writer = new IndexWriter(fsd, ((IndexWriterConfig)new IndexWriterConfig
 				(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMergePolicy(NewLogMergePolicy
-				(false)).SetCodec(Codec.ForName("Lucene40")).SetUseCompoundFile(false)));
+				(false)).SetCodec(Codec.ForName("Lucene40")).UseCompoundFile = (false)));
 			TestIndexWriterReader.CreateIndexNoClose(true, "ram", writer);
 			IndexReader reader = DirectoryReader.Open(writer, true);
 			AreEqual(100, reader.MaxDoc);
@@ -75,13 +75,13 @@ namespace Lucene.Net.Store
 		/// <exception cref="System.IO.IOException"></exception>
 		private Directory NewFSSwitchDirectory(ICollection<string> primaryExtensions)
 		{
-			FilePath primDir = CreateTempDir("foo");
-			FilePath secondDir = CreateTempDir("bar");
+			DirectoryInfo primDir = CreateTempDir("foo");
+			DirectoryInfo secondDir = CreateTempDir("bar");
 			return NewFSSwitchDirectory(primDir, secondDir, primaryExtensions);
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		private Directory NewFSSwitchDirectory(FilePath aDir, FilePath bDir, ICollection<
+		private Directory NewFSSwitchDirectory(DirectoryInfo aDir, DirectoryInfo bDir, ICollection<
 			string> primaryExtensions)
 		{
 			Directory a = new SimpleFSDirectory(aDir);
@@ -95,8 +95,8 @@ namespace Lucene.Net.Store
 		/// <exception cref="System.Exception"></exception>
 		public virtual void TestNoDir()
 		{
-			FilePath primDir = CreateTempDir("foo");
-			FilePath secondDir = CreateTempDir("bar");
+			DirectoryInfo primDir = CreateTempDir("foo");
+			DirectoryInfo secondDir = CreateTempDir("bar");
 			TestUtil.Rm(primDir);
 			TestUtil.Rm(secondDir);
 			Directory dir = NewFSSwitchDirectory(primDir, secondDir, Sharpen.Collections.EmptySet

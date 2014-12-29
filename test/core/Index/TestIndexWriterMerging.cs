@@ -66,11 +66,11 @@ namespace Lucene.Net.Test.Index
 				Lucene.Net.Documents.Document temp = reader.Document(i);
 				//System.out.println("doc "+i+"="+temp.getField("count").stringValue());
 				//compare the index doc number to the value that it should be
-				if (!temp.GetField("count").StringValue = ).Equals((i + startAt) + string.Empty))
+				if (!temp.GetField("count").StringValue.Equals((i + startAt) + string.Empty))
 				{
 					fail = true;
 					System.Console.Out.WriteLine("Document " + (i + startAt) + " is returning document "
-						 + temp.GetField("count").StringValue = ));
+						 + temp.GetField("count").StringValue);
 				}
 			}
 			reader.Dispose();
@@ -107,7 +107,7 @@ namespace Lucene.Net.Test.Index
 			FieldType customType = new FieldType();
 			customType.Stored = (true);
 			FieldType customType1 = new FieldType(TextField.TYPE_NOT_STORED);
-			customType1.SetTokenized(false);
+			customType1.Tokenized = (false);
 			customType1.StoreTermVectors = true;
 			customType1.StoreTermVectorPositions = true;
 			customType1.StoreTermVectorOffsets = true;
@@ -164,7 +164,7 @@ namespace Lucene.Net.Test.Index
 			FieldType customType = new FieldType();
 			customType.Stored = (true);
 			FieldType customType1 = new FieldType(TextField.TYPE_NOT_STORED);
-			customType1.SetTokenized(false);
+			customType1.Tokenized = (false);
 			customType1.StoreTermVectors = true;
 			customType1.StoreTermVectorPositions = true;
 			customType1.StoreTermVectorOffsets = true;
@@ -220,7 +220,7 @@ namespace Lucene.Net.Test.Index
 			FieldType customType = new FieldType();
 			customType.Stored = (true);
 			FieldType customType1 = new FieldType(TextField.TYPE_NOT_STORED);
-			customType1.SetTokenized(false);
+			customType1.Tokenized = (false);
 			customType1.StoreTermVectors = true;
 			customType1.StoreTermVectorPositions = true;
 			customType1.StoreTermVectorOffsets = true;
@@ -335,7 +335,7 @@ namespace Lucene.Net.Test.Index
 			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			FieldType customType = new FieldType(TextField.TYPE_STORED);
-			customType.SetTokenized(false);
+			customType.Tokenized = (false);
 			Field idField = NewField("id", string.Empty, customType);
 			doc.Add(idField);
 			for (int pass = 0; pass < 2; pass++)
@@ -374,8 +374,8 @@ namespace Lucene.Net.Test.Index
 					// stress out aborting them on close:
 					((LogMergePolicy)writer.Config.MergePolicy).MergeFactor = (2);
 					IndexWriter finalWriter = writer;
-					AList<Exception> failure = new AList<Exception>();
-					Sharpen.Thread t1 = new _Thread_404(finalWriter, doc, failure);
+					List<Exception> failure = new List<Exception>();
+					Thread t1 = new _Thread_404(finalWriter, doc, failure);
 					if (failure.Count > 0)
 					{
 						throw failure[0];
@@ -396,10 +396,10 @@ namespace Lucene.Net.Test.Index
 			directory.Dispose();
 		}
 
-		private sealed class _Thread_404 : Sharpen.Thread
+		private sealed class _Thread_404 : Thread
 		{
 			public _Thread_404(IndexWriter finalWriter, Lucene.Net.Documents.Document doc
-				, AList<Exception> failure)
+				, List<Exception> failure)
 			{
 				this.finalWriter = finalWriter;
 				this.Doc = doc;
@@ -430,12 +430,12 @@ namespace Lucene.Net.Test.Index
 						catch (Exception e)
 						{
 							Sharpen.Runtime.PrintStackTrace(e, System.Console.Out);
-							failure.AddItem(e);
+							failure.Add(e);
 							done = true;
 							break;
 						}
 					}
-					Sharpen.Thread.Yield();
+					Thread.Yield();
 				}
 			}
 
@@ -443,7 +443,7 @@ namespace Lucene.Net.Test.Index
 
 			private readonly Lucene.Net.Documents.Document doc;
 
-			private readonly AList<Exception> failure;
+			private readonly List<Exception> failure;
 		}
 	}
 }

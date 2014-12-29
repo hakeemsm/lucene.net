@@ -16,15 +16,20 @@
  */
 
 using System;
+using Lucene.Net.Documents;
+using Lucene.Net.Index;
+using Lucene.Net.Store;
 using Lucene.Net.Support;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Store;
+using Lucene.Net.TestFramework.Util;
+using Lucene.Net.Util;
 using NUnit.Framework;
 
 using Directory = Lucene.Net.Store.Directory;
 using IndexInput = Lucene.Net.Store.IndexInput;
 using IndexOutput = Lucene.Net.Store.IndexOutput;
 using SimpleFSDirectory = Lucene.Net.Store.SimpleFSDirectory;
-using _TestHelper = Lucene.Net.Store._TestHelper;
-using LuceneTestCase = Lucene.Net.Util.LuceneTestCase;
 using _TestUtil = Lucene.Net.Util._TestUtil;
 
 namespace Lucene.Net.Test.Index
@@ -103,13 +108,13 @@ namespace Lucene.Net.Test.Index
 		{
 			Assert.IsNotNull(expected, msg + " null expected");
 			Assert.IsNotNull(test, msg + " null test");
-			Assert.AreEqual(expected.Length(), test.Length(), msg + " length");
+			Assert.AreEqual(expected.Length, test.Length, msg + " length");
 			Assert.AreEqual(expected.FilePointer, test.FilePointer, msg + " position");
 			
 			byte[] expectedBuffer = new byte[512];
 			byte[] testBuffer = new byte[expectedBuffer.Length];
 			
-			long remainder = expected.Length() - expected.FilePointer;
+			long remainder = expected.Length - expected.FilePointer;
 			while (remainder > 0)
 			{
 				int readLen = (int) System.Math.Min(remainder, expectedBuffer.Length);
@@ -123,7 +128,7 @@ namespace Lucene.Net.Test.Index
 		
 		private void  AssertSameStreams(System.String msg, IndexInput expected, IndexInput actual, long seekTo)
 		{
-			if (seekTo >= 0 && seekTo < expected.Length())
+			if (seekTo >= 0 && seekTo < expected.Length)
 			{
 				expected.Seek(seekTo);
 				actual.Seek(seekTo);
@@ -140,23 +145,23 @@ namespace Lucene.Net.Test.Index
 			AssertSameStreams(msg + ", seek(0)", expected, actual, point);
 			
 			// seek to middle
-			point = expected.Length() / 2L;
+			point = expected.Length / 2L;
 			AssertSameStreams(msg + ", seek(mid)", expected, actual, point);
 			
 			// seek to end - 2
-			point = expected.Length() - 2;
+			point = expected.Length - 2;
 			AssertSameStreams(msg + ", seek(end-2)", expected, actual, point);
 			
 			// seek to end - 1
-			point = expected.Length() - 1;
+			point = expected.Length - 1;
 			AssertSameStreams(msg + ", seek(end-1)", expected, actual, point);
 			
 			// seek to the end
-			point = expected.Length();
+			point = expected.Length;
 			AssertSameStreams(msg + ", seek(end)", expected, actual, point);
 			
 			// seek past end
-			point = expected.Length() + 1;
+			point = expected.Length + 1;
 			AssertSameStreams(msg + ", seek(end+1)", expected, actual, point);
 		}
 		
@@ -284,8 +289,8 @@ namespace Lucene.Net.Test.Index
 				(Random()), false);
 			for (int i = 0; i < data.Length; i++)
 			{
-				IndexInput check = dir.OpenInput(segment + data[i_1], NewIOContext(Random()));
-				IndexInput test = csr.OpenInput(segment + data[i_1], NewIOContext(Random()));
+				IndexInput check = dir.OpenInput(segment + data[i], NewIOContext(Random()));
+				IndexInput test = csr.OpenInput(segment + data[i], NewIOContext(Random()));
 				AssertSameStreams(data[i], check, test);
 				AssertSameSeekBehavior(data[i], check, test);
 				test.Dispose();
@@ -351,24 +356,7 @@ namespace Lucene.Net.Test.Index
 		}
 		
 		
-		internal static bool IsCSIndexInput(IndexInput is_Renamed)
-		{
-			return is_Renamed is CompoundFileReader.CSIndexInput;
-		}
 		
-		internal static bool IsCSIndexInputOpen(IndexInput is_Renamed)
-		{
-			if (IsCSIndexInput(is_Renamed))
-			{
-				CompoundFileReader.CSIndexInput cis = (CompoundFileReader.CSIndexInput) is_Renamed;
-				
-				return _TestHelper.IsSimpleFSIndexInputOpen(cis.base_Renamed_ForNUnit);
-			}
-			else
-			{
-				return false;
-			}
-		}
 		
 		
 		[Test]
@@ -381,14 +369,14 @@ namespace Lucene.Net.Test.Index
 			IndexInput expected = dir.OpenInput("f11", NewIOContext(Random()));
 			
 			// this test only works for FSIndexInput
-			Assert.IsTrue(_TestHelper.IsSimpleFSIndexInput(expected));
-			Assert.IsTrue(_TestHelper.IsSimpleFSIndexInputOpen(expected));
+			Assert.IsTrue(TestHelper.IsSimpleFSIndexInput(expected));
+			Assert.IsTrue(TestHelper.IsSimpleFSIndexInputOpen(expected));
 			
 			IndexInput one = cr.OpenInput("f11", NewIOContext(Random()));
-			Assert.IsTrue(IsCSIndexInputOpen(one));
+			
 			
 			IndexInput two = (IndexInput) one.Clone();
-			Assert.IsTrue(IsCSIndexInputOpen(two));
+			
 			
 			AssertSameStreams("basic clone one", expected, one);
 			expected.Seek(0);
@@ -396,7 +384,6 @@ namespace Lucene.Net.Test.Index
 			
 			// Now close the first stream
 			one.Dispose();
-			Assert.IsTrue(IsCSIndexInputOpen(one), "Only close when cr is closed");
 			
 			// The following should really fail since we couldn't expect to
 			// access a file once close has been called on it (regardless of
@@ -408,8 +395,6 @@ namespace Lucene.Net.Test.Index
 			
 			// Now close the compound reader
 			cr.Dispose();
-			Assert.IsFalse(IsCSIndexInputOpen(one), "Now closed one");
-			Assert.IsFalse(IsCSIndexInputOpen(two), "Now closed two");
 			
 			// The following may also fail since the compound stream is closed
 			expected.Seek(0);
@@ -608,13 +593,13 @@ namespace Lucene.Net.Test.Index
 			CompoundFileDirectory cr = new CompoundFileDirectory(dir, "f.comp", NewIOContext(
 				Random()), false);
 			IndexInput is_Renamed = cr.OpenInput("f2", NewIOContext(Random()));
-			is_Renamed.Seek(is_Renamed.Length() - 10);
+			is_Renamed.Seek(is_Renamed.Length - 10);
 			byte[] b = new byte[100];
 			is_Renamed.ReadBytes(b, 0, 10);
 			
             Assert.Throws<System.IO.IOException>(() => is_Renamed.ReadByte(), "Single byte read past end of file");
 			
-			is_Renamed.Seek(is_Renamed.Length() - 10);
+			is_Renamed.Seek(is_Renamed.Length - 10);
 		    Assert.Throws<System.IO.IOException>(() => is_Renamed.ReadBytes(b, 0, 50), "Block read past end of file");
 			
 			is_Renamed.Dispose();
@@ -697,7 +682,7 @@ namespace Lucene.Net.Test.Index
 			{
 				IndexInput openInput = csr.OpenInput("seg_" + j_1 + "_foo.txt", NewIOContext(Random
 					()));
-				AreEqual(size * 4, openInput.Length());
+				AreEqual(size * 4, openInput.Length);
 				for (int i = 0; i < size; i++)
 				{
 					AreEqual(i * j_1, openInput.ReadInt());
@@ -857,7 +842,7 @@ namespace Lucene.Net.Test.Index
 					riw.Commit();
 				}
 			}
-			riw.Dispose();
+			riw.Close();
 			CheckFiles(dir);
 			dir.Dispose();
 		}
@@ -888,7 +873,7 @@ namespace Lucene.Net.Test.Index
 					}
 					else
 					{
-						IOUtils.CloseWhileHandlingException(@in);
+						IOUtils.CloseWhileHandlingException((IDisposable)@in);
 					}
 				}
 			}

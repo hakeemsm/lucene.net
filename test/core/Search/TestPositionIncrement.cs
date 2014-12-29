@@ -35,7 +35,7 @@ namespace Lucene.Net.Search
 			Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 			d.Add(NewTextField("field", "bogus", Field.Store.YES));
 			writer.AddDocument(d);
-			IndexReader reader = writer.GetReader();
+			IndexReader reader = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(reader);
 			DocsAndPositionsEnum pos = MultiFields.GetTermPositionsEnum(searcher.GetIndexReader
@@ -166,7 +166,7 @@ namespace Lucene.Net.Search
 					this.ClearAttributes();
 					this.termAtt.Append(this.TOKENS[this.i]);
 					this.offsetAtt.SetOffset(this.i, this.i);
-					this.posIncrAtt.SetPositionIncrement(this.INCREMENTS[this.i]);
+					this.posIncrAtt.PositionIncrement = (this.INCREMENTS[this.i]);
 					this.i++;
 					return true;
 				}
@@ -191,7 +191,7 @@ namespace Lucene.Net.Search
 			doc.Add(new TextField("content", new StringReader("a a b c d e a f g h i j a b k k"
 				)));
 			writer.AddDocument(doc);
-			IndexReader readerFromWriter = writer.GetReader();
+			IndexReader readerFromWriter = writer.Reader;
 			AtomicReader r = SlowCompositeReaderWrapper.Wrap(readerFromWriter);
 			DocsAndPositionsEnum tp = r.TermPositionsEnum(new Term("content", "a"));
 			int count = 0;
@@ -215,7 +215,7 @@ namespace Lucene.Net.Search
 				(), snq);
 			while (pspans.Next())
 			{
-				ICollection<byte[]> payloads = pspans.GetPayload();
+				ICollection<byte[]> payloads = pspans.Payload;
 				sawZero |= pspans.Start() == 0;
 				foreach (byte[] bytes in payloads)
 				{

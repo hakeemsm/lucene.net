@@ -146,7 +146,7 @@ namespace Lucene.Net.Test.Index
 					foreach (string file in dir.ListAll())
 					{
 						dir.Copy(dirCopy, file, file, IOContext.DEFAULT);
-						files.AddItem(file);
+						files.Add(file);
 					}
 					dirCopy.Sync(files);
 					// Have IW kiss the dir so we remove any leftover

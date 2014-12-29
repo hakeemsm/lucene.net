@@ -69,7 +69,7 @@ namespace Lucene.Net.Test.Index
 				commitCalled = true;
 				if (failOnCommit)
 				{
-					throw new RuntimeException("failOnCommit");
+					throw new SystemException("failOnCommit");
 				}
 			}
 

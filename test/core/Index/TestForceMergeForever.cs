@@ -1,18 +1,16 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
-using Lucene.Net.Test.Analysis;
+using System.Threading;
+using Lucene.Net.Analysis;
+using Lucene.Net.Support;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
-using Lucene.Net.Util;
-using Sharpen;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Util;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
+    [TestFixture]
 	public class TestForceMergeForever : LuceneTestCase
 	{
 		private class MyIndexWriter : IndexWriter
@@ -43,14 +41,13 @@ namespace Lucene.Net.Test.Index
 			}
 		}
 
-		/// <exception cref="System.Exception"></exception>
-		public virtual void Test()
+		[Test]
+		public virtual void TestForceMerge1()
 		{
 			Directory d = NewDirectory();
 			MockAnalyzer analyzer = new MockAnalyzer(Random());
-			analyzer.SetMaxTokenLength(TestUtil.NextInt(Random(), 1, IndexWriter.MAX_TERM_LENGTH
-				));
-			TestForceMergeForever.MyIndexWriter w = new TestForceMergeForever.MyIndexWriter(d
+			analyzer.SetMaxTokenLength(Random().NextInt(1, IndexWriter.MAX_TERM_LENGTH));
+			var w = new MyIndexWriter(d
 				, NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer));
 			// Try to make an index that requires merging:
 			w.Config.SetMaxBufferedDocs(TestUtil.NextInt(Random(), 2, 11));
@@ -61,7 +58,7 @@ namespace Lucene.Net.Test.Index
 				w.AddDocument(docs.NextDoc());
 			}
 			MergePolicy mp = w.Config.MergePolicy;
-			int mergeAtOnce = 1 + w.segmentInfos.Size();
+			int mergeAtOnce = 1 + w.segmentInfos.Count;
 			if (mp is TieredMergePolicy)
 			{
 				((TieredMergePolicy)mp).SetMaxMergeAtOnce(mergeAtOnce);
@@ -82,22 +79,22 @@ namespace Lucene.Net.Test.Index
 			}
 			AtomicBoolean doStop = new AtomicBoolean();
 			w.Config.SetMaxBufferedDocs(2);
-			Sharpen.Thread t = new _Thread_84(doStop, w, numStartDocs, docs);
+		    Thread t = new Thread(new ForceMergeThread(doStop, w, numStartDocs, docs).Run);
 			// Force deletes to apply
 			t.Start();
 			w.ForceMerge(1);
 			doStop.Set(true);
 			t.Join();
-			IsTrue("merge count is " + w.mergeCount.Get(), w.mergeCount
+			AssertTrue("merge count is " + w.mergeCount.Get(), w.mergeCount
 				.Get() <= 1);
 			w.Dispose();
 			d.Dispose();
-			docs.Dispose();
+			docs.Close();
 		}
 
-		private sealed class _Thread_84 : Sharpen.Thread
+		private sealed class ForceMergeThread
 		{
-			public _Thread_84(AtomicBoolean doStop, TestForceMergeForever.MyIndexWriter w, int
+			public ForceMergeThread(AtomicBoolean doStop, TestForceMergeForever.MyIndexWriter w, int
 				 numStartDocs, LineFileDocs docs)
 			{
 				this.doStop = doStop;
@@ -106,7 +103,7 @@ namespace Lucene.Net.Test.Index
 				this.docs = docs;
 			}
 
-			public override void Run()
+			public void Run()
 			{
 				try
 				{
@@ -114,12 +111,12 @@ namespace Lucene.Net.Test.Index
 					{
 						w.UpdateDocument(new Term("docid", string.Empty + LuceneTestCase.Random().Next(numStartDocs
 							)), docs.NextDoc());
-						w.GetReader().Dispose();
+						w.Reader.Dispose();
 					}
 				}
 				catch (Exception t)
 				{
-					throw new RuntimeException(t);
+					throw new SystemException(t.Message,t);
 				}
 			}
 

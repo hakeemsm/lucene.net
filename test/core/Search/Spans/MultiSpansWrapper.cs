@@ -190,7 +190,7 @@ namespace Lucene.Net.Search.Spans
 			{
 				return Sharpen.Collections.EmptyList();
 			}
-			return current.GetPayload();
+			return current.Payload;
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>

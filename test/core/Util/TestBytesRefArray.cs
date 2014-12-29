@@ -17,7 +17,7 @@ namespace Lucene.Net.Util
 		{
 			Random random = Random();
 			BytesRefArray list = new BytesRefArray(Counter.NewCounter());
-			IList<string> stringList = new AList<string>();
+			IList<string> stringList = new List<string>();
 			for (int j = 0; j < 2; j++)
 			{
 				if (j > 0 && random.NextBoolean())
@@ -34,7 +34,7 @@ namespace Lucene.Net.Util
 						);
 					spare.CopyChars(randomRealisticUnicodeString);
 					AreEqual(i + initSize, list.Append(spare));
-					stringList.AddItem(randomRealisticUnicodeString);
+					stringList.Add(randomRealisticUnicodeString);
 				}
 				for (int i_1 = 0; i_1 < entries; i_1++)
 				{
@@ -66,7 +66,7 @@ namespace Lucene.Net.Util
 		{
 			Random random = Random();
 			BytesRefArray list = new BytesRefArray(Counter.NewCounter());
-			IList<string> stringList = new AList<string>();
+			IList<string> stringList = new List<string>();
 			for (int j = 0; j < 2; j++)
 			{
 				if (j > 0 && random.NextBoolean())
@@ -83,7 +83,7 @@ namespace Lucene.Net.Util
 						);
 					spare.CopyChars(randomRealisticUnicodeString);
 					AreEqual(initSize + i, list.Append(spare));
-					stringList.AddItem(randomRealisticUnicodeString);
+					stringList.Add(randomRealisticUnicodeString);
 				}
 				stringList.Sort();
 				BytesRefIterator iter = list.Iterator(BytesRef.GetUTF8SortedAsUTF16Comparator());

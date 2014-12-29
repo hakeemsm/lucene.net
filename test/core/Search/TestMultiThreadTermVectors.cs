@@ -35,7 +35,7 @@ namespace Lucene.Net.Search
 			//writer.setNoCFSRatio(0.0);
 			//writer.infoStream = System.out;
 			FieldType customType = new FieldType(TextField.TYPE_STORED);
-			customType.SetTokenized(false);
+			customType.Tokenized = (false);
 			customType.StoreTermVectors = true;
 			for (int i = 0; i < numDocs; i++)
 			{
@@ -101,7 +101,7 @@ namespace Lucene.Net.Search
 			while (threadsAlive > 0)
 			{
 				//System.out.println("Threads alive");
-				Sharpen.Thread.Sleep(10);
+				Thread.Sleep(10);
 				threadsAlive = mtr.Length;
 				for (int i_1 = 0; i_1 < mtr.Length; i_1++)
 				{
@@ -126,7 +126,7 @@ namespace Lucene.Net.Search
 	{
 		private IndexReader reader = null;
 
-		private Sharpen.Thread t = null;
+		private Thread t = null;
 
 		private readonly int runsToDo = 100;
 
@@ -136,7 +136,7 @@ namespace Lucene.Net.Search
 		{
 			this.reader = reader;
 			timeElapsed = 0;
-			t = new Sharpen.Thread(this);
+			t = new Thread(this);
 			t.Start();
 		}
 

@@ -1,22 +1,21 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using System.IO;
-using NUnit.Framework;
-using Lucene.Net.Test.Analysis;
+using System.Threading;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
+using Lucene.Net.Randomized.Generators;
+using Lucene.Net.Support;
+using Lucene.Net.TestFramework;
 using Lucene.Net.Codecs.Lucene41;
-using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
-using Lucene.Net.Util;
-using Sharpen;
+using Lucene.Net.TestFramework.Util;
+using NUnit.Framework;
+using Directory = Lucene.Net.Store.Directory;
 
 namespace Lucene.Net.Test.Index
 {
+    [TestFixture]
 	public class TestConcurrentMergeScheduler : LuceneTestCase
 	{
 		private class FailOnlyOnFlush : MockDirectoryWrapper.Failure
@@ -36,36 +35,36 @@ namespace Lucene.Net.Test.Index
 				this.doFail = false;
 			}
 
-			/// <exception cref="System.IO.IOException"></exception>
+			
 			public override void Eval(MockDirectoryWrapper dir)
 			{
-				if (this.doFail && this._enclosing.IsTestThread())
-				{
-					bool isDoFlush = false;
-					bool isClose = false;
-					StackTraceElement[] trace = new Exception().GetStackTrace();
-					for (int i = 0; i < trace.Length; i++)
-					{
-						if (isDoFlush && isClose)
-						{
-							break;
-						}
-						if ("flush".Equals(trace[i].GetMethodName()))
-						{
-							isDoFlush = true;
-						}
-						if ("close".Equals(trace[i].GetMethodName()))
-						{
-							isClose = true;
-						}
-					}
-					if (isDoFlush && !isClose && LuceneTestCase.Random().NextBoolean())
-					{
-						this.hitExc = true;
-						throw new IOException(Sharpen.Thread.CurrentThread().GetName() + ": now failing during flush"
-							);
-					}
-				}
+                //if (this.doFail && this._enclosing.IsTestThread())
+                //{
+                //    bool isDoFlush = false;
+                //    bool isClose = false;
+                //    var trace = new Exception().StackTrace;
+                //    for (int i = 0; i < trace.Length; i++)
+                //    {
+                //        if (isDoFlush && isClose)
+                //        {
+                //            break;
+                //        }
+                //        if ("flush".Equals(trace[i].GetMethodName()))
+                //        {
+                //            isDoFlush = true;
+                //        }
+                //        if ("close".Equals(trace[i].GetMethodName()))
+                //        {
+                //            isClose = true;
+                //        }
+                //    }
+                //    if (isDoFlush && !isClose && LuceneTestCase.Random().NextBoolean())
+                //    {
+                //        this.hitExc = true;
+                //        throw new IOException(Thread.CurrentThread.Name + ": now failing during flush"
+                //            );
+                //    }
+                //}
 			}
 
 			internal FailOnlyOnFlush(TestConcurrentMergeScheduler _enclosing)
@@ -78,17 +77,15 @@ namespace Lucene.Net.Test.Index
 
 		// Make sure running BG merges still work fine even when
 		// we are hitting exceptions during flushing.
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestFlushExceptions()
 		{
 			MockDirectoryWrapper directory = NewMockDirectory();
-			TestConcurrentMergeScheduler.FailOnlyOnFlush failure = new TestConcurrentMergeScheduler.FailOnlyOnFlush
-				(this);
+			var failure = new FailOnlyOnFlush(this);
 			directory.FailOn(failure);
 			IndexWriter writer = new IndexWriter(directory, ((IndexWriterConfig)NewIndexWriterConfig
 				(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMaxBufferedDocs(2)));
-			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-				();
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document();
 			Field idField = NewStringField("id", string.Empty, Field.Store.YES);
 			doc.Add(idField);
 			int extraCount = 0;
@@ -100,7 +97,7 @@ namespace Lucene.Net.Test.Index
 				}
 				for (int j = 0; j < 20; j++)
 				{
-					idField.StringValue = Sharpen.Extensions.ToString(i * 20 + j));
+                    idField.StringValue = (i * 20 + j).ToString();
 					writer.AddDocument(doc);
 				}
 				// must cycle here because sometimes the merge flushes
@@ -123,7 +120,7 @@ namespace Lucene.Net.Test.Index
 					{
 						if (VERBOSE)
 						{
-							Sharpen.Runtime.PrintStackTrace(ioe, System.Console.Out);
+							Console.Out.WriteLine(ioe.StackTrace);
 						}
 						failure.ClearDoFail();
 						break;
@@ -140,19 +137,17 @@ namespace Lucene.Net.Test.Index
 
 		// Test that deletes committed after a merge started and
 		// before it finishes, are correctly merged back:
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestDeleteMerging()
 		{
 			Directory directory = NewDirectory();
-			LogDocMergePolicy mp = new LogDocMergePolicy();
+			LogDocMergePolicy mp = new LogDocMergePolicy {MinMergeDocs = (1000)};
 			// Force degenerate merging so we can get a mix of
 			// merging of segments with and without deletes at the
 			// start:
-			mp.SetMinMergeDocs(1000);
-			IndexWriter writer = new IndexWriter(directory, NewIndexWriterConfig(TEST_VERSION_CURRENT
+		    IndexWriter writer = new IndexWriter(directory, NewIndexWriterConfig(TEST_VERSION_CURRENT
 				, new MockAnalyzer(Random())).SetMergePolicy(mp));
-			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-				();
+			var doc = new Lucene.Net.Documents.Document();
 			Field idField = NewStringField("id", string.Empty, Field.Store.YES);
 			doc.Add(idField);
 			for (int i = 0; i < 10; i++)
@@ -163,7 +158,7 @@ namespace Lucene.Net.Test.Index
 				}
 				for (int j = 0; j < 100; j++)
 				{
-					idField.StringValue = Sharpen.Extensions.ToString(i * 100 + j));
+                    idField.StringValue = (i * 100 + j).ToString();
 					writer.AddDocument(doc);
 				}
 				int delID = i;
@@ -186,7 +181,7 @@ namespace Lucene.Net.Test.Index
 			directory.Dispose();
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestNoExtraFiles()
 		{
 			Directory directory = NewDirectory();
@@ -200,10 +195,8 @@ namespace Lucene.Net.Test.Index
 				}
 				for (int j = 0; j < 21; j++)
 				{
-					Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-						();
-					doc.Add(NewTextField("content", "a b c", Field.Store.NO));
-					writer.AddDocument(doc);
+					var doc = new Lucene.Net.Documents.Document {NewTextField("content", "a b c", Field.Store.NO)};
+				    writer.AddDocument(doc);
 				}
 				writer.Dispose();
 				TestIndexWriter.AssertNoUnreferencedFiles(directory, "testNoExtraFiles");
@@ -216,12 +209,11 @@ namespace Lucene.Net.Test.Index
 			directory.Dispose();
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestNoWaitClose()
 		{
 			Directory directory = NewDirectory();
-			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-				();
+			var doc = new Lucene.Net.Documents.Document();
 			Field idField = NewStringField("id", string.Empty, Field.Store.YES);
 			doc.Add(idField);
 			IndexWriter writer = new IndexWriter(directory, ((IndexWriterConfig)NewIndexWriterConfig
@@ -231,13 +223,13 @@ namespace Lucene.Net.Test.Index
 			{
 				for (int j = 0; j < 201; j++)
 				{
-					idField.StringValue = Sharpen.Extensions.ToString(iter * 201 + j));
+                    idField.StringValue = (iter * 201 + j).ToString();
 					writer.AddDocument(doc);
 				}
 				int delID = iter * 201;
 				for (int j_1 = 0; j_1 < 20; j_1++)
 				{
-					writer.DeleteDocuments(new Term("id", Sharpen.Extensions.ToString(delID)));
+					writer.DeleteDocuments(new Term("id", delID.ToString()));
 					delID += 5;
 				}
 				// Force a bunch of merge threads to kick off so we
@@ -245,7 +237,7 @@ namespace Lucene.Net.Test.Index
 				((LogMergePolicy)writer.Config.MergePolicy).MergeFactor = (3);
 				writer.AddDocument(doc);
 				writer.Commit();
-				writer.Close(false);
+				writer.Dispose(false);
 				IndexReader reader = DirectoryReader.Open(directory);
 				AreEqual((1 + iter) * 182, reader.NumDocs);
 				reader.Dispose();
@@ -259,15 +251,15 @@ namespace Lucene.Net.Test.Index
 		}
 
 		// LUCENE-4544
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestMaxMergeCount()
 		{
 			Directory dir = NewDirectory();
 			IndexWriterConfig iwc = new IndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random()));
-			int maxMergeCount = TestUtil.NextInt(Random(), 1, 5);
+			int maxMergeCount = Random().NextInt(1, 5);
 			int maxMergeThreads = TestUtil.NextInt(Random(), 1, maxMergeCount);
-			CountDownLatch enoughMergesWaiting = new CountDownLatch(maxMergeCount);
+			CountdownEvent enoughMergesWaiting = new CountdownEvent(maxMergeCount);
 			AtomicInteger runningMergeCount = new AtomicInteger(0);
 			AtomicBoolean failed = new AtomicBoolean();
 			if (VERBOSE)
@@ -275,7 +267,7 @@ namespace Lucene.Net.Test.Index
 				System.Console.Out.WriteLine("TEST: maxMergeCount=" + maxMergeCount + " maxMergeThreads="
 					 + maxMergeThreads);
 			}
-			ConcurrentMergeScheduler cms = new _ConcurrentMergeScheduler_275(runningMergeCount
+			ConcurrentMergeScheduler cms = new AnonymousConcurrentMergeScheduler(runningMergeCount
 				, maxMergeCount, enoughMergesWaiting, failed);
 			// Stall all incoming merges until we see
 			// maxMergeCount:
@@ -294,21 +286,21 @@ namespace Lucene.Net.Test.Index
 			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewField("field", "field", TextField.TYPE_NOT_STORED));
-			while (enoughMergesWaiting.GetCount() != 0 && !failed.Get())
+			while (enoughMergesWaiting.CurrentCount != 0 && !failed.Get())
 			{
 				for (int i = 0; i < 10; i++)
 				{
 					w.AddDocument(doc);
 				}
 			}
-			w.Close(false);
+			w.Dispose(false);
 			dir.Dispose();
 		}
 
-		private sealed class _ConcurrentMergeScheduler_275 : ConcurrentMergeScheduler
+		private sealed class AnonymousConcurrentMergeScheduler : ConcurrentMergeScheduler
 		{
-			public _ConcurrentMergeScheduler_275(AtomicInteger runningMergeCount, int maxMergeCount
-				, CountDownLatch enoughMergesWaiting, AtomicBoolean failed)
+			public AnonymousConcurrentMergeScheduler(AtomicInteger runningMergeCount, int maxMergeCount
+				, CountdownEvent enoughMergesWaiting, AtomicBoolean failed)
 			{
 				this.runningMergeCount = runningMergeCount;
 				this.maxMergeCount = maxMergeCount;
@@ -317,24 +309,24 @@ namespace Lucene.Net.Test.Index
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
-			protected override void DoMerge(MergePolicy.OneMerge merge)
+			protected internal override void DoMerge(MergePolicy.OneMerge merge)
 			{
 				try
 				{
 					int count = runningMergeCount.IncrementAndGet();
 					try
 					{
-						IsTrue("count=" + count + " vs maxMergeCount=" + maxMergeCount
-							, count <= maxMergeCount);
-						enoughMergesWaiting.CountDown();
+						IsTrue(count <= maxMergeCount
+							, "count=" + count + " vs maxMergeCount=" + maxMergeCount);
+						enoughMergesWaiting.Signal();
 						while (true)
 						{
-							if (enoughMergesWaiting.Await(10, TimeUnit.MILLISECONDS) || failed.Get())
+							if (enoughMergesWaiting.Wait(10) || failed.Get())
 							{
 								break;
 							}
 						}
-						Sharpen.Thread.Sleep(20);
+						Thread.Sleep(20);
 						base.DoMerge(merge);
 					}
 					finally
@@ -346,7 +338,7 @@ namespace Lucene.Net.Test.Index
 				{
 					failed.Set(true);
 					this.writer.MergeFinish(merge);
-					throw new RuntimeException(t);
+					throw new SystemException(t.Message, t);
 				}
 			}
 
@@ -354,7 +346,7 @@ namespace Lucene.Net.Test.Index
 
 			private readonly int maxMergeCount;
 
-			private readonly CountDownLatch enoughMergesWaiting;
+			private readonly CountdownEvent enoughMergesWaiting;
 
 			private readonly AtomicBoolean failed;
 		}
@@ -369,14 +361,14 @@ namespace Lucene.Net.Test.Index
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
-			protected override void DoMerge(MergePolicy.OneMerge merge)
+			protected internal override void DoMerge(MergePolicy.OneMerge merge)
 			{
-				totMergedBytes += merge.TotalBytesSize();
+				totMergedBytes += merge.TotalBytesSize;
 				base.DoMerge(merge);
 			}
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestTotalBytesSize()
 		{
 			Directory d = NewDirectory();
@@ -396,8 +388,7 @@ namespace Lucene.Net.Test.Index
 			IndexWriter w = new IndexWriter(d, iwc);
 			for (int i = 0; i < 1000; i++)
 			{
-				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-					();
+				var doc = new Lucene.Net.Documents.Document();
 				doc.Add(new StringField("id", string.Empty + i, Field.Store.NO));
 				w.AddDocument(doc);
 				if (Random().NextBoolean())
@@ -405,13 +396,12 @@ namespace Lucene.Net.Test.Index
 					w.DeleteDocuments(new Term("id", string.Empty + Random().Next(i + 1)));
 				}
 			}
-			IsTrue(((TestConcurrentMergeScheduler.TrackingCMS)w.GetConfig
-				().GetMergeScheduler()).totMergedBytes != 0);
+			IsTrue(((TrackingCMS)w.Config.MergeScheduler).totMergedBytes != 0);
 			w.Dispose();
 			d.Dispose();
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestLiveMaxMergeCount()
 		{
 			Directory d = NewDirectory();
@@ -425,7 +415,7 @@ namespace Lucene.Net.Test.Index
 			iwc.SetMaxBufferedDocs(2);
 			iwc.SetRAMBufferSizeMB(-1);
 			AtomicInteger maxRunningMergeCount = new AtomicInteger();
-			ConcurrentMergeScheduler cms = new _ConcurrentMergeScheduler_384(maxRunningMergeCount
+			ConcurrentMergeScheduler cms = new AnonymousConcurrentMergeScheduler2(maxRunningMergeCount
 				);
 			// evil?
 			cms.SetMaxMergesAndThreads(5, 3);
@@ -440,15 +430,15 @@ namespace Lucene.Net.Test.Index
 			AreEqual(0, maxRunningMergeCount.Get());
 			w.ForceMerge(1);
 			// At most 5 merge threads should have launched at once:
-			IsTrue("maxRunningMergeCount=" + maxRunningMergeCount, maxRunningMergeCount
-				.Get() <= 5);
+			IsTrue(maxRunningMergeCount
+			    .Get() <= 5, "maxRunningMergeCount=" + maxRunningMergeCount);
 			maxRunningMergeCount.Set(0);
 			// Makes another 100 segments
 			for (int i_1 = 0; i_1 < 200; i_1++)
 			{
 				w.AddDocument(new Lucene.Net.Documents.Document());
 			}
-			((ConcurrentMergeScheduler)w.Config.GetMergeScheduler()).SetMaxMergesAndThreads
+			((ConcurrentMergeScheduler)w.Config.MergeScheduler).SetMaxMergesAndThreads
 				(1, 1);
 			w.ForceMerge(1);
 			// At most 1 merge thread should have launched at once:
@@ -457,9 +447,9 @@ namespace Lucene.Net.Test.Index
 			d.Dispose();
 		}
 
-		private sealed class _ConcurrentMergeScheduler_384 : ConcurrentMergeScheduler
+		private sealed class AnonymousConcurrentMergeScheduler2 : ConcurrentMergeScheduler
 		{
-			public _ConcurrentMergeScheduler_384(AtomicInteger maxRunningMergeCount)
+			public AnonymousConcurrentMergeScheduler2(AtomicInteger maxRunningMergeCount)
 			{
 				this.maxRunningMergeCount = maxRunningMergeCount;
 				this.runningMergeCount = new AtomicInteger();
@@ -468,7 +458,7 @@ namespace Lucene.Net.Test.Index
 			internal readonly AtomicInteger runningMergeCount;
 
 			/// <exception cref="System.IO.IOException"></exception>
-			protected override void DoMerge(MergePolicy.OneMerge merge)
+			protected internal override void DoMerge(MergePolicy.OneMerge merge)
 			{
 				int count = this.runningMergeCount.IncrementAndGet();
 				lock (this)

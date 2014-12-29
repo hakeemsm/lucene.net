@@ -28,7 +28,7 @@ namespace Lucene.Net.Test.Index
 	/// </remarks>
 	public class TestIndexWriterOnJRECrash : Lucene.Net.Index.TestNRTThreads
 	{
-		private FilePath tempDir;
+		private DirectoryInfo tempDir;
 
 		/// <exception cref="System.Exception"></exception>
 		public override void SetUp()
@@ -64,8 +64,8 @@ namespace Lucene.Net.Test.Index
 					().Equals("Lucene3x"));
 				// we are the fork, setup a crashing thread
 				int crashTime = TestUtil.NextInt(Random(), 3000, 4000);
-				Sharpen.Thread t = new _Thread_69(this, crashTime);
-				t.SetPriority(Sharpen.Thread.MAX_PRIORITY);
+				Thread t = new _Thread_69(this, crashTime);
+				t.SetPriority(Thread.MAX_PRIORITY);
 				t.Start();
 				// run the test until we crash.
 				for (int i = 0; i < 1000; i++)
@@ -75,7 +75,7 @@ namespace Lucene.Net.Test.Index
 			}
 		}
 
-		private sealed class _Thread_69 : Sharpen.Thread
+		private sealed class _Thread_69 : Thread
 		{
 			public _Thread_69(TestIndexWriterOnJRECrash _enclosing, int crashTime)
 			{
@@ -87,7 +87,7 @@ namespace Lucene.Net.Test.Index
 			{
 				try
 				{
-					Sharpen.Thread.Sleep(crashTime);
+					Thread.Sleep(crashTime);
 				}
 				catch (Exception)
 				{
@@ -105,29 +105,29 @@ namespace Lucene.Net.Test.Index
 		/// <exception cref="System.Exception"></exception>
 		public virtual void ForkTest()
 		{
-			IList<string> cmd = new AList<string>();
-			cmd.AddItem(Runtime.GetProperty("java.home") + Runtime.GetProperty("file.separator"
+			IList<string> cmd = new List<string>();
+			cmd.Add(Runtime.GetProperty("java.home") + Runtime.GetProperty("file.separator"
 				) + "bin" + Runtime.GetProperty("file.separator") + "java");
-			cmd.AddItem("-Xmx512m");
-			cmd.AddItem("-Dtests.crashmode=true");
+			cmd.Add("-Xmx512m");
+			cmd.Add("-Dtests.crashmode=true");
 			// passing NIGHTLY to this test makes it run for much longer, easier to catch it in the act...
-			cmd.AddItem("-Dtests.nightly=true");
-			cmd.AddItem("-DtempDir=" + tempDir.GetPath());
-			cmd.AddItem("-Dtests.seed=" + SeedUtils.FormatSeed(Random().NextLong()));
-			cmd.AddItem("-ea");
-			cmd.AddItem("-cp");
-			cmd.AddItem(Runtime.GetProperty("java.class.path"));
-			cmd.AddItem("org.junit.runner.JUnitCore");
-			cmd.AddItem(GetType().FullName);
+			cmd.Add("-Dtests.nightly=true");
+			cmd.Add("-DtempDir=" + tempDir.GetPath());
+			cmd.Add("-Dtests.seed=" + SeedUtils.FormatSeed(Random().NextLong()));
+			cmd.Add("-ea");
+			cmd.Add("-cp");
+			cmd.Add(Runtime.GetProperty("java.class.path"));
+			cmd.Add("org.junit.runner.JUnitCore");
+			cmd.Add(GetType().FullName);
 			ProcessStartInfo pb = new ProcessStartInfo(cmd);
 			pb.WorkingDirectory = tempDir;
 			pb.RedirectErrorStream(true);
 			SystemProcess p = pb.Start();
 			// We pump everything to stderr.
 			TextWriter childOut = System.Console.Error;
-			Sharpen.Thread stdoutPumper = TestIndexWriterOnJRECrash.ThreadPumper.Start(p.GetInputStream
+			Thread stdoutPumper = TestIndexWriterOnJRECrash.ThreadPumper.Start(p.GetInputStream
 				(), childOut);
-			Sharpen.Thread stderrPumper = TestIndexWriterOnJRECrash.ThreadPumper.Start(p.GetErrorStream
+			Thread stderrPumper = TestIndexWriterOnJRECrash.ThreadPumper.Start(p.GetErrorStream
 				(), childOut);
 			if (VERBOSE)
 			{
@@ -146,14 +146,14 @@ namespace Lucene.Net.Test.Index
 		/// <remarks>A pipe thread. It'd be nice to reuse guava's implementation for this...</remarks>
 		internal class ThreadPumper
 		{
-			public static Sharpen.Thread Start(InputStream from, OutputStream to)
+			public static Thread Start(InputStream from, OutputStream to)
 			{
-				Sharpen.Thread t = new _Thread_125(from, to);
+				Thread t = new _Thread_125(from, to);
 				t.Start();
 				return t;
 			}
 
-			private sealed class _Thread_125 : Sharpen.Thread
+			private sealed class _Thread_125 : Thread
 			{
 				public _Thread_125(InputStream from, OutputStream to)
 				{
@@ -197,7 +197,7 @@ namespace Lucene.Net.Test.Index
 		/// and runs checkindex on them. returns true if it found any indexes.
 		/// </remarks>
 		/// <exception cref="System.IO.IOException"></exception>
-		public virtual bool CheckIndexes(FilePath file)
+		public virtual bool CheckIndexes(DirectoryInfo file)
 		{
 			if (file.IsDirectory())
 			{
@@ -222,7 +222,7 @@ namespace Lucene.Net.Test.Index
 					return true;
 				}
 				dir.Dispose();
-				foreach (FilePath f in file.ListFiles())
+				foreach (DirectoryInfo f in file.ListFiles())
 				{
 					if (CheckIndexes(f))
 					{

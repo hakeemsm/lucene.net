@@ -49,7 +49,7 @@ namespace Lucene.Net.Search
 				field.StringValue = df.Format(i));
 				writer.AddDocument(doc);
 			}
-			reader = writer.GetReader();
+			reader = writer.Reader;
 			searcher = NewSearcher(reader);
 			writer.Dispose();
 			if (VERBOSE)

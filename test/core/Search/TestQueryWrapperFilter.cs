@@ -46,7 +46,7 @@ namespace Lucene.Net.Search
 			Document doc = new Document();
 			doc.Add(NewTextField("field", "value", Field.Store.NO));
 			writer.AddDocument(doc);
-			IndexReader reader = writer.GetReader();
+			IndexReader reader = writer.Reader;
 			writer.Dispose();
 			
 			TermQuery termQuery = new TermQuery(new Term("field", "value"));
@@ -105,7 +105,7 @@ namespace Lucene.Net.Search
 				if (Random().Next(5) == 4)
 				{
 					v = "a";
-					aDocs.AddItem(string.Empty + i);
+					aDocs.Add(string.Empty + i);
 				}
 				else
 				{
@@ -123,7 +123,7 @@ namespace Lucene.Net.Search
 				w.DeleteDocuments(new Term("id", delID));
 				aDocs.Remove(delID);
 			}
-			IndexReader r = w.GetReader();
+			IndexReader r = w.Reader;
 			w.Dispose();
 			TopDocs hits = NewSearcher(r).Search(new MatchAllDocsQuery(), new QueryWrapperFilter
 				(new TermQuery(new Term("field", "a"))), numDocs);
@@ -148,7 +148,7 @@ namespace Lucene.Net.Search
 				doc.Add(NewStringField("field", English.IntToEnglish(i), Field.Store.NO));
 				writer.AddDocument(doc);
 			}
-			IndexReader reader = writer.GetReader();
+			IndexReader reader = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(reader);
 			for (int i_1 = 0; i_1 < 1000; i_1++)

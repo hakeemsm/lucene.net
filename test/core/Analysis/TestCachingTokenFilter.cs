@@ -97,7 +97,7 @@ namespace Lucene.Net.Test.Analysis
             writer.AddDocument(doc);
             writer.Dispose();
 
-			IndexReader reader = writer.GetReader();
+			IndexReader reader = writer.Reader;
 			DocsAndPositionsEnum termPositions = MultiFields.GetTermPositionsEnum(reader, MultiFields
 				.GetLiveDocs(reader), "preanalyzed", new BytesRef("term1"));
 			IsTrue(termPositions.NextDoc() != DocIdSetIterator.NO_MORE_DOCS

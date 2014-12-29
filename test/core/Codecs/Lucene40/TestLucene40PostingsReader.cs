@@ -124,7 +124,7 @@ namespace Lucene.Net.Test.Codecs.Lucene40
 				int tf = TestUtil.NextInt(Random(), 1, maxTF);
 				for (int j = 0; j < tf; j++)
 				{
-					shuffled.AddItem(terms[i]);
+					shuffled.Add(terms[i]);
 				}
 				i++;
 			}

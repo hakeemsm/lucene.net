@@ -1,20 +1,19 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
+using System;
 using System.Collections.Generic;
 using System.IO;
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Document;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
-using Lucene.Net.Util;
-using Sharpen;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Index;
+using Lucene.Net.TestFramework.Util;
+using NUnit.Framework;
+using Directory = Lucene.Net.Store.Directory;
 
 namespace Lucene.Net.Test.Index
 {
+    [TestFixture]
 	public class TestFieldsReader : LuceneTestCase
 	{
 		private static Directory dir;
@@ -24,15 +23,15 @@ namespace Lucene.Net.Test.Index
 		private static FieldInfos.Builder fieldInfos = null;
 
 		/// <exception cref="System.Exception"></exception>
-		[NUnit.Framework.BeforeClass]
-		public static void BeforeClass()
+		[SetUp]
+		public void Setup()
 		{
 			testDoc = new Lucene.Net.Documents.Document();
 			fieldInfos = new FieldInfos.Builder();
 			DocHelper.SetupDoc(testDoc);
 			foreach (IIndexableField field in testDoc)
 			{
-				fieldInfos.AddOrUpdate(field.Name(), field.FieldType());
+				fieldInfos.AddOrUpdate(field.Name, field.FieldTypeValue);
 			}
 			dir = NewDirectory();
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
@@ -44,9 +43,8 @@ namespace Lucene.Net.Test.Index
 			TestFieldsReader.FaultyIndexInput.doFail = false;
 		}
 
-		/// <exception cref="System.Exception"></exception>
-		[NUnit.Framework.AfterClass]
-		public static void AfterClass()
+		[TearDown]
+		public static void TearDown()
 		{
 			dir.Dispose();
 			dir = null;
@@ -54,8 +52,8 @@ namespace Lucene.Net.Test.Index
 			testDoc = null;
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
-		public virtual void Test()
+		[Test]
+		public virtual void TestFieldTypes()
 		{
 			IsTrue(dir != null);
 			IsTrue(fieldInfos != null);
@@ -65,28 +63,28 @@ namespace Lucene.Net.Test.Index
 			IsTrue(doc.GetField(DocHelper.TEXT_FIELD_1_KEY) != null);
 			Field field = (Field)doc.GetField(DocHelper.TEXT_FIELD_2_KEY);
 			IsTrue(field != null);
-			IsTrue(field.FieldType().StoreTermVectors());
-			IsFalse(field.FieldType().OmitNorms());
-			IsTrue(field.FieldType().IndexOptions() == FieldInfo.IndexOptions
+			IsTrue(field.FieldTypeValue.StoreTermVectors);
+			IsFalse(field.FieldTypeValue.OmitNorms);
+			IsTrue(field.FieldTypeValue.IndexOptions == FieldInfo.IndexOptions
 				.DOCS_AND_FREQS_AND_POSITIONS);
 			field = (Field)doc.GetField(DocHelper.TEXT_FIELD_3_KEY);
 			IsTrue(field != null);
-			IsFalse(field.FieldType().StoreTermVectors());
-			IsTrue(field.FieldType().OmitNorms());
-			IsTrue(field.FieldType().IndexOptions() == FieldInfo.IndexOptions
+			IsFalse(field.FieldTypeValue.StoreTermVectors);
+			IsTrue(field.FieldTypeValue.OmitNorms);
+			IsTrue(field.FieldTypeValue.IndexOptions == FieldInfo.IndexOptions
 				.DOCS_AND_FREQS_AND_POSITIONS);
 			field = (Field)doc.GetField(DocHelper.NO_TF_KEY);
 			IsTrue(field != null);
-			IsFalse(field.FieldType().StoreTermVectors());
-			IsFalse(field.FieldType().OmitNorms());
-			IsTrue(field.FieldType().IndexOptions() == FieldInfo.IndexOptions
+			IsFalse(field.FieldTypeValue.StoreTermVectors);
+			IsFalse(field.FieldTypeValue.OmitNorms);
+			IsTrue(field.FieldTypeValue.IndexOptions == FieldInfo.IndexOptions
 				.DOCS_ONLY);
 			DocumentStoredFieldVisitor visitor = new DocumentStoredFieldVisitor(DocHelper.TEXT_FIELD_3_KEY
 				);
 			reader.Document(0, visitor);
-			IList<IIndexableField> fields = visitor.GetDocument().GetFields();
+			IList<IIndexableField> fields = visitor.Document.GetFields();
 			AreEqual(1, fields.Count);
-			AreEqual(DocHelper.TEXT_FIELD_3_KEY, fields[0].Name());
+			AreEqual(DocHelper.TEXT_FIELD_3_KEY, fields[0].Name);
 			reader.Dispose();
 		}
 
@@ -94,10 +92,10 @@ namespace Lucene.Net.Test.Index
 		{
 			internal Directory fsDir;
 
-			public FaultyFSDirectory(FilePath dir)
+			public FaultyFSDirectory(DirectoryInfo dir)
 			{
 				fsDir = NewFSDirectory(dir);
-				lockFactory = fsDir.GetLockFactory();
+				lockFactory = fsDir.LockFactory;
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
@@ -143,7 +141,7 @@ namespace Lucene.Net.Test.Index
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
-			public override void Close()
+			protected override void Dispose(bool disposing)
 			{
 				fsDir.Dispose();
 			}
@@ -157,7 +155,7 @@ namespace Lucene.Net.Test.Index
 
 			internal int count;
 
-			private FaultyIndexInput(IndexInput delegate_) : base("FaultyIndexInput(" + delegate_
+		    internal FaultyIndexInput(IndexInput delegate_) : base("FaultyIndexInput(" + delegate_
 				 + ")", BufferedIndexInput.BUFFER_SIZE)
 			{
 				this.delegate_ = delegate_;
@@ -173,7 +171,7 @@ namespace Lucene.Net.Test.Index
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
-			protected override void ReadInternal(byte[] b, int offset, int length)
+			public override void ReadInternal(byte[] b, int offset, int length)
 			{
 				SimOutage();
 				delegate_.Seek(FilePointer);
@@ -181,22 +179,22 @@ namespace Lucene.Net.Test.Index
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
-			protected override void SeekInternal(long pos)
+			public override void SeekInternal(long pos)
 			{
 			}
 
-			public override long Length()
+			public override long Length
 			{
-				return delegate_.Length();
+			    get { return delegate_.Length; }
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
-			public override void Close()
+			protected override void Dispose(bool disposing)
 			{
 				delegate_.Dispose();
 			}
 
-			public override DataInput Clone()
+			public override object Clone()
 			{
 				TestFieldsReader.FaultyIndexInput i = new TestFieldsReader.FaultyIndexInput(((IndexInput
 					)delegate_.Clone()));
@@ -207,17 +205,17 @@ namespace Lucene.Net.Test.Index
 				}
 				catch (IOException)
 				{
-					throw new RuntimeException();
+					throw new SystemException();
 				}
 				return i;
 			}
 		}
 
 		// LUCENE-1262
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestExceptions()
 		{
-			FilePath indexDir = CreateTempDir("testfieldswriterexceptions");
+			DirectoryInfo indexDir = CreateTempDir("testfieldswriterexceptions");
 			try
 			{
 				Directory dir = new TestFieldsReader.FaultyFSDirectory(indexDir);

@@ -1,22 +1,19 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Document;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
+using Lucene.Net.Randomized.Generators;
 using Lucene.Net.Store;
-using Lucene.Net.Util;
-using Sharpen;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Util;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
+    [TestFixture]
 	public class TestConsistentFieldNumbers : LuceneTestCase
 	{
-		/// <exception cref="System.Exception"></exception>
-		[NUnit.Framework.Test]
+		
+		[Test]
 		public virtual void TestSameFieldNumbersAcrossSegments()
 		{
 			for (int i = 0; i < 2; i++)
@@ -51,7 +48,7 @@ namespace Lucene.Net.Test.Index
 				writer.Dispose();
 				SegmentInfos sis = new SegmentInfos();
 				sis.Read(dir);
-				AreEqual(2, sis.Size());
+				AreEqual(2, sis.Count);
 				FieldInfos fis1 = SegmentReader.ReadFieldInfos(sis.Info(0));
 				FieldInfos fis2 = SegmentReader.ReadFieldInfos(sis.Info(1));
 				AreEqual("f1", fis1.FieldInfo(0).name);
@@ -66,7 +63,7 @@ namespace Lucene.Net.Test.Index
 				writer.Dispose();
 				sis = new SegmentInfos();
 				sis.Read(dir);
-				AreEqual(1, sis.Size());
+				AreEqual(1, sis.Count);
 				FieldInfos fis3 = SegmentReader.ReadFieldInfos(sis.Info(0));
 				AreEqual("f1", fis3.FieldInfo(0).name);
 				AreEqual("f2", fis3.FieldInfo(1).name);
@@ -76,24 +73,24 @@ namespace Lucene.Net.Test.Index
 			}
 		}
 
-		/// <exception cref="System.Exception"></exception>
-		[NUnit.Framework.Test]
+		
+		[Test]
 		public virtual void TestAddIndexes()
 		{
 			Directory dir1 = NewDirectory();
 			Directory dir2 = NewDirectory();
 			IndexWriter writer = new IndexWriter(dir1, NewIndexWriterConfig(TEST_VERSION_CURRENT
 				, new MockAnalyzer(Random())).SetMergePolicy(NoMergePolicy.COMPOUND_FILES));
-			Lucene.Net.Documents.Document d1 = new Lucene.Net.Documents.Document(
-				);
-			d1.Add(new TextField("f1", "first field", Field.Store.YES));
-			d1.Add(new TextField("f2", "second field", Field.Store.YES));
-			writer.AddDocument(d1);
+			var d1 = new Lucene.Net.Documents.Document
+			{
+			    new TextField("f1", "first field", Field.Store.YES),
+			    new TextField("f2", "second field", Field.Store.YES)
+			};
+		    writer.AddDocument(d1);
 			writer.Dispose();
 			writer = new IndexWriter(dir2, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random())).SetMergePolicy(NoMergePolicy.COMPOUND_FILES));
-			Lucene.Net.Documents.Document d2 = new Lucene.Net.Documents.Document(
-				);
+			Lucene.Net.Documents.Document d2 = new Lucene.Net.Documents.Document();
 			FieldType customType2 = new FieldType(TextField.TYPE_STORED);
 			customType2.StoreTermVectors = true;
 			d2.Add(new TextField("f2", "second field", Field.Store.YES));
@@ -108,7 +105,7 @@ namespace Lucene.Net.Test.Index
 			writer.Dispose();
 			SegmentInfos sis = new SegmentInfos();
 			sis.Read(dir1);
-			AreEqual(2, sis.Size());
+			AreEqual(2, sis.Count);
 			FieldInfos fis1 = SegmentReader.ReadFieldInfos(sis.Info(0));
 			FieldInfos fis2 = SegmentReader.ReadFieldInfos(sis.Info(1));
 			AreEqual("f1", fis1.FieldInfo(0).name);
@@ -122,7 +119,7 @@ namespace Lucene.Net.Test.Index
 			dir2.Dispose();
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestFieldNumberGaps()
 		{
 			int numIters = AtLeast(13);
@@ -139,7 +136,7 @@ namespace Lucene.Net.Test.Index
 					writer.Dispose();
 					SegmentInfos sis = new SegmentInfos();
 					sis.Read(dir);
-					AreEqual(1, sis.Size());
+					AreEqual(1, sis.Count);
 					FieldInfos fis1 = SegmentReader.ReadFieldInfos(sis.Info(0));
 					AreEqual("f1", fis1.FieldInfo(0).name);
 					AreEqual("f2", fis1.FieldInfo(1).name);
@@ -150,12 +147,12 @@ namespace Lucene.Net.Test.Index
 						.NO_COMPOUND_FILES : NoMergePolicy.COMPOUND_FILES));
 					Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 					d.Add(new TextField("f1", "d2 first field", Field.Store.YES));
-					d.Add(new StoredField("f3", new byte[] { 1, 2, 3 }));
+					d.Add(new StoredField("f3", new sbyte[] { 1, 2, 3 }));
 					writer.AddDocument(d);
 					writer.Dispose();
 					SegmentInfos sis = new SegmentInfos();
 					sis.Read(dir);
-					AreEqual(2, sis.Size());
+					AreEqual(2, sis.Count);
 					FieldInfos fis1 = SegmentReader.ReadFieldInfos(sis.Info(0));
 					FieldInfos fis2 = SegmentReader.ReadFieldInfos(sis.Info(1));
 					AreEqual("f1", fis1.FieldInfo(0).name);
@@ -171,12 +168,12 @@ namespace Lucene.Net.Test.Index
 					Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 					d.Add(new TextField("f1", "d3 first field", Field.Store.YES));
 					d.Add(new TextField("f2", "d3 second field", Field.Store.YES));
-					d.Add(new StoredField("f3", new byte[] { 1, 2, 3, 4, 5 }));
+					d.Add(new StoredField("f3", new sbyte[] { 1, 2, 3, 4, 5 }));
 					writer.AddDocument(d);
 					writer.Dispose();
 					SegmentInfos sis = new SegmentInfos();
 					sis.Read(dir);
-					AreEqual(3, sis.Size());
+					AreEqual(3, sis.Count);
 					FieldInfos fis1 = SegmentReader.ReadFieldInfos(sis.Info(0));
 					FieldInfos fis2 = SegmentReader.ReadFieldInfos(sis.Info(1));
 					FieldInfos fis3 = SegmentReader.ReadFieldInfos(sis.Info(2));
@@ -206,7 +203,7 @@ namespace Lucene.Net.Test.Index
 				writer_1.Dispose();
 				SegmentInfos sis_1 = new SegmentInfos();
 				sis_1.Read(dir);
-				AreEqual(1, sis_1.Size());
+				AreEqual(1, sis_1.Count);
 				FieldInfos fis1_1 = SegmentReader.ReadFieldInfos(sis_1.Info(0));
 				AreEqual("f1", fis1_1.FieldInfo(0).name);
 				AreEqual("f2", fis1_1.FieldInfo(1).name);
@@ -215,8 +212,8 @@ namespace Lucene.Net.Test.Index
 			}
 		}
 
-		/// <exception cref="System.Exception"></exception>
-		[NUnit.Framework.Test]
+		
+		[Test]
 		public virtual void TestManyFields()
 		{
 			int NUM_DOCS = AtLeast(200);
@@ -252,9 +249,8 @@ namespace Lucene.Net.Test.Index
 				foreach (FieldInfo fi in fis)
 				{
 					Field expected = GetField(System.Convert.ToInt32(fi.name));
-					AreEqual(expected.FieldType().Indexed(), fi.IsIndexed());
-					AreEqual(expected.FieldType().StoreTermVectors(), fi.HasVectors
-						());
+					AreEqual(expected.FieldTypeValue.Indexed, fi.IsIndexed);
+					AreEqual(expected.FieldTypeValue.StoreTermVectors, fi.HasVectors);
 				}
 			}
 			dir.Dispose();
@@ -264,60 +260,82 @@ namespace Lucene.Net.Test.Index
 		{
 			int mode = number % 16;
 			string fieldName = string.Empty + number;
-			FieldType customType = new FieldType(TextField.TYPE_STORED);
-			FieldType customType2 = new FieldType(TextField.TYPE_STORED);
-			customType2.SetTokenized(false);
-			FieldType customType3 = new FieldType(TextField.TYPE_NOT_STORED);
-			customType3.SetTokenized(false);
-			FieldType customType4 = new FieldType(TextField.TYPE_NOT_STORED);
-			customType4.SetTokenized(false);
-			customType4.StoreTermVectors = true;
-			customType4.StoreTermVectorOffsets = true;
-			FieldType customType5 = new FieldType(TextField.TYPE_NOT_STORED);
-			customType5.StoreTermVectors = true;
-			customType5.StoreTermVectorOffsets = true;
-			FieldType customType6 = new FieldType(TextField.TYPE_STORED);
-			customType6.SetTokenized(false);
-			customType6.StoreTermVectors = true;
-			customType6.StoreTermVectorOffsets = true;
-			FieldType customType7 = new FieldType(TextField.TYPE_NOT_STORED);
-			customType7.SetTokenized(false);
-			customType7.StoreTermVectors = true;
-			customType7.StoreTermVectorOffsets = true;
-			FieldType customType8 = new FieldType(TextField.TYPE_STORED);
-			customType8.SetTokenized(false);
-			customType8.StoreTermVectors = true;
-			customType8.StoreTermVectorPositions = true;
-			FieldType customType9 = new FieldType(TextField.TYPE_NOT_STORED);
-			customType9.StoreTermVectors = true;
-			customType9.StoreTermVectorPositions = true;
-			FieldType customType10 = new FieldType(TextField.TYPE_STORED);
-			customType10.SetTokenized(false);
-			customType10.StoreTermVectors = true;
-			customType10.StoreTermVectorPositions = true;
-			FieldType customType11 = new FieldType(TextField.TYPE_NOT_STORED);
-			customType11.SetTokenized(false);
-			customType11.StoreTermVectors = true;
-			customType11.StoreTermVectorPositions = true;
-			FieldType customType12 = new FieldType(TextField.TYPE_STORED);
-			customType12.StoreTermVectors = true;
-			customType12.StoreTermVectorOffsets = true;
-			customType12.StoreTermVectorPositions = true;
-			FieldType customType13 = new FieldType(TextField.TYPE_NOT_STORED);
-			customType13.StoreTermVectors = true;
-			customType13.StoreTermVectorOffsets = true;
-			customType13.StoreTermVectorPositions = true;
-			FieldType customType14 = new FieldType(TextField.TYPE_STORED);
-			customType14.SetTokenized(false);
-			customType14.StoreTermVectors = true;
-			customType14.StoreTermVectorOffsets = true;
-			customType14.StoreTermVectorPositions = true;
-			FieldType customType15 = new FieldType(TextField.TYPE_NOT_STORED);
-			customType15.SetTokenized(false);
-			customType15.StoreTermVectors = true;
-			customType15.StoreTermVectorOffsets = true;
-			customType15.StoreTermVectorPositions = true;
-			switch (mode)
+			var customType = new FieldType(TextField.TYPE_STORED);
+			var customType2 = new FieldType(TextField.TYPE_STORED) {Tokenized = (false)};
+		    var customType3 = new FieldType(TextField.TYPE_NOT_STORED) {Tokenized = (false)};
+		    var customType4 = new FieldType(TextField.TYPE_NOT_STORED)
+		    {
+		        Tokenized = (false),
+		        StoreTermVectors = true,
+		        StoreTermVectorOffsets = true
+		    };
+		    var customType5 = new FieldType(TextField.TYPE_NOT_STORED)
+		    {
+		        StoreTermVectors = true,
+		        StoreTermVectorOffsets = true
+		    };
+		    var customType6 = new FieldType(TextField.TYPE_STORED)
+		    {
+		        Tokenized = (false),
+		        StoreTermVectors = true,
+		        StoreTermVectorOffsets = true
+		    };
+		    var customType7 = new FieldType(TextField.TYPE_NOT_STORED)
+		    {
+		        Tokenized = (false),
+		        StoreTermVectors = true,
+		        StoreTermVectorOffsets = true
+		    };
+		    var customType8 = new FieldType(TextField.TYPE_STORED)
+		    {
+		        Tokenized = (false),
+		        StoreTermVectors = true,
+		        StoreTermVectorPositions = true
+		    };
+		    var customType9 = new FieldType(TextField.TYPE_NOT_STORED)
+		    {
+		        StoreTermVectors = true,
+		        StoreTermVectorPositions = true
+		    };
+		    var customType10 = new FieldType(TextField.TYPE_STORED)
+		    {
+		        Tokenized = (false),
+		        StoreTermVectors = true,
+		        StoreTermVectorPositions = true
+		    };
+		    var customType11 = new FieldType(TextField.TYPE_NOT_STORED)
+		    {
+		        Tokenized = (false),
+		        StoreTermVectors = true,
+		        StoreTermVectorPositions = true
+		    };
+		    var customType12 = new FieldType(TextField.TYPE_STORED)
+		    {
+		        StoreTermVectors = true,
+		        StoreTermVectorOffsets = true,
+		        StoreTermVectorPositions = true
+		    };
+		    var customType13 = new FieldType(TextField.TYPE_NOT_STORED)
+		    {
+		        StoreTermVectors = true,
+		        StoreTermVectorOffsets = true,
+		        StoreTermVectorPositions = true
+		    };
+		    var customType14 = new FieldType(TextField.TYPE_STORED)
+		    {
+		        Tokenized = (false),
+		        StoreTermVectors = true,
+		        StoreTermVectorOffsets = true,
+		        StoreTermVectorPositions = true
+		    };
+		    var customType15 = new FieldType(TextField.TYPE_NOT_STORED)
+		    {
+		        Tokenized = (false),
+		        StoreTermVectors = true,
+		        StoreTermVectorOffsets = true,
+		        StoreTermVectorPositions = true
+		    };
+		    switch (mode)
 			{
 				case 0:
 				{

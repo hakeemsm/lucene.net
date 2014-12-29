@@ -47,14 +47,14 @@ namespace Lucene.Net.Test.Index
 		public virtual void TestDeleteByTermIsCurrent()
 		{
 			// get reader
-			DirectoryReader reader = writer.GetReader();
+			DirectoryReader reader = writer.Reader;
 			// 
 			//HM:revisit 
 			//assert index has a document and reader is up2date 
 			AreEqual("One document should be in the index", 1, writer.
 				NumDocs());
 			IsTrue("One document added, reader should be current", reader
-				.IsCurrent());
+				.IsCurrent);
 			// remove document
 			Term idTerm = new Term("UUID", "1");
 			writer.DeleteDocuments(idTerm);
@@ -64,7 +64,7 @@ namespace Lucene.Net.Test.Index
 			//assert document has been deleted (index changed), reader is stale
 			AreEqual("Document should be removed", 0, writer.NumDocs
 				);
-			IsFalse("Reader should be stale", reader.IsCurrent());
+			IsFalse("Reader should be stale", reader.IsCurrent);
 			reader.Dispose();
 		}
 
@@ -75,7 +75,7 @@ namespace Lucene.Net.Test.Index
 		public virtual void TestDeleteAllIsCurrent()
 		{
 			// get reader
-			DirectoryReader reader = writer.GetReader();
+			DirectoryReader reader = writer.Reader;
 			// 
 			//HM:revisit 
 			//assert index has a document and reader is up2date 
@@ -91,7 +91,7 @@ namespace Lucene.Net.Test.Index
 			//assert document has been deleted (index changed), reader is stale
 			AreEqual("Document should be removed", 0, writer.NumDocs
 				);
-			IsFalse("Reader should be stale", reader.IsCurrent());
+			IsFalse("Reader should be stale", reader.IsCurrent);
 			reader.Dispose();
 		}
 	}

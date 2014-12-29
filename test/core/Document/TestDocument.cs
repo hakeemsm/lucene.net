@@ -199,7 +199,7 @@ namespace Lucene.Net.Documents
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
 			writer.AddDocument(MakeDocumentWithFields());
-			IndexReader reader = writer.GetReader();
+			IndexReader reader = writer.Reader;
 			IndexSearcher searcher = NewSearcher(reader);
 			PhraseQuery query = new PhraseQuery();
 			query.Add(new Term("indexed_not_tokenized", "test1"));
@@ -218,7 +218,7 @@ namespace Lucene.Net.Documents
             stored.Stored = true;
 			FieldType indexedNotTokenized = new FieldType();
 			indexedNotTokenized.Indexed(true);
-			indexedNotTokenized.SetTokenized(false);
+			indexedNotTokenized.Tokenized = (false);
             doc.Add(new StringField("keyword", "test1", Field.Store.YES));
             doc.Add(new StringField("keyword", "test2", Field.Store.YES));
             doc.Add(new TextField("text", "test1", Field.Store.YES));
@@ -346,7 +346,7 @@ namespace Lucene.Net.Documents
 			doc.Add(new Field("tv_pos_off", "abc xyz", Field.Store.NO, Field.Index.ANALYZED, 
 				Field.TermVector.WITH_POSITIONS_OFFSETS));
 			w.AddDocument(doc);
-			IndexReader r = w.GetReader();
+			IndexReader r = w.Reader;
 			w.Dispose();
 			doc = r.Document(0);
 			// 4 stored fields
@@ -413,7 +413,7 @@ namespace Lucene.Net.Documents
 			Directory dir = NewDirectory();
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir);
 			iw.AddDocument(doc);
-			DirectoryReader ir = iw.GetReader();
+			DirectoryReader ir = iw.Reader;
 			Lucene.Net.Documents.Document sdoc = ir.Document(0);
 			AreEqual("5", sdoc.Get("int"));
 			IsNull(sdoc.Get("somethingElse"));

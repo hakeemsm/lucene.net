@@ -36,7 +36,7 @@ namespace Lucene.Net.Test.Index
 				();
 			TestIndexWriterNRTIsCurrent.ReaderThread[] threads = new TestIndexWriterNRTIsCurrent.ReaderThread
 				[AtLeast(3)];
-			CountDownLatch latch = new CountDownLatch(1);
+			CountdownEvent latch = new CountdownEvent(1);
 			TestIndexWriterNRTIsCurrent.WriterThread writerThread = new TestIndexWriterNRTIsCurrent.WriterThread
 				(holder, writer, AtLeast(500), Random(), latch);
 			for (int i = 0; i < threads.Length; i++)
@@ -65,7 +65,7 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		public class WriterThread : Sharpen.Thread
+		public class WriterThread : Thread
 		{
 			private readonly TestIndexWriterNRTIsCurrent.ReaderHolder holder;
 
@@ -75,12 +75,12 @@ namespace Lucene.Net.Test.Index
 
 			private bool countdown = true;
 
-			private readonly CountDownLatch latch;
+			private readonly CountdownEvent latch;
 
 			internal Exception failed;
 
 			internal WriterThread(TestIndexWriterNRTIsCurrent.ReaderHolder holder, IndexWriter
-				 writer, int numOps, Random random, CountDownLatch latch) : base()
+				 writer, int numOps, Random random, CountdownEvent latch) : base()
 			{
 				this.holder = holder;
 				this.writer = writer;
@@ -174,15 +174,15 @@ namespace Lucene.Net.Test.Index
 			}
 		}
 
-		public sealed class ReaderThread : Sharpen.Thread
+		public sealed class ReaderThread : Thread
 		{
 			private readonly TestIndexWriterNRTIsCurrent.ReaderHolder holder;
 
-			private readonly CountDownLatch latch;
+			private readonly CountdownEvent latch;
 
 			internal Exception failed;
 
-			internal ReaderThread(TestIndexWriterNRTIsCurrent.ReaderHolder holder, CountDownLatch
+			internal ReaderThread(TestIndexWriterNRTIsCurrent.ReaderHolder holder, CountdownEvent
 				 latch) : base()
 			{
 				this.holder = holder;
@@ -207,10 +207,10 @@ namespace Lucene.Net.Test.Index
 					{
 						try
 						{
-							bool current = reader.IsCurrent();
+							bool current = reader.IsCurrent;
 							if (VERBOSE)
 							{
-								System.Console.Out.WriteLine("Thread: " + Sharpen.Thread.CurrentThread() + " Reader: "
+								System.Console.Out.WriteLine("Thread: " + Thread.CurrentThread() + " Reader: "
 									 + reader + " isCurrent:" + current);
 							}
 							IsFalse(current);
@@ -219,7 +219,7 @@ namespace Lucene.Net.Test.Index
 						{
 							if (VERBOSE)
 							{
-								System.Console.Out.WriteLine("FAILED Thread: " + Sharpen.Thread.CurrentThread() +
+								System.Console.Out.WriteLine("FAILED Thread: " + Thread.CurrentThread() +
 									 " Reader: " + reader + " isCurrent: false");
 							}
 							failed = e;

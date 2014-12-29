@@ -61,7 +61,7 @@ namespace Lucene.Net.Search
 			writer.AddDocument(doc3);
 			writer.AddDocument(doc4);
 			writer.AddDocument(doc5);
-			IndexReader reader = writer.GetReader();
+			IndexReader reader = writer.Reader;
 			writer.Dispose();
 
 			IndexSearcher searcher = NewSearcher(reader);
@@ -83,7 +83,7 @@ namespace Lucene.Net.Search
 				string s = te.Term().Utf8ToString();
 				if (s.StartsWith(prefix))
 				{
-					termsWithPrefix.AddItem(new Term("body", s));
+					termsWithPrefix.Add(new Term("body", s));
 				}
 				else
 				{

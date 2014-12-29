@@ -221,8 +221,8 @@ namespace Lucene.Net.Store
 		
 		public virtual void TestNativeFSLockFactoryLockExists()
 		{
-			FilePath tempDir = CreateTempDir(LuceneTestCase.GetTestClass().Name);
-			FilePath lockFile = new FilePath(tempDir, "test.lock");
+			DirectoryInfo tempDir = CreateTempDir(LuceneTestCase.GetTestClass().Name);
+			DirectoryInfo lockFile = new DirectoryInfo(tempDir, "test.lock");
 			lockFile.CreateNewFile();
 			Lock l = new NativeFSLockFactory(tempDir).MakeLock("test.lock");
 			IsTrue("failed to obtain lock", l.Obtain());

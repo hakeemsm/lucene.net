@@ -23,7 +23,7 @@ namespace Lucene.Net.Test.Index
 
 		internal IndexReader reader;
 
-		internal AList<int> expected = new AList<int>();
+		internal List<int> expected = new List<int>();
 
 		/// <exception cref="System.Exception"></exception>
 		public override void SetUp()
@@ -43,7 +43,7 @@ namespace Lucene.Net.Test.Index
 				foo.StringValue = AddValue());
 				writer.AddDocument(doc);
 			}
-			reader = writer.GetReader();
+			reader = writer.Reader;
 			writer.Dispose();
 		}
 
@@ -75,7 +75,7 @@ namespace Lucene.Net.Test.Index
 		/// </remarks>
 		private string AddValue()
 		{
-			IList<string> terms = new AList<string>();
+			IList<string> terms = new List<string>();
 			int maxCeiling = TestUtil.NextInt(Random(), 0, 255);
 			int max = 0;
 			for (char ch = 'a'; ch <= 'z'; ch++)
@@ -83,11 +83,11 @@ namespace Lucene.Net.Test.Index
 				int num = TestUtil.NextInt(Random(), 0, maxCeiling);
 				for (int i = 0; i < num; i++)
 				{
-					terms.AddItem(char.ToString(ch));
+					terms.Add(char.ToString(ch));
 				}
 				max = Math.Max(max, num);
 			}
-			expected.AddItem(max);
+			expected.Add(max);
 			Sharpen.Collections.Shuffle(terms, Random());
 			return Arrays.ToString(Sharpen.Collections.ToArray(terms, new string[terms.Count]
 				));

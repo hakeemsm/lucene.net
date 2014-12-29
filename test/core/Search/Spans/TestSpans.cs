@@ -42,7 +42,7 @@ namespace Lucene.Net.Search.Spans
 				doc.Add(NewTextField(field, docFields[i], Field.Store.YES));
 				writer.AddDocument(doc);
 			}
-			reader = writer.GetReader();
+			reader = writer.Reader;
 			writer.Dispose();
 			searcher = NewSearcher(reader);
 		}

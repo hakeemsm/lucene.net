@@ -58,7 +58,7 @@ namespace Lucene.Net.Index
             control.SetFlushPending(FindLargestNonPendingWriter(control, perThreadState));
         }
 
-        protected bool FlushOnDocCount
+        protected internal bool FlushOnDocCount
         {
             get
             {
@@ -66,7 +66,7 @@ namespace Lucene.Net.Index
             }
         }
 
-        protected bool FlushOnDeleteTerms
+        protected internal bool FlushOnDeleteTerms
         {
             get
             {
@@ -74,7 +74,7 @@ namespace Lucene.Net.Index
             }
         }
 
-        protected bool FlushOnRAM
+        protected internal bool FlushOnRAM
         {
             get
             {

@@ -33,14 +33,14 @@ namespace Lucene.Net.Test.Index
 			{
 				w.AddDocument(docs.NextDoc());
 			}
-			IndexReader r = w.GetReader();
+			IndexReader r = w.Reader;
 			w.Dispose();
-			IList<BytesRef> terms = new AList<BytesRef>();
+			IList<BytesRef> terms = new List<BytesRef>();
 			TermsEnum termsEnum = MultiFields.GetTerms(r, "body").Iterator(null);
 			BytesRef term;
 			while ((term = termsEnum.Next()) != null)
 			{
-				terms.AddItem(BytesRef.DeepCopyOf(term));
+				terms.Add(BytesRef.DeepCopyOf(term));
 			}
 			if (VERBOSE)
 			{
@@ -209,7 +209,7 @@ namespace Lucene.Net.Test.Index
 			int numTerms = AtLeast(300);
 			//final int numTerms = 50;
 			ICollection<string> terms = new HashSet<string>();
-			ICollection<string> pendingTerms = new AList<string>();
+			ICollection<string> pendingTerms = new List<string>();
 			IDictionary<BytesRef, int> termToID = new Dictionary<BytesRef, int>();
 			int id = 0;
 			while (terms.Count != numTerms)
@@ -217,8 +217,8 @@ namespace Lucene.Net.Test.Index
 				string s = GetRandomString();
 				if (!terms.Contains(s))
 				{
-					terms.AddItem(s);
-					pendingTerms.AddItem(s);
+					terms.Add(s);
+					pendingTerms.Add(s);
 					if (Random().Next(20) == 7)
 					{
 						AddDoc(w, pendingTerms, termToID, id++);
@@ -234,7 +234,7 @@ namespace Lucene.Net.Test.Index
 				{
 					BytesRef b = new BytesRef(s);
 					termsArray[upto++] = b;
-					termsSet.AddItem(b);
+					termsSet.Add(b);
 				}
 				Arrays.Sort(termsArray);
 			}
@@ -247,7 +247,7 @@ namespace Lucene.Net.Test.Index
 						));
 				}
 			}
-			IndexReader r = w.GetReader();
+			IndexReader r = w.Reader;
 			w.Dispose();
 			// NOTE: intentional insanity!!
 			FieldCache.Ints docIDToID = FieldCache.DEFAULT.GetInts(SlowCompositeReaderWrapper
@@ -286,8 +286,8 @@ namespace Lucene.Net.Test.Index
 						{
 							s2 = GetRandomString();
 						}
-						acceptTerms.AddItem(s2);
-						sortedAcceptTerms.AddItem(new BytesRef(s2));
+						acceptTerms.Add(s2);
+						sortedAcceptTerms.Add(new BytesRef(s2));
 					}
 					a = BasicAutomata.MakeStringUnion(sortedAcceptTerms);
 				}
@@ -307,7 +307,7 @@ namespace Lucene.Net.Test.Index
 				{
 					BytesRef b = new BytesRef(s_1);
 					acceptTermsArray[upto++] = b;
-					acceptTermsSet.AddItem(b);
+					acceptTermsSet.Add(b);
 					IsTrue(Accepts(c, b));
 				}
 				Arrays.Sort(acceptTermsArray);
@@ -419,7 +419,7 @@ namespace Lucene.Net.Test.Index
 			{
 				Close();
 			}
-			r = w.GetReader();
+			r = w.Reader;
 			w.Dispose();
 			return r;
 		}
@@ -539,7 +539,7 @@ namespace Lucene.Net.Test.Index
 			w.Commit();
 			w.DeleteDocuments(new Term("field", "one"));
 			w.ForceMerge(1);
-			IndexReader r = w.GetReader();
+			IndexReader r = w.Reader;
 			w.Dispose();
 			AreEqual(1, r.NumDocs);
 			AreEqual(1, r.MaxDoc);
@@ -589,7 +589,7 @@ namespace Lucene.Net.Test.Index
 						if (!seen.Contains(t))
 						{
 							terms[seen.Count] = t;
-							seen.AddItem(t);
+							seen.Add(t);
 						}
 					}
 				}
@@ -600,7 +600,7 @@ namespace Lucene.Net.Test.Index
 				if (!seen.Contains(t) && (allowEmptyString || t.Length != 0))
 				{
 					terms[seen.Count] = t;
-					seen.AddItem(t);
+					seen.Add(t);
 				}
 			}
 			r = MakeIndex(terms);
@@ -676,7 +676,7 @@ namespace Lucene.Net.Test.Index
 			}
 			TermsEnum te = MultiFields.GetTerms(r, FIELD).Iterator(null);
 			int END_LOC = -validTerms.Length - 1;
-			IList<TestTermsEnum.TermAndState> termStates = new AList<TestTermsEnum.TermAndState
+			IList<TestTermsEnum.TermAndState> termStates = new List<TestTermsEnum.TermAndState
 				>();
 			for (int iter = 0; iter < 100 * RANDOM_MULTIPLIER; iter++)
 			{
@@ -815,7 +815,7 @@ namespace Lucene.Net.Test.Index
 						AreEqual(validTerms[loc], t2);
 						if (Random().Next(40) == 17 && termStates.Count < 100)
 						{
-							termStates.AddItem(new TestTermsEnum.TermAndState(validTerms[loc], te.TermState()
+							termStates.Add(new TestTermsEnum.TermAndState(validTerms[loc], te.TermState()
 								));
 						}
 					}
@@ -842,7 +842,7 @@ namespace Lucene.Net.Test.Index
 			doc.Add(NewTextField("field", "ccc", Field.Store.NO));
 			w.AddDocument(doc);
 			w.ForceMerge(1);
-			DirectoryReader r = w.GetReader();
+			DirectoryReader r = w.Reader;
 			w.Dispose();
 			AtomicReader sub = GetOnlySegmentReader(r);
 			Terms terms = sub.Fields().Terms("field");
@@ -902,7 +902,7 @@ namespace Lucene.Net.Test.Index
 			doc.Add(NewStringField("field", "bcd", Field.Store.NO));
 			w.AddDocument(doc);
 			w.ForceMerge(1);
-			DirectoryReader r = w.GetReader();
+			DirectoryReader r = w.Reader;
 			w.Dispose();
 			AtomicReader sub = GetOnlySegmentReader(r);
 			Terms terms = sub.Fields().Terms("field");
@@ -958,7 +958,7 @@ namespace Lucene.Net.Test.Index
 			doc.Add(NewStringField("field", string.Empty, Field.Store.NO));
 			w.AddDocument(doc);
 			w.ForceMerge(1);
-			DirectoryReader r = w.GetReader();
+			DirectoryReader r = w.Reader;
 			w.Dispose();
 			AtomicReader sub = GetOnlySegmentReader(r);
 			Terms terms = sub.Fields().Terms("field");

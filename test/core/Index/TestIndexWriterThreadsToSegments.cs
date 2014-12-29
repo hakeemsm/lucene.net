@@ -27,11 +27,11 @@ namespace Lucene.Net.Test.Index
 			Directory dir = NewDirectory();
 			IndexWriter w = new IndexWriter(dir, new IndexWriterConfig(TEST_VERSION_CURRENT, 
 				new MockAnalyzer(Random())));
-			CountDownLatch startingGun = new CountDownLatch(1);
-			CountDownLatch startDone = new CountDownLatch(2);
-			CountDownLatch middleGun = new CountDownLatch(1);
-			CountDownLatch finalGun = new CountDownLatch(1);
-			Sharpen.Thread[] threads = new Sharpen.Thread[2];
+			CountdownEvent startingGun = new CountdownEvent(1);
+			CountdownEvent startDone = new CountdownEvent(2);
+			CountdownEvent middleGun = new CountdownEvent(1);
+			CountdownEvent finalGun = new CountdownEvent(1);
+			Thread[] threads = new Thread[2];
 			for (int i = 0; i < threads.Length; i++)
 			{
 				int threadID = i;
@@ -60,10 +60,10 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		private sealed class _Thread_55 : Sharpen.Thread
+		private sealed class _Thread_55 : Thread
 		{
-			public _Thread_55(CountDownLatch startingGun, IndexWriter w, CountDownLatch startDone
-				, CountDownLatch middleGun, int threadID, CountDownLatch finalGun)
+			public _Thread_55(CountdownEvent startingGun, IndexWriter w, CountdownEvent startDone
+				, CountdownEvent middleGun, int threadID, CountdownEvent finalGun)
 			{
 				this.startingGun = startingGun;
 				this.w = w;
@@ -97,21 +97,21 @@ namespace Lucene.Net.Test.Index
 				}
 				catch (Exception e)
 				{
-					throw new RuntimeException(e);
+					throw new SystemException(e);
 				}
 			}
 
-			private readonly CountDownLatch startingGun;
+			private readonly CountdownEvent startingGun;
 
 			private readonly IndexWriter w;
 
-			private readonly CountDownLatch startDone;
+			private readonly CountdownEvent startDone;
 
-			private readonly CountDownLatch middleGun;
+			private readonly CountdownEvent middleGun;
 
 			private readonly int threadID;
 
-			private readonly CountDownLatch finalGun;
+			private readonly CountdownEvent finalGun;
 		}
 
 		/// <summary>Maximum number of simultaneous threads to use for each iteration.</summary>
@@ -163,7 +163,7 @@ namespace Lucene.Net.Test.Index
 				}
 				catch (Exception e)
 				{
-					throw new RuntimeException(e);
+					throw new SystemException(e);
 				}
 			}
 
@@ -214,7 +214,7 @@ namespace Lucene.Net.Test.Index
 				(w, maxThreadCount, indexingCount);
 			// We spin up 10 threads up front, but then in between flushes we limit how many can run on each iteration
 			int ITERS = 100;
-			Sharpen.Thread[] threads = new Sharpen.Thread[MAX_THREADS_AT_ONCE];
+			Thread[] threads = new Thread[MAX_THREADS_AT_ONCE];
 			// We use this to stop all threads once they've indexed their docs in the current iter, and pull a new NRT reader, and verify the
 			// segment count:
 			CyclicBarrier barrier = new CyclicBarrier(MAX_THREADS_AT_ONCE, checker);
@@ -225,14 +225,14 @@ namespace Lucene.Net.Test.Index
 				// We lose: no indexing for us on this cycle
 				threads[i].Start();
 			}
-			foreach (Sharpen.Thread t in threads)
+			foreach (Thread t in threads)
 			{
 				t.Join();
 			}
 			IOUtils.Close(checker, w, dir);
 		}
 
-		private sealed class _Thread_199 : Sharpen.Thread
+		private sealed class _Thread_199 : Thread
 		{
 			public _Thread_199(int ITERS, AtomicInteger indexingCount, AtomicInteger maxThreadCount
 				, IndexWriter w, CyclicBarrier barrier)
@@ -254,7 +254,7 @@ namespace Lucene.Net.Test.Index
 						{
 							if (LuceneTestCase.VERBOSE)
 							{
-								System.Console.Out.WriteLine("TEST: " + Sharpen.Thread.CurrentThread().GetName() 
+								System.Console.Out.WriteLine("TEST: " + Thread.CurrentThread().GetName() 
 									+ ": do index");
 							}
 							Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
@@ -270,7 +270,7 @@ namespace Lucene.Net.Test.Index
 						{
 							if (LuceneTestCase.VERBOSE)
 							{
-								System.Console.Out.WriteLine("TEST: " + Sharpen.Thread.CurrentThread().GetName() 
+								System.Console.Out.WriteLine("TEST: " + Thread.CurrentThread().GetName() 
 									+ ": don't index");
 							}
 						}
@@ -279,7 +279,7 @@ namespace Lucene.Net.Test.Index
 				}
 				catch (Exception e)
 				{
-					throw new RuntimeException(e);
+					throw new SystemException(e);
 				}
 			}
 
@@ -300,8 +300,8 @@ namespace Lucene.Net.Test.Index
 			Directory dir = NewDirectory();
 			RandomIndexWriter w = new RandomIndexWriter(Random(), dir);
 			w.SetDoRandomForceMerge(false);
-			Sharpen.Thread[] threads = new Sharpen.Thread[TestUtil.NextInt(Random(), 4, 30)];
-			CountDownLatch startingGun = new CountDownLatch(1);
+			Thread[] threads = new Thread[TestUtil.NextInt(Random(), 4, 30)];
+			CountdownEvent startingGun = new CountdownEvent(1);
 			for (int i = 0; i < threads.Length; i++)
 			{
 				threads[i] = new _Thread_245(startingGun, w);
@@ -309,18 +309,18 @@ namespace Lucene.Net.Test.Index
 				threads[i].Start();
 			}
 			startingGun.CountDown();
-			Sharpen.Thread.Sleep(100);
+			Thread.Sleep(100);
 			w.Dispose();
-			foreach (Sharpen.Thread t in threads)
+			foreach (Thread t in threads)
 			{
 				t.Join();
 			}
 			dir.Dispose();
 		}
 
-		private sealed class _Thread_245 : Sharpen.Thread
+		private sealed class _Thread_245 : Thread
 		{
-			public _Thread_245(CountDownLatch startingGun, RandomIndexWriter w)
+			public _Thread_245(CountdownEvent startingGun, RandomIndexWriter w)
 			{
 				this.startingGun = startingGun;
 				this.w = w;
@@ -345,11 +345,11 @@ namespace Lucene.Net.Test.Index
 				}
 				catch (Exception e)
 				{
-					throw new RuntimeException(e);
+					throw new SystemException(e);
 				}
 			}
 
-			private readonly CountDownLatch startingGun;
+			private readonly CountdownEvent startingGun;
 
 			private readonly RandomIndexWriter w;
 		}
@@ -365,8 +365,8 @@ namespace Lucene.Net.Test.Index
 			iwc.SetCodec(codec);
 			iwc.SetMergePolicy(NoMergePolicy.NO_COMPOUND_FILES);
 			IndexWriter w = new IndexWriter(dir, iwc);
-			CountDownLatch startingGun = new CountDownLatch(1);
-			Sharpen.Thread[] threads = new Sharpen.Thread[2];
+			CountdownEvent startingGun = new CountdownEvent(1);
+			Thread[] threads = new Thread[2];
 			for (int i = 0; i < threads.Length; i++)
 			{
 				int threadID = i;
@@ -374,7 +374,7 @@ namespace Lucene.Net.Test.Index
 				threads[i].Start();
 			}
 			startingGun.CountDown();
-			foreach (Sharpen.Thread t in threads)
+			foreach (Thread t in threads)
 			{
 				t.Join();
 			}
@@ -396,7 +396,7 @@ namespace Lucene.Net.Test.Index
 						string segName = IndexFileNames.ParseSegmentName(fileName);
 						if (segSeen.Contains(segName) == false)
 						{
-							segSeen.AddItem(segName);
+							segSeen.Add(segName);
 							SegmentInfo si = new Lucene46SegmentInfoFormat().GetSegmentInfoReader().Read(dir, 
 								segName, IOContext.DEFAULT);
 							si.SetCodec(codec);
@@ -419,9 +419,9 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		private sealed class _Thread_287 : Sharpen.Thread
+		private sealed class _Thread_287 : Thread
 		{
-			public _Thread_287(CountDownLatch startingGun, int threadID, IndexWriter w)
+			public _Thread_287(CountdownEvent startingGun, int threadID, IndexWriter w)
 			{
 				this.startingGun = startingGun;
 				this.threadID = threadID;
@@ -444,11 +444,11 @@ namespace Lucene.Net.Test.Index
 				}
 				catch (Exception e)
 				{
-					throw new RuntimeException(e);
+					throw new SystemException(e);
 				}
 			}
 
-			private readonly CountDownLatch startingGun;
+			private readonly CountdownEvent startingGun;
 
 			private readonly int threadID;
 

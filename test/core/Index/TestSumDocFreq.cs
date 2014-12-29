@@ -44,7 +44,7 @@ namespace Lucene.Net.Test.Index
 				field2.StringValue = string.Empty + ch1 + " " + ch2);
 				writer.AddDocument(doc);
 			}
-			IndexReader ir = writer.GetReader();
+			IndexReader ir = writer.Reader;
 			AssertSumDocFreq(ir);
 			ir.Dispose();
 			int numDeletions = AtLeast(20);

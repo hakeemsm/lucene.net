@@ -44,7 +44,7 @@ namespace Lucene.Net.Test.Index
 			IndexWriter writer = new IndexWriter(dir, GetConfig(Random(), GetDeletionPolicy(dir
 				)));
 			PersistentSnapshotDeletionPolicy psdp = (PersistentSnapshotDeletionPolicy)writer.
-				GetConfig().GetIndexDeletionPolicy();
+				GetConfig().IndexDeletionPolicy;
 			IsNull(psdp.GetLastSaveFile());
 			PrepareIndexAndSnapshots(psdp, writer, numSnapshots);
 			IsNotNull(psdp.GetLastSaveFile());
@@ -73,7 +73,7 @@ namespace Lucene.Net.Test.Index
 			AssertSnapshotExists(dir, psdp, numSnapshots, false);
 			writer.AddDocument(new Lucene.Net.Documents.Document());
 			writer.Commit();
-			snapshots.AddItem(psdp.Snapshot());
+			snapshots.Add(psdp.Snapshot());
 			AreEqual(numSnapshots + 1, psdp.GetSnapshots().Count);
 			AreEqual(numSnapshots + 1, psdp.GetSnapshotCount());
 			AssertSnapshotExists(dir, psdp, numSnapshots + 1, false);
@@ -120,7 +120,7 @@ namespace Lucene.Net.Test.Index
 			writer.AddDocument(new Lucene.Net.Documents.Document());
 			writer.Commit();
 			PersistentSnapshotDeletionPolicy psdp = (PersistentSnapshotDeletionPolicy)writer.
-				GetConfig().GetIndexDeletionPolicy();
+				GetConfig().IndexDeletionPolicy;
 			try
 			{
 				psdp.Snapshot();
@@ -151,7 +151,7 @@ namespace Lucene.Net.Test.Index
 			/// <exception cref="System.IO.IOException"></exception>
 			public override void Eval(MockDirectoryWrapper dir)
 			{
-				StackTraceElement[] trace = Sharpen.Thread.CurrentThread().GetStackTrace();
+				StackTraceElement[] trace = Thread.CurrentThread().GetStackTrace();
 				for (int i = 0; i < trace.Length; i++)
 				{
 					if (typeof(PersistentSnapshotDeletionPolicy).FullName.Equals(trace[i].GetClassName
@@ -171,7 +171,7 @@ namespace Lucene.Net.Test.Index
 			IndexWriter writer = new IndexWriter(dir, GetConfig(Random(), GetDeletionPolicy(dir
 				)));
 			PersistentSnapshotDeletionPolicy psdp = (PersistentSnapshotDeletionPolicy)writer.
-				GetConfig().GetIndexDeletionPolicy();
+				GetConfig().IndexDeletionPolicy;
 			PrepareIndexAndSnapshots(psdp, writer, 1);
 			writer.Dispose();
 			psdp.Release(snapshots[0]);
@@ -190,7 +190,7 @@ namespace Lucene.Net.Test.Index
 			IndexWriter writer = new IndexWriter(dir, GetConfig(Random(), GetDeletionPolicy(dir
 				)));
 			PersistentSnapshotDeletionPolicy psdp = (PersistentSnapshotDeletionPolicy)writer.
-				GetConfig().GetIndexDeletionPolicy();
+				GetConfig().IndexDeletionPolicy;
 			PrepareIndexAndSnapshots(psdp, writer, 1);
 			writer.Dispose();
 			psdp.Release(snapshots[0].GetGeneration());

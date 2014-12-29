@@ -1,16 +1,13 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
+using Lucene.Net.Support;
+using Lucene.Net.TestFramework;
 using Lucene.Net.Util;
-using Sharpen;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
@@ -18,8 +15,10 @@ namespace Lucene.Net.Test.Index
 	/// Unit test for
 	/// <see cref="DocumentsWriterDeleteQueue">DocumentsWriterDeleteQueue</see>
 	/// </summary>
-	public class TestDocumentsWriterDeleteQueue : LuceneTestCase
+	[TestFixture]
+    public class TestDocumentsWriterDeleteQueue : LuceneTestCase
 	{
+        [Test]
 		public virtual void TestUpdateDelteSlices()
 		{
 			DocumentsWriterDeleteQueue queue = new DocumentsWriterDeleteQueue();
@@ -41,7 +40,7 @@ namespace Lucene.Net.Test.Index
 				int i_1 = ids[j];
 				// create an array here since we compare identity below against tailItem
 				Term[] term = new Term[] { new Term("id", i_1.ToString()) };
-				uniqueValues.AddItem(term[0]);
+				uniqueValues.Add(term[0]);
 				queue.AddDelete(term);
 				if (Random().Next(20) == 0 || j == ids.Length - 1)
 				{
@@ -59,7 +58,7 @@ namespace Lucene.Net.Test.Index
 					AssertAllBetween(last2, j, bd2, ids);
 					last2 = j + 1;
 				}
-				AreEqual(j + 1, queue.NumGlobalTermDeletes());
+				AreEqual(j + 1, queue.NumGlobalTermDeletes);
 			}
 			AreEqual(uniqueValues, bd1.terms.Keys);
 			AreEqual(uniqueValues, bd2.terms.Keys);
@@ -68,11 +67,10 @@ namespace Lucene.Net.Test.Index
 			{
 				BytesRef bytesRef = new BytesRef();
 				bytesRef.CopyBytes(t.bytes);
-				frozenSet.AddItem(new Term(t.field, bytesRef));
+				frozenSet.Add(new Term(t.field, bytesRef));
 			}
 			AreEqual(uniqueValues, frozenSet);
-			AreEqual("num deletes must be 0 after freeze", 0, queue.NumGlobalTermDeletes
-				());
+			AssertEquals("num deletes must be 0 after freeze", 0, queue.NumGlobalTermDeletes);
 		}
 
 		private void AssertAllBetween(int start, int end, BufferedUpdates deletes, int[] 
@@ -80,17 +78,17 @@ namespace Lucene.Net.Test.Index
 		{
 			for (int i = start; i <= end; i++)
 			{
-				AreEqual(Sharpen.Extensions.ValueOf(end), deletes.terms.Get
-					(new Term("id", ids[i].ToString())));
+				AreEqual(end, deletes.terms[(new Term("id", ids[i].ToString()))]);
 			}
 		}
 
+        [Test]
 		public virtual void TestClear()
 		{
 			DocumentsWriterDeleteQueue queue = new DocumentsWriterDeleteQueue();
-			IsFalse(queue.AnyChanges());
+			IsFalse(queue.AnyChanges);
 			queue.Clear();
-			IsFalse(queue.AnyChanges());
+			IsFalse(queue.AnyChanges);
 			int size = 200 + Random().Next(500) * RANDOM_MULTIPLIER;
 			int termsSinceFreeze = 0;
 			int queriesSinceFreeze = 0;
@@ -107,16 +105,17 @@ namespace Lucene.Net.Test.Index
 					queue.AddDelete(term);
 					termsSinceFreeze++;
 				}
-				IsTrue(queue.AnyChanges());
+				IsTrue(queue.AnyChanges);
 				if (Random().Next(10) == 0)
 				{
 					queue.Clear();
 					queue.TryApplyGlobalSlice();
-					IsFalse(queue.AnyChanges());
+					IsFalse(queue.AnyChanges);
 				}
 			}
 		}
 
+        [Test]
 		public virtual void TestAnyChanges()
 		{
 			DocumentsWriterDeleteQueue queue = new DocumentsWriterDeleteQueue();
@@ -136,7 +135,7 @@ namespace Lucene.Net.Test.Index
 					queue.AddDelete(term);
 					termsSinceFreeze++;
 				}
-				IsTrue(queue.AnyChanges());
+				IsTrue(queue.AnyChanges);
 				if (Random().Next(5) == 0)
 				{
 					FrozenBufferedUpdates freezeGlobalBuffer = queue.FreezeGlobalBuffer(null);
@@ -145,7 +144,7 @@ namespace Lucene.Net.Test.Index
 						);
 					queriesSinceFreeze = 0;
 					termsSinceFreeze = 0;
-					IsFalse(queue.AnyChanges());
+					IsFalse(queue.AnyChanges);
 				}
 			}
 		}
@@ -154,44 +153,27 @@ namespace Lucene.Net.Test.Index
 		/// <exception cref="Sharpen.NoSuchFieldException"></exception>
 		/// <exception cref="System.ArgumentException"></exception>
 		/// <exception cref="System.MemberAccessException"></exception>
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestPartiallyAppliedGlobalSlice()
 		{
 			DocumentsWriterDeleteQueue queue = new DocumentsWriterDeleteQueue();
-			FieldInfo field = Sharpen.Runtime.GetDeclaredField(typeof(DocumentsWriterDeleteQueue
-				), "globalBufferLock");
+		    var field = (typeof (DocumentsWriterDeleteQueue).GetField("globalBufferLock", BindingFlags.NonPublic));
 			ReentrantLock Lock = (ReentrantLock)field.GetValue(queue);
 			Lock.Lock();
-			Sharpen.Thread t = new _Thread_156(queue);
+            Thread t = new Thread(() => queue.AddDelete(new Term("foo", "bar")));
 			t.Start();
 			t.Join();
 			Lock.Unlock();
-			IsTrue("changes in del queue but not in slice yet", queue.
-				AnyChanges());
+			AssertTrue("changes in del queue but not in slice yet", queue.AnyChanges);
 			queue.TryApplyGlobalSlice();
-			IsTrue("changes in global buffer", queue.AnyChanges());
+			AssertTrue("changes in global buffer", queue.AnyChanges);
 			FrozenBufferedUpdates freezeGlobalBuffer = queue.FreezeGlobalBuffer(null);
 			IsTrue(freezeGlobalBuffer.Any());
 			AreEqual(1, freezeGlobalBuffer.termCount);
-			IsFalse("all changes applied", queue.AnyChanges());
+			AssertFalse("all changes applied", queue.AnyChanges);
 		}
 
-		private sealed class _Thread_156 : Sharpen.Thread
-		{
-			public _Thread_156(DocumentsWriterDeleteQueue queue)
-			{
-				this.queue = queue;
-			}
-
-			public override void Run()
-			{
-				queue.AddDelete(new Term("foo", "bar"));
-			}
-
-			private readonly DocumentsWriterDeleteQueue queue;
-		}
-
-		/// <exception cref="System.Exception"></exception>
+	    [Test]
 		public virtual void TestStressDeleteQueue()
 		{
 			DocumentsWriterDeleteQueue queue = new DocumentsWriterDeleteQueue();
@@ -201,29 +183,54 @@ namespace Lucene.Net.Test.Index
 			for (int i = 0; i < ids.Length; i++)
 			{
 				ids[i] = Random().Next();
-				uniqueValues.AddItem(new Term("id", ids[i].ToString()));
+				uniqueValues.Add(new Term("id", ids[i].ToString()));
 			}
-			CountDownLatch latch = new CountDownLatch(1);
+			CountdownEvent latch = new CountdownEvent(1);
 			AtomicInteger index = new AtomicInteger(0);
 			int numThreads = 2 + Random().Next(5);
-			TestDocumentsWriterDeleteQueue.UpdateThread[] threads = new TestDocumentsWriterDeleteQueue.UpdateThread
-				[numThreads];
-			for (int i_1 = 0; i_1 < threads.Length; i_1++)
+			var threads = new Thread[numThreads];
+	        var slices = new Dictionary<string,DocumentsWriterDeleteQueue.DeleteSlice>();
+	        var updates = new Dictionary<string,BufferedUpdates>();
+	        for (int i = 0; i < threads.Length; i++)
 			{
-				threads[i_1] = new TestDocumentsWriterDeleteQueue.UpdateThread(queue, index, ids, 
-					latch);
-				threads[i_1].Start();
+				
+				threads[i] = new Thread(() =>
+				{
+                    try
+                    {
+                        latch.Wait();
+                    }
+                    catch (Exception e)
+                    {
+                        throw new ThreadInterruptedException();
+                    }
+                    int x = 0;
+				    var slice = queue.NewSlice();
+				    var updates2 = new BufferedUpdates();
+				    while ((x = index.IncrementAndGet()) < ids.Length)
+                    {
+                        Term term = new Term("id", ids[x].ToString());
+                        queue.Add(term, slice);
+                        IsTrue(slice.IsTailItem(term));
+                        slice.Apply(updates2, BufferedUpdates.MAX_INT);
+                        var threadId = Thread.CurrentThread.ManagedThreadId.ToString();
+                        slices.Add(threadId, slice);
+                        updates.Add(threadId, updates2);
+                    }
+				});
+				threads[i].Start();
 			}
-			latch.CountDown();
+			latch.Signal();
 			for (int i_2 = 0; i_2 < threads.Length; i_2++)
 			{
 				threads[i_2].Join();
 			}
-			foreach (TestDocumentsWriterDeleteQueue.UpdateThread updateThread in threads)
+            //TODO: this doesnt look clean. revisit
+			foreach (var updateThread in threads)
 			{
-				DocumentsWriterDeleteQueue.DeleteSlice slice = updateThread.slice;
+			    DocumentsWriterDeleteQueue.DeleteSlice slice = slices[updateThread.ManagedThreadId.ToString()];
 				queue.UpdateSlice(slice);
-				BufferedUpdates deletes = updateThread.deletes;
+			    BufferedUpdates deletes = updates[updateThread.ManagedThreadId.ToString()];
 				slice.Apply(deletes, BufferedUpdates.MAX_INT);
 				AreEqual(uniqueValues, deletes.terms.Keys);
 			}
@@ -233,58 +240,11 @@ namespace Lucene.Net.Test.Index
 			{
 				BytesRef bytesRef = new BytesRef();
 				bytesRef.CopyBytes(t.bytes);
-				frozenSet.AddItem(new Term(t.field, bytesRef));
+				frozenSet.Add(new Term(t.field, bytesRef));
 			}
-			AreEqual("num deletes must be 0 after freeze", 0, queue.NumGlobalTermDeletes
-				());
+			AssertEquals("num deletes must be 0 after freeze", 0, queue.NumGlobalTermDeletes);
 			AreEqual(uniqueValues.Count, frozenSet.Count);
 			AreEqual(uniqueValues, frozenSet);
-		}
-
-		private class UpdateThread : Sharpen.Thread
-		{
-			internal readonly DocumentsWriterDeleteQueue queue;
-
-			internal readonly AtomicInteger index;
-
-			internal readonly int[] ids;
-
-			internal readonly DocumentsWriterDeleteQueue.DeleteSlice slice;
-
-			internal readonly BufferedUpdates deletes;
-
-			internal readonly CountDownLatch latch;
-
-			protected internal UpdateThread(DocumentsWriterDeleteQueue queue, AtomicInteger index
-				, int[] ids, CountDownLatch latch)
-			{
-				this.queue = queue;
-				this.index = index;
-				this.ids = ids;
-				this.slice = queue.NewSlice();
-				deletes = new BufferedUpdates();
-				this.latch = latch;
-			}
-
-			public override void Run()
-			{
-				try
-				{
-					latch.Await();
-				}
-				catch (Exception e)
-				{
-					throw new ThreadInterruptedException(e);
-				}
-				int i = 0;
-				while ((i = index.GetAndIncrement()) < ids.Length)
-				{
-					Term term = new Term("id", ids[i].ToString());
-					queue.Add(term, slice);
-					IsTrue(slice.IsTailItem(term));
-					slice.Apply(deletes, BufferedUpdates.MAX_INT);
-				}
-			}
 		}
 	}
 }

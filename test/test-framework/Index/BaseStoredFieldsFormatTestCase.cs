@@ -20,7 +20,7 @@ namespace Lucene.Net.TestFramework.Index
 	/// <lucene.experimental></lucene.experimental>
 	public abstract class BaseStoredFieldsFormatTestCase : BaseIndexFileFormatTestCase
 	{
-		protected internal override void AddRandomFields(Lucene.NetDocument.Document
+		protected internal override void AddRandomFields(Lucene.Net.Documents.Document
 			 d)
 		{
 			int numValues = Random().Next(3);
@@ -49,8 +49,8 @@ namespace Lucene.Net.TestFramework.Index
 			{
 				fieldIDs.AddItem(i);
 			}
-			IDictionary<string, Lucene.NetDocument.Document> docs = new Dictionary<string
-				, Lucene.NetDocument.Document>();
+			IDictionary<string, Lucene.Net.Documents.Document> docs = new Dictionary<string
+				, Lucene.Net.Documents.Document>();
 			if (VERBOSE)
 			{
 				System.Console.Out.WriteLine("TEST: build index docCount=" + docCount);
@@ -59,7 +59,7 @@ namespace Lucene.Net.TestFramework.Index
 			customType2.SetStored(true);
 			for (int i_1 = 0; i_1 < docCount; i_1++)
 			{
-				Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(idField);
 				string id = string.Empty + i_1;
@@ -125,8 +125,8 @@ namespace Lucene.Net.TestFramework.Index
 						}
 						TopDocs hits = s.Search(new TermQuery(new Term("id", testID)), 1);
 						NUnit.Framework.Assert.AreEqual(1, hits.totalHits);
-						Lucene.NetDocument.Document doc = r.Document(hits.scoreDocs[0].doc);
-						Lucene.NetDocument.Document docExp = docs.Get(testID);
+						Lucene.Net.Documents.Document doc = r.Document(hits.scoreDocs[0].doc);
+						Lucene.Net.Documents.Document docExp = docs.Get(testID);
 						for (int i_2 = 0; i_2 < fieldCount; i_2++)
 						{
 							NUnit.Framework.Assert.AreEqual("doc " + testID + ", field f" + fieldCount + " is wrong"
@@ -148,7 +148,7 @@ namespace Lucene.Net.TestFramework.Index
 			Directory d = NewDirectory();
 			IndexWriter w = new IndexWriter(d, NewIndexWriterConfig(TEST_VERSION_CURRENT, new 
 				MockAnalyzer(Random())));
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			FieldType customType = new FieldType();
 			customType.SetStored(true);
@@ -157,7 +157,7 @@ namespace Lucene.Net.TestFramework.Index
 			doc.Add(NewField("zzz", "1 2 3", customType));
 			w.AddDocument(doc);
 			IndexReader r = w.GetReader();
-			Lucene.NetDocument.Document doc2 = r.Document(0);
+			Lucene.Net.Documents.Document doc2 = r.Document(0);
 			Iterator<IndexableField> it = doc2.GetFields().Iterator();
 			NUnit.Framework.Assert.IsTrue(it.HasNext());
 			Field f = (Field)it.Next();
@@ -189,7 +189,7 @@ namespace Lucene.Net.TestFramework.Index
 			{
 				b[i] = unchecked((byte)(i + 77));
 			}
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			Field f = new StoredField("binary", b, 10, 17);
 			byte[] bx = f.BinaryValue().bytes;
@@ -201,7 +201,7 @@ namespace Lucene.Net.TestFramework.Index
 			w.AddDocument(doc);
 			w.Close();
 			IndexReader ir = DirectoryReader.Open(dir);
-			Lucene.NetDocument.Document doc2 = ir.Document(0);
+			Lucene.Net.Documents.Document doc2 = ir.Document(0);
 			IndexableField f2 = doc2.GetField("binary");
 			b = f2.BinaryValue().bytes;
 			NUnit.Framework.Assert.IsTrue(b != null);
@@ -221,7 +221,7 @@ namespace Lucene.Net.TestFramework.Index
 			FieldType.NumericType[] typeAnswers = new FieldType.NumericType[numDocs];
 			for (int id = 0; id < numDocs; id++)
 			{
-				Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				Field nf;
 				Field sf;
@@ -285,7 +285,7 @@ namespace Lucene.Net.TestFramework.Index
 				FieldCache.Ints ids = FieldCache.DEFAULT.GetInts(sub, "id", false);
 				for (int docID = 0; docID < sub.NumDocs(); docID++)
 				{
-					Lucene.NetDocument.Document doc = sub.Document(docID);
+					Lucene.Net.Documents.Document doc = sub.Document(docID);
 					Field f = (Field)doc.GetField("nf");
 					NUnit.Framework.Assert.IsTrue("got f=" + f, f is StoredField);
 					NUnit.Framework.Assert.AreEqual(answers[ids.Get(docID)], f.NumericValue());
@@ -300,7 +300,7 @@ namespace Lucene.Net.TestFramework.Index
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter w = new RandomIndexWriter(Random(), dir);
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			FieldType onlyStored = new FieldType();
 			onlyStored.SetStored(true);
@@ -340,7 +340,7 @@ namespace Lucene.Net.TestFramework.Index
 				("double", d, Field.Store.YES));
 			for (int k = 0; k < 100; ++k)
 			{
-				Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				foreach (Field fld in fields)
 				{
@@ -354,7 +354,7 @@ namespace Lucene.Net.TestFramework.Index
 			foreach (Field fld_1 in fields)
 			{
 				string fldName = fld_1.Name();
-				Lucene.NetDocument.Document sDoc = reader.Document(docID, Sharpen.Collections
+				Lucene.Net.Documents.Document sDoc = reader.Document(docID, Sharpen.Collections
 					.Singleton(fldName));
 				IndexableField sField = sDoc.GetField(fldName);
 				if (typeof(Field).Equals(fld_1.GetType()))
@@ -381,7 +381,7 @@ namespace Lucene.Net.TestFramework.Index
 			iwConf.SetMaxBufferedDocs(RandomInts.RandomIntBetween(Random(), 2, 30));
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir, iwConf);
 			// make sure that the fact that documents might be empty is not a problem
-			Lucene.NetDocument.Document emptyDoc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document emptyDoc = new Lucene.Net.Documents.Document
 				();
 			int numDocs = Random().NextBoolean() ? 1 : AtLeast(1000);
 			for (int i = 0; i < numDocs; ++i)
@@ -392,7 +392,7 @@ namespace Lucene.Net.TestFramework.Index
 			DirectoryReader rd = DirectoryReader.Open(dir);
 			for (int i_1 = 0; i_1 < numDocs; ++i_1)
 			{
-				Lucene.NetDocument.Document doc = rd.Document(i_1);
+				Lucene.Net.Documents.Document doc = rd.Document(i_1);
 				NUnit.Framework.Assert.IsNotNull(doc);
 				NUnit.Framework.Assert.IsTrue(doc.GetFields().IsEmpty());
 			}
@@ -410,7 +410,7 @@ namespace Lucene.Net.TestFramework.Index
 			iwConf.SetMaxBufferedDocs(RandomInts.RandomIntBetween(Random(), 2, 30));
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir, iwConf);
 			// make sure the readers are properly cloned
-			Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			Field field = new StringField("fld", string.Empty, Field.Store.YES);
 			doc.Add(field);
@@ -481,7 +481,7 @@ namespace Lucene.Net.TestFramework.Index
 						{
 							throw new InvalidOperationException("Expected 1 hit, got " + topDocs.totalHits);
 						}
-						Lucene.NetDocument.Document sdoc = rd.Document(topDocs.scoreDocs[0].doc);
+						Lucene.Net.Documents.Document sdoc = rd.Document(topDocs.scoreDocs[0].doc);
 						if (sdoc == null || sdoc.Get("fld") == null)
 						{
 							throw new InvalidOperationException("Could not find document " + q);
@@ -558,7 +558,7 @@ namespace Lucene.Net.TestFramework.Index
 			IntField id = new IntField("id", 0, Field.Store.YES);
 			for (int i_1 = 0; i_1 < data.Length; ++i_1)
 			{
-				Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(id);
 				id.SetIntValue(i_1);
@@ -597,7 +597,7 @@ namespace Lucene.Net.TestFramework.Index
 			int numDocs = 0;
 			for (int i_3 = 0; i_3 < ir.MaxDoc(); ++i_3)
 			{
-				Lucene.NetDocument.Document doc = ir.Document(i_3);
+				Lucene.Net.Documents.Document doc = ir.Document(i_3);
 				if (doc == null)
 				{
 					continue;
@@ -641,13 +641,13 @@ namespace Lucene.Net.TestFramework.Index
 			{
 				((MockDirectoryWrapper)dir).SetThrottling(MockDirectoryWrapper.Throttling.NEVER);
 			}
-			Lucene.NetDocument.Document emptyDoc = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document emptyDoc = new Lucene.Net.Documents.Document
 				();
 			// emptyDoc
-			Lucene.NetDocument.Document bigDoc1 = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document bigDoc1 = new Lucene.Net.Documents.Document
 				();
 			// lot of small fields
-			Lucene.NetDocument.Document bigDoc2 = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document bigDoc2 = new Lucene.Net.Documents.Document
 				();
 			// 1 very big field
 			Field idField = new StringField("id", string.Empty, Field.Store.NO);
@@ -667,7 +667,7 @@ namespace Lucene.Net.TestFramework.Index
 				(), 1000000, 5000000), 2), onlyStored);
 			bigDoc2.Add(bigField);
 			int numDocs = AtLeast(5);
-			Lucene.NetDocument.Document[] docs = new Lucene.NetDocument.Document
+			Lucene.Net.Documents.Document[] docs = new Lucene.Net.Documents.Document
 				[numDocs];
 			for (int i_1 = 0; i_1 < numDocs; ++i_1)
 			{
@@ -693,7 +693,7 @@ namespace Lucene.Net.TestFramework.Index
 				Query query = new TermQuery(new Term("id", string.Empty + i_3));
 				TopDocs topDocs = searcher.Search(query, 1);
 				NUnit.Framework.Assert.AreEqual(string.Empty + i_3, 1, topDocs.totalHits);
-				Lucene.NetDocument.Document doc = rd.Document(topDocs.scoreDocs[0].doc);
+				Lucene.Net.Documents.Document doc = rd.Document(topDocs.scoreDocs[0].doc);
 				NUnit.Framework.Assert.IsNotNull(doc);
 				IndexableField[] fieldValues = doc.GetFields("fld");
 				NUnit.Framework.Assert.AreEqual(docs[i_3].GetFields("fld").Length, fieldValues.Length
@@ -718,7 +718,7 @@ namespace Lucene.Net.TestFramework.Index
 				, new MockAnalyzer(Random())).SetMergePolicy(NoMergePolicy.COMPOUND_FILES));
 			for (int i = 0; i < numDocs; ++i)
 			{
-				Lucene.NetDocument.Document doc = new Lucene.NetDocument.Document
+				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(new StringField("id", Sharpen.Extensions.ToString(i), Field.Store.YES));
 				doc.Add(new StoredField("f", TestUtil.RandomSimpleString(Random())));

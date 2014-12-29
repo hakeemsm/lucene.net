@@ -33,7 +33,7 @@ namespace Lucene.Net.Search
 					 + " allowDups=" + allowDups);
 			}
 			int numDocs = 0;
-			IList<BytesRef> docValues = new AList<BytesRef>();
+			IList<BytesRef> docValues = new List<BytesRef>();
 			// TODO: deletions
 			while (numDocs < NUM_DOCS)
 			{
@@ -58,7 +58,7 @@ namespace Lucene.Net.Search
 						{
 							continue;
 						}
-						seen.AddItem(s);
+						seen.Add(s);
 					}
 					if (VERBOSE)
 					{
@@ -76,7 +76,7 @@ namespace Lucene.Net.Search
 							));
 					}
 					doc.Add(NewStringField("string", s, Field.Store.NO));
-					docValues.AddItem(br);
+					docValues.Add(br);
 				}
 				else
 				{
@@ -85,7 +85,7 @@ namespace Lucene.Net.Search
 					{
 						System.Console.Out.WriteLine("  " + numDocs + ": <missing>");
 					}
-					docValues.AddItem(null);
+					docValues.Add(null);
 					if (DefaultCodecSupportsDocValues())
 					{
 						doc.Add(new NumericDocValuesField("id", numDocs));
@@ -102,10 +102,10 @@ namespace Lucene.Net.Search
 				if (random.Next(40) == 17)
 				{
 					// force flush
-					writer.GetReader().Dispose();
+					writer.Reader.Dispose();
 				}
 			}
-			IndexReader r = writer.GetReader();
+			IndexReader r = writer.Reader;
 			writer.Dispose();
 			if (VERBOSE)
 			{
@@ -302,7 +302,7 @@ namespace Lucene.Net.Search
 			private readonly IList<BytesRef> docValues;
 
 			public readonly IList<BytesRef> matchValues = Sharpen.Collections.SynchronizedList
-				(new AList<BytesRef>());
+				(new List<BytesRef>());
 
 			public RandomFilter(Random random, float density, IList<BytesRef> docValues)
 			{
@@ -328,7 +328,7 @@ namespace Lucene.Net.Search
 					{
 						bits.Set(docID);
 						//System.out.println("  acc id=" + idSource.get(docID) + " docID=" + docID + " id=" + idSource.get(docID) + " v=" + docValues.get(idSource.get(docID)).utf8ToString());
-						matchValues.AddItem(docValues[idSource.Get(docID)]);
+						matchValues.Add(docValues[idSource.Get(docID)]);
 					}
 				}
 				return bits;

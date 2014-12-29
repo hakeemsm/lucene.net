@@ -40,7 +40,7 @@ namespace Lucene.Net.Test.Index
 				field.StringValue = TestUtil.RandomUnicodeString(Random(), 10));
 				writer.AddDocument(doc);
 			}
-			reader = writer.GetReader();
+			reader = writer.Reader;
 			writer.Dispose();
 		}
 

@@ -95,7 +95,7 @@ namespace Lucene.Net.Test.Index
 			}
 		}
 
-		private class IndexerThread : Sharpen.Thread
+		private class IndexerThread : Thread
 		{
 			internal IndexWriter writer;
 
@@ -148,7 +148,7 @@ namespace Lucene.Net.Test.Index
 				{
 					if (LuceneTestCase.VERBOSE)
 					{
-						System.Console.Out.WriteLine(Sharpen.Thread.CurrentThread().GetName() + ": TEST: IndexerThread: cycle"
+						System.Console.Out.WriteLine(Thread.CurrentThread().GetName() + ": TEST: IndexerThread: cycle"
 							);
 					}
 					this._enclosing.doFail.Set(this);
@@ -167,11 +167,11 @@ namespace Lucene.Net.Test.Index
 							this.writer.UpdateDocument(idTerm, doc);
 						}
 					}
-					catch (RuntimeException re)
+					catch (SystemException re)
 					{
 						if (LuceneTestCase.VERBOSE)
 						{
-							System.Console.Out.WriteLine(Sharpen.Thread.CurrentThread().GetName() + ": EXC: "
+							System.Console.Out.WriteLine(Thread.CurrentThread().GetName() + ": EXC: "
 								);
 							Sharpen.Runtime.PrintStackTrace(re, System.Console.Out);
 						}
@@ -181,7 +181,7 @@ namespace Lucene.Net.Test.Index
 						}
 						catch (IOException ioe)
 						{
-							System.Console.Out.WriteLine(Sharpen.Thread.CurrentThread().GetName() + ": unexpected exception1"
+							System.Console.Out.WriteLine(Thread.CurrentThread().GetName() + ": unexpected exception1"
 								);
 							Sharpen.Runtime.PrintStackTrace(ioe, System.Console.Out);
 							this.failure = ioe;
@@ -190,7 +190,7 @@ namespace Lucene.Net.Test.Index
 					}
 					catch (Exception t)
 					{
-						System.Console.Out.WriteLine(Sharpen.Thread.CurrentThread().GetName() + ": unexpected exception2"
+						System.Console.Out.WriteLine(Thread.CurrentThread().GetName() + ": unexpected exception2"
 							);
 						Sharpen.Runtime.PrintStackTrace(t, System.Console.Out);
 						this.failure = t;
@@ -206,7 +206,7 @@ namespace Lucene.Net.Test.Index
 					}
 					catch (Exception t)
 					{
-						System.Console.Out.WriteLine(Sharpen.Thread.CurrentThread().GetName() + ": unexpected exception3"
+						System.Console.Out.WriteLine(Thread.CurrentThread().GetName() + ": unexpected exception3"
 							);
 						Sharpen.Runtime.PrintStackTrace(t, System.Console.Out);
 						this.failure = t;
@@ -219,7 +219,7 @@ namespace Lucene.Net.Test.Index
 			private readonly TestIndexWriterExceptions _enclosing;
 		}
 
-		internal ThreadLocal<Sharpen.Thread> doFail = new ThreadLocal<Sharpen.Thread>();
+		internal ThreadLocal<Thread> doFail = new ThreadLocal<Thread>();
 
 		private class TestPoint1 : RandomIndexWriter.TestPoint
 		{
@@ -232,11 +232,11 @@ namespace Lucene.Net.Test.Index
 				{
 					if (LuceneTestCase.VERBOSE)
 					{
-						System.Console.Out.WriteLine(Sharpen.Thread.CurrentThread().GetName() + ": NOW FAIL: "
+						System.Console.Out.WriteLine(Thread.CurrentThread().GetName() + ": NOW FAIL: "
 							 + name);
 						Sharpen.Runtime.PrintStackTrace(new Exception(), System.Console.Out);
 					}
-					throw new RuntimeException(Sharpen.Thread.CurrentThread().GetName() + ": intentionally failing at "
+					throw new SystemException(Thread.CurrentThread().GetName() + ": intentionally failing at "
 						 + name);
 				}
 			}
@@ -367,7 +367,7 @@ namespace Lucene.Net.Test.Index
 			{
 				if (doFail && name.Equals("DocumentsWriterPerThread addDocument start"))
 				{
-					throw new RuntimeException("intentionally failing");
+					throw new SystemException("intentionally failing");
 				}
 			}
 		}
@@ -425,7 +425,7 @@ namespace Lucene.Net.Test.Index
 				w.AddDocument(doc);
 				Fail("did not hit exception");
 			}
-			catch (RuntimeException)
+			catch (SystemException)
 			{
 			}
 			// expected
@@ -492,7 +492,7 @@ namespace Lucene.Net.Test.Index
 				if (doFail && name.Equals("startMergeInit"))
 				{
 					failed = true;
-					throw new RuntimeException("intentionally failing");
+					throw new SystemException("intentionally failing");
 				}
 			}
 		}
@@ -522,7 +522,7 @@ namespace Lucene.Net.Test.Index
 				{
 					w.AddDocument(doc);
 				}
-				catch (RuntimeException)
+				catch (SystemException)
 				{
 					break;
 				}
@@ -729,7 +729,7 @@ namespace Lucene.Net.Test.Index
 				// don't allow a sudden merge to clean up the deleted
 				// doc below:
 				LogMergePolicy lmp = (LogMergePolicy)writer.Config.MergePolicy;
-				lmp.MergeFactor = (Math.Max(lmp.GetMergeFactor(), 5));
+				lmp.MergeFactor = (Math.Max(lmp.MergeFactor, 5));
 				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
 				doc.Add(NewField("contents", "here are some contents", TestIndexWriterExceptions.DocCopyIterator
@@ -854,7 +854,7 @@ namespace Lucene.Net.Test.Index
 						);
 					// don't use a merge policy here they depend on the DWPThreadPool and its max thread states etc.
 					int finalI = i;
-					Sharpen.Thread[] threads = new Sharpen.Thread[NUM_THREAD];
+					Thread[] threads = new Thread[NUM_THREAD];
 					for (int t = 0; t < NUM_THREAD; t++)
 					{
 						threads[t] = new _Thread_724(NUM_ITER, writer, finalI);
@@ -933,7 +933,7 @@ namespace Lucene.Net.Test.Index
 			}
 		}
 
-		private sealed class _Thread_724 : Sharpen.Thread
+		private sealed class _Thread_724 : Thread
 		{
 			public _Thread_724(int NUM_ITER, IndexWriter writer, int finalI)
 			{
@@ -980,7 +980,7 @@ namespace Lucene.Net.Test.Index
 				{
 					lock (this)
 					{
-						System.Console.Out.WriteLine(Sharpen.Thread.CurrentThread().GetName() + ": ERROR: hit unexpected exception"
+						System.Console.Out.WriteLine(Thread.CurrentThread().GetName() + ": ERROR: hit unexpected exception"
 							);
 						Sharpen.Runtime.PrintStackTrace(t, System.Console.Out);
 					}
@@ -1130,7 +1130,7 @@ namespace Lucene.Net.Test.Index
 					if (!isDelete)
 					{
 						failOnCommit = true;
-						throw new RuntimeException("now fail first");
+						throw new SystemException("now fail first");
 					}
 					else
 					{
@@ -1171,9 +1171,9 @@ namespace Lucene.Net.Test.Index
 				}
 				catch (IOException)
 				{
-					Fail("expected only RuntimeException");
+					Fail("expected only SystemException");
 				}
-				catch (RuntimeException)
+				catch (SystemException)
 				{
 				}
 				// Expected
@@ -1289,7 +1289,7 @@ namespace Lucene.Net.Test.Index
 			{
 				if (doFail && name.Equals("rollback before checkpoint"))
 				{
-					throw new RuntimeException("intentionally failing");
+					throw new SystemException("intentionally failing");
 				}
 			}
 		}
@@ -1308,9 +1308,9 @@ namespace Lucene.Net.Test.Index
 			try
 			{
 				w.Rollback();
-				Fail("did not hit intentional RuntimeException");
+				Fail("did not hit intentional SystemException");
 			}
-			catch (RuntimeException)
+			catch (SystemException)
 			{
 			}
 			// expected
@@ -1426,7 +1426,7 @@ namespace Lucene.Net.Test.Index
 			// we are corrupting it!
 			IndexWriter writer = null;
 			writer = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig(TEST_VERSION_CURRENT
-				, new MockAnalyzer(Random())).SetMergePolicy(NewLogMergePolicy(true)).SetUseCompoundFile
+				, new MockAnalyzer(Random())).SetMergePolicy(NewLogMergePolicy(true)).UseCompoundFile = 
 				(true)));
 			MergePolicy lmp = writer.Config.MergePolicy;
 			// Force creation of CFS:
@@ -1570,7 +1570,7 @@ namespace Lucene.Net.Test.Index
 							w.AddDocument(doc);
 							IsFalse(field.FieldType().StoreTermVectors());
 						}
-						catch (RuntimeException e)
+						catch (SystemException e)
 						{
 							IsTrue(e.Message.StartsWith(TestIndexWriterExceptions.FailOnTermVectors
 								.EXC_MSG));
@@ -1597,7 +1597,7 @@ namespace Lucene.Net.Test.Index
 							w.AddDocument(doc);
 							IsFalse(field.FieldType().StoreTermVectors());
 						}
-						catch (RuntimeException e)
+						catch (SystemException e)
 						{
 							IsTrue(e.Message.StartsWith(TestIndexWriterExceptions.FailOnTermVectors
 								.EXC_MSG));
@@ -1618,7 +1618,7 @@ namespace Lucene.Net.Test.Index
 					sis.Read(dir);
 					foreach (AtomicReaderContext context in reader.Leaves)
 					{
-						IsFalse(((AtomicReader)context.Reader).GetFieldInfos().HasVectors
+						IsFalse(((AtomicReader)context.Reader).FieldInfos.HasVectors
 							());
 					}
 					reader.Dispose();
@@ -1658,7 +1658,7 @@ namespace Lucene.Net.Test.Index
 				}
 				if (fail)
 				{
-					throw new RuntimeException(EXC_MSG);
+					throw new SystemException(EXC_MSG);
 				}
 			}
 		}
@@ -1676,13 +1676,13 @@ namespace Lucene.Net.Test.Index
 				doc.Add(NewTextField("content", "good content", Field.Store.NO));
 				w.AddDocument(doc);
 			}
-			IList<Lucene.Net.Documents.Document> docs = new AList<Lucene.Net.Documents.Document
+			IList<Lucene.Net.Documents.Document> docs = new List<Lucene.Net.Documents.Document
 				>();
 			for (int docCount_1 = 0; docCount_1 < 7; docCount_1++)
 			{
 				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
-				docs.AddItem(doc);
+				docs.Add(doc);
 				doc.Add(NewStringField("id", docCount_1 + string.Empty, Field.Store.NO));
 				doc.Add(NewTextField("content", "silly content " + docCount_1, Field.Store.NO));
 				if (docCount_1 == 4)
@@ -1716,7 +1716,7 @@ namespace Lucene.Net.Test.Index
 				doc.Add(NewTextField("content", "good content", Field.Store.NO));
 				w.AddDocument(doc);
 			}
-			IndexReader r = w.GetReader();
+			IndexReader r = w.Reader;
 			w.Dispose();
 			IndexSearcher s = NewSearcher(r);
 			PhraseQuery pq = new PhraseQuery();
@@ -1745,14 +1745,14 @@ namespace Lucene.Net.Test.Index
 				w.AddDocument(doc);
 			}
 			// Use addDocs (no exception) to get docs in the index:
-			IList<Lucene.Net.Documents.Document> docs = new AList<Lucene.Net.Documents.Document
+			IList<Lucene.Net.Documents.Document> docs = new List<Lucene.Net.Documents.Document
 				>();
 			int numDocs2 = Random().Next(25);
 			for (int docCount_1 = 0; docCount_1 < numDocs2; docCount_1++)
 			{
 				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
-				docs.AddItem(doc);
+				docs.Add(doc);
 				doc.Add(NewStringField("subid", "subs", Field.Store.NO));
 				doc.Add(NewStringField("id", docCount_1 + string.Empty, Field.Store.NO));
 				doc.Add(NewTextField("content", "silly content " + docCount_1, Field.Store.NO));
@@ -1773,7 +1773,7 @@ namespace Lucene.Net.Test.Index
 			{
 				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
-				docs.AddItem(doc);
+				docs.Add(doc);
 				doc.Add(NewStringField("id", docCount_3 + string.Empty, Field.Store.NO));
 				doc.Add(NewTextField("content", "silly content " + docCount_3, Field.Store.NO));
 				if (docCount_3 == crashAt)
@@ -1807,7 +1807,7 @@ namespace Lucene.Net.Test.Index
 				doc.Add(NewTextField("content", "good content", Field.Store.NO));
 				w.AddDocument(doc);
 			}
-			IndexReader r = w.GetReader();
+			IndexReader r = w.Reader;
 			w.Dispose();
 			IndexSearcher s = NewSearcher(r);
 			PhraseQuery pq = new PhraseQuery();
@@ -1877,9 +1877,9 @@ namespace Lucene.Net.Test.Index
 			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			Token t1 = new Token("foo", 0, 3);
-			t1.SetPositionIncrement(int.MaxValue);
+			t1.PositionIncrement = (int.MaxValue);
 			Token t2 = new Token("bar", 4, 7);
-			t2.SetPositionIncrement(200);
+			t2.PositionIncrement = (200);
 			TokenStream overflowingTokenStream = new CannedTokenStream(new Token[] { t1, t2 }
 				);
 			Field field = new TextField("foo", overflowingTokenStream);
@@ -1906,10 +1906,10 @@ namespace Lucene.Net.Test.Index
 			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			Token t1 = new Token("foo", 0, 3);
-			t1.SetPositionIncrement(int.MaxValue - 500);
+			t1.PositionIncrement = (int.MaxValue - 500);
 			if (Random().NextBoolean())
 			{
-				t1.SetPayload(new BytesRef(new byte[] { unchecked((int)(0x1)) }));
+				t1.Payload = (new BytesRef(new byte[] { unchecked((int)(0x1)) }));
 			}
 			TokenStream overflowingTokenStream = new CannedTokenStream(new Token[] { t1 });
 			Field field = new TextField("foo", overflowingTokenStream);
@@ -1938,8 +1938,8 @@ namespace Lucene.Net.Test.Index
 			{
 				doc = new Lucene.Net.Documents.Document();
 				// try to boost with norms omitted
-				IList<IIndexableField> list = new AList<IIndexableField>();
-				list.AddItem(new _IndexableField_1586());
+				IList<IIndexableField> list = new List<IIndexableField>();
+				list.Add(new _IndexableField_1586());
 				iw.AddDocument(list.AsIterable());
 				Fail("didn't get any exception, boost silently discarded");
 			}
@@ -2308,7 +2308,7 @@ namespace Lucene.Net.Test.Index
 					{
 						System.Console.Out.WriteLine("TEST: verify against NRT reader");
 					}
-					r_1 = w.GetReader();
+					r_1 = w.Reader;
 				}
 				AreEqual(docCount - deleteCount, r_1.NumDocs);
 				if (DefaultCodecSupportsDocValues())
@@ -2393,7 +2393,7 @@ namespace Lucene.Net.Test.Index
 				{
 					if (LuceneTestCase.VERBOSE)
 					{
-						System.Console.Out.WriteLine("TEST: now fail; thread=" + Sharpen.Thread.CurrentThread
+						System.Console.Out.WriteLine("TEST: now fail; thread=" + Thread.CurrentThread
 							().GetName() + " exc:");
 						Sharpen.Runtime.PrintStackTrace(new Exception(), System.Console.Out);
 					}
@@ -2453,7 +2453,7 @@ namespace Lucene.Net.Test.Index
 				iw.Rollback();
 				Fail();
 			}
-			catch (RuntimeException expected)
+			catch (SystemException expected)
 			{
 				AreEqual("BOOM!", expected.Message);
 			}
@@ -2479,7 +2479,7 @@ namespace Lucene.Net.Test.Index
 			{
 				if (messageToFailOn.Equals(message))
 				{
-					throw new RuntimeException("BOOM!");
+					throw new SystemException("BOOM!");
 				}
 			}
 
@@ -2564,7 +2564,7 @@ namespace Lucene.Net.Test.Index
 				{
 					if (LuceneTestCase.VERBOSE)
 					{
-						System.Console.Out.WriteLine("TEST: now fail; thread=" + Sharpen.Thread.CurrentThread
+						System.Console.Out.WriteLine("TEST: now fail; thread=" + Thread.CurrentThread
 							().GetName() + " exc:");
 						Sharpen.Runtime.PrintStackTrace(new Exception(), System.Console.Out);
 					}

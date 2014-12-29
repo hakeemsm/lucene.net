@@ -1,14 +1,12 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using Lucene.Net.Index;
-using Lucene.Net.Util;
-using Sharpen;
+using Lucene.Net.Randomized.Generators;
+using Lucene.Net.Support;
+using Lucene.Net.TestFramework;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
@@ -16,40 +14,52 @@ namespace Lucene.Net.Test.Index
 	/// Tests for
 	/// <see cref="DocumentsWriterStallControl">DocumentsWriterStallControl</see>
 	/// </summary>
-	public class TestDocumentsWriterStallControl : LuceneTestCase
+	[TestFixture]
+    public class TestDocumentsWriterStallControl : LuceneTestCase
 	{
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestSimpleStall()
 		{
 			DocumentsWriterStallControl ctrl = new DocumentsWriterStallControl();
 			ctrl.UpdateStalled(false);
-			Sharpen.Thread[] waitThreads = WaitThreads(AtLeast(1), ctrl);
+			Thread[] waitThreads = WaitThreads(AtLeast(1), ctrl);
 			Start(waitThreads);
-			IsFalse(ctrl.HasBlocked());
-			IsFalse(ctrl.AnyStalledThreads());
+			IsFalse(ctrl.HasBlocked);
+			IsFalse(ctrl.AnyStalledThreads);
 			Join(waitThreads);
 			// now stall threads and wake them up again
 			ctrl.UpdateStalled(true);
 			waitThreads = WaitThreads(AtLeast(1), ctrl);
 			Start(waitThreads);
-			AwaitState(Sharpen.Thread.State.WAITING, waitThreads);
-			IsTrue(ctrl.HasBlocked());
-			IsTrue(ctrl.AnyStalledThreads());
+			AwaitState(ThreadState.WaitSleepJoin, waitThreads);
+			IsTrue(ctrl.HasBlocked);
+			IsTrue(ctrl.AnyStalledThreads);
 			ctrl.UpdateStalled(false);
-			IsFalse(ctrl.AnyStalledThreads());
+			IsFalse(ctrl.AnyStalledThreads);
 			Join(waitThreads);
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestRandom()
 		{
 			DocumentsWriterStallControl ctrl = new DocumentsWriterStallControl();
 			ctrl.UpdateStalled(false);
-			Sharpen.Thread[] stallThreads = new Sharpen.Thread[AtLeast(3)];
+			Thread[] stallThreads = new Thread[AtLeast(3)];
 			for (int i = 0; i < stallThreads.Length; i++)
 			{
 				int stallProbability = 1 + Random().Next(10);
-				stallThreads[i] = new _Thread_64(ctrl, stallProbability);
+				stallThreads[i] = new Thread(() =>
+				{
+                    int iters = AtLeast(1000);
+                    for (int j = 0; j < iters; j++)
+                    {
+                        ctrl.UpdateStalled(Random().Next(stallProbability) == 0);
+                        if (Random().Next(5) == 0)
+                        {
+                            ctrl.WaitIfStalled();
+                        }
+                    }
+				});
 			}
 			// thread 0 only updates
 			Start(stallThreads);
@@ -60,43 +70,17 @@ namespace Lucene.Net.Test.Index
 				ctrl.UpdateStalled(false);
 				if (Random().NextBoolean())
 				{
-					Sharpen.Thread.Yield();
+					Thread.Yield();
 				}
 				else
 				{
-					Sharpen.Thread.Sleep(1);
+					Thread.Sleep(1);
 				}
 			}
 			Join(stallThreads);
 		}
 
-		private sealed class _Thread_64 : Sharpen.Thread
-		{
-			public _Thread_64(DocumentsWriterStallControl ctrl, int stallProbability)
-			{
-				this.ctrl = ctrl;
-				this.stallProbability = stallProbability;
-			}
-
-			public override void Run()
-			{
-				int iters = LuceneTestCase.AtLeast(1000);
-				for (int j = 0; j < iters; j++)
-				{
-					ctrl.UpdateStalled(LuceneTestCase.Random().Next(stallProbability) == 0);
-					if (LuceneTestCase.Random().Next(5) == 0)
-					{
-						ctrl.WaitIfStalled();
-					}
-				}
-			}
-
-			private readonly DocumentsWriterStallControl ctrl;
-
-			private readonly int stallProbability;
-		}
-
-		/// <exception cref="System.Exception"></exception>
+	    [Test]
 		public virtual void TestAccquireReleaseRace()
 		{
 			DocumentsWriterStallControl ctrl = new DocumentsWriterStallControl();
@@ -106,27 +90,25 @@ namespace Lucene.Net.Test.Index
 			int numStallers = AtLeast(1);
 			int numReleasers = AtLeast(1);
 			int numWaiters = AtLeast(1);
-			TestDocumentsWriterStallControl.Synchronizer sync = new TestDocumentsWriterStallControl.Synchronizer
+			var sync = new Synchronizer
 				(numStallers + numReleasers, numStallers + numReleasers + numWaiters);
-			Sharpen.Thread[] threads = new Sharpen.Thread[numReleasers + numStallers + numWaiters
-				];
-			IList<Exception> exceptions = Collections.SynchronizedList(new AList<Exception>()
-				);
+			Thread[] threads = new Thread[numReleasers + numStallers + numWaiters];
+	        var exceptions = new ConcurrentHashSet<Exception>();
 			for (int i = 0; i < numReleasers; i++)
 			{
-				threads[i] = new TestDocumentsWriterStallControl.Updater(stop, checkPoint, ctrl, 
-					sync, true, exceptions);
+				threads[i] = new Thread(new Updater(stop, checkPoint, ctrl, 
+					sync, true, exceptions).Run);
 			}
 			for (int i_1 = numReleasers; i_1 < numReleasers + numStallers; i_1++)
 			{
-				threads[i_1] = new TestDocumentsWriterStallControl.Updater(stop, checkPoint, ctrl
-					, sync, false, exceptions);
+				threads[i_1] = new Thread(new Updater(stop, checkPoint, ctrl
+					, sync, false, exceptions).Run);
 			}
 			for (int i_2 = numReleasers + numStallers; i_2 < numReleasers + numStallers + numWaiters
 				; i_2++)
 			{
-				threads[i_2] = new TestDocumentsWriterStallControl.Waiter(stop, checkPoint, ctrl, 
-					sync, exceptions);
+				threads[i_2] = new Thread(new WaiterThread2(stop, checkPoint, ctrl, 
+					sync, exceptions).Run);
 			}
 			Start(threads);
 			int iters = AtLeast(10000);
@@ -135,27 +117,27 @@ namespace Lucene.Net.Test.Index
 			{
 				if (checkPoint.Get())
 				{
-					IsTrue("timed out waiting for update threads - deadlock?", 
-						sync.updateJoin.Await(10, TimeUnit.SECONDS));
-					if (!exceptions.IsEmpty())
+					AssertTrue("timed out waiting for update threads - deadlock?", 
+						sync.updateJoin.Signal(TimeSpan.FromTicks(10).Seconds));
+					if (exceptions.Any())
 					{
 						foreach (Exception throwable in exceptions)
 						{
-							Sharpen.Runtime.PrintStackTrace(throwable);
+							throwable.printStackTrace();
 						}
 						Fail("got exceptions in threads");
 					}
-					if (ctrl.HasBlocked() && ctrl.IsHealthy())
+					if (ctrl.HasBlocked && ctrl.IsHealthy)
 					{
 						AssertState(numReleasers, numStallers, numWaiters, threads, ctrl);
 					}
 					checkPoint.Set(false);
-					sync.waiter.CountDown();
-					sync.leftCheckpoint.Await();
+				    sync.waiter.Signal();
+					sync.leftCheckpoint.Wait();
 				}
 				IsFalse(checkPoint.Get());
-				AreEqual(0, sync.waiter.GetCount());
-				if (checkPointProbability >= Random().NextFloat())
+				AreEqual(0, sync.waiter.CurrentCount);
+				if (checkPointProbability >= Random().NextDouble())
 				{
 					sync.Reset(numStallers + numReleasers, numStallers + numReleasers + numWaiters);
 					checkPoint.Set(true);
@@ -166,64 +148,57 @@ namespace Lucene.Net.Test.Index
 				sync.Reset(numStallers + numReleasers, numStallers + numReleasers + numWaiters);
 				checkPoint.Set(true);
 			}
-			IsTrue(sync.updateJoin.Await(10, TimeUnit.SECONDS));
+			IsTrue(sync.updateJoin.Wait(new TimeSpan(0,0,10)));
 			AssertState(numReleasers, numStallers, numWaiters, threads, ctrl);
 			checkPoint.Set(false);
 			stop.Set(true);
-			sync.waiter.CountDown();
-			sync.leftCheckpoint.Await();
+			sync.waiter.Signal();
+			sync.leftCheckpoint.Wait();
 			for (int i_4 = 0; i_4 < threads.Length; i_4++)
 			{
 				ctrl.UpdateStalled(false);
 				threads[i_4].Join(2000);
-				if (threads[i_4].IsAlive() && threads[i_4] is TestDocumentsWriterStallControl.Waiter)
+				if (threads[i_4].IsAlive)
 				{
-					if (threads[i_4].GetState() == Sharpen.Thread.State.WAITING)
+					if (threads[i_4].ThreadState == ThreadState.WaitSleepJoin)
 					{
 						Fail("waiter is not released - anyThreadsStalled: " + ctrl
-							.AnyStalledThreads());
+							.AnyStalledThreads);
 					}
 				}
 			}
 		}
 
 		/// <exception cref="System.Exception"></exception>
-		private void AssertState(int numReleasers, int numStallers, int numWaiters, Sharpen.Thread
+		private void AssertState(int numReleasers, int numStallers, int numWaiters, Thread
 			[] threads, DocumentsWriterStallControl ctrl)
 		{
 			int millisToSleep = 100;
 			while (true)
 			{
-				if (ctrl.HasBlocked() && ctrl.IsHealthy())
+			    if (ctrl.HasBlocked && ctrl.IsHealthy)
 				{
 					for (int n = numReleasers + numStallers; n < numReleasers + numStallers + numWaiters
 						; n++)
 					{
 						if (ctrl.IsThreadQueued(threads[n]))
 						{
-							if (millisToSleep < 60000)
+						    if (millisToSleep < 60000)
 							{
-								Sharpen.Thread.Sleep(millisToSleep);
+								Thread.Sleep(millisToSleep);
 								millisToSleep *= 2;
 								break;
 							}
-							else
-							{
-								Fail("control claims no stalled threads but waiter seems to be blocked "
-									);
-							}
+						    Fail("control claims no stalled threads but waiter seems to be blocked "
+						        );
 						}
 					}
-					break;
 				}
-				else
-				{
-					break;
-				}
+			    break;
 			}
 		}
 
-		public class Waiter : Sharpen.Thread
+		public class WaiterThread2
 		{
 			private TestDocumentsWriterStallControl.Synchronizer sync;
 
@@ -233,11 +208,11 @@ namespace Lucene.Net.Test.Index
 
 			private AtomicBoolean stop;
 
-			private IList<Exception> exceptions;
+			private ConcurrentHashSet<Exception> exceptions;
 
-			public Waiter(AtomicBoolean stop, AtomicBoolean checkPoint, DocumentsWriterStallControl
-				 ctrl, TestDocumentsWriterStallControl.Synchronizer sync, IList<Exception> exceptions
-				) : base("waiter")
+			public WaiterThread2(AtomicBoolean stop, AtomicBoolean checkPoint, DocumentsWriterStallControl
+				 ctrl, TestDocumentsWriterStallControl.Synchronizer sync, ConcurrentHashSet<Exception> exceptions
+				)
 			{
 				this.stop = stop;
 				this.checkPoint = checkPoint;
@@ -246,7 +221,7 @@ namespace Lucene.Net.Test.Index
 				this.exceptions = exceptions;
 			}
 
-			public override void Run()
+			public void Run()
 			{
 				try
 				{
@@ -262,23 +237,23 @@ namespace Lucene.Net.Test.Index
 							catch (Exception e)
 							{
 								System.Console.Out.WriteLine("[Waiter] got interrupted - wait count: " + sync.waiter
-									.GetCount());
-								throw new ThreadInterruptedException(e);
+									.Signal());
+								throw new ThreadInterruptedException();
 							}
 						}
 					}
 				}
 				catch (Exception e)
 				{
-					Sharpen.Runtime.PrintStackTrace(e);
-					exceptions.AddItem(e);
+					e.printStackTrace();
+					exceptions.Add(e);
 				}
 			}
 		}
 
-		public class Updater : Sharpen.Thread
+		public class Updater
 		{
-			private TestDocumentsWriterStallControl.Synchronizer sync;
+			private Synchronizer sync;
 
 			private DocumentsWriterStallControl ctrl;
 
@@ -288,11 +263,10 @@ namespace Lucene.Net.Test.Index
 
 			private bool release;
 
-			private IList<Exception> exceptions;
+			private ConcurrentHashSet<Exception> exceptions;
 
 			public Updater(AtomicBoolean stop, AtomicBoolean checkPoint, DocumentsWriterStallControl
-				 ctrl, TestDocumentsWriterStallControl.Synchronizer sync, bool release, IList<Exception
-				> exceptions) : base("updater")
+				 ctrl, Synchronizer sync, bool release, ConcurrentHashSet<Exception> exceptions) 
 			{
 				this.stop = stop;
 				this.checkPoint = checkPoint;
@@ -302,7 +276,7 @@ namespace Lucene.Net.Test.Index
 				this.exceptions = exceptions;
 			}
 
-			public override void Run()
+			public void Run()
 			{
 				try
 				{
@@ -315,7 +289,7 @@ namespace Lucene.Net.Test.Index
 						}
 						if (checkPoint.Get())
 						{
-							sync.updateJoin.CountDown();
+							sync.updateJoin.Signal();
 							try
 							{
 								IsTrue(sync.Await());
@@ -323,77 +297,69 @@ namespace Lucene.Net.Test.Index
 							catch (Exception e)
 							{
 								System.Console.Out.WriteLine("[Updater] got interrupted - wait count: " + sync.waiter
-									.GetCount());
-								throw new ThreadInterruptedException(e);
+									.CurrentCount);
+								throw new ThreadInterruptedException();
 							}
-							sync.leftCheckpoint.CountDown();
+							sync.leftCheckpoint.Signal();
 						}
 						if (Random().NextBoolean())
 						{
-							Sharpen.Thread.Yield();
+							Thread.Yield();
 						}
 					}
 				}
 				catch (Exception e)
 				{
-					Sharpen.Runtime.PrintStackTrace(e);
-					exceptions.AddItem(e);
+					e.printStackTrace();
+					exceptions.Add(e);
 				}
-				sync.updateJoin.CountDown();
+				sync.updateJoin.Signal();
 			}
 		}
 
-		public static bool Terminated(Sharpen.Thread[] threads)
+		public static bool Terminated(Thread[] threads)
 		{
-			foreach (Sharpen.Thread thread in threads)
-			{
-				if (Sharpen.Thread.State.TERMINATED != thread.GetState())
-				{
-					return false;
-				}
-			}
-			return true;
+		    return threads.All(thread => ThreadState.Aborted == thread.ThreadState);
 		}
 
-		/// <exception cref="System.Exception"></exception>
-		public static void Start(Sharpen.Thread[] tostart)
+	    /// <exception cref="System.Exception"></exception>
+		public static void Start(Thread[] tostart)
 		{
-			foreach (Sharpen.Thread thread in tostart)
+			foreach (Thread thread in tostart)
 			{
 				thread.Start();
 			}
-			Sharpen.Thread.Sleep(1);
+			Thread.Sleep(1);
 		}
 
 		// let them start
 		/// <exception cref="System.Exception"></exception>
-		public static void Join(Sharpen.Thread[] toJoin)
+		public static void Join(Thread[] toJoin)
 		{
-			foreach (Sharpen.Thread thread in toJoin)
+			foreach (Thread thread in toJoin)
 			{
 				thread.Join();
 			}
 		}
 
-		public static Sharpen.Thread[] WaitThreads(int num, DocumentsWriterStallControl ctrl
-			)
+		public static Thread[] WaitThreads(int num, DocumentsWriterStallControl ctrl)
 		{
-			Sharpen.Thread[] array = new Sharpen.Thread[num];
+			Thread[] array = new Thread[num];
 			for (int i = 0; i < array.Length; i++)
 			{
-				array[i] = new _Thread_323(ctrl);
+			    array[i] = new Thread(new WaiterThread(ctrl).Run);
 			}
 			return array;
 		}
 
-		private sealed class _Thread_323 : Sharpen.Thread
+		private sealed class WaiterThread
 		{
-			public _Thread_323(DocumentsWriterStallControl ctrl)
+			public WaiterThread(DocumentsWriterStallControl ctrl)
 			{
 				this.ctrl = ctrl;
 			}
 
-			public override void Run()
+			public void Run()
 			{
 				ctrl.WaitIfStalled();
 			}
@@ -410,15 +376,15 @@ namespace Lucene.Net.Test.Index
 		/// methods.
 		/// </remarks>
 		/// <exception cref="System.Exception"></exception>
-		public static void AwaitState(Sharpen.Thread.State state, params Sharpen.Thread[]
+		public static void AwaitState(ThreadState state, params Thread[]
 			 threads)
 		{
 			while (true)
 			{
 				bool done = true;
-				foreach (Sharpen.Thread thread in threads)
+				foreach (Thread thread in threads)
 				{
-					if (thread.GetState() != state)
+					if (thread.ThreadState != state)
 					{
 						done = false;
 						break;
@@ -430,22 +396,22 @@ namespace Lucene.Net.Test.Index
 				}
 				if (Random().NextBoolean())
 				{
-					Sharpen.Thread.Yield();
+					Thread.Yield();
 				}
 				else
 				{
-					Sharpen.Thread.Sleep(1);
+					Thread.Sleep(1);
 				}
 			}
 		}
 
-		private sealed class Synchronizer
+	    public sealed class Synchronizer
 		{
-			internal volatile CountDownLatch waiter;
+			internal volatile CountdownEvent waiter;
 
-			internal volatile CountDownLatch updateJoin;
+			internal volatile CountdownEvent updateJoin;
 
-			internal volatile CountDownLatch leftCheckpoint;
+			internal volatile CountdownEvent leftCheckpoint;
 
 			public Synchronizer(int numUpdater, int numThreads)
 			{
@@ -454,15 +420,15 @@ namespace Lucene.Net.Test.Index
 
 			public void Reset(int numUpdaters, int numThreads)
 			{
-				this.waiter = new CountDownLatch(1);
-				this.updateJoin = new CountDownLatch(numUpdaters);
-				this.leftCheckpoint = new CountDownLatch(numUpdaters);
+				this.waiter = new CountdownEvent(1);
+				this.updateJoin = new CountdownEvent(numUpdaters);
+				this.leftCheckpoint = new CountdownEvent(numUpdaters);
 			}
 
 			/// <exception cref="System.Exception"></exception>
 			public bool Await()
 			{
-				return waiter.Await(10, TimeUnit.SECONDS);
+				return waiter.Wait(TimeSpan.FromSeconds(10));
 			}
 		}
 	}

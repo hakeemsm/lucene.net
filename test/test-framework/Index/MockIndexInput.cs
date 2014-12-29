@@ -4,6 +4,7 @@
  * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
+using Lucene.Net.Store;
 using Lucene.Net.TestFramework.Store;
 using Sharpen;
 

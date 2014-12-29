@@ -44,7 +44,7 @@ namespace Lucene.Net.Test.Index
 				(Random()));
 			AreEqual(typeof(MockAnalyzer), conf.GetAnalyzer().GetType(
 				));
-			IsNull(conf.GetIndexCommit());
+			IsNull(conf.IndexCommit);
 			AreEqual(typeof(KeepOnlyLastCommitDeletionPolicy), conf.GetIndexDeletionPolicy
 				().GetType());
 			AreEqual(typeof(ConcurrentMergeScheduler), conf.GetMergeScheduler
@@ -89,31 +89,31 @@ namespace Lucene.Net.Test.Index
 				, conf.GetUseCompoundFile());
 			// Sanity check - validate that all getters are covered.
 			ICollection<string> getters = new HashSet<string>();
-			getters.AddItem("getAnalyzer");
-			getters.AddItem("getIndexCommit");
-			getters.AddItem("getIndexDeletionPolicy");
-			getters.AddItem("getMaxFieldLength");
-			getters.AddItem("getMergeScheduler");
-			getters.AddItem("getOpenMode");
-			getters.AddItem("getSimilarity");
-			getters.AddItem("getTermIndexInterval");
-			getters.AddItem("getWriteLockTimeout");
-			getters.AddItem("getDefaultWriteLockTimeout");
-			getters.AddItem("getMaxBufferedDeleteTerms");
-			getters.AddItem("getRAMBufferSizeMB");
-			getters.AddItem("getMaxBufferedDocs");
-			getters.AddItem("getIndexingChain");
-			getters.AddItem("getMergedSegmentWarmer");
-			getters.AddItem("getMergePolicy");
-			getters.AddItem("getMaxThreadStates");
-			getters.AddItem("getReaderPooling");
-			getters.AddItem("getIndexerThreadPool");
-			getters.AddItem("getReaderTermsIndexDivisor");
-			getters.AddItem("getFlushPolicy");
-			getters.AddItem("getRAMPerThreadHardLimitMB");
-			getters.AddItem("getCodec");
-			getters.AddItem("getInfoStream");
-			getters.AddItem("getUseCompoundFile");
+			getters.Add("getAnalyzer");
+			getters.Add("getIndexCommit");
+			getters.Add("getIndexDeletionPolicy");
+			getters.Add("getMaxFieldLength");
+			getters.Add("getMergeScheduler");
+			getters.Add("getOpenMode");
+			getters.Add("getSimilarity");
+			getters.Add("getTermIndexInterval");
+			getters.Add("getWriteLockTimeout");
+			getters.Add("getDefaultWriteLockTimeout");
+			getters.Add("getMaxBufferedDeleteTerms");
+			getters.Add("getRAMBufferSizeMB");
+			getters.Add("getMaxBufferedDocs");
+			getters.Add("getIndexingChain");
+			getters.Add("getMergedSegmentWarmer");
+			getters.Add("getMergePolicy");
+			getters.Add("getMaxThreadStates");
+			getters.Add("getReaderPooling");
+			getters.Add("getIndexerThreadPool");
+			getters.Add("getReaderTermsIndexDivisor");
+			getters.Add("getFlushPolicy");
+			getters.Add("getRAMPerThreadHardLimitMB");
+			getters.Add("getCodec");
+			getters.Add("getInfoStream");
+			getters.Add("getUseCompoundFile");
 			foreach (MethodInfo m in Sharpen.Runtime.GetDeclaredMethods(typeof(IndexWriterConfig
 				)))
 			{
@@ -137,7 +137,7 @@ namespace Lucene.Net.Test.Index
 			{
 				if (m.Name.StartsWith("set") && !Modifier.IsStatic(m.GetModifiers()))
 				{
-					allSetters.AddItem(m.Name);
+					allSetters.Add(m.Name);
 					// setters overridden from LiveIndexWriterConfig are returned twice, once with 
 					// IndexWriterConfig return type and second with LiveIndexWriterConfig. The ones
 					// from LiveIndexWriterConfig are marked 'synthetic', so just collect them and
@@ -146,7 +146,7 @@ namespace Lucene.Net.Test.Index
 					//assert in the end that we also received them from IWC.
 					if (m.IsSynthetic())
 					{
-						liveSetters.AddItem(m.Name);
+						liveSetters.Add(m.Name);
 					}
 					else
 					{
@@ -211,7 +211,7 @@ namespace Lucene.Net.Test.Index
 			{
 				if (m.Name.StartsWith("get") && !Modifier.IsStatic(m.GetModifiers()))
 				{
-					liveGetters.AddItem(m.Name);
+					liveGetters.Add(m.Name);
 				}
 			}
 			foreach (MethodInfo m_1 in Sharpen.Runtime.GetDeclaredMethods(typeof(IndexWriterConfig
@@ -500,11 +500,11 @@ namespace Lucene.Net.Test.Index
 				(Random()));
 			iwc.SetMergePolicy(NewLogMergePolicy(true));
 			// Start false:
-			iwc.SetUseCompoundFile(false);
+			iwc.UseCompoundFile = (false);
 			iwc.MergePolicy.SetNoCFSRatio(0.0d);
 			IndexWriter w = new IndexWriter(dir, iwc);
 			// Change to true:
-			w.Config.SetUseCompoundFile(true);
+			w.Config.UseCompoundFile = (true);
 			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewStringField("field", "foo", Field.Store.NO));

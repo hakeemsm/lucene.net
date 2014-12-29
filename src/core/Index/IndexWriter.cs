@@ -2922,7 +2922,7 @@ namespace Lucene.Net.Index
             }
         }
 
-        protected void Flush(bool triggerMerge, bool applyAllDeletes)
+        public void Flush(bool triggerMerge, bool applyAllDeletes)
         {
 
             // NOTE: this method cannot be sync'd because
@@ -4359,7 +4359,7 @@ namespace Lucene.Net.Index
         }
 
         // utility routines for tests
-		internal virtual SegmentCommitInfo NewestSegment
+        public virtual SegmentCommitInfo NewestSegment
         {
             get
             {
@@ -4426,15 +4426,12 @@ namespace Lucene.Net.Index
 
         private bool keepFullyDeletedSegments;
 
-        internal void KeepFullyDeletedSegments()
-        {
-            keepFullyDeletedSegments = true;
-        }
+        
 
-        internal bool GetKeepFullyDeletedSegments()
+        public bool KeepFullyDeletedSegments 
         {
-            return keepFullyDeletedSegments;
-        }
+            get { return keepFullyDeletedSegments; }
+            set { keepFullyDeletedSegments = value; } }
 
         private bool FilesExist(SegmentInfos toSync)
         {

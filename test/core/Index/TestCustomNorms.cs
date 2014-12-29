@@ -1,34 +1,30 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Document;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Search.Similarities;
 using Lucene.Net.Store;
-using Lucene.Net.Util;
-using Sharpen;
+using Lucene.Net.Support;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Util;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
+    [TestFixture]
 	public class TestCustomNorms : LuceneTestCase
 	{
 		internal readonly string floatTestField = "normsTestFloat";
 
 		internal readonly string exceptionTestField = "normsTestExcp";
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestFloatNorms()
 		{
 			Directory dir = NewDirectory();
 			MockAnalyzer analyzer = new MockAnalyzer(Random());
-			analyzer.SetMaxTokenLength(TestUtil.NextInt(Random(), 1, IndexWriter.MAX_TERM_LENGTH
-				));
+			analyzer.SetMaxTokenLength(Random().NextInt(1, IndexWriter.MAX_TERM_LENGTH));
 			IndexWriterConfig config = NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer);
 			Similarity provider = new TestCustomNorms.MySimProvider(this);
 			config.SetSimilarity(provider);
@@ -38,10 +34,10 @@ namespace Lucene.Net.Test.Index
 			for (int i = 0; i < num; i++)
 			{
 				Lucene.Net.Documents.Document doc = docs.NextDoc();
-				float nextFloat = Random().NextFloat();
+				float nextFloat = (float) Random().NextDouble();
 				Field f = new TextField(floatTestField, string.Empty + nextFloat, Field.Store.YES
 					);
-				f.SetBoost(nextFloat);
+				f.Boost = (nextFloat);
 				doc.Add(f);
 				writer.AddDocument(doc);
 				doc.RemoveField(floatTestField);
@@ -51,20 +47,19 @@ namespace Lucene.Net.Test.Index
 				}
 			}
 			writer.Commit();
-			writer.Dispose();
+			writer.Close();
 			AtomicReader open = SlowCompositeReaderWrapper.Wrap(DirectoryReader.Open(dir));
 			NumericDocValues norms = open.GetNormValues(floatTestField);
 			IsNotNull(norms);
 			for (int i_1 = 0; i_1 < open.MaxDoc; i_1++)
 			{
 				Lucene.Net.Documents.Document document = open.Document(i_1);
-				float expected = float.ParseFloat(document.Get(floatTestField));
-				AreEqual(expected, Sharpen.Runtime.IntBitsToFloat((int)norms
-					.Get(i_1)), 0.0f);
+				float expected = float.Parse(document.Get(floatTestField));
+                AreEqual(expected, ((int)norms.Get(i_1)).IntBitsToFloat(), 0.0f);
 			}
 			open.Dispose();
 			dir.Dispose();
-			docs.Dispose();
+			docs.Close();
 		}
 
 		public class MySimProvider : PerFieldSimilarityWrapper
@@ -105,7 +100,7 @@ namespace Lucene.Net.Test.Index
 		{
 			public override long ComputeNorm(FieldInvertState state)
 			{
-				return Sharpen.Runtime.FloatToIntBits(state.GetBoost());
+                return (state.Boost).FloatToIntBits();
 			}
 
 			public override Similarity.SimWeight ComputeWeight(float queryBoost, CollectionStatistics
@@ -115,7 +110,7 @@ namespace Lucene.Net.Test.Index
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
-			public override Similarity.SimScorer SimScorer(Similarity.SimWeight weight, AtomicReaderContext
+			public override SimScorer GetSimScorer(SimWeight weight, AtomicReaderContext
 				 context)
 			{
 				throw new NotSupportedException();

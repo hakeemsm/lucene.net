@@ -1,42 +1,39 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
+using System;
 using System.Collections.Generic;
 using System.IO;
-using NUnit.Framework;
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Document;
+using System.Linq;
+using System.Threading;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
+using Lucene.Net.Support;
+using Lucene.Net.TestFramework;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
-using Lucene.Net.Util;
-using Sharpen;
+using Lucene.Net.TestFramework.Util;
+using NUnit.Framework;
+using Directory = Lucene.Net.Store.Directory;
 
 namespace Lucene.Net.Test.Index
 {
+    [TestFixture]
 	public class TestDeletionPolicy : LuceneTestCase
 	{
-		private void VerifyCommitOrder<_T0>(IList<_T0> commits) where _T0:IndexCommit
+		private void VerifyCommitOrder<T>(IList<T> commits) where T:IndexCommit
 		{
-			if (commits.IsEmpty())
+			if (!commits.Any())
 			{
 				return;
 			}
 			IndexCommit firstCommit = commits[0];
-			long last = SegmentInfos.GenerationFromSegmentsFileName(firstCommit.GetSegmentsFileName
-				());
-			AreEqual(last, firstCommit.GetGeneration());
+			long last = SegmentInfos.GenerationFromSegmentsFileName(firstCommit.SegmentsFileName);
+			AreEqual(last, firstCommit.Generation);
 			for (int i = 1; i < commits.Count; i++)
 			{
 				IndexCommit commit = commits[i];
-				long now = SegmentInfos.GenerationFromSegmentsFileName(commit.GetSegmentsFileName
-					());
-				IsTrue("SegmentInfos commits are out-of-order", now > last
-					);
-				AreEqual(now, commit.GetGeneration());
+				long now = SegmentInfos.GenerationFromSegmentsFileName(commit.SegmentsFileName);
+				IsTrue(now > last, "SegmentInfos commits are out-of-order");
+				AreEqual(now, commit.Generation);
 				last = now;
 			}
 		}
@@ -47,16 +44,16 @@ namespace Lucene.Net.Test.Index
 
 			internal int numOnCommit;
 
-			internal Directory dir;
+			internal Lucene.Net.Store.Directory dir;
 
-			internal KeepAllDeletionPolicy(TestDeletionPolicy _enclosing, Directory dir)
+            internal KeepAllDeletionPolicy(TestDeletionPolicy _enclosing, Lucene.Net.Store.Directory dir)
 			{
 				this._enclosing = _enclosing;
 				this.dir = dir;
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
-			public override void OnInit<_T0>(IList<_T0> commits)
+			public override void OnInit<T>(IList<T> commits)
 			{
 				this._enclosing.VerifyCommitOrder(commits);
 				this.numOnInit++;
@@ -67,9 +64,7 @@ namespace Lucene.Net.Test.Index
 			{
 				IndexCommit lastCommit = commits[commits.Count - 1];
 				DirectoryReader r = DirectoryReader.Open(this.dir);
-				AreEqual("lastCommit.segmentCount()=" + lastCommit.GetSegmentCount
-					() + " vs IndexReader.segmentCount=" + r.Leaves.Count, r.Leaves.Count, lastCommit
-					.SegmentCount);
+				AreEqual(r.Leaves.Count, lastCommit.SegmentCount, "lastCommit.segmentCount()=" + lastCommit.SegmentCount + " vs IndexReader.segmentCount=" + r.Leaves.Count);
 				r.Dispose();
 				this._enclosing.VerifyCommitOrder(commits);
 				this.numOnCommit++;
@@ -93,15 +88,15 @@ namespace Lucene.Net.Test.Index
 			internal int numOnCommit;
 
 			/// <exception cref="System.IO.IOException"></exception>
-			public override void OnInit<_T0>(IList<_T0> commits)
+			public override void OnInit<T>(IList<T> commits)
 			{
 				this._enclosing.VerifyCommitOrder(commits);
 				this.numOnInit++;
 				// On init, delete all commit points:
-				foreach (IndexCommit commit in commits)
+				foreach (T commit in commits)
 				{
 					commit.Delete();
-					IsTrue(commit.IsDeleted());
+					IsTrue(commit.IsDeleted);
 				}
 			}
 
@@ -176,13 +171,13 @@ namespace Lucene.Net.Test.Index
 				// commit:
 				if (isCommit)
 				{
-					string fileName = ((IndexCommit)commits[commits.Count - 1]).GetSegmentsFileName();
+					string fileName = ((IndexCommit)commits[commits.Count - 1]).SegmentsFileName;
 					if (this.seen.Contains(fileName))
 					{
-						throw new RuntimeException("onCommit was called twice on the same commit point: "
+						throw new SystemException("onCommit was called twice on the same commit point: "
 							 + fileName);
 					}
-					this.seen.AddItem(fileName);
+					this.seen.Add(fileName);
 					this.numOnCommit++;
 				}
 				int size = commits.Count;
@@ -199,7 +194,7 @@ namespace Lucene.Net.Test.Index
 		/// <exception cref="System.IO.IOException"></exception>
 		internal static long GetCommitTime(IndexCommit commit)
 		{
-			return long.Parse(commit.GetUserData().Get("commitTime"));
+			return long.Parse(commit.UserData["commitTime"]);
 		}
 
 		internal class ExpirationTimeDeletionPolicy : IndexDeletionPolicy
@@ -218,10 +213,10 @@ namespace Lucene.Net.Test.Index
 				this.expirationTimeSeconds = seconds;
 			}
 
-			/// <exception cref="System.IO.IOException"></exception>
-			public override void OnInit<_T0>(IList<_T0> commits)
+			
+			public override void OnInit<T>(IList<T> commits)
 			{
-				if (commits.IsEmpty())
+				if (!commits.Any())
 				{
 					return;
 				}
@@ -229,15 +224,15 @@ namespace Lucene.Net.Test.Index
 				this.OnCommit(commits);
 			}
 
-			/// <exception cref="System.IO.IOException"></exception>
-			public override void OnCommit<_T0>(IList<_T0> commits)
+			
+			public override void OnCommit<T>(IList<T> commits)
 			{
 				this._enclosing.VerifyCommitOrder(commits);
 				IndexCommit lastCommit = commits[commits.Count - 1];
 				// Any commit older than expireTime should be deleted:
 				double expireTime = TestDeletionPolicy.GetCommitTime(lastCommit) / 1000.0 - this.
 					expirationTimeSeconds;
-				foreach (IndexCommit commit in commits)
+				foreach (T commit in commits)
 				{
 					double modTime = TestDeletionPolicy.GetCommitTime(commit) / 1000.0;
 					if (commit != lastCommit && modTime < expireTime)
@@ -251,8 +246,7 @@ namespace Lucene.Net.Test.Index
 			private readonly TestDeletionPolicy _enclosing;
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestExpirationTimeDeletionPolicy()
 		{
 			double SECONDS = 2.0;
@@ -263,15 +257,14 @@ namespace Lucene.Net.Test.Index
 			MergePolicy mp = conf.MergePolicy;
 			mp.SetNoCFSRatio(1.0);
 			IndexWriter writer = new IndexWriter(dir, conf);
-			TestDeletionPolicy.ExpirationTimeDeletionPolicy policy = (TestDeletionPolicy.ExpirationTimeDeletionPolicy
-				)writer.Config.GetIndexDeletionPolicy();
+			ExpirationTimeDeletionPolicy policy = (ExpirationTimeDeletionPolicy)writer.Config.IndexDeletionPolicy;
 			IDictionary<string, string> commitData = new Dictionary<string, string>();
-			commitData.Put("commitTime", DateTime.Now.CurrentTimeMillis().ToString());
-			writer.SetCommitData(commitData);
+			commitData["commitTime"] = DateTime.Now.CurrentTimeMillis().ToString();
+			writer.CommitData = (commitData);
 			writer.Commit();
 			writer.Dispose();
 			long lastDeleteTime = 0;
-			int targetNumDelete = TestUtil.NextInt(Random(), 1, 5);
+			int targetNumDelete = Random().NextInt(1, 5);
 			while (policy.numDelete < targetNumDelete)
 			{
 				// Record last time when writer performed deletes of
@@ -282,18 +275,17 @@ namespace Lucene.Net.Test.Index
 				mp = conf.MergePolicy;
 				mp.SetNoCFSRatio(1.0);
 				writer = new IndexWriter(dir, conf);
-				policy = (TestDeletionPolicy.ExpirationTimeDeletionPolicy)writer.Config.GetIndexDeletionPolicy
-					();
+				policy = (TestDeletionPolicy.ExpirationTimeDeletionPolicy)writer.Config.IndexDeletionPolicy;
 				for (int j = 0; j < 17; j++)
 				{
 					AddDoc(writer);
 				}
 				commitData = new Dictionary<string, string>();
-				commitData.Put("commitTime", DateTime.Now.CurrentTimeMillis().ToString());
-				writer.SetCommitData(commitData);
+				commitData["commitTime"] = DateTime.Now.CurrentTimeMillis().ToString();
+				writer.CommitData =(commitData);
 				writer.Commit();
 				writer.Dispose();
-				Sharpen.Thread.Sleep((int)(1000.0 * (SECONDS / 5.0)));
+				Thread.Sleep((int)(1000.0 * (SECONDS / 5.0)));
 			}
 			// Then simplistic check: just verify that the
 			// segments_N's that still exist are in fact within SECONDS
@@ -317,12 +309,11 @@ namespace Lucene.Net.Test.Index
 					// age tolerance:
 					SegmentInfos sis = new SegmentInfos();
 					sis.Read(dir, fileName);
-					long modTime = long.Parse(sis.GetUserData().Get("commitTime"));
+					long modTime = long.Parse(sis.UserData["commitTime"]);
 					oneSecondResolution &= (modTime % 1000) == 0;
 					long leeway = (long)((SECONDS + (oneSecondResolution ? 1.0 : 0.0)) * 1000);
-					IsTrue("commit point was older than " + SECONDS + " seconds ("
-						 + (lastDeleteTime - modTime) + " msec) but did not get deleted ", lastDeleteTime
-						 - modTime <= leeway);
+					IsTrue(lastDeleteTime- modTime <= leeway,
+                        "commit point was older than " + SECONDS + " seconds ("+ (lastDeleteTime - modTime) + " msec) but did not get deleted ");
 				}
 				catch (IOException)
 				{
@@ -336,7 +327,7 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestKeepAllDeletionPolicy()
 		{
 			for (int pass = 0; pass < 2; pass++)
@@ -355,7 +346,7 @@ namespace Lucene.Net.Test.Index
 				mp.SetNoCFSRatio(useCompoundFile ? 1.0 : 0.0);
 				IndexWriter writer = new IndexWriter(dir, conf);
 				TestDeletionPolicy.KeepAllDeletionPolicy policy = (TestDeletionPolicy.KeepAllDeletionPolicy
-					)writer.Config.GetIndexDeletionPolicy();
+					)writer.Config.IndexDeletionPolicy;
 				for (int i = 0; i < 107; i++)
 				{
 					AddDoc(writer);
@@ -378,8 +369,7 @@ namespace Lucene.Net.Test.Index
 						System.Console.Out.WriteLine("TEST: open writer for forceMerge");
 					}
 					writer = new IndexWriter(dir, conf);
-					policy = (TestDeletionPolicy.KeepAllDeletionPolicy)writer.Config.GetIndexDeletionPolicy
-						();
+					policy = (TestDeletionPolicy.KeepAllDeletionPolicy)writer.Config.IndexDeletionPolicy;
 					writer.ForceMerge(1);
 					writer.Dispose();
 				}
@@ -429,7 +419,7 @@ namespace Lucene.Net.Test.Index
 			}
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestOpenPriorSnapshot()
 		{
 			Directory dir = NewDirectory();
@@ -437,7 +427,7 @@ namespace Lucene.Net.Test.Index
 				(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetIndexDeletionPolicy(new TestDeletionPolicy.KeepAllDeletionPolicy
 				(this, dir)).SetMaxBufferedDocs(2)).SetMergePolicy(NewLogMergePolicy(10)));
 			TestDeletionPolicy.KeepAllDeletionPolicy policy = (TestDeletionPolicy.KeepAllDeletionPolicy
-				)writer.Config.GetIndexDeletionPolicy();
+				)writer.Config.IndexDeletionPolicy;
 			for (int i = 0; i < 10; i++)
 			{
 				AddDoc(writer);
@@ -452,7 +442,7 @@ namespace Lucene.Net.Test.Index
 			IndexCommit lastCommit = null;
 			foreach (IndexCommit commit in commits)
 			{
-				if (lastCommit == null || commit.GetGeneration() > lastCommit.GetGeneration())
+				if (lastCommit == null || commit.Generation > lastCommit.Generation)
 				{
 					lastCommit = commit;
 				}
@@ -519,7 +509,7 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestKeepNoneOnInitDeletionPolicy()
 		{
 			for (int pass = 0; pass < 2; pass++)
@@ -534,7 +524,7 @@ namespace Lucene.Net.Test.Index
 				mp.SetNoCFSRatio(useCompoundFile ? 1.0 : 0.0);
 				IndexWriter writer = new IndexWriter(dir, conf);
 				TestDeletionPolicy.KeepNoneOnInitDeletionPolicy policy = (TestDeletionPolicy.KeepNoneOnInitDeletionPolicy
-					)writer.Config.GetIndexDeletionPolicy();
+					)writer.Config.IndexDeletionPolicy;
 				for (int i = 0; i < 107; i++)
 				{
 					AddDoc(writer);
@@ -545,8 +535,7 @@ namespace Lucene.Net.Test.Index
 				mp = conf.MergePolicy;
 				mp.SetNoCFSRatio(1.0);
 				writer = new IndexWriter(dir, conf);
-				policy = (TestDeletionPolicy.KeepNoneOnInitDeletionPolicy)writer.Config.GetIndexDeletionPolicy
-					();
+				policy = (TestDeletionPolicy.KeepNoneOnInitDeletionPolicy)writer.Config.IndexDeletionPolicy;
 				writer.ForceMerge(1);
 				writer.Dispose();
 				AreEqual(2, policy.numOnInit);
@@ -561,7 +550,7 @@ namespace Lucene.Net.Test.Index
 			}
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestKeepLastNDeletionPolicy()
 		{
 			int N = 5;
@@ -569,8 +558,7 @@ namespace Lucene.Net.Test.Index
 			{
 				bool useCompoundFile = (pass % 2) != 0;
 				Directory dir = NewDirectory();
-				TestDeletionPolicy.KeepLastNDeletionPolicy policy = new TestDeletionPolicy.KeepLastNDeletionPolicy
-					(this, N);
+				var policy = new KeepLastNDeletionPolicy(this, N);
 				for (int j = 0; j < N + 1; j++)
 				{
 					IndexWriterConfig conf = ((IndexWriterConfig)NewIndexWriterConfig(TEST_VERSION_CURRENT
@@ -579,8 +567,7 @@ namespace Lucene.Net.Test.Index
 					MergePolicy mp = conf.MergePolicy;
 					mp.SetNoCFSRatio(useCompoundFile ? 1.0 : 0.0);
 					IndexWriter writer = new IndexWriter(dir, conf);
-					policy = (TestDeletionPolicy.KeepLastNDeletionPolicy)writer.Config.GetIndexDeletionPolicy
-						();
+					policy = (TestDeletionPolicy.KeepLastNDeletionPolicy)writer.Config.IndexDeletionPolicy;
 					for (int i = 0; i < 17; i++)
 					{
 						AddDoc(writer);
@@ -624,7 +611,7 @@ namespace Lucene.Net.Test.Index
 			}
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestKeepLastNDeletionPolicyWithCreates()
 		{
 			int N = 10;
@@ -639,8 +626,7 @@ namespace Lucene.Net.Test.Index
 				MergePolicy mp = conf.MergePolicy;
 				mp.SetNoCFSRatio(useCompoundFile ? 1.0 : 0.0);
 				IndexWriter writer = new IndexWriter(dir, conf);
-				TestDeletionPolicy.KeepLastNDeletionPolicy policy = (TestDeletionPolicy.KeepLastNDeletionPolicy
-					)writer.Config.GetIndexDeletionPolicy();
+				KeepLastNDeletionPolicy policy = (KeepLastNDeletionPolicy)writer.Config.IndexDeletionPolicy;
 				writer.Dispose();
 				Term searchTerm = new Term("content", "aaa");
 				Query query = new TermQuery(searchTerm);
@@ -652,8 +638,7 @@ namespace Lucene.Net.Test.Index
 					mp = conf.MergePolicy;
 					mp.SetNoCFSRatio(useCompoundFile ? 1.0 : 0.0);
 					writer = new IndexWriter(dir, conf);
-					policy = (TestDeletionPolicy.KeepLastNDeletionPolicy)writer.Config.GetIndexDeletionPolicy
-						();
+					policy = (TestDeletionPolicy.KeepLastNDeletionPolicy)writer.Config.IndexDeletionPolicy;
 					for (int j = 0; j < 17; j++)
 					{
 						AddDocWithID(writer, i * (N + 1) + j);
@@ -663,8 +648,7 @@ namespace Lucene.Net.Test.Index
 					conf = new IndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetIndexDeletionPolicy
 						(policy).SetMergePolicy(NoMergePolicy.COMPOUND_FILES);
 					writer = new IndexWriter(dir, conf);
-					policy = (TestDeletionPolicy.KeepLastNDeletionPolicy)writer.Config.GetIndexDeletionPolicy
-						();
+					policy = (TestDeletionPolicy.KeepLastNDeletionPolicy)writer.Config.IndexDeletionPolicy;
 					writer.DeleteDocuments(new Term("id", string.Empty + (i * (N + 1) + 3)));
 					// this is a commit
 					writer.Dispose();
@@ -676,8 +660,7 @@ namespace Lucene.Net.Test.Index
 					writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 						(Random())).SetOpenMode(IndexWriterConfig.OpenMode.CREATE).SetIndexDeletionPolicy
 						(policy));
-					policy = (TestDeletionPolicy.KeepLastNDeletionPolicy)writer.Config.GetIndexDeletionPolicy
-						();
+					policy = (TestDeletionPolicy.KeepLastNDeletionPolicy)writer.Config.IndexDeletionPolicy;
 					// This will not commit: there are no changes
 					// pending because we opened for "create":
 					writer.Dispose();

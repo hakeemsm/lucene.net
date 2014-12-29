@@ -50,7 +50,7 @@ namespace Lucene.Net.Test.Index
 				int iterFinal = iter;
 				((LogMergePolicy)writer.Config.MergePolicy).MergeFactor = (1000);
 				FieldType customType = new FieldType(StringField.TYPE_STORED);
-				customType.OmitNorms = (true);
+				customType.OmitsNorms = (true);
 				for (int i = 0; i < 200; i++)
 				{
 					Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
@@ -59,7 +59,7 @@ namespace Lucene.Net.Test.Index
 					writer.AddDocument(d);
 				}
 				((LogMergePolicy)writer.Config.MergePolicy).MergeFactor = (4);
-				Sharpen.Thread[] threads = new Sharpen.Thread[NUM_THREADS];
+				Thread[] threads = new Thread[NUM_THREADS];
 				for (int i_1 = 0; i_1 < NUM_THREADS; i_1++)
 				{
 					int iFinal = i_1;
@@ -95,7 +95,7 @@ namespace Lucene.Net.Test.Index
 			writer.Dispose();
 		}
 
-		private sealed class _Thread_89 : Sharpen.Thread
+		private sealed class _Thread_89 : Thread
 		{
 			public _Thread_89(TestThreadedForceMerge _enclosing, IndexWriter writerFinal, int
 				 iFinal, int iterFinal, FieldType customType)
@@ -134,7 +134,7 @@ namespace Lucene.Net.Test.Index
 				catch (Exception t)
 				{
 					this._enclosing.SetFailed();
-					System.Console.Out.WriteLine(Sharpen.Thread.CurrentThread().GetName() + ": hit exception"
+					System.Console.Out.WriteLine(Thread.CurrentThread().GetName() + ": hit exception"
 						);
 					Sharpen.Runtime.PrintStackTrace(t, System.Console.Out);
 				}

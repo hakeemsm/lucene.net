@@ -68,7 +68,7 @@ namespace Lucene.Net.Search
 				doc.Add(new TextField("noTV", English.IntToEnglish(i), Field.Store.YES));
 				writer.AddDocument(doc);
 			}
-			reader = writer.GetReader();
+			reader = writer.Reader;
 			writer.Dispose();
 		}
 
@@ -110,7 +110,7 @@ namespace Lucene.Net.Search
 			doc.Add(NewField("field", "one", ft4));
 			doc.Add(NewField("field", "one", ft5));
 			writer.AddDocument(doc);
-			IndexReader reader = writer.GetReader();
+			IndexReader reader = writer.Reader;
 			writer.Dispose();
 			IndexSearcher searcher = NewSearcher(reader);
 			Query query = new TermQuery(new Term("field", "one"));

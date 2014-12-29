@@ -38,7 +38,7 @@ namespace Lucene.Net.Test.Index
 			private readonly TestTransactions _enclosing;
 		}
 
-		private abstract class TimedThread : Sharpen.Thread
+		private abstract class TimedThread : Thread
 		{
 			internal volatile bool failed;
 
@@ -71,7 +71,7 @@ namespace Lucene.Net.Test.Index
 				}
 				catch (Exception e)
 				{
-					System.Console.Out.WriteLine(Sharpen.Thread.CurrentThread() + ": exc");
+					System.Console.Out.WriteLine(Thread.CurrentThread() + ": exc");
 					Sharpen.Runtime.PrintStackTrace(e, System.Console.Out);
 					failed = true;
 				}
@@ -240,7 +240,7 @@ namespace Lucene.Net.Test.Index
 				}
 				if (r1.NumDocs != r2.NumDocs)
 				{
-					throw new RuntimeException("doc counts differ: r1=" + r1.NumDocs + " r2=" + r2.
+					throw new SystemException("doc counts differ: r1=" + r1.NumDocs + " r2=" + r2.
 						NumDocs());
 				}
 				r1.Dispose();

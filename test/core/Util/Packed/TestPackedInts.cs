@@ -173,38 +173,38 @@ namespace Lucene.Net.Util.Packed
 		private static IList<PackedInts.Mutable> CreatePackedInts(int valueCount, int bitsPerValue
 			)
 		{
-			IList<PackedInts.Mutable> packedInts = new AList<PackedInts.Mutable>();
+			IList<PackedInts.Mutable> packedInts = new List<PackedInts.Mutable>();
 			if (bitsPerValue <= 8)
 			{
-				packedInts.AddItem(new Direct8(valueCount));
+				packedInts.Add(new Direct8(valueCount));
 			}
 			if (bitsPerValue <= 16)
 			{
-				packedInts.AddItem(new Direct16(valueCount));
+				packedInts.Add(new Direct16(valueCount));
 			}
 			if (bitsPerValue <= 24 && valueCount <= Packed8ThreeBlocks.MAX_SIZE)
 			{
-				packedInts.AddItem(new Packed8ThreeBlocks(valueCount));
+				packedInts.Add(new Packed8ThreeBlocks(valueCount));
 			}
 			if (bitsPerValue <= 32)
 			{
-				packedInts.AddItem(new Direct32(valueCount));
+				packedInts.Add(new Direct32(valueCount));
 			}
 			if (bitsPerValue <= 48 && valueCount <= Packed16ThreeBlocks.MAX_SIZE)
 			{
-				packedInts.AddItem(new Packed16ThreeBlocks(valueCount));
+				packedInts.Add(new Packed16ThreeBlocks(valueCount));
 			}
 			if (bitsPerValue <= 63)
 			{
-				packedInts.AddItem(new Packed64(valueCount, bitsPerValue));
+				packedInts.Add(new Packed64(valueCount, bitsPerValue));
 			}
-			packedInts.AddItem(new Direct64(valueCount));
+			packedInts.Add(new Direct64(valueCount));
 			for (int bpv = bitsPerValue; bpv <= Packed64SingleBlock.MAX_SUPPORTED_BITS_PER_VALUE
 				; ++bpv)
 			{
 				if (Packed64SingleBlock.IsSupported(bpv))
 				{
-					packedInts.AddItem(Packed64SingleBlock.Create(valueCount, bpv));
+					packedInts.Add(Packed64SingleBlock.Create(valueCount, bpv));
 				}
 			}
 			return packedInts;
@@ -824,7 +824,7 @@ namespace Lucene.Net.Util.Packed
 
 						default:
 						{
-							throw new RuntimeException("added a type and forgot to add it here?");
+							throw new SystemException("added a type and forgot to add it here?");
 						}
 					}
 					if (bpv == 0)

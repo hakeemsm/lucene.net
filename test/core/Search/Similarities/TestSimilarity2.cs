@@ -25,9 +25,9 @@ namespace Lucene.Net.Search.Similarities
 		public override void SetUp()
 		{
 			base.SetUp();
-			sims = new AList<Similarity>();
-			sims.AddItem(new DefaultSimilarity());
-			sims.AddItem(new BM25Similarity());
+			sims = new List<Similarity>();
+			sims.Add(new DefaultSimilarity());
+			sims.Add(new BM25Similarity());
 			// TODO: not great that we dup this all with TestSimilarityBase
 			foreach (BasicModel basicModel in TestSimilarityBase.BASIC_MODELS)
 			{
@@ -35,7 +35,7 @@ namespace Lucene.Net.Search.Similarities
 				{
 					foreach (Normalization normalization in TestSimilarityBase.NORMALIZATIONS)
 					{
-						sims.AddItem(new DFRSimilarity(basicModel, afterEffect, normalization));
+						sims.Add(new DFRSimilarity(basicModel, afterEffect, normalization));
 					}
 				}
 			}
@@ -45,13 +45,13 @@ namespace Lucene.Net.Search.Similarities
 				{
 					foreach (Normalization normalization in TestSimilarityBase.NORMALIZATIONS)
 					{
-						sims.AddItem(new IBSimilarity(distribution, lambda, normalization));
+						sims.Add(new IBSimilarity(distribution, lambda, normalization));
 					}
 				}
 			}
-			sims.AddItem(new LMDirichletSimilarity());
-			sims.AddItem(new LMJelinekMercerSimilarity(0.1f));
-			sims.AddItem(new LMJelinekMercerSimilarity(0.7f));
+			sims.Add(new LMDirichletSimilarity());
+			sims.Add(new LMJelinekMercerSimilarity(0.1f));
+			sims.Add(new LMJelinekMercerSimilarity(0.7f));
 		}
 
 		/// <summary>
@@ -63,7 +63,7 @@ namespace Lucene.Net.Search.Similarities
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir);
-			IndexReader ir = iw.GetReader();
+			IndexReader ir = iw.Reader;
 			iw.Dispose();
 			IndexSearcher @is = NewSearcher(ir);
 			foreach (Similarity sim in sims)
@@ -86,7 +86,7 @@ namespace Lucene.Net.Search.Similarities
 				();
 			doc.Add(NewTextField("foo", "bar", Field.Store.NO));
 			iw.AddDocument(doc);
-			IndexReader ir = iw.GetReader();
+			IndexReader ir = iw.Reader;
 			iw.Dispose();
 			IndexSearcher @is = NewSearcher(ir);
 			foreach (Similarity sim in sims)
@@ -112,7 +112,7 @@ namespace Lucene.Net.Search.Similarities
 				();
 			doc.Add(NewTextField("foo", "bar", Field.Store.NO));
 			iw.AddDocument(doc);
-			IndexReader ir = iw.GetReader();
+			IndexReader ir = iw.Reader;
 			iw.Dispose();
 			IndexSearcher @is = NewSearcher(ir);
 			foreach (Similarity sim in sims)
@@ -136,11 +136,11 @@ namespace Lucene.Net.Search.Similarities
 			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
-			ft.OmitNorms = (true);
+			ft.OmitsNorms = (true);
 			ft.Freeze();
 			doc.Add(NewField("foo", "bar", ft));
 			iw.AddDocument(doc);
-			IndexReader ir = iw.GetReader();
+			IndexReader ir = iw.Reader;
 			iw.Dispose();
 			IndexSearcher @is = NewSearcher(ir);
 			foreach (Similarity sim in sims)
@@ -168,7 +168,7 @@ namespace Lucene.Net.Search.Similarities
 			Field f = NewField("foo", "bar", ft);
 			doc.Add(f);
 			iw.AddDocument(doc);
-			IndexReader ir = iw.GetReader();
+			IndexReader ir = iw.Reader;
 			iw.Dispose();
 			IndexSearcher @is = NewSearcher(ir);
 			foreach (Similarity sim in sims)
@@ -192,12 +192,12 @@ namespace Lucene.Net.Search.Similarities
 				();
 			FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
 			ft.IndexOptions = (FieldInfo.IndexOptions.DOCS_ONLY);
-			ft.OmitNorms = (true);
+			ft.OmitsNorms = (true);
 			ft.Freeze();
 			Field f = NewField("foo", "bar", ft);
 			doc.Add(f);
 			iw.AddDocument(doc);
-			IndexReader ir = iw.GetReader();
+			IndexReader ir = iw.Reader;
 			iw.Dispose();
 			IndexSearcher @is = NewSearcher(ir);
 			foreach (Similarity sim in sims)
@@ -227,7 +227,7 @@ namespace Lucene.Net.Search.Similarities
 			FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
 			doc.Add(NewField("foo", "bar", ft));
 			iw.AddDocument(doc);
-			IndexReader ir = iw.GetReader();
+			IndexReader ir = iw.Reader;
 			iw.Dispose();
 			IndexSearcher @is = NewSearcher(ir);
 			foreach (Similarity sim in sims)

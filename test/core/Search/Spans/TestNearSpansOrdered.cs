@@ -48,7 +48,7 @@ namespace Lucene.Net.Search.Spans
 				doc.Add(NewTextField(FIELD, docFields[i], Field.Store.NO));
 				writer.AddDocument(doc);
 			}
-			reader = writer.GetReader();
+			reader = writer.Reader;
 			writer.Dispose();
 			searcher = NewSearcher(reader);
 		}

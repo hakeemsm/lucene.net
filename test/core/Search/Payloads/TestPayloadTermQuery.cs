@@ -74,7 +74,7 @@ namespace Lucene.Net.Search.Payloads
 				{
 					if (fieldName.Equals("field"))
 					{
-						payloadAtt.SetPayload(new BytesRef(payloadField));
+						payloadAtt.Payload = (new BytesRef(payloadField));
 					}
 					else
 					{
@@ -82,11 +82,11 @@ namespace Lucene.Net.Search.Payloads
 						{
 							if (numSeen % 2 == 0)
 							{
-								payloadAtt.SetPayload(new BytesRef(payloadMultiField1));
+								payloadAtt.Payload = (new BytesRef(payloadMultiField1));
 							}
 							else
 							{
-								payloadAtt.SetPayload(new BytesRef(payloadMultiField2));
+								payloadAtt.Payload = (new BytesRef(payloadMultiField2));
 							}
 							numSeen++;
 						}
@@ -129,7 +129,7 @@ namespace Lucene.Net.Search.Payloads
 					(i), Field.Store.YES));
 				writer.AddDocument(doc);
 			}
-			reader = writer.GetReader();
+			reader = writer.Reader;
 			writer.Dispose();
 			searcher = NewSearcher(reader);
 			searcher.SetSimilarity(similarity);

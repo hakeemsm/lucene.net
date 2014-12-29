@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+using System.Linq;
 using Lucene.Net.Support;
 using System;
 using System.Collections.Generic;
@@ -44,25 +45,262 @@ namespace Lucene.Net.Index
 
     public class SnapshotDeletionPolicy : IndexDeletionPolicy
     {
-        private class SnapshotInfo
-        {
-            internal string id;
-            internal string segmentsFileName;
-            internal IndexCommit commit;
+		/// <summary>
+		/// Records how many snapshots are held against each
+		/// commit generation
+		/// </summary>
+		protected internal IDictionary<long, int> refCounts = new Dictionary<long, int>();
 
-            public SnapshotInfo(string id, string segmentsFileName, IndexCommit commit)
-            {
-                this.id = id;
-                this.segmentsFileName = segmentsFileName;
-                this.commit = commit;
-            }
+		/// <summary>Used to map gen to IndexCommit.</summary>
+		/// <remarks>Used to map gen to IndexCommit.</remarks>
+		protected internal IDictionary<long, IndexCommit> indexCommits = new Dictionary<long
+			, IndexCommit>();
 
-            public override string ToString()
-            {
-                return id + " : " + segmentsFileName;
-            }
-        }
+		/// <summary>
+		/// Wrapped
+		/// <see cref="IndexDeletionPolicy">IndexDeletionPolicy</see>
+		/// 
+		/// </summary>
+		private IndexDeletionPolicy primary;
 
+		/// <summary>
+		/// Most recently committed
+		/// <see cref="IndexCommit">IndexCommit</see>
+		/// .
+		/// </summary>
+		protected internal IndexCommit lastCommit;
+
+		/// <summary>Used to detect misuse</summary>
+		private bool initCalled;
+
+		/// <summary>
+		/// Sole constructor, taking the incoming
+		/// <see cref="IndexDeletionPolicy">IndexDeletionPolicy</see>
+		/// to wrap.
+		/// </summary>
+		public SnapshotDeletionPolicy(IndexDeletionPolicy primary)
+		{
+			this.primary = primary;
+		}
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public override void OnCommit<_T0>(IList<_T0> commits)
+		{
+			lock (this)
+			{
+				primary.OnCommit(WrapCommits(commits));
+				lastCommit = commits[commits.Count - 1];
+			}
+		}
+
+		/// <exception cref="System.IO.IOException"></exception>
+		public override void OnInit<T>(IList<T> commits)
+		{
+			lock (this)
+			{
+				initCalled = true;
+				primary.OnInit(WrapCommits(commits));
+				foreach (T commit in commits)
+				{
+					if (refCounts.ContainsKey(commit.Generation))
+					{
+						indexCommits[commit.Generation] = commit;
+					}
+				}
+				if (commits.Any())
+				{
+					lastCommit = commits[commits.Count - 1];
+				}
+			}
+		}
+
+		/// <summary>Release a snapshotted commit.</summary>
+		/// <remarks>Release a snapshotted commit.</remarks>
+		/// <param name="commit">
+		/// the commit previously returned by
+		/// <see cref="Snapshot()">Snapshot()</see>
+		/// </param>
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual void Release(IndexCommit commit)
+		{
+			lock (this)
+			{
+				long gen = commit.Generation;
+				ReleaseGen(gen);
+			}
+		}
+
+		/// <summary>Release a snapshot by generation.</summary>
+		/// <remarks>Release a snapshot by generation.</remarks>
+		/// <exception cref="System.IO.IOException"></exception>
+		protected internal virtual void ReleaseGen(long gen)
+		{
+			if (!initCalled)
+			{
+				throw new InvalidOperationException("this instance is not being used by IndexWriter; be sure to use the instance returned from writer.getConfig().getIndexDeletionPolicy()"
+					);
+			}
+			int refCount = refCounts[gen];
+			if (refCount == null)
+			{
+				throw new ArgumentException("commit gen=" + gen + " is not currently snapshotted"
+					);
+			}
+			int refCountInt = refCount;
+			//HM:revisit 
+			//assert refCountInt > 0;
+			refCountInt--;
+			if (refCountInt == 0)
+			{
+				refCounts.Remove(gen);
+				indexCommits.Remove(gen);
+			}
+			else
+			{
+				refCounts[gen] = refCountInt;
+			}
+		}
+
+		/// <summary>
+		/// Increments the refCount for this
+		/// <see cref="IndexCommit">IndexCommit</see>
+		/// .
+		/// </summary>
+		protected internal virtual void IncRef(IndexCommit ic)
+		{
+			lock (this)
+			{
+				long gen = ic.Generation;
+				int refCount = refCounts[gen];
+				int refCountInt;
+				if (refCount == 0) //.NET Port. checking for 0 since it is not long?
+				{
+					indexCommits[gen] = lastCommit;
+					refCountInt = 0;
+				}
+				else
+				{
+					refCountInt = refCount;
+				}
+				refCounts[gen] = refCountInt + 1;
+			}
+		}
+
+		/// <summary>Snapshots the last commit and returns it.</summary>
+		/// <remarks>
+		/// Snapshots the last commit and returns it. Once a commit is 'snapshotted,' it is protected
+		/// from deletion (as long as this
+		/// <see cref="IndexDeletionPolicy">IndexDeletionPolicy</see>
+		/// is used). The
+		/// snapshot can be removed by calling
+		/// <see cref="Release(IndexCommit)">Release(IndexCommit)</see>
+		/// followed
+		/// by a call to
+		/// <see cref="IndexWriter.DeleteUnusedFiles()">IndexWriter.DeleteUnusedFiles()</see>
+		/// .
+		/// <p>
+		/// <b>NOTE:</b> while the snapshot is held, the files it references will not
+		/// be deleted, which will consume additional disk space in your index. If you
+		/// take a snapshot at a particularly bad time (say just before you call
+		/// forceMerge) then in the worst case this could consume an extra 1X of your
+		/// total index size, until you release the snapshot.
+		/// </remarks>
+		/// <exception cref="System.InvalidOperationException">if this index does not have any commits yet
+		/// 	</exception>
+		/// <returns>
+		/// the
+		/// <see cref="IndexCommit">IndexCommit</see>
+		/// that was snapshotted.
+		/// </returns>
+		/// <exception cref="System.IO.IOException"></exception>
+		public virtual IndexCommit Snapshot()
+		{
+			lock (this)
+			{
+				if (!initCalled)
+				{
+					throw new InvalidOperationException("this instance is not being used by IndexWriter; be sure to use the instance returned from writer.getConfig().getIndexDeletionPolicy()"
+						);
+				}
+				if (lastCommit == null)
+				{
+					// No commit yet, eg this is a new IndexWriter:
+					throw new InvalidOperationException("No index commit to snapshot");
+				}
+				IncRef(lastCommit);
+				return lastCommit;
+			}
+		}
+
+		/// <summary>Returns all IndexCommits held by at least one snapshot.</summary>
+		/// <remarks>Returns all IndexCommits held by at least one snapshot.</remarks>
+		public virtual IList<IndexCommit> GetSnapshots()
+		{
+			lock (this)
+			{
+				return new List<IndexCommit>(indexCommits.Values);
+			}
+		}
+
+		/// <summary>Returns the total number of snapshots currently held.</summary>
+		/// <remarks>Returns the total number of snapshots currently held.</remarks>
+		public virtual int GetSnapshotCount()
+		{
+			lock (this)
+			{
+				int total = 0;
+				foreach (int refCount in refCounts.Values)
+				{
+					total += refCount;
+				}
+				return total;
+			}
+		}
+
+		/// <summary>
+		/// Retrieve an
+		/// <see cref="IndexCommit">IndexCommit</see>
+		/// from its generation;
+		/// returns null if this IndexCommit is not currently
+		/// snapshotted
+		/// </summary>
+		public virtual IndexCommit GetIndexCommit(long gen)
+		{
+			lock (this)
+			{
+				return indexCommits[gen];
+			}
+		}
+
+		public override object Clone()
+		{
+			lock (this)
+			{
+				var other = (SnapshotDeletionPolicy)base.Clone();
+				other.primary = (IndexDeletionPolicy) this.primary.Clone();
+				other.lastCommit = null;
+				other.refCounts = new Dictionary<long, int>(refCounts);
+				other.indexCommits = new Dictionary<long, IndexCommit>(indexCommits);
+				return other;
+			}
+		}
+
+		/// <summary>
+		/// Wraps each
+		/// <see cref="IndexCommit">IndexCommit</see>
+		/// as a
+		/// <see cref="SnapshotCommitPoint">SnapshotCommitPoint</see>
+		/// .
+		/// </summary>
+		private IList<IndexCommit> WrapCommits<T>(IList<T> commits) where T:IndexCommit
+		{
+			IList<IndexCommit> wrappedCommits = new List<IndexCommit>(commits.Count);
+			foreach (T ic in commits)
+			{
+				wrappedCommits.Add(new SnapshotCommitPoint(this, ic));
+			}
+			return wrappedCommits;
+		}
         protected class SnapshotCommitPoint : IndexCommit
         {
             protected IndexCommit cp;
@@ -81,7 +319,7 @@ namespace Lucene.Net.Index
 
             protected bool ShouldDelete(string segmentsFileName)
             {
-                return !parent.segmentsFileToIDs.ContainsKey(segmentsFileName);
+                return !parent.refCounts.ContainsKey(this.cp.Generation);
             }
 
             public override void Delete()
@@ -133,213 +371,5 @@ namespace Lucene.Net.Index
             }
         }
 
-        private IDictionary<string, SnapshotInfo> idToSnapshot = new HashMap<string, SnapshotInfo>();
-
-        private IDictionary<string, ISet<string>> segmentsFileToIDs = new HashMap<string, ISet<string>>();
-
-        private IndexDeletionPolicy primary;
-
-        protected IndexCommit lastCommit;
-
-        public SnapshotDeletionPolicy(IndexDeletionPolicy primary)
-        {
-            this.primary = primary;
-        }
-
-        public SnapshotDeletionPolicy(IndexDeletionPolicy primary, IDictionary<string, string> snapshotsInfo)
-            : this(primary)
-        {
-            if (snapshotsInfo != null)
-            {
-                // Add the ID->segmentIDs here - the actual IndexCommits will be
-                // reconciled on the call to onInit()
-                foreach (KeyValuePair<string, string> e in snapshotsInfo)
-                {
-                    RegisterSnapshotInfo(e.Key, e.Value, null);
-                }
-            }
-        }
-
-        protected virtual void CheckSnapshotted(string id)
-        {
-            if (IsSnapshotted(id))
-            {
-                throw new InvalidOperationException("Snapshot ID " + id
-                    + " is already used - must be unique");
-            }
-        }
-
-        protected virtual void RegisterSnapshotInfo(string id, String segment, IndexCommit commit)
-        {
-            idToSnapshot[id] = new SnapshotInfo(id, segment, commit);
-            ISet<String> ids = segmentsFileToIDs[segment];
-            if (ids == null)
-            {
-                ids = new HashSet<String>();
-                segmentsFileToIDs[segment] = ids;
-            }
-            ids.Add(id);
-        }
-
-        protected virtual IList<IndexCommit> WrapCommits<T>(IList<T> commits)
-            where T : IndexCommit
-        {
-            IList<IndexCommit> wrappedCommits = new List<IndexCommit>(commits.Count);
-            foreach (IndexCommit ic in commits)
-            {
-                wrappedCommits.Add(new SnapshotCommitPoint(this, ic));
-            }
-            return wrappedCommits;
-        }
-
-        public virtual IndexCommit GetSnapshot(string id)
-        {
-            lock (this)
-            {
-                SnapshotInfo snapshotInfo = idToSnapshot[id];
-                if (snapshotInfo == null)
-                {
-                    throw new InvalidOperationException("No snapshot exists by ID: " + id);
-                }
-                return snapshotInfo.commit;
-            }
-        }
-
-        public virtual IDictionary<string, string> GetSnapshots()
-        {
-            lock (this)
-            {
-                IDictionary<string, string> snapshots = new HashMap<string, string>();
-                foreach (KeyValuePair<string, SnapshotInfo> e in idToSnapshot)
-                {
-                    snapshots[e.Key] = e.Value.segmentsFileName;
-                }
-                return snapshots;
-            }
-        }
-
-        public virtual bool IsSnapshotted(string id)
-        {
-            return idToSnapshot.ContainsKey(id);
-        }
-
-        public override void OnCommit<T>(IList<T> commits)
-        {
-            lock (this)
-            {
-                primary.OnCommit(WrapCommits(commits));
-                lastCommit = commits[commits.Count - 1];
-            }
-        }
-
-        public override void OnInit<T>(IList<T> commits)
-        {
-            lock (this)
-            {
-                primary.OnInit(WrapCommits(commits));
-                lastCommit = commits[commits.Count - 1];
-
-                /*
-                 * Assign snapshotted IndexCommits to their correct snapshot IDs as
-                 * specified in the constructor.
-                 */
-                foreach (IndexCommit commit in commits)
-                {
-                    ISet<String> ids = segmentsFileToIDs[commit.SegmentsFileName];
-                    if (ids != null)
-                    {
-                        foreach (String id in ids)
-                        {
-                            idToSnapshot[id].commit = commit;
-                        }
-                    }
-                }
-
-                /*
-                 * Second, see if there are any instances where a snapshot ID was specified
-                 * in the constructor but an IndexCommit doesn't exist. In this case, the ID
-                 * should be removed.
-                 * 
-                 * Note: This code is protective for extreme cases where IDs point to
-                 * non-existent segments. As the constructor should have received its
-                 * information via a call to getSnapshots(), the data should be well-formed.
-                 */
-                // Find lost snapshots
-                List<String> idsToRemove = null;
-                foreach (KeyValuePair<String, SnapshotInfo> e in idToSnapshot)
-                {
-                    if (e.Value.commit == null)
-                    {
-                        if (idsToRemove == null)
-                        {
-                            idsToRemove = new List<String>();
-                        }
-                        idsToRemove.Add(e.Key);
-                    }
-                }
-                // Finally, remove those 'lost' snapshots.
-                if (idsToRemove != null)
-                {
-                    foreach (String id in idsToRemove)
-                    {
-                        SnapshotInfo info = idToSnapshot[id];
-                        idToSnapshot.Remove(id);
-                        segmentsFileToIDs.Remove(info.segmentsFileName);
-                    }
-                }
-            }
-        }
-
-        /// <summary>Release the currently held snapshot. </summary>
-        public virtual void Release(string id)
-        {
-            lock (this)
-            {
-                SnapshotInfo info = idToSnapshot[id];
-                idToSnapshot.Remove(id);
-                if (info == null)
-                {
-                    throw new InvalidOperationException("Snapshot doesn't exist: " + id);
-                }
-                ISet<String> ids = segmentsFileToIDs[info.segmentsFileName];
-                if (ids != null)
-                {
-                    ids.Remove(id);
-                    if (ids.Count == 0)
-                    {
-                        segmentsFileToIDs.Remove(info.segmentsFileName);
-                    }
-                }
-            }
-        }
-
-        public virtual IndexCommit Snapshot(string id)
-        {
-            lock (this)
-            {
-                if (lastCommit == null)
-                {
-                    // no commit exists. Really shouldn't happen, but might be if SDP is
-                    // accessed before onInit or onCommit were called.
-                    throw new InvalidOperationException("No index commit to snapshot");
-                }
-
-                // Can't use the same snapshot ID twice...
-                CheckSnapshotted(id);
-
-                RegisterSnapshotInfo(id, lastCommit.SegmentsFileName, lastCommit);
-                return lastCommit;
-            }
-        }
-
-        public override object Clone()
-        {
-            SnapshotDeletionPolicy other = (SnapshotDeletionPolicy)base.Clone();
-            other.primary = (IndexDeletionPolicy)this.primary.Clone();
-            other.lastCommit = null;
-            other.segmentsFileToIDs = new HashMap<String, ISet<String>>(segmentsFileToIDs);
-            other.idToSnapshot = new HashMap<String, SnapshotInfo>(idToSnapshot);
-            return other;
-        }
     }
 }

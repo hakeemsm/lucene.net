@@ -68,11 +68,11 @@ namespace Lucene.Net.Search.Payloads
 				{
 					if (numSeen % 2 == 0)
 					{
-						payAtt.SetPayload(new BytesRef(payload2));
+						payAtt.Payload = (new BytesRef(payload2));
 					}
 					else
 					{
-						payAtt.SetPayload(new BytesRef(payload4));
+						payAtt.Payload = (new BytesRef(payload4));
 					}
 					numSeen++;
 					result = true;
@@ -118,7 +118,7 @@ namespace Lucene.Net.Search.Payloads
 				doc.Add(NewTextField("field2", txt, Field.Store.YES));
 				writer.AddDocument(doc);
 			}
-			reader = writer.GetReader();
+			reader = writer.Reader;
 			writer.Dispose();
 			searcher = NewSearcher(reader);
 			searcher.SetSimilarity(similarity);

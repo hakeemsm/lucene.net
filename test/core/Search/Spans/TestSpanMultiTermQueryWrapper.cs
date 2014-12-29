@@ -43,7 +43,7 @@ namespace Lucene.Net.Search.Spans
 			iw.AddDocument(doc);
 			field.StringValue = "jumps over extremely very lazy broxn dog");
 			iw.AddDocument(doc);
-			reader = iw.GetReader();
+			reader = iw.Reader;
 			iw.Dispose();
 			searcher = NewSearcher(reader);
 		}

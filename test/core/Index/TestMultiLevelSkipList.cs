@@ -110,7 +110,7 @@ namespace Lucene.Net.Test.Index
 				 + target, target, tp.DocID);
 			AreEqual("Frequency is not 1: " + tp.Freq, 1, tp.Freq);
 			tp.NextPosition();
-			BytesRef b = tp.GetPayload();
+			BytesRef b = tp.Payload;
 			AreEqual(1, b.length);
 			AreEqual("Wrong payload for the target " + target + ": " +
 				 b.bytes[b.offset], unchecked((byte)target), b.bytes[b.offset]);
@@ -148,7 +148,7 @@ namespace Lucene.Net.Test.Index
 				bool hasNext = input.IncrementToken();
 				if (hasNext)
 				{
-					payloadAtt.SetPayload(new BytesRef(new byte[] { unchecked((byte)payloadCount.IncrementAndGet
+					payloadAtt.Payload = (new BytesRef(new byte[] { unchecked((byte)payloadCount.IncrementAndGet
 						()) }));
 				}
 				return hasNext;

@@ -1,39 +1,38 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
-using Lucene.Net.Test.Analysis;
+using System.Collections.Generic;
+using System.Threading;
+using Lucene.Net.Analysis;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
-using Lucene.Net.Util;
-using Sharpen;
+using Lucene.Net.Support;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Util;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
+    [TestFixture]
 	public class TestFlushByRamOrCountsPolicy : LuceneTestCase
 	{
 		private static LineFileDocs lineDocFile;
 
 		/// <exception cref="System.Exception"></exception>
-		[NUnit.Framework.BeforeClass]
-		public static void BeforeClass()
+		[SetUp]
+		public void Setup()
 		{
 			lineDocFile = new LineFileDocs(Random(), DefaultCodecSupportsDocValues());
 		}
 
 		/// <exception cref="System.Exception"></exception>
-		[NUnit.Framework.AfterClass]
-		public static void AfterClass()
+		[TearDown]
+		public static void TearDown()
 		{
-			lineDocFile.Dispose();
+			lineDocFile.Close();
 			lineDocFile = null;
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestFlushByRam()
 		{
 			double ramBuffer = (TEST_NIGHTLY ? 1 : 10) + AtLeast(2) + Random().NextDouble();
@@ -41,11 +40,11 @@ namespace Lucene.Net.Test.Index
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestFlushByRamLargeBuffer()
 		{
 			// with a 256 mb ram buffer we should never stall
-			RunFlushByRam(1 + Random().Next(TEST_NIGHTLY ? 5 : 1), 256.d, true);
+			RunFlushByRam(1 + Random().Next(TEST_NIGHTLY ? 5 : 1), 256, true);
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -56,11 +55,9 @@ namespace Lucene.Net.Test.Index
 			int numDocumentsToIndex = 10 + AtLeast(30);
 			AtomicInteger numDocs = new AtomicInteger(numDocumentsToIndex);
 			Directory dir = NewDirectory();
-			TestFlushByRamOrCountsPolicy.MockDefaultFlushPolicy flushPolicy = new TestFlushByRamOrCountsPolicy.MockDefaultFlushPolicy
-				();
+			var flushPolicy = new MockDefaultFlushPolicy();
 			MockAnalyzer analyzer = new MockAnalyzer(Random());
-			analyzer.SetMaxTokenLength(TestUtil.NextInt(Random(), 1, IndexWriter.MAX_TERM_LENGTH
-				));
+			analyzer.SetMaxTokenLength(Random().NextInt(1, IndexWriter.MAX_TERM_LENGTH));
 			IndexWriterConfig iwc = NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer).SetFlushPolicy
 				(flushPolicy);
 			int numDWPT = 1 + AtLeast(2);
@@ -71,51 +68,47 @@ namespace Lucene.Net.Test.Index
 			iwc.SetMaxBufferedDocs(IndexWriterConfig.DISABLE_AUTO_FLUSH);
 			iwc.SetMaxBufferedDeleteTerms(IndexWriterConfig.DISABLE_AUTO_FLUSH);
 			IndexWriter writer = new IndexWriter(dir, iwc);
-			flushPolicy = (TestFlushByRamOrCountsPolicy.MockDefaultFlushPolicy)writer.GetConfig
-				().GetFlushPolicy();
-			IsFalse(flushPolicy.FlushOnDocCount());
-			IsFalse(flushPolicy.FlushOnDeleteTerms());
-			IsTrue(flushPolicy.FlushOnRAM());
-			DocumentsWriter docsWriter = writer.GetDocsWriter();
+			flushPolicy = (MockDefaultFlushPolicy)writer.Config.FlushPolicy;
+			AssertFalse(flushPolicy.FlushOnDocCount);
+			AssertFalse(flushPolicy.FlushOnDeleteTerms);
+			AssertTrue(flushPolicy.FlushOnRAM);
+			DocumentsWriter docsWriter = writer.DocsWriter;
 			IsNotNull(docsWriter);
 			DocumentsWriterFlushControl flushControl = docsWriter.flushControl;
-			AreEqual(" bytes must be 0 after init", 0, flushControl.FlushBytes
-				());
-			TestFlushByRamOrCountsPolicy.IndexThread[] threads = new TestFlushByRamOrCountsPolicy.IndexThread
-				[numThreads];
+			AssertEquals(" bytes must be 0 after init", 0, flushControl.FlushBytes);
+			var threads = new Thread[numThreads];
 			for (int x = 0; x < threads.Length; x++)
 			{
-				threads[x] = new TestFlushByRamOrCountsPolicy.IndexThread(this, numDocs, numThreads
-					, writer, lineDocFile, false);
+			    threads[x] = new Thread(new IndexThread(this, numDocs, numThreads, writer, lineDocFile, false).Run);
 				threads[x].Start();
 			}
 			for (int x_1 = 0; x_1 < threads.Length; x_1++)
 			{
 				threads[x_1].Join();
 			}
-			long maxRAMBytes = (long)(iwc.GetRAMBufferSizeMB() * 1024. * 1024.);
-			AreEqual(" all flushes must be due numThreads=" + numThreads
-				, 0, flushControl.FlushBytes());
-			AreEqual(numDocumentsToIndex, writer.NumDocs);
-			AreEqual(numDocumentsToIndex, writer.MaxDoc);
-			IsTrue("peak bytes without flush exceeded watermark", flushPolicy
+			long maxRAMBytes = (long)(iwc.RAMBufferSizeMB * 1024 * 1024);
+			AssertEquals(" all flushes must be due numThreads=" + numThreads
+				, 0, flushControl.FlushBytes);
+			AssertEquals(numDocumentsToIndex, writer.NumDocs);
+			AssertEquals(numDocumentsToIndex, writer.MaxDoc);
+			AssertTrue("peak bytes without flush exceeded watermark", flushPolicy
 				.peakBytesWithoutFlush <= maxRAMBytes);
 			AssertActiveBytesAfter(flushControl);
 			if (flushPolicy.hasMarkedPending)
 			{
-				IsTrue(maxRAMBytes < flushControl.peakActiveBytes);
+				AssertTrue(maxRAMBytes < flushControl.peakActiveBytes);
 			}
 			if (ensureNotStalled)
 			{
-				IsFalse(docsWriter.flushControl.stallControl.WasStalled());
+				AssertFalse(docsWriter.flushControl.stallControl.WasStalled);
 			}
 			writer.Dispose();
-			AreEqual(0, flushControl.ActiveBytes());
+			AssertEquals(0, flushControl.ActiveBytes);
 			dir.Dispose();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestFlushDocCount()
 		{
 			int[] numThreads = new int[] { 2 + AtLeast(1), 1 };
@@ -124,8 +117,7 @@ namespace Lucene.Net.Test.Index
 				int numDocumentsToIndex = 50 + AtLeast(30);
 				AtomicInteger numDocs = new AtomicInteger(numDocumentsToIndex);
 				Directory dir = NewDirectory();
-				TestFlushByRamOrCountsPolicy.MockDefaultFlushPolicy flushPolicy = new TestFlushByRamOrCountsPolicy.MockDefaultFlushPolicy
-					();
+				var flushPolicy = new MockDefaultFlushPolicy();
 				IndexWriterConfig iwc = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 					(Random())).SetFlushPolicy(flushPolicy);
 				int numDWPT = 1 + AtLeast(2);
@@ -136,43 +128,40 @@ namespace Lucene.Net.Test.Index
 				iwc.SetRAMBufferSizeMB(IndexWriterConfig.DISABLE_AUTO_FLUSH);
 				iwc.SetMaxBufferedDeleteTerms(IndexWriterConfig.DISABLE_AUTO_FLUSH);
 				IndexWriter writer = new IndexWriter(dir, iwc);
-				flushPolicy = (TestFlushByRamOrCountsPolicy.MockDefaultFlushPolicy)writer.GetConfig
-					().GetFlushPolicy();
-				IsTrue(flushPolicy.FlushOnDocCount());
-				IsFalse(flushPolicy.FlushOnDeleteTerms());
-				IsFalse(flushPolicy.FlushOnRAM());
-				DocumentsWriter docsWriter = writer.GetDocsWriter();
+				flushPolicy = (TestFlushByRamOrCountsPolicy.MockDefaultFlushPolicy)writer.Config.FlushPolicy;
+				AssertTrue(flushPolicy.FlushOnDocCount);
+				AssertFalse(flushPolicy.FlushOnDeleteTerms);
+				AssertFalse(flushPolicy.FlushOnRAM);
+				DocumentsWriter docsWriter = writer.DocsWriter;
 				IsNotNull(docsWriter);
 				DocumentsWriterFlushControl flushControl = docsWriter.flushControl;
-				AreEqual(" bytes must be 0 after init", 0, flushControl.FlushBytes
-					());
-				TestFlushByRamOrCountsPolicy.IndexThread[] threads = new TestFlushByRamOrCountsPolicy.IndexThread
-					[numThreads[i]];
+				AssertEquals(" bytes must be 0 after init", 0, flushControl.FlushBytes);
+				var threads = new Thread[numThreads[i]];
 				for (int x = 0; x < threads.Length; x++)
 				{
-					threads[x] = new TestFlushByRamOrCountsPolicy.IndexThread(this, numDocs, numThreads
-						[i], writer, lineDocFile, false);
+					threads[x] = new Thread(new IndexThread(this, numDocs, numThreads
+						[i], writer, lineDocFile, false).Run);
 					threads[x].Start();
 				}
 				for (int x_1 = 0; x_1 < threads.Length; x_1++)
 				{
 					threads[x_1].Join();
 				}
-				AreEqual(" all flushes must be due numThreads=" + numThreads
-					[i], 0, flushControl.FlushBytes());
-				AreEqual(numDocumentsToIndex, writer.NumDocs);
-				AreEqual(numDocumentsToIndex, writer.MaxDoc);
-				IsTrue("peak bytes without flush exceeded watermark", flushPolicy
-					.peakDocCountWithoutFlush <= iwc.GetMaxBufferedDocs());
+				AssertEquals(" all flushes must be due numThreads=" + numThreads
+					[i], 0, flushControl.FlushBytes);
+				AssertEquals(numDocumentsToIndex, writer.NumDocs);
+				AssertEquals(numDocumentsToIndex, writer.MaxDoc);
+				AssertTrue("peak bytes without flush exceeded watermark", flushPolicy
+					.peakDocCountWithoutFlush <= iwc.MaxBufferedDocs);
 				AssertActiveBytesAfter(flushControl);
 				writer.Dispose();
-				AreEqual(0, flushControl.ActiveBytes());
+				AssertEquals(0, flushControl.ActiveBytes);
 				dir.Dispose();
 			}
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestRandom()
 		{
 			int numThreads = 1 + Random().Next(8);
@@ -185,57 +174,51 @@ namespace Lucene.Net.Test.Index
 				();
 			iwc.SetFlushPolicy(flushPolicy);
 			int numDWPT = 1 + Random().Next(8);
-			DocumentsWriterPerThreadPool threadPool = new DocumentsWriterPerThreadPool(numDWPT
-				);
+			var threadPool = new DocumentsWriterPerThreadPool(numDWPT);
 			iwc.SetIndexerThreadPool(threadPool);
 			IndexWriter writer = new IndexWriter(dir, iwc);
-			flushPolicy = (TestFlushByRamOrCountsPolicy.MockDefaultFlushPolicy)writer.GetConfig
-				().GetFlushPolicy();
-			DocumentsWriter docsWriter = writer.GetDocsWriter();
+			flushPolicy = (TestFlushByRamOrCountsPolicy.MockDefaultFlushPolicy)writer.Config.FlushPolicy;
+			DocumentsWriter docsWriter = writer.DocsWriter;
 			IsNotNull(docsWriter);
 			DocumentsWriterFlushControl flushControl = docsWriter.flushControl;
-			AreEqual(" bytes must be 0 after init", 0, flushControl.FlushBytes
-				());
-			TestFlushByRamOrCountsPolicy.IndexThread[] threads = new TestFlushByRamOrCountsPolicy.IndexThread
-				[numThreads];
+			AssertEquals(" bytes must be 0 after init", 0, flushControl.FlushBytes);
+			var threads = new Thread[numThreads];
 			for (int x = 0; x < threads.Length; x++)
 			{
-				threads[x] = new TestFlushByRamOrCountsPolicy.IndexThread(this, numDocs, numThreads
-					, writer, lineDocFile, true);
+				threads[x] = new Thread(new IndexThread(this, numDocs, numThreads
+					, writer, lineDocFile, true).Run);
 				threads[x].Start();
 			}
 			for (int x_1 = 0; x_1 < threads.Length; x_1++)
 			{
 				threads[x_1].Join();
 			}
-			AreEqual(" all flushes must be due", 0, flushControl.FlushBytes
-				());
-			AreEqual(numDocumentsToIndex, writer.NumDocs);
-			AreEqual(numDocumentsToIndex, writer.MaxDoc);
-			if (flushPolicy.FlushOnRAM() && !flushPolicy.FlushOnDocCount() && !flushPolicy.FlushOnDeleteTerms
-				())
+			AssertEquals(" all flushes must be due", 0, flushControl.FlushBytes);
+			AssertEquals(numDocumentsToIndex, writer.NumDocs);
+			AssertEquals(numDocumentsToIndex, writer.MaxDoc);
+			if (flushPolicy.FlushOnRAM && !flushPolicy.FlushOnDocCount && !flushPolicy.FlushOnDeleteTerms)
 			{
-				long maxRAMBytes = (long)(iwc.GetRAMBufferSizeMB() * 1024. * 1024.);
-				IsTrue("peak bytes without flush exceeded watermark", flushPolicy
+				long maxRAMBytes = (long)(iwc.RAMBufferSizeMB * 1024 * 1024);
+				AssertTrue("peak bytes without flush exceeded watermark", flushPolicy
 					.peakBytesWithoutFlush <= maxRAMBytes);
 				if (flushPolicy.hasMarkedPending)
 				{
-					IsTrue("max: " + maxRAMBytes + " " + flushControl.peakActiveBytes
+					AssertTrue("max: " + maxRAMBytes + " " + flushControl.peakActiveBytes
 						, maxRAMBytes <= flushControl.peakActiveBytes);
 				}
 			}
 			AssertActiveBytesAfter(flushControl);
 			writer.Commit();
-			AreEqual(0, flushControl.ActiveBytes());
+			AssertEquals(0, flushControl.ActiveBytes);
 			IndexReader r = DirectoryReader.Open(dir);
-			AreEqual(numDocumentsToIndex, r.NumDocs);
-			AreEqual(numDocumentsToIndex, r.MaxDoc);
-			if (!flushPolicy.FlushOnRAM())
+			AssertEquals(numDocumentsToIndex, r.NumDocs);
+			AssertEquals(numDocumentsToIndex, r.MaxDoc);
+			if (!flushPolicy.FlushOnRAM)
 			{
-				IsFalse("never stall if we don't flush on RAM", docsWriter
-					.flushControl.stallControl.WasStalled());
-				IsFalse("never block if we don't flush on RAM", docsWriter
-					.flushControl.stallControl.HasBlocked());
+				AssertFalse("never stall if we don't flush on RAM", docsWriter
+					.flushControl.stallControl.WasStalled);
+				AssertFalse("never block if we don't flush on RAM", docsWriter
+					.flushControl.stallControl.HasBlocked);
 			}
 			r.Dispose();
 			writer.Dispose();
@@ -243,10 +226,10 @@ namespace Lucene.Net.Test.Index
 		}
 
 		/// <exception cref="System.Exception"></exception>
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestStallControl()
 		{
-			int[] numThreads = new int[] { 4 + Random().Next(8), 1 };
+			int[] numThreads = { 4 + Random().Next(8), 1 };
 			int numDocumentsToIndex = 50 + Random().Next(50);
 			for (int i = 0; i < numThreads.Length; i++)
 			{
@@ -266,37 +249,35 @@ namespace Lucene.Net.Test.Index
 				// with such a small ram buffer we should be stalled quiet quickly
 				iwc.SetRAMBufferSizeMB(0.25);
 				IndexWriter writer = new IndexWriter(dir, iwc);
-				TestFlushByRamOrCountsPolicy.IndexThread[] threads = new TestFlushByRamOrCountsPolicy.IndexThread
-					[numThreads[i]];
+				var threads = new Thread[numThreads[i]];
 				for (int x = 0; x < threads.Length; x++)
 				{
-					threads[x] = new TestFlushByRamOrCountsPolicy.IndexThread(this, numDocs, numThreads
-						[i], writer, lineDocFile, false);
+				    threads[x] = new Thread(new IndexThread(this, numDocs, numThreads
+				        [i], writer, lineDocFile, false).Run);
 					threads[x].Start();
 				}
 				for (int x_1 = 0; x_1 < threads.Length; x_1++)
 				{
 					threads[x_1].Join();
 				}
-				DocumentsWriter docsWriter = writer.GetDocsWriter();
+				DocumentsWriter docsWriter = writer.DocsWriter;
 				IsNotNull(docsWriter);
 				DocumentsWriterFlushControl flushControl = docsWriter.flushControl;
-				AreEqual(" all flushes must be due", 0, flushControl.FlushBytes
-					());
-				AreEqual(numDocumentsToIndex, writer.NumDocs);
-				AreEqual(numDocumentsToIndex, writer.MaxDoc);
+				AssertEquals(" all flushes must be due", 0, flushControl.FlushBytes);
+				AssertEquals(numDocumentsToIndex, writer.NumDocs);
+				AssertEquals(numDocumentsToIndex, writer.MaxDoc);
 				if (numThreads[i] == 1)
 				{
-					IsFalse("single thread must not block numThreads: " + numThreads
-						[i], docsWriter.flushControl.stallControl.HasBlocked());
+					AssertFalse("single thread must not block numThreads: " + numThreads
+						[i], docsWriter.flushControl.stallControl.HasBlocked);
 				}
-				if (docsWriter.flushControl.peakNetBytes > (2.d * iwc.GetRAMBufferSizeMB() * 1024.d
-					 * 1024.d))
+				if (docsWriter.flushControl.peakNetBytes > (2 * iwc.RAMBufferSizeMB * 1024
+					 * 1024))
 				{
-					IsTrue(docsWriter.flushControl.stallControl.WasStalled());
+					AssertTrue(docsWriter.flushControl.stallControl.WasStalled);
 				}
 				AssertActiveBytesAfter(flushControl);
-				writer.Close(true);
+				writer.Dispose(true);
 				dir.Dispose();
 			}
 		}
@@ -304,21 +285,21 @@ namespace Lucene.Net.Test.Index
 		protected internal virtual void AssertActiveBytesAfter(DocumentsWriterFlushControl
 			 flushControl)
 		{
-			Iterator<DocumentsWriterPerThreadPool.ThreadState> allActiveThreads = flushControl
-				.AllActiveThreadStates();
+			IEnumerator<DocumentsWriterPerThreadPool.ThreadState> allActiveThreads = flushControl
+				.AllActiveThreadStates;
 			long bytesUsed = 0;
-			while (allActiveThreads.HasNext())
+			while (allActiveThreads.MoveNext())
 			{
-				DocumentsWriterPerThreadPool.ThreadState next = allActiveThreads.Next();
+				DocumentsWriterPerThreadPool.ThreadState next = allActiveThreads.Current;
 				if (next.dwpt != null)
 				{
-					bytesUsed += next.dwpt.BytesUsed();
+					bytesUsed += next.dwpt.BytesUsed;
 				}
 			}
-			AreEqual(bytesUsed, flushControl.ActiveBytes());
+			AssertEquals(bytesUsed, flushControl.ActiveBytes);
 		}
 
-		public class IndexThread : Sharpen.Thread
+		public class IndexThread
 		{
 			internal IndexWriter writer;
 
@@ -341,7 +322,7 @@ namespace Lucene.Net.Test.Index
 				this.doRandomCommit = doRandomCommit;
 			}
 
-			public override void Run()
+			public void Run()
 			{
 				try
 				{
@@ -350,7 +331,7 @@ namespace Lucene.Net.Test.Index
 					{
 						Lucene.Net.Documents.Document doc = this.docs.NextDoc();
 						this.writer.AddDocument(doc);
-						long newRamSize = this.writer.RamSizeInBytes();
+						long newRamSize = this.writer.RamSizeInBytes;
 						if (newRamSize != ramSize)
 						{
 							ramSize = newRamSize;
@@ -368,8 +349,9 @@ namespace Lucene.Net.Test.Index
 				catch (Exception ex)
 				{
 					System.Console.Out.WriteLine("FAILED exc:");
-					Sharpen.Runtime.PrintStackTrace(ex, System.Console.Out);
-					throw new RuntimeException(ex);
+                    ex.printStackTrace();
+					
+					throw new SystemException(ex.Message,ex);
 				}
 			}
 
@@ -387,9 +369,9 @@ namespace Lucene.Net.Test.Index
 			public override void OnDelete(DocumentsWriterFlushControl control, DocumentsWriterPerThreadPool.ThreadState
 				 state)
 			{
-				AList<DocumentsWriterPerThreadPool.ThreadState> pending = new AList<DocumentsWriterPerThreadPool.ThreadState
+				List<DocumentsWriterPerThreadPool.ThreadState> pending = new List<DocumentsWriterPerThreadPool.ThreadState
 					>();
-				AList<DocumentsWriterPerThreadPool.ThreadState> notPending = new AList<DocumentsWriterPerThreadPool.ThreadState
+				List<DocumentsWriterPerThreadPool.ThreadState> notPending = new List<DocumentsWriterPerThreadPool.ThreadState
 					>();
 				FindPending(control, pending, notPending);
 				bool flushCurrent = state.flushPending;
@@ -400,8 +382,8 @@ namespace Lucene.Net.Test.Index
 				}
 				else
 				{
-					if (FlushOnDeleteTerms() && state.dwpt.pendingUpdates.numTermDeletes.Get() >= indexWriterConfig
-						.GetMaxBufferedDeleteTerms())
+					if (FlushOnDeleteTerms && state.dwpt.pendingUpdates.numTermDeletes.Get() >= indexWriterConfig
+						.MaxBufferedDeleteTerms)
 					{
 						toFlush = state;
 					}
@@ -415,31 +397,31 @@ namespace Lucene.Net.Test.Index
 				{
 					if (flushCurrent)
 					{
-						IsTrue(pending.Remove(toFlush));
+						AssertTrue(pending.Remove(toFlush));
 					}
 					else
 					{
-						IsTrue(notPending.Remove(toFlush));
+						AssertTrue(notPending.Remove(toFlush));
 					}
-					IsTrue(toFlush.flushPending);
+					AssertTrue(toFlush.flushPending);
 					hasMarkedPending = true;
 				}
 				foreach (DocumentsWriterPerThreadPool.ThreadState threadState in notPending)
 				{
-					IsFalse(threadState.flushPending);
+					AssertFalse(threadState.flushPending);
 				}
 			}
 
 			public override void OnInsert(DocumentsWriterFlushControl control, DocumentsWriterPerThreadPool.ThreadState
 				 state)
 			{
-				AList<DocumentsWriterPerThreadPool.ThreadState> pending = new AList<DocumentsWriterPerThreadPool.ThreadState
+				List<DocumentsWriterPerThreadPool.ThreadState> pending = new List<DocumentsWriterPerThreadPool.ThreadState
 					>();
-				AList<DocumentsWriterPerThreadPool.ThreadState> notPending = new AList<DocumentsWriterPerThreadPool.ThreadState
+				List<DocumentsWriterPerThreadPool.ThreadState> notPending = new List<DocumentsWriterPerThreadPool.ThreadState
 					>();
 				FindPending(control, pending, notPending);
 				bool flushCurrent = state.flushPending;
-				long activeBytes = control.ActiveBytes();
+				long activeBytes = control.ActiveBytes;
 				DocumentsWriterPerThreadPool.ThreadState toFlush;
 				if (state.flushPending)
 				{
@@ -447,18 +429,17 @@ namespace Lucene.Net.Test.Index
 				}
 				else
 				{
-					if (FlushOnDocCount() && state.dwpt.GetNumDocsInRAM() >= indexWriterConfig.GetMaxBufferedDocs
-						())
+					if (FlushOnDocCount && state.dwpt.NumDocsInRAM >= indexWriterConfig.MaxBufferedDocs)
 					{
 						toFlush = state;
 					}
 					else
 					{
-						if (FlushOnRAM() && activeBytes >= (long)(indexWriterConfig.GetRAMBufferSizeMB() 
-							* 1024. * 1024.))
+						if (FlushOnRAM && activeBytes >= (long)(indexWriterConfig.RAMBufferSizeMB 
+							* 1024 * 1024))
 						{
 							toFlush = FindLargestNonPendingWriter(control, state);
-							IsFalse(toFlush.flushPending);
+							AssertFalse(toFlush.flushPending);
 						}
 						else
 						{
@@ -471,44 +452,43 @@ namespace Lucene.Net.Test.Index
 				{
 					if (flushCurrent)
 					{
-						IsTrue(pending.Remove(toFlush));
+						AssertTrue(pending.Remove(toFlush));
 					}
 					else
 					{
-						IsTrue(notPending.Remove(toFlush));
+						AssertTrue(notPending.Remove(toFlush));
 					}
-					IsTrue(toFlush.flushPending);
+					AssertTrue(toFlush.flushPending);
 					hasMarkedPending = true;
 				}
 				else
 				{
 					peakBytesWithoutFlush = Math.Max(activeBytes, peakBytesWithoutFlush);
-					peakDocCountWithoutFlush = Math.Max(state.dwpt.GetNumDocsInRAM(), peakDocCountWithoutFlush
+					peakDocCountWithoutFlush = Math.Max(state.dwpt.NumDocsInRAM, peakDocCountWithoutFlush
 						);
 				}
 				foreach (DocumentsWriterPerThreadPool.ThreadState threadState in notPending)
 				{
-					IsFalse(threadState.flushPending);
+					AssertFalse(threadState.flushPending);
 				}
 			}
 		}
 
-		internal static void FindPending(DocumentsWriterFlushControl flushControl, AList<
-			DocumentsWriterPerThreadPool.ThreadState> pending, AList<DocumentsWriterPerThreadPool.ThreadState
+		internal static void FindPending(DocumentsWriterFlushControl flushControl, List<
+			DocumentsWriterPerThreadPool.ThreadState> pending, List<DocumentsWriterPerThreadPool.ThreadState
 			> notPending)
 		{
-			Iterator<DocumentsWriterPerThreadPool.ThreadState> allActiveThreads = flushControl
-				.AllActiveThreadStates();
-			while (allActiveThreads.HasNext())
+			IEnumerator<DocumentsWriterPerThreadPool.ThreadState> allActiveThreads = flushControl.AllActiveThreadStates;
+			while (allActiveThreads.MoveNext())
 			{
-				DocumentsWriterPerThreadPool.ThreadState next = allActiveThreads.Next();
+				DocumentsWriterPerThreadPool.ThreadState next = allActiveThreads.Current;
 				if (next.flushPending)
 				{
-					pending.AddItem(next);
+					pending.Add(next);
 				}
 				else
 				{
-					notPending.AddItem(next);
+					notPending.Add(next);
 				}
 			}
 		}

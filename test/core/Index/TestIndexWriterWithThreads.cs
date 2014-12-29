@@ -19,7 +19,7 @@ namespace Lucene.Net.Test.Index
 	/// <summary>MultiThreaded IndexWriter tests</summary>
 	public class TestIndexWriterWithThreads : LuceneTestCase
 	{
-		private class IndexerThread : Sharpen.Thread
+		private class IndexerThread : Thread
 		{
 			internal bool diskFull;
 
@@ -78,7 +78,7 @@ namespace Lucene.Net.Test.Index
 							this.diskFull = true;
 							try
 							{
-								Sharpen.Thread.Sleep(1);
+								Thread.Sleep(1);
 							}
 							catch (Exception ie)
 							{
@@ -93,7 +93,7 @@ namespace Lucene.Net.Test.Index
 						{
 							if (this.noErrors)
 							{
-								System.Console.Out.WriteLine(Sharpen.Thread.CurrentThread().GetName() + ": ERROR: unexpected IOException:"
+								System.Console.Out.WriteLine(Thread.CurrentThread().GetName() + ": ERROR: unexpected IOException:"
 									);
 								Sharpen.Runtime.PrintStackTrace(ioe, System.Console.Out);
 								this.error = ioe;
@@ -106,7 +106,7 @@ namespace Lucene.Net.Test.Index
 						//t.printStackTrace(System.out);
 						if (this.noErrors)
 						{
-							System.Console.Out.WriteLine(Sharpen.Thread.CurrentThread().GetName() + ": ERROR: unexpected Throwable:"
+							System.Console.Out.WriteLine(Thread.CurrentThread().GetName() + ": ERROR: unexpected Throwable:"
 								);
 							Sharpen.Runtime.PrintStackTrace(t, System.Console.Out);
 							this.error = t;
@@ -201,7 +201,7 @@ namespace Lucene.Net.Test.Index
 				bool done = false;
 				while (!done)
 				{
-					Sharpen.Thread.Sleep(100);
+					Thread.Sleep(100);
 					for (int i_2 = 0; i_2 < NUM_THREADS; i_2++)
 					{
 						// only stop when at least one thread has added a doc
@@ -279,7 +279,7 @@ namespace Lucene.Net.Test.Index
 				{
 					threads[i_1].Start();
 				}
-				Sharpen.Thread.Sleep(10);
+				Thread.Sleep(10);
 				dir.FailOn(failure);
 				failure.SetDoFail();
 				for (int i_2 = 0; i_2 < NUM_THREADS; i_2++)
@@ -528,7 +528,7 @@ namespace Lucene.Net.Test.Index
 		public virtual void TestOpenTwoIndexWritersOnDifferentThreads()
 		{
 			Directory dir = NewDirectory();
-			CountDownLatch oneIWConstructed = new CountDownLatch(1);
+			CountdownEvent oneIWConstructed = new CountdownEvent(1);
 			TestIndexWriterWithThreads.DelayedIndexAndCloseRunnable thread1 = new TestIndexWriterWithThreads.DelayedIndexAndCloseRunnable
 				(dir, oneIWConstructed);
 			TestIndexWriterWithThreads.DelayedIndexAndCloseRunnable thread2 = new TestIndexWriterWithThreads.DelayedIndexAndCloseRunnable
@@ -564,7 +564,7 @@ namespace Lucene.Net.Test.Index
 			}
 		}
 
-		internal class DelayedIndexAndCloseRunnable : Sharpen.Thread
+		internal class DelayedIndexAndCloseRunnable : Thread
 		{
 			private readonly Directory dir;
 
@@ -572,11 +572,11 @@ namespace Lucene.Net.Test.Index
 
 			internal Exception failure = null;
 
-			private readonly CountDownLatch startIndexing = new CountDownLatch(1);
+			private readonly CountdownEvent startIndexing = new CountdownEvent(1);
 
-			private CountDownLatch iwConstructed;
+			private CountdownEvent iwConstructed;
 
-			public DelayedIndexAndCloseRunnable(Directory dir, CountDownLatch iwConstructed)
+			public DelayedIndexAndCloseRunnable(Directory dir, CountdownEvent iwConstructed)
 			{
 				this.dir = dir;
 				this.iwConstructed = iwConstructed;
@@ -629,7 +629,7 @@ namespace Lucene.Net.Test.Index
 			writerRef.Set(new IndexWriter(d, NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer
 				)));
 			LineFileDocs docs = new LineFileDocs(Random());
-			Sharpen.Thread[] threads = new Sharpen.Thread[threadCount];
+			Thread[] threads = new Thread[threadCount];
 			int iters = AtLeast(100);
 			AtomicBoolean failed = new AtomicBoolean();
 			Lock rollbackLock = new ReentrantLock();
@@ -655,7 +655,7 @@ namespace Lucene.Net.Test.Index
 			d.Dispose();
 		}
 
-		private sealed class _Thread_564 : Sharpen.Thread
+		private sealed class _Thread_564 : Thread
 		{
 			public _Thread_564(int iters, AtomicBoolean failed, Lock rollbackLock, AtomicReference
 				<IndexWriter> writerRef, BaseDirectoryWrapper d, Lock commitLock, LineFileDocs docs
@@ -684,7 +684,7 @@ namespace Lucene.Net.Test.Index
 								rollbackLock.Lock();
 								if (LuceneTestCase.VERBOSE)
 								{
-									System.Console.Out.WriteLine("\nTEST: " + Sharpen.Thread.CurrentThread().GetName(
+									System.Console.Out.WriteLine("\nTEST: " + Thread.CurrentThread().GetName(
 										) + ": now rollback");
 								}
 								try
@@ -692,7 +692,7 @@ namespace Lucene.Net.Test.Index
 									writerRef.Get().Rollback();
 									if (LuceneTestCase.VERBOSE)
 									{
-										System.Console.Out.WriteLine("TEST: " + Sharpen.Thread.CurrentThread().GetName() 
+										System.Console.Out.WriteLine("TEST: " + Thread.CurrentThread().GetName() 
 											+ ": rollback done; now open new writer");
 									}
 									writerRef.Set(new IndexWriter(d, LuceneTestCase.NewIndexWriterConfig(LuceneTestCase
@@ -710,7 +710,7 @@ namespace Lucene.Net.Test.Index
 								commitLock.Lock();
 								if (LuceneTestCase.VERBOSE)
 								{
-									System.Console.Out.WriteLine("\nTEST: " + Sharpen.Thread.CurrentThread().GetName(
+									System.Console.Out.WriteLine("\nTEST: " + Thread.CurrentThread().GetName(
 										) + ": now commit");
 								}
 								try
@@ -738,7 +738,7 @@ namespace Lucene.Net.Test.Index
 							{
 								if (LuceneTestCase.VERBOSE)
 								{
-									System.Console.Out.WriteLine("\nTEST: " + Sharpen.Thread.CurrentThread().GetName(
+									System.Console.Out.WriteLine("\nTEST: " + Thread.CurrentThread().GetName(
 										) + ": now add");
 								}
 								try
@@ -761,7 +761,7 @@ namespace Lucene.Net.Test.Index
 					catch (Exception t)
 					{
 						failed.Set(true);
-						throw new RuntimeException(t);
+						throw new SystemException(t);
 					}
 				}
 			}

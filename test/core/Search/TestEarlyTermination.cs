@@ -48,7 +48,7 @@ namespace Lucene.Net.Search
 		public virtual void TestEarlyTermination()
 		{
 			int iters = AtLeast(5);
-			IndexReader reader = writer.GetReader();
+			IndexReader reader = writer.Reader;
 			for (int i = 0; i < iters; ++i)
 			{
 				IndexSearcher searcher = NewSearcher(reader);

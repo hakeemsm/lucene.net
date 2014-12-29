@@ -83,7 +83,7 @@ namespace Lucene.Net.Test.Index
 			{
 				termAtt.SetEmpty().Append(terms[nextTokenIndex]);
 				offsetAtt.SetOffset(starts[nextTokenIndex], ends[nextTokenIndex]);
-				posIncAtt.SetPositionIncrement(incs[nextTokenIndex]);
+				posIncAtt.PositionIncrement = (incs[nextTokenIndex]);
 				nextTokenIndex++;
 				return true;
 			}

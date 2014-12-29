@@ -228,7 +228,7 @@ namespace Lucene.Net.Search
 		/// <exception cref="System.Exception"></exception>
 		public virtual void TestNextAllTerms()
 		{
-			IList<string> termsList = new AList<string>();
+			IList<string> termsList = new List<string>();
 			Sharpen.Collections.AddAll(termsList, Arrays.AsList(commonTerms));
 			Sharpen.Collections.AddAll(termsList, Arrays.AsList(mediumTerms));
 			Sharpen.Collections.AddAll(termsList, Arrays.AsList(rareTerms));
@@ -246,7 +246,7 @@ namespace Lucene.Net.Search
 		/// <exception cref="System.Exception"></exception>
 		public virtual void TestAdvanceAllTerms()
 		{
-			IList<string> termsList = new AList<string>();
+			IList<string> termsList = new List<string>();
 			Sharpen.Collections.AddAll(termsList, Arrays.AsList(commonTerms));
 			Sharpen.Collections.AddAll(termsList, Arrays.AsList(mediumTerms));
 			Sharpen.Collections.AddAll(termsList, Arrays.AsList(rareTerms));
@@ -267,7 +267,7 @@ namespace Lucene.Net.Search
 		/// <exception cref="System.Exception"></exception>
 		public virtual void TestNextVaryingNumberOfTerms()
 		{
-			IList<string> termsList = new AList<string>();
+			IList<string> termsList = new List<string>();
 			Sharpen.Collections.AddAll(termsList, Arrays.AsList(commonTerms));
 			Sharpen.Collections.AddAll(termsList, Arrays.AsList(mediumTerms));
 			Sharpen.Collections.AddAll(termsList, Arrays.AsList(rareTerms));
@@ -290,7 +290,7 @@ namespace Lucene.Net.Search
 		/// <exception cref="System.Exception"></exception>
 		public virtual void TestAdvanceVaryingNumberOfTerms()
 		{
-			IList<string> termsList = new AList<string>();
+			IList<string> termsList = new List<string>();
 			Sharpen.Collections.AddAll(termsList, Arrays.AsList(commonTerms));
 			Sharpen.Collections.AddAll(termsList, Arrays.AsList(mediumTerms));
 			Sharpen.Collections.AddAll(termsList, Arrays.AsList(rareTerms));
@@ -355,7 +355,7 @@ namespace Lucene.Net.Search
 					long ord = dv.LookupTerm(term.Bytes());
 					if (ord >= 0)
 					{
-						bool success = ords.AddItem(ord);
+						bool success = ords.Add(ord);
 						//HM:revisit 
 						//assert success; // no dups
 						TermContext context = TermContext.Build(((AtomicReaderContext)reader.GetContext()
