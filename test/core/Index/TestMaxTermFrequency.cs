@@ -88,8 +88,8 @@ namespace Lucene.Net.Test.Index
 				max = Math.Max(max, num);
 			}
 			expected.Add(max);
-			Sharpen.Collections.Shuffle(terms, Random());
-			return Arrays.ToString(Sharpen.Collections.ToArray(terms, new string[terms.Count]
+			Collections.Shuffle(terms, Random());
+			return Arrays.ToString(Collections.ToArray(terms, new string[terms.Count]
 				));
 		}
 

@@ -1,23 +1,22 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System.Collections.Generic;
 using System.IO;
-using Lucene.Net.Test.Analysis;
+using Lucene.Net.Analysis;
 using Lucene.Net.Index;
+using Lucene.Net.Randomized.Generators;
 using Lucene.Net.Store;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
-using Sharpen;
+using NUnit.Framework;
+using Directory = Lucene.Net.Store.Directory;
 
 namespace Lucene.Net.Test.Index
 {
+    [TestFixture]
 	public class TestIndexWriterOutOfFileDescriptors : LuceneTestCase
 	{
-		/// <exception cref="System.Exception"></exception>
-		public virtual void Test()
+		[Test]
+        public virtual void TestFileDescriptors()
 		{
 			MockDirectoryWrapper dir = NewMockFSDirectory(CreateTempDir("TestIndexWriterOutOfFileDescriptors"
 				));
@@ -51,7 +50,7 @@ namespace Lucene.Net.Test.Index
 						// we see incrementing messageID:
 						iwc.SetInfoStream(new PrintStreamInfoStream(System.Console.Out));
 					}
-					MergeScheduler ms = iwc.GetMergeScheduler();
+					MergeScheduler ms = iwc.MergeScheduler;
 					if (ms is ConcurrentMergeScheduler)
 					{
 						((ConcurrentMergeScheduler)ms).SetSuppressExceptions();
@@ -108,7 +107,7 @@ namespace Lucene.Net.Test.Index
 							r2 = r3;
 						}
 					}
-					IsTrue("before=" + lastNumDocs + " after=" + r2.NumDocs, 
+					AssertTrue("before=" + lastNumDocs + " after=" + r2.NumDocs, 
 						r2.NumDocs >= lastNumDocs);
 					lastNumDocs = r2.NumDocs;
 					//System.out.println("numDocs=" + lastNumDocs);
@@ -124,7 +123,7 @@ namespace Lucene.Net.Test.Index
 					if (VERBOSE)
 					{
 						System.Console.Out.WriteLine("TEST: iter=" + iter + ": exception");
-						Sharpen.Runtime.PrintStackTrace(ioe);
+						ioe.printStackTrace();
 					}
 					if (w != null)
 					{

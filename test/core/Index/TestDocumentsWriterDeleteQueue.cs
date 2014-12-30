@@ -150,7 +150,7 @@ namespace Lucene.Net.Test.Index
 		}
 
 		/// <exception cref="System.Security.SecurityException"></exception>
-		/// <exception cref="Sharpen.NoSuchFieldException"></exception>
+		/// <exception cref="NoSuchFieldException"></exception>
 		/// <exception cref="System.ArgumentException"></exception>
 		/// <exception cref="System.MemberAccessException"></exception>
 		[Test]

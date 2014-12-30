@@ -39,9 +39,9 @@ namespace Lucene.Net.Test.Index
 				}
 
 				/// <exception cref="System.IO.IOException"></exception>
-				public override TermsEnum Iterator(TermsEnum reuse)
+				public override TermsEnum IEnumerator(TermsEnum reuse)
 				{
-					return new TestFilterAtomicReader.TestReader.TestTermsEnum(base.Iterator(reuse));
+					return new TestFilterAtomicReader.TestReader.TestTermsEnum(base.IEnumerator(reuse));
 				}
 			}
 
@@ -145,7 +145,7 @@ namespace Lucene.Net.Test.Index
 			writer.Dispose();
 			reader.Dispose();
 			reader = DirectoryReader.Open(target);
-			TermsEnum terms = MultiFields.GetTerms(reader, "default").Iterator(null);
+			TermsEnum terms = MultiFields.GetTerms(reader, "default").IEnumerator(null);
 			while (terms.Next() != null)
 			{
 				IsTrue(terms.Term.Utf8ToString().IndexOf('e') != -1);
@@ -163,7 +163,7 @@ namespace Lucene.Net.Test.Index
 			target.Dispose();
 		}
 
-		/// <exception cref="Sharpen.NoSuchMethodException"></exception>
+		/// <exception cref="NoSuchMethodException"></exception>
 		/// <exception cref="System.Security.SecurityException"></exception>
 		private static void CheckOverrideMethods(Type clazz)
 		{

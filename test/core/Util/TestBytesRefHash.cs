@@ -108,7 +108,7 @@ namespace Lucene.Net.Util
 					int key = hash.Add(@ref);
 					if (key >= 0)
 					{
-						IsNull(strings.Put(str, Sharpen.Extensions.ValueOf(key)));
+						IsNull(strings.Put(str, Extensions.ValueOf(key)));
 						AreEqual(uniqueCount, key);
 						uniqueCount++;
 						AreEqual(hash.Size(), count + 1);

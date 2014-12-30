@@ -89,27 +89,27 @@ namespace Lucene.Net.TestFramework.Index
 
 		/// <exception cref="System.Exception"></exception>
 		protected internal virtual void UpdateDocuments<_T0>(Term id, IList<_T0> docs) where 
-			_T0:Iterable<IndexableField>
+			_T0:IEnumerable<IndexableField>
 		{
 			writer.UpdateDocuments(id, docs.AsIterable());
 		}
 
 		/// <exception cref="System.Exception"></exception>
 		protected internal virtual void AddDocuments<_T0>(Term id, IList<_T0> docs) where 
-			_T0:Iterable<IndexableField>
+			_T0:IEnumerable<IndexableField>
 		{
 			writer.AddDocuments(docs.AsIterable());
 		}
 
 		/// <exception cref="System.Exception"></exception>
-		protected internal virtual void AddDocument<_T0>(Term id, Iterable<_T0> doc) where 
+		protected internal virtual void AddDocument<_T0>(Term id, IEnumerable<_T0> doc) where 
 			_T0:IndexableField
 		{
 			writer.AddDocument(doc);
 		}
 
 		/// <exception cref="System.Exception"></exception>
-		protected internal virtual void UpdateDocument<_T0>(Term term, Iterable<_T0> doc)
+		protected internal virtual void UpdateDocument<_T0>(Term term, IEnumerable<_T0> doc)
 			 where _T0:IndexableField
 		{
 			writer.UpdateDocument(term, doc);

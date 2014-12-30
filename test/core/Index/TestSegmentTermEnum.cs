@@ -68,7 +68,7 @@ namespace Lucene.Net.Test.Index
 			AddDoc(writer, "aaa bbb");
 			writer.Dispose();
 			SegmentReader reader = GetOnlySegmentReader(DirectoryReader.Open(dir));
-			TermsEnum terms = reader.Fields().Terms("content").Iterator(null);
+			TermsEnum terms = reader.Fields().Terms("content").IEnumerator(null);
 			IsNotNull(terms.Next());
 			AreEqual("aaa", terms.Term().Utf8ToString());
 			IsNotNull(terms.Next());
@@ -94,7 +94,7 @@ namespace Lucene.Net.Test.Index
 		private void VerifyDocFreq()
 		{
 			IndexReader reader = DirectoryReader.Open(dir);
-			TermsEnum termEnum = MultiFields.GetTerms(reader, "content").Iterator(null);
+			TermsEnum termEnum = MultiFields.GetTerms(reader, "content").IEnumerator(null);
 			// create enumeration of all terms
 			// go to the first term (aaa)
 			termEnum.Next();

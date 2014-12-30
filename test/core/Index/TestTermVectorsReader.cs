@@ -240,7 +240,7 @@ namespace Lucene.Net.Test.Index
 				Terms vector = reader.Get(j).Terms(testFields[0]);
 				IsNotNull(vector);
 				AreEqual(testTerms.Length, vector.Size());
-				TermsEnum termsEnum = vector.Iterator(null);
+				TermsEnum termsEnum = vector.IEnumerator(null);
 				for (int i = 0; i < testTerms.Length; i++)
 				{
 					BytesRef text = termsEnum.Next();
@@ -264,7 +264,7 @@ namespace Lucene.Net.Test.Index
 				Terms vector = reader.Get(j).Terms(testFields[0]);
 				IsNotNull(vector);
 				AreEqual(testTerms.Length, vector.Size());
-				TermsEnum termsEnum = vector.Iterator(null);
+				TermsEnum termsEnum = vector.IEnumerator(null);
 				DocsEnum docsEnum = null;
 				for (int i = 0; i < testTerms.Length; i++)
 				{
@@ -296,7 +296,7 @@ namespace Lucene.Net.Test.Index
 			Terms vector = reader.Get(0).Terms(testFields[0]);
 			IsNotNull(vector);
 			AreEqual(testTerms.Length, vector.Size());
-			TermsEnum termsEnum = vector.Iterator(null);
+			TermsEnum termsEnum = vector.IEnumerator(null);
 			DocsAndPositionsEnum dpEnum = null;
 			for (int i = 0; i < testTerms.Length; i++)
 			{
@@ -335,7 +335,7 @@ namespace Lucene.Net.Test.Index
 			//no pos, no offset
 			IsNotNull(freqVector);
 			AreEqual(testTerms.Length, freqVector.Size());
-			termsEnum = freqVector.Iterator(null);
+			termsEnum = freqVector.IEnumerator(null);
 			IsNotNull(termsEnum);
 			for (int i_1 = 0; i_1 < testTerms.Length; i_1++)
 			{
@@ -358,7 +358,7 @@ namespace Lucene.Net.Test.Index
 				, seg.info, fieldInfos, NewIOContext(Random()));
 			Terms vector = reader.Get(0).Terms(testFields[0]);
 			IsNotNull(vector);
-			TermsEnum termsEnum = vector.Iterator(null);
+			TermsEnum termsEnum = vector.IEnumerator(null);
 			IsNotNull(termsEnum);
 			AreEqual(testTerms.Length, vector.Size());
 			DocsAndPositionsEnum dpEnum = null;

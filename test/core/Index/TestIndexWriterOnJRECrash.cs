@@ -1,20 +1,16 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
-using Com.Carrotsearch.Randomizedtesting;
+using System.Threading;
 using Lucene.Net.Codecs;
 using Lucene.Net.Index;
+using Lucene.Net.Randomized;
 using Lucene.Net.Store;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
-using Sharpen;
 
 namespace Lucene.Net.Test.Index
 {
@@ -26,7 +22,7 @@ namespace Lucene.Net.Test.Index
 	/// Runs TestNRTThreads in a separate process, crashes the JRE in the middle
 	/// of execution, then runs checkindex to make sure its not corrupt.
 	/// </remarks>
-	public class TestIndexWriterOnJRECrash : Lucene.Net.Index.TestNRTThreads
+	public class TestIndexWriterOnJRECrash : Lucene.Net.Test.Index.TestNRTThreads
 	{
 		private DirectoryInfo tempDir;
 
@@ -35,12 +31,11 @@ namespace Lucene.Net.Test.Index
 		{
 			base.SetUp();
 			tempDir = CreateTempDir("jrecrash");
-			tempDir.Delete();
-			tempDir.Mkdir();
+			
 		}
 
 		/// <exception cref="System.Exception"></exception>
-		[LuceneTestCase.Nightly]
+		//[LuceneTestCase.Nightly]
 		public override void TestNRTThreads()
 		{
 			// if we are not the fork
@@ -60,12 +55,11 @@ namespace Lucene.Net.Test.Index
 			else
 			{
 				// TODO: the non-fork code could simply enable impersonation?
-				AssumeFalse("does not support PreFlex, see LUCENE-3992", Codec.GetDefault().GetName
-					().Equals("Lucene3x"));
+				AssumeFalse("does not support PreFlex, see LUCENE-3992", Codec.Default.Name.Equals("Lucene3x"));
 				// we are the fork, setup a crashing thread
 				int crashTime = TestUtil.NextInt(Random(), 3000, 4000);
-				Thread t = new _Thread_69(this, crashTime);
-				t.SetPriority(Thread.MAX_PRIORITY);
+				Thread t = new Thread(new SleepThread(this, crashTime).Run);
+				t.Priority = (ThreadPriority.Highest);
 				t.Start();
 				// run the test until we crash.
 				for (int i = 0; i < 1000; i++)
@@ -75,15 +69,15 @@ namespace Lucene.Net.Test.Index
 			}
 		}
 
-		private sealed class _Thread_69 : Thread
+		private sealed class SleepThread
 		{
-			public _Thread_69(TestIndexWriterOnJRECrash _enclosing, int crashTime)
+			public SleepThread(TestIndexWriterOnJRECrash _enclosing, int crashTime)
 			{
 				this._enclosing = _enclosing;
 				this.crashTime = crashTime;
 			}
 
-			public override void Run()
+			public void Run()
 			{
 				try
 				{
@@ -246,8 +240,8 @@ namespace Lucene.Net.Test.Index
 				{
 					try
 					{
-						Type clazz = Sharpen.Runtime.GetType("sun.misc.Unsafe");
-						FieldInfo field = Sharpen.Runtime.GetDeclaredField(clazz, "theUnsafe");
+						Type clazz = Runtime.GetType("sun.misc.Unsafe");
+						FieldInfo field = Runtime.GetDeclaredField(clazz, "theUnsafe");
 						object o = field.GetValue(null);
 						MethodInfo m = clazz.GetMethod("putAddress", typeof(long), typeof(long));
 						m.Invoke(o, 0L, 0L);
@@ -255,7 +249,7 @@ namespace Lucene.Net.Test.Index
 					catch (Exception e)
 					{
 						System.Console.Out.WriteLine("Couldn't kill the JVM via Unsafe.");
-						Sharpen.Runtime.PrintStackTrace(e, System.Console.Out);
+						e.printStackTrace();
 					}
 				}
 				// Fallback attempt to Runtime.halt();
@@ -264,7 +258,7 @@ namespace Lucene.Net.Test.Index
 			catch (Exception e)
 			{
 				System.Console.Out.WriteLine("Couldn't kill the JVM.");
-				Sharpen.Runtime.PrintStackTrace(e, System.Console.Out);
+				e.printStackTrace();
 			}
 			// We couldn't get the JVM to crash for some reason.
 			Fail();

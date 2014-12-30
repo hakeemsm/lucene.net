@@ -169,7 +169,7 @@ namespace Lucene.Net.Search
 						{
 							// TODO: try to "focus" on high freq terms sometimes too
 							// TODO: maybe also periodically reset the terms...?
-							TermsEnum termsEnum = MultiFields.GetTerms(mockReader, "body").Iterator(null);
+							TermsEnum termsEnum = MultiFields.GetTerms(mockReader, "body").IEnumerator(null);
 							terms = new List<BytesRef>();
 							while (termsEnum.Next() != null)
 							{
@@ -204,7 +204,7 @@ namespace Lucene.Net.Search
 								}
 								else
 								{
-									prefix = Sharpen.Runtime.Substring(t, 0, TestUtil.NextInt(Random(), 1, 2));
+									prefix = Runtime.Substring(t, 0, TestUtil.NextInt(Random(), 1, 2));
 								}
 								query = new PrefixQuery(new Term("body", prefix));
 							}
@@ -269,7 +269,7 @@ namespace Lucene.Net.Search
 							if (VERBOSE)
 							{
 								System.Console.Out.WriteLine("  searcher expired during search: " + see);
-								Sharpen.Runtime.PrintStackTrace(see, System.Console.Out);
+								Runtime.PrintStackTrace(see, System.Console.Out);
 							}
 							// We can't do this in general: on a very slow
 							// computer it's possible the local searcher
@@ -301,7 +301,7 @@ namespace Lucene.Net.Search
 					priorSearches.Add(searchState);
 					if (priorSearches.Count > 200)
 					{
-						Sharpen.Collections.Shuffle(priorSearches, Random());
+						Collections.Shuffle(priorSearches, Random());
 						priorSearches.SubList(100, priorSearches.Count).Clear();
 					}
 				}

@@ -1,25 +1,23 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using System.IO;
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Document;
+using System.Threading;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
+using Lucene.Net.Support;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
-using Sharpen;
+using Directory = Lucene.Net.Store.Directory;
 
 namespace Lucene.Net.Test.Index
 {
 	/// <summary>MultiThreaded IndexWriter tests</summary>
 	public class TestIndexWriterWithThreads : LuceneTestCase
 	{
-		private class IndexerThread : Thread
+		private class IndexerThread 
 		{
 			internal bool diskFull;
 
@@ -42,7 +40,7 @@ namespace Lucene.Net.Test.Index
 				this.noErrors = noErrors;
 			}
 
-			public override void Run()
+			public void Run()
 			{
 				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
@@ -68,7 +66,7 @@ namespace Lucene.Net.Test.Index
 						if (LuceneTestCase.VERBOSE)
 						{
 							System.Console.Out.WriteLine("TEST: expected exc:");
-							Sharpen.Runtime.PrintStackTrace(ioe, System.Console.Out);
+							Runtime.PrintStackTrace(ioe, System.Console.Out);
 						}
 						//System.out.println(Thread.currentThread().getName() + ": hit exc");
 						//ioe.printStackTrace(System.out);
@@ -93,9 +91,9 @@ namespace Lucene.Net.Test.Index
 						{
 							if (this.noErrors)
 							{
-								System.Console.Out.WriteLine(Thread.CurrentThread().GetName() + ": ERROR: unexpected IOException:"
+								System.Console.Out.WriteLine(Thread.CurrentThread.Name + ": ERROR: unexpected IOException:"
 									);
-								Sharpen.Runtime.PrintStackTrace(ioe, System.Console.Out);
+								Runtime.PrintStackTrace(ioe, System.Console.Out);
 								this.error = ioe;
 							}
 							break;
@@ -106,9 +104,9 @@ namespace Lucene.Net.Test.Index
 						//t.printStackTrace(System.out);
 						if (this.noErrors)
 						{
-							System.Console.Out.WriteLine(Thread.CurrentThread().GetName() + ": ERROR: unexpected Throwable:"
+							System.Console.Out.WriteLine(Thread.CurrentThread.Name + ": ERROR: unexpected Throwable:"
 								);
-							Sharpen.Runtime.PrintStackTrace(t, System.Console.Out);
+							t.printStackTrace();
 							this.error = t;
 						}
 						break;
@@ -138,7 +136,7 @@ namespace Lucene.Net.Test.Index
 				IndexWriter writer = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig
 					(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMaxBufferedDocs(2)).SetMergeScheduler
 					(new ConcurrentMergeScheduler()).SetMergePolicy(NewLogMergePolicy(4)));
-				((ConcurrentMergeScheduler)writer.Config.GetMergeScheduler()).SetSuppressExceptions
+				((ConcurrentMergeScheduler)writer.Config.MergeScheduler).SetSuppressExceptions
 					();
 				dir.SetMaxSizeInBytes(4 * 1024 + 20 * iter);
 				TestIndexWriterWithThreads.IndexerThread[] threads = new TestIndexWriterWithThreads.IndexerThread
@@ -186,7 +184,7 @@ namespace Lucene.Net.Test.Index
 				IndexWriter writer = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig
 					(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMaxBufferedDocs(10)).SetMergeScheduler
 					(new ConcurrentMergeScheduler()).SetMergePolicy(NewLogMergePolicy(4)));
-				((ConcurrentMergeScheduler)writer.Config.GetMergeScheduler()).SetSuppressExceptions
+				((ConcurrentMergeScheduler)writer.Config.MergeScheduler).SetSuppressExceptions
 					();
 				TestIndexWriterWithThreads.IndexerThread[] threads = new TestIndexWriterWithThreads.IndexerThread
 					[NUM_THREADS];
@@ -267,7 +265,7 @@ namespace Lucene.Net.Test.Index
 				IndexWriter writer = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig
 					(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMaxBufferedDocs(2)).SetMergeScheduler
 					(new ConcurrentMergeScheduler()).SetMergePolicy(NewLogMergePolicy(4)));
-				((ConcurrentMergeScheduler)writer.Config.GetMergeScheduler()).SetSuppressExceptions
+				((ConcurrentMergeScheduler)writer.Config.MergeScheduler).SetSuppressExceptions
 					();
 				TestIndexWriterWithThreads.IndexerThread[] threads = new TestIndexWriterWithThreads.IndexerThread
 					[NUM_THREADS];
@@ -606,7 +604,7 @@ namespace Lucene.Net.Test.Index
 				{
 					failed = true;
 					failure = e;
-					Sharpen.Runtime.PrintStackTrace(failure, System.Console.Out);
+					Runtime.PrintStackTrace(failure, System.Console.Out);
 					return;
 				}
 			}
@@ -692,7 +690,7 @@ namespace Lucene.Net.Test.Index
 									writerRef.Get().Rollback();
 									if (LuceneTestCase.VERBOSE)
 									{
-										System.Console.Out.WriteLine("TEST: " + Thread.CurrentThread().GetName() 
+										System.Console.Out.WriteLine("TEST: " + Thread.CurrentThread.Name 
 											+ ": rollback done; now open new writer");
 									}
 									writerRef.Set(new IndexWriter(d, LuceneTestCase.NewIndexWriterConfig(LuceneTestCase

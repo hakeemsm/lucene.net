@@ -42,7 +42,7 @@ namespace Lucene.Net.Test.Index
 			w.Close();
 			AtomicReader ar = SlowCompositeReaderWrapper.Wrap(r);
 			DocTermOrds dto = new DocTermOrds(ar, ar.LiveDocs, "field");
-			SortedSetDocValues iter = dto.Iterator(ar);
+			SortedSetDocValues iter = dto.IEnumerator(ar);
 			iter.SetDocument(0);
 			AreEqual(0, iter.NextOrd());
 			AreEqual(1, iter.NextOrd());
@@ -289,7 +289,7 @@ namespace Lucene.Net.Test.Index
 				System.Console.Out.WriteLine("TEST: verify prefix=" + (prefixRef == null ? "null"
 					 : prefixRef.Utf8ToString()));
 				System.Console.Out.WriteLine("TEST: all TERMS:");
-				TermsEnum allTE = MultiFields.GetTerms(r, "field").Iterator(null);
+				TermsEnum allTE = MultiFields.GetTerms(r, "field").IEnumerator(null);
 				int ord = 0;
 				while (allTE.Next() != null)
 				{
@@ -310,7 +310,7 @@ namespace Lucene.Net.Test.Index
 					Terms terms = MultiFields.GetTerms(r, "field");
 					if (terms != null)
 					{
-						TermsEnum termsEnum = terms.Iterator(null);
+						TermsEnum termsEnum = terms.IEnumerator(null);
 						TermsEnum.SeekStatus result = termsEnum.SeekCeil(prefixRef);
 						if (result != TermsEnum.SeekStatus.END)
 						{
@@ -338,7 +338,7 @@ namespace Lucene.Net.Test.Index
 					}
 				}
 			}
-			SortedSetDocValues iter = dto.Iterator(r);
+			SortedSetDocValues iter = dto.IEnumerator(r);
 			for (int docID = 0; docID < r.MaxDoc; docID++)
 			{
 				if (VERBOSE)

@@ -117,7 +117,7 @@ namespace Lucene.Net.Search
 				{
 					if (LuceneTestCase.VERBOSE)
 					{
-						System.Console.Out.WriteLine("[" + Thread.CurrentThread().GetName() + "]: launch reopen thread"
+						System.Console.Out.WriteLine("[" + Thread.CurrentThread.Name + "]: launch reopen thread"
 							);
 					}
 					while (DateTime.Now.CurrentTimeMillis() < stopTime)
@@ -145,7 +145,7 @@ namespace Lucene.Net.Search
 					if (LuceneTestCase.VERBOSE)
 					{
 						System.Console.Out.WriteLine("TEST: reopen thread hit exc");
-						Sharpen.Runtime.PrintStackTrace(t, System.Console.Out);
+						t.printStackTrace();
 					}
 					this._enclosing.failed.Set(true);
 					throw new SystemException(t);
@@ -371,7 +371,7 @@ namespace Lucene.Net.Search
 					if (LuceneTestCase.VERBOSE)
 					{
 						System.Console.Out.WriteLine("FAIL: unexpected exc");
-						Sharpen.Runtime.PrintStackTrace(e, System.Console.Out);
+						e.printStackTrace();
 					}
 					exc[0] = e;
 					success.Set(false);

@@ -131,7 +131,7 @@ namespace Lucene.Net.Search
 				try
 				{
 					IDictionary<string, int> values = new Dictionary<string, int>();
-					IList<string> allIDs = Sharpen.Collections.SynchronizedList(new List<string>());
+					IList<string> allIDs = Collections.SynchronizedList(new List<string>());
 					startingGun.Await();
 					for (int iter = 0; iter < iters; iter++)
 					{

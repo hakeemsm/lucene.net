@@ -211,7 +211,7 @@ namespace Lucene.Net.Test.Index
 			{
 				Terms terms = fields.Terms(field);
 				IsNotNull(terms);
-				TermsEnum tis = terms.Iterator(null);
+				TermsEnum tis = terms.IEnumerator(null);
 				while (tis.Next() != null)
 				{
 					sw.Write("  term=" + field + ":" + tis.Term);

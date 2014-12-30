@@ -399,7 +399,7 @@ namespace Lucene.Net.Search.Spans
 			{
 				AtomicReaderContext ctx = leaves[i];
 				Similarity sim = new _DefaultSimilarity_414();
-				Similarity oldSim = searcher.GetSimilarity();
+				Similarity oldSim = searcher.Similarity;
 				Scorer spanScorer;
 				try
 				{

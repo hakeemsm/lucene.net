@@ -1,23 +1,18 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Document;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
-using Lucene.Net.Util;
-using Sharpen;
+using Lucene.Net.TestFramework;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
+    [TestFixture]
 	public class TestIndexWriterMergePolicy : LuceneTestCase
 	{
 		// Test the normal case
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestNormalCase()
 		{
 			Directory dir = NewDirectory();
@@ -34,7 +29,7 @@ namespace Lucene.Net.Test.Index
 		}
 
 		// Test to see if there is over merge
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestNoOverMerge()
 		{
 			Directory dir = NewDirectory();
@@ -46,25 +41,23 @@ namespace Lucene.Net.Test.Index
 			{
 				AddDoc(writer);
 				CheckInvariants(writer);
-				if (writer.GetNumBufferedDocuments() + writer.SegmentCount >= 18)
+				if (writer.NumBufferedDocuments + writer.SegmentCount >= 18)
 				{
 					noOverMerge = true;
 				}
 			}
-			IsTrue(noOverMerge);
+			AssertTrue(noOverMerge);
 			writer.Dispose();
 			dir.Dispose();
 		}
 
 		// Test the case where flush is forced after every addDoc
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestForceFlush()
 		{
 			Directory dir = NewDirectory();
-			LogDocMergePolicy mp = new LogDocMergePolicy();
-			mp.SetMinMergeDocs(100);
-			mp.MergeFactor = (10);
-			IndexWriter writer = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig
+			LogDocMergePolicy mp = new LogDocMergePolicy {MinMergeDocs = (100), MergeFactor = (10)};
+		    IndexWriter writer = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig
 				(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMaxBufferedDocs(10)).SetMergePolicy
 				(mp));
 			for (int i = 0; i < 100; i++)
@@ -76,7 +69,7 @@ namespace Lucene.Net.Test.Index
 				writer = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig(TEST_VERSION_CURRENT
 					, new MockAnalyzer(Random())).SetOpenMode(IndexWriterConfig.OpenMode.APPEND).SetMaxBufferedDocs
 					(10)).SetMergePolicy(mp));
-				mp.SetMinMergeDocs(100);
+				mp.MinMergeDocs = (100);
 				CheckInvariants(writer);
 			}
 			writer.Dispose();
@@ -84,7 +77,7 @@ namespace Lucene.Net.Test.Index
 		}
 
 		// Test the case where mergeFactor changes
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestMergeFactorChange()
 		{
 			Directory dir = NewDirectory();
@@ -109,7 +102,7 @@ namespace Lucene.Net.Test.Index
 		}
 
 		// Test the case where both mergeFactor and maxBufferedDocs change
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestMaxBufferedDocsChange()
 		{
 			Directory dir = NewDirectory();
@@ -157,7 +150,7 @@ namespace Lucene.Net.Test.Index
 		}
 
 		// Test the case where a merge results in no doc at all
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestMergeDocCount0()
 		{
 			Directory dir = NewDirectory();
@@ -208,13 +201,11 @@ namespace Lucene.Net.Test.Index
 		private void CheckInvariants(IndexWriter writer)
 		{
 			writer.WaitForMerges();
-			int maxBufferedDocs = writer.Config.GetMaxBufferedDocs();
-			int mergeFactor = ((LogMergePolicy)writer.Config.MergePolicy).GetMergeFactor
-				();
-			int maxMergeDocs = ((LogMergePolicy)writer.Config.MergePolicy).GetMaxMergeDocs
-				();
-			int ramSegmentCount = writer.GetNumBufferedDocuments();
-			IsTrue(ramSegmentCount < maxBufferedDocs);
+			int maxBufferedDocs = writer.Config.MaxBufferedDocs;
+			int mergeFactor = ((LogMergePolicy)writer.Config.MergePolicy).MergeFactor;
+			int maxMergeDocs = ((LogMergePolicy)writer.Config.MergePolicy).MaxMergeDocs;
+			int ramSegmentCount = writer.NumBufferedDocuments;
+			AssertTrue(ramSegmentCount < maxBufferedDocs);
 			int lowerBound = -1;
 			int upperBound = maxBufferedDocs;
 			int numSegments = 0;
@@ -222,7 +213,7 @@ namespace Lucene.Net.Test.Index
 			for (int i = segmentCount - 1; i >= 0; i--)
 			{
 				int docCount = writer.GetDocCount(i);
-				IsTrue("docCount=" + docCount + " lowerBound=" + lowerBound
+				AssertTrue("docCount=" + docCount + " lowerBound=" + lowerBound
 					 + " upperBound=" + upperBound + " i=" + i + " segmentCount=" + segmentCount + " index="
 					 + writer.SegString() + " config=" + writer.Config, docCount > lowerBound);
 				if (docCount <= upperBound)
@@ -233,7 +224,7 @@ namespace Lucene.Net.Test.Index
 				{
 					if (upperBound * mergeFactor <= maxMergeDocs)
 					{
-						IsTrue("maxMergeDocs=" + maxMergeDocs + "; numSegments=" +
+						AssertTrue("maxMergeDocs=" + maxMergeDocs + "; numSegments=" +
 							 numSegments + "; upperBound=" + upperBound + "; mergeFactor=" + mergeFactor + "; segs="
 							 + writer.SegString() + " config=" + writer.Config, numSegments < mergeFactor
 							);
@@ -249,12 +240,13 @@ namespace Lucene.Net.Test.Index
 			}
 			if (upperBound * mergeFactor <= maxMergeDocs)
 			{
-				IsTrue(numSegments < mergeFactor);
+				AssertTrue(numSegments < mergeFactor);
 			}
 		}
 
 		private const double EPSILON = 1E-14;
 
+        [Test]
 		public virtual void TestSetters()
 		{
 			AssertSetters(new LogByteSizeMergePolicy());
@@ -266,10 +258,10 @@ namespace Lucene.Net.Test.Index
 			lmp.SetMaxCFSSegmentSizeMB(2.0);
 			AreEqual(2.0, lmp.GetMaxCFSSegmentSizeMB(), EPSILON);
 			lmp.SetMaxCFSSegmentSizeMB(double.PositiveInfinity);
-			AreEqual(long.MaxValue / 1024 / 1024., lmp.GetMaxCFSSegmentSizeMB
+			AreEqual(long.MaxValue / 1024 / 1024, lmp.GetMaxCFSSegmentSizeMB
 				(), EPSILON * long.MaxValue);
-			lmp.SetMaxCFSSegmentSizeMB(long.MaxValue / 1024 / 1024.);
-			AreEqual(long.MaxValue / 1024 / 1024., lmp.GetMaxCFSSegmentSizeMB
+			lmp.SetMaxCFSSegmentSizeMB(long.MaxValue / 1024 / 1024);
+			AreEqual(long.MaxValue / 1024 / 1024, lmp.GetMaxCFSSegmentSizeMB
 				(), EPSILON * long.MaxValue);
 			try
 			{

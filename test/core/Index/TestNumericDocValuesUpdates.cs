@@ -363,13 +363,13 @@ namespace Lucene.Net.Test.Index
 					();
 				doc.Add(new StringField("dvUpdateKey", "dv", Field.Store.NO));
 				doc.Add(new NumericDocValuesField("ndv", i));
-				doc.Add(new BinaryDocValuesField("bdv", new BytesRef(Sharpen.Extensions.ToString(
+				doc.Add(new BinaryDocValuesField("bdv", new BytesRef(Extensions.ToString(
 					i))));
-				doc.Add(new SortedDocValuesField("sdv", new BytesRef(Sharpen.Extensions.ToString(
+				doc.Add(new SortedDocValuesField("sdv", new BytesRef(Extensions.ToString(
 					i))));
-				doc.Add(new SortedSetDocValuesField("ssdv", new BytesRef(Sharpen.Extensions.ToString
+				doc.Add(new SortedSetDocValuesField("ssdv", new BytesRef(Extensions.ToString
 					(i))));
-				doc.Add(new SortedSetDocValuesField("ssdv", new BytesRef(Sharpen.Extensions.ToString
+				doc.Add(new SortedSetDocValuesField("ssdv", new BytesRef(Extensions.ToString
 					(i * 2))));
 				writer.AddDocument(doc);
 			}
@@ -388,10 +388,10 @@ namespace Lucene.Net.Test.Index
 			{
 				AreEqual(17, ndv.Get(i_1));
 				bdv.Get(i_1, scratch);
-				AreEqual(new BytesRef(Sharpen.Extensions.ToString(i_1)), scratch
+				AreEqual(new BytesRef(Extensions.ToString(i_1)), scratch
 					);
 				sdv.Get(i_1, scratch);
-				AreEqual(new BytesRef(Sharpen.Extensions.ToString(i_1)), scratch
+				AreEqual(new BytesRef(Extensions.ToString(i_1)), scratch
 					);
 				ssdv.SetDocument(i_1);
 				long ord = ssdv.NextOrd();
@@ -705,7 +705,7 @@ namespace Lucene.Net.Test.Index
 				for (int i = 0; i < numDocs; i++)
 				{
 					doc.RemoveField("id");
-					doc.Add(new StringField("id", Sharpen.Extensions.ToString(docid++), Field.Store.NO
+					doc.Add(new StringField("id", Extensions.ToString(docid++), Field.Store.NO
 						));
 					writer.AddDocument(doc);
 				}
@@ -714,7 +714,7 @@ namespace Lucene.Net.Test.Index
 				if (random.NextDouble() < 0.2)
 				{
 					// randomly delete some docs
-					writer.DeleteDocuments(new Term("id", Sharpen.Extensions.ToString(random.Next(docid
+					writer.DeleteDocuments(new Term("id", Extensions.ToString(random.Next(docid
 						))));
 				}
 				// randomly commit or reopen-IW (or nothing), before forceMerge
@@ -737,7 +737,7 @@ namespace Lucene.Net.Test.Index
 				// and some MPs might now merge it, thereby invalidating test's
 				// assumption that the reader has no deletes).
 				doc = new Lucene.Net.Documents.Document();
-				doc.Add(new StringField("id", Sharpen.Extensions.ToString(docid++), Field.Store.NO
+				doc.Add(new StringField("id", Extensions.ToString(docid++), Field.Store.NO
 					));
 				doc.Add(new StringField("key", "doc", Field.Store.NO));
 				doc.Add(new NumericDocValuesField("ndv", value));

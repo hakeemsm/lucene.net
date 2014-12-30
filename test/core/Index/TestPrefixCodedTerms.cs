@@ -17,7 +17,7 @@ namespace Lucene.Net.Test.Index
 		{
 			PrefixCodedTerms.Builder b = new PrefixCodedTerms.Builder();
 			PrefixCodedTerms pb = b.Finish();
-			IsFalse(pb.Iterator().HasNext());
+			IsFalse(pb.IEnumerator().HasNext());
 		}
 
 		public virtual void TestOne()
@@ -26,7 +26,7 @@ namespace Lucene.Net.Test.Index
 			PrefixCodedTerms.Builder b = new PrefixCodedTerms.Builder();
 			b.Add(term);
 			PrefixCodedTerms pb = b.Finish();
-			Iterator<Term> iterator = pb.Iterator();
+			IEnumerator<Term> iterator = pb.IEnumerator();
 			IsTrue(iterator.HasNext());
 			AreEqual(term, iterator.Next());
 		}
@@ -47,7 +47,7 @@ namespace Lucene.Net.Test.Index
 				b.Add(@ref);
 			}
 			PrefixCodedTerms pb = b.Finish();
-			Iterator<Term> expected = terms.Iterator();
+			IEnumerator<Term> expected = terms.IEnumerator();
 			foreach (Term t in pb)
 			{
 				IsTrue(expected.HasNext());
@@ -66,7 +66,7 @@ namespace Lucene.Net.Test.Index
 			PrefixCodedTerms.Builder b2 = new PrefixCodedTerms.Builder();
 			b2.Add(t2);
 			PrefixCodedTerms pb2 = b2.Finish();
-			Iterator<Term> merged = new MergedIterator<Term>(pb1.Iterator(), pb2.Iterator());
+			IEnumerator<Term> merged = new MergedIterator<Term>(pb1.IEnumerator(), pb2.IEnumerator());
 			IsTrue(merged.HasNext());
 			AreEqual(t1, merged.Next());
 			IsTrue(merged.HasNext());
@@ -87,7 +87,7 @@ namespace Lucene.Net.Test.Index
 						(Random(), 4));
 					terms.Add(term);
 				}
-				Sharpen.Collections.AddAll(superSet, terms);
+				Collections.AddAll(superSet, terms);
 				PrefixCodedTerms.Builder b = new PrefixCodedTerms.Builder();
 				foreach (Term @ref in terms)
 				{
@@ -95,14 +95,14 @@ namespace Lucene.Net.Test.Index
 				}
 				pb[i] = b.Finish();
 			}
-			IList<Iterator<Term>> subs = new List<Iterator<Term>>();
+			IList<IEnumerator<Term>> subs = new List<IEnumerator<Term>>();
 			for (int i_1 = 0; i_1 < pb.Length; i_1++)
 			{
-				subs.Add(pb[i_1].Iterator());
+				subs.Add(pb[i_1].IEnumerator());
 			}
-			Iterator<Term> expected = superSet.Iterator();
-			Iterator<Term> actual = new MergedIterator<Term>(Sharpen.Collections.ToArray(subs
-				, new Iterator[0]));
+			IEnumerator<Term> expected = superSet.IEnumerator();
+			IEnumerator<Term> actual = new MergedIterator<Term>(Collections.ToArray(subs
+				, new IEnumerator[0]));
 			while (actual.HasNext())
 			{
 				IsTrue(expected.HasNext());

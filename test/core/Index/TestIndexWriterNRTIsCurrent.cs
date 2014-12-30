@@ -1,20 +1,19 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using System.IO;
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Document;
+using System.Threading;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
+using Lucene.Net.Randomized.Generators;
 using Lucene.Net.Store;
+using Lucene.Net.TestFramework;
 using Lucene.Net.Util;
-using Sharpen;
+using NUnit.Framework;
+using Directory = Lucene.Net.Store.Directory;
 
 namespace Lucene.Net.Test.Index
 {
+    [TestFixture]
 	public class TestIndexWriterNRTIsCurrent : LuceneTestCase
 	{
 		public class ReaderHolder
@@ -24,39 +23,39 @@ namespace Lucene.Net.Test.Index
 			internal volatile bool stop = false;
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestIsCurrentWithThreads()
 		{
 			Directory dir = NewDirectory();
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random()));
 			IndexWriter writer = new IndexWriter(dir, conf);
-			TestIndexWriterNRTIsCurrent.ReaderHolder holder = new TestIndexWriterNRTIsCurrent.ReaderHolder
-				();
-			TestIndexWriterNRTIsCurrent.ReaderThread[] threads = new TestIndexWriterNRTIsCurrent.ReaderThread
-				[AtLeast(3)];
+			var holder = new ReaderHolder();
+			var threads = new Thread[AtLeast(3)];
+		    var readerThreads = new ReaderThread[AtLeast(3)];
 			CountdownEvent latch = new CountdownEvent(1);
-			TestIndexWriterNRTIsCurrent.WriterThread writerThread = new TestIndexWriterNRTIsCurrent.WriterThread
-				(holder, writer, AtLeast(500), Random(), latch);
+		    var writerThreadTarget = new WriterThread(holder, writer, AtLeast(500), Random(), latch);
+		    var writerThread = new Thread(writerThreadTarget.Run);
 			for (int i = 0; i < threads.Length; i++)
 			{
-				threads[i] = new TestIndexWriterNRTIsCurrent.ReaderThread(holder, latch);
+			    var readerThread = new ReaderThread(holder, latch);
+			    threads[i] = new Thread(readerThread.Run);
+			    readerThreads[i] = readerThread;
 				threads[i].Start();
 			}
 			writerThread.Start();
 			writerThread.Join();
-			bool failed = writerThread.failed != null;
+			bool failed = writerThreadTarget.failed != null;
 			if (failed)
 			{
-				Sharpen.Runtime.PrintStackTrace(writerThread.failed);
+                writerThreadTarget.failed.printStackTrace();
 			}
-			for (int i_1 = 0; i_1 < threads.Length; i_1++)
+			for (int i = 0; i < threads.Length; i++)
 			{
-				threads[i_1].Join();
-				if (threads[i_1].failed != null)
+				threads[i].Join();
+				if (readerThreads[i].failed != null)
 				{
-					Sharpen.Runtime.PrintStackTrace(threads[i_1].failed);
+                    readerThreads[i].failed.printStackTrace();
 					failed = true;
 				}
 			}
@@ -65,7 +64,7 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		public class WriterThread : Thread
+		public class WriterThread
 		{
 			private readonly TestIndexWriterNRTIsCurrent.ReaderHolder holder;
 
@@ -88,7 +87,7 @@ namespace Lucene.Net.Test.Index
 				this.latch = latch;
 			}
 
-			public override void Run()
+			public void Run()
 			{
 				DirectoryReader currentReader = null;
 				Random random = LuceneTestCase.Random();
@@ -102,7 +101,7 @@ namespace Lucene.Net.Test.Index
 					Term term = new Term("id");
 					for (int i = 0; i < numOps && !holder.stop; i++)
 					{
-						float nextOp = random.NextFloat();
+						var nextOp = random.NextDouble();
 						if (nextOp < 0.3)
 						{
 							term.Set("id", new BytesRef("1"));
@@ -126,7 +125,7 @@ namespace Lucene.Net.Test.Index
 							if (countdown)
 							{
 								countdown = false;
-								latch.CountDown();
+								latch.Signal();
 							}
 						}
 						if (random.NextBoolean())
@@ -154,7 +153,7 @@ namespace Lucene.Net.Test.Index
 					holder.reader = null;
 					if (countdown)
 					{
-						latch.CountDown();
+						latch.Signal();
 					}
 					if (currentReader != null)
 					{
@@ -174,7 +173,7 @@ namespace Lucene.Net.Test.Index
 			}
 		}
 
-		public sealed class ReaderThread : Thread
+		public sealed class ReaderThread
 		{
 			private readonly TestIndexWriterNRTIsCurrent.ReaderHolder holder;
 
@@ -189,11 +188,11 @@ namespace Lucene.Net.Test.Index
 				this.latch = latch;
 			}
 
-			public override void Run()
+			public void Run()
 			{
 				try
 				{
-					latch.Await();
+					latch.Wait();
 				}
 				catch (Exception e)
 				{
@@ -210,7 +209,7 @@ namespace Lucene.Net.Test.Index
 							bool current = reader.IsCurrent;
 							if (VERBOSE)
 							{
-								System.Console.Out.WriteLine("Thread: " + Thread.CurrentThread() + " Reader: "
+								System.Console.Out.WriteLine("Thread: " + Thread.CurrentThread + " Reader: "
 									 + reader + " isCurrent:" + current);
 							}
 							IsFalse(current);
@@ -219,7 +218,7 @@ namespace Lucene.Net.Test.Index
 						{
 							if (VERBOSE)
 							{
-								System.Console.Out.WriteLine("FAILED Thread: " + Thread.CurrentThread() +
+								System.Console.Out.WriteLine("FAILED Thread: " + Thread.CurrentThread +
 									 " Reader: " + reader + " isCurrent: false");
 							}
 							failed = e;
@@ -238,7 +237,7 @@ namespace Lucene.Net.Test.Index
 								{
 									failed = e;
 								}
-								return;
+								
 							}
 						}
 					}

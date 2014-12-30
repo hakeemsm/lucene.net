@@ -462,7 +462,7 @@ namespace Lucene.Net.Search
 		/// <exception cref="System.Exception"></exception>
 		public virtual void TestRewriteCoord1()
 		{
-			Similarity oldSimilarity = s.GetSimilarity();
+			Similarity oldSimilarity = s.Similarity;
 			try
 			{
 				s.SetSimilarity(new _DefaultSimilarity_401());
@@ -496,7 +496,7 @@ namespace Lucene.Net.Search
 		/// <exception cref="System.Exception"></exception>
 		public virtual void TestRewriteNegate()
 		{
-			Similarity oldSimilarity = s.GetSimilarity();
+			Similarity oldSimilarity = s.Similarity;
 			try
 			{
 				s.SetSimilarity(new _DefaultSimilarity_423());

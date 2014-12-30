@@ -295,7 +295,7 @@ namespace Lucene.Net.Test.Index
                             }
                             lock (this)
                             {
-                                Sharpen.Runtime.Wait(this, TestUtil.NextInt(LuceneTestCase.Random(), 1, 100));
+                                Runtime.Wait(this, TestUtil.NextInt(LuceneTestCase.Random(), 1, 100));
                             }
                         }
 					});
@@ -305,7 +305,7 @@ namespace Lucene.Net.Test.Index
 			}
 			lock (this)
 			{
-				Sharpen.Runtime.Wait(this, 1000);
+				Runtime.Wait(this, 1000);
 			}
 			for (int i_2 = 0; i_2 < n; i_2++)
 			{
@@ -457,7 +457,7 @@ namespace Lucene.Net.Test.Index
 					}
 					lock (this)
 					{
-						Sharpen.Runtime.Wait(this, TestUtil.NextInt(LuceneTestCase.Random(), 1, 100));
+						Runtime.Wait(this, TestUtil.NextInt(LuceneTestCase.Random(), 1, 100));
 					}
 				}
 			}
@@ -515,7 +515,7 @@ namespace Lucene.Net.Test.Index
 				}
 				catch (Exception r)
 				{
-					Sharpen.Runtime.PrintStackTrace(r, System.Console.Out);
+					Runtime.PrintStackTrace(r, System.Console.Out);
 					this.error = r;
 				}
 			}

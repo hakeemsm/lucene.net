@@ -1,21 +1,17 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Document;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
-using Lucene.Net.Util;
-using Sharpen;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Util;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
+    [TestFixture]
 	public class TestIndexWriterForceMerge : LuceneTestCase
 	{
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestPartialMerge()
 		{
 			Directory dir = NewDirectory();
@@ -27,7 +23,7 @@ namespace Lucene.Net.Test.Index
 				, 5 * incrMin))
 			{
 				LogDocMergePolicy ldmp = new LogDocMergePolicy();
-				ldmp.SetMinMergeDocs(1);
+				ldmp.MinMergeDocs = (1);
 				ldmp.MergeFactor = (5);
 				IndexWriter writer = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig
 					(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetOpenMode(IndexWriterConfig.OpenMode
@@ -39,7 +35,7 @@ namespace Lucene.Net.Test.Index
 				writer.Dispose();
 				SegmentInfos sis = new SegmentInfos();
 				sis.Read(dir);
-				int segCount = sis.Size();
+				int segCount = sis.Count;
 				ldmp = new LogDocMergePolicy();
 				ldmp.MergeFactor = (5);
 				writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
@@ -48,7 +44,7 @@ namespace Lucene.Net.Test.Index
 				writer.Dispose();
 				sis = new SegmentInfos();
 				sis.Read(dir);
-				int optSegCount = sis.Size();
+				int optSegCount = sis.Count;
 				if (segCount < 3)
 				{
 					AreEqual(segCount, optSegCount);
@@ -61,7 +57,7 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestMaxNumSegments2()
 		{
 			Directory dir = NewDirectory();
@@ -69,7 +65,7 @@ namespace Lucene.Net.Test.Index
 				();
 			doc.Add(NewStringField("content", "aaa", Field.Store.NO));
 			LogDocMergePolicy ldmp = new LogDocMergePolicy();
-			ldmp.SetMinMergeDocs(1);
+			ldmp.MinMergeDocs = (1);
 			ldmp.MergeFactor = (4);
 			IndexWriter writer = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig
 				(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMaxBufferedDocs(2)).SetMergePolicy
@@ -85,20 +81,20 @@ namespace Lucene.Net.Test.Index
 				writer.Commit();
 				SegmentInfos sis = new SegmentInfos();
 				sis.Read(dir);
-				int segCount = sis.Size();
+				int segCount = sis.Count;
 				writer.ForceMerge(7);
 				writer.Commit();
 				writer.WaitForMerges();
 				sis = new SegmentInfos();
 				sis.Read(dir);
-				int optSegCount = sis.Size();
+				int optSegCount = sis.Count;
 				if (segCount < 7)
 				{
 					AreEqual(segCount, optSegCount);
 				}
 				else
 				{
-					AreEqual("seg: " + segCount, 7, optSegCount);
+					AssertEquals("seg: " + segCount, 7, optSegCount);
 				}
 			}
 			writer.Dispose();
@@ -115,7 +111,7 @@ namespace Lucene.Net.Test.Index
 		/// starting index size as its temporary free space
 		/// required.
 		/// </remarks>
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestForceMergeTempSpaceUsage()
 		{
 			MockDirectoryWrapper dir = NewMockDirectory();
@@ -130,7 +126,7 @@ namespace Lucene.Net.Test.Index
 			{
 				TestIndexWriter.AddDocWithIndex(writer, j);
 			}
-			int termIndexInterval = writer.Config.GetTermIndexInterval();
+			int termIndexInterval = writer.Config.TermIndexInterval;
 			// force one extra segment w/ different doc store so
 			// we see the doc stores get merged
 			writer.Commit();
@@ -161,7 +157,7 @@ namespace Lucene.Net.Test.Index
 			writer.ForceMerge(1);
 			writer.Dispose();
 			long maxDiskUsage = dir.GetMaxUsedSizeInBytes();
-			IsTrue("forceMerge used too much temporary space: starting usage was "
+			AssertTrue("forceMerge used too much temporary space: starting usage was "
 				 + startDiskUsage + " bytes; max temp usage was " + maxDiskUsage + " but should have been "
 				 + (4 * startDiskUsage) + " (= 4X starting usage)", maxDiskUsage <= 4 * startDiskUsage
 				);
@@ -171,7 +167,7 @@ namespace Lucene.Net.Test.Index
 		// Test calling forceMerge(1, false) whereby forceMerge is kicked
 		// off but we don't wait for it to finish (but
 		// writer.close()) does wait
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestBackgroundForceMerge()
 		{
 			Directory dir = NewDirectory();
@@ -207,7 +203,7 @@ namespace Lucene.Net.Test.Index
 					reader.Dispose();
 					SegmentInfos infos = new SegmentInfos();
 					infos.Read(dir);
-					AreEqual(2, infos.Size());
+					AreEqual(2, infos.Count);
 				}
 			}
 			dir.Dispose();

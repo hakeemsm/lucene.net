@@ -38,7 +38,7 @@ namespace Lucene.Net.Search
 		/// <exception cref="System.Exception"></exception>
 		public override void TearDown()
 		{
-			searcher.SetSimilarity(IndexSearcher.GetDefaultSimilarity());
+			searcher.SetSimilarity(IndexSearcher.DefaultSimilarity);
 			base.TearDown();
 		}
 

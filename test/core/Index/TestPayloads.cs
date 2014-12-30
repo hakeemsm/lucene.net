@@ -60,7 +60,7 @@ namespace Lucene.Net.Test.Index
 			// enabled in only some documents
 			d.Add(NewTextField("f3", "This field has payloads in some docs", Field.Store.NO));
 			// only add payload data for field f2
-			analyzer.SetPayloadData("f2", Sharpen.Runtime.GetBytesForString("somedata", StandardCharsets
+			analyzer.SetPayloadData("f2", Runtime.GetBytesForString("somedata", StandardCharsets
 				.UTF_8), 0, 1);
 			writer.AddDocument(d);
 			// flush
@@ -86,9 +86,9 @@ namespace Lucene.Net.Test.Index
 			d.Add(NewTextField("f2", "This field has payloads in all docs", Field.Store.NO));
 			d.Add(NewTextField("f3", "This field has payloads in some docs", Field.Store.NO));
 			// add payload data for field f2 and f3
-			analyzer.SetPayloadData("f2", Sharpen.Runtime.GetBytesForString("somedata", StandardCharsets
+			analyzer.SetPayloadData("f2", Runtime.GetBytesForString("somedata", StandardCharsets
 				.UTF_8), 0, 1);
-			analyzer.SetPayloadData("f3", Sharpen.Runtime.GetBytesForString("somedata", StandardCharsets
+			analyzer.SetPayloadData("f3", Runtime.GetBytesForString("somedata", StandardCharsets
 				.UTF_8), 0, 3);
 			writer.AddDocument(d);
 			// force merge
@@ -270,7 +270,7 @@ namespace Lucene.Net.Test.Index
 		{
 			// this test needs the random data to be valid unicode
 			string s = TestUtil.RandomFixedByteLengthUnicodeString(Random(), data.Length);
-			byte[] b = Sharpen.Runtime.GetBytesForString(s, utf8);
+			byte[] b = Runtime.GetBytesForString(s, utf8);
 			//HM:revisit 
 			//assert b.length == data.length;
 			System.Array.Copy(b, 0, data, 0, b.Length);
@@ -469,7 +469,7 @@ namespace Lucene.Net.Test.Index
 			}
 			writer.Dispose();
 			IndexReader reader = DirectoryReader.Open(dir);
-			TermsEnum terms = MultiFields.GetFields(reader).Terms(field).Iterator(null);
+			TermsEnum terms = MultiFields.GetFields(reader).Terms(field).IEnumerator(null);
 			Bits liveDocs = MultiFields.GetLiveDocs(reader);
 			DocsAndPositionsEnum tp = null;
 			while (terms.Next() != null)
@@ -517,7 +517,7 @@ namespace Lucene.Net.Test.Index
 				}
 				catch (Exception e)
 				{
-					Sharpen.Runtime.PrintStackTrace(e);
+					Runtime.PrintStackTrace(e);
 					Fail(e.ToString());
 				}
 			}

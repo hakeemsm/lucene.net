@@ -159,7 +159,7 @@ namespace Lucene.Net.Test.Index
 		{
 			Fields fields = MultiFields.GetFields(reader);
 			Terms cterms = fields.Terms(term.field);
-			TermsEnum ctermsEnum = cterms.Iterator(null);
+			TermsEnum ctermsEnum = cterms.IEnumerator(null);
 			if (ctermsEnum.SeekExact(new BytesRef(term.Text())))
 			{
 				DocsEnum docsEnum = TestUtil.Docs(Random(), ctermsEnum, bits, null, DocsEnum.FLAG_NONE

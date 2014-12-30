@@ -1,13 +1,7 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System.Collections.Generic;
-using Lucene.Net.Index;
+using Lucene.Net.Randomized.Generators;
+using Lucene.Net.TestFramework;
 using Lucene.Net.Util;
-using Sharpen;
 
 namespace Lucene.Net.Test.Index
 {

@@ -6,8 +6,10 @@
 
 using System.Collections.Generic;
 using Lucene.Net.Index;
+using Lucene.Net.Randomized.Generators;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
+using Lucene.Net.TestFramework.Index;
 using Sharpen;
 
 namespace Lucene.Net.Test.Index

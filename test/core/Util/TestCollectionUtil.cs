@@ -31,8 +31,8 @@ namespace Lucene.Net.Test.Util
 				AreEqual(list2, list1);
 				list1 = CreateRandomList(2000);
 				list2 = new List<int>(list1);
-				CollectionUtil.IntroSort(list1, Sharpen.Collections.ReverseOrder());
-				list2.Sort(Sharpen.Collections.ReverseOrder());
+				CollectionUtil.IntroSort(list1, Collections.ReverseOrder());
+				list2.Sort(Collections.ReverseOrder());
 				AreEqual(list2, list1);
 				// reverse back, so we can test that completely backwards sorted array (worst case) is working:
 				CollectionUtil.IntroSort(list1);
@@ -51,8 +51,8 @@ namespace Lucene.Net.Test.Util
 				AreEqual(list2, list1);
 				list1 = CreateRandomList(2000);
 				list2 = new List<int>(list1);
-				CollectionUtil.TimSort(list1, Sharpen.Collections.ReverseOrder());
-				list2.Sort(Sharpen.Collections.ReverseOrder());
+				CollectionUtil.TimSort(list1, Collections.ReverseOrder());
+				list2.Sort(Collections.ReverseOrder());
 				AreEqual(list2, list1);
 				// reverse back, so we can test that completely backwards sorted array (worst case) is working:
 				CollectionUtil.TimSort(list1);
@@ -182,14 +182,14 @@ namespace Lucene.Net.Test.Util
 			// LUCENE-2989
 			CollectionUtil.IntroSort(list);
 			CollectionUtil.TimSort(list);
-			CollectionUtil.IntroSort(list, Sharpen.Collections.ReverseOrder());
-			CollectionUtil.TimSort(list, Sharpen.Collections.ReverseOrder());
+			CollectionUtil.IntroSort(list, Collections.ReverseOrder());
+			CollectionUtil.TimSort(list, Collections.ReverseOrder());
 			// check that empty non-random access lists pass sorting without ex (as sorting is not needed)
 			list = new List<int>();
 			CollectionUtil.IntroSort(list);
 			CollectionUtil.TimSort(list);
-			CollectionUtil.IntroSort(list, Sharpen.Collections.ReverseOrder());
-			CollectionUtil.TimSort(list, Sharpen.Collections.ReverseOrder());
+			CollectionUtil.IntroSort(list, Collections.ReverseOrder());
+			CollectionUtil.TimSort(list, Collections.ReverseOrder());
         }
 
         [Test]
@@ -200,8 +200,8 @@ namespace Lucene.Net.Test.Util
 			list.Add(1);
 			CollectionUtil.IntroSort(list);
 			CollectionUtil.TimSort(list);
-			CollectionUtil.IntroSort(list, Sharpen.Collections.ReverseOrder());
-			CollectionUtil.TimSort(list, Sharpen.Collections.ReverseOrder());
+			CollectionUtil.IntroSort(list, Collections.ReverseOrder());
+			CollectionUtil.TimSort(list, Collections.ReverseOrder());
         }
     }
 }

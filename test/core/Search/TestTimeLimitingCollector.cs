@@ -141,7 +141,7 @@ namespace Lucene.Net.Search
 			}
 			catch (Exception e)
 			{
-				Sharpen.Runtime.PrintStackTrace(e);
+				Runtime.PrintStackTrace(e);
 				IsTrue("Unexpected exception: " + e, false);
 			}
 			//==fail

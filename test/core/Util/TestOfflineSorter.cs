@@ -46,7 +46,7 @@ namespace Lucene.Net.Util
 		/// <exception cref="System.Exception"></exception>
 		public virtual void TestSingleLine()
 		{
-			CheckSort(new OfflineSorter(), new byte[][] { Sharpen.Runtime.GetBytesForString("Single line only."
+			CheckSort(new OfflineSorter(), new byte[][] { Runtime.GetBytesForString("Single line only."
 				, StandardCharsets.UTF_8) });
 		}
 
@@ -90,7 +90,7 @@ namespace Lucene.Net.Util
 				data.Add(current);
 				howMuchData -= current.Length;
 			}
-			byte[][] bytes = Sharpen.Collections.ToArray(data, new byte[data.Count][]);
+			byte[][] bytes = Collections.ToArray(data, new byte[data.Count][]);
 			return bytes;
 		}
 

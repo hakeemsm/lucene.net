@@ -111,7 +111,7 @@ namespace Lucene.Net.Util.Fst
 						>>(terms2.Length);
 					for (int idx_2 = 0; idx_2 < terms2.Length; idx_2++)
 					{
-						BytesRef output = Random().Next(30) == 17 ? NO_OUTPUT : new BytesRef(Sharpen.Extensions.ToString
+						BytesRef output = Random().Next(30) == 17 ? NO_OUTPUT : new BytesRef(Extensions.ToString
 							(idx_2));
 						pairs.Add(new FSTTester.InputOutput<BytesRef>(terms2[idx_2], output));
 					}
@@ -205,7 +205,7 @@ namespace Lucene.Net.Util.Fst
 					>>(terms.Length);
 				for (int idx = 0; idx < terms.Length; idx++)
 				{
-					BytesRef output = Random().Next(30) == 17 ? NO_OUTPUT : new BytesRef(Sharpen.Extensions.ToString
+					BytesRef output = Random().Next(30) == 17 ? NO_OUTPUT : new BytesRef(Extensions.ToString
 						(idx));
 					pairs.Add(new FSTTester.InputOutput<BytesRef>(terms[idx], output));
 				}
@@ -219,7 +219,7 @@ namespace Lucene.Net.Util.Fst
 					>>(terms.Length);
 				for (int idx = 0; idx < terms.Length; idx++)
 				{
-					string s = Sharpen.Extensions.ToString(idx);
+					string s = Extensions.ToString(idx);
 					IntsRef output = new IntsRef(s.Length);
 					output.length = s.Length;
 					for (int idx2 = 0; idx2 < output.length; idx2++)
@@ -272,7 +272,7 @@ namespace Lucene.Net.Util.Fst
 						string term = FSTTester.GetRandomString(random);
 						termsSet.Add(FSTTester.ToIntsRef(term, inputMode));
 					}
-					DoTest(inputMode, Sharpen.Collections.ToArray(termsSet, new IntsRef[termsSet.Count
+					DoTest(inputMode, Collections.ToArray(termsSet, new IntsRef[termsSet.Count
 						]));
 				}
 			}
@@ -330,7 +330,7 @@ namespace Lucene.Net.Util.Fst
 			if (terms != null)
 			{
 				IntsRef scratchIntsRef = new IntsRef();
-				TermsEnum termsEnum = terms.Iterator(null);
+				TermsEnum termsEnum = terms.IEnumerator(null);
 				if (VERBOSE)
 				{
 					System.Console.Out.WriteLine("TEST: got termsEnum=" + termsEnum);
@@ -685,14 +685,14 @@ namespace Lucene.Net.Util.Fst
 			{
 				if (args[idx].Equals("-prune"))
 				{
-					prune = Sharpen.Extensions.ValueOf(args[1 + idx]);
+					prune = Extensions.ValueOf(args[1 + idx]);
 					idx++;
 				}
 				else
 				{
 					if (args[idx].Equals("-limit"))
 					{
-						limit = Sharpen.Extensions.ValueOf(args[1 + idx]);
+						limit = Extensions.ValueOf(args[1 + idx]);
 						idx++;
 					}
 					else
@@ -1078,7 +1078,7 @@ namespace Lucene.Net.Util.Fst
 						);
 				}
 				// Verify w/ MultiTermsEnum
-				TermsEnum termsEnum = MultiFields.GetTerms(r, "id").Iterator(null);
+				TermsEnum termsEnum = MultiFields.GetTerms(r, "id").IEnumerator(null);
 				for (int iter_1 = 0; iter_1 < 2 * NUM_IDS; iter_1++)
 				{
 					string id_1;
@@ -1194,7 +1194,7 @@ namespace Lucene.Net.Util.Fst
 			IndexSearcher s = NewSearcher(r);
 			w.Dispose();
 			IList<string> allTermsList = new List<string>(allTerms);
-			Sharpen.Collections.Shuffle(allTermsList, Random());
+			Collections.Shuffle(allTermsList, Random());
 			// verify exact lookup
 			foreach (string term_1 in allTermsList)
 			{
@@ -1226,7 +1226,7 @@ namespace Lucene.Net.Util.Fst
 			List<string> @out = new List<string>();
 			StringBuilder b = new StringBuilder();
 			s.Generate(@out, b, 'a', 'i', 10);
-			string[] input = Sharpen.Collections.ToArray(@out, new string[@out.Count]);
+			string[] input = Collections.ToArray(@out, new string[@out.Count]);
 			Arrays.Sort(input);
 			FST<object> fst = s.Compile(input);
 			FST.Arc<object> arc = fst.GetFirstArc(new FST.Arc<object>());
@@ -1271,7 +1271,7 @@ namespace Lucene.Net.Util.Fst
 					{
 						b.Append(c);
 						this.Generate(@out, b, from, c == to ? to : from, depth - 1);
-						Sharpen.Runtime.DeleteCharAt(b, b.Length - 1);
+						Runtime.DeleteCharAt(b, b.Length - 1);
 					}
 				}
 			}
@@ -1643,7 +1643,7 @@ namespace Lucene.Net.Util.Fst
 				}
 				for (int j = 1; j < s.Length; j++)
 				{
-					allPrefixes.Add(Sharpen.Runtime.Substring(s, 0, j));
+					allPrefixes.Add(Runtime.Substring(s, 0, j));
 				}
 				int weight = TestUtil.NextInt(random, 1, 100);
 				// weights 1..100
@@ -1689,7 +1689,7 @@ namespace Lucene.Net.Util.Fst
 					{
 						//System.out.println("  consider " + e.getKey());
 						matches.Add(new Util.Result<long>(Lucene.Net.Util.Fst.Util.ToIntsRef(new 
-							BytesRef(Sharpen.Runtime.Substring(e_1.Key, prefix.Length)), new IntsRef()), e_1
+							BytesRef(Runtime.Substring(e_1.Key, prefix.Length)), new IntsRef()), e_1
 							.Value - prefixOutput));
 					}
 				}
@@ -1779,7 +1779,7 @@ namespace Lucene.Net.Util.Fst
 				}
 				for (int j = 1; j < s.Length; j++)
 				{
-					allPrefixes.Add(Sharpen.Runtime.Substring(s, 0, j));
+					allPrefixes.Add(Runtime.Substring(s, 0, j));
 				}
 				int weight = TestUtil.NextInt(random, 1, 100);
 				// weights 1..100
@@ -1832,7 +1832,7 @@ namespace Lucene.Net.Util.Fst
 					{
 						//System.out.println("  consider " + e.getKey());
 						matches.Add(new Util.Result<PairOutputs.Pair<long, long>>(Lucene.Net.Util.Fst.Util
-							.ToIntsRef(new BytesRef(Sharpen.Runtime.Substring(e_1.Key, prefix.Length)), new 
+							.ToIntsRef(new BytesRef(Runtime.Substring(e_1.Key, prefix.Length)), new 
 							IntsRef()), outputs.NewPair(e_1.Value.a - prefixOutput.output1, e_1.Value.b - prefixOutput
 							.output2)));
 					}

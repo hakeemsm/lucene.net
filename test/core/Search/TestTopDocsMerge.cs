@@ -25,7 +25,7 @@ namespace Lucene.Net.Search
 			public ShardSearcher(AtomicReaderContext ctx, IndexReaderContext parent) : base(parent
 				)
 			{
-				this.ctx = Sharpen.Collections.SingletonList(ctx);
+				this.ctx = Collections.SingletonList(ctx);
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>

@@ -538,7 +538,7 @@ namespace Lucene.Net.Search
 					return false;
 				}
 				TestQueryRescorer.FixedScoreQuery other = (TestQueryRescorer.FixedScoreQuery)o;
-				return Sharpen.Runtime.FloatToIntBits(GetBoost()) == Sharpen.Runtime.FloatToIntBits
+				return Runtime.FloatToIntBits(GetBoost()) == Runtime.FloatToIntBits
 					(other.GetBoost()) && reverse == other.reverse && Arrays.Equals(idToNum, other.idToNum
 					);
 			}

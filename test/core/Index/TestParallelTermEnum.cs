@@ -65,7 +65,7 @@ namespace Lucene.Net.Test.Index
 		private void CheckTerms(Terms terms, Bits liveDocs, params string[] termsList)
 		{
 			IsNotNull(terms);
-			TermsEnum te = terms.Iterator(null);
+			TermsEnum te = terms.IEnumerator(null);
 			foreach (string t in termsList)
 			{
 				BytesRef b = te.Next();
@@ -85,7 +85,7 @@ namespace Lucene.Net.Test.Index
 			ParallelAtomicReader pr = new ParallelAtomicReader(ir1, ir2);
 			Bits liveDocs = pr.LiveDocs;
 			Fields fields = pr.Fields();
-			Iterator<string> fe = fields.Iterator();
+			IEnumerator<string> fe = fields.IEnumerator();
 			string f = fe.Next();
 			AreEqual("field1", f);
 			CheckTerms(fields.Terms(f), liveDocs, "brown", "fox", "jumps", "quick", "the");

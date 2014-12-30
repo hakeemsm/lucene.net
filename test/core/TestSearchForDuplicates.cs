@@ -99,7 +99,7 @@ namespace Lucene.Net
 			{
 				Document d = new Document();
 				d.Add(NewTextField(PRIORITY_FIELD, HIGH_PRIORITY, Field.Store.YES));
-				d.Add(NewTextField(ID_FIELD, Sharpen.Extensions.ToString(j), Field.Store.YES));
+				d.Add(NewTextField(ID_FIELD, Extensions.ToString(j), Field.Store.YES));
 				writer.AddDocument(d);
 			}
 			writer.Dispose();

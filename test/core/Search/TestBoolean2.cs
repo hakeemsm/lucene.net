@@ -255,7 +255,7 @@ namespace Lucene.Net.Search
 			query.Add(new TermQuery(new Term(field, "w2")), BooleanClause.Occur.MUST);
 			query.Add(new TermQuery(new Term(field, "zz")), BooleanClause.Occur.SHOULD);
 			int[] expDocNrs = new int[] { 2, 3 };
-			Similarity oldSimilarity = searcher.GetSimilarity();
+			Similarity oldSimilarity = searcher.Similarity;
 			try
 			{
 				searcher.SetSimilarity(new _DefaultSimilarity_245());
@@ -303,7 +303,7 @@ namespace Lucene.Net.Search
 					try
 					{
 						// a little hackish, QueryUtils.check is too costly to do on bigSearcher in this loop.
-						searcher.SetSimilarity(bigSearcher.GetSimilarity());
+						searcher.SetSimilarity(bigSearcher.Similarity);
 						// random sim
 						QueryUtils.Check(Random(), q1, searcher);
 					}

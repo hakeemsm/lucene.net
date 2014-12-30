@@ -55,7 +55,7 @@ namespace Lucene.Net.Test.Index
 				catch (Exception e)
 				{
 					System.Console.Out.WriteLine(Thread.CurrentThread() + ": exc");
-					Sharpen.Runtime.PrintStackTrace(e, System.Console.Out);
+					e.printStackTrace();
 					failed = true;
 				}
 			}
@@ -94,7 +94,7 @@ namespace Lucene.Net.Test.Index
 				{
 					Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 					int n = LuceneTestCase.Random().Next();
-					d.Add(LuceneTestCase.NewStringField("id", Sharpen.Extensions.ToString(this.nextID
+					d.Add(LuceneTestCase.NewStringField("id", Extensions.ToString(this.nextID
 						++), Field.Store.YES));
 					d.Add(LuceneTestCase.NewTextField("contents", English.IntToEnglish(n), Field.Store
 						.NO));

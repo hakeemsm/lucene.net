@@ -77,7 +77,7 @@ namespace Lucene.Net.Util
                     originalString2[byteNum] = (char) randomInt;
                 }
                 // put in strings to compare ordinals
-				int originalComparison = Sharpen.Runtime.CompareOrdinal(new string(originalString1
+				int originalComparison = Runtime.CompareOrdinal(new string(originalString1
 					, 0, numBytes1), new string(originalString2, 0, numBytes2));
 				originalComparison = originalComparison < 0 ? -1 : originalComparison > 0 ? 1 : 0;
 				int encodedLen1 = IndexableBinaryStringTools.GetEncodedLength(originalArray1, 0, 
@@ -98,7 +98,7 @@ namespace Lucene.Net.Util
 				}
 				IndexableBinaryStringTools.Encode(original2, 0, numBytes2, encoded2, 0, encodedLen2
 					);
-				int encodedComparison = Sharpen.Runtime.CompareOrdinal(new string(encoded1, 0, encodedLen1
+				int encodedComparison = Runtime.CompareOrdinal(new string(encoded1, 0, encodedLen1
 					), new string(encoded2, 0, encodedLen2));
 				encodedComparison = encodedComparison < 0 ? -1 : encodedComparison > 0 ? 1 : 0;
                 

@@ -79,7 +79,7 @@ namespace Lucene.Net.Test.Index
 					continue;
 				}
 				long computedSumDocFreq = 0;
-				TermsEnum termsEnum = terms.Iterator(null);
+				TermsEnum termsEnum = terms.IEnumerator(null);
 				while (termsEnum.Next() != null)
 				{
 					computedSumDocFreq += termsEnum.DocFreq;

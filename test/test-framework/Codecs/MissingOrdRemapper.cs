@@ -16,9 +16,9 @@ namespace Lucene.Net.Codecs.TestFramework
 			return new _Iterable_32(iterable);
 		}
 
-		private sealed class _Iterable_32 : Iterable<BytesRef>
+		private sealed class _Iterable_32 : IEnumerable<BytesRef>
 		{
-			public _Iterable_32(Iterable<BytesRef> iterable)
+			public _Iterable_32(IEnumerable<BytesRef> iterable)
 			{
 				this.iterable = iterable;
 			}
@@ -30,7 +30,7 @@ namespace Lucene.Net.Codecs.TestFramework
 
 			private sealed class _Iterator_35 : Iterator<BytesRef>
 			{
-				public _Iterator_35(Iterable<BytesRef> iterable)
+				public _Iterator_35(IEnumerable<BytesRef> iterable)
 				{
 					this.iterable = iterable;
 					this.seenEmpty = false;
@@ -64,10 +64,10 @@ namespace Lucene.Net.Codecs.TestFramework
 					throw new NotSupportedException();
 				}
 
-				private readonly Iterable<BytesRef> iterable;
+				private readonly IEnumerable<BytesRef> iterable;
 			}
 
-			private readonly Iterable<BytesRef> iterable;
+			private readonly IEnumerable<BytesRef> iterable;
 		}
 
 		/// <summary>remaps ord -1 to ord 0 on this iterable.</summary>
@@ -77,9 +77,9 @@ namespace Lucene.Net.Codecs.TestFramework
 			return new _Iterable_65(iterable);
 		}
 
-		private sealed class _Iterable_65 : Iterable<Number>
+		private sealed class _Iterable_65 : IEnumerable<Number>
 		{
-			public _Iterable_65(Iterable<Number> iterable)
+			public _Iterable_65(IEnumerable<Number> iterable)
 			{
 				this.iterable = iterable;
 			}
@@ -91,7 +91,7 @@ namespace Lucene.Net.Codecs.TestFramework
 
 			private sealed class _Iterator_68 : Iterator<Number>
 			{
-				public _Iterator_68(Iterable<Number> iterable)
+				public _Iterator_68(IEnumerable<Number> iterable)
 				{
 					this.iterable = iterable;
 					this.@in = iterable.Iterator();
@@ -122,10 +122,10 @@ namespace Lucene.Net.Codecs.TestFramework
 					throw new NotSupportedException();
 				}
 
-				private readonly Iterable<Number> iterable;
+				private readonly IEnumerable<Number> iterable;
 			}
 
-			private readonly Iterable<Number> iterable;
+			private readonly IEnumerable<Number> iterable;
 		}
 
 		/// <summary>remaps every ord+1 on this iterable</summary>
@@ -134,9 +134,9 @@ namespace Lucene.Net.Codecs.TestFramework
 			return new _Iterable_97(iterable);
 		}
 
-		private sealed class _Iterable_97 : Iterable<Number>
+		private sealed class _Iterable_97 : IEnumerable<Number>
 		{
-			public _Iterable_97(Iterable<Number> iterable)
+			public _Iterable_97(IEnumerable<Number> iterable)
 			{
 				this.iterable = iterable;
 			}
@@ -148,7 +148,7 @@ namespace Lucene.Net.Codecs.TestFramework
 
 			private sealed class _Iterator_100 : Iterator<Number>
 			{
-				public _Iterator_100(Iterable<Number> iterable)
+				public _Iterator_100(IEnumerable<Number> iterable)
 				{
 					this.iterable = iterable;
 					this.@in = iterable.Iterator();
@@ -172,10 +172,10 @@ namespace Lucene.Net.Codecs.TestFramework
 					throw new NotSupportedException();
 				}
 
-				private readonly Iterable<Number> iterable;
+				private readonly IEnumerable<Number> iterable;
 			}
 
-			private readonly Iterable<Number> iterable;
+			private readonly IEnumerable<Number> iterable;
 		}
 	}
 }

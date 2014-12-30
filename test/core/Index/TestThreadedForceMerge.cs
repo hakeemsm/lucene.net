@@ -134,9 +134,9 @@ namespace Lucene.Net.Test.Index
 				catch (Exception t)
 				{
 					this._enclosing.SetFailed();
-					System.Console.Out.WriteLine(Thread.CurrentThread().GetName() + ": hit exception"
+					System.Console.Out.WriteLine(Thread.CurrentThread.Name + ": hit exception"
 						);
-					Sharpen.Runtime.PrintStackTrace(t, System.Console.Out);
+					t.printStackTrace();
 				}
 			}
 

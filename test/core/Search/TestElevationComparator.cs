@@ -91,7 +91,7 @@ namespace Lucene.Net.Search
 			for (int i = 0; i < vals.Length - 1; i += 2)
 			{
 				q.Add(new TermQuery(new Term(vals[i], vals[i + 1])), BooleanClause.Occur.SHOULD);
-				priority.Put(new BytesRef(vals[i + 1]), Sharpen.Extensions.ValueOf(max--));
+				priority.Put(new BytesRef(vals[i + 1]), Extensions.ValueOf(max--));
 			}
 			// System.out.println(" pri doc=" + vals[i+1] + " pri=" + (1+max));
 			return q;
@@ -196,7 +196,7 @@ namespace Lucene.Net.Search
 
 			public override int Value(int slot)
 			{
-				return Sharpen.Extensions.ValueOf(this.values[slot]);
+				return Extensions.ValueOf(this.values[slot]);
 			}
 
 			public override int CompareTop(int doc)

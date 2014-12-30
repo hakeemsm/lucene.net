@@ -73,7 +73,7 @@ namespace Lucene.Net.Search
 			int numDeletions = Random().Next(num / 10);
 			for (int i_1 = 0; i_1 < numDeletions; i_1++)
 			{
-				writer.DeleteDocuments(new Term("id", Sharpen.Extensions.ToString(Random().Next(num
+				writer.DeleteDocuments(new Term("id", Extensions.ToString(Random().Next(num
 					))));
 			}
 			reader = writer.Reader;

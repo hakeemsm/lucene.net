@@ -162,7 +162,7 @@ namespace Lucene.Net.Util.Packed
 				}
 				catch (Exception e)
 				{
-					Sharpen.Runtime.PrintStackTrace(e, System.Console.Error);
+					Runtime.PrintStackTrace(e, System.Console.Error);
 					Fail(string.Format(CultureInfo.ROOT, "Exception while filling %s: valueCount=%d, bitsPerValue=%s"
 						, packedInt.GetType().Name, valueCount, bitsPerValue));
 				}
@@ -874,7 +874,7 @@ namespace Lucene.Net.Util.Packed
 					{
 						AreEqual(arr[i_2], buf.Get(i_2));
 					}
-					AbstractAppendingLongBuffer.Iterator it = buf.Iterator();
+					AbstractAppendingLongBuffer.IEnumerator it = buf.IEnumerator();
 					for (int i_3 = 0; i_3 < arr.Length; ++i_3)
 					{
 						if (Random().NextBoolean())

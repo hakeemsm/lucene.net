@@ -72,7 +72,7 @@ namespace Lucene.Net.Search
 					}
 					else
 					{
-						doc.Add(NewStringField("id", Sharpen.Extensions.ToString(numDocs), Field.Store.NO
+						doc.Add(NewStringField("id", Extensions.ToString(numDocs), Field.Store.NO
 							));
 					}
 					doc.Add(NewStringField("string", s, Field.Store.NO));
@@ -92,7 +92,7 @@ namespace Lucene.Net.Search
 					}
 					else
 					{
-						doc.Add(NewStringField("id", Sharpen.Extensions.ToString(numDocs), Field.Store.NO
+						doc.Add(NewStringField("id", Extensions.ToString(numDocs), Field.Store.NO
 							));
 					}
 				}
@@ -187,7 +187,7 @@ namespace Lucene.Net.Search
 				f.matchValues.Sort(new _IComparer_184(sortMissingLast));
 				if (reverse)
 				{
-					Sharpen.Collections.Reverse(f.matchValues);
+					Collections.Reverse(f.matchValues);
 				}
 				IList<BytesRef> expected = f.matchValues;
 				if (VERBOSE)
@@ -301,7 +301,7 @@ namespace Lucene.Net.Search
 
 			private readonly IList<BytesRef> docValues;
 
-			public readonly IList<BytesRef> matchValues = Sharpen.Collections.SynchronizedList
+			public readonly IList<BytesRef> matchValues = Collections.SynchronizedList
 				(new List<BytesRef>());
 
 			public RandomFilter(Random random, float density, IList<BytesRef> docValues)

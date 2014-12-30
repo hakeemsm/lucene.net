@@ -95,7 +95,7 @@ namespace Lucene.Net.Test.Index
 			writer.Dispose();
 			conf = NewWriterConfig();
 			LogMergePolicy lmp = new LogDocMergePolicy();
-			lmp.SetMaxMergeDocs(3);
+			lmp.MaxMergeDocs = (3);
 			conf.SetMergePolicy(lmp);
 			writer = new IndexWriter(dir, conf);
 			writer.ForceMerge(1);
@@ -119,7 +119,7 @@ namespace Lucene.Net.Test.Index
 			writer.Dispose();
 			conf = NewWriterConfig();
 			LogMergePolicy lmp = new LogDocMergePolicy();
-			lmp.SetMaxMergeDocs(3);
+			lmp.MaxMergeDocs = (3);
 			conf.SetMergePolicy(lmp);
 			writer = new IndexWriter(dir, conf);
 			writer.ForceMerge(1);
@@ -142,7 +142,7 @@ namespace Lucene.Net.Test.Index
 			writer.Dispose();
 			conf = NewWriterConfig();
 			LogMergePolicy lmp = new LogDocMergePolicy();
-			lmp.SetMaxMergeDocs(3);
+			lmp.MaxMergeDocs = (3);
 			conf.SetMergePolicy(lmp);
 			writer = new IndexWriter(dir, conf);
 			writer.ForceMerge(1);
@@ -165,7 +165,7 @@ namespace Lucene.Net.Test.Index
 			writer.Dispose();
 			conf = NewWriterConfig();
 			LogMergePolicy lmp = new LogDocMergePolicy();
-			lmp.SetMaxMergeDocs(3);
+			lmp.MaxMergeDocs = (3);
 			conf.SetMergePolicy(lmp);
 			writer = new IndexWriter(dir, conf);
 			writer.ForceMerge(1);
@@ -187,7 +187,7 @@ namespace Lucene.Net.Test.Index
 			writer.Dispose();
 			conf = NewWriterConfig();
 			LogMergePolicy lmp = new LogDocMergePolicy();
-			lmp.SetMaxMergeDocs(2);
+			lmp.MaxMergeDocs = (2);
 			conf.SetMergePolicy(lmp);
 			writer = new IndexWriter(dir, conf);
 			writer.ForceMerge(1);
@@ -210,7 +210,7 @@ namespace Lucene.Net.Test.Index
 			writer.Dispose();
 			conf = NewWriterConfig();
 			LogMergePolicy lmp = new LogDocMergePolicy();
-			lmp.SetMaxMergeDocs(3);
+			lmp.MaxMergeDocs = (3);
 			conf.SetMergePolicy(lmp);
 			writer = new IndexWriter(dir, conf);
 			writer.ForceMerge(1);
@@ -236,7 +236,7 @@ namespace Lucene.Net.Test.Index
 			writer.Dispose();
 			conf = NewWriterConfig();
 			LogMergePolicy lmp = new LogDocMergePolicy();
-			lmp.SetMaxMergeDocs(3);
+			lmp.MaxMergeDocs = (3);
 			lmp.MergeFactor = (2);
 			conf.SetMergePolicy(lmp);
 			writer = new IndexWriter(dir, conf);
@@ -263,7 +263,7 @@ namespace Lucene.Net.Test.Index
 			writer.Dispose();
 			conf = NewWriterConfig();
 			LogMergePolicy lmp = new LogDocMergePolicy();
-			lmp.SetMaxMergeDocs(3);
+			lmp.MaxMergeDocs = (3);
 			conf.SetMergePolicy(lmp);
 			writer = new IndexWriter(dir, conf);
 			writer.ForceMerge(1);
@@ -285,7 +285,7 @@ namespace Lucene.Net.Test.Index
 			writer.Dispose();
 			conf = NewWriterConfig();
 			LogMergePolicy lmp = new LogDocMergePolicy();
-			lmp.SetMaxMergeDocs(3);
+			lmp.MaxMergeDocs = (3);
 			conf.SetMergePolicy(lmp);
 			writer = new IndexWriter(dir, conf);
 			writer.ForceMerge(1);
@@ -308,7 +308,7 @@ namespace Lucene.Net.Test.Index
 			writer.Dispose();
 			conf = NewWriterConfig();
 			LogMergePolicy lmp = new LogDocMergePolicy();
-			lmp.SetMaxMergeDocs(2);
+			lmp.MaxMergeDocs = (2);
 			conf.SetMergePolicy(lmp);
 			writer = new IndexWriter(dir, conf);
 			writer.ForceMerge(1);

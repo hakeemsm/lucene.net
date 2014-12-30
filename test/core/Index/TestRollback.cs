@@ -37,7 +37,7 @@ namespace Lucene.Net.Test.Index
 			{
 				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
-				string value = Sharpen.Extensions.ToString(i_1);
+				string value = Extensions.ToString(i_1);
 				doc.Add(NewStringField("pk", value, Field.Store.YES));
 				doc.Add(NewStringField("text", "foo", Field.Store.YES));
 				w.UpdateDocument(new Term("pk", value), doc);

@@ -85,7 +85,7 @@ namespace Lucene.Net.Test.Util
         internal virtual void DoIterate1(BitArray a, FixedBitSet b)
         {
             int aa = -1, bb = -1;
-            var iterator = b.Iterator();
+            var iterator = b.IEnumerator();
             do
             {
                 aa = a.NextSetBit(aa + 1);
@@ -97,7 +97,7 @@ namespace Lucene.Net.Test.Util
         internal virtual void DoIterate2(BitArray a, FixedBitSet b)
         {
             int aa = -1, bb = -1;
-            var iterator = b.Iterator();
+            var iterator = b.IEnumerator();
             do
             {
                 aa = a.NextSetBit(aa + 1);

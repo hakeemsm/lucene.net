@@ -121,7 +121,7 @@ namespace Lucene.Net.Test.Index
 			Terms vector = mergedReader.GetTermVectors(0).Terms(DocHelper.TEXT_FIELD_2_KEY);
 			IsNotNull(vector);
 			AreEqual(3, vector.Size());
-			TermsEnum termsEnum = vector.Iterator(null);
+			TermsEnum termsEnum = vector.IEnumerator(null);
 			int i = 0;
 			while (termsEnum.Next() != null)
 			{

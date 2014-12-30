@@ -1,20 +1,18 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using System.Collections.Generic;
-using NUnit.Framework;
-using Lucene.Net.Test.Analysis;
+using System.Threading;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
+using Lucene.Net.Randomized.Generators;
+using Lucene.Net.Support;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Index;
+using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Codecs;
-using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
 using Lucene.Net.Util;
-using Sharpen;
 
 namespace Lucene.Net.Test.Index
 {
@@ -115,7 +113,7 @@ namespace Lucene.Net.Test.Index
 			Directory dir1 = NewDirectory();
 			IndexWriterConfig iwc = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random()));
-			if (iwc.GetMaxBufferedDocs() < 20)
+			if (iwc.MaxBufferedDocs < 20)
 			{
 				iwc.SetMaxBufferedDocs(20);
 			}
@@ -142,7 +140,7 @@ namespace Lucene.Net.Test.Index
 			string id10 = r1.Document(10).GetField("id").StringValue;
 			Lucene.Net.Documents.Document newDoc = r1.Document(10);
 			newDoc.RemoveField("id");
-			newDoc.Add(NewStringField("id", Sharpen.Extensions.ToString(8000), Field.Store.YES
+			newDoc.Add(NewStringField("id", Extensions.ToString(8000), Field.Store.YES
 				));
 			writer.UpdateDocument(new Term("id", id10), newDoc);
 			IsFalse(r1.IsCurrent);
@@ -153,7 +151,7 @@ namespace Lucene.Net.Test.Index
 			{
 				System.Console.Out.WriteLine("TEST: verify id");
 			}
-			AreEqual(1, Count(new Term("id", Sharpen.Extensions.ToString
+			AreEqual(1, Count(new Term("id", Extensions.ToString
 				(8000)), r2));
 			r1.Dispose();
 			IsTrue(r2.IsCurrent);
@@ -163,7 +161,7 @@ namespace Lucene.Net.Test.Index
 			IsTrue(r3.IsCurrent);
 			IsTrue(r2.IsCurrent);
 			AreEqual(0, Count(new Term("id", id10), r3));
-			AreEqual(1, Count(new Term("id", Sharpen.Extensions.ToString
+			AreEqual(1, Count(new Term("id", Extensions.ToString
 				(8000)), r3));
 			writer = new IndexWriter(dir1, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random())));
@@ -232,7 +230,7 @@ namespace Lucene.Net.Test.Index
 			Directory dir1 = GetAssertNoDeletesDirectory(NewDirectory());
 			IndexWriterConfig iwc = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random()));
-			if (iwc.GetMaxBufferedDocs() < 20)
+			if (iwc.MaxBufferedDocs < 20)
 			{
 				iwc.SetMaxBufferedDocs(20);
 			}
@@ -366,8 +364,7 @@ namespace Lucene.Net.Test.Index
 			addDirThreads.JoinThreads();
 			//assertEquals(100 + numDirs * (3 * numIter / 4) * addDirThreads.numThreads
 			//    * addDirThreads.NUM_INIT_DOCS, addDirThreads.mainWriter.numDocs());
-			AreEqual(addDirThreads.count, addDirThreads.mainWriter.NumDocs
-				());
+			AreEqual(addDirThreads.count, addDirThreads.mainWriter.NumDocs);
 			addDirThreads.Close(true);
 			IsTrue(addDirThreads.failures.Count == 0);
 			TestUtil.CheckIndex(mainDir);
@@ -467,7 +464,7 @@ namespace Lucene.Net.Test.Index
 
 			internal virtual void Handle(Exception t)
 			{
-				Sharpen.Runtime.PrintStackTrace(t, System.Console.Out);
+				t.printStackTrace();
 				lock (this.failures)
 				{
 					this.failures.Add(t);
@@ -694,7 +691,7 @@ namespace Lucene.Net.Test.Index
 			{
 				writer.AddDocument(DocHelper.CreateDocument(i, "test", 4));
 			}
-			((ConcurrentMergeScheduler)writer.Config.GetMergeScheduler()).Sync();
+			((ConcurrentMergeScheduler)writer.Config.MergeScheduler).Sync();
 			IsTrue(warmer.warmCount > 0);
 			int count = warmer.warmCount;
 			writer.AddDocument(DocHelper.CreateDocument(17, "test", 4));
@@ -724,7 +721,7 @@ namespace Lucene.Net.Test.Index
 			{
 				writer.AddDocument(DocHelper.CreateDocument(i, "test", 4));
 			}
-			((ConcurrentMergeScheduler)writer.Config.GetMergeScheduler()).Sync();
+			((ConcurrentMergeScheduler)writer.Config.MergeScheduler).Sync();
 			DirectoryReader r2 = DirectoryReader.OpenIfChanged(r1);
 			if (r2 != null)
 			{
@@ -786,7 +783,7 @@ namespace Lucene.Net.Test.Index
 			DirectoryReader r = writer.Reader;
 			float SECONDS = 0.5f;
 			long endTime = (long)(DateTime.Now.CurrentTimeMillis() + 1000. * SECONDS);
-			IList<Exception> excs = Sharpen.Collections.SynchronizedList(new List<Exception>
+			IList<Exception> excs = Collections.SynchronizedList(new List<Exception>
 				());
 			// Only one thread can addIndexes at a time, because
 			// IndexWriter acquires a write lock in each directory:
@@ -900,7 +897,7 @@ namespace Lucene.Net.Test.Index
 			DirectoryReader r = writer.Reader;
 			float SECONDS = 0.5f;
 			long endTime = (long)(DateTime.Now.CurrentTimeMillis() + 1000. * SECONDS);
-			IList<Exception> excs = Sharpen.Collections.SynchronizedList(new List<Exception>
+			IList<Exception> excs = Collections.SynchronizedList(new List<Exception>
 				());
 			Thread[] threads = new Thread[numThreads];
 			for (int i = 0; i < numThreads; i++)
@@ -1287,7 +1284,7 @@ namespace Lucene.Net.Test.Index
 							if (LuceneTestCase.VERBOSE)
 							{
 								System.Console.Out.WriteLine("TEST: now fail; exc:");
-								Sharpen.Runtime.PrintStackTrace(new Exception(), System.Console.Out);
+								new Exception().printStackTrace();
 							}
 							shouldFail.Set(false);
 							throw new MockDirectoryWrapper.FakeIOException();

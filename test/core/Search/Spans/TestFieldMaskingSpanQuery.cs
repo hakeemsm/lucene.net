@@ -211,7 +211,7 @@ namespace Lucene.Net.Search.Spans
 		/// <exception cref="System.Exception"></exception>
 		public virtual void TestSimple2()
 		{
-			AssumeTrue("Broken scoring: LUCENE-3723", searcher.GetSimilarity() is TFIDFSimilarity
+			AssumeTrue("Broken scoring: LUCENE-3723", searcher.Similarity is TFIDFSimilarity
 				);
 			SpanQuery q1 = new SpanTermQuery(new Term("gender", "female"));
 			SpanQuery q2 = new SpanTermQuery(new Term("last", "smith"));
@@ -278,7 +278,7 @@ namespace Lucene.Net.Search.Spans
 		/// <exception cref="System.Exception"></exception>
 		public virtual void TestSpans2()
 		{
-			AssumeTrue("Broken scoring: LUCENE-3723", searcher.GetSimilarity() is TFIDFSimilarity
+			AssumeTrue("Broken scoring: LUCENE-3723", searcher.Similarity is TFIDFSimilarity
 				);
 			SpanQuery qA1 = new SpanTermQuery(new Term("gender", "female"));
 			SpanQuery qA2 = new SpanTermQuery(new Term("first", "james"));

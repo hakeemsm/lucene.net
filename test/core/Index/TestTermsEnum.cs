@@ -36,7 +36,7 @@ namespace Lucene.Net.Test.Index
 			IndexReader r = w.Reader;
 			w.Dispose();
 			IList<BytesRef> terms = new List<BytesRef>();
-			TermsEnum termsEnum = MultiFields.GetTerms(r, "body").Iterator(null);
+			TermsEnum termsEnum = MultiFields.GetTerms(r, "body").IEnumerator(null);
 			BytesRef term;
 			while ((term = termsEnum.Next()) != null)
 			{
@@ -103,7 +103,7 @@ namespace Lucene.Net.Test.Index
 						target = terms[Random().Next(terms.Count)];
 						exists = "yes";
 					}
-					upto = Sharpen.Collections.BinarySearch(terms, target);
+					upto = Collections.BinarySearch(terms, target);
 					if (Random().NextBoolean())
 					{
 						if (VERBOSE)
@@ -511,7 +511,7 @@ namespace Lucene.Net.Test.Index
 			AreEqual(1, DocFreq(r, "aa9"));
 			AreEqual(1, DocFreq(r, "xx"));
 			AreEqual(1, DocFreq(r, "aa4"));
-			TermsEnum te = MultiFields.GetTerms(r, FIELD).Iterator(null);
+			TermsEnum te = MultiFields.GetTerms(r, FIELD).IEnumerator(null);
 			while (te.Next() != null)
 			{
 			}
@@ -546,7 +546,7 @@ namespace Lucene.Net.Test.Index
 			Terms terms = MultiFields.GetTerms(r, "field");
 			if (terms != null)
 			{
-				IsNull(terms.Iterator(null).Next());
+				IsNull(terms.IEnumerator(null).Next());
 			}
 			r.Dispose();
 			d.Dispose();
@@ -674,7 +674,7 @@ namespace Lucene.Net.Test.Index
 					System.Console.Out.WriteLine("  " + t.Utf8ToString() + " " + t);
 				}
 			}
-			TermsEnum te = MultiFields.GetTerms(r, FIELD).Iterator(null);
+			TermsEnum te = MultiFields.GetTerms(r, FIELD).IEnumerator(null);
 			int END_LOC = -validTerms.Length - 1;
 			IList<TestTermsEnum.TermAndState> termStates = new List<TestTermsEnum.TermAndState
 				>();

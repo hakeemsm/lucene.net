@@ -1422,7 +1422,7 @@ namespace Lucene.Net.Search
 		{
 			IList<string> letters = Arrays.AsList(new string[] { "A", "B", "C", "D", "E", "F"
 				, "G", "H", "I", "J" });
-			Sharpen.Collections.Shuffle(letters, Random());
+			Collections.Shuffle(letters, Random());
 			Directory dir = NewDirectory();
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir);
 			foreach (string letter in letters)
@@ -1464,7 +1464,7 @@ namespace Lucene.Net.Search
 			/// <exception cref="System.IO.IOException"></exception>
 			public TermsEnum TermsEnum(Terms terms)
 			{
-				return terms.Iterator(null);
+				return terms.IEnumerator(null);
 			}
 		}
 
@@ -1474,7 +1474,7 @@ namespace Lucene.Net.Search
 		{
 			IList<string> letters = Arrays.AsList(new string[] { "A", "B", "C", "D", "E", "F"
 				, "G", "H", "I", "J" });
-			Sharpen.Collections.Shuffle(letters, Random());
+			Collections.Shuffle(letters, Random());
 			Directory dir = NewDirectory();
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir);
 			foreach (string letter in letters)
@@ -1516,7 +1516,7 @@ namespace Lucene.Net.Search
 			/// <exception cref="System.IO.IOException"></exception>
 			public TermsEnum TermsEnum(Terms terms)
 			{
-				return terms.Iterator(null);
+				return terms.IEnumerator(null);
 			}
 		}
 
@@ -1526,7 +1526,7 @@ namespace Lucene.Net.Search
 		{
 			IList<string> letters = Arrays.AsList(new string[] { "A", "B", "C", "D", "E", "F"
 				, "G", "H", "I", "J" });
-			Sharpen.Collections.Shuffle(letters, Random());
+			Collections.Shuffle(letters, Random());
 			Directory dir = NewDirectory();
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir);
 			foreach (string letter in letters)
@@ -1568,7 +1568,7 @@ namespace Lucene.Net.Search
 			/// <exception cref="System.IO.IOException"></exception>
 			public TermsEnum TermsEnum(Terms terms)
 			{
-				return terms.Iterator(null);
+				return terms.IEnumerator(null);
 			}
 		}
 
@@ -1578,7 +1578,7 @@ namespace Lucene.Net.Search
 		{
 			IList<string> letters = Arrays.AsList(new string[] { "A", "B", "C", "D", "E", "F"
 				, "G", "H", "I", "J" });
-			Sharpen.Collections.Shuffle(letters, Random());
+			Collections.Shuffle(letters, Random());
 			Directory dir = NewDirectory();
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir);
 			foreach (string letter in letters)
@@ -1620,7 +1620,7 @@ namespace Lucene.Net.Search
 			/// <exception cref="System.IO.IOException"></exception>
 			public TermsEnum TermsEnum(Terms terms)
 			{
-				return terms.Iterator(null);
+				return terms.IEnumerator(null);
 			}
 		}
 
@@ -1630,7 +1630,7 @@ namespace Lucene.Net.Search
 		{
 			IList<string> letters = Arrays.AsList(new string[] { "A", "B", "C", "D", "E", "F"
 				, "G", "H", "I", "J" });
-			Sharpen.Collections.Shuffle(letters, Random());
+			Collections.Shuffle(letters, Random());
 			Directory dir = NewDirectory();
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir);
 			foreach (string letter in letters)
@@ -1672,7 +1672,7 @@ namespace Lucene.Net.Search
 			/// <exception cref="System.IO.IOException"></exception>
 			public TermsEnum TermsEnum(Terms terms)
 			{
-				return terms.Iterator(null);
+				return terms.IEnumerator(null);
 			}
 		}
 
@@ -1682,7 +1682,7 @@ namespace Lucene.Net.Search
 		{
 			IList<string> letters = Arrays.AsList(new string[] { "A", "B", "C", "D", "E", "F"
 				, "G", "H", "I", "J" });
-			Sharpen.Collections.Shuffle(letters, Random());
+			Collections.Shuffle(letters, Random());
 			Directory dir = NewDirectory();
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir);
 			foreach (string letter in letters)
@@ -1724,7 +1724,7 @@ namespace Lucene.Net.Search
 			/// <exception cref="System.IO.IOException"></exception>
 			public TermsEnum TermsEnum(Terms terms)
 			{
-				return terms.Iterator(null);
+				return terms.IEnumerator(null);
 			}
 		}
 

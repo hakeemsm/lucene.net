@@ -1,16 +1,13 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
+using System;
 using System.Collections.Generic;
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Document;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
+using Lucene.Net.Randomized.Generators;
 using Lucene.Net.Store;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Index;
 using Lucene.Net.Util;
-using Sharpen;
 
 namespace Lucene.Net.Test.Index
 {
@@ -136,7 +133,7 @@ namespace Lucene.Net.Test.Index
 
 		private string AsUnicodeChar(char c)
 		{
-			return "U+" + Sharpen.Extensions.ToHexString(c);
+			return "U+" + Extensions.ToHexString(c);
 		}
 
 		private string TermDesc(string s)
@@ -158,7 +155,7 @@ namespace Lucene.Net.Test.Index
 		private void CheckTermsOrder(IndexReader r, ICollection<string> allTerms, bool isTop
 			)
 		{
-			TermsEnum terms = MultiFields.GetFields(r).Terms("f").Iterator(null);
+		    TermsEnum terms = MultiFields.GetFields(r).Terms("f").Iterator(null);
 			BytesRef last = new BytesRef();
 			ICollection<string> seenTerms = new HashSet<string>();
 			while (true)
@@ -180,7 +177,7 @@ namespace Lucene.Net.Test.Index
 				IsTrue(allTerms.Equals(seenTerms));
 			}
 			// Test seeking:
-			Iterator<string> it = seenTerms.Iterator();
+			IEnumerator<string> it = seenTerms.GetEnumerator();
 			while (it.HasNext())
 			{
 				BytesRef tr = new BytesRef(it.Next());
@@ -204,7 +201,7 @@ namespace Lucene.Net.Test.Index
 				UnicodeUtil.UTF16toUTF8(buffer, 0, 20, utf8);
 				if (!hasIllegal)
 				{
-					byte[] b = Sharpen.Runtime.GetBytesForString(new string(buffer, 0, 20), StandardCharsets
+					byte[] b = Runtime.GetBytesForString(new string(buffer, 0, 20), StandardCharsets
 						.UTF_8);
 					AreEqual(b.Length, utf8.length);
 					for (int i = 0; i < b.Length; i++)
@@ -254,7 +251,7 @@ namespace Lucene.Net.Test.Index
 				UnicodeUtil.UTF8toUTF16(utf8.bytes, 0, utf8.length, utf16);
 				AreEqual("codepoint " + ch, s1, new string(utf16.chars, 0, 
 					utf16.length));
-				byte[] b = Sharpen.Runtime.GetBytesForString(s1, StandardCharsets.UTF_8);
+				byte[] b = Runtime.GetBytesForString(s1, StandardCharsets.UTF_8);
 				AreEqual(utf8.length, b.Length);
 				for (int j = 0; j < utf8.length; j++)
 				{

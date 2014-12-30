@@ -148,7 +148,7 @@ namespace Lucene.Net.Test.Index
 						//HM:revisit 
 						//assert end >= 0 && end >= start;
 						// check that the offsets correspond to the term in the src text
-						IsTrue(Sharpen.Runtime.Substring(storedNumbers, start, end
+						IsTrue(Runtime.Substring(storedNumbers, start, end
 							).Equals(term));
 						if (withPayloads)
 						{
@@ -182,7 +182,7 @@ namespace Lucene.Net.Test.Index
 					//HM:revisit 
 					//assert end >= 0 && end >= start;
 					// check that the offsets correspond to the term in the src text
-					IsTrue(Sharpen.Runtime.Substring(storedNumbers, start, end
+					IsTrue(Runtime.Substring(storedNumbers, start, end
 						).Equals("hundred"));
 					if (withPayloads)
 					{
@@ -289,7 +289,7 @@ namespace Lucene.Net.Test.Index
 					offset += offIncr + tokenOffset;
 				}
 				//System.out.println("  " + token + " posIncr=" + token.getPositionIncrement() + " pos=" + pos + " off=" + token.startOffset() + "/" + token.endOffset() + " (freq=" + postingsByDoc.get(docCount).size() + ")");
-				doc.Add(new Field("content", new CannedTokenStream(Sharpen.Collections.ToArray(tokens
+				doc.Add(new Field("content", new CannedTokenStream(Collections.ToArray(tokens
 					, new Token[tokens.Count])), ft));
 				w.AddDocument(doc);
 			}
@@ -301,7 +301,7 @@ namespace Lucene.Net.Test.Index
 				// TODO: improve this
 				AtomicReader sub = ((AtomicReader)ctx.Reader);
 				//System.out.println("\nsub=" + sub);
-				TermsEnum termsEnum = sub.Fields().Terms("content").Iterator(null);
+				TermsEnum termsEnum = sub.Fields().Terms("content").IEnumerator(null);
 				DocsEnum docs = null;
 				DocsAndPositionsEnum docsAndPositions = null;
 				DocsAndPositionsEnum docsAndPositionsAndOffsets = null;

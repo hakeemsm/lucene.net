@@ -99,7 +99,7 @@ namespace Lucene.Net.Store
 			DirectoryInfo secondDir = CreateTempDir("bar");
 			TestUtil.Rm(primDir);
 			TestUtil.Rm(secondDir);
-			Directory dir = NewFSSwitchDirectory(primDir, secondDir, Sharpen.Collections.EmptySet
+			Directory dir = NewFSSwitchDirectory(primDir, secondDir, Collections.EmptySet
 				<string>());
 			try
 			{
@@ -117,7 +117,7 @@ namespace Lucene.Net.Store
 		/// <exception cref="System.IO.IOException"></exception>
 		public virtual void TestDirectoryFilter()
 		{
-			Directory dir = NewFSSwitchDirectory(Sharpen.Collections.EmptySet<string>());
+			Directory dir = NewFSSwitchDirectory(Collections.EmptySet<string>());
 			string name = "file";
 			try
 			{
@@ -135,7 +135,7 @@ namespace Lucene.Net.Store
 		/// <exception cref="System.IO.IOException"></exception>
 		public virtual void TestCompoundFileAppendTwice()
 		{
-			Directory newDir = NewFSSwitchDirectory(Sharpen.Collections.Singleton("cfs"));
+			Directory newDir = NewFSSwitchDirectory(Collections.Singleton("cfs"));
 			CompoundFileDirectory csw = new CompoundFileDirectory(newDir, "d.cfs", NewIOContext
 				(Random()), true);
 			CreateSequenceFile(newDir, "d1", unchecked((byte)0), 15);

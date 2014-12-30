@@ -167,7 +167,7 @@ namespace Lucene.Net.Search
 			query.Add(dQuery, BooleanClause.Occur.MUST);
 			// Only needed in Java6; Java7+ has a @SafeVarargs annotated Arrays#asList()!
 			// see http://docs.oracle.com/javase/7/docs/api/java/lang/SafeVarargs.html
-			Iterable<ICollection<string>> occurList = Arrays.AsList(Sharpen.Collections.Singleton
+			IEnumerable<ICollection<string>> occurList = Arrays.AsList(Collections.Singleton
 				("MUST"), new HashSet<string>(Arrays.AsList("MUST", "SHOULD")));
 			foreach (ICollection<string> occur in occurList)
 			{

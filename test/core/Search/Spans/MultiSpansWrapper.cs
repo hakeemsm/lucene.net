@@ -188,7 +188,7 @@ namespace Lucene.Net.Search.Spans
 		{
 			if (current == null)
 			{
-				return Sharpen.Collections.EmptyList();
+				return Collections.EmptyList();
 			}
 			return current.Payload;
 		}

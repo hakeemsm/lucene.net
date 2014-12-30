@@ -112,9 +112,9 @@ namespace Lucene.Net.Test.Index
 				string reg = AutomatonTestUtil.RandomRegexp(Random());
 				Lucene.Net.Util.Automaton.Automaton automaton = new RegExp(reg, RegExp.NONE
 					).ToAutomaton();
-				TermsEnum te = MultiFields.GetTerms(reader, "field").Iterator(null);
+				TermsEnum te = MultiFields.GetTerms(reader, "field").IEnumerator(null);
 				List<BytesRef> unsortedTerms = new List<BytesRef>(terms);
-				Sharpen.Collections.Shuffle(unsortedTerms, Random());
+				Collections.Shuffle(unsortedTerms, Random());
 				foreach (BytesRef term in unsortedTerms)
 				{
 					if (BasicOperations.Run(automaton, term.Utf8ToString()))
@@ -142,7 +142,7 @@ namespace Lucene.Net.Test.Index
 		{
 			for (int i = 0; i < numIterations; i++)
 			{
-				TermsEnum te = MultiFields.GetTerms(reader, "field").Iterator(null);
+				TermsEnum te = MultiFields.GetTerms(reader, "field").IEnumerator(null);
 				foreach (BytesRef term in terms)
 				{
 					int c = Random().Next(3);

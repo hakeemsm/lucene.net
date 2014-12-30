@@ -560,7 +560,7 @@ namespace Lucene.Net.Search
 				}
 
 				/// <exception cref="System.IO.IOException"></exception>
-				public override DocIdSetIterator Iterator()
+				public override DocIdSetIterator IEnumerator()
 				{
 					IsTrue("iterator should not be called if bitset is present"
 						, nullBitset);
@@ -638,7 +638,7 @@ namespace Lucene.Net.Search
 				}
 
 				/// <exception cref="System.IO.IOException"></exception>
-				public override DocIdSetIterator Iterator()
+				public override DocIdSetIterator IEnumerator()
 				{
 					DocsEnum termDocsEnum = ((AtomicReader)context.Reader).TermDocsEnum(new Term("field"
 						, "0"));

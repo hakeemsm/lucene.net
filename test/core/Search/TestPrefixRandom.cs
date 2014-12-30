@@ -80,7 +80,7 @@ namespace Lucene.Net.Search
 			/// <exception cref="System.IO.IOException"></exception>
 			protected override TermsEnum GetTermsEnum(Terms terms, AttributeSource atts)
 			{
-				return new TestPrefixRandom.DumbPrefixQuery.SimplePrefixTermsEnum(this, terms.Iterator
+				return new TestPrefixRandom.DumbPrefixQuery.SimplePrefixTermsEnum(this, terms.IEnumerator
 					(null), this.prefix);
 			}
 

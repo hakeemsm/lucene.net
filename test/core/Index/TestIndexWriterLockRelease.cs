@@ -1,15 +1,10 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System.IO;
-using Lucene.Net.Test.Analysis;
+using Lucene.Net.Analysis;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
-using Lucene.Net.Util;
-using Sharpen;
+using Lucene.Net.TestFramework;
+using NUnit.Framework;
+using Directory = Lucene.Net.Store.Directory;
 
 namespace Lucene.Net.Test.Index
 {
@@ -23,10 +18,11 @@ namespace Lucene.Net.Test.Index
 	/// release its write lock when trying to open an index which does not yet
 	/// exist).
 	/// </remarks>
-	public class TestIndexWriterLockRelease : LuceneTestCase
+	[TestFixture]
+    public class TestIndexWriterLockRelease : LuceneTestCase
 	{
-		/// <exception cref="System.IO.IOException"></exception>
-		public virtual void TestIndexWriterLockRelease()
+		[Test]
+		public virtual void TestIndexWriterReleaseLock()
 		{
 			Directory dir = NewFSDirectory(CreateTempDir("testLockRelease"));
 			try

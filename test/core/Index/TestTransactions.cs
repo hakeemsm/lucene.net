@@ -72,7 +72,7 @@ namespace Lucene.Net.Test.Index
 				catch (Exception e)
 				{
 					System.Console.Out.WriteLine(Thread.CurrentThread() + ": exc");
-					Sharpen.Runtime.PrintStackTrace(e, System.Console.Out);
+					e.printStackTrace();
 					failed = true;
 				}
 			}
@@ -116,7 +116,7 @@ namespace Lucene.Net.Test.Index
 					.NewIndexWriterConfig(LuceneTestCase.TEST_VERSION_CURRENT, new MockAnalyzer(LuceneTestCase
 					.Random())).SetMaxBufferedDocs(3)).SetMergeScheduler(new ConcurrentMergeScheduler
 					()).SetMergePolicy(LuceneTestCase.NewLogMergePolicy(2)));
-				((ConcurrentMergeScheduler)writer1.Config.GetMergeScheduler()).SetSuppressExceptions
+				((ConcurrentMergeScheduler)writer1.Config.MergeScheduler).SetSuppressExceptions
 					();
 				// Intentionally use different params so flush/merge
 				// happen @ different times
@@ -124,7 +124,7 @@ namespace Lucene.Net.Test.Index
 					.NewIndexWriterConfig(LuceneTestCase.TEST_VERSION_CURRENT, new MockAnalyzer(LuceneTestCase
 					.Random())).SetMaxBufferedDocs(2)).SetMergeScheduler(new ConcurrentMergeScheduler
 					()).SetMergePolicy(LuceneTestCase.NewLogMergePolicy(3)));
-				((ConcurrentMergeScheduler)writer2.Config.GetMergeScheduler()).SetSuppressExceptions
+				((ConcurrentMergeScheduler)writer2.Config.MergeScheduler).SetSuppressExceptions
 					();
 				this.Update(writer1);
 				this.Update(writer2);
@@ -175,7 +175,7 @@ namespace Lucene.Net.Test.Index
 				{
 					Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 					int n = LuceneTestCase.Random().Next();
-					d.Add(LuceneTestCase.NewField("id", Sharpen.Extensions.ToString(this.nextID++), customType
+					d.Add(LuceneTestCase.NewField("id", Extensions.ToString(this.nextID++), customType
 						));
 					d.Add(LuceneTestCase.NewTextField("contents", English.IntToEnglish(n), Field.Store
 						.NO));

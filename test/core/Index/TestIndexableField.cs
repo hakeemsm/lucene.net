@@ -270,7 +270,7 @@ namespace Lucene.Net.Test.Index
 						{
 							Terms tfv = r.GetTermVectors(docID).Terms(name);
 							IsNotNull(tfv);
-							TermsEnum termsEnum = tfv.Iterator(null);
+							TermsEnum termsEnum = tfv.IEnumerator(null);
 							AreEqual(new BytesRef(string.Empty + counter), termsEnum.Next
 								());
 							AreEqual(1, termsEnum.TotalTermFreq);

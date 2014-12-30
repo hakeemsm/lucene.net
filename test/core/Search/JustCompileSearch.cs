@@ -53,7 +53,7 @@ namespace Lucene.Net.Search
 
 		internal sealed class JustCompileDocIdSet : DocIdSet
 		{
-			public override DocIdSetIterator Iterator()
+			public override DocIdSetIterator IEnumerator()
 			{
 				throw new NotSupportedException(UNSUPPORTED_MSG);
 			}

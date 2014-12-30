@@ -39,7 +39,7 @@ namespace Lucene.Net.Test.Codecs.Lucene40
 			{
 				AtomicReader indexReader = ((AtomicReader)ctx.Reader);
 				Terms terms = indexReader.Terms("body");
-				TermsEnum iterator = terms.Iterator(null);
+				TermsEnum iterator = terms.IEnumerator(null);
 				var enums = new IdentityHashMap<DocsEnum, bool>();
 				Bits.MatchNoBits bits = new Bits.MatchNoBits(indexReader.MaxDoc);
 				while ((iterator.Next()) != null)
@@ -69,7 +69,7 @@ namespace Lucene.Net.Test.Codecs.Lucene40
 			foreach (AtomicReaderContext ctx in open.Leaves)
 			{
 				Terms terms = ((AtomicReader)ctx.Reader).Terms("body");
-				TermsEnum iterator = terms.Iterator(null);
+				TermsEnum iterator = terms.IEnumerator(null);
 				var enums = new IdentityHashMap<DocsEnum, bool>();
 				var bits = new Bits.MatchNoBits(open.MaxDoc);
 				DocsEnum docs = null;
@@ -81,7 +81,7 @@ namespace Lucene.Net.Test.Codecs.Lucene40
 				}
 				AreEqual(1, enums.Count);
 				enums.Clear();
-				iterator = terms.Iterator(null);
+				iterator = terms.IEnumerator(null);
 				docs = null;
 				while ((iterator.Next()) != null)
 				{
@@ -91,7 +91,7 @@ namespace Lucene.Net.Test.Codecs.Lucene40
 				}
 				AreEqual(terms.Size, enums.Count);
 				enums.Clear();
-				iterator = terms.Iterator(null);
+				iterator = terms.IEnumerator(null);
 				docs = null;
 				while ((iterator.Next()) != null)
 				{
@@ -124,10 +124,10 @@ namespace Lucene.Net.Test.Codecs.Lucene40
 			foreach (AtomicReaderContext ctx in leaves)
 			{
 				Terms terms = ((AtomicReader)ctx.Reader).Terms("body");
-				TermsEnum iterator = terms.Iterator(null);
+				TermsEnum iterator = terms.IEnumerator(null);
 				var enums = new IdentityHashMap<DocsEnum, bool>();
 				var bits = new Bits.MatchNoBits(firstReader.MaxDoc);
-				iterator = terms.Iterator(null);
+				iterator = terms.IEnumerator(null);
 				DocsEnum docs = null;
 				BytesRef term = null;
 				while ((term = iterator.Next()) != null)
@@ -137,7 +137,7 @@ namespace Lucene.Net.Test.Codecs.Lucene40
 					enums[docs] = true;
 				}
 				AreEqual(terms.Size, enums.Count);
-				iterator = terms.Iterator(null);
+				iterator = terms.IEnumerator(null);
 				enums.Clear();
 				docs = null;
 				while ((term = iterator.Next()) != null)
@@ -165,7 +165,7 @@ namespace Lucene.Net.Test.Codecs.Lucene40
 			{
 				return null;
 			}
-			TermsEnum iterator = terms.Iterator(null);
+			TermsEnum iterator = terms.IEnumerator(null);
 			if (iterator.SeekExact(term))
 			{
 				return iterator.Docs(bits, null, Random().NextBoolean() ? DocsEnum.FLAG_FREQS : DocsEnum

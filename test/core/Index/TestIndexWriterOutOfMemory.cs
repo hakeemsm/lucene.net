@@ -1,17 +1,14 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using System.IO;
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Document;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
+using Lucene.Net.Randomized.Generators;
 using Lucene.Net.Store;
+using Lucene.Net.Support;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
-using Sharpen;
 
 namespace Lucene.Net.Test.Index
 {
@@ -67,15 +64,15 @@ namespace Lucene.Net.Test.Index
 							();
 						doc.Add(NewStringField("id", i.ToString(), Field.Store.NO));
 						doc.Add(new NumericDocValuesField("dv", i));
-						doc.Add(new BinaryDocValuesField("dv2", new BytesRef(Sharpen.Extensions.ToString(
+						doc.Add(new BinaryDocValuesField("dv2", new BytesRef(Extensions.ToString(
 							i))));
-						doc.Add(new SortedDocValuesField("dv3", new BytesRef(Sharpen.Extensions.ToString(
+						doc.Add(new SortedDocValuesField("dv3", new BytesRef(Extensions.ToString(
 							i))));
 						if (DefaultCodecSupportsSortedSet())
 						{
-							doc.Add(new SortedSetDocValuesField("dv4", new BytesRef(Sharpen.Extensions.ToString
+							doc.Add(new SortedSetDocValuesField("dv4", new BytesRef(Extensions.ToString
 								(i))));
-							doc.Add(new SortedSetDocValuesField("dv4", new BytesRef(Sharpen.Extensions.ToString
+							doc.Add(new SortedSetDocValuesField("dv4", new BytesRef(Extensions.ToString
 								(i - 1))));
 						}
 						doc.Add(NewTextField("text1", TestUtil.RandomAnalysisString(Random(), 20, true), 
@@ -115,7 +112,7 @@ namespace Lucene.Net.Test.Index
 										if (thingToDo == 2 && DefaultCodecSupportsFieldUpdates())
 										{
 											iw.UpdateBinaryDocValue(new Term("id", i.ToString()), "dv2", new 
-												BytesRef(Sharpen.Extensions.ToString(i + 1)));
+												BytesRef(Extensions.ToString(i + 1)));
 										}
 									}
 								}
@@ -125,7 +122,7 @@ namespace Lucene.Net.Test.Index
 								if (e.Message != null && e.Message.StartsWith("Fake OutOfMemoryError"))
 								{
 									exceptionStream.WriteLine("\nTEST: got expected fake exc:" + e.Message);
-									Sharpen.Runtime.PrintStackTrace(e, exceptionStream);
+									Runtime.PrintStackTrace(e, exceptionStream);
 									try
 									{
 										iw.Rollback();
@@ -146,7 +143,7 @@ namespace Lucene.Net.Test.Index
 							// block docs
 							Lucene.Net.Documents.Document doc2 = new Lucene.Net.Documents.Document
 								();
-							doc2.Add(NewStringField("id", Sharpen.Extensions.ToString(-i), Field.Store.NO));
+							doc2.Add(NewStringField("id", Extensions.ToString(-i), Field.Store.NO));
 							doc2.Add(NewTextField("text1", TestUtil.RandomAnalysisString(Random(), 20, true), 
 								Field.Store.NO));
 							doc2.Add(new StoredField("stored1", "foo"));
@@ -160,7 +157,7 @@ namespace Lucene.Net.Test.Index
 								if (Random().NextBoolean())
 								{
 									iw.DeleteDocuments(new Term("id", i.ToString()), new Term("id", 
-										Sharpen.Extensions.ToString(-i)));
+										Extensions.ToString(-i)));
 								}
 							}
 							catch (OutOfMemoryException e)
@@ -168,7 +165,7 @@ namespace Lucene.Net.Test.Index
 								if (e.Message != null && e.Message.StartsWith("Fake OutOfMemoryError"))
 								{
 									exceptionStream.WriteLine("\nTEST: got expected fake exc:" + e.Message);
-									Sharpen.Runtime.PrintStackTrace(e, exceptionStream);
+									Runtime.PrintStackTrace(e, exceptionStream);
 								}
 								else
 								{
@@ -216,7 +213,7 @@ namespace Lucene.Net.Test.Index
 								if (e.Message != null && e.Message.StartsWith("Fake OutOfMemoryError"))
 								{
 									exceptionStream.WriteLine("\nTEST: got expected fake exc:" + e.Message);
-									Sharpen.Runtime.PrintStackTrace(e, exceptionStream);
+									Runtime.PrintStackTrace(e, exceptionStream);
 								}
 								else
 								{
@@ -242,7 +239,7 @@ namespace Lucene.Net.Test.Index
 						if (e.Message != null && e.Message.StartsWith("Fake OutOfMemoryError"))
 						{
 							exceptionStream.WriteLine("\nTEST: got expected fake exc:" + e.Message);
-							Sharpen.Runtime.PrintStackTrace(e, exceptionStream);
+							Runtime.PrintStackTrace(e, exceptionStream);
 							try
 							{
 								iw.Rollback();

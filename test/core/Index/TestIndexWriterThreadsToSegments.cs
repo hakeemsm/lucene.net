@@ -1,19 +1,16 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using System.Collections.Generic;
-using Lucene.Net.Test.Analysis;
+using System.Threading;
+using Lucene.Net.Analysis;
 using Lucene.Net.Codecs;
 using Lucene.Net.Codecs.Lucene46;
-using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
+using Lucene.Net.Support;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Index;
+using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
-using Sharpen;
 
 namespace Lucene.Net.Test.Index
 {
@@ -254,7 +251,7 @@ namespace Lucene.Net.Test.Index
 						{
 							if (LuceneTestCase.VERBOSE)
 							{
-								System.Console.Out.WriteLine("TEST: " + Thread.CurrentThread().GetName() 
+								System.Console.Out.WriteLine("TEST: " + Thread.CurrentThread.Name 
 									+ ": do index");
 							}
 							Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
@@ -270,7 +267,7 @@ namespace Lucene.Net.Test.Index
 						{
 							if (LuceneTestCase.VERBOSE)
 							{
-								System.Console.Out.WriteLine("TEST: " + Thread.CurrentThread().GetName() 
+								System.Console.Out.WriteLine("TEST: " + Thread.CurrentThread.Name 
 									+ ": don't index");
 							}
 						}

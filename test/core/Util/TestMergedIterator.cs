@@ -20,14 +20,14 @@ namespace Lucene.Net.Util
 
 		public virtual void TestMergeEmpty()
 		{
-			Iterator<int> merged = new MergedIterator<int>();
+			IEnumerator<int> merged = new MergedIterator<int>();
 			IsFalse(merged.HasNext());
-			merged = new MergedIterator<int>(new List<int>().Iterator());
+			merged = new MergedIterator<int>(new List<int>().IEnumerator());
 			IsFalse(merged.HasNext());
-			Iterator<int>[] itrs = new Iterator[Random().Next(100)];
+			IEnumerator<int>[] itrs = new IEnumerator[Random().Next(100)];
 			for (int i = 0; i < itrs.Length; i++)
 			{
-				itrs[i] = new List<int>().Iterator();
+				itrs[i] = new List<int>().IEnumerator();
 			}
 			merged = new MergedIterator<int>(itrs);
 			IsFalse(merged.HasNext());
@@ -132,13 +132,13 @@ namespace Lucene.Net.Util
 				}
 			}
 			// Now check that they get merged cleanly
-			Iterator<int>[] itrs = new Iterator[numLists];
+			IEnumerator<int>[] itrs = new IEnumerator[numLists];
 			for (int i_2 = 0; i_2 < numLists; i_2++)
 			{
-				itrs[i_2] = lists[i_2].Iterator();
+				itrs[i_2] = lists[i_2].IEnumerator();
 			}
 			MergedIterator<int> mergedItr = new MergedIterator<int>(removeDups, itrs);
-			Iterator<int> expectedItr = expected.Iterator();
+			IEnumerator<int> expectedItr = expected.IEnumerator();
 			while (expectedItr.HasNext())
 			{
 				IsTrue(mergedItr.HasNext());

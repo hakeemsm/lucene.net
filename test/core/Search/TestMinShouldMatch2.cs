@@ -98,7 +98,7 @@ namespace Lucene.Net.Search
 			)
 		{
 			IList<string> list = Arrays.AsList(values);
-			Sharpen.Collections.Shuffle(list, Random());
+			Collections.Shuffle(list, Random());
 			int howMany = TestUtil.NextInt(Random(), 1, list.Count);
 			for (int i = 0; i < howMany; i++)
 			{
@@ -229,10 +229,10 @@ namespace Lucene.Net.Search
 		public virtual void TestNextAllTerms()
 		{
 			IList<string> termsList = new List<string>();
-			Sharpen.Collections.AddAll(termsList, Arrays.AsList(commonTerms));
-			Sharpen.Collections.AddAll(termsList, Arrays.AsList(mediumTerms));
-			Sharpen.Collections.AddAll(termsList, Arrays.AsList(rareTerms));
-			string[] terms = Sharpen.Collections.ToArray(termsList, new string[0]);
+			Collections.AddAll(termsList, Arrays.AsList(commonTerms));
+			Collections.AddAll(termsList, Arrays.AsList(mediumTerms));
+			Collections.AddAll(termsList, Arrays.AsList(rareTerms));
+			string[] terms = Collections.ToArray(termsList, new string[0]);
 			for (int minNrShouldMatch = 1; minNrShouldMatch <= terms.Length; minNrShouldMatch
 				++)
 			{
@@ -247,10 +247,10 @@ namespace Lucene.Net.Search
 		public virtual void TestAdvanceAllTerms()
 		{
 			IList<string> termsList = new List<string>();
-			Sharpen.Collections.AddAll(termsList, Arrays.AsList(commonTerms));
-			Sharpen.Collections.AddAll(termsList, Arrays.AsList(mediumTerms));
-			Sharpen.Collections.AddAll(termsList, Arrays.AsList(rareTerms));
-			string[] terms = Sharpen.Collections.ToArray(termsList, new string[0]);
+			Collections.AddAll(termsList, Arrays.AsList(commonTerms));
+			Collections.AddAll(termsList, Arrays.AsList(mediumTerms));
+			Collections.AddAll(termsList, Arrays.AsList(rareTerms));
+			string[] terms = Collections.ToArray(termsList, new string[0]);
 			for (int amount = 25; amount < 200; amount += 25)
 			{
 				for (int minNrShouldMatch = 1; minNrShouldMatch <= terms.Length; minNrShouldMatch
@@ -268,13 +268,13 @@ namespace Lucene.Net.Search
 		public virtual void TestNextVaryingNumberOfTerms()
 		{
 			IList<string> termsList = new List<string>();
-			Sharpen.Collections.AddAll(termsList, Arrays.AsList(commonTerms));
-			Sharpen.Collections.AddAll(termsList, Arrays.AsList(mediumTerms));
-			Sharpen.Collections.AddAll(termsList, Arrays.AsList(rareTerms));
-			Sharpen.Collections.Shuffle(termsList, Random());
+			Collections.AddAll(termsList, Arrays.AsList(commonTerms));
+			Collections.AddAll(termsList, Arrays.AsList(mediumTerms));
+			Collections.AddAll(termsList, Arrays.AsList(rareTerms));
+			Collections.Shuffle(termsList, Random());
 			for (int numTerms = 2; numTerms <= termsList.Count; numTerms++)
 			{
-				string[] terms = Sharpen.Collections.ToArray(termsList.SubList(0, numTerms), new 
+				string[] terms = Collections.ToArray(termsList.SubList(0, numTerms), new 
 					string[0]);
 				for (int minNrShouldMatch = 1; minNrShouldMatch <= terms.Length; minNrShouldMatch
 					++)
@@ -291,15 +291,15 @@ namespace Lucene.Net.Search
 		public virtual void TestAdvanceVaryingNumberOfTerms()
 		{
 			IList<string> termsList = new List<string>();
-			Sharpen.Collections.AddAll(termsList, Arrays.AsList(commonTerms));
-			Sharpen.Collections.AddAll(termsList, Arrays.AsList(mediumTerms));
-			Sharpen.Collections.AddAll(termsList, Arrays.AsList(rareTerms));
-			Sharpen.Collections.Shuffle(termsList, Random());
+			Collections.AddAll(termsList, Arrays.AsList(commonTerms));
+			Collections.AddAll(termsList, Arrays.AsList(mediumTerms));
+			Collections.AddAll(termsList, Arrays.AsList(rareTerms));
+			Collections.Shuffle(termsList, Random());
 			for (int amount = 25; amount < 200; amount += 25)
 			{
 				for (int numTerms = 2; numTerms <= termsList.Count; numTerms++)
 				{
-					string[] terms = Sharpen.Collections.ToArray(termsList.SubList(0, numTerms), new 
+					string[] terms = Collections.ToArray(termsList.SubList(0, numTerms), new 
 						string[0]);
 					for (int minNrShouldMatch = 1; minNrShouldMatch <= terms.Length; minNrShouldMatch
 						++)

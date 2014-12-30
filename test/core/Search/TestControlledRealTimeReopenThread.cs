@@ -79,14 +79,14 @@ namespace Lucene.Net.Search
 			{
 				if (VERBOSE)
 				{
-					System.Console.Out.WriteLine(Thread.CurrentThread().GetName() + ": nrt: verify "
+					System.Console.Out.WriteLine(Thread.CurrentThread.Name + ": nrt: verify "
 						 + id);
 				}
 				nrtDeletesThread.WaitForGeneration(gen);
 				IndexSearcher s = nrtDeletes.Acquire();
 				if (VERBOSE)
 				{
-					System.Console.Out.WriteLine(Thread.CurrentThread().GetName() + ": nrt: got searcher="
+					System.Console.Out.WriteLine(Thread.CurrentThread.Name + ": nrt: got searcher="
 						 + s);
 				}
 				try
@@ -111,14 +111,14 @@ namespace Lucene.Net.Search
 			{
 				if (VERBOSE)
 				{
-					System.Console.Out.WriteLine(Thread.CurrentThread().GetName() + ": nrt: verify "
+					System.Console.Out.WriteLine(Thread.CurrentThread.Name + ": nrt: verify "
 						 + id);
 				}
 				nrtNoDeletesThread.WaitForGeneration(gen);
 				IndexSearcher s = nrtNoDeletes.Acquire();
 				if (VERBOSE)
 				{
-					System.Console.Out.WriteLine(Thread.CurrentThread().GetName() + ": nrt: got searcher="
+					System.Console.Out.WriteLine(Thread.CurrentThread.Name + ": nrt: got searcher="
 						 + s);
 				}
 				try
@@ -135,7 +135,7 @@ namespace Lucene.Net.Search
 		}
 
 		/// <exception cref="System.Exception"></exception>
-		protected override void AddDocument<_T0>(Term id, Iterable<_T0> doc)
+		protected override void AddDocument<_T0>(Term id, IEnumerable<_T0> doc)
 		{
 			long gen = genWriter.AddDocument(doc);
 			// Randomly verify the add "took":
@@ -143,14 +143,14 @@ namespace Lucene.Net.Search
 			{
 				if (VERBOSE)
 				{
-					System.Console.Out.WriteLine(Thread.CurrentThread().GetName() + ": nrt: verify "
+					System.Console.Out.WriteLine(Thread.CurrentThread.Name + ": nrt: verify "
 						 + id);
 				}
 				nrtNoDeletesThread.WaitForGeneration(gen);
 				IndexSearcher s = nrtNoDeletes.Acquire();
 				if (VERBOSE)
 				{
-					System.Console.Out.WriteLine(Thread.CurrentThread().GetName() + ": nrt: got searcher="
+					System.Console.Out.WriteLine(Thread.CurrentThread.Name + ": nrt: got searcher="
 						 + s);
 				}
 				try
@@ -166,7 +166,7 @@ namespace Lucene.Net.Search
 		}
 
 		/// <exception cref="System.Exception"></exception>
-		protected override void UpdateDocument<_T0>(Term id, Iterable<_T0> doc)
+		protected override void UpdateDocument<_T0>(Term id, IEnumerable<_T0> doc)
 		{
 			long gen = genWriter.UpdateDocument(id, doc);
 			// Randomly verify the udpate "took":
@@ -174,14 +174,14 @@ namespace Lucene.Net.Search
 			{
 				if (VERBOSE)
 				{
-					System.Console.Out.WriteLine(Thread.CurrentThread().GetName() + ": nrt: verify "
+					System.Console.Out.WriteLine(Thread.CurrentThread.Name + ": nrt: verify "
 						 + id);
 				}
 				nrtDeletesThread.WaitForGeneration(gen);
 				IndexSearcher s = nrtDeletes.Acquire();
 				if (VERBOSE)
 				{
-					System.Console.Out.WriteLine(Thread.CurrentThread().GetName() + ": nrt: got searcher="
+					System.Console.Out.WriteLine(Thread.CurrentThread.Name + ": nrt: got searcher="
 						 + s);
 				}
 				try
@@ -205,14 +205,14 @@ namespace Lucene.Net.Search
 			{
 				if (VERBOSE)
 				{
-					System.Console.Out.WriteLine(Thread.CurrentThread().GetName() + ": nrt: verify del "
+					System.Console.Out.WriteLine(Thread.CurrentThread.Name + ": nrt: verify del "
 						 + id);
 				}
 				nrtDeletesThread.WaitForGeneration(gen);
 				IndexSearcher s = nrtDeletes.Acquire();
 				if (VERBOSE)
 				{
-					System.Console.Out.WriteLine(Thread.CurrentThread().GetName() + ": nrt: got searcher="
+					System.Console.Out.WriteLine(Thread.CurrentThread.Name + ": nrt: got searcher="
 						 + s);
 				}
 				try
@@ -432,7 +432,7 @@ namespace Lucene.Net.Search
 				}
 				catch (Exception e)
 				{
-					Sharpen.Runtime.PrintStackTrace(e);
+					Runtime.PrintStackTrace(e);
 				}
 				finally
 				{
@@ -497,7 +497,7 @@ namespace Lucene.Net.Search
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
-			public override void UpdateDocument<_T0>(Term term, Iterable<_T0> doc, Analyzer analyzer
+			public override void UpdateDocument<_T0>(Term term, IEnumerable<_T0> doc, Analyzer analyzer
 				)
 			{
 				base.UpdateDocument(term, doc, analyzer);

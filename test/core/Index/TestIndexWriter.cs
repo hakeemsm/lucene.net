@@ -945,7 +945,7 @@ namespace Lucene.Net.Test.Index
             writer.Dispose();
             DirectoryReader reader = DirectoryReader.Open(dir);
             AtomicReader subreader = GetOnlySegmentReader(reader);
-            TermsEnum te = subreader.Fields.Terms(string.Empty).Iterator(null);
+            TermsEnum te = subreader.Fields.Terms(string.Empty).IEnumerator(null);
             AssertEquals(new BytesRef("a"), te.Next());
             AssertEquals(new BytesRef("b"), te.Next());
             AssertEquals(new BytesRef("c"), te.Next());
@@ -971,7 +971,7 @@ namespace Lucene.Net.Test.Index
             writer.Dispose();
             DirectoryReader reader = DirectoryReader.Open(dir);
             AtomicReader subreader = GetOnlySegmentReader(reader);
-            TermsEnum te = subreader.Fields.Terms(string.Empty).Iterator(null);
+            TermsEnum te = subreader.Fields.Terms(string.Empty).IEnumerator(null);
             AssertEquals(new BytesRef(string.Empty), te.Next());
             AssertEquals(new BytesRef("a"), te.Next());
             AssertEquals(new BytesRef("b"), te.Next());
@@ -1110,7 +1110,7 @@ namespace Lucene.Net.Test.Index
             w.Dispose();
             IndexReader r = DirectoryReader.Open(dir);
             Terms tpv = r.GetTermVectors(0).Terms("field");
-            TermsEnum termsEnum = tpv.Iterator(null);
+            TermsEnum termsEnum = tpv.IEnumerator(null);
             IsNotNull(termsEnum.Next());
             DocsAndPositionsEnum dpEnum = termsEnum.DocsAndPositions(null, null);
             IsNotNull(dpEnum);
@@ -1178,7 +1178,7 @@ namespace Lucene.Net.Test.Index
             public IndexerThreadInterrupt(TestIndexWriter _enclosing)
             {
                 this._enclosing = _enclosing;
-                this.random = new Random(LuceneTestCase.Random().NextLong());
+                this.random = new Random(LuceneTestCase.Random().NextInt(0,int.MaxValue));
                 // make a little directory for addIndexes
                 // LUCENE-2239: won't work with NIOFS/MMAP
                 this.adder = new MockDirectoryWrapper(this.random, new RAMDirectory());
@@ -1279,7 +1279,7 @@ namespace Lucene.Net.Test.Index
 							}
 							for (int i = 0; i < 100; i++)
 							{
-								idField.StringValue = i.ToString());
+								idField.StringValue = i.ToString();
 								if (LuceneTestCase.DefaultCodecSupportsDocValues())
 								{
 									binaryDVField.SetBytesValue(new BytesRef(idField.StringValue));
@@ -1624,7 +1624,7 @@ namespace Lucene.Net.Test.Index
             d.Add(f);
             w.AddDocument(d);
             AtomicReader r = GetOnlySegmentReader(w.Reader);
-            TermsEnum t = r.Fields.Terms("field").Iterator(null);
+            TermsEnum t = r.Fields.Terms("field").IEnumerator(null);
             int count = 0;
             while (t.Next() != null)
             {

@@ -25,7 +25,7 @@ namespace Lucene.Net.Index
         private volatile IndexReaderWarmer mergedSegmentWarmer;
         private volatile int termIndexInterval; // TODO: this should be private to the codec, not settable here
 
-        protected volatile IndexDeletionPolicy delPolicy;
+        protected internal volatile IndexDeletionPolicy delPolicy;
 
         protected volatile IndexCommit commit;
 
@@ -33,7 +33,7 @@ namespace Lucene.Net.Index
 
         protected volatile Similarity similarity;
 
-        protected volatile MergeScheduler mergeScheduler;
+        protected internal volatile MergeScheduler mergeScheduler;
 
         protected long writeLockTimeout;
 
@@ -43,13 +43,13 @@ namespace Lucene.Net.Index
 
         protected volatile InfoStream infoStream;
 
-        protected volatile MergePolicy mergePolicy;
+        protected internal volatile MergePolicy mergePolicy;
 
-        protected volatile DocumentsWriterPerThreadPool indexerThreadPool;
+        protected internal volatile DocumentsWriterPerThreadPool indexerThreadPool;
 
         protected volatile bool readerPooling;
 
-        protected volatile FlushPolicy flushPolicy;
+        protected internal volatile FlushPolicy flushPolicy;
 
         protected volatile int perThreadHardLimitMB;
 

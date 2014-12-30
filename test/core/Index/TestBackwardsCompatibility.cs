@@ -690,7 +690,7 @@ namespace Lucene.Net.Test.Index
 			{
 				Directory dir = oldIndexDirs[name];
 				IndexReader r = DirectoryReader.Open(dir);
-				TermsEnum terms = MultiFields.GetFields(r).Terms("content").Iterator(null);
+				TermsEnum terms = MultiFields.GetFields(r).Terms("content").IEnumerator(null);
 				BytesRef t = terms.Next();
 				IsNotNull(t);
 				// content field only has term aaa:
@@ -888,7 +888,7 @@ namespace Lucene.Net.Test.Index
 				IndexUpgrader upgrader = null;
 				try
 				{
-					upgrader = IndexUpgrader.ParseArgs(Sharpen.Collections.ToArray(args, new string[0
+					upgrader = IndexUpgrader.ParseArgs(Collections.ToArray(args, new string[0
 						]));
 				}
 				catch (Exception e)

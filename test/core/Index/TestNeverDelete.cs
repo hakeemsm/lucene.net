@@ -52,7 +52,7 @@ namespace Lucene.Net.Test.Index
 				{
 					System.Console.Out.WriteLine("TEST: check files: " + ic.FileNames);
 				}
-				Sharpen.Collections.AddAll(allFiles, ic.FileNames);
+				Collections.AddAll(allFiles, ic.FileNames);
 				// Make sure no old files were removed
 				foreach (string fileName in allFiles)
 				{

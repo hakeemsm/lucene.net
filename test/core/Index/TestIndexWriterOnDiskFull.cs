@@ -1,26 +1,24 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
+using System.Diagnostics;
 using System.IO;
-using Lucene.Net.Test.Analysis;
+using Lucene.Net.Analysis;
 using Lucene.Net.Codecs;
-using Lucene.Net.Document;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
-using Lucene.Net.Util;
-using Sharpen;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Util;
+using NUnit.Framework;
+using Directory = Lucene.Net.Store.Directory;
 
 namespace Lucene.Net.Test.Index
 {
 	/// <summary>Tests for IndexWriter when the disk runs out of space</summary>
-	public class TestIndexWriterOnDiskFull : LuceneTestCase
+	[TestFixture]
+    public class TestIndexWriterOnDiskFull : LuceneTestCase
 	{
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestAddDocumentOnDiskFull()
 		{
 			for (int pass = 0; pass < 2; pass++)
@@ -30,7 +28,7 @@ namespace Lucene.Net.Test.Index
 					System.Console.Out.WriteLine("TEST: pass=" + pass);
 				}
 				bool doAbort = pass == 1;
-				long diskFree = TestUtil.NextInt(Random(), 100, 300);
+				long diskFree = Random().NextInt(100, 300);
 				while (true)
 				{
 					if (VERBOSE)
@@ -41,7 +39,7 @@ namespace Lucene.Net.Test.Index
 					dir.SetMaxSizeInBytes(diskFree);
 					IndexWriter writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT
 						, new MockAnalyzer(Random())));
-					MergeScheduler ms = writer.Config.GetMergeScheduler();
+					MergeScheduler ms = writer.Config.MergeScheduler;
 					if (ms is ConcurrentMergeScheduler)
 					{
 						// This test intentionally produces exceptions
@@ -67,7 +65,7 @@ namespace Lucene.Net.Test.Index
 						if (VERBOSE)
 						{
 							System.Console.Out.WriteLine("TEST: exception on addDoc");
-							Sharpen.Runtime.PrintStackTrace(e, System.Console.Out);
+							e.printStackTrace();
 						}
 						hitError = true;
 					}
@@ -97,7 +95,7 @@ namespace Lucene.Net.Test.Index
 								{
 									System.Console.Out.WriteLine("TEST: exception on close; retry w/ no disk space limit"
 										);
-									Sharpen.Runtime.PrintStackTrace(e, System.Console.Out);
+									e.printStackTrace();
 								}
 								dir.SetMaxSizeInBytes(0);
 								writer.Dispose();
@@ -113,8 +111,7 @@ namespace Lucene.Net.Test.Index
 						}
 						dir.Dispose();
 						// Now try again w/ more space:
-						diskFree += TEST_NIGHTLY ? TestUtil.NextInt(Random(), 400, 600) : TestUtil.NextInt
-							(Random(), 3000, 5000);
+						diskFree += TEST_NIGHTLY ? Random().NextInt(400, 600) : Random().NextInt(3000, 5000);
 					}
 					else
 					{
@@ -132,7 +129,7 @@ namespace Lucene.Net.Test.Index
 		// fulls
 		// TODO: have test fail if on any given top
 		// iter there was not a single IOE hit
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestAddIndexOnDiskFull()
 		{
 			// MemoryCodec, since it uses FST, is not necessarily
@@ -172,18 +169,18 @@ namespace Lucene.Net.Test.Index
 			MockDirectoryWrapper startDir = NewMockDirectory();
 			IndexWriter writer_1 = new IndexWriter(startDir, NewIndexWriterConfig(TEST_VERSION_CURRENT
 				, new MockAnalyzer(Random())));
-			for (int j_2 = 0; j_2 < START_COUNT; j_2++)
+			for (int j = 0; j < START_COUNT; j++)
 			{
-				AddDocWithIndex(writer_1, j_2);
+				AddDocWithIndex(writer_1, j);
 			}
 			writer_1.Dispose();
 			// Make sure starting index seems to be working properly:
 			Term searchTerm = new Term("content", "aaa");
 			IndexReader reader = DirectoryReader.Open(startDir);
-			AreEqual("first docFreq", 57, reader.DocFreq(searchTerm));
+			AssertEquals("first docFreq", 57, reader.DocFreq(searchTerm));
 			IndexSearcher searcher = NewSearcher(reader);
 			ScoreDoc[] hits = searcher.Search(new TermQuery(searchTerm), null, 1000).ScoreDocs;
-			AreEqual("first number of hits", 57, hits.Length);
+			AssertEquals("first number of hits", 57, hits.Length);
 			reader.Dispose();
 			// Iterate with larger and larger amounts of free
 			// disk space.  With little free disk space,
@@ -199,9 +196,9 @@ namespace Lucene.Net.Test.Index
 			long diskUsage = startDir.SizeInBytes();
 			long startDiskUsage = 0;
 			string[] files_1 = startDir.ListAll();
-			for (int i_1 = 0; i_1 < files_1.Length; i_1++)
+			for (int i = 0; i < files_1.Length; i++)
 			{
-				startDiskUsage += startDir.FileLength(files_1[i_1]);
+				startDiskUsage += startDir.FileLength(files_1[i]);
 			}
 			for (int iter = 0; iter < 3; iter++)
 			{
@@ -243,7 +240,7 @@ namespace Lucene.Net.Test.Index
 						(Random())).SetOpenMode(IndexWriterConfig.OpenMode.APPEND).SetMergePolicy(NewLogMergePolicy
 						(false)));
 					IOException err = null;
-					MergeScheduler ms = writer_1.Config.GetMergeScheduler();
+					MergeScheduler ms = writer_1.Config.MergeScheduler;
 					for (int x = 0; x < 2; x++)
 					{
 						if (ms is ConcurrentMergeScheduler)
@@ -363,11 +360,11 @@ namespace Lucene.Net.Test.Index
 							if (VERBOSE)
 							{
 								System.Console.Out.WriteLine("  hit IOException: " + e);
-								Sharpen.Runtime.PrintStackTrace(e, System.Console.Out);
+								e.printStackTrace();
 							}
 							if (1 == x)
 							{
-								Sharpen.Runtime.PrintStackTrace(e, System.Console.Out);
+								e.printStackTrace();
 								Fail(methodName + " hit IOException after disk space was freed up"
 									);
 							}
@@ -390,7 +387,7 @@ namespace Lucene.Net.Test.Index
 						}
 						catch (IOException e)
 						{
-							Sharpen.Runtime.PrintStackTrace(e, System.Console.Out);
+							e.printStackTrace();
 							Fail(testName + ": exception when creating IndexReader: " 
 								+ e);
 						}
@@ -409,7 +406,7 @@ namespace Lucene.Net.Test.Index
 							// all docs:
 							if (result != START_COUNT && result != END_COUNT)
 							{
-								Sharpen.Runtime.PrintStackTrace(err, System.Console.Out);
+								err.printStackTrace();
 								Fail(testName + ": method did throw exception but docFreq('aaa') is "
 									 + result + " instead of expected " + START_COUNT + " or " + END_COUNT);
 							}
@@ -421,7 +418,7 @@ namespace Lucene.Net.Test.Index
 						}
 						catch (IOException e)
 						{
-							Sharpen.Runtime.PrintStackTrace(e, System.Console.Out);
+							e.printStackTrace();
 							Fail(testName + ": exception when searching: " + e);
 						}
 						int result2 = hits.Length;
@@ -439,7 +436,7 @@ namespace Lucene.Net.Test.Index
 							// all docs:
 							if (result2 != result)
 							{
-								Sharpen.Runtime.PrintStackTrace(err, System.Console.Out);
+								err.printStackTrace();
 								Fail(testName + ": method did throw exception but hits.length for search on term 'aaa' is "
 									 + result2 + " instead of expected " + result);
 							}
@@ -464,7 +461,7 @@ namespace Lucene.Net.Test.Index
 						// Javadocs state that temp free Directory space
 						// required is at most 2X total input size of
 						// indices so let's make sure:
-						IsTrue("max free Directory space required exceeded 1X the total input index sizes during "
+						AssertTrue("max free Directory space required exceeded 1X the total input index sizes during "
 							 + methodName + ": max temp usage = " + (dir.GetMaxUsedSizeInBytes() - startDiskUsage
 							) + " bytes vs limit=" + (2 * (startDiskUsage + inputDiskUsage)) + "; starting disk usage = "
 							 + startDiskUsage + " bytes; " + "input index disk usage = " + inputDiskUsage + 
@@ -506,17 +503,17 @@ namespace Lucene.Net.Test.Index
 				{
 					return;
 				}
-				StackTraceElement[] trace = new Exception().GetStackTrace();
+				var trace = new StackTrace(new Exception()).GetFrames();
 				for (int i = 0; i < trace.Length; i++)
 				{
-					if (typeof(SegmentMerger).FullName.Equals(trace[i].GetClassName()) && "mergeTerms"
-						.Equals(trace[i].GetMethodName()) && !didFail1)
+					if (typeof(SegmentMerger).FullName.Equals(trace[i].GetMethod().DeclaringType.FullName) && "mergeTerms"
+						.Equals(trace[i].GetMethod().Name) && !didFail1)
 					{
 						didFail1 = true;
 						throw new IOException("fake disk full during mergeTerms");
 					}
-					if (typeof(LiveDocsFormat).FullName.Equals(trace[i].GetClassName()) && "writeLiveDocs"
-						.Equals(trace[i].GetMethodName()) && !didFail2)
+					if (typeof(LiveDocsFormat).FullName.Equals(trace[i].GetMethod().DeclaringType.FullName) && "writeLiveDocs"
+						.Equals(trace[i].GetMethod().Name) && !didFail2)
 					{
 						didFail2 = true;
 						throw new IOException("fake disk full while writing LiveDocs");
@@ -526,7 +523,7 @@ namespace Lucene.Net.Test.Index
 		}
 
 		// LUCENE-2593
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestCorruptionAfterDiskFullDuringMerge()
 		{
 			MockDirectoryWrapper dir = NewMockDirectory();
@@ -535,17 +532,17 @@ namespace Lucene.Net.Test.Index
 				MockAnalyzer(Random())).SetMergeScheduler(new SerialMergeScheduler()).SetReaderPooling
 				(true).SetMergePolicy(NewLogMergePolicy(2)));
 			// we can do this because we add/delete/add (and dont merge to "nothing")
-			w.SetKeepFullyDeletedSegments(true);
+			w.KeepFullyDeletedSegments = (true);
 			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-				();
-			doc.Add(NewTextField("f", "doctor who", Field.Store.NO));
-			w.AddDocument(doc);
+			{
+			    NewTextField("f", "doctor who", Field.Store.NO)
+			};
+		    w.AddDocument(doc);
 			w.Commit();
 			w.DeleteDocuments(new Term("f", "who"));
 			w.AddDocument(doc);
 			// disk fills up!
-			TestIndexWriterOnDiskFull.FailTwiceDuringMerge ftdm = new TestIndexWriterOnDiskFull.FailTwiceDuringMerge
-				();
+			var ftdm = new FailTwiceDuringMerge();
 			ftdm.SetDoFail();
 			dir.FailOn(ftdm);
 			try
@@ -568,7 +565,7 @@ namespace Lucene.Net.Test.Index
 		// LUCENE-1130: make sure immeidate disk full on creating
 		// an IndexWriter (hit during DW.ThreadState.init()) is
 		// OK:
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestImmediateDiskFull()
 		{
 			MockDirectoryWrapper dir = NewMockDirectory();
@@ -599,7 +596,7 @@ namespace Lucene.Net.Test.Index
 			}
 			try
 			{
-				writer.Close(false);
+				writer.Dispose(false);
 				Fail("did not hit disk full");
 			}
 			catch (IOException)
@@ -608,7 +605,7 @@ namespace Lucene.Net.Test.Index
 			// Make sure once disk space is avail again, we can
 			// cleanly close:
 			dir.SetMaxSizeInBytes(0);
-			writer.Close(false);
+			writer.Dispose(false);
 			dir.Dispose();
 		}
 
@@ -631,10 +628,11 @@ namespace Lucene.Net.Test.Index
 		private void AddDocWithIndex(IndexWriter writer, int index)
 		{
 			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-				();
-			doc.Add(NewTextField("content", "aaa " + index, Field.Store.NO));
-			doc.Add(NewTextField("id", string.Empty + index, Field.Store.NO));
-			if (DefaultCodecSupportsDocValues())
+			{
+			    NewTextField("content", "aaa " + index, Field.Store.NO),
+			    NewTextField("id", string.Empty + index, Field.Store.NO)
+			};
+		    if (DefaultCodecSupportsDocValues())
 			{
 				doc.Add(new NumericDocValuesField("numericdv", 1));
 			}

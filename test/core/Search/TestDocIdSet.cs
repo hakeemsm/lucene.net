@@ -22,20 +22,20 @@ namespace Lucene.Net.Search
 			DocIdSet innerSet = new _DocIdSet_39(maxdoc);
 			DocIdSet filteredSet = new _FilteredDocIdSet_72(innerSet);
 			//validate only even docids
-			DocIdSetIterator iter = filteredSet.Iterator();
+			DocIdSetIterator iter = filteredSet.IEnumerator();
 			List<int> list = new List<int>();
 			int doc = iter.Advance(3);
 			if (doc != DocIdSetIterator.NO_MORE_DOCS)
 			{
-				list.Add(Sharpen.Extensions.ValueOf(doc));
+				list.Add(Extensions.ValueOf(doc));
 				while ((doc = iter.NextDoc()) != DocIdSetIterator.NO_MORE_DOCS)
 				{
-					list.Add(Sharpen.Extensions.ValueOf(doc));
+					list.Add(Extensions.ValueOf(doc));
 				}
 			}
 			int[] docs = new int[list.Count];
 			int c = 0;
-			Iterator<int> intIter = list.Iterator();
+			IEnumerator<int> intIter = list.IEnumerator();
 			while (intIter.HasNext())
 			{
 				docs[c++] = intIter.Next();
@@ -57,7 +57,7 @@ namespace Lucene.Net.Search
 				this.maxdoc = maxdoc;
 			}
 
-			public override DocIdSetIterator Iterator()
+			public override DocIdSetIterator IEnumerator()
 			{
 				return new _DocIdSetIterator_43(maxdoc);
 			}
@@ -193,7 +193,7 @@ namespace Lucene.Net.Search
 				{
 				}
 
-				public override DocIdSetIterator Iterator()
+				public override DocIdSetIterator IEnumerator()
 				{
 					return null;
 				}

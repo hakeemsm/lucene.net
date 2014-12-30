@@ -58,7 +58,7 @@ namespace Lucene.Net.Test.Index
 				)));
 			IsTrue(reader != null);
 			AreEqual(indexDivisor, reader.GetTermInfosIndexDivisor());
-			TermsEnum terms = reader.Fields().Terms(DocHelper.TEXT_FIELD_2_KEY).Iterator(null
+			TermsEnum terms = reader.Fields().Terms(DocHelper.TEXT_FIELD_2_KEY).IEnumerator(null
 				);
 			terms.SeekCeil(new BytesRef("field"));
 			DocsEnum termDocs = TestUtil.Docs(Random(), terms, reader.LiveDocs, null, DocsEnum

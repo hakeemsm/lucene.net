@@ -35,7 +35,7 @@ namespace Lucene.Net.Test.Index
 			string ids = "-" + id;
 			IndexCommit last = null;
 			ICollection<IndexCommit> commits = DirectoryReader.ListCommits(dir);
-			for (Iterator<IndexCommit> iterator = commits.Iterator(); iterator.HasNext(); )
+			for (IEnumerator<IndexCommit> iterator = commits.IEnumerator(); iterator.HasNext(); )
 			{
 				IndexCommit commit = iterator.Next();
 				IDictionary<string, string> ud = commit.UserData;
@@ -163,7 +163,7 @@ namespace Lucene.Net.Test.Index
 						// This code reads the last id ("30" in this example) and deletes it
 						// if it is after the desired rollback point
 						string x = userData.Get("index");
-						string lastVal = Sharpen.Runtime.Substring(x, x.LastIndexOf("-") + 1);
+						string lastVal = Runtime.Substring(x, x.LastIndexOf("-") + 1);
 						int last = System.Convert.ToInt32(lastVal);
 						if (last > this.rollbackPoint)
 						{

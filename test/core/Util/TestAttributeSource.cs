@@ -153,7 +153,7 @@ namespace Lucene.Net.Util
         
             src = new AttributeSource();
             // TODO: how to fix this??
-            // orginal Java is: src.addAttribute((Class) Iterator.class);  // break this by unsafe cast
+            // orginal Java is: src.addAttribute((Class) IEnumerator.class);  // break this by unsafe cast
             Assert.Throws<ArgumentException>(() => src.AddAttribute<IEnumerator>(), "Should throw ArgumentException");
         }
 

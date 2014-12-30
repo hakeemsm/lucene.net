@@ -227,7 +227,7 @@ namespace Lucene.Net.Test.Index
 		private IList<BytesRef> FindTerms(IndexReader r)
 		{
 			System.Console.Out.WriteLine("TEST: findTerms");
-			TermsEnum termsEnum = MultiFields.GetTerms(r, "field").Iterator(null);
+			TermsEnum termsEnum = MultiFields.GetTerms(r, "field").IEnumerator(null);
 			IList<BytesRef> savedTerms = new List<BytesRef>();
 			int nextSave = TestUtil.NextInt(Random(), 500000, 1000000);
 			BytesRef term;
@@ -250,7 +250,7 @@ namespace Lucene.Net.Test.Index
 				);
 			IndexSearcher s = NewSearcher(r);
 			terms.Shuffle();
-			TermsEnum termsEnum = MultiFields.GetTerms(r, "field").Iterator(null);
+			TermsEnum termsEnum = MultiFields.GetTerms(r, "field").IEnumerator(null);
 			bool failed = false;
 			for (int iter = 0; iter < 10 * terms.Count; iter++)
 			{

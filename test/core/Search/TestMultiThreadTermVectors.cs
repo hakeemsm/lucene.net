@@ -81,7 +81,7 @@ namespace Lucene.Net.Search
 					}
 					catch (IOException ioe)
 					{
-						Sharpen.Runtime.PrintStackTrace(ioe);
+						Runtime.PrintStackTrace(ioe);
 					}
 				}
 			}
@@ -161,7 +161,7 @@ namespace Lucene.Net.Search
 			}
 			catch (Exception e)
 			{
-				Sharpen.Runtime.PrintStackTrace(e);
+				Runtime.PrintStackTrace(e);
 			}
 			return;
 		}
@@ -182,7 +182,7 @@ namespace Lucene.Net.Search
 				start = DateTime.Now.CurrentTimeMillis();
 				Terms vector = reader.GetTermVectors(docId).Terms("field");
 				timeElapsed += DateTime.Now.CurrentTimeMillis() - start;
-				VerifyVector(vector.Iterator(null), docId);
+				VerifyVector(vector.IEnumerator(null), docId);
 			}
 		}
 
@@ -194,7 +194,7 @@ namespace Lucene.Net.Search
 				Terms terms = vectors.Terms(field);
 				//HM:revisit 
 				//assert terms != null;
-				VerifyVector(terms.Iterator(null), num);
+				VerifyVector(terms.IEnumerator(null), num);
 			}
 		}
 

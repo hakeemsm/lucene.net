@@ -61,7 +61,7 @@ namespace Lucene.Net.Test.Index
 
 		protected internal IList<IndexCommit> snapshots = new List<IndexCommit>();
 
-		/// <exception cref="Sharpen.SystemException"></exception>
+		/// <exception cref="SystemException"></exception>
 		/// <exception cref="System.IO.IOException"></exception>
 		protected internal virtual void PrepareIndexAndSnapshots(SnapshotDeletionPolicy sdp
 			, IndexWriter writer, int numSnapshots)
@@ -189,7 +189,7 @@ namespace Lucene.Net.Test.Index
 						}
 						catch (Exception t)
 						{
-							Sharpen.Runtime.PrintStackTrace(t, System.Console.Out);
+							t.printStackTrace();
 							Fail("addDocument failed");
 						}
 						if (i % 2 == 0)

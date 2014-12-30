@@ -43,7 +43,7 @@ namespace Lucene.Net.Search
 			// delete 20 of them
 			for (int i_1 = 0; i_1 < 20; i_1++)
 			{
-				iw.DeleteDocuments(new Term("id", Sharpen.Extensions.ToString(Random().Next(iw.MaxDoc
+				iw.DeleteDocuments(new Term("id", Extensions.ToString(Random().Next(iw.MaxDoc
 					()))));
 			}
 			ir = iw.Reader;
@@ -110,7 +110,7 @@ namespace Lucene.Net.Search
 			for (int i = 0; i < 10; i++)
 			{
 				int id = Random().Next(ir.MaxDoc);
-				Query query = new TermQuery(new Term("id", Sharpen.Extensions.ToString(id)));
+				Query query = new TermQuery(new Term("id", Extensions.ToString(id)));
 				Filter expected = new QueryWrapperFilter(query);
 				Filter actual = new CachingWrapperFilter(expected);
 				AssertFilterEquals(expected, actual);
@@ -125,8 +125,8 @@ namespace Lucene.Net.Search
 			{
 				int id_start = Random().Next(ir.MaxDoc - 1);
 				int id_end = id_start + 1;
-				Query query = TermRangeQuery.NewStringRange("id", Sharpen.Extensions.ToString(id_start
-					), Sharpen.Extensions.ToString(id_end), true, true);
+				Query query = TermRangeQuery.NewStringRange("id", Extensions.ToString(id_start
+					), Extensions.ToString(id_end), true, true);
 				Filter expected = new QueryWrapperFilter(query);
 				Filter actual = new CachingWrapperFilter(expected);
 				AssertFilterEquals(expected, actual);
@@ -232,7 +232,7 @@ namespace Lucene.Net.Search
 				{
 				}
 
-				public override DocIdSetIterator Iterator()
+				public override DocIdSetIterator IEnumerator()
 				{
 					return null;
 				}
@@ -256,7 +256,7 @@ namespace Lucene.Net.Search
 			}
 			if (cachedSet == null)
 			{
-				IsTrue(originalSet == null || originalSet.Iterator() == null
+				IsTrue(originalSet == null || originalSet.IEnumerator() == null
 					);
 			}
 			else
@@ -289,11 +289,11 @@ namespace Lucene.Net.Search
 			AssertDocIdSetCacheable(reader, new QueryWrapperFilter(new TermQuery(new Term("test"
 				, "value"))), false);
 			// returns default empty docidset, always cacheable:
-			AssertDocIdSetCacheable(reader, NumericRangeFilter.NewIntRange("test", Sharpen.Extensions.ValueOf
-				(10000), Sharpen.Extensions.ValueOf(-10000), true, true), true);
+			AssertDocIdSetCacheable(reader, NumericRangeFilter.NewIntRange("test", Extensions.ValueOf
+				(10000), Extensions.ValueOf(-10000), true, true), true);
 			// is cacheable:
-			AssertDocIdSetCacheable(reader, FieldCacheRangeFilter.NewIntRange("test", Sharpen.Extensions.ValueOf
-				(10), Sharpen.Extensions.ValueOf(20), true, true), true);
+			AssertDocIdSetCacheable(reader, FieldCacheRangeFilter.NewIntRange("test", Extensions.ValueOf
+				(10), Extensions.ValueOf(20), true, true), true);
 			// a fixedbitset filter is always cacheable
 			AssertDocIdSetCacheable(reader, new _Filter_258(), true);
 			reader.Dispose();

@@ -51,7 +51,7 @@ namespace Lucene.Net.Search
 			iw.Dispose();
 			// no boosting
 			IndexSearcher searcher1 = NewSearcher(ir, false);
-			Similarity @base = searcher1.GetSimilarity();
+			Similarity @base = searcher1.Similarity;
 			// boosting
 			IndexSearcher searcher2 = NewSearcher(ir, false);
 			searcher2.SetSimilarity(new _PerFieldSimilarityWrapper_74(@base));

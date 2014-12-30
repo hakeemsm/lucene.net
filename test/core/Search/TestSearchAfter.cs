@@ -49,7 +49,7 @@ namespace Lucene.Net.Search
 				.STRING_VAL, true), SortField.FIELD_SCORE, SortField.FIELD_DOC }));
 			if (supportsDocValues)
 			{
-				Sharpen.Collections.AddAll(allSortFields, Arrays.AsList(new SortField[] { new SortField
+				Collections.AddAll(allSortFields, Arrays.AsList(new SortField[] { new SortField
 					("intdocvalues", SortField.Type.INT, false), new SortField("floatdocvalues", SortField.Type
 					.FLOAT, false), new SortField("sortedbytesdocvalues", SortField.Type.STRING, false
 					), new SortField("sortedbytesdocvaluesval", SortField.Type.STRING_VAL, false), new 

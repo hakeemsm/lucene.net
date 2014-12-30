@@ -655,7 +655,7 @@ namespace Lucene.Net.Test.Index
             {
                 Directory dir = oldIndexDirs[name];
                 IndexReader r = DirectoryReader.Open(dir);
-                TermsEnum terms = MultiFields.GetFields(r).Terms("content").Iterator(null);
+                TermsEnum terms = MultiFields.GetFields(r).Terms("content").IEnumerator(null);
                 BytesRef t = terms.Next();
                 IsNotNull(t);
                 // content field only has term aaa:

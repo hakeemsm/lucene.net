@@ -66,7 +66,7 @@ namespace Lucene.Net.Search
 
 		internal static int maxId;
 
-		internal static readonly int intLength = Sharpen.Extensions.ToString(int.MaxValue
+		internal static readonly int intLength = Extensions.ToString(int.MaxValue
 			).Length;
 
 		/// <summary>a simple padding function that should work with any int</summary>
@@ -80,7 +80,7 @@ namespace Lucene.Net.Search
 				n = int.MaxValue + n + 1;
 			}
 			b.Append(p);
-			string s = Sharpen.Extensions.ToString(n);
+			string s = Extensions.ToString(n);
 			for (int i = s.Length; i <= intLength; i++)
 			{
 				b.Append("0");
@@ -197,7 +197,7 @@ namespace Lucene.Net.Search
 				string bb = Pad(b);
 				string label = a + ":" + aa + " vs " + b + ":" + bb;
 				AreEqual("length of " + label, aa.Length, bb.Length);
-				IsTrue("compare less than " + label, Sharpen.Runtime.CompareOrdinal
+				IsTrue("compare less than " + label, Runtime.CompareOrdinal
 					(aa, bb) < 0);
 			}
 		}

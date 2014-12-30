@@ -60,7 +60,7 @@ namespace Lucene.Net.Search
 					doc.Add(NewTextField("content", "test", Field.Store.YES));
 				}
 				// every document has a defined 'mandant' field
-				doc.Add(NewStringField("mandant", Sharpen.Extensions.ToString(i % 3), Field.Store
+				doc.Add(NewStringField("mandant", Extensions.ToString(i % 3), Field.Store
 					.YES));
 				writer.AddDocument(doc);
 			}
@@ -120,7 +120,7 @@ namespace Lucene.Net.Search
 			// entries are silently overwritten
 			for (int hitid = 0; hitid < hitsByRank.Length; ++hitid)
 			{
-				resultMap.Put(Sharpen.Extensions.ValueOf(hitsByRank[hitid].Doc), Sharpen.Extensions.ValueOf
+				resultMap.Put(Extensions.ValueOf(hitsByRank[hitid].Doc), Extensions.ValueOf
 					(hitid));
 			}
 			// Key: Lucene
@@ -133,7 +133,7 @@ namespace Lucene.Net.Search
 			// besides the sorting both sets of hits must be identical
 			for (int hitid_1 = 0; hitid_1 < resultSort.Length; ++hitid_1)
 			{
-				int idHitDate = Sharpen.Extensions.ValueOf(resultSort[hitid_1].Doc);
+				int idHitDate = Extensions.ValueOf(resultSort[hitid_1].Doc);
 				// document ID
 				// from sorted
 				// search
@@ -148,7 +148,7 @@ namespace Lucene.Net.Search
 				// every hit must appear once in both result sets --> remove it from the
 				// Map.
 				// At the end the Map must be empty!
-				Sharpen.Collections.Remove(resultMap, idHitDate);
+				Collections.Remove(resultMap, idHitDate);
 			}
 			if (resultMap.Count == 0)
 			{
@@ -171,7 +171,7 @@ namespace Lucene.Net.Search
 				for (int docnum = 0; docnum < hits.Length; ++docnum)
 				{
 					int luceneId = null;
-					luceneId = Sharpen.Extensions.ValueOf(hits[docnum].Doc);
+					luceneId = Extensions.ValueOf(hits[docnum].Doc);
 					if (idMap.ContainsKey(luceneId))
 					{
 						StringBuilder message = new StringBuilder(prefix);
@@ -185,7 +185,7 @@ namespace Lucene.Net.Search
 					}
 					else
 					{
-						idMap.Put(luceneId, Sharpen.Extensions.ValueOf(docnum));
+						idMap.Put(luceneId, Extensions.ValueOf(docnum));
 					}
 				}
 			}
@@ -217,7 +217,7 @@ namespace Lucene.Net.Search
 			{
 				BooleanQuery bq = new BooleanQuery();
 				bq.Add(query, BooleanClause.Occur.MUST);
-				bq.Add(new TermQuery(new Term("mandant", Sharpen.Extensions.ToString(this.switcher
+				bq.Add(new TermQuery(new Term("mandant", Extensions.ToString(this.switcher
 					))), BooleanClause.Occur.MUST);
 				return base.Search(bq, filter, nDocs, sort);
 			}
@@ -227,7 +227,7 @@ namespace Lucene.Net.Search
 			{
 				BooleanQuery bq = new BooleanQuery();
 				bq.Add(query, BooleanClause.Occur.MUST);
-				bq.Add(new TermQuery(new Term("mandant", Sharpen.Extensions.ToString(this.switcher
+				bq.Add(new TermQuery(new Term("mandant", Extensions.ToString(this.switcher
 					))), BooleanClause.Occur.MUST);
 				return base.Search(bq, filter, nDocs);
 			}

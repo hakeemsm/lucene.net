@@ -117,7 +117,7 @@ namespace Lucene.Net.Test.Index
 								// however we're opening and closing the reader rapidly
 								IndexReader reader = this.writer.Reader;
 								int id = this.r.Next(this._enclosing.seq);
-								Term term = new Term("id", Sharpen.Extensions.ToString(id));
+								Term term = new Term("id", Extensions.ToString(id));
 								int count = TestIndexWriterReader.Count(term, reader);
 								this.writer.DeleteDocuments(term);
 								reader.Dispose();
@@ -128,7 +128,7 @@ namespace Lucene.Net.Test.Index
 				}
 				catch (Exception ex)
 				{
-					Sharpen.Runtime.PrintStackTrace(ex, System.Console.Out);
+					Runtime.PrintStackTrace(ex, System.Console.Out);
 					this.ex = ex;
 					this.run = false;
 				}

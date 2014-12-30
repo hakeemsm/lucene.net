@@ -56,7 +56,7 @@ namespace Lucene.Net.Test.Index
 			Terms terms = reader.GetTermVector(1, "field");
 			//HM:revisit 
 			//assert terms != null;
-			TermsEnum termsEnum = terms.Iterator(null);
+			TermsEnum termsEnum = terms.IEnumerator(null);
 			IsTrue(termsEnum.SeekExact(new BytesRef("withPayload")));
 			DocsAndPositionsEnum de = termsEnum.DocsAndPositions(null, null);
 			AreEqual(0, de.NextDoc());
@@ -104,7 +104,7 @@ namespace Lucene.Net.Test.Index
 			Terms terms = reader.GetTermVector(0, "field");
 			//HM:revisit 
 			//assert terms != null;
-			TermsEnum termsEnum = terms.Iterator(null);
+			TermsEnum termsEnum = terms.IEnumerator(null);
 			IsTrue(termsEnum.SeekExact(new BytesRef("withPayload")));
 			DocsAndPositionsEnum de = termsEnum.DocsAndPositions(null, null);
 			AreEqual(0, de.NextDoc());

@@ -1,14 +1,8 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
-using Lucene.Net.Document;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
-using Lucene.Net.Util;
-using Sharpen;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Index;
 
 namespace Lucene.Net.Test.Index
 {
@@ -26,10 +20,8 @@ namespace Lucene.Net.Test.Index
 			directory = NewDirectory();
 			writer = new RandomIndexWriter(Random(), directory);
 			// write document
-			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-				();
-			doc.Add(NewTextField("UUID", "1", Field.Store.YES));
-			writer.AddDocument(doc);
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document {NewTextField("UUID", "1", Field.Store.YES)};
+		    writer.AddDocument(doc);
 			writer.Commit();
 		}
 

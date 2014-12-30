@@ -52,7 +52,7 @@ namespace Lucene.Net.Util
 				}
 				for (int i_3 = 0; i_3 < 2; i_3++)
 				{
-					BytesRefIterator iterator = list.Iterator();
+					BytesRefIterator iterator = list.IEnumerator();
 					foreach (string @string in stringList)
 					{
 						AreEqual(@string, iterator.Next().Utf8ToString());
@@ -86,7 +86,7 @@ namespace Lucene.Net.Util
 					stringList.Add(randomRealisticUnicodeString);
 				}
 				stringList.Sort();
-				BytesRefIterator iter = list.Iterator(BytesRef.GetUTF8SortedAsUTF16Comparator());
+				BytesRefIterator iter = list.IEnumerator(BytesRef.GetUTF8SortedAsUTF16Comparator());
 				int i_1 = 0;
 				while ((spare = iter.Next()) != null)
 				{

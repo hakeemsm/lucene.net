@@ -57,7 +57,7 @@ namespace Lucene.Net.Search.Spans
 			{
 				if (input.IncrementToken())
 				{
-					payloadAttr.Payload = (new BytesRef(Sharpen.Runtime.GetBytesForString(("pos: " + 
+					payloadAttr.Payload = (new BytesRef(Runtime.GetBytesForString(("pos: " + 
 						pos), StandardCharsets.UTF_8)));
 					pos++;
 					return true;
@@ -458,7 +458,7 @@ namespace Lucene.Net.Search.Spans
 		public virtual void TestSpanPayloadCheck()
 		{
 			SpanTermQuery term1 = new SpanTermQuery(new Term("field", "five"));
-			BytesRef pay = new BytesRef(Sharpen.Runtime.GetBytesForString(("pos: " + 5), StandardCharsets
+			BytesRef pay = new BytesRef(Runtime.GetBytesForString(("pos: " + 5), StandardCharsets
 				.UTF_8));
 			SpanQuery query = new SpanPayloadCheckQuery(term1, Collections.SingletonList(pay.
 				bytes));
@@ -478,9 +478,9 @@ namespace Lucene.Net.Search.Spans
 			clauses[0] = term1;
 			clauses[1] = term2;
 			snq = new SpanNearQuery(clauses, 0, true);
-			pay = new BytesRef(Sharpen.Runtime.GetBytesForString(("pos: " + 0), StandardCharsets
+			pay = new BytesRef(Runtime.GetBytesForString(("pos: " + 0), StandardCharsets
 				.UTF_8));
-			pay2 = new BytesRef(Sharpen.Runtime.GetBytesForString(("pos: " + 1), StandardCharsets
+			pay2 = new BytesRef(Runtime.GetBytesForString(("pos: " + 1), StandardCharsets
 				.UTF_8));
 			list = new List<byte[]>();
 			list.Add(pay.bytes);
@@ -498,11 +498,11 @@ namespace Lucene.Net.Search.Spans
 			clauses[1] = term2;
 			clauses[2] = new SpanTermQuery(new Term("field", "five"));
 			snq = new SpanNearQuery(clauses, 0, true);
-			pay = new BytesRef(Sharpen.Runtime.GetBytesForString(("pos: " + 0), StandardCharsets
+			pay = new BytesRef(Runtime.GetBytesForString(("pos: " + 0), StandardCharsets
 				.UTF_8));
-			pay2 = new BytesRef(Sharpen.Runtime.GetBytesForString(("pos: " + 1), StandardCharsets
+			pay2 = new BytesRef(Runtime.GetBytesForString(("pos: " + 1), StandardCharsets
 				.UTF_8));
-			BytesRef pay3 = new BytesRef(Sharpen.Runtime.GetBytesForString(("pos: " + 2), StandardCharsets
+			BytesRef pay3 = new BytesRef(Runtime.GetBytesForString(("pos: " + 2), StandardCharsets
 				.UTF_8));
 			list = new List<byte[]>();
 			list.Add(pay.bytes);
@@ -535,13 +535,13 @@ namespace Lucene.Net.Search.Spans
 			CheckHits(query, new int[] { 1103, 1203, 1303, 1403, 1503, 1603, 1703, 1803, 1903
 				 });
 			ICollection<byte[]> payloads = new List<byte[]>();
-			BytesRef pay = new BytesRef(Sharpen.Runtime.GetBytesForString(("pos: " + 0), StandardCharsets
+			BytesRef pay = new BytesRef(Runtime.GetBytesForString(("pos: " + 0), StandardCharsets
 				.UTF_8));
-			BytesRef pay2 = new BytesRef(Sharpen.Runtime.GetBytesForString(("pos: " + 1), StandardCharsets
+			BytesRef pay2 = new BytesRef(Runtime.GetBytesForString(("pos: " + 1), StandardCharsets
 				.UTF_8));
-			BytesRef pay3 = new BytesRef(Sharpen.Runtime.GetBytesForString(("pos: " + 3), StandardCharsets
+			BytesRef pay3 = new BytesRef(Runtime.GetBytesForString(("pos: " + 3), StandardCharsets
 				.UTF_8));
-			BytesRef pay4 = new BytesRef(Sharpen.Runtime.GetBytesForString(("pos: " + 4), StandardCharsets
+			BytesRef pay4 = new BytesRef(Runtime.GetBytesForString(("pos: " + 4), StandardCharsets
 				.UTF_8));
 			payloads.Add(pay.bytes);
 			payloads.Add(pay2.bytes);

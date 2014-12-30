@@ -122,7 +122,7 @@ namespace Lucene.Net.Search
 			Terms vector = vectors.Terms("field");
 			IsNotNull(vector);
 			AreEqual(1, vector.Size());
-			TermsEnum termsEnum = vector.Iterator(null);
+			TermsEnum termsEnum = vector.IEnumerator(null);
 			IsNotNull(termsEnum.Next());
 			AreEqual("one", termsEnum.Term().Utf8ToString());
 			AreEqual(5, termsEnum.TotalTermFreq);
