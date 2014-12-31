@@ -1,16 +1,12 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Document;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
-using Lucene.Net.Util;
-using Sharpen;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Index;
+using Lucene.Net.TestFramework.Util;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
@@ -20,7 +16,7 @@ namespace Lucene.Net.Test.Index
 
 		private Directory dir;
 
-		/// <exception cref="System.Exception"></exception>
+		[SetUp]
 		public override void SetUp()
 		{
 			base.SetUp();
@@ -37,17 +33,17 @@ namespace Lucene.Net.Test.Index
 			int num = AtLeast(10);
 			for (int i = 0; i < num; i++)
 			{
-				field.StringValue = TestUtil.RandomUnicodeString(Random(), 10));
+				field.StringValue = TestUtil.RandomUnicodeString(Random(), 10);
 				writer.AddDocument(doc);
 			}
 			reader = writer.Reader;
 			writer.Dispose();
 		}
 
-		/// <exception cref="System.Exception"></exception>
-		public virtual void Test()
+		[Test]
+		public virtual void TestSearch()
 		{
-			IsTrue(reader.GetRefCount() > 0);
+			IsTrue(reader.RefCount > 0);
 			IndexSearcher searcher = NewSearcher(reader);
 			TermRangeQuery query = TermRangeQuery.NewStringRange("field", "a", "z", true, true
 				);
@@ -64,10 +60,10 @@ namespace Lucene.Net.Test.Index
 
 		// expected
 		// LUCENE-3800
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestReaderChaining()
 		{
-			IsTrue(reader.GetRefCount() > 0);
+			IsTrue(reader.RefCount > 0);
 			IndexReader wrappedReader = SlowCompositeReaderWrapper.Wrap(reader);
 			wrappedReader = new ParallelAtomicReader((AtomicReader)wrappedReader);
 			IndexSearcher searcher = NewSearcher(wrappedReader);

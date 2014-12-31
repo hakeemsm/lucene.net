@@ -1,34 +1,33 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
+using System;
 using System.Collections.Generic;
-using Lucene.Net.Test.Analysis;
+using System.Linq;
+using Lucene.Net.Analysis;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
+using Lucene.Net.Support;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Index;
+using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
-using Sharpen;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
 	public class TestPerSegmentDeletes : LuceneTestCase
 	{
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestDeletes1()
 		{
 			//IndexWriter.debug2 = System.out;
-			Directory dir = new MockDirectoryWrapper(new Random(Random().NextLong()), new RAMDirectory
+			Directory dir = new MockDirectoryWrapper(new Random(Random().Next()), new RAMDirectory
 				());
 			IndexWriterConfig iwc = new IndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random()));
 			iwc.SetMergeScheduler(new SerialMergeScheduler());
 			iwc.SetMaxBufferedDocs(5000);
 			iwc.SetRAMBufferSizeMB(100);
-			TestPerSegmentDeletes.RangeMergePolicy fsmp = new TestPerSegmentDeletes.RangeMergePolicy
-				(this, false);
+			var fsmp = new RangeMergePolicy(this, false);
 			iwc.SetMergePolicy(fsmp);
 			IndexWriter writer = new IndexWriter(dir, iwc);
 			for (int x = 0; x < 5; x++)
@@ -38,7 +37,7 @@ namespace Lucene.Net.Test.Index
 			//System.out.println("numRamDocs(" + x + ")" + writer.numRamDocs());
 			//System.out.println("commit1");
 			writer.Commit();
-			AreEqual(1, writer.segmentInfos.Size());
+			AreEqual(1, writer.segmentInfos.Count);
 			for (int x_1 = 5; x_1 < 10; x_1++)
 			{
 				writer.AddDocument(DocHelper.CreateDocument(x_1, "2", 2));
@@ -46,7 +45,7 @@ namespace Lucene.Net.Test.Index
 			//System.out.println("numRamDocs(" + x + ")" + writer.numRamDocs());
 			//System.out.println("commit2");
 			writer.Commit();
-			AreEqual(2, writer.segmentInfos.Size());
+			AreEqual(2, writer.segmentInfos.Count);
 			for (int x_2 = 10; x_2 < 15; x_2++)
 			{
 				writer.AddDocument(DocHelper.CreateDocument(x_2, "3", 2));
@@ -68,13 +67,12 @@ namespace Lucene.Net.Test.Index
 			// which should apply the delete id:2
 			writer.DeleteDocuments(new Term("id", "2"));
 			writer.Flush(false, false);
-			fsmp = (TestPerSegmentDeletes.RangeMergePolicy)writer.Config.GetMergePolicy(
-				);
+			fsmp = (RangeMergePolicy)writer.Config.MergePolicy;
 			fsmp.doMerge = true;
 			fsmp.start = 0;
 			fsmp.length = 2;
 			writer.MaybeMerge();
-			AreEqual(2, writer.segmentInfos.Size());
+			AreEqual(2, writer.segmentInfos.Count);
 			// id:2 shouldn't exist anymore because
 			// it's been applied in the merge and now it's gone
 			IndexReader r2 = writer.Reader;
@@ -142,25 +140,25 @@ namespace Lucene.Net.Test.Index
 			return false;
 		}
 
-		public static void PrintDelDocs(Bits bits)
+		public static void PrintDelDocs(IBits bits)
 		{
 			if (bits == null)
 			{
 				return;
 			}
-			for (int x = 0; x < bits.Length(); x++)
+			for (int x = 0; x < bits.Length; x++)
 			{
-				System.Console.Out.WriteLine(x + ":" + bits.Get(x));
+				System.Console.Out.WriteLine(x + ":" + bits[x]);
 			}
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		public virtual int[] ToDocsArray(Term term, Bits bits, IndexReader reader)
+		public virtual int[] ToDocsArray(Term term, IBits bits, IndexReader reader)
 		{
 			Fields fields = MultiFields.GetFields(reader);
 			Terms cterms = fields.Terms(term.field);
-			TermsEnum ctermsEnum = cterms.IEnumerator(null);
-			if (ctermsEnum.SeekExact(new BytesRef(term.Text())))
+			TermsEnum ctermsEnum = cterms.Iterator(null);
+			if (ctermsEnum.SeekExact(new BytesRef(term.Text)))
 			{
 				DocsEnum docsEnum = TestUtil.Docs(Random(), ctermsEnum, bits, null, DocsEnum.FLAG_NONE
 					);
@@ -191,24 +189,24 @@ namespace Lucene.Net.Test.Index
 
 			private readonly bool useCompoundFile;
 
-			private RangeMergePolicy(TestPerSegmentDeletes _enclosing, bool useCompoundFile)
+		    internal RangeMergePolicy(TestPerSegmentDeletes _enclosing, bool useCompoundFile)
 			{
 				this._enclosing = _enclosing;
 				this.useCompoundFile = useCompoundFile;
 			}
 
-			public override void Close()
+		    protected override void Dispose(bool disposing)
 			{
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
-			public override MergePolicy.MergeSpecification FindMerges(MergeTrigger mergeTrigger
+			public override MergePolicy.MergeSpecification FindMerges(MergeTrigger? mergeTrigger
 				, SegmentInfos segmentInfos)
 			{
 				MergePolicy.MergeSpecification ms = new MergePolicy.MergeSpecification();
 				if (this.doMerge)
 				{
-					MergePolicy.OneMerge om = new MergePolicy.OneMerge(segmentInfos.AsList().SubList(
+					MergePolicy.OneMerge om = new MergePolicy.OneMerge(segmentInfos.ToList().SubList(
 						this.start, this.start + this.length));
 					ms.Add(om);
 					this.doMerge = false;

@@ -1,26 +1,25 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Com.Carrotsearch.Randomizedtesting.Generators;
-using Lucene.Net.Test.Analysis;
+using System.Threading;
+using Lucene.Net.Analysis;
+using Lucene.Net.Codecs.Asserting.TestFramework;
+using Lucene.Net.Codecs.Lucene40.TestFramework;
+using Lucene.Net.Codecs.Lucene41.TestFramrwork;
+using Lucene.Net.Codecs.Lucene42.TestFramework;
+using Lucene.Net.Codecs.Lucene45.TestFramework;
+using Lucene.Net.Documents;
 using Lucene.Net.Codecs;
-using Lucene.Net.Codecs.Asserting;
-using Lucene.Net.Codecs.Lucene40;
-using Lucene.Net.Codecs.Lucene41;
-using Lucene.Net.Codecs.Lucene42;
 using Lucene.Net.Codecs.Lucene45;
 using Lucene.Net.Codecs.Lucene46;
-using Lucene.Net.Document;
 using Lucene.Net.Index;
-using Lucene.Net.Store;
+using Lucene.Net.Randomized.Generators;
+using Lucene.Net.Support;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
-using Sharpen;
+using Lucene.Net.Store;
+using Directory = Lucene.Net.Store.Directory;
 
 namespace Lucene.Net.Test.Index
 {
@@ -29,11 +28,12 @@ namespace Lucene.Net.Test.Index
 		private Lucene.Net.Documents.Document Doc(int id)
 		{
 			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-				();
-			doc.Add(new StringField("id", "doc-" + id, Field.Store.NO));
-			// make sure we don't set the doc's value to 0, to not confuse with a document that's missing values
-			doc.Add(new NumericDocValuesField("val", id + 1));
-			return doc;
+			{
+			    new StringField("id", "doc-" + id, Field.Store.NO),
+			    new NumericDocValuesField("val", id + 1)
+			};
+		    // make sure we don't set the doc's value to 0, to not confuse with a document that's missing values
+		    return doc;
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -252,11 +252,11 @@ namespace Lucene.Net.Test.Index
 				writer.Dispose();
 			}
 			AtomicReader slow = SlowCompositeReaderWrapper.Wrap(reader);
-			Bits liveDocs = slow.LiveDocs;
+			IBits liveDocs = slow.LiveDocs;
 			bool[] expectedLiveDocs = new bool[] { true, false, false, true, true, true };
-			for (int i_1 = 0; i_1 < expectedLiveDocs.Length; i_1++)
+			for (int i = 0; i < expectedLiveDocs.Length; i++)
 			{
-				AreEqual(expectedLiveDocs[i_1], liveDocs.Get(i_1));
+				AreEqual(expectedLiveDocs[i], liveDocs[i]);
 			}
 			long[] expectedValues = new long[] { 1, 2, 3, 17, 5, 17 };
 			NumericDocValues ndv = slow.GetNumericDocValues("val");
@@ -301,7 +301,7 @@ namespace Lucene.Net.Test.Index
 				writer.Dispose();
 			}
 			AtomicReader r = ((AtomicReader)reader.Leaves[0].Reader);
-			IsFalse(r.LiveDocs.Get(0));
+			IsFalse(r.LiveDocs[0]);
 			AreEqual(17, r.GetNumericDocValues("val").Get(1));
 			reader.Dispose();
 			dir.Dispose();
@@ -340,7 +340,7 @@ namespace Lucene.Net.Test.Index
 				writer.Dispose();
 			}
 			AtomicReader r = ((AtomicReader)reader.Leaves[0].Reader);
-			IsFalse(r.LiveDocs.Get(0));
+			IsFalse(r.LiveDocs[0]);
 			AreEqual(1, r.GetNumericDocValues("val").Get(0));
 			// deletes are currently applied first
 			reader.Dispose();
@@ -359,19 +359,16 @@ namespace Lucene.Net.Test.Index
 			IndexWriter writer = new IndexWriter(dir, conf);
 			for (int i = 0; i < 4; i++)
 			{
-				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-					();
-				doc.Add(new StringField("dvUpdateKey", "dv", Field.Store.NO));
-				doc.Add(new NumericDocValuesField("ndv", i));
-				doc.Add(new BinaryDocValuesField("bdv", new BytesRef(Extensions.ToString(
-					i))));
-				doc.Add(new SortedDocValuesField("sdv", new BytesRef(Extensions.ToString(
-					i))));
-				doc.Add(new SortedSetDocValuesField("ssdv", new BytesRef(Extensions.ToString
-					(i))));
-				doc.Add(new SortedSetDocValuesField("ssdv", new BytesRef(Extensions.ToString
-					(i * 2))));
-				writer.AddDocument(doc);
+				var doc = new Lucene.Net.Documents.Document
+				{
+				    new StringField("dvUpdateKey", "dv", Field.Store.NO),
+				    new NumericDocValuesField("ndv", i),
+				    new BinaryDocValuesField("bdv", new BytesRef(i.ToString())),
+				    new SortedDocValuesField("sdv", new BytesRef(i.ToString())),
+				    new SortedSetDocValuesField("ssdv", new BytesRef(i.ToString())),
+				    new SortedSetDocValuesField("ssdv", new BytesRef((i*2).ToString()))
+				};
+			    writer.AddDocument(doc);
 			}
 			writer.Commit();
 			// update all docs' ndv field
@@ -384,25 +381,23 @@ namespace Lucene.Net.Test.Index
 			SortedDocValues sdv = r.GetSortedDocValues("sdv");
 			SortedSetDocValues ssdv = r.GetSortedSetDocValues("ssdv");
 			BytesRef scratch = new BytesRef();
-			for (int i_1 = 0; i_1 < r.MaxDoc; i_1++)
+			for (int x = 0; x < r.MaxDoc; x++)
 			{
-				AreEqual(17, ndv.Get(i_1));
-				bdv.Get(i_1, scratch);
-				AreEqual(new BytesRef(Extensions.ToString(i_1)), scratch
-					);
-				sdv.Get(i_1, scratch);
-				AreEqual(new BytesRef(Extensions.ToString(i_1)), scratch
-					);
-				ssdv.SetDocument(i_1);
+				AreEqual(17, ndv.Get(x));
+				bdv.Get(x, scratch);
+				AreEqual(new BytesRef(x.ToString()), scratch);
+				sdv.Get(x, scratch);
+				AreEqual(new BytesRef(x.ToString()), scratch);
+				ssdv.SetDocument(x);
 				long ord = ssdv.NextOrd();
 				ssdv.LookupOrd(ord, scratch);
-				AreEqual(i_1, System.Convert.ToInt32(scratch.Utf8ToString(
+				AreEqual(x, System.Convert.ToInt32(scratch.Utf8ToString(
 					)));
-				if (i_1 != 0)
+				if (x != 0)
 				{
 					ord = ssdv.NextOrd();
 					ssdv.LookupOrd(ord, scratch);
-					AreEqual(i_1 * 2, System.Convert.ToInt32(scratch.Utf8ToString
+					AreEqual(x * 2, System.Convert.ToInt32(scratch.Utf8ToString
 						()));
 				}
 				AreEqual(SortedSetDocValues.NO_MORE_ORDS, ssdv.NextOrd());
@@ -423,12 +418,13 @@ namespace Lucene.Net.Test.Index
 			IndexWriter writer = new IndexWriter(dir, conf);
 			for (int i = 0; i < 2; i++)
 			{
-				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-					();
-				doc.Add(new StringField("dvUpdateKey", "dv", Field.Store.NO));
-				doc.Add(new NumericDocValuesField("ndv1", i));
-				doc.Add(new NumericDocValuesField("ndv2", i));
-				writer.AddDocument(doc);
+				var doc = new Lucene.Net.Documents.Document
+				{
+				    new StringField("dvUpdateKey", "dv", Field.Store.NO),
+				    new NumericDocValuesField("ndv1", i),
+				    new NumericDocValuesField("ndv2", i)
+				};
+			    writer.AddDocument(doc);
 			}
 			writer.Commit();
 			// update all docs' ndv1 field
@@ -457,10 +453,11 @@ namespace Lucene.Net.Test.Index
 			IndexWriter writer = new IndexWriter(dir, conf);
 			for (int i = 0; i < 2; i++)
 			{
-				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-					();
-				doc.Add(new StringField("dvUpdateKey", "dv", Field.Store.NO));
-				if (i == 0)
+				var doc = new Lucene.Net.Documents.Document
+				{
+				    new StringField("dvUpdateKey", "dv", Field.Store.NO)
+				};
+			    if (i == 0)
 				{
 					// index only one document with value
 					doc.Add(new NumericDocValuesField("ndv", 5));
@@ -494,15 +491,16 @@ namespace Lucene.Net.Test.Index
 			IndexWriter writer = new IndexWriter(dir, conf);
 			for (int i = 0; i < 2; i++)
 			{
-				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-					();
-				doc.Add(new StringField("id", "doc" + i, Field.Store.NO));
-				doc.Add(new NumericDocValuesField("ndv", 5));
-				writer.AddDocument(doc);
+				var doc = new Lucene.Net.Documents.Document
+				{
+				    new StringField("id", "doc" + i, Field.Store.NO),
+				    new NumericDocValuesField("ndv", 5)
+				};
+			    writer.AddDocument(doc);
 			}
 			writer.Commit();
 			// unset the value of 'doc0'
-			writer.UpdateNumericDocValue(new Term("id", "doc0"), "ndv", null);
+			writer.UpdateNumericDocValue(new Term("id", "doc0"), "ndv", 0);
 			writer.Dispose();
 			DirectoryReader reader = DirectoryReader.Open(dir);
 			AtomicReader r = ((AtomicReader)reader.Leaves[0].Reader);
@@ -518,9 +516,9 @@ namespace Lucene.Net.Test.Index
 					AreEqual(5, ndv.Get(i_1));
 				}
 			}
-			Bits docsWithField = r.GetDocsWithField("ndv");
-			IsFalse(docsWithField.Get(0));
-			IsTrue(docsWithField.Get(1));
+			IBits docsWithField = r.GetDocsWithField("ndv");
+			IsFalse(docsWithField[0]);
+			IsTrue(docsWithField[1]);
 			reader.Dispose();
 			dir.Dispose();
 		}
@@ -536,15 +534,16 @@ namespace Lucene.Net.Test.Index
 			IndexWriter writer = new IndexWriter(dir, conf);
 			for (int i = 0; i < 2; i++)
 			{
-				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-					();
-				doc.Add(new StringField("id", "doc", Field.Store.NO));
-				doc.Add(new NumericDocValuesField("ndv", 5));
-				writer.AddDocument(doc);
+				var doc = new Lucene.Net.Documents.Document
+				{
+				    new StringField("id", "doc", Field.Store.NO),
+				    new NumericDocValuesField("ndv", 5)
+				};
+			    writer.AddDocument(doc);
 			}
 			writer.Commit();
 			// unset the value of 'doc'
-			writer.UpdateNumericDocValue(new Term("id", "doc"), "ndv", null);
+			writer.UpdateNumericDocValue(new Term("id", "doc"), "ndv", 0);
 			writer.Dispose();
 			DirectoryReader reader = DirectoryReader.Open(dir);
 			AtomicReader r = ((AtomicReader)reader.Leaves[0].Reader);
@@ -553,9 +552,9 @@ namespace Lucene.Net.Test.Index
 			{
 				AreEqual(0, ndv.Get(i_1));
 			}
-			Bits docsWithField = r.GetDocsWithField("ndv");
-			IsFalse(docsWithField.Get(0));
-			IsFalse(docsWithField.Get(1));
+			IBits docsWithField = r.GetDocsWithField("ndv");
+			IsFalse(docsWithField[0]);
+			IsFalse(docsWithField[1]);
 			reader.Dispose();
 			dir.Dispose();
 		}
@@ -571,10 +570,11 @@ namespace Lucene.Net.Test.Index
 				(Random()));
 			IndexWriter writer = new IndexWriter(dir, conf);
 			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-				();
-			doc.Add(new StringField("key", "doc", Field.Store.NO));
-			doc.Add(new StringField("foo", "bar", Field.Store.NO));
-			writer.AddDocument(doc);
+			{
+			    new StringField("key", "doc", Field.Store.NO),
+			    new StringField("foo", "bar", Field.Store.NO)
+			};
+		    writer.AddDocument(doc);
 			// flushed document
 			writer.Commit();
 			writer.AddDocument(doc);
@@ -610,7 +610,7 @@ namespace Lucene.Net.Test.Index
 			Directory dir = NewDirectory();
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random()));
-			conf.SetCodec(new _Lucene46Codec_554());
+			conf.SetCodec(new AnonymousLucene46Codec());
 			IndexWriter writer = new IndexWriter(dir, conf);
 			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
@@ -639,13 +639,9 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		private sealed class _Lucene46Codec_554 : Lucene46Codec
+		private sealed class AnonymousLucene46Codec : Lucene46Codec
 		{
-			public _Lucene46Codec_554()
-			{
-			}
-
-			public override DocValuesFormat GetDocValuesFormatForField(string field)
+		    public override DocValuesFormat GetDocValuesFormatForField(string field)
 			{
 				return new Lucene45DocValuesFormat();
 			}
@@ -692,7 +688,7 @@ namespace Lucene.Net.Test.Index
 			Random random = Random();
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(random));
-			IndexWriter writer = new IndexWriter(dir, conf.Clone());
+			IndexWriter writer = new IndexWriter(dir, (IndexWriterConfig) conf.Clone());
 			int docid = 0;
 			int numRounds = AtLeast(10);
 			for (int rnd = 0; rnd < numRounds; rnd++)
@@ -705,7 +701,7 @@ namespace Lucene.Net.Test.Index
 				for (int i = 0; i < numDocs; i++)
 				{
 					doc.RemoveField("id");
-					doc.Add(new StringField("id", Extensions.ToString(docid++), Field.Store.NO
+                    doc.Add(new StringField("id", (docid++).ToString(), Field.Store.NO
 						));
 					writer.AddDocument(doc);
 				}
@@ -714,8 +710,7 @@ namespace Lucene.Net.Test.Index
 				if (random.NextDouble() < 0.2)
 				{
 					// randomly delete some docs
-					writer.DeleteDocuments(new Term("id", Extensions.ToString(random.Next(docid
-						))));
+                    writer.DeleteDocuments(new Term("id", random.Next().ToString()));
 				}
 				// randomly commit or reopen-IW (or nothing), before forceMerge
 				if (random.NextDouble() < 0.4)
@@ -727,7 +722,7 @@ namespace Lucene.Net.Test.Index
 					if (random.NextDouble() < 0.1)
 					{
 						writer.Dispose();
-						writer = new IndexWriter(dir, conf.Clone());
+						writer = new IndexWriter(dir, (IndexWriterConfig) conf.Clone());
 					}
 				}
 				// add another document with the current value, to be sure forceMerge has
@@ -737,7 +732,7 @@ namespace Lucene.Net.Test.Index
 				// and some MPs might now merge it, thereby invalidating test's
 				// assumption that the reader has no deletes).
 				doc = new Lucene.Net.Documents.Document();
-				doc.Add(new StringField("id", Extensions.ToString(docid++), Field.Store.NO
+                doc.Add(new StringField("id", (docid++).ToString(), Field.Store.NO
 					));
 				doc.Add(new StringField("key", "doc", Field.Store.NO));
 				doc.Add(new NumericDocValuesField("ndv", value));
@@ -755,8 +750,7 @@ namespace Lucene.Net.Test.Index
 				}
 				AreEqual(1, reader.Leaves.Count);
 				AtomicReader r = ((AtomicReader)reader.Leaves[0].Reader);
-				IsNull("index should have no deletes after forceMerge", r.
-					GetLiveDocs());
+				AssertNull("index should have no deletes after forceMerge", r.LiveDocs);
 				NumericDocValues ndv = r.GetNumericDocValues("ndv");
 				IsNotNull(ndv);
 				for (int i_1 = 0; i_1 < r.MaxDoc; i_1++)
@@ -843,11 +837,12 @@ namespace Lucene.Net.Test.Index
 				//      System.out.println("[" + Thread.currentThread().getName() + "]: round=" + i + ", numDocs=" + numDocs);
 				for (int j = 0; j < numDocs; j++)
 				{
-					Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-						();
-					doc.Add(new StringField("id", "doc-" + docID, Field.Store.NO));
-					doc.Add(new StringField("key", "all", Field.Store.NO));
-					// update key
+					var doc = new Lucene.Net.Documents.Document
+					{
+					    new StringField("id", "doc-" + docID, Field.Store.NO),
+					    new StringField("key", "all", Field.Store.NO)
+					};
+				    // update key
 					// add all fields with their current value
 					for (int f = 0; f < fieldValues.Length; f++)
 					{
@@ -861,7 +856,7 @@ namespace Lucene.Net.Test.Index
 				{
 					if (!fieldHasValue[field])
 					{
-						writer.UpdateNumericDocValue(new Term("key", "all"), "f" + field, null);
+						writer.UpdateNumericDocValue(new Term("key", "all"), "f" + field, 0);
 					}
 				}
 				int fieldIdx = random.Next(fieldValues.Length);
@@ -870,7 +865,7 @@ namespace Lucene.Net.Test.Index
 				{
 					//        System.out.println("[" + Thread.currentThread().getName() + "]: unset field '" + updateField + "'");
 					fieldHasValue[fieldIdx] = false;
-					writer.UpdateNumericDocValue(new Term("key", "all"), updateField, null);
+					writer.UpdateNumericDocValue(new Term("key", "all"), updateField, 0);
 				}
 				else
 				{
@@ -903,28 +898,28 @@ namespace Lucene.Net.Test.Index
 				{
 					AtomicReader r = ((AtomicReader)context.Reader);
 					//        System.out.println(((SegmentReader) r).getSegmentName());
-					Bits liveDocs = r.LiveDocs;
+					IBits liveDocs = r.LiveDocs;
 					for (int field_1 = 0; field_1 < fieldValues.Length; field_1++)
 					{
 						string f = "f" + field_1;
 						NumericDocValues ndv = r.GetNumericDocValues(f);
-						Bits docsWithField = r.GetDocsWithField(f);
+						IBits docsWithField = r.GetDocsWithField(f);
 						IsNotNull(ndv);
 						int maxDoc = r.MaxDoc;
 						for (int doc = 0; doc < maxDoc; doc++)
 						{
-							if (liveDocs == null || liveDocs.Get(doc))
+							if (liveDocs == null || liveDocs[doc])
 							{
 								//              System.out.println("doc=" + (doc + context.docBase) + " f='" + f + "' vslue=" + ndv.get(doc));
 								if (fieldHasValue[field_1])
 								{
-									IsTrue(docsWithField.Get(doc));
-									AreEqual("invalid value for doc=" + doc + ", field=" + f +
+									IsTrue(docsWithField[doc]);
+									AssertEquals("invalid value for doc=" + doc + ", field=" + f +
 										 ", reader=" + r, fieldValues[field_1], ndv.Get(doc));
 								}
 								else
 								{
-									IsFalse(docsWithField.Get(doc));
+									IsFalse(docsWithField[doc]);
 								}
 							}
 						}
@@ -979,11 +974,11 @@ namespace Lucene.Net.Test.Index
 			{
 				AtomicReader r = ((AtomicReader)context.Reader);
 				NumericDocValues ndv = r.GetNumericDocValues("ndv");
-				Bits docsWithField = r.GetDocsWithField("ndv");
+				IBits docsWithField = r.GetDocsWithField("ndv");
 				IsNotNull(docsWithField);
-				IsTrue(docsWithField.Get(0));
+				IsTrue(docsWithField[0]);
 				AreEqual(5L, ndv.Get(0));
-				IsFalse(docsWithField.Get(1));
+				IsFalse(docsWithField[1]);
 				AreEqual(0L, ndv.Get(1));
 			}
 			reader.Dispose();
@@ -1043,11 +1038,12 @@ namespace Lucene.Net.Test.Index
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random()));
 			IndexWriter writer = new IndexWriter(dir, conf);
-			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-				();
-			doc.Add(new StringField("f", "mock-value", Field.Store.NO));
-			doc.Add(new NumericDocValuesField("f", 5));
-			writer.AddDocument(doc);
+			var doc = new Lucene.Net.Documents.Document
+			{
+			    new StringField("f", "mock-value", Field.Store.NO),
+			    new NumericDocValuesField("f", 5)
+			};
+		    writer.AddDocument(doc);
 			writer.Commit();
 			writer.UpdateNumericDocValue(new Term("f", "mock-value"), "f", 17L);
 			writer.Dispose();
@@ -1063,8 +1059,8 @@ namespace Lucene.Net.Test.Index
 		[NUnit.Framework.Test]
 		public virtual void TestUpdateOldSegments()
 		{
-			Codec[] oldCodecs = new Codec[] { new Lucene40RWCodec(), new Lucene41RWCodec(), new 
-				Lucene42RWCodec(), new Lucene45RWCodec() };
+			Codec[] oldCodecs = { new Lucene40RWCodec(), new Lucene41RWCodec(), new 
+			    Lucene42RWCodec(), new Lucene45RWCodec() };
 			Directory dir = NewDirectory();
 			bool oldValue = OLD_FORMAT_IMPERSONATION_IS_ACTIVE;
 			// create a segment with an old Codec
@@ -1073,11 +1069,12 @@ namespace Lucene.Net.Test.Index
 			conf.SetCodec(oldCodecs[Random().Next(oldCodecs.Length)]);
 			OLD_FORMAT_IMPERSONATION_IS_ACTIVE = true;
 			IndexWriter writer = new IndexWriter(dir, conf);
-			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-				();
-			doc.Add(new StringField("id", "doc", Field.Store.NO));
-			doc.Add(new NumericDocValuesField("f", 5));
-			writer.AddDocument(doc);
+			var doc = new Lucene.Net.Documents.Document
+			{
+			    new StringField("id", "doc", Field.Store.NO),
+			    new NumericDocValuesField("f", 5)
+			};
+		    writer.AddDocument(doc);
 			writer.Dispose();
 			conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(Random()));
 			writer = new IndexWriter(dir, conf);
@@ -1113,10 +1110,8 @@ namespace Lucene.Net.Test.Index
 			int numDocs = AtLeast(2000);
 			for (int i = 0; i < numDocs; i++)
 			{
-				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-					();
-				doc.Add(new StringField("id", "doc" + i, Field.Store.NO));
-				double group = Random().NextDouble();
+				var doc = new Lucene.Net.Documents.Document {new StringField("id", "doc" + i, Field.Store.NO)};
+			    double group = Random().NextDouble();
 				string g;
 				if (group < 0.1)
 				{
@@ -1154,12 +1149,12 @@ namespace Lucene.Net.Test.Index
 			AtomicInteger numUpdates = new AtomicInteger(AtLeast(100));
 			// same thread updates a field as well as reopens
 			Thread[] threads = new Thread[numThreads];
-			for (int i_1 = 0; i_1 < threads.Length; i_1++)
+			for (int i = 0; i < threads.Length; i++)
 			{
-				string f = "f" + i_1;
-				string cf = "cf" + i_1;
-				threads[i_1] = new _Thread_1014(numUpdates, writer, f, cf, numDocs, done, "UpdateThread-"
-					 + i_1);
+				string f = "f" + i;
+				string cf = "cf" + i;
+			    threads[i] = new Thread(new TermThread(numUpdates, writer, f, cf, numDocs, done, "UpdateThread-"
+			                                                                                         + i).Run);
 			}
 			//              System.out.println("[" + Thread.currentThread().getName() + "] numUpdates=" + numUpdates + " updateTerm=" + t);
 			// sometimes unset a value
@@ -1176,7 +1171,7 @@ namespace Lucene.Net.Test.Index
 			{
 				t.Start();
 			}
-			done.Await();
+			done.Wait();
 			writer.Dispose();
 			DirectoryReader reader = DirectoryReader.Open(dir);
 			foreach (AtomicReaderContext context in reader.Leaves)
@@ -1186,15 +1181,15 @@ namespace Lucene.Net.Test.Index
 				{
 					NumericDocValues ndv = r.GetNumericDocValues("f" + i_2);
 					NumericDocValues control = r.GetNumericDocValues("cf" + i_2);
-					Bits docsWithNdv = r.GetDocsWithField("f" + i_2);
-					Bits docsWithControl = r.GetDocsWithField("cf" + i_2);
-					Bits liveDocs = r.LiveDocs;
+					IBits docsWithNdv = r.GetDocsWithField("f" + i_2);
+					IBits docsWithControl = r.GetDocsWithField("cf" + i_2);
+					IBits liveDocs = r.LiveDocs;
 					for (int j = 0; j < r.MaxDoc; j++)
 					{
-						if (liveDocs == null || liveDocs.Get(j))
+						if (liveDocs == null || liveDocs[j])
 						{
-							AreEqual(docsWithNdv.Get(j), docsWithControl.Get(j));
-							if (docsWithNdv.Get(j))
+							AreEqual(docsWithNdv[j], docsWithControl[j]);
+							if (docsWithNdv[j])
 							{
 								AreEqual(control.Get(j), ndv.Get(j) * 2);
 							}
@@ -1206,10 +1201,10 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		private sealed class _Thread_1014 : Thread
+		private sealed class TermThread
 		{
-			public _Thread_1014(AtomicInteger numUpdates, IndexWriter writer, string f, string
-				 cf, int numDocs, CountdownEvent done, string baseArg1) : base(baseArg1)
+			public TermThread(AtomicInteger numUpdates, IndexWriter writer, string f, string
+				 cf, int numDocs, CountdownEvent done, string baseArg1)
 			{
 				this.numUpdates = numUpdates;
 				this.writer = writer;
@@ -1219,14 +1214,14 @@ namespace Lucene.Net.Test.Index
 				this.done = done;
 			}
 
-			public override void Run()
+			public void Run()
 			{
 				DirectoryReader reader = null;
 				bool success = false;
 				try
 				{
-					Random random = LuceneTestCase.Random();
-					while (numUpdates.GetAndDecrement() > 0)
+					Random random = Random();
+					while (numUpdates.DecrementAndGet() > 0)
 					{
 						double group = random.NextDouble();
 						Term t;
@@ -1254,8 +1249,8 @@ namespace Lucene.Net.Test.Index
 						}
 						if (random.NextBoolean())
 						{
-							writer.UpdateNumericDocValue(t, f, null);
-							writer.UpdateNumericDocValue(t, cf, null);
+							writer.UpdateNumericDocValue(t, f, 0);
+							writer.UpdateNumericDocValue(t, cf, 0);
 						}
 						else
 						{
@@ -1293,7 +1288,7 @@ namespace Lucene.Net.Test.Index
 				}
 				catch (IOException e)
 				{
-					throw new SystemException(e);
+					throw new SystemException(e.Message,e);
 				}
 				finally
 				{
@@ -1307,11 +1302,11 @@ namespace Lucene.Net.Test.Index
 						{
 							if (success)
 							{
-								throw new SystemException(e);
+								throw new SystemException(e.Message,e);
 							}
 						}
 					}
-					done.CountDown();
+					done.Signal();
 				}
 			}
 
@@ -1341,20 +1336,21 @@ namespace Lucene.Net.Test.Index
 			int numDocs = AtLeast(10);
 			for (int i = 0; i < numDocs; i++)
 			{
-				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-					();
-				doc.Add(new StringField("id", "doc" + i, Field.Store.NO));
-				long value = Random().Next();
-				doc.Add(new NumericDocValuesField("f", value));
-				doc.Add(new NumericDocValuesField("cf", value * 2));
-				writer.AddDocument(doc);
+			    long value = Random().Next();
+			    var doc = new Lucene.Net.Documents.Document
+			    {
+			        new StringField("id", "doc" + i, Field.Store.NO),
+			        new NumericDocValuesField("f", value),
+			        new NumericDocValuesField("cf", value*2)
+			    };
+			    writer.AddDocument(doc);
 			}
 			int numGens = AtLeast(5);
 			for (int i_1 = 0; i_1 < numGens; i_1++)
 			{
 				int doc = Random().Next(numDocs);
 				Term t = new Term("id", "doc" + doc);
-				long value = Random().NextLong();
+				long value = Random().NextLong(0,long.MaxValue);
 				writer.UpdateNumericDocValue(t, "f", value);
 				writer.UpdateNumericDocValue(t, "cf", value * 2);
 				DirectoryReader reader = DirectoryReader.Open(writer, true);
@@ -1383,8 +1379,8 @@ namespace Lucene.Net.Test.Index
 				(Random()));
 			conf.SetMergePolicy(NoMergePolicy.COMPOUND_FILES);
 			// disable merges to simplify test assertions.
-			conf.SetCodec(new _Lucene46Codec_1156());
-			IndexWriter writer = new IndexWriter(dir, conf.Clone());
+			conf.SetCodec(new AnonymousLucene46Codec2());
+			IndexWriter writer = new IndexWriter(dir, (IndexWriterConfig) conf.Clone());
 			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(new StringField("id", "d0", Field.Store.NO));
@@ -1393,13 +1389,15 @@ namespace Lucene.Net.Test.Index
 			writer.AddDocument(doc);
 			writer.Dispose();
 			// change format
-			conf.SetCodec(new _Lucene46Codec_1171());
-			writer = new IndexWriter(dir, conf.Clone());
-			doc = new Lucene.Net.Documents.Document();
-			doc.Add(new StringField("id", "d1", Field.Store.NO));
-			doc.Add(new NumericDocValuesField("f1", 17L));
-			doc.Add(new NumericDocValuesField("f2", 2L));
-			writer.AddDocument(doc);
+			conf.SetCodec(new AnonymousLucene46Codec3());
+			writer = new IndexWriter(dir, (IndexWriterConfig) conf.Clone());
+			doc = new Lucene.Net.Documents.Document
+			{
+			    new StringField("id", "d1", Field.Store.NO),
+			    new NumericDocValuesField("f1", 17L),
+			    new NumericDocValuesField("f2", 2L)
+			};
+		    writer.AddDocument(doc);
 			writer.UpdateNumericDocValue(new Term("id", "d0"), "f1", 12L);
 			writer.Dispose();
 			DirectoryReader reader = DirectoryReader.Open(dir);
@@ -1414,25 +1412,17 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		private sealed class _Lucene46Codec_1156 : Lucene46Codec
+		private sealed class AnonymousLucene46Codec2 : Lucene46Codec
 		{
-			public _Lucene46Codec_1156()
-			{
-			}
-
-			public override DocValuesFormat GetDocValuesFormatForField(string field)
+		    public override DocValuesFormat GetDocValuesFormatForField(string field)
 			{
 				return new Lucene45DocValuesFormat();
 			}
 		}
 
-		private sealed class _Lucene46Codec_1171 : Lucene46Codec
+		private sealed class AnonymousLucene46Codec3 : Lucene46Codec
 		{
-			public _Lucene46Codec_1171()
-			{
-			}
-
-			public override DocValuesFormat GetDocValuesFormatForField(string field)
+		    public override DocValuesFormat GetDocValuesFormatForField(string field)
 			{
 				return new AssertingDocValuesFormat();
 			}
@@ -1456,13 +1446,14 @@ namespace Lucene.Net.Test.Index
 			// create first index
 			for (int i = 0; i < numDocs; i++)
 			{
-				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-					();
-				doc.Add(new StringField("id", RandomPicks.RandomFrom(Random(), randomTerms), Field.Store
-					.NO));
-				doc.Add(new NumericDocValuesField("ndv", 4L));
-				doc.Add(new NumericDocValuesField("control", 8L));
-				writer.AddDocument(doc);
+				var doc = new Lucene.Net.Documents.Document
+				{
+				    new StringField("id", Random().RandomFrom(randomTerms), Field.Store
+				        .NO),
+				    new NumericDocValuesField("ndv", 4L),
+				    new NumericDocValuesField("control", 8L)
+				};
+			    writer.AddDocument(doc);
 			}
 			if (Random().NextBoolean())
 			{
@@ -1470,7 +1461,7 @@ namespace Lucene.Net.Test.Index
 			}
 			// update some docs to a random value
 			long value = Random().Next();
-			Term term = new Term("id", RandomPicks.RandomFrom(Random(), randomTerms));
+			Term term = new Term("id", Random().RandomFrom(randomTerms));
 			writer.UpdateNumericDocValue(term, "ndv", value);
 			writer.UpdateNumericDocValue(term, "control", value * 2);
 			writer.Dispose();
@@ -1511,11 +1502,12 @@ namespace Lucene.Net.Test.Index
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random()));
 			IndexWriter writer = new IndexWriter(dir, conf);
-			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-				();
-			doc.Add(new StringField("id", "d0", Field.Store.NO));
-			doc.Add(new NumericDocValuesField("f", 1L));
-			writer.AddDocument(doc);
+			var doc = new Lucene.Net.Documents.Document
+			{
+			    new StringField("id", "d0", Field.Store.NO),
+			    new NumericDocValuesField("f", 1L)
+			};
+		    writer.AddDocument(doc);
 			// create first gen of update files
 			writer.UpdateNumericDocValue(new Term("id", "d0"), "f", 2L);
 			writer.Commit();
@@ -1605,7 +1597,7 @@ namespace Lucene.Net.Test.Index
 					NumericDocValues cf = r.GetNumericDocValues("cf" + i_2);
 					for (int j = 0; j < r.MaxDoc; j++)
 					{
-						AreEqual("reader=" + r + ", field=f" + i_2 + ", doc=" + j, 
+						AssertEquals("reader=" + r + ", field=f" + i_2 + ", doc=" + j, 
 							cf.Get(j), f.Get(j) * 2);
 					}
 				}

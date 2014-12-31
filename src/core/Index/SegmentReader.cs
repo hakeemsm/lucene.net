@@ -35,7 +35,7 @@ namespace Lucene.Net.Index
         // tells us the docCount:
         private readonly int numDocs;
 
-        internal readonly SegmentCoreReaders core;
+        public readonly SegmentCoreReaders core;
 
 		internal readonly SegmentDocValues segDocValues;
 		private sealed class AnonymousCTLDictionary1 : CloseableThreadLocal<IDictionary<string, object>>

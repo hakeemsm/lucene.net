@@ -1,15 +1,12 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Document;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
+using Lucene.Net.Randomized.Generators;
 using Lucene.Net.Store;
-using Lucene.Net.Util;
-using Sharpen;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Index;
+using Lucene.Net.TestFramework.Util;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
@@ -17,8 +14,8 @@ namespace Lucene.Net.Test.Index
 	{
 		// Tests whether the DocumentWriter correctly enable the
 		// omitNorms bit in the FieldInfo
-		/// <exception cref="System.Exception"></exception>
-		public virtual void TestOmitNorms()
+		[Test]
+		public virtual void TestDocOmitNorms()
 		{
 			Directory ram = NewDirectory();
 			Analyzer analyzer = new MockAnalyzer(Random());
@@ -30,7 +27,7 @@ namespace Lucene.Net.Test.Index
 			d.Add(f1);
 			// this field will NOT have norms
 			FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
-			customType.OmitsNorms = (true);
+			customType.OmitNorms = (true);
 			Field f2 = NewField("f2", "This field has NO norms in all docs", customType);
 			d.Add(f2);
 			writer.AddDocument(d);
@@ -48,9 +45,9 @@ namespace Lucene.Net.Test.Index
 			writer.Dispose();
 			SegmentReader reader = GetOnlySegmentReader(DirectoryReader.Open(ram));
 			FieldInfos fi = reader.FieldInfos;
-			IsTrue("OmitNorms field bit should be set.", fi.FieldInfo(
+			AssertTrue("OmitNorms field bit should be set.", fi.FieldInfo(
 				"f1").OmitsNorms);
-			IsTrue("OmitNorms field bit should be set.", fi.FieldInfo(
+			AssertTrue("OmitNorms field bit should be set.", fi.FieldInfo(
 				"f2").OmitsNorms);
 			reader.Dispose();
 			ram.Dispose();
@@ -58,7 +55,7 @@ namespace Lucene.Net.Test.Index
 
 		// Tests whether merging of docs that have different
 		// omitNorms for the same field works
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestMixedMerge()
 		{
 			Directory ram = NewDirectory();
@@ -72,7 +69,7 @@ namespace Lucene.Net.Test.Index
 			d.Add(f1);
 			// this field will NOT have norms
 			FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
-			customType.OmitsNorms = (true);
+			customType.OmitNorms = (true);
 			Field f2 = NewField("f2", "This field has NO norms in all docs", customType);
 			d.Add(f2);
 			for (int i = 0; i < 30; i++)
@@ -95,9 +92,9 @@ namespace Lucene.Net.Test.Index
 			writer.Dispose();
 			SegmentReader reader = GetOnlySegmentReader(DirectoryReader.Open(ram));
 			FieldInfos fi = reader.FieldInfos;
-			IsTrue("OmitNorms field bit should be set.", fi.FieldInfo(
+			AssertTrue("OmitNorms field bit should be set.", fi.FieldInfo(
 				"f1").OmitsNorms);
-			IsTrue("OmitNorms field bit should be set.", fi.FieldInfo(
+			AssertTrue("OmitNorms field bit should be set.", fi.FieldInfo(
 				"f2").OmitsNorms);
 			reader.Dispose();
 			ram.Dispose();
@@ -106,7 +103,7 @@ namespace Lucene.Net.Test.Index
 		// Make sure first adding docs that do not omitNorms for
 		// field X, then adding docs that do omitNorms for that same
 		// field, 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestMixedRAM()
 		{
 			Directory ram = NewDirectory();
@@ -120,7 +117,7 @@ namespace Lucene.Net.Test.Index
 			d.Add(f1);
 			// this field will NOT have norms
 			FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
-			customType.OmitsNorms = (true);
+			customType.OmitNorms = (true);
 			Field f2 = NewField("f2", "This field has NO norms in all docs", customType);
 			d.Add(f2);
 			for (int i = 0; i < 5; i++)
@@ -137,9 +134,9 @@ namespace Lucene.Net.Test.Index
 			writer.Dispose();
 			SegmentReader reader = GetOnlySegmentReader(DirectoryReader.Open(ram));
 			FieldInfos fi = reader.FieldInfos;
-			IsTrue("OmitNorms field bit should not be set.", !fi.FieldInfo
+			AssertTrue("OmitNorms field bit should not be set.", !fi.FieldInfo
 				("f1").OmitsNorms);
-			IsTrue("OmitNorms field bit should be set.", fi.FieldInfo(
+			AssertTrue("OmitNorms field bit should be set.", fi.FieldInfo(
 				"f2").OmitsNorms);
 			reader.Dispose();
 			ram.Dispose();
@@ -158,7 +155,7 @@ namespace Lucene.Net.Test.Index
 		}
 
 		// Verifies no *.nrm exists when all fields omit norms:
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestNoNrmFile()
 		{
 			Directory ram = NewDirectory();
@@ -171,7 +168,7 @@ namespace Lucene.Net.Test.Index
 			lmp.SetNoCFSRatio(0.0);
 			Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 			FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
-			customType.OmitsNorms = (true);
+			customType.OmitNorms = (true);
 			Field f1 = NewField("f1", "This field has no norms", customType);
 			d.Add(f1);
 			for (int i = 0; i < 30; i++)
@@ -198,7 +195,7 @@ namespace Lucene.Net.Test.Index
 		/// Internally checks that MultiNorms.norms() is consistent (returns the same bytes)
 		/// as the fully merged equivalent.
 		/// </remarks>
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestOmitNormsCombos()
 		{
 			// indexed with norms
@@ -206,7 +203,7 @@ namespace Lucene.Net.Test.Index
 			Field norms = new Field("foo", "a", customType);
 			// indexed without norms
 			FieldType customType1 = new FieldType(TextField.TYPE_STORED);
-			customType1.OmitsNorms = (true);
+			customType1.OmitNorms = (true);
 			Field noNorms = new Field("foo", "a", customType1);
 			// not indexed, but stored
 			FieldType customType2 = new FieldType();
@@ -215,7 +212,7 @@ namespace Lucene.Net.Test.Index
 			// not indexed but stored, omitNorms is set
 			FieldType customType3 = new FieldType();
 			customType3.Stored = (true);
-			customType3.OmitsNorms = (true);
+			customType3.OmitNorms = (true);
 			Field noNormsNoIndex = new Field("foo", "a", customType3);
 			// not indexed nor stored (doesnt exist at all, we index a different field instead)
 			Field emptyNorms = new Field("bar", "a", customType);

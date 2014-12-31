@@ -4,11 +4,16 @@
  * If this is an open source Java library, include the proper license and copyright attributions here!
  */
 
+using Lucene.Net.Analysis;
+using Lucene.Net.Analysis.Tokenattributes;
+using Lucene.Net.Documents;
 using Lucene.Net.Test.Analysis;
 using Lucene.Net.Test.Analysis.Tokenattributes;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Index;
 using Lucene.Net.Util;
 using Sharpen;
 

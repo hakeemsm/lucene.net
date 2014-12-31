@@ -1,18 +1,19 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using System.Collections.Generic;
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Document;
+using System.Linq;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
+using Lucene.Net.Randomized.Generators;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
+using Lucene.Net.Support;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Analysis;
+using Lucene.Net.TestFramework.Index;
+using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
-using Sharpen;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
@@ -23,14 +24,14 @@ namespace Lucene.Net.Test.Index
 		// TODO: we really need to test indexingoffsets, but then getting only docs / docs + freqs.
 		// not all codecs store prx separate...
 		// TODO: fix sep codec to index offsets so we can greatly reduce this list!
-		/// <exception cref="System.Exception"></exception>
+		[SetUp]
 		public override void SetUp()
 		{
 			base.SetUp();
 			iwc = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(Random()));
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestBasic()
 		{
 			Directory dir = NewDirectory();
@@ -44,7 +45,7 @@ namespace Lucene.Net.Test.Index
 			{
 				ft.StoreTermVectors = true;
 				ft.StoreTermVectorPositions = (Random().NextBoolean());
-				ft.SetStoreTermVectorOffsets(Random().NextBoolean());
+				ft.StoreTermVectorOffsets = (Random().NextBoolean());
 			}
 			Token[] tokens = new Token[] { MakeToken("a", 1, 0, 6), MakeToken("b", 1, 8, 9), 
 				MakeToken("a", 1, 9, 17), MakeToken("c", 1, 19, 50) };
@@ -58,39 +59,39 @@ namespace Lucene.Net.Test.Index
 			AreEqual(0, dp.NextDoc());
 			AreEqual(2, dp.Freq);
 			AreEqual(0, dp.NextPosition());
-			AreEqual(0, dp.StartOffset());
-			AreEqual(6, dp.EndOffset());
+			AreEqual(0, dp.StartOffset);
+			AreEqual(6, dp.EndOffset);
 			AreEqual(2, dp.NextPosition());
-			AreEqual(9, dp.StartOffset());
-			AreEqual(17, dp.EndOffset());
+			AreEqual(9, dp.StartOffset);
+			AreEqual(17, dp.EndOffset);
 			AreEqual(DocIdSetIterator.NO_MORE_DOCS, dp.NextDoc());
 			dp = MultiFields.GetTermPositionsEnum(r, null, "content", new BytesRef("b"));
 			IsNotNull(dp);
 			AreEqual(0, dp.NextDoc());
 			AreEqual(1, dp.Freq);
 			AreEqual(1, dp.NextPosition());
-			AreEqual(8, dp.StartOffset());
-			AreEqual(9, dp.EndOffset());
+			AreEqual(8, dp.StartOffset);
+			AreEqual(9, dp.EndOffset);
 			AreEqual(DocIdSetIterator.NO_MORE_DOCS, dp.NextDoc());
 			dp = MultiFields.GetTermPositionsEnum(r, null, "content", new BytesRef("c"));
 			IsNotNull(dp);
 			AreEqual(0, dp.NextDoc());
 			AreEqual(1, dp.Freq);
 			AreEqual(3, dp.NextPosition());
-			AreEqual(19, dp.StartOffset());
-			AreEqual(50, dp.EndOffset());
+			AreEqual(19, dp.StartOffset);
+			AreEqual(50, dp.EndOffset);
 			AreEqual(DocIdSetIterator.NO_MORE_DOCS, dp.NextDoc());
 			r.Dispose();
 			dir.Dispose();
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestSkipping()
 		{
 			DoTestNumbers(false);
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestPayloads()
 		{
 			DoTestNumbers(true);
@@ -100,7 +101,7 @@ namespace Lucene.Net.Test.Index
 		public virtual void DoTestNumbers(bool withPayloads)
 		{
 			Directory dir = NewDirectory();
-			Analyzer analyzer = withPayloads ? new MockPayloadAnalyzer() : new MockAnalyzer(Random
+			Analyzer analyzer = withPayloads ? (Analyzer) new MockPayloadAnalyzer() : new MockAnalyzer(Random
 				());
 			iwc = NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer);
 			iwc.SetMergePolicy(NewLogMergePolicy());
@@ -112,23 +113,25 @@ namespace Lucene.Net.Test.Index
 			if (Random().NextBoolean())
 			{
 				ft.StoreTermVectors = true;
-				ft.SetStoreTermVectorOffsets(Random().NextBoolean());
+				ft.StoreTermVectorOffsets = (Random().NextBoolean());
 				ft.StoreTermVectorPositions = (Random().NextBoolean());
 			}
 			int numDocs = AtLeast(500);
 			for (int i = 0; i < numDocs; i++)
 			{
-				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-					();
-				doc.Add(new Field("numbers", English.IntToEnglish(i), ft));
-				doc.Add(new Field("oddeven", (i % 2) == 0 ? "even" : "odd", ft));
-				doc.Add(new StringField("id", string.Empty + i, Field.Store.NO));
-				w.AddDocument(doc);
+				var doc = new Lucene.Net.Documents.Document
+				{
+				    new Field("numbers", English.IntToEnglish(i), ft),
+				    new Field("oddeven", (i%2) == 0 ? "even" : "odd", ft),
+				    new StringField("id", string.Empty + i, Field.Store.NO)
+				};
+			    w.AddDocument(doc);
 			}
 			IndexReader reader = w.Reader;
 			w.Dispose();
-			string[] terms = new string[] { "one", "two", "three", "four", "five", "six", "seven"
-				, "eight", "nine", "ten", "hundred" };
+			string[] terms =
+			{ "one", "two", "three", "four", "five", "six", "seven"
+			    , "eight", "nine", "ten", "hundred" };
 			foreach (string term in terms)
 			{
 				DocsAndPositionsEnum dp = MultiFields.GetTermPositionsEnum(reader, null, "numbers"
@@ -141,15 +144,14 @@ namespace Lucene.Net.Test.Index
 					for (int i_1 = 0; i_1 < freq; i_1++)
 					{
 						dp.NextPosition();
-						int start = dp.StartOffset();
+						int start = dp.StartOffset;
 						//HM:revisit 
 						//assert start >= 0;
-						int end = dp.EndOffset();
+						int end = dp.EndOffset;
 						//HM:revisit 
 						//assert end >= 0 && end >= start;
 						// check that the offsets correspond to the term in the src text
-						IsTrue(Runtime.Substring(storedNumbers, start, end
-							).Equals(term));
+                        IsTrue(storedNumbers.Substring(start, end).Equals(term));
 						if (withPayloads)
 						{
 							// check that we have a payload and it starts with "pos"
@@ -175,15 +177,14 @@ namespace Lucene.Net.Test.Index
 				{
 					string storedNumbers = reader.Document(doc).Get("numbers");
 					dp.NextPosition();
-					int start = dp.StartOffset();
+					int start = dp.StartOffset;
 					//HM:revisit 
 					//assert start >= 0;
-					int end = dp.EndOffset();
+					int end = dp.EndOffset;
 					//HM:revisit 
 					//assert end >= 0 && end >= start;
 					// check that the offsets correspond to the term in the src text
-					IsTrue(Runtime.Substring(storedNumbers, start, end
-						).Equals("hundred"));
+                    IsTrue(storedNumbers.Substring(start, end).Equals("hundred"));
 					if (withPayloads)
 					{
 						// check that we have a payload and it starts with "pos"
@@ -206,7 +207,7 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestRandom()
 		{
 			// token -> docID -> tokens
@@ -224,7 +225,7 @@ namespace Lucene.Net.Test.Index
 			if (Random().NextBoolean())
 			{
 				ft.StoreTermVectors = true;
-				ft.SetStoreTermVectorOffsets(Random().NextBoolean());
+				ft.StoreTermVectorOffsets = (Random().NextBoolean());
 				ft.StoreTermVectorPositions = (Random().NextBoolean());
 			}
 			for (int docCount = 0; docCount < numDocs; docCount++)
@@ -274,23 +275,22 @@ namespace Lucene.Net.Test.Index
 						);
 					if (!actualTokens.ContainsKey(text))
 					{
-						actualTokens.Put(text, new Dictionary<int, IList<Token>>());
+						actualTokens[text] = new Dictionary<int, IList<Token>>();
 					}
-					IDictionary<int, IList<Token>> postingsByDoc = actualTokens.Get(text);
+					IDictionary<int, IList<Token>> postingsByDoc = actualTokens[text];
 					if (!postingsByDoc.ContainsKey(docCount))
 					{
-						postingsByDoc.Put(docCount, new List<Token>());
+						postingsByDoc[docCount] =  new List<Token>();
 					}
-					postingsByDoc.Get(docCount).Add(token);
+					postingsByDoc[docCount].Add(token);
 					tokens.Add(token);
 					pos += posIncr;
 					// stuff abs position into type:
-					token.SetType(string.Empty + pos);
+					token.Type = (string.Empty + pos);
 					offset += offIncr + tokenOffset;
 				}
 				//System.out.println("  " + token + " posIncr=" + token.getPositionIncrement() + " pos=" + pos + " off=" + token.startOffset() + "/" + token.endOffset() + " (freq=" + postingsByDoc.get(docCount).size() + ")");
-				doc.Add(new Field("content", new CannedTokenStream(Collections.ToArray(tokens
-					, new Token[tokens.Count])), ft));
+				doc.Add(new Field("content", new CannedTokenStream(tokens.ToArray()), ft));
 				w.AddDocument(doc);
 			}
 			DirectoryReader r = w.Reader;
@@ -301,7 +301,7 @@ namespace Lucene.Net.Test.Index
 				// TODO: improve this
 				AtomicReader sub = ((AtomicReader)ctx.Reader);
 				//System.out.println("\nsub=" + sub);
-				TermsEnum termsEnum = sub.Fields().Terms("content").IEnumerator(null);
+				TermsEnum termsEnum = sub.Fields.Terms("content").Iterator(null);
 				DocsEnum docs = null;
 				DocsAndPositionsEnum docsAndPositions = null;
 				DocsAndPositionsEnum docsAndPositionsAndOffsets = null;
@@ -317,7 +317,7 @@ namespace Lucene.Net.Test.Index
 						//System.out.println("    doc/freq");
 						while ((doc = docs.NextDoc()) != DocIdSetIterator.NO_MORE_DOCS)
 						{
-							IList<Token> expected = actualTokens.Get(term).Get(docIDToID.Get(doc));
+							IList<Token> expected = (actualTokens[term])[docIDToID.Get(doc)];
 							//System.out.println("      doc=" + docIDToID.get(doc) + " docID=" + doc + " " + expected.size() + " freq");
 							IsNotNull(expected);
 							AreEqual(expected.Count, docs.Freq);
@@ -329,13 +329,13 @@ namespace Lucene.Net.Test.Index
 						//System.out.println("    doc/freq/pos");
 						while ((doc = docsAndPositions.NextDoc()) != DocIdSetIterator.NO_MORE_DOCS)
 						{
-							IList<Token> expected = actualTokens.Get(term).Get(docIDToID.Get(doc));
+                            IList<Token> expected = (actualTokens[term])[docIDToID.Get(doc)];
 							//System.out.println("      doc=" + docIDToID.get(doc) + " " + expected.size() + " freq");
 							IsNotNull(expected);
 							AreEqual(expected.Count, docsAndPositions.Freq);
 							foreach (Token token in expected)
 							{
-								int pos = System.Convert.ToInt32(token.Type());
+								int pos = System.Convert.ToInt32(token.Type);
 								//System.out.println("        pos=" + pos);
 								AreEqual(pos, docsAndPositions.NextPosition());
 							}
@@ -346,20 +346,18 @@ namespace Lucene.Net.Test.Index
 						while ((doc = docsAndPositionsAndOffsets.NextDoc()) != DocIdSetIterator.NO_MORE_DOCS
 							)
 						{
-							IList<Token> expected = actualTokens.Get(term).Get(docIDToID.Get(doc));
+                            IList<Token> expected = (actualTokens[term])[docIDToID.Get(doc)];
 							//System.out.println("      doc=" + docIDToID.get(doc) + " " + expected.size() + " freq");
 							IsNotNull(expected);
 							AreEqual(expected.Count, docsAndPositionsAndOffsets.Freq
 								);
 							foreach (Token token in expected)
 							{
-								int pos = System.Convert.ToInt32(token.Type());
+								int pos = System.Convert.ToInt32(token.Type);
 								//System.out.println("        pos=" + pos);
 								AreEqual(pos, docsAndPositionsAndOffsets.NextPosition());
-								AreEqual(token.StartOffset(), docsAndPositionsAndOffsets.StartOffset
-									());
-								AreEqual(token.EndOffset(), docsAndPositionsAndOffsets.EndOffset
-									());
+								AreEqual(token.StartOffset, docsAndPositionsAndOffsets.StartOffset);
+								AreEqual(token.EndOffset, docsAndPositionsAndOffsets.EndOffset);
 							}
 						}
 					}
@@ -370,7 +368,7 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestWithUnindexedFields()
 		{
 			Directory dir = NewDirectory();
@@ -384,7 +382,7 @@ namespace Lucene.Net.Test.Index
 				{
 					// stored only
 					FieldType ft = new FieldType();
-					ft.Indexed(false);
+					ft.Indexed = (false);
 					ft.Stored = (true);
 					doc.Add(new Field("foo", "boo!", ft));
 				}
@@ -408,14 +406,14 @@ namespace Lucene.Net.Test.Index
 			AtomicReader slow = SlowCompositeReaderWrapper.Wrap(ir);
 			FieldInfos fis = slow.FieldInfos;
 			AreEqual(FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS
-				, fis.FieldInfo("foo").GetIndexOptions());
+				, fis.FieldInfo("foo").IndexOptionsValue);
 			slow.Dispose();
 			ir.Dispose();
 			riw.Dispose();
 			dir.Dispose();
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestAddFieldTwice()
 		{
 			Directory dir = NewDirectory();
@@ -439,7 +437,7 @@ namespace Lucene.Net.Test.Index
 
 		// checkindex
 		// NOTE: the next two tests aren't that good as we need an EvilToken...
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestNegativeOffsets()
 		{
 			try
@@ -453,7 +451,7 @@ namespace Lucene.Net.Test.Index
 		}
 
 		//expected
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestIllegalOffsets()
 		{
 			try
@@ -467,7 +465,7 @@ namespace Lucene.Net.Test.Index
 		}
 
 		//expected
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestBackwardsOffsets()
 		{
 			try
@@ -482,14 +480,14 @@ namespace Lucene.Net.Test.Index
 		}
 
 		// expected
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestStackedTokens()
 		{
 			CheckTokens(new Token[] { MakeToken("foo", 1, 0, 3), MakeToken("foo", 0, 0, 3), MakeToken
 				("foo", 0, 0, 3) });
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestLegalbutVeryLargeOffsets()
 		{
 			Directory dir = NewDirectory();
@@ -548,7 +546,7 @@ namespace Lucene.Net.Test.Index
 				}
 				else
 				{
-					IOUtils.CloseWhileHandlingException(riw, dir);
+					IOUtils.CloseWhileHandlingException((IDisposable)riw, dir);
 				}
 			}
 		}

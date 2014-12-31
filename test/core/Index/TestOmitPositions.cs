@@ -1,29 +1,26 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Document;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
+using Lucene.Net.Randomized.Generators;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Index;
+using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
-using Sharpen;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
 	/// <lucene.experimental></lucene.experimental>
 	public class TestOmitPositions : LuceneTestCase
 	{
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestBasic()
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter w = new RandomIndexWriter(Random(), dir);
-			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-				();
+			var doc = new Lucene.Net.Documents.Document();
 			FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
 			ft.IndexOptions = (FieldInfo.IndexOptions.DOCS_AND_FREQS);
 			Field f = NewField("foo", "this is a test test", ft);
@@ -48,7 +45,7 @@ namespace Lucene.Net.Test.Index
 
 		// Tests whether the DocumentWriter correctly enable the
 		// omitTermFreqAndPositions bit in the FieldInfo
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestPositions()
 		{
 			Directory ram = NewDirectory();
@@ -117,32 +114,23 @@ namespace Lucene.Net.Test.Index
 			SegmentReader reader = GetOnlySegmentReader(DirectoryReader.Open(ram));
 			FieldInfos fi = reader.FieldInfos;
 			// docs + docs = docs
-			AreEqual(FieldInfo.IndexOptions.DOCS_ONLY, fi.FieldInfo("f1"
-				).GetIndexOptions());
+			AreEqual(FieldInfo.IndexOptions.DOCS_ONLY, fi.FieldInfo("f1").IndexOptionsValue);
 			// docs + docs/freqs = docs
-			AreEqual(FieldInfo.IndexOptions.DOCS_ONLY, fi.FieldInfo("f2"
-				).GetIndexOptions());
+			AreEqual(FieldInfo.IndexOptions.DOCS_ONLY, fi.FieldInfo("f2").IndexOptionsValue);
 			// docs + docs/freqs/pos = docs
-			AreEqual(FieldInfo.IndexOptions.DOCS_ONLY, fi.FieldInfo("f3"
-				).GetIndexOptions());
+			AreEqual(FieldInfo.IndexOptions.DOCS_ONLY, fi.FieldInfo("f3").IndexOptionsValue);
 			// docs/freqs + docs = docs
-			AreEqual(FieldInfo.IndexOptions.DOCS_ONLY, fi.FieldInfo("f4"
-				).GetIndexOptions());
+			AreEqual(FieldInfo.IndexOptions.DOCS_ONLY, fi.FieldInfo("f4").IndexOptionsValue);
 			// docs/freqs + docs/freqs = docs/freqs
-			AreEqual(FieldInfo.IndexOptions.DOCS_AND_FREQS, fi.FieldInfo
-				("f5").GetIndexOptions());
+			AreEqual(FieldInfo.IndexOptions.DOCS_AND_FREQS, fi.FieldInfo("f5").IndexOptionsValue);
 			// docs/freqs + docs/freqs/pos = docs/freqs
-			AreEqual(FieldInfo.IndexOptions.DOCS_AND_FREQS, fi.FieldInfo
-				("f6").GetIndexOptions());
+			AreEqual(FieldInfo.IndexOptions.DOCS_AND_FREQS, fi.FieldInfo("f6").IndexOptionsValue);
 			// docs/freqs/pos + docs = docs
-			AreEqual(FieldInfo.IndexOptions.DOCS_ONLY, fi.FieldInfo("f7"
-				).GetIndexOptions());
+			AreEqual(FieldInfo.IndexOptions.DOCS_ONLY, fi.FieldInfo("f7").IndexOptionsValue);
 			// docs/freqs/pos + docs/freqs = docs/freqs
-			AreEqual(FieldInfo.IndexOptions.DOCS_AND_FREQS, fi.FieldInfo
-				("f8").GetIndexOptions());
+			AreEqual(FieldInfo.IndexOptions.DOCS_AND_FREQS, fi.FieldInfo("f8").IndexOptionsValue);
 			// docs/freqs/pos + docs/freqs/pos = docs/freqs/pos
-			AreEqual(FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS
-				, fi.FieldInfo("f9").GetIndexOptions());
+			AreEqual(FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS, fi.FieldInfo("f9").IndexOptionsValue);
 			reader.Dispose();
 			ram.Dispose();
 		}
@@ -159,7 +147,7 @@ namespace Lucene.Net.Test.Index
 		}
 
 		// Verifies no *.prx exists when all fields omit term positions:
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestNoPrxFile()
 		{
 			Directory ram = NewDirectory();
@@ -198,7 +186,7 @@ namespace Lucene.Net.Test.Index
 		}
 
 		/// <summary>make sure we downgrade positions and payloads correctly</summary>
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestMixing()
 		{
 			// no positions
@@ -234,8 +222,8 @@ namespace Lucene.Net.Test.Index
 			DirectoryReader ir = iw.Reader;
 			FieldInfos fis = MultiFields.GetMergedFieldInfos(ir);
 			AreEqual(FieldInfo.IndexOptions.DOCS_AND_FREQS, fis.FieldInfo
-				("foo").GetIndexOptions());
-			IsFalse(fis.FieldInfo("foo").HasPayloads());
+				("foo").IndexOptionsValue);
+			IsFalse(fis.FieldInfo("foo").HasPayloads);
 			iw.Dispose();
 			ir.Dispose();
 			dir.Dispose();

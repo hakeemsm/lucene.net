@@ -1,39 +1,41 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Lucene.Net.Index;
+using Lucene.Net.Support;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
-using Sharpen;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
 	public class TestPrefixCodedTerms : LuceneTestCase
 	{
+        [Test]
 		public virtual void TestEmpty()
 		{
 			PrefixCodedTerms.Builder b = new PrefixCodedTerms.Builder();
 			PrefixCodedTerms pb = b.Finish();
-			IsFalse(pb.IEnumerator().HasNext());
+			IsFalse(pb.GetEnumerator().MoveNext());
 		}
 
+        [Test]
 		public virtual void TestOne()
 		{
 			Term term = new Term("foo", "bogus");
 			PrefixCodedTerms.Builder b = new PrefixCodedTerms.Builder();
 			b.Add(term);
 			PrefixCodedTerms pb = b.Finish();
-			IEnumerator<Term> iterator = pb.IEnumerator();
-			IsTrue(iterator.HasNext());
-			AreEqual(term, iterator.Next());
+			IEnumerator<Term> iterator = pb.GetEnumerator();
+			IsTrue(iterator.MoveNext());
+			AreEqual(term, iterator.Current);
 		}
 
+        [Test]
 		public virtual void TestRandom()
 		{
-			ICollection<Term> terms = new TreeSet<Term>();
+			ICollection<Term> terms = new HashSet<Term>();
 			int nterms = AtLeast(10000);
 			for (int i = 0; i < nterms; i++)
 			{
@@ -47,16 +49,17 @@ namespace Lucene.Net.Test.Index
 				b.Add(@ref);
 			}
 			PrefixCodedTerms pb = b.Finish();
-			IEnumerator<Term> expected = terms.IEnumerator();
+			IEnumerator<Term> expected = terms.GetEnumerator();
 			foreach (Term t in pb)
 			{
-				IsTrue(expected.HasNext());
-				AreEqual(expected.Next(), t);
+				IsTrue(expected.MoveNext());
+				AreEqual(expected.Current, t);
 			}
-			IsFalse(expected.HasNext());
+			IsFalse(expected.MoveNext());
 		}
 
-		public virtual void TestMergeOne()
+		[Test]
+        public virtual void TestMergeOne()
 		{
 			Term t1 = new Term("foo", "a");
 			PrefixCodedTerms.Builder b1 = new PrefixCodedTerms.Builder();
@@ -66,28 +69,30 @@ namespace Lucene.Net.Test.Index
 			PrefixCodedTerms.Builder b2 = new PrefixCodedTerms.Builder();
 			b2.Add(t2);
 			PrefixCodedTerms pb2 = b2.Finish();
-			IEnumerator<Term> merged = new MergedIterator<Term>(pb1.IEnumerator(), pb2.IEnumerator());
-			IsTrue(merged.HasNext());
-			AreEqual(t1, merged.Next());
-			IsTrue(merged.HasNext());
-			AreEqual(t2, merged.Next());
+			IEnumerator<Term> merged = new MergedIterator<Term>(pb1.GetEnumerator(), pb2.GetEnumerator());
+			IsTrue(merged.MoveNext());
+			AreEqual(t1, merged.Current);
+			IsTrue(merged.MoveNext());
+			AreEqual(t2, merged.Current);
 		}
 
+        [Test]
 		public virtual void TestMergeRandom()
 		{
-			PrefixCodedTerms[] pb = new PrefixCodedTerms[TestUtil.NextInt(Random(), 2, 10)];
-			ICollection<Term> superSet = new TreeSet<Term>();
+			PrefixCodedTerms[] pb = new PrefixCodedTerms[Random().NextInt(2, 10)];
+			ICollection<Term> superSet = new HashSet<Term>();
 			for (int i = 0; i < pb.Length; i++)
 			{
-				ICollection<Term> terms = new TreeSet<Term>();
-				int nterms = TestUtil.NextInt(Random(), 0, 10000);
+				ICollection<Term> terms = new HashSet<Term>();
+				int nterms = Random().NextInt(0, 10000);
 				for (int j = 0; j < nterms; j++)
 				{
 					Term term = new Term(TestUtil.RandomUnicodeString(Random(), 2), TestUtil.RandomUnicodeString
 						(Random(), 4));
 					terms.Add(term);
 				}
-				Collections.AddAll(superSet, terms);
+                terms.ToList().ForEach(superSet.Add);
+                
 				PrefixCodedTerms.Builder b = new PrefixCodedTerms.Builder();
 				foreach (Term @ref in terms)
 				{
@@ -95,20 +100,15 @@ namespace Lucene.Net.Test.Index
 				}
 				pb[i] = b.Finish();
 			}
-			IList<IEnumerator<Term>> subs = new List<IEnumerator<Term>>();
-			for (int i_1 = 0; i_1 < pb.Length; i_1++)
+			IList<IEnumerator<Term>> subs = pb.Select(t => t.GetEnumerator()).ToList();
+            IEnumerator<Term> expected = superSet.GetEnumerator();
+			IEnumerator<Term> actual = new MergedIterator<Term>(subs.ToArray());
+			while (actual.MoveNext())
 			{
-				subs.Add(pb[i_1].IEnumerator());
+				IsTrue(expected.MoveNext());
+				AreEqual(expected.Current, actual.Current);
 			}
-			IEnumerator<Term> expected = superSet.IEnumerator();
-			IEnumerator<Term> actual = new MergedIterator<Term>(Collections.ToArray(subs
-				, new IEnumerator[0]));
-			while (actual.HasNext())
-			{
-				IsTrue(expected.HasNext());
-				AreEqual(expected.Next(), actual.Next());
-			}
-			IsFalse(expected.HasNext());
+			IsFalse(expected.MoveNext());
 		}
 	}
 }

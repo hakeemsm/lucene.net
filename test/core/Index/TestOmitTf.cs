@@ -1,20 +1,15 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using System.Text;
-using NUnit.Framework;
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Document;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
+using Lucene.Net.TestFramework;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Search.Similarities;
 using Lucene.Net.Store;
+using Lucene.Net.TestFramework.Index;
 using Lucene.Net.Util;
-using Sharpen;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
@@ -44,7 +39,7 @@ namespace Lucene.Net.Test.Index
 
 			public override float LengthNorm(FieldInvertState state)
 			{
-				return state.GetBoost();
+				return state.Boost;
 			}
 
 			public override float Tf(float freq)
@@ -87,7 +82,7 @@ namespace Lucene.Net.Test.Index
 
 		// Tests whether the DocumentWriter correctly enable the
 		// omitTermFreqAndPositions bit in the FieldInfo
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestOmitTermFreqAndPositions()
 		{
 			Directory ram = NewDirectory();
@@ -118,17 +113,17 @@ namespace Lucene.Net.Test.Index
 			writer.Dispose();
 			SegmentReader reader = GetOnlySegmentReader(DirectoryReader.Open(ram));
 			FieldInfos fi = reader.FieldInfos;
-			AreEqual("OmitTermFreqAndPositions field bit should be set."
-				, FieldInfo.IndexOptions.DOCS_ONLY, fi.FieldInfo("f1").GetIndexOptions());
-			AreEqual("OmitTermFreqAndPositions field bit should be set."
-				, FieldInfo.IndexOptions.DOCS_ONLY, fi.FieldInfo("f2").GetIndexOptions());
+			AssertEquals("OmitTermFreqAndPositions field bit should be set."
+				, FieldInfo.IndexOptions.DOCS_ONLY, fi.FieldInfo("f1").IndexOptionsValue);
+			AssertEquals("OmitTermFreqAndPositions field bit should be set."
+				, FieldInfo.IndexOptions.DOCS_ONLY, fi.FieldInfo("f2").IndexOptionsValue);
 			reader.Dispose();
 			ram.Dispose();
 		}
 
 		// Tests whether merging of docs that have different
 		// omitTermFreqAndPositions for the same field works
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestMixedMerge()
 		{
 			Directory ram = NewDirectory();
@@ -165,10 +160,10 @@ namespace Lucene.Net.Test.Index
 			writer.Dispose();
 			SegmentReader reader = GetOnlySegmentReader(DirectoryReader.Open(ram));
 			FieldInfos fi = reader.FieldInfos;
-			AreEqual("OmitTermFreqAndPositions field bit should be set."
-				, FieldInfo.IndexOptions.DOCS_ONLY, fi.FieldInfo("f1").GetIndexOptions());
-			AreEqual("OmitTermFreqAndPositions field bit should be set."
-				, FieldInfo.IndexOptions.DOCS_ONLY, fi.FieldInfo("f2").GetIndexOptions());
+			AssertEquals("OmitTermFreqAndPositions field bit should be set."
+				, FieldInfo.IndexOptions.DOCS_ONLY, fi.FieldInfo("f1").IndexOptionsValue);
+			AssertEquals("OmitTermFreqAndPositions field bit should be set."
+				, FieldInfo.IndexOptions.DOCS_ONLY, fi.FieldInfo("f2").IndexOptionsValue);
 			reader.Dispose();
 			ram.Dispose();
 		}
@@ -176,7 +171,7 @@ namespace Lucene.Net.Test.Index
 		// Make sure first adding docs that do not omitTermFreqAndPositions for
 		// field X, then adding docs that do omitTermFreqAndPositions for that same
 		// field, 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestMixedRAM()
 		{
 			Directory ram = NewDirectory();
@@ -205,11 +200,10 @@ namespace Lucene.Net.Test.Index
 			writer.Dispose();
 			SegmentReader reader = GetOnlySegmentReader(DirectoryReader.Open(ram));
 			FieldInfos fi = reader.FieldInfos;
-			AreEqual("OmitTermFreqAndPositions field bit should not be set."
-				, FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS, fi.FieldInfo("f1").GetIndexOptions
-				());
-			AreEqual("OmitTermFreqAndPositions field bit should be set."
-				, FieldInfo.IndexOptions.DOCS_ONLY, fi.FieldInfo("f2").GetIndexOptions());
+			AssertEquals("OmitTermFreqAndPositions field bit should not be set."
+				, FieldInfo.IndexOptions.DOCS_AND_FREQS_AND_POSITIONS, fi.FieldInfo("f1").IndexOptionsValue);
+			AssertEquals("OmitTermFreqAndPositions field bit should be set."
+				, FieldInfo.IndexOptions.DOCS_ONLY, fi.FieldInfo("f2").IndexOptionsValue);
 			reader.Dispose();
 			ram.Dispose();
 		}
@@ -226,7 +220,7 @@ namespace Lucene.Net.Test.Index
 		}
 
 		// Verifies no *.prx exists when all fields omit term freq:
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestNoPrxFile()
 		{
 			Directory ram = NewDirectory();
@@ -264,7 +258,7 @@ namespace Lucene.Net.Test.Index
 		}
 
 		// Test scores with one field with Term Freqs and one without, otherwise with equal content 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestBasic()
 		{
 			Directory dir = NewDirectory();
@@ -293,7 +287,7 @@ namespace Lucene.Net.Test.Index
 			writer.Dispose();
 			IndexReader reader = DirectoryReader.Open(dir);
 			IndexSearcher searcher = NewSearcher(reader);
-			searcher.SetSimilarity(new TestOmitTf.SimpleSimilarity());
+			searcher.Similarity = (new TestOmitTf.SimpleSimilarity());
 			Term a = new Term("noTf", term);
 			Term b = new Term("tf", term);
 			Term c = new Term("noTf", "notf");
@@ -324,35 +318,49 @@ namespace Lucene.Net.Test.Index
 				}
 			}
 			// else OK because positions are not indexed
-			searcher.Search(q1, new _CountingHitCollector_324());
+			searcher.Search(q1, new AnonCountingHitCollector());
 			//System.out.println("Q1: Doc=" + doc + " score=" + score);
 			//System.out.println(CountingHitCollector.getCount());
-			searcher.Search(q2, new _CountingHitCollector_342());
+			searcher.Search(q2, new AnonCountingHitCollector2());
 			//System.out.println("Q2: Doc=" + doc + " score=" + score);
 			//System.out.println(CountingHitCollector.getCount());
-			searcher.Search(q3, new _CountingHitCollector_363());
+			searcher.Search(q3, new AnonCountingHitCollector3());
 			//System.out.println("Q1: Doc=" + doc + " score=" + score);
 			//System.out.println(CountingHitCollector.getCount());
-			searcher.Search(q4, new _CountingHitCollector_382());
+			searcher.Search(q4, new AnonCountingHitCollector4());
 			//System.out.println("Q1: Doc=" + doc + " score=" + score);
 			//System.out.println(CountingHitCollector.getCount());
 			BooleanQuery bq = new BooleanQuery();
-			bq.Add(q1, BooleanClause.Occur.MUST);
-			bq.Add(q4, BooleanClause.Occur.MUST);
-			searcher.Search(bq, new _CountingHitCollector_406());
+			bq.Add(q1, Occur.MUST);
+			bq.Add(q4, Occur.MUST);
+			searcher.Search(bq, new AnonCountingHitCollector5());
 			//System.out.println("BQ: Doc=" + doc + " score=" + score);
-			AreEqual(15, TestOmitTf.CountingHitCollector.GetCount());
+			AssertEquals(15, TestOmitTf.CountingHitCollector.GetCount());
 			reader.Dispose();
 			dir.Dispose();
 		}
 
-		private sealed class _CountingHitCollector_324 : TestOmitTf.CountingHitCollector
+		private sealed class AnonCountingHitCollector : TestOmitTf.CountingHitCollector
 		{
-			public _CountingHitCollector_324()
+		    private Scorer scorer;
+
+			public override void SetScorer(Scorer scorer)
 			{
+				this.scorer = scorer;
 			}
 
-			private Scorer scorer;
+			/// <exception cref="System.IO.IOException"></exception>
+			public sealed override void Collect(int doc)
+			{
+				float score = this.scorer.Score();
+				AssertTrue("got score=" + score, score == 1.0f);
+				base.Collect(doc);
+			}
+		}
+
+		private sealed class AnonCountingHitCollector2 : TestOmitTf.CountingHitCollector
+		{
+		    private Scorer scorer;
 
 			public sealed override void SetScorer(Scorer scorer)
 			{
@@ -363,40 +371,14 @@ namespace Lucene.Net.Test.Index
 			public sealed override void Collect(int doc)
 			{
 				float score = this.scorer.Score();
-				IsTrue("got score=" + score, score == 1.0f);
+				AssertEquals(1.0f + doc, score, 0.00001f);
 				base.Collect(doc);
 			}
 		}
 
-		private sealed class _CountingHitCollector_342 : TestOmitTf.CountingHitCollector
+		private sealed class AnonCountingHitCollector3 : TestOmitTf.CountingHitCollector
 		{
-			public _CountingHitCollector_342()
-			{
-			}
-
-			private Scorer scorer;
-
-			public sealed override void SetScorer(Scorer scorer)
-			{
-				this.scorer = scorer;
-			}
-
-			/// <exception cref="System.IO.IOException"></exception>
-			public sealed override void Collect(int doc)
-			{
-				float score = this.scorer.Score();
-				AreEqual(1.0f + doc, score, 0.00001f);
-				base.Collect(doc);
-			}
-		}
-
-		private sealed class _CountingHitCollector_363 : TestOmitTf.CountingHitCollector
-		{
-			public _CountingHitCollector_363()
-			{
-			}
-
-			private Scorer scorer;
+		    private Scorer scorer;
 
 			public sealed override void SetScorer(Scorer scorer)
 			{
@@ -413,13 +395,9 @@ namespace Lucene.Net.Test.Index
 			}
 		}
 
-		private sealed class _CountingHitCollector_382 : TestOmitTf.CountingHitCollector
+		private sealed class AnonCountingHitCollector4 : TestOmitTf.CountingHitCollector
 		{
-			public _CountingHitCollector_382()
-			{
-			}
-
-			private Scorer scorer;
+		    private Scorer scorer;
 
 			public sealed override void SetScorer(Scorer scorer)
 			{
@@ -436,13 +414,9 @@ namespace Lucene.Net.Test.Index
 			}
 		}
 
-		private sealed class _CountingHitCollector_406 : TestOmitTf.CountingHitCollector
+		private sealed class AnonCountingHitCollector5 : TestOmitTf.CountingHitCollector
 		{
-			public _CountingHitCollector_406()
-			{
-			}
-
-			/// <exception cref="System.IO.IOException"></exception>
+		    /// <exception cref="System.IO.IOException"></exception>
 			public sealed override void Collect(int doc)
 			{
 				base.Collect(doc);
@@ -491,15 +465,15 @@ namespace Lucene.Net.Test.Index
 				docBase = context.docBase;
 			}
 
-			public override bool AcceptsDocsOutOfOrder()
+			public override bool AcceptsDocsOutOfOrder
 			{
-				return true;
+			    get { return true; }
 			}
 		}
 
 		/// <summary>test that when freqs are omitted, that totalTermFreq and sumTotalTermFreq are -1
 		/// 	</summary>
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestStats()
 		{
 			Directory dir = NewDirectory();
@@ -515,9 +489,9 @@ namespace Lucene.Net.Test.Index
 			iw.AddDocument(doc);
 			IndexReader ir = iw.Reader;
 			iw.Dispose();
-			AreEqual(-1, ir.TotalTermFreq(new Term("foo", new BytesRef
+			AssertEquals(-1, ir.TotalTermFreq(new Term("foo", new BytesRef
 				("bar"))));
-			AreEqual(-1, ir.GetSumTotalTermFreq("foo"));
+			AssertEquals(-1, ir.GetSumTotalTermFreq("foo"));
 			ir.Dispose();
 			dir.Dispose();
 		}

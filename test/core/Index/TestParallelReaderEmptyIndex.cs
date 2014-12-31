@@ -1,15 +1,9 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Document;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
-using Lucene.Net.Util;
-using Sharpen;
+using Lucene.Net.TestFramework;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
@@ -25,7 +19,7 @@ namespace Lucene.Net.Test.Index
 		/// Creates two empty indexes and wraps a ParallelReader around. Adding this
 		/// reader to a new index should not throw any exception.
 		/// </remarks>
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestEmptyIndex()
 		{
 			Directory rd1 = NewDirectory();
@@ -69,7 +63,7 @@ namespace Lucene.Net.Test.Index
 		/// to have TermVectors. Adding this index to another index should not throw
 		/// any exception.
 		/// </remarks>
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestEmptyIndexWithVectors()
 		{
 			Directory rd1 = NewDirectory();
@@ -87,10 +81,10 @@ namespace Lucene.Net.Test.Index
 				FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
 				customType.StoreTermVectors = true;
 				doc.Add(NewField("test", string.Empty, customType));
-				idField.StringValue = "1");
+				idField.StringValue = "1";
 				iw.AddDocument(doc);
 				doc.Add(NewTextField("test", string.Empty, Field.Store.NO));
-				idField.StringValue = "2");
+				idField.StringValue = "2";
 				iw.AddDocument(doc);
 				iw.Dispose();
 				IndexWriterConfig dontMergeConfig = new IndexWriterConfig(TEST_VERSION_CURRENT, new 
@@ -135,8 +129,8 @@ namespace Lucene.Net.Test.Index
 			// 
 			//HM:revisit 
 			//assert subreaders were closed
-			AreEqual(0, reader1.GetRefCount());
-			AreEqual(0, reader2.GetRefCount());
+			AreEqual(0, reader1.RefCount);
+			AreEqual(0, reader2.RefCount);
 			rd1.Dispose();
 			rd2.Dispose();
 			iwOut.ForceMerge(1);

@@ -1,14 +1,7 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System.IO;
-using Lucene.Net.TestFramework.Analysis;
-using Lucene.Net.TestFramework.Analysis.Tokenattributes;
-using Lucene.Net.TestFramework.Util;
-using Sharpen;
+using Lucene.Net.Analysis;
+using Lucene.Net.Analysis.Tokenattributes;
+using Lucene.Net.Util;
 
 namespace Lucene.Net.TestFramework.Analysis
 {
@@ -24,8 +17,8 @@ namespace Lucene.Net.TestFramework.Analysis
 	/// </remarks>
 	public sealed class MockPayloadAnalyzer : Analyzer
 	{
-		protected override Analyzer.TokenStreamComponents CreateComponents(string fieldName
-			, StreamReader reader)
+	    public override Analyzer.TokenStreamComponents CreateComponents(string fieldName
+			, TextReader reader)
 		{
 			Tokenizer result = new MockTokenizer(reader, MockTokenizer.WHITESPACE, true);
 			return new Analyzer.TokenStreamComponents(result, new MockPayloadFilter(result, fieldName

@@ -1,22 +1,17 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Document;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
-using Lucene.Net.Util;
-using Sharpen;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Index;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
 	public class TestRollback : LuceneTestCase
 	{
 		// LUCENE-2536
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestRollbackIntegrityWithBufferFlush()
 		{
 			Directory dir = NewDirectory();
@@ -33,18 +28,18 @@ namespace Lucene.Net.Test.Index
 			IndexWriter w = new IndexWriter(dir, ((IndexWriterConfig)NewIndexWriterConfig(TEST_VERSION_CURRENT
 				, new MockAnalyzer(Random())).SetMaxBufferedDocs(2)).SetOpenMode(IndexWriterConfig.OpenMode
 				.APPEND));
-			for (int i_1 = 0; i_1 < 3; i_1++)
+			for (int i = 0; i < 3; i++)
 			{
 				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
-				string value = Extensions.ToString(i_1);
+				string value = i.ToString();
 				doc.Add(NewStringField("pk", value, Field.Store.YES));
 				doc.Add(NewStringField("text", "foo", Field.Store.YES));
 				w.UpdateDocument(new Term("pk", value), doc);
 			}
 			w.Rollback();
 			IndexReader r = DirectoryReader.Open(dir);
-			AreEqual("index should contain same number of docs post rollback"
+			AssertEquals("index should contain same number of docs post rollback"
 				, 5, r.NumDocs);
 			r.Dispose();
 			dir.Dispose();

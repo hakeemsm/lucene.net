@@ -1,25 +1,24 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using System.IO;
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Test.Analysis.Tokenattributes;
-using Lucene.Net.Document;
+using Lucene.Net.Analysis;
+using Lucene.Net.Analysis.Tokenattributes;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
-using Lucene.Net.Store;
+using Lucene.Net.Randomized.Generators;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Analysis;
+using Lucene.Net.TestFramework.Index;
 using Lucene.Net.Util;
-using Sharpen;
+using Lucene.Net.Store;
+using NUnit.Framework;
+using Directory = Lucene.Net.Store.Directory;
 
 namespace Lucene.Net.Test.Index
 {
 	public class TestPayloadsOnVectors : LuceneTestCase
 	{
 		/// <summary>some docs have payload att, some not</summary>
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestMixupDocs()
 		{
 			Directory dir = NewDirectory();
@@ -33,7 +32,7 @@ namespace Lucene.Net.Test.Index
 			customType.StoreTermVectors = true;
 			customType.StoreTermVectorPositions = true;
 			customType.StoreTermVectorPayloads = true;
-			customType.SetStoreTermVectorOffsets(Random().NextBoolean());
+			customType.StoreTermVectorOffsets = (Random().NextBoolean());
 			Field field = new Field("field", string.Empty, customType);
 			TokenStream ts = new MockTokenizer(new StringReader("here we go"), MockTokenizer.
 				WHITESPACE, true);
@@ -56,7 +55,7 @@ namespace Lucene.Net.Test.Index
 			Terms terms = reader.GetTermVector(1, "field");
 			//HM:revisit 
 			//assert terms != null;
-			TermsEnum termsEnum = terms.IEnumerator(null);
+			TermsEnum termsEnum = terms.Iterator(null);
 			IsTrue(termsEnum.SeekExact(new BytesRef("withPayload")));
 			DocsAndPositionsEnum de = termsEnum.DocsAndPositions(null, null);
 			AreEqual(0, de.NextDoc());
@@ -68,19 +67,21 @@ namespace Lucene.Net.Test.Index
 		}
 
 		/// <summary>some field instances have payload att, some not</summary>
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestMixupMultiValued()
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
 			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
-			FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
-			customType.StoreTermVectors = true;
-			customType.StoreTermVectorPositions = true;
-			customType.StoreTermVectorPayloads = true;
-			customType.SetStoreTermVectorOffsets(Random().NextBoolean());
-			Field field = new Field("field", string.Empty, customType);
+			FieldType customType = new FieldType(TextField.TYPE_NOT_STORED)
+			{
+			    StoreTermVectors = true,
+			    StoreTermVectorPositions = true,
+			    StoreTermVectorPayloads = true,
+			    StoreTermVectorOffsets = (Random().NextBoolean())
+			};
+		    Field field = new Field("field", string.Empty, customType);
 			TokenStream ts = new MockTokenizer(new StringReader("here we go"), MockTokenizer.
 				WHITESPACE, true);
 			IsFalse(ts.HasAttribute(typeof(PayloadAttribute)));
@@ -102,9 +103,9 @@ namespace Lucene.Net.Test.Index
 			writer.AddDocument(doc);
 			DirectoryReader reader = writer.Reader;
 			Terms terms = reader.GetTermVector(0, "field");
-			//HM:revisit 
+			
 			//assert terms != null;
-			TermsEnum termsEnum = terms.IEnumerator(null);
+			TermsEnum termsEnum = terms.Iterator(null);
 			IsTrue(termsEnum.SeekExact(new BytesRef("withPayload")));
 			DocsAndPositionsEnum de = termsEnum.DocsAndPositions(null, null);
 			AreEqual(0, de.NextDoc());
@@ -115,19 +116,21 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestPayloadsWithoutPositions()
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir);
 			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
-			FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
-			customType.StoreTermVectors = true;
-			customType.StoreTermVectorPositions = (false);
-			customType.StoreTermVectorPayloads = true;
-			customType.SetStoreTermVectorOffsets(Random().NextBoolean());
-			doc.Add(new Field("field", "foo", customType));
+			FieldType customType = new FieldType(TextField.TYPE_NOT_STORED)
+			{
+			    StoreTermVectors = true,
+			    StoreTermVectorPositions = (false),
+			    StoreTermVectorPayloads = true,
+			    StoreTermVectorOffsets = (Random().NextBoolean())
+			};
+		    doc.Add(new Field("field", "foo", customType));
 			try
 			{
 				writer.AddDocument(doc);

@@ -1,17 +1,13 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Document;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
+using Lucene.Net.Randomized.Generators;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
-using Lucene.Net.Util;
-using Sharpen;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Util;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
@@ -27,7 +23,7 @@ namespace Lucene.Net.Test.Index
 
 		private Directory dir2;
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestQueries()
 		{
 			single = Single(Random());
@@ -41,8 +37,8 @@ namespace Lucene.Net.Test.Index
 			QueryTest(new TermQuery(new Term("f4", "v1")));
 			QueryTest(new TermQuery(new Term("f4", "v2")));
 			BooleanQuery bq1 = new BooleanQuery();
-			bq1.Add(new TermQuery(new Term("f1", "v1")), BooleanClause.Occur.MUST);
-			bq1.Add(new TermQuery(new Term("f4", "v1")), BooleanClause.Occur.MUST);
+			bq1.Add(new TermQuery(new Term("f1", "v1")), Occur.MUST);
+			bq1.Add(new TermQuery(new Term("f4", "v1")), Occur.MUST);
 			QueryTest(bq1);
 			single.IndexReader.Dispose();
 			single = null;
@@ -56,7 +52,7 @@ namespace Lucene.Net.Test.Index
 			dir2 = null;
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestFieldNames()
 		{
 			Directory dir1 = GetDir1(Random());
@@ -65,7 +61,7 @@ namespace Lucene.Net.Test.Index
 				(DirectoryReader.Open(dir1)), SlowCompositeReaderWrapper.Wrap(DirectoryReader.Open
 				(dir2)));
 			FieldInfos fieldInfos = pr.FieldInfos;
-			AreEqual(4, fieldInfos.Size());
+			AreEqual(4, fieldInfos.Size);
 			IsNotNull(fieldInfos.FieldInfo("f1"));
 			IsNotNull(fieldInfos.FieldInfo("f2"));
 			IsNotNull(fieldInfos.FieldInfo("f3"));
@@ -75,7 +71,7 @@ namespace Lucene.Net.Test.Index
 			dir2.Dispose();
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestRefCounts1()
 		{
 			Directory dir1 = GetDir1(Random());
@@ -87,16 +83,16 @@ namespace Lucene.Net.Test.Index
 				.Wrap(DirectoryReader.Open(dir1)), ir2 = SlowCompositeReaderWrapper.Wrap(DirectoryReader
 				.Open(dir2)));
 			// check RefCounts
-			AreEqual(1, ir1.GetRefCount());
-			AreEqual(1, ir2.GetRefCount());
+			AreEqual(1, ir1.RefCount);
+			AreEqual(1, ir2.RefCount);
 			pr.Dispose();
-			AreEqual(0, ir1.GetRefCount());
-			AreEqual(0, ir2.GetRefCount());
+			AreEqual(0, ir1.RefCount);
+			AreEqual(0, ir2.RefCount);
 			dir1.Dispose();
 			dir2.Dispose();
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestRefCounts2()
 		{
 			Directory dir1 = GetDir1(Random());
@@ -106,20 +102,20 @@ namespace Lucene.Net.Test.Index
 			// don't close subreaders, so ParallelReader will increment refcounts
 			ParallelAtomicReader pr = new ParallelAtomicReader(false, ir1, ir2);
 			// check RefCounts
-			AreEqual(2, ir1.GetRefCount());
-			AreEqual(2, ir2.GetRefCount());
+			AreEqual(2, ir1.RefCount);
+			AreEqual(2, ir2.RefCount);
 			pr.Dispose();
-			AreEqual(1, ir1.GetRefCount());
-			AreEqual(1, ir2.GetRefCount());
+			AreEqual(1, ir1.RefCount);
+			AreEqual(1, ir2.RefCount);
 			ir1.Dispose();
 			ir2.Dispose();
-			AreEqual(0, ir1.GetRefCount());
-			AreEqual(0, ir2.GetRefCount());
+			AreEqual(0, ir1.RefCount);
+			AreEqual(0, ir2.RefCount);
 			dir1.Dispose();
 			dir2.Dispose();
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestCloseInnerReader()
 		{
 			Directory dir1 = GetDir1(Random());
@@ -143,7 +139,7 @@ namespace Lucene.Net.Test.Index
 			dir1.Dispose();
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestIncompatibleIndexes()
 		{
 			// two documents:
@@ -181,15 +177,15 @@ namespace Lucene.Net.Test.Index
 			}
 			// expected exception
 			// check RefCounts
-			AreEqual(1, ir1.GetRefCount());
-			AreEqual(1, ir2.GetRefCount());
+			AreEqual(1, ir1.RefCount);
+			AreEqual(1, ir2.RefCount);
 			ir1.Dispose();
 			ir2.Dispose();
 			dir1.Dispose();
 			dir2.Dispose();
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestIgnoreStoredFields()
 		{
 			Directory dir1 = GetDir1(Random());
@@ -258,7 +254,7 @@ namespace Lucene.Net.Test.Index
 			AreEqual(parallelHits.Length, singleHits.Length);
 			for (int i = 0; i < parallelHits.Length; i++)
 			{
-				AreEqual(parallelHits[i].score, singleHits[i].score, 0.001f
+				AreEqual(parallelHits[i].Score, singleHits[i].Score, 0.001f
 					);
 				Lucene.Net.Documents.Document docParallel = parallel.Doc(parallelHits[i].Doc
 					);

@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Lucene.Net.Index;
 using Lucene.Net.Randomized.Generators;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
 using Lucene.Net.Support;
 using Lucene.Net.TestFramework.Index;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
@@ -25,7 +27,7 @@ namespace Lucene.Net.Test.Index
 		}
 
 		/// <exception cref="System.Exception"></exception>
-		protected override void DoSearching(ExecutorService es, long stopTime)
+		protected override void DoSearching(TaskScheduler es, long stopTime)
 		{
 			bool anyOpenDelFiles = false;
 			DirectoryReader r = DirectoryReader.Open(writer, true);
@@ -88,13 +90,12 @@ namespace Lucene.Net.Test.Index
 				System.Console.Out.WriteLine("OBD files: " + openDeletedFiles_1);
 			}
 			anyOpenDelFiles |= openDeletedFiles_1.Count > 0;
-			IsFalse("saw non-zero open-but-deleted count", anyOpenDelFiles
-				);
+			AssertFalse("saw non-zero open-but-deleted count", anyOpenDelFiles);
 		}
 
 		protected override Directory GetDirectory(Directory @in)
 		{
-			//HM:revisit 
+			
 			//assert in instanceof MockDirectoryWrapper;
 			if (!useNonNrtReaders)
 			{
@@ -104,7 +105,7 @@ namespace Lucene.Net.Test.Index
 		}
 
 		/// <exception cref="System.Exception"></exception>
-		protected override void DoAfterWriter(ExecutorService es)
+		protected override void DoAfterWriter(TaskScheduler es)
 		{
 			// Force writer to do reader pooling, always, so that
 			// all merged segments, even for merges before
@@ -153,10 +154,10 @@ namespace Lucene.Net.Test.Index
 			return NewSearcher(r2);
 		}
 
-		/// <exception cref="System.Exception"></exception>
-		public virtual void TestNRTThreads()
-		{
-			RunTest("TestNRTThreads");
-		}
+        //[Test]
+        //public virtual void TestRunNRTThreads()
+        //{
+        //    RunTest("TestNRTThreads");
+        //}
 	}
 }

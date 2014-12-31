@@ -11,7 +11,7 @@ using ICoreClosedListener = Lucene.Net.Index.SegmentReader.ICoreClosedListener;
 
 namespace Lucene.Net.Index
 {
-    internal sealed class SegmentCoreReaders
+    public sealed class SegmentCoreReaders
     {
         // Counts how many other reader share the core objects
         // (freqStream, proxStream, tis, etc.) of this reader;
