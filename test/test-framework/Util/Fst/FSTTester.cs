@@ -262,7 +262,7 @@ namespace Lucene.Net.TestFramework.Util.Fst
 		private T RandomAcceptedWord(FST<T> fst, IntsRef @in)
 		{
 			FST.Arc<T> arc = fst.GetFirstArc(new FST.Arc<T>());
-			IList<FST.Arc<T>> arcs = new AList<FST.Arc<T>>();
+			IList<FST.Arc<T>> arcs = new List<FST.Arc<T>>();
 			@in.length = 0;
 			@in.offset = 0;
 			T NO_OUTPUT = fst.outputs.GetNoOutput();
@@ -272,11 +272,11 @@ namespace Lucene.Net.TestFramework.Util.Fst
 			{
 				// read all arcs:
 				fst.ReadFirstTargetArc(arc, arc, fstReader);
-				arcs.AddItem(new FST.Arc<T>().CopyFrom(arc));
+				arcs.Add(new FST.Arc<T>().CopyFrom(arc));
 				while (!arc.IsLast())
 				{
 					fst.ReadNextArc(arc, fstReader);
-					arcs.AddItem(new FST.Arc<T>().CopyFrom(arc));
+					arcs.Add(new FST.Arc<T>().CopyFrom(arc));
 				}
 				// pick one
 				arc = arcs[random.Next(arcs.Count)];
@@ -409,7 +409,7 @@ namespace Lucene.Net.TestFramework.Util.Fst
 					long output = (long)pair.output;
 					maxLong = Math.Max(maxLong, output);
 					minLong = Math.Min(minLong, output);
-					validOutputs.AddItem(output);
+					validOutputs.Add(output);
 				}
 			}
 			else

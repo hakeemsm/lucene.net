@@ -28,7 +28,7 @@ namespace Lucene.Net.TestFramework.Search
 		/// <summary>Thrown when the lease for a searcher has expired.</summary>
 		/// <remarks>Thrown when the lease for a searcher has expired.</remarks>
 		[System.Serializable]
-		public class SearcherExpiredException : RuntimeException
+		public class SearcherExpiredException : SystemException
 		{
 			public SearcherExpiredException(string message) : base(message)
 			{
@@ -125,7 +125,7 @@ namespace Lucene.Net.TestFramework.Search
 			if (VERBOSE)
 			{
 				System.Console.Out.WriteLine("REOPEN: nodeID=" + nodeID + " version=" + version +
-					 " maxDoc=" + newSearcher.GetIndexReader().MaxDoc());
+					 " maxDoc=" + newSearcher.IndexReader.MaxDoc());
 			}
 			// Broadcast new collection stats for this node to all
 			// other nodes:
@@ -204,7 +204,7 @@ namespace Lucene.Net.TestFramework.Search
 			{
 				foreach (Term term in terms)
 				{
-					TermContext termContext = TermContext.Build(s.GetIndexReader().GetContext(), term
+					TermContext termContext = TermContext.Build(s.IndexReader.GetContext(), term
 						);
 					stats.Put(term, s.TermStatistics(term, termContext));
 				}
@@ -290,7 +290,7 @@ namespace Lucene.Net.TestFramework.Search
 								(nodeID, this.nodeVersions[nodeID], term);
 							if (!this._enclosing.termStatsCache.ContainsKey(key))
 							{
-								missing.AddItem(term);
+								missing.Add(term);
 							}
 						}
 						if (missing.Count != 0)
@@ -478,7 +478,7 @@ namespace Lucene.Net.TestFramework.Search
 								// request to a remote shard won't have reader.maxDoc at hand, so
 								// it will send some arbitrary value which will be fixed on the
 								// other end.
-								shardAfter.doc = s.GetIndexReader().MaxDoc() - 1;
+								shardAfter.doc = s.IndexReader.MaxDoc() - 1;
 							}
 							finally
 							{
@@ -593,7 +593,7 @@ namespace Lucene.Net.TestFramework.Search
 				System.Array.Copy(nodeVersions, 0, this.currentNodeVersions, 0, this.currentNodeVersions
 					.Length);
 				this.currentShardSearcher = new ShardSearchingTestBase.NodeState.ShardIndexSearcher
-					(this, this.currentNodeVersions.Clone(), this.mgr.Acquire().GetIndexReader(), this
+					(this, this.currentNodeVersions.Clone(), this.mgr.Acquire().IndexReader, this
 					.myNodeID);
 			}
 
@@ -603,10 +603,10 @@ namespace Lucene.Net.TestFramework.Search
 				this.currentNodeVersions[nodeID] = version;
 				if (this.currentShardSearcher != null)
 				{
-					this.currentShardSearcher.GetIndexReader().DecRef();
+					this.currentShardSearcher.IndexReader.DecRef();
 				}
 				this.currentShardSearcher = new ShardSearchingTestBase.NodeState.ShardIndexSearcher
-					(this, this.currentNodeVersions.Clone(), this.mgr.Acquire().GetIndexReader(), this
+					(this, this.currentNodeVersions.Clone(), this.mgr.Acquire().IndexReader, this
 					.myNodeID);
 			}
 
@@ -621,7 +621,7 @@ namespace Lucene.Net.TestFramework.Search
 					// happens right after the above line, this thread
 					// gets stalled, and the old IR is closed.  So we
 					// must try/retry until incRef succeeds:
-					if (s.GetIndexReader().TryIncRef())
+					if (s.IndexReader.TryIncRef())
 					{
 						return s;
 					}
@@ -631,7 +631,7 @@ namespace Lucene.Net.TestFramework.Search
 			/// <exception cref="System.IO.IOException"></exception>
 			public void Release(ShardSearchingTestBase.NodeState.ShardIndexSearcher s)
 			{
-				s.GetIndexReader().DecRef();
+				s.IndexReader.DecRef();
 			}
 
 			// Get and old searcher matching the specified versions:
@@ -645,7 +645,7 @@ namespace Lucene.Net.TestFramework.Search
 						 + " version=" + nodeVersions[this.myNodeID]);
 				}
 				return new ShardSearchingTestBase.NodeState.ShardIndexSearcher(this, nodeVersions
-					, s.GetIndexReader(), this.myNodeID);
+					, s.IndexReader, this.myNodeID);
 			}
 
 			// Reopen local reader
@@ -678,7 +678,7 @@ namespace Lucene.Net.TestFramework.Search
 			{
 				if (this.currentShardSearcher != null)
 				{
-					this.currentShardSearcher.GetIndexReader().DecRef();
+					this.currentShardSearcher.IndexReader.DecRef();
 				}
 				this.searchers.Close();
 				this.mgr.Close();
@@ -689,7 +689,7 @@ namespace Lucene.Net.TestFramework.Search
 			private readonly ShardSearchingTestBase _enclosing;
 		}
 
-		private sealed class ChangeIndices : Sharpen.Thread
+		private sealed class ChangeIndices : Thread
 		{
 			// TODO: make this more realistic, ie, each node should
 			// have its own thread, so we have true node to node
@@ -741,7 +741,7 @@ namespace Lucene.Net.TestFramework.Search
 				{
 					System.Console.Out.WriteLine("FAILED:");
 					Sharpen.Runtime.PrintStackTrace(t, System.Console.Out);
-					throw new RuntimeException(t);
+					throw new SystemException(t);
 				}
 			}
 
@@ -759,7 +759,7 @@ namespace Lucene.Net.TestFramework.Search
 
 		internal long endTimeNanos;
 
-		private Sharpen.Thread changeIndicesThread;
+		private Thread changeIndicesThread;
 
 		/// <exception cref="System.IO.IOException"></exception>
 		protected internal virtual void Start(int numNodes, double runTimeSec, int maxSearcherAgeSeconds

@@ -42,7 +42,7 @@ namespace Lucene.Net.TestFramework.Index
 				(Random()));
 			IndexWriter iwriter = new IndexWriter(dir, iwc);
 			int uniqueValueCount = TestUtil.NextInt(Random(), 1, 256);
-			IList<long> values = new AList<long>();
+			IList<long> values = new List<long>();
 			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			NumericDocValuesField dvf = new NumericDocValuesField("dv", 0);
@@ -53,7 +53,7 @@ namespace Lucene.Net.TestFramework.Index
 				if (values.Count < uniqueValueCount)
 				{
 					value = Random().NextLong();
-					values.AddItem(value);
+					values.Add(value);
 				}
 				else
 				{

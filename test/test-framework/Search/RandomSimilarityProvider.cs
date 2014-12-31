@@ -45,7 +45,7 @@ namespace Lucene.Net.TestFramework.Search
 			perFieldSeed = random.Next();
 			coordType = random.Next(3);
 			shouldQueryNorm = random.NextBoolean();
-			knownSims = new AList<Similarity>(allSims);
+			knownSims = new List<Similarity>(allSims);
 			Sharpen.Collections.Shuffle(knownSims, random);
 		}
 
@@ -130,16 +130,16 @@ namespace Lucene.Net.TestFramework.Search
 			// TODO: if we enable NoNormalization, we have to deal with
 			// a couple tests (e.g. TestDocBoost, TestSort) that expect length normalization
 			// new Normalization.NoNormalization()
-			allSims = new AList<Similarity>();
-			allSims.AddItem(new DefaultSimilarity());
-			allSims.AddItem(new BM25Similarity());
+			allSims = new List<Similarity>();
+			allSims.Add(new DefaultSimilarity());
+			allSims.Add(new BM25Similarity());
 			foreach (BasicModel basicModel in BASIC_MODELS)
 			{
 				foreach (AfterEffect afterEffect in AFTER_EFFECTS)
 				{
 					foreach (Normalization normalization in NORMALIZATIONS)
 					{
-						allSims.AddItem(new DFRSimilarity(basicModel, afterEffect, normalization));
+						allSims.Add(new DFRSimilarity(basicModel, afterEffect, normalization));
 					}
 				}
 			}
@@ -149,12 +149,12 @@ namespace Lucene.Net.TestFramework.Search
 				{
 					foreach (Normalization normalization in NORMALIZATIONS)
 					{
-						allSims.AddItem(new IBSimilarity(distribution, lambda, normalization));
+						allSims.Add(new IBSimilarity(distribution, lambda, normalization));
 					}
 				}
 			}
-			allSims.AddItem(new LMJelinekMercerSimilarity(0.1f));
-			allSims.AddItem(new LMJelinekMercerSimilarity(0.7f));
+			allSims.Add(new LMJelinekMercerSimilarity(0.1f));
+			allSims.Add(new LMJelinekMercerSimilarity(0.7f));
 		}
 
 		public override string ToString()

@@ -1,24 +1,22 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System.Collections.Generic;
-using Lucene.Net.Test.Analysis;
+using Lucene.Net.Analysis;
 using Lucene.Net.Codecs;
-using Lucene.Net.Document;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
+using Lucene.Net.Randomized.Generators;
 using Lucene.Net.Store;
-using Lucene.Net.Util;
-using Sharpen;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Index;
+using Lucene.Net.TestFramework.Util;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
+    [TestFixture]
 	public class TestMixedCodecs : LuceneTestCase
 	{
-		/// <exception cref="System.Exception"></exception>
-		public virtual void Test()
+		[Test]
+		public virtual void TestCodecs()
 		{
 			int NUM_DOCS = AtLeast(1000);
 			Directory dir = NewDirectory();
@@ -71,7 +69,7 @@ namespace Lucene.Net.Test.Index
 					w.DeleteDocuments(new Term("id", toDelete.ToString()));
 					if (Random().Next(17) == 6)
 					{
-						IndexReader r = w.Reader;
+						IndexReader r = w.GetReader();
 						AreEqual(NUM_DOCS - deleted.Count, r.NumDocs);
 						r.Dispose();
 					}

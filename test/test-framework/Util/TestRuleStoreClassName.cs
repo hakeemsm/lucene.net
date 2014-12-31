@@ -69,7 +69,7 @@ namespace Lucene.Net.TestFramework.Util
 			Description localDescription = description;
 			if (localDescription == null)
 			{
-				throw new RuntimeException("The rule is not currently executing.");
+				throw new SystemException("The rule is not currently executing.");
 			}
 			return localDescription.GetTestClass();
 		}

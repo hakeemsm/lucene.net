@@ -1,22 +1,19 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System.IO;
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Document;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
-using Sharpen;
+using NUnit.Framework;
+using Directory = Lucene.Net.Store.Directory;
 
 namespace Lucene.Net.Test.Index
 {
 	/// <summary>Tests lazy skipping on the proximity file.</summary>
-	/// <remarks>Tests lazy skipping on the proximity file.</remarks>
+	[TestFixture]
 	public class TestLazyProxSkipping : LuceneTestCase
 	{
 		private IndexSearcher searcher;
@@ -33,10 +30,10 @@ namespace Lucene.Net.Test.Index
 
 		private class SeekCountingDirectory : MockDirectoryWrapper
 		{
-			protected SeekCountingDirectory(TestLazyProxSkipping _enclosing, Directory delegate_
-				) : base(LuceneTestCase.Random(), delegate_)
+			protected internal SeekCountingDirectory(TestLazyProxSkipping _enclosing, Directory dir
+				) : base(LuceneTestCase.Random(), dir)
 			{
-				this._enclosing = _enclosing;
+				this.parent = _enclosing;
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
@@ -46,20 +43,20 @@ namespace Lucene.Net.Test.Index
 				if (name.EndsWith(".prx") || name.EndsWith(".pos"))
 				{
 					// we decorate the proxStream with a wrapper class that allows to count the number of calls of seek()
-					ii = new TestLazyProxSkipping.SeeksCountingStream(this, ii);
+					ii = new TestLazyProxSkipping.SeeksCountingStream(parent, ii);
 				}
 				return ii;
 			}
 
-			private readonly TestLazyProxSkipping _enclosing;
+			private readonly TestLazyProxSkipping parent;
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
 		private void CreateIndex(int numHits)
 		{
 			int numDocs = 500;
-			Analyzer analyzer = new _Analyzer_71();
-			Directory directory = new TestLazyProxSkipping.SeekCountingDirectory(this, new RAMDirectory
+			Analyzer analyzer = new AnonymousAnalyzer();
+			Directory directory = new SeekCountingDirectory(this, new RAMDirectory
 				());
 			// note: test explicitly disables payloads
 			IndexWriter writer = new IndexWriter(directory, ((IndexWriterConfig)NewIndexWriterConfig
@@ -98,16 +95,12 @@ namespace Lucene.Net.Test.Index
 			this.searcher = NewSearcher(reader);
 		}
 
-		private sealed class _Analyzer_71 : Analyzer
+		private sealed class AnonymousAnalyzer : Analyzer
 		{
-			public _Analyzer_71()
+		    public override TokenStreamComponents CreateComponents(string fieldName
+				, TextReader reader)
 			{
-			}
-
-			protected override Analyzer.TokenStreamComponents CreateComponents(string fieldName
-				, StreamReader reader)
-			{
-				return new Analyzer.TokenStreamComponents(new MockTokenizer(reader, MockTokenizer
+				return new TokenStreamComponents(new MockTokenizer(reader, MockTokenizer
 					.WHITESPACE, true));
 			}
 		}
@@ -132,12 +125,12 @@ namespace Lucene.Net.Test.Index
 			AreEqual(numHits, hits.Length);
 			// check if the number of calls of seek() does not exceed the number of hits
 			IsTrue(this.seeksCounter > 0);
-			IsTrue("seeksCounter=" + this.seeksCounter + " numHits=" +
+			AssertTrue("seeksCounter=" + this.seeksCounter + " numHits=" +
 				 numHits, this.seeksCounter <= numHits + 1);
 			searcher.IndexReader.Dispose();
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestLazySkipping()
 		{
 			string fieldFormat = TestUtil.GetPostingsFormat(this.field);
@@ -153,7 +146,7 @@ namespace Lucene.Net.Test.Index
 			PerformTest(10);
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestSeek()
 		{
 			Directory directory = NewDirectory();
@@ -161,10 +154,11 @@ namespace Lucene.Net.Test.Index
 				, new MockAnalyzer(Random())));
 			for (int i = 0; i < 10; i++)
 			{
-				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-					();
-				doc.Add(NewTextField(this.field, "a b", Field.Store.YES));
-				writer.AddDocument(doc);
+				var doc = new Lucene.Net.Documents.Document
+				{
+				    NewTextField(this.field, "a b", Field.Store.YES)
+				};
+			    writer.AddDocument(doc);
 			}
 			writer.Dispose();
 			IndexReader reader = DirectoryReader.Open(directory);
@@ -214,14 +208,14 @@ namespace Lucene.Net.Test.Index
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
-			public override void Close()
+			protected override void Dispose(bool disposing)
 			{
 				this.input.Dispose();
 			}
 
 			public override long FilePointer
 			{
-				return this.input.FilePointer;
+			    get { return this.input.FilePointer; }
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
@@ -231,14 +225,14 @@ namespace Lucene.Net.Test.Index
 				this.input.Seek(pos);
 			}
 
-			public override long Length()
+			public override long Length
 			{
-				return this.input.Length();
+			    get { return this.input.Length; }
 			}
 
-			public override DataInput Clone()
+			public override object Clone()
 			{
-				return new TestLazyProxSkipping.SeeksCountingStream(this, ((IndexInput)this.input
+				return new TestLazyProxSkipping.SeeksCountingStream(_enclosing, ((IndexInput)this.input
 					.Clone()));
 			}
 

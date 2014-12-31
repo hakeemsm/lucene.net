@@ -1,19 +1,16 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System.IO;
+using Lucene.Net.Analysis;
+using Lucene.Net.Analysis.Tokenattributes;
+using Lucene.Net.Documents;
+using Lucene.Net.Support;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Util;
 using NUnit.Framework;
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Test.Analysis.Tokenattributes;
 using Lucene.Net.Codecs.Lucene41;
-using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
 using Lucene.Net.Util;
-using Sharpen;
+using Directory = Lucene.Net.Store.Directory;
 
 namespace Lucene.Net.Test.Index
 {
@@ -31,10 +28,10 @@ namespace Lucene.Net.Test.Index
 	{
 		internal class CountingRAMDirectory : MockDirectoryWrapper
 		{
-			protected CountingRAMDirectory(TestMultiLevelSkipList _enclosing, Directory delegate_
-				) : base(LuceneTestCase.Random(), delegate_)
+			protected internal CountingRAMDirectory(TestMultiLevelSkipList _enclosing, Directory dir
+				) : base(LuceneTestCase.Random(), dir)
 			{
-				this._enclosing = _enclosing;
+				this.parent = _enclosing;
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
@@ -43,12 +40,12 @@ namespace Lucene.Net.Test.Index
 				IndexInput @in = base.OpenInput(fileName, context);
 				if (fileName.EndsWith(".frq"))
 				{
-					@in = new TestMultiLevelSkipList.CountingStream(this, @in);
+					@in = new TestMultiLevelSkipList.CountingStream(parent, @in);
 				}
 				return @in;
 			}
 
-			private readonly TestMultiLevelSkipList _enclosing;
+			private readonly TestMultiLevelSkipList parent;
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -59,11 +56,10 @@ namespace Lucene.Net.Test.Index
 			counter = 0;
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestSimpleSkip()
 		{
-			Directory dir = new TestMultiLevelSkipList.CountingRAMDirectory(this, new RAMDirectory
-				());
+			Directory dir = new CountingRAMDirectory(this, new RAMDirectory());
 			IndexWriter writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT
 				, new TestMultiLevelSkipList.PayloadAnalyzer()).SetCodec(TestUtil.AlwaysPostingsFormat
 				(new Lucene41PostingsFormat())).SetMergePolicy(NewLogMergePolicy()));
@@ -72,7 +68,7 @@ namespace Lucene.Net.Test.Index
 			{
 				Lucene.Net.Documents.Document d1 = new Lucene.Net.Documents.Document(
 					);
-				d1.Add(NewTextField(term.Field(), term.Text(), Field.Store.NO));
+				d1.Add(NewTextField(term.Field, term.Text, Field.Store.NO));
 				writer.AddDocument(d1);
 			}
 			writer.Commit();
@@ -106,13 +102,13 @@ namespace Lucene.Net.Test.Index
 				Fail("Too many bytes read: " + counter + " vs " + maxCounter
 					);
 			}
-			AreEqual("Wrong document " + tp.DocID + " after skipTo target "
+			AssertEquals("Wrong document " + tp.DocID + " after skipTo target "
 				 + target, target, tp.DocID);
-			AreEqual("Frequency is not 1: " + tp.Freq, 1, tp.Freq);
+			AssertEquals("Frequency is not 1: " + tp.Freq, 1, tp.Freq);
 			tp.NextPosition();
 			BytesRef b = tp.Payload;
-			AreEqual(1, b.length);
-			AreEqual("Wrong payload for the target " + target + ": " +
+			AssertEquals(1, b.length);
+			AssertEquals("Wrong payload for the target " + target + ": " +
 				 b.bytes[b.offset], unchecked((byte)target), b.bytes[b.offset]);
 		}
 
@@ -120,8 +116,8 @@ namespace Lucene.Net.Test.Index
 		{
 			private readonly AtomicInteger payloadCount = new AtomicInteger(-1);
 
-			protected override Analyzer.TokenStreamComponents CreateComponents(string fieldName
-				, StreamReader reader)
+		    public override Analyzer.TokenStreamComponents CreateComponents(string fieldName
+				, TextReader reader)
 			{
 				Tokenizer tokenizer = new MockTokenizer(reader, MockTokenizer.WHITESPACE, true);
 				return new Analyzer.TokenStreamComponents(tokenizer, new TestMultiLevelSkipList.PayloadFilter
@@ -148,8 +144,7 @@ namespace Lucene.Net.Test.Index
 				bool hasNext = input.IncrementToken();
 				if (hasNext)
 				{
-					payloadAtt.Payload = (new BytesRef(new byte[] { unchecked((byte)payloadCount.IncrementAndGet
-						()) }));
+					payloadAtt.Payload = (new BytesRef(new[] { (sbyte) payloadCount.IncrementAndGet() }));
 				}
 				return hasNext;
 			}
@@ -164,7 +159,7 @@ namespace Lucene.Net.Test.Index
 			internal CountingStream(TestMultiLevelSkipList _enclosing, IndexInput input) : base
 				("CountingStream(" + input + ")")
 			{
-				this._enclosing = _enclosing;
+				this.enclosingInstance = _enclosing;
 				// Simply extends IndexInput in a way that we are able to count the number
 				// of bytes read
 				this.input = input;
@@ -173,26 +168,26 @@ namespace Lucene.Net.Test.Index
 			/// <exception cref="System.IO.IOException"></exception>
 			public override byte ReadByte()
 			{
-				this._enclosing.counter++;
+				this.enclosingInstance.counter++;
 				return this.input.ReadByte();
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
 			public override void ReadBytes(byte[] b, int offset, int len)
 			{
-				this._enclosing.counter += len;
+				this.enclosingInstance.counter += len;
 				this.input.ReadBytes(b, offset, len);
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
-			public override void Close()
+			protected override void Dispose(bool disposing)
 			{
 				this.input.Dispose();
 			}
 
 			public override long FilePointer
 			{
-				return this.input.FilePointer;
+			    get { return this.input.FilePointer; }
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
@@ -201,18 +196,17 @@ namespace Lucene.Net.Test.Index
 				this.input.Seek(pos);
 			}
 
-			public override long Length()
+			public override long Length
 			{
-				return this.input.Length();
+			    get { return this.input.Length; }
 			}
 
-			public override DataInput Clone()
+			public override object Clone()
 			{
-				return new TestMultiLevelSkipList.CountingStream(this, ((IndexInput)this.input.Clone
-					()));
+				return new CountingStream(enclosingInstance, ((IndexInput)this.input.Clone()));
 			}
 
-			private readonly TestMultiLevelSkipList _enclosing;
+			private readonly TestMultiLevelSkipList enclosingInstance;
 		}
 	}
 }

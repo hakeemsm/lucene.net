@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using Lucene.Net.Analysis;
@@ -10,12 +11,14 @@ using Lucene.Net.Support;
 using Lucene.Net.TestFramework;
 using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
+using NUnit.Framework;
 using Directory = Lucene.Net.Store.Directory;
 
 namespace Lucene.Net.Test.Index
 {
 	/// <summary>MultiThreaded IndexWriter tests</summary>
-	public class TestIndexWriterWithThreads : LuceneTestCase
+	[TestFixture]
+    public class TestIndexWriterWithThreads : LuceneTestCase
 	{
 		private class IndexerThread 
 		{
@@ -66,7 +69,7 @@ namespace Lucene.Net.Test.Index
 						if (LuceneTestCase.VERBOSE)
 						{
 							System.Console.Out.WriteLine("TEST: expected exc:");
-							Runtime.PrintStackTrace(ioe, System.Console.Out);
+							ioe.printStackTrace();
 						}
 						//System.out.println(Thread.currentThread().getName() + ": hit exc");
 						//ioe.printStackTrace(System.out);
@@ -80,7 +83,7 @@ namespace Lucene.Net.Test.Index
 							}
 							catch (Exception ie)
 							{
-								throw new ThreadInterruptedException(ie);
+								throw new ThreadInterruptedException(ie.Message,ie);
 							}
 							if (fullCount++ >= 5)
 							{
@@ -93,7 +96,7 @@ namespace Lucene.Net.Test.Index
 							{
 								System.Console.Out.WriteLine(Thread.CurrentThread.Name + ": ERROR: unexpected IOException:"
 									);
-								Runtime.PrintStackTrace(ioe, System.Console.Out);
+								ioe.printStackTrace();
 								this.error = ioe;
 							}
 							break;
@@ -121,7 +124,7 @@ namespace Lucene.Net.Test.Index
 		// LUCENE-1130: make sure immediate disk full on creating
 		// an IndexWriter (hit during DW.ThreadState.init()), with
 		// multiple threads, is OK:
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestImmediateDiskFullWithThreads()
 		{
 			int NUM_THREADS = 3;
@@ -139,28 +142,30 @@ namespace Lucene.Net.Test.Index
 				((ConcurrentMergeScheduler)writer.Config.MergeScheduler).SetSuppressExceptions
 					();
 				dir.SetMaxSizeInBytes(4 * 1024 + 20 * iter);
-				TestIndexWriterWithThreads.IndexerThread[] threads = new TestIndexWriterWithThreads.IndexerThread
-					[NUM_THREADS];
+				var threads = new Thread[NUM_THREADS];
+				var indexerThreads = new IndexerThread[NUM_THREADS];
 				for (int i = 0; i < NUM_THREADS; i++)
 				{
-					threads[i] = new TestIndexWriterWithThreads.IndexerThread(this, writer, true);
+				    var indexerThread = new IndexerThread(this, writer, true);
+				    threads[i] = new Thread(indexerThread.Run);
+				    indexerThreads[i] = indexerThread;
 				}
-				for (int i_1 = 0; i_1 < NUM_THREADS; i_1++)
+			    for (int j = 0; j < NUM_THREADS; j++)
 				{
-					threads[i_1].Start();
+					threads[j].Start();
 				}
-				for (int i_2 = 0; i_2 < NUM_THREADS; i_2++)
+				for (int k = 0; k < NUM_THREADS; k++)
 				{
 					// Without fix for LUCENE-1130: one of the
 					// threads will hang
-					threads[i_2].Join();
-					IsTrue("hit unexpected Throwable", threads[i_2].error == null
+					threads[k].Join();
+					AssertTrue("hit unexpected Throwable", indexerThreads[k].error == null
 						);
 				}
 				// Make sure once disk space is avail again, we can
 				// cleanly close:
 				dir.SetMaxSizeInBytes(0);
-				writer.Close(false);
+				writer.Dispose(false);
 				dir.Dispose();
 			}
 		}
@@ -169,7 +174,7 @@ namespace Lucene.Net.Test.Index
 		// threads are trying to add documents.  Strictly
 		// speaking, this isn't valid us of Lucene's APIs, but we
 		// still want to be robust to this case:
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestCloseWithThreads()
 		{
 			int NUM_THREADS = 3;
@@ -186,49 +191,48 @@ namespace Lucene.Net.Test.Index
 					(new ConcurrentMergeScheduler()).SetMergePolicy(NewLogMergePolicy(4)));
 				((ConcurrentMergeScheduler)writer.Config.MergeScheduler).SetSuppressExceptions
 					();
-				TestIndexWriterWithThreads.IndexerThread[] threads = new TestIndexWriterWithThreads.IndexerThread
-					[NUM_THREADS];
+				var threads = new Thread[NUM_THREADS];
+                var indexerThreads = new IndexerThread[NUM_THREADS];
 				for (int i = 0; i < NUM_THREADS; i++)
 				{
-					threads[i] = new TestIndexWriterWithThreads.IndexerThread(this, writer, false);
+                    var indexerThread = new IndexerThread(this, writer, false);
+                    threads[i] = new Thread(indexerThread.Run);
+                    indexerThreads[i] = indexerThread;
 				}
-				for (int i_1 = 0; i_1 < NUM_THREADS; i_1++)
+				for (int j = 0; j < NUM_THREADS; j++)
 				{
-					threads[i_1].Start();
+					threads[j].Start();
 				}
 				bool done = false;
 				while (!done)
 				{
 					Thread.Sleep(100);
-					for (int i_2 = 0; i_2 < NUM_THREADS; i_2++)
+					for (int k = 0; k < NUM_THREADS; k++)
 					{
-						// only stop when at least one thread has added a doc
-						if (threads[i_2].addCount > 0)
+					    // only stop when at least one thread has added a doc
+						if (indexerThreads[k].addCount > 0)
 						{
 							done = true;
 							break;
 						}
-						else
-						{
-							if (!threads[i_2].IsAlive())
-							{
-								Fail("thread failed before indexing a single document");
-							}
-						}
+					    if (!threads[k].IsAlive)
+					    {
+					        Fail("thread failed before indexing a single document");
+					    }
 					}
 				}
 				if (VERBOSE)
 				{
 					System.Console.Out.WriteLine("\nTEST: now close");
 				}
-				writer.Close(false);
+				writer.Dispose(false);
 				// Make sure threads that are adding docs are not hung:
 				for (int i_3 = 0; i_3 < NUM_THREADS; i_3++)
 				{
 					// Without fix for LUCENE-1130: one of the
 					// threads will hang
 					threads[i_3].Join();
-					if (threads[i_3].IsAlive())
+					if (threads[i_3].IsAlive)
 					{
 						Fail("thread seems to be hung");
 					}
@@ -250,9 +254,8 @@ namespace Lucene.Net.Test.Index
 
 		// Runs test, with multiple threads, using the specific
 		// failure to trigger an IOException
-		/// <exception cref="System.Exception"></exception>
-		public virtual void _testMultipleThreadsFailure(MockDirectoryWrapper.Failure failure
-			)
+		[Test]
+		public virtual void TestMultipleThreadsFailure(MockDirectoryWrapper.Failure failure)
 		{
 			int NUM_THREADS = 3;
 			for (int iter = 0; iter < 2; iter++)
@@ -267,35 +270,37 @@ namespace Lucene.Net.Test.Index
 					(new ConcurrentMergeScheduler()).SetMergePolicy(NewLogMergePolicy(4)));
 				((ConcurrentMergeScheduler)writer.Config.MergeScheduler).SetSuppressExceptions
 					();
-				TestIndexWriterWithThreads.IndexerThread[] threads = new TestIndexWriterWithThreads.IndexerThread
-					[NUM_THREADS];
-				for (int i = 0; i < NUM_THREADS; i++)
+				var threads = new Thread[NUM_THREADS];
+			    var indexerThreads = new IndexerThread[NUM_THREADS];
+			    for (int i = 0; i < NUM_THREADS; i++)
 				{
-					threads[i] = new TestIndexWriterWithThreads.IndexerThread(this, writer, true);
+                    var indexerThread = new IndexerThread(this, writer, true);
+                    threads[i] = new Thread(indexerThread.Run);
+				    indexerThreads[i] = indexerThread;
 				}
-				for (int i_1 = 0; i_1 < NUM_THREADS; i_1++)
+				for (int j = 0; j < NUM_THREADS; j++)
 				{
-					threads[i_1].Start();
+					threads[j].Start();
 				}
 				Thread.Sleep(10);
 				dir.FailOn(failure);
 				failure.SetDoFail();
-				for (int i_2 = 0; i_2 < NUM_THREADS; i_2++)
+				for (int k = 0; k < NUM_THREADS; k++)
 				{
-					threads[i_2].Join();
-					IsTrue("hit unexpected Throwable", threads[i_2].error == null
+					threads[k].Join();
+					AssertTrue("hit unexpected Throwable", indexerThreads[k].error == null
 						);
 				}
 				bool success = false;
 				try
 				{
-					writer.Close(false);
+					writer.Dispose(false);
 					success = true;
 				}
 				catch (IOException)
 				{
 					failure.ClearDoFail();
-					writer.Close(false);
+					writer.Dispose(false);
 				}
 				if (VERBOSE)
 				{
@@ -304,10 +309,10 @@ namespace Lucene.Net.Test.Index
 				if (success)
 				{
 					IndexReader reader = DirectoryReader.Open(dir);
-					Bits delDocs = MultiFields.GetLiveDocs(reader);
+					IBits delDocs = MultiFields.GetLiveDocs(reader);
 					for (int j = 0; j < reader.MaxDoc; j++)
 					{
-						if (delDocs == null || !delDocs.Get(j))
+						if (delDocs == null || !delDocs[j])
 						{
 							reader.Document(j);
 							reader.GetTermVectors(j);
@@ -321,8 +326,8 @@ namespace Lucene.Net.Test.Index
 
 		// Runs test, with one thread, using the specific failure
 		// to trigger an IOException
-		/// <exception cref="System.IO.IOException"></exception>
-		public virtual void _testSingleThreadFailure(MockDirectoryWrapper.Failure failure
+		[Test]
+		public virtual void TestSingleThreadFailure(MockDirectoryWrapper.Failure failure
 			)
 		{
 			MockDirectoryWrapper dir = NewMockDirectory();
@@ -354,7 +359,7 @@ namespace Lucene.Net.Test.Index
 			}
 			failure.ClearDoFail();
 			writer.AddDocument(doc);
-			writer.Close(false);
+			writer.Dispose(false);
 			dir.Dispose();
 		}
 
@@ -377,7 +382,7 @@ namespace Lucene.Net.Test.Index
 				dir.SetAssertNoUnrefencedFilesOnClose(false);
 				if (doFail)
 				{
-					StackTraceElement[] trace = new Exception().GetStackTrace();
+					var trace = new StackTrace(new Exception()).GetFrames();
 					bool sawAbortOrFlushDoc = false;
 					bool sawClose = false;
 					bool sawMerge = false;
@@ -387,16 +392,16 @@ namespace Lucene.Net.Test.Index
 						{
 							break;
 						}
-						if ("abort".Equals(trace[i].GetMethodName()) || "finishDocument".Equals(trace[i].
-							GetMethodName()))
+						if ("abort".Equals(trace[i].GetMethod().Name) || "finishDocument".Equals(trace[i].
+							GetMethod().Name))
 						{
 							sawAbortOrFlushDoc = true;
 						}
-						if ("merge".Equals(trace[i].GetMethodName()))
+						if ("merge".Equals(trace[i].GetMethod().Name))
 						{
 							sawMerge = true;
 						}
-						if ("close".Equals(trace[i].GetMethodName()))
+						if ("close".Equals(trace[i].GetMethod().Name))
 						{
 							sawClose = true;
 						}
@@ -417,37 +422,37 @@ namespace Lucene.Net.Test.Index
 
 		// LUCENE-1130: make sure initial IOException, and then 2nd
 		// IOException during rollback(), is OK:
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestIOExceptionDuringAbort()
 		{
-			_testSingleThreadFailure(new TestIndexWriterWithThreads.FailOnlyOnAbortOrFlush(false
+			TestSingleThreadFailure(new TestIndexWriterWithThreads.FailOnlyOnAbortOrFlush(false
 				));
 		}
 
 		// LUCENE-1130: make sure initial IOException, and then 2nd
 		// IOException during rollback(), is OK:
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestIOExceptionDuringAbortOnlyOnce()
 		{
-			_testSingleThreadFailure(new TestIndexWriterWithThreads.FailOnlyOnAbortOrFlush(true
+			TestSingleThreadFailure(new TestIndexWriterWithThreads.FailOnlyOnAbortOrFlush(true
 				));
 		}
 
 		// LUCENE-1130: make sure initial IOException, and then 2nd
 		// IOException during rollback(), with multiple threads, is OK:
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestIOExceptionDuringAbortWithThreads()
 		{
-			_testMultipleThreadsFailure(new TestIndexWriterWithThreads.FailOnlyOnAbortOrFlush
+			TestMultipleThreadsFailure(new TestIndexWriterWithThreads.FailOnlyOnAbortOrFlush
 				(false));
 		}
 
 		// LUCENE-1130: make sure initial IOException, and then 2nd
 		// IOException during rollback(), with multiple threads, is OK:
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestIOExceptionDuringAbortWithThreadsOnlyOnce()
 		{
-			_testMultipleThreadsFailure(new TestIndexWriterWithThreads.FailOnlyOnAbortOrFlush
+			TestMultipleThreadsFailure(new TestIndexWriterWithThreads.FailOnlyOnAbortOrFlush
 				(true));
 		}
 
@@ -466,11 +471,11 @@ namespace Lucene.Net.Test.Index
 			{
 				if (doFail)
 				{
-					StackTraceElement[] trace = new Exception().GetStackTrace();
+					var trace = new StackTrace(new Exception()).GetFrames();
 					for (int i = 0; i < trace.Length; i++)
 					{
-						if ("flush".Equals(trace[i].GetMethodName()) && "Lucene.Net.index.DocFieldProcessor"
-							.Equals(trace[i].GetClassName()))
+						if ("flush".Equals(trace[i].GetMethod().Name) && "Lucene.Net.index.DocFieldProcessor"
+							.Equals(trace[i].GetMethod().DeclaringType.FullName))
 						{
 							if (onlyOnce)
 							{
@@ -486,35 +491,33 @@ namespace Lucene.Net.Test.Index
 		}
 
 		// LUCENE-1130: test IOException in writeSegment
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestIOExceptionDuringWriteSegment()
 		{
-			_testSingleThreadFailure(new TestIndexWriterWithThreads.FailOnlyInWriteSegment(false
+			TestSingleThreadFailure(new TestIndexWriterWithThreads.FailOnlyInWriteSegment(false
 				));
 		}
 
 		// LUCENE-1130: test IOException in writeSegment
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestIOExceptionDuringWriteSegmentOnlyOnce()
 		{
-			_testSingleThreadFailure(new TestIndexWriterWithThreads.FailOnlyInWriteSegment(true
+			TestSingleThreadFailure(new TestIndexWriterWithThreads.FailOnlyInWriteSegment(true
 				));
 		}
 
 		// LUCENE-1130: test IOException in writeSegment, with threads
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestIOExceptionDuringWriteSegmentWithThreads()
 		{
-			_testMultipleThreadsFailure(new TestIndexWriterWithThreads.FailOnlyInWriteSegment
-				(false));
+			TestMultipleThreadsFailure(new FailOnlyInWriteSegment(false));
 		}
 
 		// LUCENE-1130: test IOException in writeSegment, with threads
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestIOExceptionDuringWriteSegmentWithThreadsOnlyOnce()
 		{
-			_testMultipleThreadsFailure(new TestIndexWriterWithThreads.FailOnlyInWriteSegment
-				(true));
+			TestMultipleThreadsFailure(new FailOnlyInWriteSegment(true));
 		}
 
 		//  LUCENE-3365: Test adding two documents with the same field from two different IndexWriters 
@@ -522,37 +525,37 @@ namespace Lucene.Net.Test.Index
 		//  and closes before the second IndexWriter time's out trying to get the Lock,
 		//  we should see both documents
 		/// <exception cref="System.IO.IOException"></exception>
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestOpenTwoIndexWritersOnDifferentThreads()
 		{
 			Directory dir = NewDirectory();
 			CountdownEvent oneIWConstructed = new CountdownEvent(1);
-			TestIndexWriterWithThreads.DelayedIndexAndCloseRunnable thread1 = new TestIndexWriterWithThreads.DelayedIndexAndCloseRunnable
-				(dir, oneIWConstructed);
-			TestIndexWriterWithThreads.DelayedIndexAndCloseRunnable thread2 = new TestIndexWriterWithThreads.DelayedIndexAndCloseRunnable
-				(dir, oneIWConstructed);
+		    var thread1Target = new DelayedIndexAndCloseRunnable(dir, oneIWConstructed);
+		    var thread2Target = new DelayedIndexAndCloseRunnable(dir, oneIWConstructed);
+		    var thread1 = new Thread(thread1Target.Run);
+		    var thread2 = new Thread(thread2Target.Run);
 			thread1.Start();
 			thread2.Start();
-			oneIWConstructed.Await();
-			thread1.StartIndexing();
-			thread2.StartIndexing();
+			oneIWConstructed.Signal();
+			thread1Target.StartIndexing();
+			thread2Target.StartIndexing();
 			thread1.Join();
 			thread2.Join();
 			// ensure the directory is closed if we hit the timeout and throw assume
 			// TODO: can we improve this in LuceneTestCase? I dont know what the logic would be...
 			try
 			{
-				AssumeFalse("aborting test: timeout obtaining lock", thread1.failure is LockObtainFailedException
+				AssumeFalse("aborting test: timeout obtaining lock", thread1Target.failure is LockObtainFailedException
 					);
-				AssumeFalse("aborting test: timeout obtaining lock", thread2.failure is LockObtainFailedException
+				AssumeFalse("aborting test: timeout obtaining lock", thread2Target.failure is LockObtainFailedException
 					);
-				IsFalse("Failed due to: " + thread1.failure, thread1.failed
+				AssertFalse("Failed due to: " + thread1Target.failure, thread1Target.failed
 					);
-				IsFalse("Failed due to: " + thread2.failure, thread2.failed
+                AssertFalse("Failed due to: " + thread2Target.failure, thread2Target.failed
 					);
 				// now verify that we have two documents in the index
 				IndexReader reader = DirectoryReader.Open(dir);
-				AreEqual("IndexReader should have one document per thread running"
+				AssertEquals("IndexReader should have one document per thread running"
 					, 2, reader.NumDocs);
 				reader.Dispose();
 			}
@@ -562,7 +565,7 @@ namespace Lucene.Net.Test.Index
 			}
 		}
 
-		internal class DelayedIndexAndCloseRunnable : Thread
+		internal class DelayedIndexAndCloseRunnable
 		{
 			private readonly Directory dir;
 
@@ -582,21 +585,21 @@ namespace Lucene.Net.Test.Index
 
 			public virtual void StartIndexing()
 			{
-				this.startIndexing.CountDown();
+				this.startIndexing.Signal();
 			}
 
-			public override void Run()
+			public void Run()
 			{
 				try
 				{
-					Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
+					var doc = new Lucene.Net.Documents.Document
 						();
 					Field field = NewTextField("field", "testData", Field.Store.YES);
 					doc.Add(field);
 					IndexWriter writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT
 						, new MockAnalyzer(Random())));
-					iwConstructed.CountDown();
-					startIndexing.Await();
+					iwConstructed.Signal();
+					startIndexing.Wait();
 					writer.AddDocument(doc);
 					writer.Dispose();
 				}
@@ -604,179 +607,178 @@ namespace Lucene.Net.Test.Index
 				{
 					failed = true;
 					failure = e;
-					Runtime.PrintStackTrace(failure, System.Console.Out);
-					return;
+					failure.printStackTrace();
 				}
 			}
 		}
 
 		// LUCENE-4147
-		/// <exception cref="System.Exception"></exception>
-		public virtual void TestRollbackAndCommitWithThreads()
-		{
-			BaseDirectoryWrapper d = NewDirectory();
-			if (d is MockDirectoryWrapper)
-			{
-				((MockDirectoryWrapper)d).SetPreventDoubleWrite(false);
-			}
-			int threadCount = TestUtil.NextInt(Random(), 2, 6);
-			AtomicReference<IndexWriter> writerRef = new AtomicReference<IndexWriter>();
-			MockAnalyzer analyzer = new MockAnalyzer(Random());
-			analyzer.SetMaxTokenLength(TestUtil.NextInt(Random(), 1, IndexWriter.MAX_TERM_LENGTH
-				));
-			writerRef.Set(new IndexWriter(d, NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer
-				)));
-			LineFileDocs docs = new LineFileDocs(Random());
-			Thread[] threads = new Thread[threadCount];
-			int iters = AtLeast(100);
-			AtomicBoolean failed = new AtomicBoolean();
-			Lock rollbackLock = new ReentrantLock();
-			Lock commitLock = new ReentrantLock();
-			for (int threadID = 0; threadID < threadCount; threadID++)
-			{
-				threads[threadID] = new _Thread_564(iters, failed, rollbackLock, writerRef, d, commitLock
-					, docs);
-				//final int x = random().nextInt(5);
-				// ok
-				// ok
-				// ok
-				// ok
-				// ok
-				threads[threadID].Start();
-			}
-			for (int threadID_1 = 0; threadID_1 < threadCount; threadID_1++)
-			{
-				threads[threadID_1].Join();
-			}
-			IsTrue(!failed.Get());
-			writerRef.Get().Dispose();
-			d.Dispose();
-		}
+        //[Test]
+        //public virtual void TestRollbackAndCommitWithThreads()
+        //{
+        //    BaseDirectoryWrapper d = NewDirectory();
+        //    if (d is MockDirectoryWrapper)
+        //    {
+        //        ((MockDirectoryWrapper)d).SetPreventDoubleWrite(false);
+        //    }
+        //    int threadCount = TestUtil.NextInt(Random(), 2, 6);
+        //    AtomicReference<IndexWriter> writerRef = new AtomicReference<IndexWriter>();
+        //    MockAnalyzer analyzer = new MockAnalyzer(Random());
+        //    analyzer.SetMaxTokenLength(TestUtil.NextInt(Random(), 1, IndexWriter.MAX_TERM_LENGTH
+        //        ));
+        //    writerRef.Set(new IndexWriter(d, NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer
+        //        )));
+        //    LineFileDocs docs = new LineFileDocs(Random());
+        //    Thread[] threads = new Thread[threadCount];
+        //    int iters = AtLeast(100);
+        //    AtomicBoolean failed = new AtomicBoolean();
+        //    Lock rollbackLock = new ReentrantLock();
+        //    Lock commitLock = new ReentrantLock();
+        //    for (int threadID = 0; threadID < threadCount; threadID++)
+        //    {
+        //        threads[threadID] = new _Thread_564(iters, failed, rollbackLock, writerRef, d, commitLock
+        //            , docs);
+        //        //final int x = random().nextInt(5);
+        //        // ok
+        //        // ok
+        //        // ok
+        //        // ok
+        //        // ok
+        //        threads[threadID].Start();
+        //    }
+        //    for (int threadID_1 = 0; threadID_1 < threadCount; threadID_1++)
+        //    {
+        //        threads[threadID_1].Join();
+        //    }
+        //    IsTrue(!failed.Get());
+        //    writerRef.Get().Dispose();
+        //    d.Dispose();
+        //}
 
-		private sealed class _Thread_564 : Thread
-		{
-			public _Thread_564(int iters, AtomicBoolean failed, Lock rollbackLock, AtomicReference
-				<IndexWriter> writerRef, BaseDirectoryWrapper d, Lock commitLock, LineFileDocs docs
-				)
-			{
-				this.iters = iters;
-				this.failed = failed;
-				this.rollbackLock = rollbackLock;
-				this.writerRef = writerRef;
-				this.d = d;
-				this.commitLock = commitLock;
-				this.docs = docs;
-			}
+        //private sealed class _Thread_564 : Thread
+        //{
+        //    public _Thread_564(int iters, AtomicBoolean failed, Lock rollbackLock, AtomicReference
+        //        <IndexWriter> writerRef, BaseDirectoryWrapper d, Lock commitLock, LineFileDocs docs
+        //        )
+        //    {
+        //        this.iters = iters;
+        //        this.failed = failed;
+        //        this.rollbackLock = rollbackLock;
+        //        this.writerRef = writerRef;
+        //        this.d = d;
+        //        this.commitLock = commitLock;
+        //        this.docs = docs;
+        //    }
 
-			public override void Run()
-			{
-				for (int iter = 0; iter < iters && !failed.Get(); iter++)
-				{
-					int x = LuceneTestCase.Random().Next(3);
-					try
-					{
-						switch (x)
-						{
-							case 0:
-							{
-								rollbackLock.Lock();
-								if (LuceneTestCase.VERBOSE)
-								{
-									System.Console.Out.WriteLine("\nTEST: " + Thread.CurrentThread().GetName(
-										) + ": now rollback");
-								}
-								try
-								{
-									writerRef.Get().Rollback();
-									if (LuceneTestCase.VERBOSE)
-									{
-										System.Console.Out.WriteLine("TEST: " + Thread.CurrentThread.Name 
-											+ ": rollback done; now open new writer");
-									}
-									writerRef.Set(new IndexWriter(d, LuceneTestCase.NewIndexWriterConfig(LuceneTestCase
-										.TEST_VERSION_CURRENT, new MockAnalyzer(LuceneTestCase.Random()))));
-								}
-								finally
-								{
-									rollbackLock.Unlock();
-								}
-								break;
-							}
+        //    public override void Run()
+        //    {
+        //        for (int iter = 0; iter < iters && !failed.Get(); iter++)
+        //        {
+        //            int x = LuceneTestCase.Random().Next(3);
+        //            try
+        //            {
+        //                switch (x)
+        //                {
+        //                    case 0:
+        //                    {
+        //                        rollbackLock.Lock();
+        //                        if (LuceneTestCase.VERBOSE)
+        //                        {
+        //                            System.Console.Out.WriteLine("\nTEST: " + Thread.CurrentThread().GetName(
+        //                                ) + ": now rollback");
+        //                        }
+        //                        try
+        //                        {
+        //                            writerRef.Get().Rollback();
+        //                            if (LuceneTestCase.VERBOSE)
+        //                            {
+        //                                System.Console.Out.WriteLine("TEST: " + Thread.CurrentThread.Name 
+        //                                    + ": rollback done; now open new writer");
+        //                            }
+        //                            writerRef.Set(new IndexWriter(d, LuceneTestCase.NewIndexWriterConfig(LuceneTestCase
+        //                                .TEST_VERSION_CURRENT, new MockAnalyzer(LuceneTestCase.Random()))));
+        //                        }
+        //                        finally
+        //                        {
+        //                            rollbackLock.Unlock();
+        //                        }
+        //                        break;
+        //                    }
 
-							case 1:
-							{
-								commitLock.Lock();
-								if (LuceneTestCase.VERBOSE)
-								{
-									System.Console.Out.WriteLine("\nTEST: " + Thread.CurrentThread().GetName(
-										) + ": now commit");
-								}
-								try
-								{
-									if (LuceneTestCase.Random().NextBoolean())
-									{
-										writerRef.Get().PrepareCommit();
-									}
-									writerRef.Get().Commit();
-								}
-								catch (AlreadyClosedException)
-								{
-								}
-								catch (ArgumentNullException)
-								{
-								}
-								finally
-								{
-									commitLock.Unlock();
-								}
-								break;
-							}
+        //                    case 1:
+        //                    {
+        //                        commitLock.Lock();
+        //                        if (LuceneTestCase.VERBOSE)
+        //                        {
+        //                            System.Console.Out.WriteLine("\nTEST: " + Thread.CurrentThread().GetName(
+        //                                ) + ": now commit");
+        //                        }
+        //                        try
+        //                        {
+        //                            if (LuceneTestCase.Random().NextBoolean())
+        //                            {
+        //                                writerRef.Get().PrepareCommit();
+        //                            }
+        //                            writerRef.Get().Commit();
+        //                        }
+        //                        catch (AlreadyClosedException)
+        //                        {
+        //                        }
+        //                        catch (ArgumentNullException)
+        //                        {
+        //                        }
+        //                        finally
+        //                        {
+        //                            commitLock.Unlock();
+        //                        }
+        //                        break;
+        //                    }
 
-							case 2:
-							{
-								if (LuceneTestCase.VERBOSE)
-								{
-									System.Console.Out.WriteLine("\nTEST: " + Thread.CurrentThread().GetName(
-										) + ": now add");
-								}
-								try
-								{
-									writerRef.Get().AddDocument(docs.NextDoc());
-								}
-								catch (AlreadyClosedException)
-								{
-								}
-								catch (ArgumentNullException)
-								{
-								}
-								catch (Exception)
-								{
-								}
-								break;
-							}
-						}
-					}
-					catch (Exception t)
-					{
-						failed.Set(true);
-						throw new SystemException(t);
-					}
-				}
-			}
+        //                    case 2:
+        //                    {
+        //                        if (LuceneTestCase.VERBOSE)
+        //                        {
+        //                            System.Console.Out.WriteLine("\nTEST: " + Thread.CurrentThread().GetName(
+        //                                ) + ": now add");
+        //                        }
+        //                        try
+        //                        {
+        //                            writerRef.Get().AddDocument(docs.NextDoc());
+        //                        }
+        //                        catch (AlreadyClosedException)
+        //                        {
+        //                        }
+        //                        catch (ArgumentNullException)
+        //                        {
+        //                        }
+        //                        catch (Exception)
+        //                        {
+        //                        }
+        //                        break;
+        //                    }
+        //                }
+        //            }
+        //            catch (Exception t)
+        //            {
+        //                failed.Set(true);
+        //                throw new SystemException(t);
+        //            }
+        //        }
+        //    }
 
-			private readonly int iters;
+        //    private readonly int iters;
 
-			private readonly AtomicBoolean failed;
+        //    private readonly AtomicBoolean failed;
 
-			private readonly Lock rollbackLock;
+        //    private readonly Lock rollbackLock;
 
-			private readonly AtomicReference<IndexWriter> writerRef;
+        //    private readonly AtomicReference<IndexWriter> writerRef;
 
-			private readonly BaseDirectoryWrapper d;
+        //    private readonly BaseDirectoryWrapper d;
 
-			private readonly Lock commitLock;
+        //    private readonly Lock commitLock;
 
-			private readonly LineFileDocs docs;
-		}
+        //    private readonly LineFileDocs docs;
+        //}
 	}
 }

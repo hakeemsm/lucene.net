@@ -214,7 +214,7 @@ namespace Lucene.Net.Codecs.Ramonly
 
 			internal long totalTermFreq;
 
-			internal readonly IList<RAMOnlyPostingsFormat.RAMDoc> docs = new AList<RAMOnlyPostingsFormat.RAMDoc
+			internal readonly IList<RAMOnlyPostingsFormat.RAMDoc> docs = new List<RAMOnlyPostingsFormat.RAMDoc
 				>();
 
 			public RAMTerm(string term)
@@ -358,7 +358,7 @@ namespace Lucene.Net.Codecs.Ramonly
 			public override void StartDoc(int docID, int freq)
 			{
 				current = new RAMOnlyPostingsFormat.RAMDoc(docID, freq);
-				term.docs.AddItem(current);
+				term.docs.Add(current);
 				posUpto = 0;
 			}
 

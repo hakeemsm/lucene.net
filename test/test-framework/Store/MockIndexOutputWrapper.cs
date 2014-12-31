@@ -88,7 +88,7 @@ namespace Lucene.Net.TestFramework.Store
 				message += ")";
 				if (LuceneTestCase.VERBOSE)
 				{
-					System.Console.Out.WriteLine(Sharpen.Thread.CurrentThread().GetName() + ": MDW: now throw fake disk full"
+					System.Console.Out.WriteLine(Thread.CurrentThread.Name + ": MDW: now throw fake disk full"
 						);
 					Sharpen.Runtime.PrintStackTrace(new Exception(), System.Console.Out);
 				}
@@ -143,7 +143,7 @@ namespace Lucene.Net.TestFramework.Store
 			{
 				int half = len / 2;
 				delegate_.WriteBytes(b, offset, half);
-				Sharpen.Thread.Yield();
+				Thread.Yield();
 				delegate_.WriteBytes(b, offset + half, len - half);
 			}
 			else

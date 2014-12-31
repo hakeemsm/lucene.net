@@ -41,13 +41,13 @@ namespace Lucene.Net.TestFramework.Index
 			//w.w.setNoCFSRatio(0.0);
 			int docCount = AtLeast(200);
 			int fieldCount = TestUtil.NextInt(rand, 1, 5);
-			IList<int> fieldIDs = new AList<int>();
+			IList<int> fieldIDs = new List<int>();
 			FieldType customType = new FieldType(TextField.TYPE_STORED);
 			customType.SetTokenized(false);
 			Field idField = NewField("id", string.Empty, customType);
 			for (int i = 0; i < fieldCount; i++)
 			{
-				fieldIDs.AddItem(i);
+				fieldIDs.Add(i);
 			}
 			IDictionary<string, Lucene.Net.Documents.Document> docs = new Dictionary<string
 				, Lucene.Net.Documents.Document>();
@@ -425,17 +425,17 @@ namespace Lucene.Net.TestFramework.Index
 			IndexSearcher searcher = new IndexSearcher(rd);
 			int concurrentReads = AtLeast(5);
 			int readsPerThread = AtLeast(50);
-			IList<Sharpen.Thread> readThreads = new AList<Sharpen.Thread>();
+			IList<Thread> readThreads = new List<Thread>();
 			AtomicReference<Exception> ex = new AtomicReference<Exception>();
 			for (int i_1 = 0; i_1 < concurrentReads; ++i_1)
 			{
-				readThreads.AddItem(new _Thread_432(readsPerThread, numDocs, searcher, rd, ex));
+				readThreads.Add(new _Thread_432(readsPerThread, numDocs, searcher, rd, ex));
 			}
-			foreach (Sharpen.Thread thread in readThreads)
+			foreach (Thread thread in readThreads)
 			{
 				thread.Start();
 			}
-			foreach (Sharpen.Thread thread_1 in readThreads)
+			foreach (Thread thread_1 in readThreads)
 			{
 				thread_1.Join();
 			}
@@ -448,7 +448,7 @@ namespace Lucene.Net.TestFramework.Index
 			dir.Close();
 		}
 
-		private sealed class _Thread_432 : Sharpen.Thread
+		private sealed class _Thread_432 : Thread
 		{
 			public _Thread_432(int readsPerThread, int numDocs, IndexSearcher searcher, DirectoryReader
 				 rd, AtomicReference<Exception> ex)

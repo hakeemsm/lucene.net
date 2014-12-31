@@ -19,7 +19,7 @@ namespace Lucene.Net.TestFramework.Util
 		/// <summary>The thread executing the current test case.</summary>
 		/// <remarks>The thread executing the current test case.</remarks>
 		/// <seealso cref="LuceneTestCase.IsTestThread()">LuceneTestCase.IsTestThread()</seealso>
-		public volatile Sharpen.Thread testCaseThread;
+		public volatile Thread testCaseThread;
 
 		/// <summary>Test method name.</summary>
 		/// <remarks>Test method name.</remarks>
@@ -45,7 +45,7 @@ namespace Lucene.Net.TestFramework.Util
 			{
 				try
 				{
-					Sharpen.Thread current = Sharpen.Thread.CurrentThread();
+					Thread current = Thread.CurrentThread();
 					this._enclosing.testCaseThread = current;
 					this._enclosing.testMethodName = description.GetMethodName();
 					@base.Evaluate();

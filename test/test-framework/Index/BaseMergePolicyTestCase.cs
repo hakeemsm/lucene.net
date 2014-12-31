@@ -1,15 +1,10 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
-using Lucene.Net.TestFramework.Analysis;
-using Lucene.Net.TestFramework.Index;
-using Lucene.Net.TestFramework.Store;
+using Lucene.Net.Analysis;
+using Lucene.Net.Index;
+using Lucene.Net.Randomized.Generators;
+using Lucene.Net.Store;
+using Lucene.Net.Support;
 using Lucene.Net.TestFramework.Util;
-using Sharpen;
 
 namespace Lucene.Net.TestFramework.Index
 {
@@ -25,53 +20,53 @@ namespace Lucene.Net.TestFramework.Index
 		/// <see cref="MergePolicy">MergePolicy</see>
 		/// instance.
 		/// </summary>
-		protected internal abstract Lucene.Net.TestFramework.Index.MergePolicy MergePolicy();
+		protected internal abstract Lucene.Net.Index.MergePolicy MergePolicy();
 
 		/// <exception cref="System.IO.IOException"></exception>
 		public virtual void TestForceMergeNotNeeded()
 		{
 			Directory dir = NewDirectory();
 			AtomicBoolean mayMerge = new AtomicBoolean(true);
-			MergeScheduler mergeScheduler = new _SerialMergeScheduler_40(mayMerge);
+			MergeScheduler mergeScheduler = new AnonymousSerialMergeScheduler(mayMerge);
 			IndexWriter writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT
 				, new MockAnalyzer(Random())).SetMergeScheduler(mergeScheduler).SetMergePolicy(MergePolicy
 				()));
-			writer.GetConfig().GetMergePolicy().SetNoCFSRatio(Random().NextBoolean() ? 0 : 1);
-			int numSegments = TestUtil.NextInt(Random(), 2, 20);
+			writer.Config.MergePolicy.SetNoCFSRatio(Random().NextBoolean() ? 0 : 1);
+			int numSegments = Random().NextInt(2, 20);
 			for (int i = 0; i < numSegments; ++i)
 			{
-				int numDocs = TestUtil.NextInt(Random(), 1, 5);
+				int numDocs = Random().NextInt(1, 5);
 				for (int j = 0; j < numDocs; ++j)
 				{
 					writer.AddDocument(new Lucene.Net.Documents.Document());
 				}
-				writer.GetReader().Close();
+				writer.Reader.Dispose();
 			}
 			for (int i_1 = 5; i_1 >= 0; --i_1)
 			{
-				int segmentCount = writer.GetSegmentCount();
-				int maxNumSegments = i_1 == 0 ? 1 : TestUtil.NextInt(Random(), 1, 10);
+				int segmentCount = writer.SegmentCount;
+				int maxNumSegments = i_1 == 0 ? 1 : Random().NextInt(1, 10);
 				mayMerge.Set(segmentCount > maxNumSegments);
 				writer.ForceMerge(maxNumSegments);
 			}
-			writer.Close();
-			dir.Close();
+			writer.Dispose();
+			dir.Dispose();
 		}
 
-		private sealed class _SerialMergeScheduler_40 : SerialMergeScheduler
+		private sealed class AnonymousSerialMergeScheduler : SerialMergeScheduler
 		{
-			public _SerialMergeScheduler_40(AtomicBoolean mayMerge)
+			public AnonymousSerialMergeScheduler(AtomicBoolean mayMerge)
 			{
 				this.mayMerge = mayMerge;
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
-			public override void Merge(IndexWriter writer, MergeTrigger trigger, bool newMergesFound
+			public override void Merge(IndexWriter writer, MergePolicy.MergeTrigger trigger, bool newMergesFound
 				)
 			{
 				lock (this)
 				{
-					if (!mayMerge.Get() && writer.GetNextMerge() != null)
+					if (!mayMerge.Get() && writer.NextMerge != null)
 					{
 						throw new Exception();
 					}

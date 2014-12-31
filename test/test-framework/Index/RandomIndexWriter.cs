@@ -27,39 +27,39 @@ namespace Lucene.Net.TestFramework.Index
         private Codec codec; // sugar
 
         // Randomly calls Thread.yield so we mixup thread scheduling
-		public static IndexWriter MockIndexWriter(Directory dir, IndexWriterConfig conf, 
-			Random r)
-		{
-			// Randomly calls Thread.yield so we mixup thread scheduling
-			Random random = new Random(r.NextInt(0,int.MaxValue));
-			return MockIndexWriter(dir, conf, new _TestPoint_57(random));
-		}
+        public static IndexWriter MockIndexWriter(Directory dir, IndexWriterConfig conf,
+            Random r)
+        {
+            // Randomly calls Thread.yield so we mixup thread scheduling
+            Random random = new Random(r.NextInt(0, int.MaxValue));
+            return MockIndexWriter(dir, conf, new _TestPoint_57(random));
+        }
 
-		private sealed class _TestPoint_57 : RandomIndexWriter.TestPoint
-		{
-			public _TestPoint_57(Random random)
-			{
-				this.random = random;
-			}
+        private sealed class _TestPoint_57 : RandomIndexWriter.TestPoint
+        {
+            public _TestPoint_57(Random random)
+            {
+                this.random = random;
+            }
 
-			public void Apply(string message)
-			{
-				if (random.Next(4) == 2)
-				{
-					Thread.Yield();
-				}
-			}
+            public void Apply(string message)
+            {
+                if (random.Next(4) == 2)
+                {
+                    Thread.Yield();
+                }
+            }
 
-			private readonly Random random;
-		}
+            private readonly Random random;
+        }
 
-		public static IndexWriter MockIndexWriter(Directory dir, IndexWriterConfig conf, 
-			RandomIndexWriter.TestPoint testPoint)
-		{
-			conf.SetInfoStream(new RandomIndexWriter.TestPointInfoStream(conf.InfoStream
-				, testPoint));
-			return new IndexWriter(dir, conf);
-		}
+        public static IndexWriter MockIndexWriter(Directory dir, IndexWriterConfig conf,
+            RandomIndexWriter.TestPoint testPoint)
+        {
+            conf.SetInfoStream(new RandomIndexWriter.TestPointInfoStream(conf.InfoStream
+                , testPoint));
+            return new IndexWriter(dir, conf);
+        }
         /** create a RandomIndexWriter with a random config: Uses TEST_VERSION_CURRENT and MockAnalyzer */
         public RandomIndexWriter(Random r, Directory dir) :
             this(r, dir, LuceneTestCase.NewIndexWriterConfig(r, LuceneTestCase.TEST_VERSION_CURRENT, new MockAnalyzer(r)))
@@ -67,15 +67,17 @@ namespace Lucene.Net.TestFramework.Index
         }
 
         /** create a RandomIndexWriter with a random config: Uses TEST_VERSION_CURRENT */
-        public RandomIndexWriter(Random r, Directory dir, Analyzer a): this(r, dir, LuceneTestCase.NewIndexWriterConfig(r, LuceneTestCase.TEST_VERSION_CURRENT, a))
+        public RandomIndexWriter(Random r, Directory dir, Analyzer a)
+            : this(r, dir, LuceneTestCase.NewIndexWriterConfig(r, LuceneTestCase.TEST_VERSION_CURRENT, a))
         {
-           
+
         }
 
         /** create a RandomIndexWriter with a random config */
-        public RandomIndexWriter(Random r, Directory dir, Version v, Analyzer a):this(r, dir, LuceneTestCase.NewIndexWriterConfig(r, v, a))
+        public RandomIndexWriter(Random r, Directory dir, Version v, Analyzer a)
+            : this(r, dir, LuceneTestCase.NewIndexWriterConfig(r, v, a))
         {
-            
+
         }
 
         /** create a RandomIndexWriter with the provided config */
@@ -326,9 +328,15 @@ namespace Lucene.Net.TestFramework.Index
             w.DeleteAll();
         }
 
+        public DirectoryReader Reader
+        {
+            get { return GetReader(); }
+        }
+
+        //TODO: remove all external calls and make this internal just like in IW
         public virtual DirectoryReader GetReader()
         {
-            LuceneTestCase.MaybeChangeLiveIndexWriterConfig(r, w.GetConfig());
+            LuceneTestCase.MaybeChangeLiveIndexWriterConfig(r, w.Config);
             return GetReader(true);
         }
 
@@ -398,25 +406,27 @@ namespace Lucene.Net.TestFramework.Index
     // order during searching:
 			if (!applyDeletions || !codec.GetName().Equals("Lucene3x") && r.NextBoolean())
 			{
-      if (LuceneTestCase.VERBOSE) {
-        System.out.println("RIW.getReader: use NRT reader");
+      if (LuceneTestCase.VERBOSE) 
+      {
+        System.Console.WriteLine("RIW.getReader: use NRT reader");
       }
-      if (r.nextInt(5) == 1) {
+      if (r.NextInt(5) == 1) 
+      {
         w.Commit();
       }
-      return w.getReader(applyDeletions);
-    } else {
-      if (LuceneTestCase.VERBOSE) {
-        System.out.println("RIW.getReader: open new reader");
-      }
-      w.Commit();
-      if (r.nextBoolean()) {
-        return DirectoryReader.Open(w.Directory, _TestUtil.nextInt(r, 1, 10));
-      } else {
-        return w.getReader(applyDeletions);
-      }
+      return w.GetReader(applyDeletions);
     }
-  }
+            if (LuceneTestCase.VERBOSE) 
+            {
+                System.out.println("RIW.getReader: open new reader");
+            }
+            w.Commit();
+            if (r.nextBoolean()) 
+            {
+                return DirectoryReader.Open(w.Directory, _TestUtil.nextInt(r, 1, 10));
+            }
+            return w.getReader(applyDeletions);
+        }
 
         /**
          * Close this writer.
@@ -424,7 +434,7 @@ namespace Lucene.Net.TestFramework.Index
          */
         public virtual void Close()
         {
-            if (!w.IsClosed())
+            if (!w.IsClosed)
             {
                 LuceneTestCase.MaybeChangeLiveIndexWriterConfig(r, w.GetConfig());
             }
@@ -499,6 +509,11 @@ namespace Lucene.Net.TestFramework.Index
         public interface TestPoint
         {
             void Apply(string message);
+        }
+
+        public void Dispose()
+        {
+            throw new NotImplementedException();
         }
     }
 

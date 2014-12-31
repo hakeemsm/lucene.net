@@ -247,12 +247,12 @@ namespace Lucene.Net.TestFramework.Util
 			int spot = line.IndexOf(SEP);
 			if (spot == -1)
 			{
-				throw new RuntimeException("line: [" + line + "] is in an invalid format !");
+				throw new SystemException("line: [" + line + "] is in an invalid format !");
 			}
 			int spot2 = line.IndexOf(SEP, 1 + spot);
 			if (spot2 == -1)
 			{
-				throw new RuntimeException("line: [" + line + "] is in an invalid format !");
+				throw new SystemException("line: [" + line + "] is in an invalid format !");
 			}
 			docState.body.SetStringValue(Sharpen.Runtime.Substring(line, 1 + spot2, line.Length
 				));

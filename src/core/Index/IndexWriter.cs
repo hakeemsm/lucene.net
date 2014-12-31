@@ -1396,7 +1396,8 @@ namespace Lucene.Net.Index
                 HandleOOM(oom, "updateBinaryDocValue");
             }
         }
-        internal int SegmentCount
+
+        public int SegmentCount
         {
             get
             {
@@ -4645,7 +4646,7 @@ namespace Lucene.Net.Index
             }
         }
 
-        internal bool IsClosed
+        public bool IsClosed
         {
             get
             {

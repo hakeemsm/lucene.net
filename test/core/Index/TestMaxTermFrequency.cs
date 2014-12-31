@@ -1,23 +1,23 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using System.Collections.Generic;
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Document;
+using System.Linq;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Search.Similarities;
 using Lucene.Net.Store;
+using Lucene.Net.Support;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Index;
+using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
-using Sharpen;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
 	/// <summary>Tests the maxTermFrequency statistic in FieldInvertState</summary>
-	public class TestMaxTermFrequency : LuceneTestCase
+	[TestFixture]
+    public class TestMaxTermFrequency : LuceneTestCase
 	{
 		internal Directory dir;
 
@@ -25,29 +25,28 @@ namespace Lucene.Net.Test.Index
 
 		internal List<int> expected = new List<int>();
 
-		/// <exception cref="System.Exception"></exception>
+		[SetUp]
 		public override void SetUp()
 		{
 			base.SetUp();
 			dir = NewDirectory();
 			IndexWriterConfig config = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random(), MockTokenizer.SIMPLE, true)).SetMergePolicy(NewLogMergePolicy());
-			config.SetSimilarity(new TestMaxTermFrequency.TestSimilarity(this));
+			config.SetSimilarity(new TestSimilarity(this));
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir, config);
-			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-				();
+			var doc = new Lucene.Net.Documents.Document();
 			Field foo = NewTextField("foo", string.Empty, Field.Store.NO);
 			doc.Add(foo);
 			for (int i = 0; i < 100; i++)
 			{
-				foo.StringValue = AddValue());
+				foo.StringValue = AddValue();
 				writer.AddDocument(doc);
 			}
-			reader = writer.Reader;
-			writer.Dispose();
+			reader = writer.GetReader();
+			writer.Close();
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[TearDown]
 		public override void TearDown()
 		{
 			reader.Dispose();
@@ -55,8 +54,8 @@ namespace Lucene.Net.Test.Index
 			base.TearDown();
 		}
 
-		/// <exception cref="System.Exception"></exception>
-		public virtual void Test()
+		[Test]
+		public virtual void TestNormValues()
 		{
 			NumericDocValues fooNorms = MultiDocValues.GetNormValues(reader, "foo");
 			for (int i = 0; i < reader.MaxDoc; i++)
@@ -89,8 +88,7 @@ namespace Lucene.Net.Test.Index
 			}
 			expected.Add(max);
 			Collections.Shuffle(terms, Random());
-			return Arrays.ToString(Collections.ToArray(terms, new string[terms.Count]
-				));
+			return Arrays.ToString(terms.ToArray());
 		}
 
 		/// <summary>Simple similarity that encodes maxTermFrequency directly as a byte</summary>
@@ -98,7 +96,7 @@ namespace Lucene.Net.Test.Index
 		{
 			public override float LengthNorm(FieldInvertState state)
 			{
-				return state.GetMaxTermFrequency();
+				return state.MaxTermFrequency;
 			}
 
 			public override long EncodeNormValue(float f)

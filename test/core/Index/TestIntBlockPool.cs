@@ -1,7 +1,9 @@
 using System.Collections.Generic;
+using System.Linq;
 using Lucene.Net.Randomized.Generators;
 using Lucene.Net.TestFramework;
 using Lucene.Net.Util;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
@@ -11,11 +13,13 @@ namespace Lucene.Net.Test.Index
 	/// 	</see>
 	/// functionality
 	/// </summary>
-	public class TestIntBlockPool : LuceneTestCase
+	[TestFixture]
+    public class TestIntBlockPool : LuceneTestCase
 	{
-		public virtual void TestSingleWriterReader()
+	    [Test]
+        public virtual void TestSingleWriterReader()
 		{
-			Counter bytesUsed = Counter.NewCounter();
+            Counter bytesUsed = Lucene.Net.Util.Counter.NewCounter();
 			IntBlockPool pool = new IntBlockPool(new TestIntBlockPool.ByteTrackingAllocator(bytesUsed
 				));
 			for (int j = 0; j < 2; j++)
@@ -27,7 +31,7 @@ namespace Lucene.Net.Test.Index
 				{
 					writer.WriteInt(i);
 				}
-				int upto = writer.GetCurrentOffset();
+				int upto = writer.CurrentOffset;
 				IntBlockPool.SliceReader reader = new IntBlockPool.SliceReader(pool);
 				reader.Reset(start, upto);
 				for (int i_1 = 0; i_1 < num; i_1++)
@@ -49,9 +53,10 @@ namespace Lucene.Net.Test.Index
 			}
 		}
 
+        [Test]
 		public virtual void TestMultipleWriterReader()
 		{
-			Counter bytesUsed = Counter.NewCounter();
+            Counter bytesUsed = Lucene.Net.Util.Counter.NewCounter();
 			IntBlockPool pool = new IntBlockPool(new TestIntBlockPool.ByteTrackingAllocator(bytesUsed
 				));
 			for (int j = 0; j < 2; j++)
@@ -78,17 +83,17 @@ namespace Lucene.Net.Test.Index
 						writer.Reset(values.end);
 					}
 					writer.WriteInt(values.NextValue());
-					values.end = writer.GetCurrentOffset();
+					values.end = writer.CurrentOffset;
 					if (Random().Next(5) == 0)
 					{
 						// pick one and reader the ints
 						AssertReader(reader, holders[Random().Next(holders.Count)]);
 					}
 				}
-				while (!holders.IsEmpty())
+				while (holders.Any())
 				{
-					TestIntBlockPool.StartEndAndValues values = holders.Remove(Random().Next(holders.
-						Count));
+                    TestIntBlockPool.StartEndAndValues values = holders[Random().Next(holders.Count)];
+                    holders.RemoveAt(Random().Next(holders.Count));
 					AssertReader(reader, values);
 				}
 				if (Random().NextBoolean())
@@ -119,10 +124,13 @@ namespace Lucene.Net.Test.Index
 				this.bytesUsed = bytesUsed;
 			}
 
-			public override int[] GetIntBlock()
+			public override int[] IntBlock
 			{
-				bytesUsed.AddAndGet(blockSize * RamUsageEstimator.NUM_BYTES_INT);
-				return new int[blockSize];
+			    get
+			    {
+			        bytesUsed.AddAndGet(blockSize*RamUsageEstimator.NUM_BYTES_INT);
+			        return new int[blockSize];
+			    }
 			}
 
 			public override void RecycleIntBlocks(int[][] blocks, int start, int end)

@@ -120,11 +120,11 @@ namespace Lucene.Net.Test.Index
 							if (e.Message != null && e.Message.StartsWith("Fake IOException"))
 							{
 								exceptionStream.WriteLine("\nTEST: got expected fake exc:" + e.Message);
-								Runtime.PrintStackTrace(e, exceptionStream);
+								e.printStackTrace();
 							}
 							else
 							{
-								Rethrow.Rethrow(e);
+								throw
 							}
 						}
 					}
@@ -155,11 +155,11 @@ namespace Lucene.Net.Test.Index
 							if (e.Message != null && e.Message.StartsWith("Fake IOException"))
 							{
 								exceptionStream.WriteLine("\nTEST: got expected fake exc:" + e.Message);
-								Runtime.PrintStackTrace(e, exceptionStream);
+								e.printStackTrace();
 							}
 							else
 							{
-								Rethrow.Rethrow(e);
+								throw
 							}
 						}
 					}
@@ -195,11 +195,11 @@ namespace Lucene.Net.Test.Index
 							if (e.Message != null && e.Message.StartsWith("Fake IOException"))
 							{
 								exceptionStream.WriteLine("\nTEST: got expected fake exc:" + e.Message);
-								Runtime.PrintStackTrace(e, exceptionStream);
+								e.printStackTrace();
 							}
 							else
 							{
-								Rethrow.Rethrow(e);
+								throw
 							}
 						}
 					}
@@ -213,7 +213,7 @@ namespace Lucene.Net.Test.Index
 					if (e.Message != null && e.Message.StartsWith("Fake IOException"))
 					{
 						exceptionStream.WriteLine("\nTEST: got expected fake exc:" + e.Message);
-						Runtime.PrintStackTrace(e, exceptionStream);
+						e.printStackTrace();
 						try
 						{
 							iw.Rollback();
@@ -224,7 +224,7 @@ namespace Lucene.Net.Test.Index
 					}
 					else
 					{
-						Rethrow.Rethrow(e);
+						throw
 					}
 				}
 				dir.Dispose();

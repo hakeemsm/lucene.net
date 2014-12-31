@@ -75,7 +75,7 @@ namespace Lucene.Net.TestFramework.Store
 			{
 				if (this.delegateLock.Obtain())
 				{
-					this._enclosing.dir.openLocks.AddItem(this.name);
+					this._enclosing.dir.openLocks.Add(this.name);
 					return true;
 				}
 				else

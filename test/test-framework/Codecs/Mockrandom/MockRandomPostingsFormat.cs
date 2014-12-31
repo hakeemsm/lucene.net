@@ -64,18 +64,18 @@ namespace Lucene.Net.Codecs.Mockrandom
 		{
 			private readonly int salt;
 
-			private readonly IList<IntStreamFactory> delegates = new AList<IntStreamFactory>(
+			private readonly IList<IntStreamFactory> delegates = new List<IntStreamFactory>(
 				);
 
 			public MockIntStreamFactory(Random random)
 			{
 				// Chooses random IntStreamFactory depending on file's extension
 				salt = random.Next();
-				delegates.AddItem(new MockSingleIntFactory());
+				delegates.Add(new MockSingleIntFactory());
 				int blockSize = TestUtil.NextInt(random, 1, 2000);
-				delegates.AddItem(new MockFixedIntBlockPostingsFormat.MockIntFactory(blockSize));
+				delegates.Add(new MockFixedIntBlockPostingsFormat.MockIntFactory(blockSize));
 				int baseBlockSize = TestUtil.NextInt(random, 1, 127);
-				delegates.AddItem(new MockVariableIntBlockPostingsFormat.MockIntFactory(baseBlockSize
+				delegates.Add(new MockVariableIntBlockPostingsFormat.MockIntFactory(baseBlockSize
 					));
 			}
 

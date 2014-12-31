@@ -254,7 +254,7 @@ namespace Lucene.Net.Search
 				}
 				catch (Exception e)
 				{
-					Rethrow.Rethrow(e);
+					throw
 				}
 			}
 

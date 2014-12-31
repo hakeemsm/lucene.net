@@ -22,7 +22,7 @@ namespace Lucene.Net.TestFramework.Util
 			 classModel)
 		{
 			IDictionary<MethodInfo, ClassModel.MethodModel> methods = classModel.GetMethods();
-			AList<MethodInfo> result = new AList<MethodInfo>();
+			List<MethodInfo> result = new List<MethodInfo>();
 			foreach (ClassModel.MethodModel mm in methods.Values)
 			{
 				// Skip any methods that have overrieds/ shadows.
@@ -34,7 +34,7 @@ namespace Lucene.Net.TestFramework.Util
 				if (m.Name.StartsWith("test") && Modifier.IsPublic(m.GetModifiers()) && !Modifier
 					.IsStatic(m.GetModifiers()) && Sharpen.Runtime.GetParameterTypes(m).Length == 0)
 				{
-					result.AddItem(m);
+					result.Add(m);
 				}
 			}
 			return result;

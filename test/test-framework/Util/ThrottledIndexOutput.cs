@@ -156,7 +156,7 @@ namespace Lucene.Net.TestFramework.Util
 			}
 			try
 			{
-				Sharpen.Thread.Sleep(ms);
+				Thread.Sleep(ms);
 			}
 			catch (Exception e)
 			{

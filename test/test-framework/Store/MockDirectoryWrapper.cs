@@ -523,7 +523,7 @@ namespace Lucene.Net.Store
 			{
 				if (LuceneTestCase.VERBOSE)
 				{
-					System.Console.Out.WriteLine(Sharpen.Thread.CurrentThread().GetName() + ": MockDirectoryWrapper: now throw random exception"
+					System.Console.Out.WriteLine(Thread.CurrentThread.Name + ": MockDirectoryWrapper: now throw random exception"
 						 + (message == null ? string.Empty : " (" + message + ")"));
 					Sharpen.Runtime.PrintStackTrace(new Exception(), System.Console.Out);
 				}
@@ -539,7 +539,7 @@ namespace Lucene.Net.Store
 			{
 				if (LuceneTestCase.VERBOSE)
 				{
-					System.Console.Out.WriteLine(Sharpen.Thread.CurrentThread().GetName() + ": MockDirectoryWrapper: now throw random exception during open file="
+					System.Console.Out.WriteLine(Thread.CurrentThread.Name + ": MockDirectoryWrapper: now throw random exception during open file="
 						 + name);
 					Sharpen.Runtime.PrintStackTrace(new Exception(), System.Console.Out);
 				}
@@ -597,7 +597,7 @@ namespace Lucene.Net.Store
 		{
 			if (randomState.NextBoolean())
 			{
-				Sharpen.Thread.Yield();
+				Thread.Yield();
 			}
 		}
 
@@ -620,7 +620,7 @@ namespace Lucene.Net.Store
 				{
 					if (openFiles.ContainsKey(name))
 					{
-						openFilesDeleted.AddItem(name);
+						openFilesDeleted.Add(name);
 						if (!assertNoDeleteOpenFile)
 						{
 							throw (IOException)FillOpenTrace(new IOException("MockDirectoryWrapper: file \"" 
@@ -698,8 +698,8 @@ namespace Lucene.Net.Store
 				{
 					throw new IOException("cannot createOutput after crash");
 				}
-				unSyncedFiles.AddItem(name);
-				createdFiles.AddItem(name);
+				unSyncedFiles.Add(name);
+				createdFiles.Add(name);
 				if (@in is RAMDirectory)
 				{
 					RAMDirectory ramdir = (RAMDirectory)@in;
@@ -731,7 +731,7 @@ namespace Lucene.Net.Store
 				}
 				IndexOutput io = new MockIndexOutputWrapper(this, delegateOutput, name);
 				AddFileHandle(io, name, MockDirectoryWrapper.Handle.Output);
-				openFilesForWrite.AddItem(name);
+				openFilesForWrite.Add(name);
 				// throttling REALLY slows down tests, so don't do it very often for SOMETIMES.
 				if (throttling == MockDirectoryWrapper.Throttling.ALWAYS || (throttling == MockDirectoryWrapper.Throttling
 					.SOMETIMES && randomState.Next(200) == 0) && !(@in is RateLimitedDirectoryWrapper
@@ -773,7 +773,7 @@ namespace Lucene.Net.Store
 				{
 					openFiles.Put(name, Sharpen.Extensions.ValueOf(1));
 				}
-				openFileHandles.Put(c, new RuntimeException("unclosed Index" + handle.ToString() 
+				openFileHandles.Put(c, new SystemException("unclosed Index" + handle.ToString() 
 					+ ": " + name));
 			}
 		}
@@ -943,14 +943,14 @@ namespace Lucene.Net.Store
 					{
 						cause = stacktraces.Next();
 					}
-					// RuntimeException instead of IOException because
+					// SystemException instead of IOException because
 					// super() does not throw IOException currently:
-					throw new RuntimeException("MockDirectoryWrapper: cannot close: there are still open files: "
+					throw new SystemException("MockDirectoryWrapper: cannot close: there are still open files: "
 						 + openFiles, cause);
 				}
 				if (openLocks.Count > 0)
 				{
-					throw new RuntimeException("MockDirectoryWrapper: cannot close: there are still open locks: "
+					throw new SystemException("MockDirectoryWrapper: cannot close: there are still open locks: "
 						 + openLocks);
 				}
 				isOpen = false;
@@ -989,7 +989,7 @@ namespace Lucene.Net.Store
 							{
 								// this is possible if we hit an exception while writing segments.gen, we try to delete it
 								// and it ends out in pendingDeletions (but IFD wont remove this).
-								startSet.AddItem("segments.gen");
+								startSet.Add("segments.gen");
 								if (LuceneTestCase.VERBOSE)
 								{
 									System.Console.Out.WriteLine("MDW: Unreferenced check: Ignoring segments.gen that we could not delete."
@@ -1004,7 +1004,7 @@ namespace Lucene.Net.Store
 								if (file.StartsWith("segments") && !file.Equals("segments.gen") && endSet.Contains
 									(file))
 								{
-									startSet.AddItem(file);
+									startSet.Add(file);
 									if (LuceneTestCase.VERBOSE)
 									{
 										System.Console.Out.WriteLine("MDW: Unreferenced check: Ignoring segments file: " 
@@ -1033,7 +1033,7 @@ namespace Lucene.Net.Store
 													System.Console.Out.WriteLine("MDW: Unreferenced check: Ignoring referenced file: "
 														 + s + " " + "from " + file + " that we could not delete.");
 												}
-												startSet.AddItem(s);
+												startSet.Add(s);
 											}
 										}
 									}
@@ -1049,20 +1049,20 @@ namespace Lucene.Net.Store
 							endFiles = Sharpen.Collections.ToArray(endSet, new string[0]);
 							if (!Arrays.Equals(startFiles, endFiles))
 							{
-								IList<string> removed = new AList<string>();
+								IList<string> removed = new List<string>();
 								foreach (string fileName in startFiles)
 								{
 									if (!endSet.Contains(fileName))
 									{
-										removed.AddItem(fileName);
+										removed.Add(fileName);
 									}
 								}
-								IList<string> added = new AList<string>();
+								IList<string> added = new List<string>();
 								foreach (string fileName_1 in endFiles)
 								{
 									if (!startSet.Contains(fileName_1))
 									{
-										added.AddItem(fileName_1);
+										added.Add(fileName_1);
 									}
 								}
 								string extras;
@@ -1191,7 +1191,7 @@ namespace Lucene.Net.Store
 			}
 		}
 
-		internal AList<MockDirectoryWrapper.Failure> failures;
+		internal List<MockDirectoryWrapper.Failure> failures;
 
 		/// <summary>
 		/// add a Failure object to the list of objects to be evaluated
@@ -1203,9 +1203,9 @@ namespace Lucene.Net.Store
 			{
 				if (failures == null)
 				{
-					failures = new AList<MockDirectoryWrapper.Failure>();
+					failures = new List<MockDirectoryWrapper.Failure>();
 				}
-				failures.AddItem(fail);
+				failures.Add(fail);
 			}
 		}
 

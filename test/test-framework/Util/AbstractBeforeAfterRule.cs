@@ -38,7 +38,7 @@
 //            /// <exception cref="System.Exception"></exception>
 //            public override void Evaluate()
 //            {
-//                AList<Exception> errors = new AList<Exception>();
+//                List<Exception> errors = new List<Exception>();
 //                try
 //                {
 //                    this._enclosing.Before();
@@ -46,7 +46,7 @@
 //                }
 //                catch (Exception t)
 //                {
-//                    errors.AddItem(t);
+//                    errors.Add(t);
 //                }
 //                try
 //                {
@@ -54,7 +54,7 @@
 //                }
 //                catch (Exception t)
 //                {
-//                    errors.AddItem(t);
+//                    errors.Add(t);
 //                }
 //                MultipleFailureException.AssertEmpty(errors);
 //            }

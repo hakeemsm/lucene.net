@@ -1,20 +1,19 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Test.Analysis.Tokenattributes;
-using Lucene.Net.Document;
+using Lucene.Net.Analysis;
+using Lucene.Net.Analysis.Tokenattributes;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
+using Lucene.Net.Randomized.Generators;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Index;
+using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
-using Sharpen;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
+    [TestFixture]
 	public class TestLongPostings : LuceneTestCase
 	{
 		// Produces a realistic unicode random string that
@@ -30,8 +29,9 @@ namespace Lucene.Net.Test.Index
 				{
 					continue;
 				}
-				TermToBytesRefAttribute termAtt = ts.GetAttribute<TermToBytesRefAttribute>();
-				BytesRef termBytes = termAtt.GetBytesRef();
+			    TokenStream ts = a.TokenStream("foo", s);
+				ITermToBytesRefAttribute termAtt = ts.GetAttribute<ITermToBytesRefAttribute>();
+				BytesRef termBytes = termAtt.BytesRef;
 				ts.Reset();
 				int count = 0;
 				bool changed = false;
@@ -55,13 +55,12 @@ namespace Lucene.Net.Test.Index
 			}
 		}
 
-		/// <exception cref="System.Exception"></exception>
-		public virtual void TestLongPostings()
+		[Test]
+		public virtual void TestLongPostingsAll()
 		{
 			// Don't use TestUtil.getTempDir so that we own the
 			// randomness (ie same seed will point to same dir):
-			Directory dir = NewFSDirectory(CreateTempDir("longpostings" + "." + Random().NextLong
-				()));
+			Directory dir = NewFSDirectory(CreateTempDir("longpostings" + "." + Random().Next()));
 			int NUM_DOCS = AtLeast(2000);
 			if (VERBOSE)
 			{
@@ -88,11 +87,11 @@ namespace Lucene.Net.Test.Index
 			iwc.SetRAMBufferSizeMB(16.0 + 16.0 * Random().NextDouble());
 			iwc.SetMaxBufferedDocs(-1);
 			RandomIndexWriter riw = new RandomIndexWriter(Random(), dir, iwc);
-			for (int idx_1 = 0; idx_1 < NUM_DOCS; idx_1++)
+			for (int idx = 0; idx < NUM_DOCS; idx++)
 			{
 				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 					();
-				string s = isS1.Get(idx_1) ? s1 : s2;
+				string s = isS1[idx] ? s1 : s2;
 				Field f = NewTextField("field", s, Field.Store.NO);
 				int count = TestUtil.NextInt(Random(), 1, 4);
 				for (int ct = 0; ct < count; ct++)
@@ -101,8 +100,8 @@ namespace Lucene.Net.Test.Index
 				}
 				riw.AddDocument(doc);
 			}
-			r = riw.Reader;
-			riw.Dispose();
+			r = riw.GetReader();
+			riw.Close();
 			AreEqual(NUM_DOCS, r.NumDocs);
 			IsTrue(r.DocFreq(new Term("field", s1)) > 0);
 			IsTrue(r.DocFreq(new Term("field", s2)) > 0);
@@ -148,7 +147,7 @@ namespace Lucene.Net.Test.Index
 							}
 							else
 							{
-								if (isS1.Get(expected) == doS1)
+								if (isS1[expected] == doS1)
 								{
 									break;
 								}
@@ -177,11 +176,11 @@ namespace Lucene.Net.Test.Index
 								AreEqual(pos, postings.NextPosition());
 								if (Random().NextBoolean())
 								{
-									postings.Payload;
-									if (Random().NextBoolean())
-									{
-										postings.Payload;
-									}
+								    BytesRef pl1 = postings.Payload;
+								    if (Random().NextBoolean())
+								    {
+								        BytesRef pl2 = postings.Payload;
+								    }
 								}
 							}
 						}
@@ -212,17 +211,11 @@ namespace Lucene.Net.Test.Index
 								expected = int.MaxValue;
 								break;
 							}
-							else
-							{
-								if (isS1.Get(expected) == doS1)
-								{
-									break;
-								}
-								else
-								{
-									expected++;
-								}
-							}
+						    if (isS1[expected] == doS1)
+						    {
+						        break;
+						    }
+						    expected++;
 						}
 						docID = postings.Advance(targetDocID);
 						if (VERBOSE)
@@ -243,11 +236,11 @@ namespace Lucene.Net.Test.Index
 								AreEqual(pos, postings.NextPosition());
 								if (Random().NextBoolean())
 								{
-									postings.Payload;
-									if (Random().NextBoolean())
-									{
-										postings.Payload;
-									}
+								    BytesRef pl1 = postings.Payload;
+								    if (Random().NextBoolean())
+								    {
+								        BytesRef pl2 = postings.Payload;
+								    }
 								}
 							}
 						}
@@ -260,7 +253,7 @@ namespace Lucene.Net.Test.Index
 		}
 
 		// a weaker form of testLongPostings, that doesnt check positions
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestLongPostingsNoPositions()
 		{
 			DoTestLongPostingsNoPositions(FieldInfo.IndexOptions.DOCS_ONLY);
@@ -272,8 +265,7 @@ namespace Lucene.Net.Test.Index
 		{
 			// Don't use TestUtil.getTempDir so that we own the
 			// randomness (ie same seed will point to same dir):
-			Directory dir = NewFSDirectory(CreateTempDir("longpostings" + "." + Random().NextLong
-				()));
+			Directory dir = NewFSDirectory(CreateTempDir("longpostings" + "." + Random().Next()));
 			int NUM_DOCS = AtLeast(2000);
 			if (VERBOSE)
 			{
@@ -304,11 +296,10 @@ namespace Lucene.Net.Test.Index
 				RandomIndexWriter riw = new RandomIndexWriter(Random(), dir, iwc);
 				FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
 				ft.IndexOptions = (options);
-				for (int idx_1 = 0; idx_1 < NUM_DOCS; idx_1++)
+				for (int idx = 0; idx < NUM_DOCS; idx++)
 				{
-					Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-						();
-					string s = isS1.Get(idx_1) ? s1 : s2;
+					var doc = new Lucene.Net.Documents.Document();
+					string s = isS1[idx] ? s1 : s2;
 					Field f = NewField("field", s, ft);
 					int count = TestUtil.NextInt(Random(), 1, 4);
 					for (int ct = 0; ct < count; ct++)
@@ -317,8 +308,8 @@ namespace Lucene.Net.Test.Index
 					}
 					riw.AddDocument(doc);
 				}
-				r = riw.Reader;
-				riw.Dispose();
+				r = riw.GetReader();
+				riw.Close();
 			}
 			else
 			{
@@ -378,24 +369,18 @@ namespace Lucene.Net.Test.Index
 						int expected = docID + 1;
 						while (true)
 						{
-							if (expected == NUM_DOCS)
+						    if (expected == NUM_DOCS)
 							{
 								expected = int.MaxValue;
 								break;
 							}
-							else
-							{
-								if (isS1.Get(expected) == doS1)
-								{
-									break;
-								}
-								else
-								{
-									expected++;
-								}
-							}
+						    if (isS1[expected] == doS1)
+						    {
+						        break;
+						    }
+						    expected++;
 						}
-						docID = docs.NextDoc();
+					    docID = docs.NextDoc();
 						if (VERBOSE)
 						{
 							System.Console.Out.WriteLine("  got docID=" + docID);
@@ -431,24 +416,18 @@ namespace Lucene.Net.Test.Index
 						int expected = targetDocID;
 						while (true)
 						{
-							if (expected == NUM_DOCS)
+						    if (expected == NUM_DOCS)
 							{
 								expected = int.MaxValue;
 								break;
 							}
-							else
-							{
-								if (isS1.Get(expected) == doS1)
-								{
-									break;
-								}
-								else
-								{
-									expected++;
-								}
-							}
+						    if (isS1[expected] == doS1)
+						    {
+						        break;
+						    }
+						    expected++;
 						}
-						docID = docs.Advance(targetDocID);
+					    docID = docs.Advance(targetDocID);
 						if (VERBOSE)
 						{
 							System.Console.Out.WriteLine("  got docID=" + docID);
@@ -461,7 +440,7 @@ namespace Lucene.Net.Test.Index
 						if (Random().Next(6) == 3 && postings != null)
 						{
 							int freq = postings.Freq;
-							IsTrue("got invalid freq=" + freq, freq >= 1 && freq <= 4);
+							AssertTrue("got invalid freq=" + freq, freq >= 1 && freq <= 4);
 						}
 					}
 				}

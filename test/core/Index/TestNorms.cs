@@ -1,18 +1,15 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Document;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Search.Similarities;
 using Lucene.Net.Store;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Index;
+using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
-using Sharpen;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
@@ -42,7 +39,7 @@ namespace Lucene.Net.Test.Index
 
 			public override float LengthNorm(FieldInvertState state)
 			{
-				return state.GetLength();
+				return state.Length;
 			}
 
 			public override float Coord(int overlap, int maxOverlap)
@@ -84,7 +81,7 @@ namespace Lucene.Net.Test.Index
 		}
 
 		// LUCENE-1260
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestCustomEncoder()
 		{
 			Directory dir = NewDirectory();
@@ -100,7 +97,7 @@ namespace Lucene.Net.Test.Index
 			doc.Add(bar);
 			for (int i = 0; i < 100; i++)
 			{
-				bar.StringValue = "singleton");
+				bar.StringValue = "singleton";
 				writer.AddDocument(doc);
 			}
 			IndexReader reader = writer.Reader;
@@ -119,7 +116,7 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestMaxByteNorms()
 		{
 			Directory dir = NewFSDirectory(CreateTempDir("TestNorms.testMaxByteNorms"));
@@ -157,7 +154,7 @@ namespace Lucene.Net.Test.Index
 				Lucene.Net.Documents.Document doc = docs.NextDoc();
 				int boost = Random().Next(255);
 				Field f = new TextField(byteTestField, string.Empty + boost, Field.Store.YES);
-				f.SetBoost(boost);
+				f.Boost = boost;
 				doc.Add(f);
 				writer.AddDocument(doc);
 				doc.RemoveField(byteTestField);
@@ -168,7 +165,7 @@ namespace Lucene.Net.Test.Index
 			}
 			writer.Commit();
 			writer.Dispose();
-			docs.Dispose();
+			docs.Close();
 		}
 
 		public class MySimProvider : PerFieldSimilarityWrapper
@@ -209,7 +206,7 @@ namespace Lucene.Net.Test.Index
 		{
 			public override long ComputeNorm(FieldInvertState state)
 			{
-				int boost = (int)state.GetBoost();
+				int boost = (int)state.Boost;
 				return unchecked((byte)boost);
 			}
 
@@ -220,7 +217,7 @@ namespace Lucene.Net.Test.Index
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
-			public override Similarity.SimScorer SimScorer(Similarity.SimWeight weight, AtomicReaderContext
+			public override SimScorer GetSimScorer(Similarity.SimWeight weight, AtomicReaderContext
 				 context)
 			{
 				throw new NotSupportedException();

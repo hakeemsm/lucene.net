@@ -53,7 +53,7 @@ namespace Lucene.Net.TestFramework.Index
 
 		protected internal virtual BaseTermVectorsFormatTestCase.Options RandomOptions()
 		{
-			return RandomPicks.RandomFrom(Random(), new AList<BaseTermVectorsFormatTestCase.Options
+			return RandomPicks.RandomFrom(Random(), new List<BaseTermVectorsFormatTestCase.Options
 				>(ValidOptions()));
 		}
 
@@ -261,12 +261,12 @@ namespace Lucene.Net.TestFramework.Index
 					{
 						this.positionToTerms.Put(this.positions[i_3], new HashSet<int>(1));
 					}
-					this.positionToTerms.Get(this.positions[i_3]).AddItem(i_3);
+					this.positionToTerms.Get(this.positions[i_3]).Add(i_3);
 					if (!this.startOffsetToTerms.ContainsKey(this.startOffsets[i_3]))
 					{
 						this.startOffsetToTerms.Put(this.startOffsets[i_3], new HashSet<int>(1));
 					}
-					this.startOffsetToTerms.Get(this.startOffsets[i_3]).AddItem(i_3);
+					this.startOffsetToTerms.Get(this.startOffsets[i_3]).Add(i_3);
 				}
 				this.freqs = new Dictionary<string, int>();
 				foreach (string term in this.terms)
@@ -351,7 +351,7 @@ namespace Lucene.Net.TestFramework.Index
 						this.fieldNames[i] = RandomPicks.RandomFrom(LuceneTestCase.Random(), fieldNames);
 					}
 					while (usedFileNames.Contains(this.fieldNames[i]));
-					usedFileNames.AddItem(this.fieldNames[i]);
+					usedFileNames.Add(this.fieldNames[i]);
 					this.tokenStreams[i] = new BaseTermVectorsFormatTestCase.RandomTokenStream(this, 
 						TestUtil.NextInt(LuceneTestCase.Random(), 1, maxTermCount), sampleTerms, sampleTermBytes
 						);
@@ -387,7 +387,7 @@ namespace Lucene.Net.TestFramework.Index
 				ICollection<string> fieldNames = new HashSet<string>();
 				while (fieldNames.Count < distinctFieldNames)
 				{
-					fieldNames.AddItem(TestUtil.RandomSimpleString(LuceneTestCase.Random()));
+					fieldNames.Add(TestUtil.RandomSimpleString(LuceneTestCase.Random()));
 					fieldNames.Remove("id");
 				}
 				this.fieldNames = Sharpen.Collections.ToArray(fieldNames, new string[0]);
@@ -421,11 +421,11 @@ namespace Lucene.Net.TestFramework.Index
 			ICollection<string> fields2 = new HashSet<string>();
 			for (int i = 0; i < doc.fieldNames.Length; ++i)
 			{
-				fields1.AddItem(doc.fieldNames[i]);
+				fields1.Add(doc.fieldNames[i]);
 			}
 			foreach (string field in fields)
 			{
-				fields2.AddItem(field);
+				fields2.Add(field);
 			}
 			NUnit.Framework.Assert.AreEqual(fields1, fields2);
 			for (int i_1 = 0; i_1 < doc.fieldNames.Length; ++i_1)
@@ -471,7 +471,7 @@ namespace Lucene.Net.TestFramework.Index
 			ICollection<BytesRef> uniqueTerms = new HashSet<BytesRef>();
 			foreach (string term in tk.freqs.Keys)
 			{
-				uniqueTerms.AddItem(new BytesRef(term));
+				uniqueTerms.Add(new BytesRef(term));
 			}
 			BytesRef[] sortedTerms = Sharpen.Collections.ToArray(uniqueTerms, new BytesRef[0]
 				);
@@ -796,7 +796,7 @@ namespace Lucene.Net.TestFramework.Index
 			ICollection<int> deletes = new HashSet<int>();
 			while (deletes.Count < numDeletes)
 			{
-				deletes.AddItem(Random().Next(numDocs));
+				deletes.Add(Random().Next(numDocs));
 			}
 			foreach (BaseTermVectorsFormatTestCase.Options options in ValidOptions())
 			{
@@ -869,16 +869,16 @@ namespace Lucene.Net.TestFramework.Index
 					AssertEquals(docs[i_2], reader.GetTermVectors(docID));
 				}
 				AtomicReference<Exception> exception = new AtomicReference<Exception>();
-				Sharpen.Thread[] threads = new Sharpen.Thread[2];
+				Thread[] threads = new Thread[2];
 				for (int i_3 = 0; i_3 < threads.Length; ++i_3)
 				{
 					threads[i_3] = new _Thread_692(this, numDocs, reader, docs, exception);
 				}
-				foreach (Sharpen.Thread thread in threads)
+				foreach (Thread thread in threads)
 				{
 					thread.Start();
 				}
-				foreach (Sharpen.Thread thread_1 in threads)
+				foreach (Thread thread_1 in threads)
 				{
 					thread_1.Join();
 				}
@@ -889,7 +889,7 @@ namespace Lucene.Net.TestFramework.Index
 			}
 		}
 
-		private sealed class _Thread_692 : Sharpen.Thread
+		private sealed class _Thread_692 : Thread
 		{
 			public _Thread_692(BaseTermVectorsFormatTestCase _enclosing, int numDocs, IndexReader
 				 reader, BaseTermVectorsFormatTestCase.RandomDocument[] docs, AtomicReference<Exception

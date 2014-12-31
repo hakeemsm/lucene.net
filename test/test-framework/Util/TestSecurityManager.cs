@@ -67,7 +67,7 @@ namespace Lucene.Net.TestFramework.Util
 				string systemClassName = typeof(Runtime).FullName;
 				string runtimeClassName = typeof(Runtime).FullName;
 				string exitMethodHit = null;
-				foreach (StackTraceElement se in Sharpen.Thread.CurrentThread().GetStackTrace())
+				foreach (StackTraceElement se in Thread.CurrentThread().GetStackTrace())
 				{
 					string className = se.GetClassName();
 					string methodName = se.GetMethodName();

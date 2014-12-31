@@ -1,36 +1,33 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
-using Lucene.Net.Document;
+using System.Collections.Generic;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Index;
+using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
-using Sharpen;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
 	/// <summary>Tests MultiDocValues versus ordinary segment merging</summary>
-	public class TestMultiDocValues : LuceneTestCase
+	[TestFixture]
+    public class TestMultiDocValues : LuceneTestCase
 	{
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestNumerics()
 		{
 			Directory dir = NewDirectory();
-			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-				();
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document();
 			Field field = new NumericDocValuesField("numbers", 0);
 			doc.Add(field);
-			IndexWriterConfig iwc = NewIndexWriterConfig(Random(), TEST_VERSION_CURRENT, null
-				);
+			IndexWriterConfig iwc = NewIndexWriterConfig(Random(), TEST_VERSION_CURRENT, null);
 			iwc.SetMergePolicy(NewLogMergePolicy());
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir, iwc);
 			int numDocs = AtLeast(500);
 			for (int i = 0; i < numDocs; i++)
 			{
-				field.SetLongValue(Random().NextLong());
+				field.SetLongValue(Random().NextLong(0,long.MaxValue));
 				iw.AddDocument(doc);
 				if (Random().Next(17) == 0)
 				{
@@ -53,7 +50,7 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestBinary()
 		{
 			Directory dir = NewDirectory();
@@ -96,7 +93,7 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestSorted()
 		{
 			Directory dir = NewDirectory();
@@ -130,7 +127,7 @@ namespace Lucene.Net.Test.Index
 			iw.Dispose();
 			SortedDocValues multi = MultiDocValues.GetSortedValues(ir, "bytes");
 			SortedDocValues single = merged.GetSortedDocValues("bytes");
-			AreEqual(single.GetValueCount(), multi.GetValueCount());
+			AreEqual(single.ValueCount, multi.ValueCount);
 			BytesRef actual = new BytesRef();
 			BytesRef expected = new BytesRef();
 			for (int i_1 = 0; i_1 < numDocs; i_1++)
@@ -148,7 +145,7 @@ namespace Lucene.Net.Test.Index
 		}
 
 		// tries to make more dups than testSorted
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestSortedWithLotsOfDups()
 		{
 			Directory dir = NewDirectory();
@@ -178,7 +175,7 @@ namespace Lucene.Net.Test.Index
 			iw.Dispose();
 			SortedDocValues multi = MultiDocValues.GetSortedValues(ir, "bytes");
 			SortedDocValues single = merged.GetSortedDocValues("bytes");
-			AreEqual(single.GetValueCount(), multi.GetValueCount());
+			AreEqual(single.ValueCount, multi.ValueCount);
 			BytesRef actual = new BytesRef();
 			BytesRef expected = new BytesRef();
 			for (int i_1 = 0; i_1 < numDocs; i_1++)
@@ -195,7 +192,7 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestSortedSet()
 		{
 			AssumeTrue("codec does not support SORTED_SET", DefaultCodecSupportsSortedSet());
@@ -234,11 +231,11 @@ namespace Lucene.Net.Test.Index
 			}
 			else
 			{
-				AreEqual(single.GetValueCount(), multi.GetValueCount());
+				AreEqual(single.ValueCount, multi.ValueCount);
 				BytesRef actual = new BytesRef();
 				BytesRef expected = new BytesRef();
 				// check values
-				for (long i_1 = 0; i_1 < single.GetValueCount(); i_1++)
+				for (long i_1 = 0; i_1 < single.ValueCount; i_1++)
 				{
 					single.LookupOrd(i_1, expected);
 					multi.LookupOrd(i_1, actual);
@@ -270,7 +267,7 @@ namespace Lucene.Net.Test.Index
 		}
 
 		// tries to make more dups than testSortedSet
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestSortedSetWithDups()
 		{
 			AssumeTrue("codec does not support SORTED_SET", DefaultCodecSupportsSortedSet());
@@ -309,11 +306,11 @@ namespace Lucene.Net.Test.Index
 			}
 			else
 			{
-				AreEqual(single.GetValueCount(), multi.GetValueCount());
+				AreEqual(single.ValueCount, multi.ValueCount);
 				BytesRef actual = new BytesRef();
 				BytesRef expected = new BytesRef();
 				// check values
-				for (long i_1 = 0; i_1 < single.GetValueCount(); i_1++)
+				for (long i_1 = 0; i_1 < single.ValueCount; i_1++)
 				{
 					single.LookupOrd(i_1, expected);
 					multi.LookupOrd(i_1, actual);
@@ -344,7 +341,7 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestDocsWithField()
 		{
 			AssumeTrue("codec does not support docsWithField", DefaultCodecSupportsDocsWithField
@@ -361,9 +358,9 @@ namespace Lucene.Net.Test.Index
 					();
 				if (Random().Next(4) >= 0)
 				{
-					doc.Add(new NumericDocValuesField("numbers", Random().NextLong()));
+					doc.Add(new NumericDocValuesField("numbers", Random().NextLong(0,long.MaxValue)));
 				}
-				doc.Add(new NumericDocValuesField("numbersAlways", Random().NextLong()));
+				doc.Add(new NumericDocValuesField("numbersAlways", Random().NextLong(0,long.MaxValue)));
 				iw.AddDocument(doc);
 				if (Random().Next(17) == 0)
 				{
@@ -375,26 +372,26 @@ namespace Lucene.Net.Test.Index
 			DirectoryReader ir2 = iw.Reader;
 			AtomicReader merged = GetOnlySegmentReader(ir2);
 			iw.Dispose();
-			Bits multi = MultiDocValues.GetDocsWithField(ir, "numbers");
-			Bits single = merged.GetDocsWithField("numbers");
+			IBits multi = MultiDocValues.GetDocsWithField(ir, "numbers");
+			IBits single = merged.GetDocsWithField("numbers");
 			if (multi == null)
 			{
 				IsNull(single);
 			}
 			else
 			{
-				AreEqual(single.Length(), multi.Length());
-				for (int i_1 = 0; i_1 < numDocs; i_1++)
+				AreEqual(single.Length, multi.Length);
+				for (int i = 0; i < numDocs; i++)
 				{
-					AreEqual(single.Get(i_1), multi.Get(i_1));
+					AreEqual(single[i], multi[i]);
 				}
 			}
 			multi = MultiDocValues.GetDocsWithField(ir, "numbersAlways");
 			single = merged.GetDocsWithField("numbersAlways");
-			AreEqual(single.Length(), multi.Length());
-			for (int i_2 = 0; i_2 < numDocs; i_2++)
+			AreEqual(single.Length, multi.Length);
+			for (int j = 0; j < numDocs; j++)
 			{
-				AreEqual(single.Get(i_2), multi.Get(i_2));
+				AreEqual(single[j], multi[j]);
 			}
 			ir.Dispose();
 			ir2.Dispose();

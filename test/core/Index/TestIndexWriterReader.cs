@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using Lucene.Net.Analysis;
 using Lucene.Net.Documents;
@@ -13,10 +14,12 @@ using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
 using Lucene.Net.Util;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
-	public class TestIndexWriterReader : LuceneTestCase
+    [TestFixture]
+    public class TestIndexWriterReader : LuceneTestCase
 	{
 		private readonly int numThreads = TEST_NIGHTLY ? 5 : 3;
 
@@ -24,20 +27,20 @@ namespace Lucene.Net.Test.Index
 		public static int Count(Term t, IndexReader r)
 		{
 			int count = 0;
-			DocsEnum td = TestUtil.Docs(Random(), r, t.Field(), new BytesRef(t.Text()), MultiFields
+			DocsEnum td = TestUtil.Docs(Random(), r, t.Field, new BytesRef(t.Text), MultiFields
 				.GetLiveDocs(r), null, 0);
 			if (td != null)
 			{
 				while (td.NextDoc() != DocIdSetIterator.NO_MORE_DOCS)
 				{
-					td.DocID;
-					count++;
+				    var docId = td.DocID;
+				    count++;
 				}
 			}
 			return count;
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestAddCloseOpen()
 		{
 			// Can't use assertNoDeletes: this test pulls a non-NRT
@@ -78,6 +81,7 @@ namespace Lucene.Net.Test.Index
 						case 4:
 						{
 							writer.DeleteDocuments(new Term("id", string.Empty + previous));
+                            break;
 						}
 					}
 				}
@@ -106,7 +110,7 @@ namespace Lucene.Net.Test.Index
 			dir1.Dispose();
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestUpdateDocument()
 		{
 			bool doFullMerge = true;
@@ -140,7 +144,7 @@ namespace Lucene.Net.Test.Index
 			string id10 = r1.Document(10).GetField("id").StringValue;
 			Lucene.Net.Documents.Document newDoc = r1.Document(10);
 			newDoc.RemoveField("id");
-			newDoc.Add(NewStringField("id", Extensions.ToString(8000), Field.Store.YES
+			newDoc.Add(NewStringField("id", 8000.ToString(), Field.Store.YES
 				));
 			writer.UpdateDocument(new Term("id", id10), newDoc);
 			IsFalse(r1.IsCurrent);
@@ -151,8 +155,8 @@ namespace Lucene.Net.Test.Index
 			{
 				System.Console.Out.WriteLine("TEST: verify id");
 			}
-			AreEqual(1, Count(new Term("id", Extensions.ToString
-				(8000)), r2));
+			AreEqual(1, Count(new Term("id", 8000.ToString
+				()), r2));
 			r1.Dispose();
 			IsTrue(r2.IsCurrent);
 			writer.Dispose();
@@ -161,8 +165,8 @@ namespace Lucene.Net.Test.Index
 			IsTrue(r3.IsCurrent);
 			IsTrue(r2.IsCurrent);
 			AreEqual(0, Count(new Term("id", id10), r3));
-			AreEqual(1, Count(new Term("id", Extensions.ToString
-				(8000)), r3));
+			AreEqual(1, Count(new Term("id", 8000.ToString
+				()), r3));
 			writer = new IndexWriter(dir1, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random())));
 			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
@@ -179,7 +183,7 @@ namespace Lucene.Net.Test.Index
 			dir1.Dispose();
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestIsCurrent()
 		{
 			Directory dir = NewDirectory();
@@ -223,7 +227,7 @@ namespace Lucene.Net.Test.Index
 		}
 
 		/// <summary>Test using IW.addIndexes</summary>
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestAddIndexes()
 		{
 			bool doFullMerge = false;
@@ -277,7 +281,7 @@ namespace Lucene.Net.Test.Index
 			dir2.Dispose();
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestAddIndexes2()
 		{
 			bool doFullMerge = false;
@@ -304,7 +308,7 @@ namespace Lucene.Net.Test.Index
 		}
 
 		/// <summary>Deletes using IW.deleteDocuments</summary>
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestDeleteFromIndexWriter()
 		{
 			bool doFullMerge = true;
@@ -349,7 +353,7 @@ namespace Lucene.Net.Test.Index
 			dir1.Dispose();
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestAddIndexesAndDoDeletesThreads()
 		{
 			int numIter = 2;
@@ -385,8 +389,7 @@ namespace Lucene.Net.Test.Index
 
 			internal int numDirs;
 
-			internal readonly Thread[] threads = new Thread[this._enclosing.numThreads
-				];
+		    internal readonly Thread[] threads;
 
 			internal IndexWriter mainWriter;
 
@@ -405,6 +408,7 @@ namespace Lucene.Net.Test.Index
 				 mainWriter)
 			{
 				this._enclosing = _enclosing;
+                threads = new Thread[_enclosing.numThreads];
 				this.numDirs = numDirs;
 				this.mainWriter = mainWriter;
 				this.addDir = LuceneTestCase.NewDirectory();
@@ -412,7 +416,7 @@ namespace Lucene.Net.Test.Index
 					.NewIndexWriterConfig(LuceneTestCase.TEST_VERSION_CURRENT, new MockAnalyzer(LuceneTestCase
 					.Random())).SetMaxBufferedDocs(2)));
 				TestUtil.ReduceOpenFiles(writer);
-				for (int i = 0; i < TestIndexWriterReader.AddDirectoriesThreads.NUM_INIT_DOCS; i++)
+				for (int i = 0; i < NUM_INIT_DOCS; i++)
 				{
 					Lucene.Net.Documents.Document doc = DocHelper.CreateDocument(i, "addindex", 
 						4);
@@ -436,7 +440,7 @@ namespace Lucene.Net.Test.Index
 					}
 					catch (Exception ie)
 					{
-						throw new ThreadInterruptedException(ie);
+						throw new ThreadInterruptedException(ie.Message,ie);
 					}
 				}
 			}
@@ -449,7 +453,7 @@ namespace Lucene.Net.Test.Index
 				{
 					this.mainWriter.WaitForMerges();
 				}
-				this.mainWriter.Close(doWait);
+				this.mainWriter.Dispose(doWait);
 			}
 
 			/// <exception cref="System.Exception"></exception>
@@ -475,7 +479,7 @@ namespace Lucene.Net.Test.Index
 			{
 				for (int i = 0; i < this._enclosing.numThreads; i++)
 				{
-					this.threads[i] = new _Thread_463(this, numIter);
+				    this.threads[i] = new Thread(new DirectoryThreadRunner(this, numIter).Run);
 				}
 				//int j = 0;
 				//while (true) {
@@ -493,15 +497,15 @@ namespace Lucene.Net.Test.Index
 				}
 			}
 
-			private sealed class _Thread_463 : Thread
+			private sealed class DirectoryThreadRunner
 			{
-				public _Thread_463(AddDirectoriesThreads _enclosing, int numIter)
+				public DirectoryThreadRunner(AddDirectoriesThreads _enclosing, int numIter)
 				{
 					this._enclosing = _enclosing;
 					this.numIter = numIter;
 				}
 
-				public override void Run()
+				public void Run()
 				{
 					try
 					{
@@ -555,22 +559,22 @@ namespace Lucene.Net.Test.Index
 					case 3:
 					{
 						this.mainWriter.Commit();
+                        break;
 					}
 				}
-				this.count.AddAndGet(dirs.Length * TestIndexWriterReader.AddDirectoriesThreads.NUM_INIT_DOCS
-					);
+				this.count.AddAndGet(dirs.Length * NUM_INIT_DOCS);
 			}
 
 			private readonly TestIndexWriterReader _enclosing;
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestIndexWriterReopenSegmentFullMerge()
 		{
 			DoTestIndexWriterReopenSegment(true);
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestIndexWriterReopenSegment()
 		{
 			DoTestIndexWriterReopenSegment(false);
@@ -671,7 +675,7 @@ namespace Lucene.Net.Test.Index
 			}
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestMergeWarmer()
 		{
 			Directory dir1 = GetAssertNoDeletesDirectory(NewDirectory());
@@ -702,7 +706,7 @@ namespace Lucene.Net.Test.Index
 			dir1.Dispose();
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestAfterCommit()
 		{
 			Directory dir1 = GetAssertNoDeletesDirectory(NewDirectory());
@@ -735,7 +739,7 @@ namespace Lucene.Net.Test.Index
 		}
 
 		// Make sure reader remains usable even if IndexWriter closes
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestAfterClose()
 		{
 			Directory dir1 = GetAssertNoDeletesDirectory(NewDirectory());
@@ -765,7 +769,7 @@ namespace Lucene.Net.Test.Index
 		}
 
 		// Stress test reopen during addIndexes
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestDuringAddIndexes()
 		{
 			Directory dir1 = GetAssertNoDeletesDirectory(NewDirectory());
@@ -782,17 +786,15 @@ namespace Lucene.Net.Test.Index
 			}
 			DirectoryReader r = writer.Reader;
 			float SECONDS = 0.5f;
-			long endTime = (long)(DateTime.Now.CurrentTimeMillis() + 1000. * SECONDS);
-			IList<Exception> excs = Collections.SynchronizedList(new List<Exception>
-				());
+			long endTime = (long)(DateTime.Now.CurrentTimeMillis() + 1000 * SECONDS);
+			var excs = new ConcurrentHashSet<Exception>(new List<Exception>());
 			// Only one thread can addIndexes at a time, because
 			// IndexWriter acquires a write lock in each directory:
 			Thread[] threads = new Thread[1];
 			for (int i_1 = 0; i_1 < threads.Length; i_1++)
 			{
-				threads[i_1] = new _Thread_742(writer, dirs, excs, endTime);
-				threads[i_1].SetDaemon(true);
-				threads[i_1].Start();
+			    threads[i_1] = new Thread(new IndexThread(writer, dirs, excs, endTime).Run) {IsBackground = (true)};
+			    threads[i_1].Start();
 			}
 			int lastCount = 0;
 			while (DateTime.Now.CurrentTimeMillis() < endTime)
@@ -830,16 +832,16 @@ namespace Lucene.Net.Test.Index
 			{
 				ICollection<string> openDeletedFiles = ((MockDirectoryWrapper)dir1).GetOpenDeletedFiles
 					();
-				AreEqual("openDeleted=" + openDeletedFiles, 0, openDeletedFiles
+				AssertEquals("openDeleted=" + openDeletedFiles, 0, openDeletedFiles
 					.Count);
 			}
 			writer.Dispose();
 			dir1.Dispose();
 		}
 
-		private sealed class _Thread_742 : Thread
+		private sealed class IndexThread
 		{
-			public _Thread_742(IndexWriter writer, Directory[] dirs, IList<Exception> excs, long
+			public IndexThread(IndexWriter writer, Directory[] dirs, ConcurrentHashSet<Exception> excs, long
 				 endTime)
 			{
 				this.writer = writer;
@@ -848,7 +850,7 @@ namespace Lucene.Net.Test.Index
 				this.endTime = endTime;
 			}
 
-			public override void Run()
+			public void Run()
 			{
 				do
 				{
@@ -860,7 +862,7 @@ namespace Lucene.Net.Test.Index
 					catch (Exception t)
 					{
 						excs.Add(t);
-						throw new SystemException(t);
+					    throw;
 					}
 				}
 				while (DateTime.Now.CurrentTimeMillis() < endTime);
@@ -870,7 +872,7 @@ namespace Lucene.Net.Test.Index
 
 			private readonly Directory[] dirs;
 
-			private readonly IList<Exception> excs;
+			private readonly ConcurrentHashSet<Exception> excs;
 
 			private readonly long endTime;
 		}
@@ -885,7 +887,7 @@ namespace Lucene.Net.Test.Index
 		}
 
 		// Stress test reopen during add/delete
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestDuringAddDelete()
 		{
 			Directory dir1 = NewDirectory();
@@ -896,15 +898,13 @@ namespace Lucene.Net.Test.Index
 			writer.Commit();
 			DirectoryReader r = writer.Reader;
 			float SECONDS = 0.5f;
-			long endTime = (long)(DateTime.Now.CurrentTimeMillis() + 1000. * SECONDS);
-			IList<Exception> excs = Collections.SynchronizedList(new List<Exception>
-				());
+			long endTime = (long)(DateTime.Now.CurrentTimeMillis() + 1000 * SECONDS);
+			var excs = new ConcurrentHashSet<Exception>(new List<Exception>());
 			Thread[] threads = new Thread[numThreads];
 			for (int i = 0; i < numThreads; i++)
 			{
-				threads[i] = new _Thread_829(writer, excs, endTime);
-				threads[i].SetDaemon(true);
-				threads[i].Start();
+			    threads[i] = new Thread(new DocThread(writer, excs, endTime).Run) {IsBackground = (true)};
+			    threads[i].Start();
 			}
 			int sum = 0;
 			while (DateTime.Now.CurrentTimeMillis() < endTime)
@@ -933,26 +933,26 @@ namespace Lucene.Net.Test.Index
 			Query q_1 = new TermQuery(new Term("indexname", "test"));
 			IndexSearcher searcher_1 = NewSearcher(r);
 			sum += searcher_1.Search(q_1, 10).TotalHits;
-			IsTrue("no documents found at all", sum > 0);
+			AssertTrue("no documents found at all", sum > 0);
 			AreEqual(0, excs.Count);
 			writer.Dispose();
 			r.Dispose();
 			dir1.Dispose();
 		}
 
-		private sealed class _Thread_829 : Thread
+		private sealed class DocThread
 		{
-			public _Thread_829(IndexWriter writer, IList<Exception> excs, long endTime)
+			public DocThread(IndexWriter writer, ConcurrentHashSet<Exception> excs, long endTime)
 			{
 				this.writer = writer;
 				this.excs = excs;
 				this.endTime = endTime;
-				this.r = new Random(LuceneTestCase.Random().NextLong());
+				this.r = new Random(Random().Next());
 			}
 
 			internal readonly Random r;
 
-			public override void Run()
+			public void Run()
 			{
 				int count = 0;
 				do
@@ -974,7 +974,7 @@ namespace Lucene.Net.Test.Index
 					catch (Exception t)
 					{
 						excs.Add(t);
-						throw new SystemException(t);
+						throw new SystemException(t.Message,t);
 					}
 				}
 				while (DateTime.Now.CurrentTimeMillis() < endTime);
@@ -982,25 +982,22 @@ namespace Lucene.Net.Test.Index
 
 			private readonly IndexWriter writer;
 
-			private readonly IList<Exception> excs;
+			private readonly ConcurrentHashSet<Exception> excs;
 
 			private readonly long endTime;
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestForceMergeDeletes()
 		{
 			Directory dir = NewDirectory();
 			IndexWriter w = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new 
 				MockAnalyzer(Random())).SetMergePolicy(NewLogMergePolicy()));
-			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-				();
-			doc.Add(NewTextField("field", "a b c", Field.Store.NO));
-			Field id = NewStringField("id", string.Empty, Field.Store.NO);
-			doc.Add(id);
-			id.StringValue = "0");
+		    Field id = NewStringField("id", string.Empty, Field.Store.NO);
+		    var doc = new Lucene.Net.Documents.Document {NewTextField("field", "a b c", Field.Store.NO), id};
+		    id.StringValue = "0";
 			w.AddDocument(doc);
-			id.StringValue = "1");
+			id.StringValue = "1";
 			w.AddDocument(doc);
 			w.DeleteDocuments(new Term("id", "0"));
 			IndexReader r = w.Reader;
@@ -1009,25 +1006,22 @@ namespace Lucene.Net.Test.Index
 			r.Dispose();
 			r = DirectoryReader.Open(dir);
 			AreEqual(1, r.NumDocs);
-			IsFalse(r.HasDeletions());
+			IsFalse(r.HasDeletions);
 			r.Dispose();
 			dir.Dispose();
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestDeletesNumDocs()
 		{
 			Directory dir = NewDirectory();
 			IndexWriter w = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new 
 				MockAnalyzer(Random())));
-			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-				();
-			doc.Add(NewTextField("field", "a b c", Field.Store.NO));
-			Field id = NewStringField("id", string.Empty, Field.Store.NO);
-			doc.Add(id);
-			id.StringValue = "0");
+		    Field id = NewStringField("id", string.Empty, Field.Store.NO);
+		    var doc = new Lucene.Net.Documents.Document {NewTextField("field", "a b c", Field.Store.NO), id};
+		    id.StringValue = "0";
 			w.AddDocument(doc);
-			id.StringValue = "1");
+			id.StringValue = "1";
 			w.AddDocument(doc);
 			IndexReader r = w.Reader;
 			AreEqual(2, r.NumDocs);
@@ -1044,7 +1038,7 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestEmptyIndex()
 		{
 			// Ensures that getReader works on an empty index, which hasn't been committed yet.
@@ -1058,19 +1052,17 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestSegmentWarmer()
 		{
 			Directory dir = NewDirectory();
 			AtomicBoolean didWarm = new AtomicBoolean();
 			IndexWriter w = new IndexWriter(dir, ((IndexWriterConfig)((IndexWriterConfig)NewIndexWriterConfig
 				(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMaxBufferedDocs(2)).SetReaderPooling
-				(true).SetMergedSegmentWarmer(new _IndexReaderWarmer_962(didWarm))).SetMergePolicy
+				(true).SetMergedSegmentWarmer(new AnonymousIndexWarmer(didWarm))).SetMergePolicy
 				(NewLogMergePolicy(10)));
-			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-				();
-			doc.Add(NewStringField("foo", "bar", Field.Store.NO));
-			for (int i = 0; i < 20; i++)
+			var doc = new Lucene.Net.Documents.Document {NewStringField("foo", "bar", Field.Store.NO)};
+		    for (int i = 0; i < 20; i++)
 			{
 				w.AddDocument(doc);
 			}
@@ -1080,9 +1072,9 @@ namespace Lucene.Net.Test.Index
 			IsTrue(didWarm.Get());
 		}
 
-		private sealed class _IndexReaderWarmer_962 : IndexWriter.IndexReaderWarmer
+		private sealed class AnonymousIndexWarmer : IndexWriter.IndexReaderWarmer
 		{
-			public _IndexReaderWarmer_962(AtomicBoolean didWarm)
+			public AnonymousIndexWarmer(AtomicBoolean didWarm)
 			{
 				this.didWarm = didWarm;
 			}
@@ -1099,12 +1091,12 @@ namespace Lucene.Net.Test.Index
 			private readonly AtomicBoolean didWarm;
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestSimpleMergedSegmentWramer()
 		{
 			Directory dir = NewDirectory();
 			AtomicBoolean didWarm = new AtomicBoolean();
-			InfoStream infoStream = new _InfoStream_988(didWarm);
+			InfoStream infoStream = new AnonInfoStream(didWarm);
 			IndexWriter w = new IndexWriter(dir, ((IndexWriterConfig)((IndexWriterConfig)NewIndexWriterConfig
 				(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetMaxBufferedDocs(2)).SetReaderPooling
 				(true).SetInfoStream(infoStream).SetMergedSegmentWarmer(new SimpleMergedSegmentWarmer
@@ -1122,17 +1114,14 @@ namespace Lucene.Net.Test.Index
 			IsTrue(didWarm.Get());
 		}
 
-		private sealed class _InfoStream_988 : InfoStream
+		private sealed class AnonInfoStream : InfoStream
 		{
-			public _InfoStream_988(AtomicBoolean didWarm)
+			public AnonInfoStream(AtomicBoolean didWarm)
 			{
 				this.didWarm = didWarm;
 			}
 
-			/// <exception cref="System.IO.IOException"></exception>
-			public override void Close()
-			{
-			}
+			
 
 			public override void Message(string component, string message)
 			{
@@ -1150,13 +1139,13 @@ namespace Lucene.Net.Test.Index
 			private readonly AtomicBoolean didWarm;
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestNoTermsIndex()
 		{
 			// Some Codecs don't honor the ReaderTermsIndexDivisor, so skip the test if
 			// they're picked.
 			AssumeFalse("PreFlex codec does not support ReaderTermsIndexDivisor!", "Lucene3x"
-				.Equals(Codec.GetDefault().GetName()));
+				.Equals(Codec.Default.Name));
 			IndexWriterConfig conf = ((IndexWriterConfig)NewIndexWriterConfig(TEST_VERSION_CURRENT
 				, new MockAnalyzer(Random())).SetReaderTermsIndexDivisor(-1));
 			// Don't proceed if picked Codec is in the list of illegal ones.
@@ -1191,7 +1180,7 @@ namespace Lucene.Net.Test.Index
 			}
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestReopenAfterNoRealChange()
 		{
 			Directory d = GetAssertNoDeletesDirectory(NewDirectory());
@@ -1230,7 +1219,7 @@ namespace Lucene.Net.Test.Index
 			MockDirectoryWrapper dir = (MockDirectoryWrapper)GetAssertNoDeletesDirectory(NewMockDirectory
 				());
 			AtomicBoolean shouldFail = new AtomicBoolean();
-			dir.FailOn(new _Failure_1106(shouldFail));
+			dir.FailOn(new AnonymousFailure(shouldFail));
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random()));
 			conf.SetMergePolicy(NoMergePolicy.COMPOUND_FILES);
@@ -1264,9 +1253,9 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		private sealed class _Failure_1106 : MockDirectoryWrapper.Failure
+		private sealed class AnonymousFailure : MockDirectoryWrapper.Failure
 		{
-			public _Failure_1106(AtomicBoolean shouldFail)
+			public AnonymousFailure(AtomicBoolean shouldFail)
 			{
 				this.shouldFail = shouldFail;
 			}
@@ -1274,12 +1263,12 @@ namespace Lucene.Net.Test.Index
 			/// <exception cref="System.IO.IOException"></exception>
 			public override void Eval(MockDirectoryWrapper dir)
 			{
-				StackTraceElement[] trace = new Exception().GetStackTrace();
+				var trace = new StackTrace(new Exception()).GetFrames();
 				if (shouldFail.Get())
 				{
 					for (int i = 0; i < trace.Length; i++)
 					{
-						if ("getReadOnlyClone".Equals(trace[i].GetMethodName()))
+						if ("getReadOnlyClone".Equals(trace[i].GetMethod().Name,StringComparison.CurrentCultureIgnoreCase))
 						{
 							if (LuceneTestCase.VERBOSE)
 							{
@@ -1304,7 +1293,7 @@ namespace Lucene.Net.Test.Index
 		/// Make sure if all we do is open NRT reader against
 		/// writer, we don't see merge starvation.
 		/// </remarks>
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestTooManySegments()
 		{
 			Directory dir = GetAssertNoDeletesDirectory(NewDirectory());
@@ -1316,10 +1305,8 @@ namespace Lucene.Net.Test.Index
 			// Create 500 segments:
 			for (int i = 0; i < 500; i++)
 			{
-				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-					();
-				doc.Add(NewStringField("id", string.Empty + i, Field.Store.NO));
-				w.AddDocument(doc);
+				var doc = new Lucene.Net.Documents.Document {NewStringField("id", string.Empty + i, Field.Store.NO)};
+			    w.AddDocument(doc);
 				IndexReader r = DirectoryReader.Open(w, true);
 				// Make sure segment count never exceeds 100:
 				IsTrue(r.Leaves.Count < 100);

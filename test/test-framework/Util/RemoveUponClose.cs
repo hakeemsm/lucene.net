@@ -30,7 +30,7 @@ namespace Lucene.Net.TestFramework.Util
 			this.file = file;
 			this.failureMarker = failureMarker;
 			StringBuilder b = new StringBuilder();
-			foreach (StackTraceElement e in Sharpen.Thread.CurrentThread().GetStackTrace())
+			foreach (StackTraceElement e in Thread.CurrentThread().GetStackTrace())
 			{
 				b.Append('\t').Append(e.ToString()).Append('\n');
 			}

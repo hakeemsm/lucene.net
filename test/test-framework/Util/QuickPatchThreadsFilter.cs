@@ -24,7 +24,7 @@ namespace Lucene.Net.TestFramework.Util
 			isJ9 = Runtime.GetProperty("java.vm.info", "<?>").Contains("IBM J9");
 		}
 
-		public virtual bool Reject(Sharpen.Thread t)
+		public virtual bool Reject(Thread t)
 		{
 			if (isJ9)
 			{

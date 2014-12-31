@@ -299,15 +299,15 @@ namespace Lucene.Net.TestFramework.Util.Automaton
 							.Get(t.to);
 						if (tl == null)
 						{
-							tl = new AList<AutomatonTestUtil.RandomAcceptedStrings.ArrivingTransition>();
+							tl = new List<AutomatonTestUtil.RandomAcceptedStrings.ArrivingTransition>();
 							allArriving.Put(t.to, tl);
 						}
-						tl.AddItem(new AutomatonTestUtil.RandomAcceptedStrings.ArrivingTransition(s, t));
+						tl.Add(new AutomatonTestUtil.RandomAcceptedStrings.ArrivingTransition(s, t));
 					}
 					if (s.accept)
 					{
-						q.AddItem(s);
-						seen.AddItem(s);
+						q.Add(s);
+						seen.Add(s);
 					}
 				}
 				// Breadth-first search, from accept states,
@@ -324,8 +324,8 @@ namespace Lucene.Net.TestFramework.Util.Automaton
 							State from = at.from;
 							if (!seen.Contains(from))
 							{
-								q.AddItem(from);
-								seen.AddItem(from);
+								q.Add(from);
+								seen.Add(from);
 								leadsToAccept.Put(at.t, true);
 							}
 						}
@@ -335,7 +335,7 @@ namespace Lucene.Net.TestFramework.Util.Automaton
 
 			public virtual int[] GetRandomAcceptedString(Random r)
 			{
-				IList<int> soFar = new AList<int>();
+				IList<int> soFar = new List<int>();
 				if (a.IsSingleton())
 				{
 					// accepts only one
@@ -345,7 +345,7 @@ namespace Lucene.Net.TestFramework.Util.Automaton
 					{
 						int cp = s.CodePointAt(charUpto);
 						charUpto += char.CharCount(cp);
-						soFar.AddItem(cp);
+						soFar.Add(cp);
 					}
 				}
 				else
@@ -370,7 +370,7 @@ namespace Lucene.Net.TestFramework.Util.Automaton
 						}
 						if (s.numTransitions == 0)
 						{
-							throw new RuntimeException("this automaton has dead states");
+							throw new SystemException("this automaton has dead states");
 						}
 						bool cheat = r.NextBoolean();
 						Transition t;
@@ -378,13 +378,13 @@ namespace Lucene.Net.TestFramework.Util.Automaton
 						{
 							// pick a transition that we know is the fastest
 							// path to an accept state
-							IList<Transition> toAccept = new AList<Transition>();
+							IList<Transition> toAccept = new List<Transition>();
 							for (int i = 0; i < s.numTransitions; i++)
 							{
 								Transition t0 = s.transitionsArray[i];
 								if (leadsToAccept.ContainsKey(t0))
 								{
-									toAccept.AddItem(t0);
+									toAccept.Add(t0);
 								}
 							}
 							if (toAccept.Count == 0)
@@ -401,7 +401,7 @@ namespace Lucene.Net.TestFramework.Util.Automaton
 						{
 							t = s.transitionsArray[r.Next(s.numTransitions)];
 						}
-						soFar.AddItem(GetRandomCodePoint(r, t));
+						soFar.Add(GetRandomCodePoint(r, t));
 						s = t.to;
 					}
 				}
@@ -472,7 +472,7 @@ namespace Lucene.Net.TestFramework.Util.Automaton
 				return;
 			}
 			ICollection<State> initialset = new HashSet<State>();
-			initialset.AddItem(a.initial);
+			initialset.Add(a.initial);
 			DeterminizeSimple(a, initialset);
 		}
 
@@ -495,7 +495,7 @@ namespace Lucene.Net.TestFramework.Util.Automaton
 			IDictionary<ICollection<State>, State> newstate = new Dictionary<ICollection<State
 				>, State>();
 			sets.Put(initialset, initialset);
-			worklist.AddItem(initialset);
+			worklist.Add(initialset);
 			a.initial = new State();
 			newstate.Put(initialset, a.initial);
 			while (worklist.Count > 0)
@@ -519,14 +519,14 @@ namespace Lucene.Net.TestFramework.Util.Automaton
 						{
 							if (t.min <= points[n] && points[n] <= t.max)
 							{
-								p.AddItem(t.to);
+								p.Add(t.to);
 							}
 						}
 					}
 					if (!sets.ContainsKey(p))
 					{
 						sets.Put(p, p);
-						worklist.AddItem(p);
+						worklist.Add(p);
 						newstate.Put(p, new State());
 					}
 					State q_2 = newstate.Get(p);
@@ -567,7 +567,7 @@ namespace Lucene.Net.TestFramework.Util.Automaton
 			{
 				if (limit > 0)
 				{
-					strings.AddItem(Lucene.Net.TestFramework.Util.Fst.Util.ToUTF32(a.singleton, new IntsRef(
+					strings.Add(Lucene.Net.TestFramework.Util.Fst.Util.ToUTF32(a.singleton, new IntsRef(
 						)));
 				}
 			}
@@ -594,7 +594,7 @@ namespace Lucene.Net.TestFramework.Util.Automaton
 		private static bool GetFiniteStrings(State s, HashSet<State> pathstates, HashSet<
 			IntsRef> strings, IntsRef path, int limit)
 		{
-			pathstates.AddItem(s);
+			pathstates.Add(s);
 			foreach (Transition t in s.GetTransitions())
 			{
 				if (pathstates.Contains(t.to))
@@ -608,7 +608,7 @@ namespace Lucene.Net.TestFramework.Util.Automaton
 					path.length++;
 					if (t.to.accept)
 					{
-						strings.AddItem(IntsRef.DeepCopyOf(path));
+						strings.Add(IntsRef.DeepCopyOf(path));
 						if (limit >= 0 && strings.Count > limit)
 						{
 							return false;
@@ -650,7 +650,7 @@ namespace Lucene.Net.TestFramework.Util.Automaton
 		{
 			// TODO: not great that this is recursive... in theory a
 			// large automata could exceed java's stack
-			path.AddItem(s);
+			path.Add(s);
 			foreach (Transition t in s.GetTransitions())
 			{
 				if (path.Contains(t.to) || !IsFiniteSlow(t.to, path))

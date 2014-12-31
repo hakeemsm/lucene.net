@@ -87,7 +87,7 @@ namespace Lucene.Net.TestFramework.Util
 		/// <remarks>Expand from multi-exception wrappers.</remarks>
 		private static IList<Exception> ExpandFromMultiple(Exception t)
 		{
-			return ExpandFromMultiple(t, new AList<Exception>());
+			return ExpandFromMultiple(t, new List<Exception>());
 		}
 
 		/// <summary>Internal recursive routine.</summary>
@@ -104,7 +104,7 @@ namespace Lucene.Net.TestFramework.Util
 			}
 			else
 			{
-				list.AddItem(t);
+				list.Add(t);
 			}
 			return list;
 		}

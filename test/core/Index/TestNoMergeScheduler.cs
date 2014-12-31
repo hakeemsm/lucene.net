@@ -1,15 +1,9 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
+using System;
 using System.Reflection;
-using Com.Carrotsearch.Randomizedtesting.Generators;
 using Lucene.Net.Index;
-using Lucene.Net.Util;
-using Sharpen;
-using Reflect;
+using Lucene.Net.Randomized.Generators;
+using Lucene.Net.Support;
+using Lucene.Net.TestFramework;
 
 namespace Lucene.Net.Test.Index
 {
@@ -17,25 +11,24 @@ namespace Lucene.Net.Test.Index
 	{
 		/// <exception cref="System.Exception"></exception>
 		[NUnit.Framework.Test]
-		public virtual void TestNoMergeScheduler()
+		public virtual void NoMergeSchedulerTest()
 		{
 			MergeScheduler ms = NoMergeScheduler.INSTANCE;
 			ms.Dispose();
-			ms.Merge(null, RandomPicks.RandomFrom(Random(), MergeTrigger.Values()), Random().
-				NextBoolean());
+		    var mergeValue = Enum.GetNames(typeof(MergePolicy.MergeTrigger));
+		    string randomPick = Random().RandomFrom(mergeValue);
+		    MergePolicy.MergeTrigger mObj = (MergePolicy.MergeTrigger) Enum.Parse(typeof (MergePolicy.MergeTrigger), randomPick);
+		    ms.Merge(null, mObj, Random().NextBoolean());
 		}
 
 		/// <exception cref="System.Exception"></exception>
 		[NUnit.Framework.Test]
 		public virtual void TestFinalSingleton()
 		{
-			IsTrue(Modifier.IsFinal(typeof(NoMergeScheduler).GetModifiers
-				()));
-			Constructor<object>[] ctors = typeof(NoMergeScheduler).GetDeclaredConstructors();
-			AreEqual("expected 1 private ctor only: " + Arrays.ToString
-				(ctors), 1, ctors.Length);
-			IsTrue("that 1 should be private: " + ctors[0], Modifier.IsPrivate
-				(ctors[0].GetModifiers()));
+			IsTrue(typeof(NoMergeScheduler).IsSealed);
+			var ctors = typeof(NoMergeScheduler).GetConstructors();
+			AssertEquals("expected 1 private ctor only: " + Arrays.ToString(ctors), 1, ctors.Length);
+			AssertTrue("that 1 should be private: " + ctors[0], ctors[0].IsPrivate);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -54,7 +47,7 @@ namespace Lucene.Net.Test.Index
 				// this will need to change.
 				if (m.DeclaringType != typeof(object))
 				{
-					IsTrue(m + " is not overridden !", m.DeclaringType == typeof(
+					AssertTrue(m + " is not overridden !", m.DeclaringType == typeof(
 						NoMergeScheduler));
 				}
 			}

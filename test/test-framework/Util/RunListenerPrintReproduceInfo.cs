@@ -31,7 +31,7 @@ namespace Lucene.Net.TestFramework.Util
 		/// A list of all test suite classes executed so far in this JVM (ehm,
 		/// under this class's classloader).
 		/// </remarks>
-		private static IList<string> testClassesRun = new AList<string>();
+		private static IList<string> testClassesRun = new List<string>();
 
 		/// <summary>The currently executing scope.</summary>
 		/// <remarks>The currently executing scope.</remarks>
@@ -56,7 +56,7 @@ namespace Lucene.Net.TestFramework.Util
 			testFailed = false;
 			scope = LifecycleScope.SUITE;
 			Type targetClass = RandomizedContext.Current().GetTargetClass();
-			testClassesRun.AddItem(targetClass.Name);
+			testClassesRun.Add(targetClass.Name);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -136,7 +136,7 @@ namespace Lucene.Net.TestFramework.Util
 				Runtime.GetProperty("os.version") + " " + Runtime.GetProperty("os.arch") + "/" +
 				 Runtime.GetProperty("java.vendor") + " " + Runtime.GetProperty("java.version") 
 				+ " " + (Constants.JRE_IS_64BIT ? "(64-bit)" : "(32-bit)") + "/" + "cpus=" + Runtime
-				.GetRuntime().AvailableProcessors() + "," + "threads=" + Sharpen.Thread.ActiveCount
+				.GetRuntime().AvailableProcessors() + "," + "threads=" + Thread.ActiveCount
 				() + "," + "free=" + Runtime.GetRuntime().FreeMemory() + "," + "total=" + Runtime
 				.GetRuntime().TotalMemory());
 			System.Console.Error.WriteLine("NOTE: All tests run in this JVM: " + Arrays.ToString

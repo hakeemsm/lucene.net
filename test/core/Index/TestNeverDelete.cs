@@ -1,17 +1,17 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using System.Collections.Generic;
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Document;
+using System.IO;
+using System.Linq;
+using System.Threading;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
+using Lucene.Net.Support;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
-using Lucene.Net.Util;
-using Sharpen;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Index;
+using Lucene.Net.TestFramework.Util;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
@@ -19,7 +19,7 @@ namespace Lucene.Net.Test.Index
 	{
 		// Make sure if you use NoDeletionPolicy that no file
 		// referenced by a commit point is ever deleted
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestIndexing()
 		{
 			DirectoryInfo tmpDir = CreateTempDir("TestNeverDelete");
@@ -33,17 +33,16 @@ namespace Lucene.Net.Test.Index
 			}
 			RandomIndexWriter w = new RandomIndexWriter(Random(), d, NewIndexWriterConfig(TEST_VERSION_CURRENT
 				, new MockAnalyzer(Random())).SetIndexDeletionPolicy(NoDeletionPolicy.INSTANCE));
-			w.w.Config.SetMaxBufferedDocs(TestUtil.NextInt(Random(), 5, 30));
+			w.w.Config.SetMaxBufferedDocs(Random().NextInt(5, 30));
 			w.Commit();
 			Thread[] indexThreads = new Thread[Random().Next(4)];
 			long stopTime = DateTime.Now.CurrentTimeMillis() + AtLeast(1000);
 			for (int x = 0; x < indexThreads.Length; x++)
 			{
-				indexThreads[x] = new _Thread_58(stopTime, w);
-				indexThreads[x].SetName("Thread " + x);
-				indexThreads[x].Start();
+			    indexThreads[x] = new Thread(new DocThread(stopTime, w).Run) {Name = ("Thread " + x)};
+			    indexThreads[x].Start();
 			}
-			ICollection<string> allFiles = new HashSet<string>();
+			var allFiles = new HashSet<string>();
 			DirectoryReader r = DirectoryReader.Open(d);
 			while (DateTime.Now.CurrentTimeMillis() < stopTime)
 			{
@@ -52,11 +51,11 @@ namespace Lucene.Net.Test.Index
 				{
 					System.Console.Out.WriteLine("TEST: check files: " + ic.FileNames);
 				}
-				Collections.AddAll(allFiles, ic.FileNames);
+				allFiles = (HashSet<string>) allFiles.Concat(ic.FileNames);
 				// Make sure no old files were removed
 				foreach (string fileName in allFiles)
 				{
-					IsTrue("file " + fileName + " does not exist", SlowFileExists
+					AssertTrue("file " + fileName + " does not exist", SlowFileExists
 						(d, fileName));
 				}
 				DirectoryReader r2 = DirectoryReader.OpenIfChanged(r);
@@ -74,31 +73,31 @@ namespace Lucene.Net.Test.Index
 			}
 			w.Dispose();
 			d.Dispose();
-			TestUtil.Rm(tmpDir);
+            tmpDir.Delete(true);
+			
 		}
 
-		private sealed class _Thread_58 : Thread
+		private sealed class DocThread
 		{
-			public _Thread_58(long stopTime, RandomIndexWriter w)
+			public DocThread(long stopTime, RandomIndexWriter w)
 			{
 				this.stopTime = stopTime;
 				this.w = w;
 			}
 
-			public override void Run()
+			public void Run()
 			{
 				try
 				{
 					int docCount = 0;
 					while (DateTime.Now.CurrentTimeMillis() < stopTime)
 					{
-						Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-							();
-						doc.Add(LuceneTestCase.NewStringField("dc", string.Empty + docCount, Field.Store.
-							YES));
-						doc.Add(LuceneTestCase.NewTextField("field", "here is some text", Field.Store.YES
-							));
-						w.AddDocument(doc);
+						var doc = new Lucene.Net.Documents.Document
+						{
+						    NewStringField("dc", string.Empty + docCount, Field.Store.YES),
+						    NewTextField("field", "here is some text", Field.Store.YES)
+						};
+					    w.AddDocument(doc);
 						if (docCount % 13 == 0)
 						{
 							w.Commit();
@@ -108,7 +107,7 @@ namespace Lucene.Net.Test.Index
 				}
 				catch (Exception e)
 				{
-					throw new SystemException(e);
+					throw new SystemException(e.Message,e);
 				}
 			}
 

@@ -4,6 +4,7 @@ using System.Threading;
 using Lucene.Net.Analysis;
 using Lucene.Net.Codecs;
 using Lucene.Net.Codecs.Lucene46;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
 using Lucene.Net.Support;
@@ -11,14 +12,16 @@ using Lucene.Net.TestFramework;
 using Lucene.Net.TestFramework.Index;
 using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
+    [TestFixture]
 	public class TestIndexWriterThreadsToSegments : LuceneTestCase
 	{
 		// LUCENE-5644: for first segment, two threads each indexed one doc (likely concurrently), but for second segment, each thread indexed the
 		// doc NOT at the same time, and should have shared the same thread state / segment
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestSegmentCountOnFlushBasic()
 		{
 			Directory dir = NewDirectory();
@@ -32,21 +35,20 @@ namespace Lucene.Net.Test.Index
 			for (int i = 0; i < threads.Length; i++)
 			{
 				int threadID = i;
-				threads[i] = new _Thread_55(startingGun, w, startDone, middleGun, threadID, finalGun
-					);
+				threads[i] = new Thread(new WaitingThread(startingGun, w, startDone, middleGun, threadID, finalGun).Run);
 				threads[i].Start();
 			}
-			startingGun.CountDown();
-			startDone.Await();
+			startingGun.Signal();
+			startDone.Wait();
 			IndexReader r = DirectoryReader.Open(w, true);
 			AreEqual(2, r.NumDocs);
 			int numSegments = r.Leaves.Count;
 			// 1 segment if the threads ran sequentially, else 2:
 			IsTrue(numSegments <= 2);
 			r.Dispose();
-			middleGun.CountDown();
+			middleGun.Signal();
 			threads[0].Join();
-			finalGun.CountDown();
+			finalGun.Signal();
 			threads[1].Join();
 			r = DirectoryReader.Open(w, true);
 			AreEqual(4, r.NumDocs);
@@ -57,9 +59,9 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		private sealed class _Thread_55 : Thread
+		private sealed class WaitingThread
 		{
-			public _Thread_55(CountdownEvent startingGun, IndexWriter w, CountdownEvent startDone
+			public WaitingThread(CountdownEvent startingGun, IndexWriter w, CountdownEvent startDone
 				, CountdownEvent middleGun, int threadID, CountdownEvent finalGun)
 			{
 				this.startingGun = startingGun;
@@ -70,31 +72,31 @@ namespace Lucene.Net.Test.Index
 				this.finalGun = finalGun;
 			}
 
-			public override void Run()
+			public void Run()
 			{
 				try
 				{
-					startingGun.Await();
-					Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-						();
-					doc.Add(LuceneTestCase.NewTextField("field", "here is some text", Field.Store.NO)
-						);
-					w.AddDocument(doc);
-					startDone.CountDown();
-					middleGun.Await();
+					startingGun.Wait();
+					var doc = new Lucene.Net.Documents.Document
+					{
+					    NewTextField("field", "here is some text", Field.Store.NO)
+					};
+				    w.AddDocument(doc);
+					startDone.Signal();
+					middleGun.Wait();
 					if (threadID == 0)
 					{
 						w.AddDocument(doc);
 					}
 					else
 					{
-						finalGun.Await();
+						finalGun.Wait();
 						w.AddDocument(doc);
 					}
 				}
 				catch (Exception e)
 				{
-					throw new SystemException(e);
+					throw new SystemException(e.Message,e);
 				}
 			}
 
@@ -115,7 +117,7 @@ namespace Lucene.Net.Test.Index
 		/// <remarks>Maximum number of simultaneous threads to use for each iteration.</remarks>
 		private const int MAX_THREADS_AT_ONCE = 10;
 
-		internal class CheckSegmentCount : Runnable, IDisposable
+		internal class CheckSegmentCount : IDisposable
 		{
 			private readonly IndexWriter w;
 
@@ -146,7 +148,7 @@ namespace Lucene.Net.Test.Index
 					IsNotNull(r2);
 					r.Dispose();
 					r = r2;
-					int maxThreadStates = w.Config.GetMaxThreadStates();
+					int maxThreadStates = w.Config.MaxThreadStates;
 					int maxExpectedSegments = oldSegmentCount + Math.Min(maxThreadStates, maxThreadCountPerIter
 						.Get());
 					if (VERBOSE)
@@ -160,7 +162,7 @@ namespace Lucene.Net.Test.Index
 				}
 				catch (Exception e)
 				{
-					throw new SystemException(e);
+					throw new SystemException(e.Message,e);
 				}
 			}
 
@@ -175,8 +177,8 @@ namespace Lucene.Net.Test.Index
 				}
 			}
 
-			/// <exception cref="System.IO.IOException"></exception>
-			public virtual void Close()
+			
+			public virtual void Dispose()
 			{
 				r.Dispose();
 				r = null;
@@ -185,13 +187,13 @@ namespace Lucene.Net.Test.Index
 
 		// LUCENE-5644: index docs w/ multiple threads but in between flushes we limit how many threads can index concurrently in the next
 		// iteration, and then verify that no more segments were flushed than number of threads:
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestSegmentCountOnFlushRandom()
 		{
 			Directory dir = NewFSDirectory(CreateTempDir());
 			IndexWriterConfig iwc = new IndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer
 				(Random()));
-			int maxThreadStates = TestUtil.NextInt(Random(), 1, 12);
+			int maxThreadStates = Random().NextInt(1, 12);
 			if (VERBOSE)
 			{
 				System.Console.Out.WriteLine("TEST: maxThreadStates=" + maxThreadStates);
@@ -207,17 +209,16 @@ namespace Lucene.Net.Test.Index
 			AtomicInteger indexingCount = new AtomicInteger();
 			// How many threads we will use on each cycle:
 			AtomicInteger maxThreadCount = new AtomicInteger();
-			TestIndexWriterThreadsToSegments.CheckSegmentCount checker = new TestIndexWriterThreadsToSegments.CheckSegmentCount
-				(w, maxThreadCount, indexingCount);
+			var checker = new CheckSegmentCount(w, maxThreadCount, indexingCount);
 			// We spin up 10 threads up front, but then in between flushes we limit how many can run on each iteration
 			int ITERS = 100;
 			Thread[] threads = new Thread[MAX_THREADS_AT_ONCE];
 			// We use this to stop all threads once they've indexed their docs in the current iter, and pull a new NRT reader, and verify the
 			// segment count:
-			CyclicBarrier barrier = new CyclicBarrier(MAX_THREADS_AT_ONCE, checker);
+			Barrier barrier = new Barrier(MAX_THREADS_AT_ONCE, b=>checker.Run());
 			for (int i = 0; i < threads.Length; i++)
 			{
-				threads[i] = new _Thread_199(ITERS, indexingCount, maxThreadCount, w, barrier);
+			    threads[i] = new Thread(new BarrierThread(ITERS, indexingCount, maxThreadCount, w, barrier).Run);
 				// We get to index on this cycle:
 				// We lose: no indexing for us on this cycle
 				threads[i].Start();
@@ -229,10 +230,10 @@ namespace Lucene.Net.Test.Index
 			IOUtils.Close(checker, w, dir);
 		}
 
-		private sealed class _Thread_199 : Thread
+		private sealed class BarrierThread 
 		{
-			public _Thread_199(int ITERS, AtomicInteger indexingCount, AtomicInteger maxThreadCount
-				, IndexWriter w, CyclicBarrier barrier)
+			public BarrierThread(int ITERS, AtomicInteger indexingCount, AtomicInteger maxThreadCount
+				, IndexWriter w, Barrier barrier)
 			{
 				this.ITERS = ITERS;
 				this.indexingCount = indexingCount;
@@ -241,7 +242,7 @@ namespace Lucene.Net.Test.Index
 				this.barrier = barrier;
 			}
 
-			public override void Run()
+			public void Run()
 			{
 				try
 				{
@@ -255,10 +256,11 @@ namespace Lucene.Net.Test.Index
 									+ ": do index");
 							}
 							Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-								();
-							doc.Add(new TextField("field", "here is some text that is a bit longer than normal trivial text"
-								, Field.Store.NO));
-							for (int j = 0; j < 200; j++)
+							{
+							    new TextField("field", "here is some text that is a bit longer than normal trivial text"
+							        , Field.Store.NO)
+							};
+						    for (int j = 0; j < 200; j++)
 							{
 								w.AddDocument(doc);
 							}
@@ -271,12 +273,12 @@ namespace Lucene.Net.Test.Index
 									+ ": don't index");
 							}
 						}
-						barrier.Await();
+						barrier.SignalAndWait();
 					}
 				}
 				catch (Exception e)
 				{
-					throw new SystemException(e);
+					throw new SystemException(e.Message,e);
 				}
 			}
 
@@ -288,26 +290,26 @@ namespace Lucene.Net.Test.Index
 
 			private readonly IndexWriter w;
 
-			private readonly CyclicBarrier barrier;
+			private readonly Barrier barrier;
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestManyThreadsClose()
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter w = new RandomIndexWriter(Random(), dir);
 			w.SetDoRandomForceMerge(false);
-			Thread[] threads = new Thread[TestUtil.NextInt(Random(), 4, 30)];
+			Thread[] threads = new Thread[Random().NextInt(4, 30)];
 			CountdownEvent startingGun = new CountdownEvent(1);
 			for (int i = 0; i < threads.Length; i++)
 			{
-				threads[i] = new _Thread_245(startingGun, w);
+			    threads[i] = new Thread(new ThreadRunner(startingGun, w).Run);
 				// ok
 				threads[i].Start();
 			}
-			startingGun.CountDown();
+			startingGun.Signal();
 			Thread.Sleep(100);
-			w.Dispose();
+			w.Close();
 			foreach (Thread t in threads)
 			{
 				t.Join();
@@ -315,24 +317,25 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		private sealed class _Thread_245 : Thread
+		private sealed class ThreadRunner
 		{
-			public _Thread_245(CountdownEvent startingGun, RandomIndexWriter w)
+			public ThreadRunner(CountdownEvent startingGun, RandomIndexWriter w)
 			{
 				this.startingGun = startingGun;
 				this.w = w;
 			}
 
-			public override void Run()
+			public void Run()
 			{
 				try
 				{
-					startingGun.Await();
-					Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-						();
-					doc.Add(new TextField("field", "here is some text that is a bit longer than normal trivial text"
-						, Field.Store.NO));
-					while (true)
+					startingGun.Signal();
+					var doc = new Lucene.Net.Documents.Document
+					{
+					    new TextField("field", "here is some text that is a bit longer than normal trivial text"
+					        , Field.Store.NO)
+					};
+				    while (true)
 					{
 						w.AddDocument(doc);
 					}
@@ -342,7 +345,7 @@ namespace Lucene.Net.Test.Index
 				}
 				catch (Exception e)
 				{
-					throw new SystemException(e);
+					throw new SystemException(e.Message,e);
 				}
 			}
 
@@ -351,7 +354,7 @@ namespace Lucene.Net.Test.Index
 			private readonly RandomIndexWriter w;
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestDocsStuckInRAMForever()
 		{
 			Directory dir = NewDirectory();
@@ -367,10 +370,10 @@ namespace Lucene.Net.Test.Index
 			for (int i = 0; i < threads.Length; i++)
 			{
 				int threadID = i;
-				threads[i] = new _Thread_287(startingGun, threadID, w);
+			    threads[i] = new Thread(new DocThread(startingGun, threadID, w).Run);
 				threads[i].Start();
 			}
-			startingGun.CountDown();
+			startingGun.Signal();
 			foreach (Thread t in threads)
 			{
 				t.Join();
@@ -382,10 +385,8 @@ namespace Lucene.Net.Test.Index
 			// docs flushed.  If the writer incorrectly holds onto previously indexed docs forever then this will run forever:
 			while (thread0Count < 1000 || thread1Count < 1000)
 			{
-				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-					();
-				doc.Add(NewStringField("field", "threadIDmain", Field.Store.NO));
-				w.AddDocument(doc);
+				var doc = new Lucene.Net.Documents.Document {NewStringField("field", "threadIDmain", Field.Store.NO)};
+			    w.AddDocument(doc);
 				foreach (string fileName in dir.ListAll())
 				{
 					if (fileName.EndsWith(".si"))
@@ -394,9 +395,9 @@ namespace Lucene.Net.Test.Index
 						if (segSeen.Contains(segName) == false)
 						{
 							segSeen.Add(segName);
-							SegmentInfo si = new Lucene46SegmentInfoFormat().GetSegmentInfoReader().Read(dir, 
+							SegmentInfo si = new Lucene46SegmentInfoFormat().SegmentInfoReader.Read(dir, 
 								segName, IOContext.DEFAULT);
-							si.SetCodec(codec);
+							si.Codec = (codec);
 							SegmentCommitInfo sci = new SegmentCommitInfo(si, 0, -1, -1);
 							SegmentReader sr = new SegmentReader(sci, 1, IOContext.DEFAULT);
 							try
@@ -416,32 +417,33 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		private sealed class _Thread_287 : Thread
+		private sealed class DocThread
 		{
-			public _Thread_287(CountdownEvent startingGun, int threadID, IndexWriter w)
+			public DocThread(CountdownEvent startingGun, int threadID, IndexWriter w)
 			{
 				this.startingGun = startingGun;
 				this.threadID = threadID;
 				this.w = w;
 			}
 
-			public override void Run()
+			public void Run()
 			{
 				try
 				{
-					startingGun.Await();
+					startingGun.Wait();
 					for (int j = 0; j < 1000; j++)
 					{
-						Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-							();
-						doc.Add(LuceneTestCase.NewStringField("field", "threadID" + threadID, Field.Store
-							.NO));
-						w.AddDocument(doc);
+						var doc = new Lucene.Net.Documents.Document
+						{
+						    NewStringField("field", "threadID" + threadID, Field.Store
+						        .NO)
+						};
+					    w.AddDocument(doc);
 					}
 				}
 				catch (Exception e)
 				{
-					throw new SystemException(e);
+					throw new SystemException(e.Message,e);
 				}
 			}
 

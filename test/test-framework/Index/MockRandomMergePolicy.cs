@@ -67,12 +67,12 @@ namespace Lucene.Net.TestFramework.Index
 		public override MergePolicy.MergeSpecification FindForcedMerges(SegmentInfos segmentInfos
 			, int maxSegmentCount, IDictionary<SegmentCommitInfo, bool> segmentsToMerge)
 		{
-			IList<SegmentCommitInfo> eligibleSegments = new AList<SegmentCommitInfo>();
+			IList<SegmentCommitInfo> eligibleSegments = new List<SegmentCommitInfo>();
 			foreach (SegmentCommitInfo info in segmentInfos)
 			{
 				if (segmentsToMerge.ContainsKey(info))
 				{
-					eligibleSegments.AddItem(info);
+					eligibleSegments.Add(info);
 				}
 			}
 			//System.out.println("MRMP: findMerges sis=" + segmentInfos + " eligible=" + eligibleSegments);
@@ -139,7 +139,7 @@ namespace Lucene.Net.TestFramework.Index
 		{
 			internal readonly Random r;
 
-			internal AList<AtomicReader> readers;
+			internal List<AtomicReader> readers;
 
 			internal MockRandomOneMerge(IList<SegmentCommitInfo> segments, long seed) : base(
 				segments)
@@ -152,7 +152,7 @@ namespace Lucene.Net.TestFramework.Index
 			{
 				if (readers == null)
 				{
-					readers = new AList<AtomicReader>(base.GetMergeReaders());
+					readers = new List<AtomicReader>(base.GetMergeReaders());
 					for (int i = 0; i < readers.Count; i++)
 					{
 						// wrap it (e.g. prevent bulk merge etc)

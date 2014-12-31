@@ -32,12 +32,12 @@ namespace Lucene.Net.TestFramework.Index
 		{
 			this.fields = fields;
 			this.negate = negate;
-			AList<FieldInfo> filteredInfos = new AList<FieldInfo>();
+			List<FieldInfo> filteredInfos = new List<FieldInfo>();
 			foreach (FieldInfo fi in @in.GetFieldInfos())
 			{
 				if (HasField(fi.name))
 				{
-					filteredInfos.AddItem(fi);
+					filteredInfos.Add(fi);
 				}
 			}
 			fieldInfos = new FieldInfos(Sharpen.Collections.ToArray(filteredInfos, new FieldInfo

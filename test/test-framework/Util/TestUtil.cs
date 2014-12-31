@@ -89,7 +89,7 @@ namespace Lucene.Net.TestFramework.Util
 		/// <summary>This runs the CheckIndex tool on the index in.</summary>
 		/// <remarks>
 		/// This runs the CheckIndex tool on the index in.  If any
-		/// issues are hit, a RuntimeException is thrown; else,
+		/// issues are hit, a SystemException is thrown; else,
 		/// true is returned.
 		/// </remarks>
 		/// <exception cref="System.IO.IOException"></exception>
@@ -123,7 +123,7 @@ namespace Lucene.Net.TestFramework.Util
 		/// <summary>This runs the CheckIndex tool on the Reader.</summary>
 		/// <remarks>
 		/// This runs the CheckIndex tool on the Reader.  If any
-		/// issues are hit, a RuntimeException is thrown
+		/// issues are hit, a SystemException is thrown
 		/// </remarks>
 		/// <exception cref="System.IO.IOException"></exception>
 		public static void CheckReader(IndexReader reader)

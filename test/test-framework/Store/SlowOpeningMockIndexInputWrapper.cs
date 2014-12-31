@@ -23,7 +23,7 @@ namespace Lucene.Net.TestFramework.Store
 		{
 			try
 			{
-				Sharpen.Thread.Sleep(50);
+				Thread.Sleep(50);
 			}
 			catch (Exception ie)
 			{

@@ -64,7 +64,7 @@
 //                }
 //                // ignore test points!
 //                string name;
-//                if (Sharpen.Thread.CurrentThread().GetName().StartsWith("TEST-"))
+//                if (Thread.CurrentThread.Name.StartsWith("TEST-"))
 //                {
 //                    // The name of the main thread is way too
 //                    // long when looking at IW verbose output...
@@ -72,7 +72,7 @@
 //                }
 //                else
 //                {
-//                    name = Sharpen.Thread.CurrentThread().GetName();
+//                    name = Thread.CurrentThread.Name;
 //                }
 //                stream.WriteLine(component + " " + messageID + " [" + new DateTime() + "; " + name
 //                     + "]: " + message);

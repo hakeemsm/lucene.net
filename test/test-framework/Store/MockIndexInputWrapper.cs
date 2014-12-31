@@ -67,7 +67,7 @@ namespace Lucene.Net.TestFramework.Store
 		{
 			if (closed)
 			{
-				throw new RuntimeException("Abusing closed IndexInput!");
+				throw new SystemException("Abusing closed IndexInput!");
 			}
 		}
 

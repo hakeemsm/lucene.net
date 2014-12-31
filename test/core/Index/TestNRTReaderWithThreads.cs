@@ -1,23 +1,21 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
-using Lucene.Net.Test.Analysis;
+using System.Threading;
+using Lucene.Net.Analysis;
+using Lucene.Net.Support;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
-using Lucene.Net.Util;
-using Sharpen;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Index;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
+    [TestFixture]
 	public class TestNRTReaderWithThreads : LuceneTestCase
 	{
 		internal AtomicInteger seq = new AtomicInteger(1);
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestIndexing()
 		{
 			Directory mainDir = NewDirectory();
@@ -31,13 +29,14 @@ namespace Lucene.Net.Test.Index
 			IndexReader reader = writer.Reader;
 			// start pooling readers
 			reader.Dispose();
-			TestNRTReaderWithThreads.RunThread[] indexThreads = new TestNRTReaderWithThreads.RunThread
-				[4];
-			for (int x = 0; x < indexThreads.Length; x++)
+			var threads = new Thread[4];
+		    var runThreads = new RunThread[4];
+		    for (int x = 0; x < threads.Length; x++)
 			{
-				indexThreads[x] = new TestNRTReaderWithThreads.RunThread(this, x % 2, writer);
-				indexThreads[x].SetName("Thread " + x);
-				indexThreads[x].Start();
+			    var runThread = new RunThread(this, x%2, writer);
+			    threads[x] = new Thread(runThread.Run) {Name = ("Thread " + x)};
+			    threads[x].Start();
+			    runThreads[x] = runThread;
 			}
 			long startTime = DateTime.Now.CurrentTimeMillis();
 			long duration = 1000;
@@ -47,30 +46,28 @@ namespace Lucene.Net.Test.Index
 			}
 			int delCount = 0;
 			int addCount = 0;
-			for (int x_1 = 0; x_1 < indexThreads.Length; x_1++)
+			foreach (RunThread t in runThreads)
 			{
-				indexThreads[x_1].run = false;
-				IsNull("Exception thrown: " + indexThreads[x_1].ex, indexThreads
-					[x_1].ex);
-				addCount += indexThreads[x_1].addCount;
-				delCount += indexThreads[x_1].delCount;
+			    t.run = false;
+			    AssertNull("Exception thrown: " + t.ex, t.ex);
+			    addCount += t.addCount;
+			    delCount += t.delCount;
 			}
-			for (int x_2 = 0; x_2 < indexThreads.Length; x_2++)
+			foreach (Thread t in threads)
 			{
-				indexThreads[x_2].Join();
+			    t.Join();
 			}
-			for (int x_3 = 0; x_3 < indexThreads.Length; x_3++)
-			{
-				IsNull("Exception thrown: " + indexThreads[x_3].ex, indexThreads
-					[x_3].ex);
-			}
-			//System.out.println("addCount:"+addCount);
+		    foreach (RunThread t in runThreads)
+		    {
+		        AssertNull("Exception thrown: " + t.ex, t.ex);
+		    }
+		    //System.out.println("addCount:"+addCount);
 			//System.out.println("delCount:"+delCount);
 			writer.Dispose();
 			mainDir.Dispose();
 		}
 
-		public class RunThread : Thread
+		public class RunThread
 		{
 			internal IndexWriter writer;
 
@@ -84,7 +81,7 @@ namespace Lucene.Net.Test.Index
 
 			internal int type;
 
-			internal readonly Random r = new Random(LuceneTestCase.Random().NextLong());
+			internal readonly Random r = new Random(Random().Next());
 
 			public RunThread(TestNRTReaderWithThreads _enclosing, int type, IndexWriter writer
 				)
@@ -94,7 +91,7 @@ namespace Lucene.Net.Test.Index
 				this.writer = writer;
 			}
 
-			public override void Run()
+			public void Run()
 			{
 				try
 				{
@@ -116,8 +113,8 @@ namespace Lucene.Net.Test.Index
 								// we may or may not delete because the term may not exist,
 								// however we're opening and closing the reader rapidly
 								IndexReader reader = this.writer.Reader;
-								int id = this.r.Next(this._enclosing.seq);
-								Term term = new Term("id", Extensions.ToString(id));
+								int id = this.r.Next(this._enclosing.seq.Get());
+								Term term = new Term("id", id.ToString());
 								int count = TestIndexWriterReader.Count(term, reader);
 								this.writer.DeleteDocuments(term);
 								reader.Dispose();
@@ -128,7 +125,7 @@ namespace Lucene.Net.Test.Index
 				}
 				catch (Exception ex)
 				{
-					Runtime.PrintStackTrace(ex, System.Console.Out);
+					ex.printStackTrace();
 					this.ex = ex;
 					this.run = false;
 				}

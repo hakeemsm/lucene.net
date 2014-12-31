@@ -2276,14 +2276,18 @@ namespace Lucene.Net.TestFramework
                 Assert.True(condition);
         }
 
-        protected static DirectoryInfo CreateTempDir(string name)
+        protected static DirectoryInfo CreateTempDir(string name = "")
         {
             string tempPath = AppSettings.Get("tempDir",Path.GetTempPath());
             if (!System.IO.Directory.Exists(tempPath))
             {
                 System.IO.Directory.CreateDirectory(tempPath);
             }
-            var path = Path.Combine(tempPath, name);
+            string path = tempPath;
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                path = Path.Combine(tempPath, name);
+            }
             
             var directoryInfo = new DirectoryInfo(path);
             directoryInfo.Create();

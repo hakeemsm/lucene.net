@@ -1,14 +1,7 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System.Reflection;
 using Lucene.Net.Index;
-using Lucene.Net.Util;
-using Sharpen;
-using Reflect;
+using Lucene.Net.Support;
+using Lucene.Net.TestFramework;
 
 namespace Lucene.Net.Test.Index
 {
@@ -16,7 +9,7 @@ namespace Lucene.Net.Test.Index
 	{
 		/// <exception cref="System.Exception"></exception>
 		[NUnit.Framework.Test]
-		public virtual void TestNoMergePolicy()
+		public virtual void NoMergePolicyTest()
 		{
 			MergePolicy mp = NoMergePolicy.NO_COMPOUND_FILES;
 			IsNull(mp.FindMerges(null, (SegmentInfos)null));
@@ -40,13 +33,11 @@ namespace Lucene.Net.Test.Index
 		[NUnit.Framework.Test]
 		public virtual void TestFinalSingleton()
 		{
-			IsTrue(Modifier.IsFinal(typeof(NoMergePolicy).GetModifiers
-				()));
-			Constructor<object>[] ctors = typeof(NoMergePolicy).GetDeclaredConstructors();
-			AreEqual("expected 1 private ctor only: " + Arrays.ToString
-				(ctors), 1, ctors.Length);
-			IsTrue("that 1 should be private: " + ctors[0], Modifier.IsPrivate
-				(ctors[0].GetModifiers()));
+			IsTrue(typeof(NoMergePolicy).IsSealed);
+			var ctors = typeof(NoMergePolicy).GetConstructors();
+			AssertEquals("expected 1 private ctor only: " + Arrays.ToString(ctors), 1, ctors.Length);
+			AssertTrue("that 1 should be private: " + ctors[0], ctors[0].IsPrivate);
+				
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -67,10 +58,9 @@ namespace Lucene.Net.Test.Index
 				{
 					continue;
 				}
-				if (m.DeclaringType != typeof(object) && !Modifier.IsFinal(m.GetModifiers()))
+				if (m.DeclaringType != typeof(object) && (m.IsFinal))
 				{
-					IsTrue(m + " is not overridden ! ", m.DeclaringType == typeof(
-						NoMergePolicy));
+					AssertTrue(m + " is not overridden ! ", m.DeclaringType == typeof(NoMergePolicy));
 				}
 			}
 		}

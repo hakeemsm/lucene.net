@@ -1,17 +1,11 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
+using System.Collections.Generic;
 using System.Reflection;
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Document;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
+using Lucene.Net.Support;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
-using Lucene.Net.Util;
-using Sharpen;
-using Reflect;
+using Lucene.Net.TestFramework;
 
 namespace Lucene.Net.Test.Index
 {
@@ -19,24 +13,22 @@ namespace Lucene.Net.Test.Index
 	{
 		/// <exception cref="System.Exception"></exception>
 		[NUnit.Framework.Test]
-		public virtual void TestNoDeletionPolicy()
+		public virtual void TestDeleteNotPolicy()
 		{
 			IndexDeletionPolicy idp = NoDeletionPolicy.INSTANCE;
-			idp.OnInit(null);
-			idp.OnCommit(null);
+			idp.OnInit<IndexCommit>(null);
+			idp.OnCommit<IndexCommit>(null);
 		}
 
 		/// <exception cref="System.Exception"></exception>
 		[NUnit.Framework.Test]
 		public virtual void TestFinalSingleton()
 		{
-			IsTrue(Modifier.IsFinal(typeof(NoDeletionPolicy).GetModifiers
-				()));
-			Constructor<object>[] ctors = typeof(NoDeletionPolicy).GetDeclaredConstructors();
-			AreEqual("expected 1 private ctor only: " + Arrays.ToString
+			IsTrue((typeof(NoDeletionPolicy).IsSealed));
+			var ctors = typeof(NoDeletionPolicy).GetConstructors();
+			AssertEquals("expected 1 private ctor only: " + Arrays.ToString
 				(ctors), 1, ctors.Length);
-			IsTrue("that 1 should be private: " + ctors[0], Modifier.IsPrivate
-				(ctors[0].GetModifiers()));
+			AssertTrue("that 1 should be private: " + ctors[0], ctors[0].IsPrivate);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -58,7 +50,7 @@ namespace Lucene.Net.Test.Index
 				// different class than Object, this will need to change.
 				if (m.DeclaringType != typeof(object))
 				{
-					IsTrue(m + " is not overridden !", m.DeclaringType == typeof(
+					AssertTrue(m + " is not overridden !", m.DeclaringType == typeof(
 						NoDeletionPolicy));
 				}
 			}
@@ -78,7 +70,7 @@ namespace Lucene.Net.Test.Index
 				doc.Add(NewTextField("c", "a" + i, Field.Store.YES));
 				writer.AddDocument(doc);
 				writer.Commit();
-				AreEqual("wrong number of commits !", i + 1, DirectoryReader
+				AssertEquals("wrong number of commits !", i + 1, DirectoryReader
 					.ListCommits(dir).Count);
 			}
 			writer.Dispose();

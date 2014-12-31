@@ -1,23 +1,20 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System.Collections.Generic;
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Document;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
+using Lucene.Net.Randomized.Generators;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
-using Sharpen;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
 	public class TestMultiFields : LuceneTestCase
 	{
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestRandom()
 		{
 			int num = AtLeast(2);
@@ -31,7 +28,7 @@ namespace Lucene.Net.Test.Index
 				IndexWriter w = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new 
 					MockAnalyzer(Random())).SetMergePolicy(NoMergePolicy.COMPOUND_FILES));
 				// we can do this because we use NoMergePolicy (and dont merge to "nothing")
-				w.SetKeepFullyDeletedSegments(true);
+				w.KeepFullyDeletedSegments = (true);
 				IDictionary<BytesRef, IList<int>> docs = new Dictionary<BytesRef, IList<int>>();
 				ICollection<int> deleted = new HashSet<int>();
 				IList<BytesRef> terms = new List<BytesRef>();
@@ -55,8 +52,8 @@ namespace Lucene.Net.Test.Index
 					{
 						// re-use existing term
 						BytesRef term = terms[Random().Next(terms.Count)];
-						docs.Get(term).Add(i);
-						f.StringValue = term.Utf8ToString());
+						docs[term].Add(i);
+						f.StringValue = term.Utf8ToString();
 					}
 					else
 					{
@@ -64,14 +61,14 @@ namespace Lucene.Net.Test.Index
 						BytesRef term = new BytesRef(s);
 						if (!docs.ContainsKey(term))
 						{
-							docs.Put(term, new List<int>());
+							docs[term] = new List<int>();
 						}
-						docs.Get(term).Add(i);
+						docs[term].Add(i);
 						terms.Add(term);
 						uniqueTerms.Add(term);
-						f.StringValue = s);
+						f.StringValue = s;
 					}
-					id.StringValue = string.Empty + i);
+					id.StringValue = string.Empty + i;
 					w.AddDocument(doc);
 					if (Random().Next(4) == 1)
 					{
@@ -90,14 +87,14 @@ namespace Lucene.Net.Test.Index
 				}
 				if (VERBOSE)
 				{
-					IList<BytesRef> termsList = new List<BytesRef>(uniqueTerms);
-					termsList.Sort(BytesRef.GetUTF8SortedAsUTF16Comparator());
+					var termsList = new List<BytesRef>(uniqueTerms);
+					termsList.Sort(BytesRef.UTF8SortedAsUnicodeComparer);
 					System.Console.Out.WriteLine("TEST: terms in UTF16 order:");
 					foreach (BytesRef b in termsList)
 					{
 						System.Console.Out.WriteLine("  " + UnicodeUtil.ToHexString(b.Utf8ToString()) + " "
 							 + b);
-						foreach (int docID in docs.Get(b))
+						foreach (int docID in docs[b])
 						{
 							if (deleted.Contains(docID))
 							{
@@ -116,10 +113,10 @@ namespace Lucene.Net.Test.Index
 				{
 					System.Console.Out.WriteLine("TEST: reader=" + reader);
 				}
-				Bits liveDocs = MultiFields.GetLiveDocs(reader);
+				IBits liveDocs = MultiFields.GetLiveDocs(reader);
 				foreach (int delDoc in deleted)
 				{
-					IsFalse(liveDocs.Get(delDoc));
+					IsFalse(liveDocs[delDoc]);
 				}
 				for (int i_1 = 0; i_1 < 100; i_1++)
 				{
@@ -132,7 +129,7 @@ namespace Lucene.Net.Test.Index
 					DocsEnum docsEnum = TestUtil.Docs(Random(), reader, "field", term, liveDocs, null
 						, DocsEnum.FLAG_NONE);
 					IsNotNull(docsEnum);
-					foreach (int docID in docs.Get(term))
+					foreach (int docID in docs[term])
 					{
 						if (!deleted.Contains(docID))
 						{
@@ -147,7 +144,7 @@ namespace Lucene.Net.Test.Index
 			}
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestSeparateEnums()
 		{
 			Directory dir = NewDirectory();
@@ -170,7 +167,7 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestTermDocsEnum()
 		{
 			Directory dir = NewDirectory();
