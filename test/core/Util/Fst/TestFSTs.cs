@@ -19,7 +19,7 @@ using Lucene.Net.Util;
 using Lucene.Net.Util.Automaton;
 using Lucene.Net.Util.Fst;
 using Lucene.Net.Util.Packed;
-using Sharpen;
+
 
 namespace Lucene.Net.Util.Fst
 {

@@ -8,7 +8,7 @@ using System;
 using Org.Apache.Lucene;
 using Lucene.Net.Test.Analysis;
 using Lucene.Net.Util;
-using Sharpen;
+
 
 namespace Org.Apache.Lucene
 {

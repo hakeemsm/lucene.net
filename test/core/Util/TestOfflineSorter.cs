@@ -8,7 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Lucene.Net.Util;
-using Sharpen;
+
 
 namespace Lucene.Net.Util
 {

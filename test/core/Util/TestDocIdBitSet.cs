@@ -5,7 +5,7 @@
  */
 
 using Lucene.Net.Util;
-using Sharpen;
+
 
 namespace Lucene.Net.Util
 {

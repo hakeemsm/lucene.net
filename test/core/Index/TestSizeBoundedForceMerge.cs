@@ -1,14 +1,8 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
-using Lucene.Net.Document;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
-using Lucene.Net.Util;
-using Sharpen;
+using Lucene.Net.TestFramework;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
@@ -46,7 +40,7 @@ namespace Lucene.Net.Test.Index
 			return conf;
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestByteSizeLimit()
 		{
 			// tests that the max merge size constraint is applied during forceMerge.
@@ -66,7 +60,7 @@ namespace Lucene.Net.Test.Index
 			double min = sis.Info(0).SizeInBytes();
 			conf = NewWriterConfig();
 			LogByteSizeMergePolicy lmp = new LogByteSizeMergePolicy();
-			lmp.SetMaxMergeMBForForcedMerge((min + 1) / (1 << 20));
+			lmp.MaxMergeMBForForcedMerge = ((min + 1) / (1 << 20));
 			conf.SetMergePolicy(lmp);
 			writer = new IndexWriter(dir, conf);
 			writer.ForceMerge(1);
@@ -74,10 +68,10 @@ namespace Lucene.Net.Test.Index
 			// Should only be 3 segments in the index, because one of them exceeds the size limit
 			sis = new SegmentInfos();
 			sis.Read(dir);
-			AreEqual(3, sis.Size());
+			AreEqual(3, sis.Count);
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestNumDocsLimit()
 		{
 			// tests that the max merge docs constraint is applied during forceMerge.
@@ -103,10 +97,10 @@ namespace Lucene.Net.Test.Index
 			// Should only be 3 segments in the index, because one of them exceeds the size limit
 			SegmentInfos sis = new SegmentInfos();
 			sis.Read(dir);
-			AreEqual(3, sis.Size());
+			AreEqual(3, sis.Count);
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestLastSegmentTooLarge()
 		{
 			Directory dir = new RAMDirectory();
@@ -126,10 +120,10 @@ namespace Lucene.Net.Test.Index
 			writer.Dispose();
 			SegmentInfos sis = new SegmentInfos();
 			sis.Read(dir);
-			AreEqual(2, sis.Size());
+			AreEqual(2, sis.Count);
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestFirstSegmentTooLarge()
 		{
 			Directory dir = new RAMDirectory();
@@ -149,10 +143,10 @@ namespace Lucene.Net.Test.Index
 			writer.Dispose();
 			SegmentInfos sis = new SegmentInfos();
 			sis.Read(dir);
-			AreEqual(2, sis.Size());
+			AreEqual(2, sis.Count);
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestAllSegmentsSmall()
 		{
 			Directory dir = new RAMDirectory();
@@ -172,10 +166,10 @@ namespace Lucene.Net.Test.Index
 			writer.Dispose();
 			SegmentInfos sis = new SegmentInfos();
 			sis.Read(dir);
-			AreEqual(1, sis.Size());
+			AreEqual(1, sis.Count);
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestAllSegmentsLarge()
 		{
 			Directory dir = new RAMDirectory();
@@ -194,10 +188,10 @@ namespace Lucene.Net.Test.Index
 			writer.Dispose();
 			SegmentInfos sis = new SegmentInfos();
 			sis.Read(dir);
-			AreEqual(3, sis.Size());
+			AreEqual(3, sis.Count);
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestOneLargeOneSmall()
 		{
 			Directory dir = new RAMDirectory();
@@ -217,10 +211,10 @@ namespace Lucene.Net.Test.Index
 			writer.Dispose();
 			SegmentInfos sis = new SegmentInfos();
 			sis.Read(dir);
-			AreEqual(4, sis.Size());
+			AreEqual(4, sis.Count);
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestMergeFactor()
 		{
 			Directory dir = new RAMDirectory();
@@ -246,10 +240,10 @@ namespace Lucene.Net.Test.Index
 			// max merge docs settings.
 			SegmentInfos sis = new SegmentInfos();
 			sis.Read(dir);
-			AreEqual(4, sis.Size());
+			AreEqual(4, sis.Count);
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestSingleMergeableSegment()
 		{
 			Directory dir = new RAMDirectory();
@@ -271,11 +265,11 @@ namespace Lucene.Net.Test.Index
 			// Verify that the last segment does not have deletions.
 			SegmentInfos sis = new SegmentInfos();
 			sis.Read(dir);
-			AreEqual(3, sis.Size());
-			IsFalse(sis.Info(2).HasDeletions());
+			AreEqual(3, sis.Count);
+			IsFalse(sis.Info(2).HasDeletions);
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestSingleNonMergeableSegment()
 		{
 			Directory dir = new RAMDirectory();
@@ -293,10 +287,10 @@ namespace Lucene.Net.Test.Index
 			// Verify that the last segment does not have deletions.
 			SegmentInfos sis = new SegmentInfos();
 			sis.Read(dir);
-			AreEqual(1, sis.Size());
+			AreEqual(1, sis.Count);
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestSingleMergeableTooLargeSegment()
 		{
 			Directory dir = new RAMDirectory();
@@ -316,8 +310,8 @@ namespace Lucene.Net.Test.Index
 			// Verify that the last segment does not have deletions.
 			SegmentInfos sis = new SegmentInfos();
 			sis.Read(dir);
-			AreEqual(1, sis.Size());
-			IsTrue(sis.Info(0).HasDeletions());
+			AreEqual(1, sis.Count);
+			IsTrue(sis.Info(0).HasDeletions);
 		}
 	}
 }

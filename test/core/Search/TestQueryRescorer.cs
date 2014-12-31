@@ -14,7 +14,7 @@ using Lucene.Net.Search.Similarities;
 using Lucene.Net.Search.Spans;
 using Lucene.Net.Store;
 using Lucene.Net.Util;
-using Sharpen;
+
 
 namespace Lucene.Net.Search
 {

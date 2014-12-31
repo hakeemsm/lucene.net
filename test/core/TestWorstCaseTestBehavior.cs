@@ -9,7 +9,7 @@ using Com.Carrotsearch.Randomizedtesting;
 using NUnit.Framework;
 using Org.Apache.Lucene;
 using Lucene.Net.Util;
-using Sharpen;
+
 
 namespace Org.Apache.Lucene
 {

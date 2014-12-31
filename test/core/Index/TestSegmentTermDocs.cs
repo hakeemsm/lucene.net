@@ -1,16 +1,13 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Document;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Index;
+using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
-using Sharpen;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
@@ -23,7 +20,7 @@ namespace Lucene.Net.Test.Index
 
 		private SegmentCommitInfo info;
 
-		/// <exception cref="System.Exception"></exception>
+		[SetUp]
 		public override void SetUp()
 		{
 			base.SetUp();
@@ -32,19 +29,20 @@ namespace Lucene.Net.Test.Index
 			info = DocHelper.WriteDoc(Random(), dir, testDoc);
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[TearDown]
 		public override void TearDown()
 		{
 			dir.Dispose();
 			base.TearDown();
 		}
 
-		public virtual void Test()
+        [Test]
+		public virtual void TestDirNotNull()
 		{
 			IsTrue(dir != null);
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestTermDocs()
 		{
 			TestTermDocs(1);
@@ -57,9 +55,8 @@ namespace Lucene.Net.Test.Index
 			SegmentReader reader = new SegmentReader(info, indexDivisor, NewIOContext(Random(
 				)));
 			IsTrue(reader != null);
-			AreEqual(indexDivisor, reader.GetTermInfosIndexDivisor());
-			TermsEnum terms = reader.Fields().Terms(DocHelper.TEXT_FIELD_2_KEY).IEnumerator(null
-				);
+			AreEqual(indexDivisor, reader.TermInfosIndexDivisor);
+			TermsEnum terms = reader.Fields.Terms(DocHelper.TEXT_FIELD_2_KEY).Iterator(null);
 			terms.SeekCeil(new BytesRef("field"));
 			DocsEnum termDocs = TestUtil.Docs(Random(), terms, reader.LiveDocs, null, DocsEnum
 				.FLAG_FREQS);
@@ -73,7 +70,7 @@ namespace Lucene.Net.Test.Index
 			reader.Dispose();
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestBadSeek()
 		{
 			TestBadSeek(1);
@@ -104,13 +101,13 @@ namespace Lucene.Net.Test.Index
 			}
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestSkipTo()
 		{
 			TestSkipTo(1);
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestSkipTo(int indexDivisor)
 		{
 			Directory dir = NewDirectory();
@@ -135,8 +132,7 @@ namespace Lucene.Net.Test.Index
 			writer.ForceMerge(1);
 			writer.Dispose();
 			IndexReader reader = DirectoryReader.Open(dir, indexDivisor);
-			DocsEnum tdocs = TestUtil.Docs(Random(), reader, ta.Field(), new BytesRef(ta.Text
-				()), MultiFields.GetLiveDocs(reader), null, DocsEnum.FLAG_FREQS);
+			DocsEnum tdocs = TestUtil.Docs(Random(), reader, ta.Field, new BytesRef(ta.Text), MultiFields.GetLiveDocs(reader), null, DocsEnum.FLAG_FREQS);
 			// without optimization (assumption skipInterval == 16)
 			// with next
 			IsTrue(tdocs.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
@@ -154,7 +150,7 @@ namespace Lucene.Net.Test.Index
 			IsFalse(tdocs.Advance(10) != DocIdSetIterator.NO_MORE_DOCS
 				);
 			// without next
-			tdocs = TestUtil.Docs(Random(), reader, ta.Field(), new BytesRef(ta.Text()), MultiFields
+			tdocs = TestUtil.Docs(Random(), reader, ta.Field, new BytesRef(ta.Text), MultiFields
 				.GetLiveDocs(reader), null, 0);
 			IsTrue(tdocs.Advance(0) != DocIdSetIterator.NO_MORE_DOCS);
 			AreEqual(0, tdocs.DocID);
@@ -166,7 +162,7 @@ namespace Lucene.Net.Test.Index
 				);
 			// exactly skipInterval documents and therefore with optimization
 			// with next
-			tdocs = TestUtil.Docs(Random(), reader, tb.Field(), new BytesRef(tb.Text()), MultiFields
+			tdocs = TestUtil.Docs(Random(), reader, tb.Field, new BytesRef(tb.Text), MultiFields
 				.GetLiveDocs(reader), null, DocsEnum.FLAG_FREQS);
 			IsTrue(tdocs.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
 			AreEqual(10, tdocs.DocID);
@@ -185,7 +181,7 @@ namespace Lucene.Net.Test.Index
 			IsFalse(tdocs.Advance(26) != DocIdSetIterator.NO_MORE_DOCS
 				);
 			// without next
-			tdocs = TestUtil.Docs(Random(), reader, tb.Field(), new BytesRef(tb.Text()), MultiFields
+			tdocs = TestUtil.Docs(Random(), reader, tb.Field, new BytesRef(tb.Text), MultiFields
 				.GetLiveDocs(reader), null, DocsEnum.FLAG_FREQS);
 			IsTrue(tdocs.Advance(5) != DocIdSetIterator.NO_MORE_DOCS);
 			AreEqual(10, tdocs.DocID);
@@ -199,7 +195,7 @@ namespace Lucene.Net.Test.Index
 				);
 			// much more than skipInterval documents and therefore with optimization
 			// with next
-			tdocs = TestUtil.Docs(Random(), reader, tc.Field(), new BytesRef(tc.Text()), MultiFields
+			tdocs = TestUtil.Docs(Random(), reader, tc.Field, new BytesRef(tc.Text), MultiFields
 				.GetLiveDocs(reader), null, DocsEnum.FLAG_FREQS);
 			IsTrue(tdocs.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
 			AreEqual(26, tdocs.DocID);
@@ -220,7 +216,7 @@ namespace Lucene.Net.Test.Index
 			IsFalse(tdocs.Advance(76) != DocIdSetIterator.NO_MORE_DOCS
 				);
 			//without next
-			tdocs = TestUtil.Docs(Random(), reader, tc.Field(), new BytesRef(tc.Text()), MultiFields
+			tdocs = TestUtil.Docs(Random(), reader, tc.Field, new BytesRef(tc.Text), MultiFields
 				.GetLiveDocs(reader), null, 0);
 			IsTrue(tdocs.Advance(5) != DocIdSetIterator.NO_MORE_DOCS);
 			AreEqual(26, tdocs.DocID);
@@ -238,7 +234,7 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestIndexDivisor()
 		{
 			testDoc = new Lucene.Net.Documents.Document();

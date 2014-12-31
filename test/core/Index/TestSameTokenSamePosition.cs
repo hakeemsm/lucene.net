@@ -1,21 +1,10 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using Lucene.Net.Analysis;
 using Lucene.Net.Analysis.Tokenattributes;
 using Lucene.Net.Documents;
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Test.Analysis.Tokenattributes;
-using Lucene.Net.Document;
-using Lucene.Net.Index;
 using Lucene.Net.Store;
 using Lucene.Net.TestFramework;
 using Lucene.Net.TestFramework.Index;
-using Lucene.Net.Util;
-using Sharpen;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
@@ -29,31 +18,33 @@ namespace Lucene.Net.Test.Index
 		/// Attempt to reproduce an assertion error that happens
 		/// only with the trunk version around April 2011.
 		/// </remarks>
-		/// <exception cref="System.Exception"></exception>
-		public virtual void Test()
+		[Test]
+		public virtual void TestTextFieldDoc()
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter riw = new RandomIndexWriter(Random(), dir);
 			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-				();
-			doc.Add(new TextField("eng", new BugReproTokenStream()));
-			riw.AddDocument(doc);
+			{
+			    new TextField("eng", new BugReproTokenStream())
+			};
+		    riw.AddDocument(doc);
 			riw.Dispose();
 			dir.Dispose();
 		}
 
 		/// <summary>Same as the above, but with more docs</summary>
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestMoreDocs()
 		{
 			Directory dir = NewDirectory();
 			RandomIndexWriter riw = new RandomIndexWriter(Random(), dir);
 			for (int i = 0; i < 100; i++)
 			{
-				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-					();
-				doc.Add(new TextField("eng", new BugReproTokenStream()));
-				riw.AddDocument(doc);
+				var doc = new Lucene.Net.Documents.Document
+				{
+				    new TextField("eng", new BugReproTokenStream())
+				};
+			    riw.AddDocument(doc);
 			}
 			riw.Dispose();
 			dir.Dispose();
@@ -62,29 +53,34 @@ namespace Lucene.Net.Test.Index
 
 	internal sealed class BugReproTokenStream : TokenStream
 	{
-		private readonly CharTermAttribute termAtt = AddAttribute<CharTermAttribute>();
+	    private readonly CharTermAttribute termAtt;
 
-		private readonly OffsetAttribute offsetAtt = AddAttribute<OffsetAttribute>();
+	    private readonly OffsetAttribute offsetAtt;
 
-		private readonly PositionIncrementAttribute posIncAtt = AddAttribute<PositionIncrementAttribute
-			>();
+	    private readonly PositionIncrementAttribute posIncAtt;
 
 		private readonly int tokenCount = 4;
 
 		private int nextTokenIndex = 0;
 
-		private readonly string terms = new string[] { "six", "six", "drunken", "drunken"
-			 };
+		private readonly string[] terms = { "six", "six", "drunken", "drunken"};
 
-		private readonly int starts = new int[] { 0, 0, 4, 4 };
+		private readonly int[] starts = { 0, 0, 4, 4 };
 
-		private readonly int ends = new int[] { 3, 3, 11, 11 };
+		private readonly int[] ends = { 3, 3, 11, 11 };
 
-		private readonly int incs = new int[] { 1, 0, 1, 0 };
+		private readonly int[] incs = { 1, 0, 1, 0 };
+
+	    public BugReproTokenStream()
+	    {
+            termAtt = AddAttribute<CharTermAttribute>();
+            offsetAtt = AddAttribute<OffsetAttribute>();
+            posIncAtt = AddAttribute<PositionIncrementAttribute>();
+	    }
 
 		public override bool IncrementToken()
 		{
-			if (nextTokenIndex < tokenCount)
+		    if (nextTokenIndex < tokenCount)
 			{
 				termAtt.SetEmpty().Append(terms[nextTokenIndex]);
 				offsetAtt.SetOffset(starts[nextTokenIndex], ends[nextTokenIndex]);
@@ -92,13 +88,10 @@ namespace Lucene.Net.Test.Index
 				nextTokenIndex++;
 				return true;
 			}
-			else
-			{
-				return false;
-			}
+		    return false;
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+	    /// <exception cref="System.IO.IOException"></exception>
 		public override void Reset()
 		{
 			base.Reset();

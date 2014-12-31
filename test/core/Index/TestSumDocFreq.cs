@@ -8,7 +8,7 @@ using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
 using Lucene.Net.Util;
-using Sharpen;
+
 
 namespace Lucene.Net.Test.Index
 {

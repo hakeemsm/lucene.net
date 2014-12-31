@@ -1,16 +1,13 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using System.Collections.Generic;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Index;
+using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
-using Sharpen;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
@@ -24,7 +21,7 @@ namespace Lucene.Net.Test.Index
 		private SegmentReader reader = null;
 
 		//TODO: Setup the reader w/ multiple documents
-		/// <exception cref="System.Exception"></exception>
+		[SetUp]
 		public override void SetUp()
 		{
 			base.SetUp();
@@ -35,7 +32,7 @@ namespace Lucene.Net.Test.Index
 				.READ);
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[TearDown]
 		public override void TearDown()
 		{
 			reader.Dispose();
@@ -43,7 +40,8 @@ namespace Lucene.Net.Test.Index
 			base.TearDown();
 		}
 
-		public virtual void Test()
+        [Test]
+		public virtual void TestDocHelper()
 		{
 			IsTrue(dir != null);
 			IsTrue(reader != null);
@@ -52,7 +50,7 @@ namespace Lucene.Net.Test.Index
 				);
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestDocument()
 		{
 			IsTrue(reader.NumDocs == 1);
@@ -66,10 +64,11 @@ namespace Lucene.Net.Test.Index
 			foreach (IIndexableField field in fields)
 			{
 				IsTrue(field != null);
-				IsTrue(DocHelper.nameValues.ContainsKey(field.Name()));
+				IsTrue(DocHelper.nameValues.ContainsKey(field.Name));
 			}
 		}
 
+        [Test]
 		public virtual void TestGetFieldNameVariations()
 		{
 			ICollection<string> allFieldNames = new HashSet<string>();
@@ -121,7 +120,7 @@ namespace Lucene.Net.Test.Index
 				);
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestTerms()
 		{
 			Fields fields = MultiFields.GetFields(reader);
@@ -129,12 +128,12 @@ namespace Lucene.Net.Test.Index
 			{
 				Terms terms = fields.Terms(field);
 				IsNotNull(terms);
-				TermsEnum termsEnum = terms.IEnumerator(null);
+				TermsEnum termsEnum = terms.Iterator(null);
 				while (termsEnum.Next() != null)
 				{
-					BytesRef term = termsEnum.Term();
+					BytesRef term = termsEnum.Term;
 					IsTrue(term != null);
-					string fieldValue = (string)DocHelper.nameValues.Get(field);
+					string fieldValue = (string)DocHelper.nameValues[field];
 					IsTrue(fieldValue.IndexOf(term.Utf8ToString()) != -1);
 				}
 			}
@@ -156,7 +155,7 @@ namespace Lucene.Net.Test.Index
 			IsTrue(positions.NextPosition() >= 0);
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestNorms()
 		{
 			//TODO: Not sure how these work/should be tested
@@ -170,43 +169,41 @@ namespace Lucene.Net.Test.Index
 			for (int i = 0; i < DocHelper.fields.Length; i++)
 			{
 				IIndexableField f = DocHelper.fields[i];
-				if (f.FieldType().Indexed())
+				if (f.FieldTypeValue.Indexed)
 				{
-					AreEqual(reader.GetNormValues(f.Name()) != null, !f.FieldType
-						().OmitsNorms());
-					AreEqual(reader.GetNormValues(f.Name()) != null, !DocHelper
-						.noNorms.ContainsKey(f.Name()));
-					if (reader.GetNormValues(f.Name()) == null)
+					AreEqual(reader.GetNormValues(f.Name) != null, !f.FieldTypeValue.OmitNorms);
+					AreEqual(reader.GetNormValues(f.Name) != null, !DocHelper
+						.noNorms.ContainsKey(f.Name));
+					if (reader.GetNormValues(f.Name) == null)
 					{
 						// test for norms of null
-						NumericDocValues norms = MultiDocValues.GetNormValues(reader, f.Name());
+						NumericDocValues norms = MultiDocValues.GetNormValues(reader, f.Name);
 						IsNull(norms);
 					}
 				}
 			}
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestTermVectors()
 		{
 			Terms result = reader.GetTermVectors(0).Terms(DocHelper.TEXT_FIELD_2_KEY);
 			IsNotNull(result);
-			AreEqual(3, result.Size());
-			TermsEnum termsEnum = result.IEnumerator(null);
+			AreEqual(3, result.Size);
+			TermsEnum termsEnum = result.Iterator(null);
 			while (termsEnum.Next() != null)
 			{
-				string term = termsEnum.Term().Utf8ToString();
+				string term = termsEnum.Term.Utf8ToString();
 				int freq = (int)termsEnum.TotalTermFreq;
 				IsTrue(DocHelper.FIELD_2_TEXT.IndexOf(term) != -1);
 				IsTrue(freq > 0);
 			}
 			Fields results = reader.GetTermVectors(0);
 			IsTrue(results != null);
-			AreEqual("We do not have 3 term freq vectors", 3, results.
-				Size());
+			AssertEquals("We do not have 3 term freq vectors", 3, results.Size);
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestOutOfBoundsAccess()
 		{
 			int numDocs = reader.MaxDoc;

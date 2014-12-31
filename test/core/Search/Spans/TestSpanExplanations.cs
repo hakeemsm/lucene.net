@@ -6,7 +6,7 @@
 
 using Lucene.Net.Search;
 using Lucene.Net.Search.Spans;
-using Sharpen;
+
 
 namespace Lucene.Net.Search.Spans
 {

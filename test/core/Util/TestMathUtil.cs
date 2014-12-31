@@ -7,7 +7,7 @@
 using Com.Carrotsearch.Randomizedtesting.Generators;
 using Mono.Math;
 using Lucene.Net.Util;
-using Sharpen;
+
 
 namespace Lucene.Net.Util
 {

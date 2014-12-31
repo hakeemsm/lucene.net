@@ -6,18 +6,23 @@
 
 using System.Collections.Generic;
 using Lucene.Net.Document;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Index;
+using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
-using Sharpen;
+using NUnit.Framework;
+
 
 namespace Lucene.Net.Test.Index
 {
 	public class TestStressAdvance : LuceneTestCase
 	{
-		/// <exception cref="System.Exception"></exception>
-		public virtual void TestStressAdvance()
+		[Test]
+		public virtual void TestStressAdvance1()
 		{
 			for (int iter = 0; iter < 3; iter++)
 			{
@@ -43,14 +48,14 @@ namespace Lucene.Net.Test.Index
 				{
 					if (Random().Next(4) == 3)
 					{
-						f.StringValue = "a");
+						f.StringValue = "a";
 						aDocs.Add(id);
 					}
 					else
 					{
-						f.StringValue = "b");
+						f.StringValue = "b";
 					}
-					idField.StringValue = string.Empty + id);
+					idField.StringValue = string.Empty + id;
 					w.AddDocument(doc);
 					if (VERBOSE)
 					{
@@ -74,7 +79,7 @@ namespace Lucene.Net.Test.Index
 						bDocIDs.Add(docID);
 					}
 				}
-				TermsEnum te = GetOnlySegmentReader(r).Fields().Terms("field").IEnumerator(null);
+				TermsEnum te = GetOnlySegmentReader(r).Fields.Terms("field").Iterator(null);
 				DocsEnum de = null;
 				for (int iter2 = 0; iter2 < 10; iter2++)
 				{

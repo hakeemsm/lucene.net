@@ -1,23 +1,24 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
+using System.Threading;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
+using Lucene.Net.Support;
 using Lucene.Net.Test.Analysis;
 using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
-using Sharpen;
+using NUnit.Framework;
+
 
 namespace Lucene.Net.Test.Index
 {
 	public class TestStressIndexing : LuceneTestCase
 	{
-		private abstract class TimedThread : Thread
+		private abstract class TimedThread
 		{
 			internal volatile bool failed;
 
@@ -35,7 +36,7 @@ namespace Lucene.Net.Test.Index
 				this.allThreads = threads;
 			}
 
-			public override void Run()
+			public void Run()
 			{
 				long stopTime = DateTime.Now.CurrentTimeMillis() + RUN_TIME_MSEC;
 				count = 0;
@@ -54,7 +55,7 @@ namespace Lucene.Net.Test.Index
 				}
 				catch (Exception e)
 				{
-					System.Console.Out.WriteLine(Thread.CurrentThread() + ": exc");
+					System.Console.Out.WriteLine(Thread.CurrentThread + ": exc");
 					e.printStackTrace();
 					failed = true;
 				}
@@ -94,8 +95,7 @@ namespace Lucene.Net.Test.Index
 				{
 					Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
 					int n = LuceneTestCase.Random().Next();
-					d.Add(LuceneTestCase.NewStringField("id", Extensions.ToString(this.nextID
-						++), Field.Store.YES));
+                    d.Add(LuceneTestCase.NewStringField("id", (nextID++).ToString(), Field.Store.YES));
 					d.Add(LuceneTestCase.NewTextField("contents", English.IntToEnglish(n), Field.Store
 						.NO));
 					this.writer.AddDocument(d);
@@ -143,28 +143,33 @@ namespace Lucene.Net.Test.Index
 				(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetOpenMode(IndexWriterConfig.OpenMode
 				.CREATE).SetMaxBufferedDocs(10)).SetMergeScheduler(mergeScheduler));
 			modifier.Commit();
-			TestStressIndexing.TimedThread[] threads = new TestStressIndexing.TimedThread[4];
+			var timedThreads = new TimedThread[4];
+			var threads = new Thread[4];
 			int numThread = 0;
 			// One modifier that writes 10 docs then removes 5, over
 			// and over:
-			TestStressIndexing.IndexerThread indexerThread = new TestStressIndexing.IndexerThread
-				(this, modifier, threads);
+		    var idxThread = new IndexerThread(this, modifier, timedThreads);
+		    var indexerThread = new Thread(idxThread.Run);
+			timedThreads[numThread++] = idxThread;
 			threads[numThread++] = indexerThread;
 			indexerThread.Start();
-			TestStressIndexing.IndexerThread indexerThread2 = new TestStressIndexing.IndexerThread
-				(this, modifier, threads);
+			var idxThread2 = new IndexerThread(this, modifier, timedThreads);
+		    var indexerThread2 = new Thread(idxThread2.Run);
+			timedThreads[numThread++] = idxThread2;
 			threads[numThread++] = indexerThread2;
 			indexerThread2.Start();
 			// Two searchers that constantly just re-instantiate the
 			// searcher:
-			TestStressIndexing.SearcherThread searcherThread1 = new TestStressIndexing.SearcherThread
-				(directory, threads);
-			threads[numThread++] = searcherThread1;
-			searcherThread1.Start();
-			TestStressIndexing.SearcherThread searcherThread2 = new TestStressIndexing.SearcherThread
-				(directory, threads);
-			threads[numThread++] = searcherThread2;
-			searcherThread2.Start();
+			var searcherThread1 = new SearcherThread(directory, timedThreads);
+			var srchThread1 = new Thread(searcherThread1.Run);
+			timedThreads[numThread++] = searcherThread1;
+			threads[numThread++] = srchThread1;
+			srchThread1.Start();
+			var searcherThread2 = new SearcherThread(directory, timedThreads);
+            var srchThread2 = new Thread(searcherThread2.Run);
+			timedThreads[numThread++] = searcherThread2;
+			threads[numThread++] = srchThread2;
+			srchThread2.Start();
 			for (int i = 0; i < numThread; i++)
 			{
 				threads[i].Join();
@@ -172,14 +177,14 @@ namespace Lucene.Net.Test.Index
 			modifier.Dispose();
 			for (int i_1 = 0; i_1 < numThread; i_1++)
 			{
-				IsTrue(!threads[i_1].failed);
+				IsTrue(!timedThreads[i_1].failed);
 			}
 		}
 
 		//System.out.println("    Writer: " + indexerThread.count + " iterations");
 		//System.out.println("Searcher 1: " + searcherThread1.count + " searchers created");
 		//System.out.println("Searcher 2: " + searcherThread2.count + " searchers created");
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestStressIndexAndSearching()
 		{
 			Directory directory = NewDirectory();

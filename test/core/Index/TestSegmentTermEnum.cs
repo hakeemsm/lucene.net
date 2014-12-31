@@ -1,17 +1,13 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
-using Lucene.Net.Test.Analysis;
+using Lucene.Net.Analysis;
 using Lucene.Net.Codecs.Lucene41;
-using Lucene.Net.Document;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
-using Sharpen;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
@@ -19,21 +15,21 @@ namespace Lucene.Net.Test.Index
 	{
 		internal Directory dir;
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public override void SetUp()
 		{
 			base.SetUp();
 			dir = NewDirectory();
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[TearDown]
 		public override void TearDown()
 		{
 			dir.Dispose();
 			base.TearDown();
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestTermEnum()
 		{
 			IndexWriter writer = null;
@@ -59,7 +55,7 @@ namespace Lucene.Net.Test.Index
 			VerifyDocFreq();
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestPrevTermAtEnd()
 		{
 			IndexWriter writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT
@@ -68,14 +64,14 @@ namespace Lucene.Net.Test.Index
 			AddDoc(writer, "aaa bbb");
 			writer.Dispose();
 			SegmentReader reader = GetOnlySegmentReader(DirectoryReader.Open(dir));
-			TermsEnum terms = reader.Fields().Terms("content").IEnumerator(null);
+			TermsEnum terms = reader.Fields.Terms("content").Iterator(null);
 			IsNotNull(terms.Next());
-			AreEqual("aaa", terms.Term().Utf8ToString());
+			AreEqual("aaa", terms.Term.Utf8ToString());
 			IsNotNull(terms.Next());
 			long ordB;
 			try
 			{
-				ordB = terms.Ord();
+				ordB = terms.Ord;
 			}
 			catch (NotSupportedException)
 			{
@@ -83,10 +79,10 @@ namespace Lucene.Net.Test.Index
 				reader.Dispose();
 				return;
 			}
-			AreEqual("bbb", terms.Term().Utf8ToString());
+			AreEqual("bbb", terms.Term.Utf8ToString());
 			IsNull(terms.Next());
 			terms.SeekExact(ordB);
-			AreEqual("bbb", terms.Term().Utf8ToString());
+			AreEqual("bbb", terms.Term.Utf8ToString());
 			reader.Dispose();
 		}
 
@@ -94,21 +90,21 @@ namespace Lucene.Net.Test.Index
 		private void VerifyDocFreq()
 		{
 			IndexReader reader = DirectoryReader.Open(dir);
-			TermsEnum termEnum = MultiFields.GetTerms(reader, "content").IEnumerator(null);
+			TermsEnum termEnum = MultiFields.GetTerms(reader, "content").Iterator(null);
 			// create enumeration of all terms
 			// go to the first term (aaa)
 			termEnum.Next();
 			// 
 			//HM:revisit 
 			//assert that term is 'aaa'
-			AreEqual("aaa", termEnum.Term().Utf8ToString());
+			AreEqual("aaa", termEnum.Term.Utf8ToString());
 			AreEqual(200, termEnum.DocFreq);
 			// go to the second term (bbb)
 			termEnum.Next();
 			// 
 			//HM:revisit 
 			//assert that term is 'bbb'
-			AreEqual("bbb", termEnum.Term().Utf8ToString());
+			AreEqual("bbb", termEnum.Term.Utf8ToString());
 			AreEqual(100, termEnum.DocFreq);
 			// create enumeration of terms after term 'aaa',
 			// including 'aaa'
@@ -116,14 +112,14 @@ namespace Lucene.Net.Test.Index
 			// 
 			//HM:revisit 
 			//assert that term is 'aaa'
-			AreEqual("aaa", termEnum.Term().Utf8ToString());
+			AreEqual("aaa", termEnum.Term.Utf8ToString());
 			AreEqual(200, termEnum.DocFreq);
 			// go to term 'bbb'
 			termEnum.Next();
 			// 
 			//HM:revisit 
 			//assert that term is 'bbb'
-			AreEqual("bbb", termEnum.Term().Utf8ToString());
+			AreEqual("bbb", termEnum.Term.Utf8ToString());
 			AreEqual(100, termEnum.DocFreq);
 			reader.Dispose();
 		}
@@ -132,9 +128,10 @@ namespace Lucene.Net.Test.Index
 		private void AddDoc(IndexWriter writer, string value)
 		{
 			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-				();
-			doc.Add(NewTextField("content", value, Field.Store.NO));
-			writer.AddDocument(doc);
+			{
+			    NewTextField("content", value, Field.Store.NO)
+			};
+		    writer.AddDocument(doc);
 		}
 	}
 }

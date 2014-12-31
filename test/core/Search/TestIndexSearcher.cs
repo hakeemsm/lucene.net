@@ -9,7 +9,7 @@ using Lucene.Net.TestFramework;
 using Lucene.Net.TestFramework.Index;
 using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
-using Sharpen;
+
 
 namespace Lucene.Net.Search
 {

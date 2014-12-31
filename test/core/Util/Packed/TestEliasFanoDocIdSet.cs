@@ -7,7 +7,7 @@
 using Lucene.Net.Search;
 using Lucene.Net.Util;
 using Lucene.Net.Util.Packed;
-using Sharpen;
+
 
 namespace Lucene.Net.Util.Packed
 {

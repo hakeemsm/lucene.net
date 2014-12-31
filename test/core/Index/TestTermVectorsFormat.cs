@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using Lucene.Net.Codecs;
 using Lucene.Net.Codecs.Lucene3x;
 using Lucene.Net.Index;
-using Sharpen;
+
 
 namespace Lucene.Net.Test.Index
 {

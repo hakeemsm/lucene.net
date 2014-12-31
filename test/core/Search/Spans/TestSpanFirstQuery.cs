@@ -12,7 +12,7 @@ using Lucene.Net.Search.Spans;
 using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Lucene.Net.Util.Automaton;
-using Sharpen;
+
 
 namespace Lucene.Net.Search.Spans
 {

@@ -1,15 +1,13 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using Lucene.Net.Codecs;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
+using Lucene.Net.Support;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Index;
+using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
-using Sharpen;
+using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
 {
@@ -36,7 +34,7 @@ namespace Lucene.Net.Test.Index
 		//The variables for the new merged segment
 		//First segment to be merged
 		//Second Segment to be merged
-		/// <exception cref="System.Exception"></exception>
+		[SetUp]
 		public override void SetUp()
 		{
 			base.SetUp();
@@ -53,7 +51,7 @@ namespace Lucene.Net.Test.Index
 				(Random()));
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[TearDown]
 		public override void TearDown()
 		{
 			reader1.Dispose();
@@ -64,7 +62,8 @@ namespace Lucene.Net.Test.Index
 			base.TearDown();
 		}
 
-		public virtual void Test()
+        [Test]
+		public virtual void TestMergeDir()
 		{
 			IsTrue(mergedDir != null);
 			IsTrue(merge1Dir != null);
@@ -73,14 +72,14 @@ namespace Lucene.Net.Test.Index
 			IsTrue(reader2 != null);
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestMerge()
 		{
-			Codec codec = Codec.GetDefault();
+			Codec codec = Codec.Default;
 			SegmentInfo si = new SegmentInfo(mergedDir, Constants.LUCENE_MAIN_VERSION, mergedSegment
 				, -1, false, codec, null);
 			SegmentMerger merger = new SegmentMerger(Arrays.AsList<AtomicReader>(reader1, reader2
-				), si, InfoStream.GetDefault(), mergedDir, IndexWriterConfig.DEFAULT_TERM_INDEX_INTERVAL
+				), si, InfoStream.Default, mergedDir, IndexWriterConfig.DEFAULT_TERM_INDEX_INTERVAL
 				, MergeState.CheckAbort.NONE, new FieldInfos.FieldNumbers(), NewIOContext(Random
 				()), true);
 			MergeState mergeState = merger.Merge();
@@ -116,16 +115,16 @@ namespace Lucene.Net.Test.Index
 				}
 			}
 			//System.out.println("stored size: " + stored.size());
-			AreEqual("We do not have 3 fields that were indexed with term vector"
+			AssertEquals("We do not have 3 fields that were indexed with term vector"
 				, 3, tvCount);
 			Terms vector = mergedReader.GetTermVectors(0).Terms(DocHelper.TEXT_FIELD_2_KEY);
 			IsNotNull(vector);
-			AreEqual(3, vector.Size());
-			TermsEnum termsEnum = vector.IEnumerator(null);
+			AreEqual(3, vector.Size);
+			TermsEnum termsEnum = vector.Iterator(null);
 			int i = 0;
 			while (termsEnum.Next() != null)
 			{
-				string term = termsEnum.Term().Utf8ToString();
+				string term = termsEnum.Term.Utf8ToString();
 				int freq = (int)termsEnum.TotalTermFreq;
 				//System.out.println("Term: " + term + " Freq: " + freq);
 				IsTrue(DocHelper.FIELD_2_TEXT.IndexOf(term) != -1);
@@ -144,7 +143,7 @@ namespace Lucene.Net.Test.Index
 			}
 			for (int i = 0; i < map1.MaxDoc; ++i)
 			{
-				if (map1.Get(i) != map2.Get(i))
+				if (map1[i] != map2[i])
 				{
 					return false;
 				}
@@ -152,10 +151,11 @@ namespace Lucene.Net.Test.Index
 			return true;
 		}
 
+        [Test]
 		public virtual void TestBuildDocMap()
 		{
-			int maxDoc = TestUtil.NextInt(Random(), 1, 128);
-			int numDocs = TestUtil.NextInt(Random(), 0, maxDoc);
+			int maxDoc = Random().NextInt(1, 128);
+			int numDocs = Random().NextInt(0, maxDoc);
 			int numDeletedDocs = maxDoc - numDocs;
 			FixedBitSet liveDocs = new FixedBitSet(maxDoc);
 			for (int i = 0; i < numDocs; ++i)
@@ -163,7 +163,7 @@ namespace Lucene.Net.Test.Index
 				while (true)
 				{
 					int docID = Random().Next(maxDoc);
-					if (!liveDocs.Get(docID))
+					if (!liveDocs[docID])
 					{
 						liveDocs.Set(docID);
 						break;
@@ -173,20 +173,19 @@ namespace Lucene.Net.Test.Index
 			MergeState.DocMap docMap = MergeState.DocMap.Build(maxDoc, liveDocs);
 			AreEqual(maxDoc, docMap.MaxDoc);
 			AreEqual(numDocs, docMap.NumDocs);
-			AreEqual(numDeletedDocs, docMap.NumDeletedDocs());
-			// 
-			//HM:revisit 
+			AreEqual(numDeletedDocs, docMap.NumDeletedDocs);
+			
 			//assert the mapping is compact
-			for (int i_1 = 0; i_1 < maxDoc; ++i_1)
+			for (int i = 0, del=0; i < maxDoc; ++i)
 			{
-				if (!liveDocs.Get(i_1))
+				if (!liveDocs[i])
 				{
-					AreEqual(-1, docMap.Get(i_1));
+					AreEqual(-1, docMap[i]);
 					++del;
 				}
 				else
 				{
-					AreEqual(i_1 - del, docMap.Get(i_1));
+					AreEqual(i - del, docMap[i]);
 				}
 			}
 		}

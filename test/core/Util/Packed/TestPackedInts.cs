@@ -13,7 +13,7 @@ using NUnit.Framework;
 using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Lucene.Net.Util.Packed;
-using Sharpen;
+
 
 namespace Lucene.Net.Util.Packed
 {

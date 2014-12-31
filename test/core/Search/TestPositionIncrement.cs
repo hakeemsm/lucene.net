@@ -15,7 +15,7 @@ using Lucene.Net.Search.Payloads;
 using Lucene.Net.Search.Spans;
 using Lucene.Net.Store;
 using Lucene.Net.Util;
-using Sharpen;
+
 
 namespace Lucene.Net.Search
 {

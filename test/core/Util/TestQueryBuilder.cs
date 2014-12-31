@@ -11,7 +11,7 @@ using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Util;
 using Lucene.Net.Util.Automaton;
-using Sharpen;
+
 
 namespace Lucene.Net.Util
 {

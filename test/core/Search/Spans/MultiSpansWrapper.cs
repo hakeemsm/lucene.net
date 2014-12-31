@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Search.Spans;
-using Sharpen;
+
 
 namespace Lucene.Net.Search.Spans
 {

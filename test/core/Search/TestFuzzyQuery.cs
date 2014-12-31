@@ -12,7 +12,7 @@ using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
 using Lucene.Net.Util;
-using Sharpen;
+
 
 namespace Lucene.Net.Search
 {

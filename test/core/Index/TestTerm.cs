@@ -6,7 +6,7 @@
 
 using Lucene.Net.Index;
 using Lucene.Net.Util;
-using Sharpen;
+
 
 namespace Lucene.Net.Test.Index
 {

@@ -386,7 +386,7 @@ namespace Lucene.Net.Test.Index
 				}
 				catch (Exception e)
 				{
-					throw new SystemException(e);
+					throw new SystemException(e.Message,e);
 				}
 			}
 
