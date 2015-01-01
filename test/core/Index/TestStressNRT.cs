@@ -1,18 +1,17 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using System.Collections.Generic;
-using NUnit.Framework;
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Document;
+using System.Threading;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
+using Lucene.Net.Randomized.Generators;
+using Lucene.Net.Support;
+using Lucene.Net.TestFramework;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
-using Lucene.Net.Util;
+using Lucene.Net.TestFramework.Index;
+using Lucene.Net.TestFramework.Util;
+using NUnit.Framework;
 
 
 namespace Lucene.Net.Test.Index
@@ -44,14 +43,14 @@ namespace Lucene.Net.Test.Index
 			syncArr = new object[ndocs];
 			for (int i = 0; i < ndocs; i++)
 			{
-				model.Put(i, -1L);
+				model[i] = -1L;
 				syncArr[i] = new object();
 			}
 			committedModel.PutAll(model);
 		}
 
-		/// <exception cref="System.Exception"></exception>
-		public virtual void Test()
+		[Test]
+		public virtual void TestStress()
 		{
 			// update variables
 			int commitPercent = Random().Next(20);
@@ -98,9 +97,9 @@ namespace Lucene.Net.Test.Index
 			reader = DirectoryReader.Open(dir);
 			for (int i = 0; i < nWriteThreads; i++)
 			{
-				Thread thread = new _Thread_115(this, operations, commitPercent, numCommitting
+				Thread thread = new Thread(new DocThreadRunner(this, operations, commitPercent, numCommitting
 					, maxConcurrentCommits, softCommitPercent, writer, ndocs, deletePercent, tombstones
-					, storedOnlyType, deleteByQueryPercent, "WRITER" + i);
+					, storedOnlyType, deleteByQueryPercent, "WRITER" + i).Run);
 				// take a snapshot
 				// increment the reference since we will use this for reopening
 				// assertU(h.commit("softCommit","true"));
@@ -109,9 +108,9 @@ namespace Lucene.Net.Test.Index
 				// extra ref:
 				// install the new reader if it's newest (and check the current version since another reader may have already been installed)
 				//System.out.println(Thread.currentThread().getName() + ": newVersion=" + newReader.getVersion());
-				//HM:revisit 
+				
 				//assert newReader.getRefCount() > 0;
-				//HM:revisit 
+				
 				//assert reader.getRefCount() > 0;
 				// Silly: forces fieldInfos to be
 				// loaded so we don't hit IOE on later
@@ -132,8 +131,8 @@ namespace Lucene.Net.Test.Index
 			}
 			for (int i_1 = 0; i_1 < nReadThreads; i_1++)
 			{
-				Thread thread = new _Thread_299(this, operations, ndocs, tombstones, "READER"
-					 + i_1);
+				Thread thread = new Thread(new _Thread_299(this, operations, ndocs, tombstones, "READER"
+					 + i_1).Run);
 				// bias toward a recently changed doc
 				// when indexing, we update the index, then the model
 				// so when querying, we should first check the model, and then the index
@@ -164,12 +163,12 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		private sealed class _Thread_115 : Thread
+		private sealed class DocThreadRunner
 		{
-			public _Thread_115(TestStressNRT _enclosing, AtomicLong operations, int commitPercent
+			public DocThreadRunner(TestStressNRT _enclosing, AtomicLong operations, int commitPercent
 				, AtomicInteger numCommitting, int maxConcurrentCommits, int softCommitPercent, 
 				RandomIndexWriter writer, int ndocs, int deletePercent, bool tombstones, FieldType
-				 storedOnlyType, int deleteByQueryPercent, string baseArg1) : base(baseArg1)
+				 storedOnlyType, int deleteByQueryPercent, string baseArg1) 
 			{
 				this._enclosing = _enclosing;
 				this.operations = operations;
@@ -188,7 +187,7 @@ namespace Lucene.Net.Test.Index
 
 			internal Random rand;
 
-			public override void Run()
+			public void Run()
 			{
 				try
 				{
@@ -307,26 +306,28 @@ namespace Lucene.Net.Test.Index
 							}
 							lock (sync)
 							{
-								long val = this._enclosing.model.Get(id);
+								long val = this._enclosing.model[id];
 								long nextVal = Math.Abs(val) + 1;
 								if (oper < commitPercent + deletePercent)
 								{
 									if (tombstones)
 									{
-										Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
-										d.Add(LuceneTestCase.NewStringField("id", "-" + Extensions.ToString(id), 
-											Field.Store.YES));
-										d.Add(LuceneTestCase.NewField(this._enclosing.field, System.Convert.ToString(nextVal
-											), storedOnlyType));
-										writer.UpdateDocument(new Term("id", "-" + Extensions.ToString(id)), d);
+										Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document
+										{
+										    LuceneTestCase.NewStringField("id", "-" + id,
+										        Field.Store.YES),
+										    LuceneTestCase.NewField(this._enclosing.field, System.Convert.ToString(nextVal
+										        ), storedOnlyType)
+										};
+									    writer.UpdateDocument(new Term("id", "-" + id), d);
 									}
 									if (LuceneTestCase.VERBOSE)
 									{
 										System.Console.Out.WriteLine("TEST: " + Thread.CurrentThread.Name 
 											+ ": term delDocs id:" + id + " nextVal=" + nextVal);
 									}
-									writer.DeleteDocuments(new Term("id", Extensions.ToString(id)));
-									this._enclosing.model.Put(id, -nextVal);
+									writer.DeleteDocuments(new Term("id", id.ToString()));
+									this._enclosing.model[id] = -nextVal;
 								}
 								else
 								{
@@ -334,26 +335,27 @@ namespace Lucene.Net.Test.Index
 									{
 										if (tombstones)
 										{
-											Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
-											d.Add(LuceneTestCase.NewStringField("id", "-" + Extensions.ToString(id), 
-												Field.Store.YES));
-											d.Add(LuceneTestCase.NewField(this._enclosing.field, System.Convert.ToString(nextVal
-												), storedOnlyType));
-											writer.UpdateDocument(new Term("id", "-" + Extensions.ToString(id)), d);
+											Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document
+											{
+											    NewStringField("id", "-" + id,
+											        Field.Store.YES),
+											    NewField(this._enclosing.field, System.Convert.ToString(nextVal
+											        ), storedOnlyType)
+											};
+										    writer.UpdateDocument(new Term("id", "-" + id.ToString()), d);
 										}
 										if (LuceneTestCase.VERBOSE)
 										{
 											System.Console.Out.WriteLine("TEST: " + Thread.CurrentThread.Name 
 												+ ": query delDocs id:" + id + " nextVal=" + nextVal);
 										}
-										writer.DeleteDocuments(new TermQuery(new Term("id", Extensions.ToString(id
-											))));
-										this._enclosing.model.Put(id, -nextVal);
+										writer.DeleteDocuments(new TermQuery(new Term("id", id.ToString())));
+										this._enclosing.model[id] = -nextVal;
 									}
 									else
 									{
 										Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
-										d.Add(LuceneTestCase.NewStringField("id", Extensions.ToString(id), Field.Store
+										d.Add(LuceneTestCase.NewStringField("id", id.ToString(), Field.Store
 											.YES));
 										d.Add(LuceneTestCase.NewField(this._enclosing.field, System.Convert.ToString(nextVal
 											), storedOnlyType));
@@ -362,12 +364,12 @@ namespace Lucene.Net.Test.Index
 											System.Console.Out.WriteLine("TEST: " + Thread.CurrentThread.Name 
 												+ ": u id:" + id + " val=" + nextVal);
 										}
-										writer.UpdateDocument(new Term("id", Extensions.ToString(id)), d);
+										writer.UpdateDocument(new Term("id", id.ToString()), d);
 										if (tombstones)
 										{
-											writer.DeleteDocuments(new Term("id", "-" + Extensions.ToString(id)));
+											writer.DeleteDocuments(new Term("id", "-" + id.ToString()));
 										}
-										this._enclosing.model.Put(id, nextVal);
+										this._enclosing.model[id] = nextVal;
 									}
 								}
 							}
@@ -383,7 +385,7 @@ namespace Lucene.Net.Test.Index
 					System.Console.Out.WriteLine(Thread.CurrentThread.Name + ": FAILED: unexpected exception"
 						);
 					e.printStackTrace();
-					throw new SystemException(e);
+					throw new SystemException(e.Message,e);
 				}
 			}
 
@@ -412,21 +414,22 @@ namespace Lucene.Net.Test.Index
 			private readonly int deleteByQueryPercent;
 		}
 
-		private sealed class _Thread_299 : Thread
+		private sealed class _Thread_299
 		{
 			public _Thread_299(TestStressNRT _enclosing, AtomicLong operations, int ndocs, bool
-				 tombstones, string baseArg1) : base(baseArg1)
+				 tombstones, string baseArg1)
 			{
 				this._enclosing = _enclosing;
 				this.operations = operations;
 				this.ndocs = ndocs;
 				this.tombstones = tombstones;
 				this.rand = new Random(LuceneTestCase.Random().Next());
+			    Thread.CurrentThread.Name = baseArg1;
 			}
 
 			internal Random rand;
 
-			public override void Run()
+			public void Run()
 			{
 				try
 				{
@@ -440,7 +443,7 @@ namespace Lucene.Net.Test.Index
 						DirectoryReader r;
 						lock (this._enclosing)
 						{
-							val = this._enclosing.committedModel.Get(id);
+							val = this._enclosing.committedModel[id];
 							r = this._enclosing.reader;
 							r.IncRef();
 						}
@@ -460,11 +463,11 @@ namespace Lucene.Net.Test.Index
 							lastReader = r;
 							lastSearcher = searcher;
 						}
-						Query q = new TermQuery(new Term("id", Extensions.ToString(id)));
+						Query q = new TermQuery(new Term("id", id.ToString()));
 						TopDocs results = searcher.Search(q, 10);
 						if (results.TotalHits == 0 && tombstones)
 						{
-							q = new TermQuery(new Term("id", "-" + Extensions.ToString(id)));
+							q = new TermQuery(new Term("id", "-" + id));
 							results = searcher.Search(q, 1);
 							if (results.TotalHits == 0)
 							{
@@ -512,7 +515,7 @@ namespace Lucene.Net.Test.Index
 					System.Console.Out.WriteLine(Thread.CurrentThread.Name + ": FAILED: unexpected exception"
 						);
 					e.printStackTrace();
-					throw new SystemException(e);
+					throw new SystemException(e.Message,e);
 				}
 			}
 

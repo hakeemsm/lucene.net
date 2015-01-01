@@ -361,7 +361,7 @@ namespace Lucene.Net.Test.Index
 			IsNotNull(fieldName);
 			Terms terms2 = reader.Terms(fieldName);
 			IsNotNull(terms2);
-			TermsEnum termsEnum = terms2.IEnumerator(null);
+			TermsEnum termsEnum = terms2.Iterator(null);
 			DocsEnum docsEnum = null;
 			for (int i = 0; i < NUM_TERMS; i++)
 			{
@@ -454,7 +454,7 @@ namespace Lucene.Net.Test.Index
 				pq.Add(new Term("content", "ccc"));
 				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document();
 				FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
-				customType.OmitsNorms = (true);
+				customType.OmitNorms = (true);
 				doc.Add(NewField("content", "aaa bbb ccc ddd", customType));
 				// add document and force commit for creating a first segment
 				writer.AddDocument(doc);
@@ -550,7 +550,7 @@ namespace Lucene.Net.Test.Index
             for (int iter = 0; iter < NUM_TEST_ITER; iter++)
             {
                 var field = fields[Random().Next(fields.Length)];
-                TermsEnum termsEnum = termsDict.Terms(field.fieldInfo.name).IEnumerator(null);
+                TermsEnum termsEnum = termsDict.Terms(field.fieldInfo.name).Iterator(null);
                 if (si.Codec is Lucene3xCodec)
                 {
                     // code below expects unicode sort order

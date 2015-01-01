@@ -10,6 +10,7 @@ using Lucene.Net.Search;
 using Lucene.Net.Search.Similarities;
 using Lucene.Net.Store;
 using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Index;
 using Lucene.Net.Util;
 using NUnit.Framework;
 using FieldInfo = System.Reflection.FieldInfo;

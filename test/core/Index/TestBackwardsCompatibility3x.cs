@@ -10,6 +10,7 @@ using Lucene.Net.Randomized.Generators;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
 using Lucene.Net.Support;
+using Lucene.Net.TestFramework;
 using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
 using NUnit.Framework;
@@ -513,7 +514,8 @@ namespace Lucene.Net.Test.Index
         {
             // we use a real directory name that is not cleaned up, because this method is only used to create backwards indexes:
             DirectoryInfo indexDir = CreateTempDir("\\4x" + dirName);
-            TestUtil.Rm(indexDir);
+            indexDir.Delete(true);
+            
             Directory dir = NewFSDirectory(indexDir);
             LogByteSizeMergePolicy mp = new LogByteSizeMergePolicy();
             mp.SetNoCFSRatio(doCFS ? 1.0 : 0.0);
@@ -655,7 +657,7 @@ namespace Lucene.Net.Test.Index
             {
                 Directory dir = oldIndexDirs[name];
                 IndexReader r = DirectoryReader.Open(dir);
-                TermsEnum terms = MultiFields.GetFields(r).Terms("content").IEnumerator(null);
+                TermsEnum terms = MultiFields.GetFields(r).Terms("content").Iterator(null);
                 BytesRef t = terms.Next();
                 IsNotNull(t);
                 // content field only has term aaa:

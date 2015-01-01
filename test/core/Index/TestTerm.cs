@@ -1,17 +1,13 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using Lucene.Net.Index;
-using Lucene.Net.Util;
+using Lucene.Net.TestFramework;
+using NUnit.Framework;
 
 
 namespace Lucene.Net.Test.Index
 {
 	public class TestTerm : LuceneTestCase
 	{
+        [Test]
 		public virtual void TestEquals()
 		{
 			Term @base = new Term("same", "same");

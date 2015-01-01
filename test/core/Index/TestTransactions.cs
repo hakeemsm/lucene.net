@@ -1,16 +1,15 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using System.IO;
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Document;
+using System.Threading;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
-using Lucene.Net.Util;
+using Lucene.Net.Support;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Util;
+using NUnit.Framework;
+using Directory = Lucene.Net.Store.Directory;
 
 
 namespace Lucene.Net.Test.Index
@@ -38,7 +37,7 @@ namespace Lucene.Net.Test.Index
 			private readonly TestTransactions _enclosing;
 		}
 
-		private abstract class TimedThread : Thread
+		private abstract class TimedThread
 		{
 			internal volatile bool failed;
 
@@ -54,7 +53,7 @@ namespace Lucene.Net.Test.Index
 				this.allThreads = threads;
 			}
 
-			public override void Run()
+			public void Run()
 			{
 				long stopTime = DateTime.Now.CurrentTimeMillis() + (long)(RUN_TIME_MSEC);
 				try
@@ -71,7 +70,7 @@ namespace Lucene.Net.Test.Index
 				}
 				catch (Exception e)
 				{
-					System.Console.Out.WriteLine(Thread.CurrentThread() + ": exc");
+					System.Console.Out.WriteLine(Thread.CurrentThread + ": exc");
 					e.printStackTrace();
 					failed = true;
 				}
@@ -90,7 +89,7 @@ namespace Lucene.Net.Test.Index
 			}
 		}
 
-		private class IndexerThread : TestTransactions.TimedThread
+		private class IndexerThread : TimedThread
 		{
 			internal Directory dir1;
 
@@ -174,10 +173,10 @@ namespace Lucene.Net.Test.Index
 				for (int j = 0; j < 10; j++)
 				{
 					Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
-					int n = LuceneTestCase.Random().Next();
-					d.Add(LuceneTestCase.NewField("id", Extensions.ToString(this.nextID++), customType
+					int n = Random().Next();
+                    d.Add(NewField("id", (nextID++).ToString(), customType
 						));
-					d.Add(LuceneTestCase.NewTextField("contents", English.IntToEnglish(n), Field.Store
+					d.Add(NewTextField("contents", English.IntToEnglish(n), Field.Store
 						.NO));
 					writer.AddDocument(d);
 				}
@@ -240,8 +239,7 @@ namespace Lucene.Net.Test.Index
 				}
 				if (r1.NumDocs != r2.NumDocs)
 				{
-					throw new SystemException("doc counts differ: r1=" + r1.NumDocs + " r2=" + r2.
-						NumDocs());
+					throw new SystemException("doc counts differ: r1=" + r1.NumDocs + " r2=" + r2.NumDocs);
 				}
 				r1.Dispose();
 				r2.Dispose();
@@ -263,18 +261,16 @@ namespace Lucene.Net.Test.Index
 			writer.Dispose();
 		}
 
-		/// <exception cref="System.Exception"></exception>
-		public virtual void TestTransactions()
+		[Test]
+		public virtual void TestTransactionswithThreads()
 		{
 			// we cant use non-ramdir on windows, because this test needs to double-write.
-			MockDirectoryWrapper dir1 = new MockDirectoryWrapper(Random(), new RAMDirectory()
-				);
-			MockDirectoryWrapper dir2 = new MockDirectoryWrapper(Random(), new RAMDirectory()
-				);
+			MockDirectoryWrapper dir1 = new MockDirectoryWrapper(Random(), new RAMDirectory());
+			MockDirectoryWrapper dir2 = new MockDirectoryWrapper(Random(), new RAMDirectory());
 			dir1.SetPreventDoubleWrite(false);
 			dir2.SetPreventDoubleWrite(false);
-			dir1.FailOn(new TestTransactions.RandomFailure(this));
-			dir2.FailOn(new TestTransactions.RandomFailure(this));
+			dir1.FailOn(new RandomFailure(this));
+			dir2.FailOn(new RandomFailure(this));
 			dir1.SetFailOnOpenInput(false);
 			dir2.SetFailOnOpenInput(false);
 			// We throw exceptions in deleteFile, which creates
@@ -283,27 +279,28 @@ namespace Lucene.Net.Test.Index
 			dir2.SetAssertNoUnrefencedFilesOnClose(false);
 			InitIndex(dir1);
 			InitIndex(dir2);
-			TestTransactions.TimedThread[] threads = new TestTransactions.TimedThread[3];
+			var threads = new Thread[3];
+			var timedThreads = new TimedThread[3];
 			int numThread = 0;
-			TestTransactions.IndexerThread indexerThread = new TestTransactions.IndexerThread
-				(this, this, dir1, dir2, threads);
-			threads[numThread++] = indexerThread;
-			indexerThread.Start();
-			TestTransactions.SearcherThread searcherThread1 = new TestTransactions.SearcherThread
-				(this, dir1, dir2, threads);
-			threads[numThread++] = searcherThread1;
-			searcherThread1.Start();
-			TestTransactions.SearcherThread searcherThread2 = new TestTransactions.SearcherThread
-				(this, dir1, dir2, threads);
-			threads[numThread++] = searcherThread2;
-			searcherThread2.Start();
+			var indexerThread = new IndexerThread(this, this, dir1, dir2, timedThreads);
+		    var threadRunner = new Thread(indexerThread.Run);
+		    threads[numThread++] = threadRunner;
+			threadRunner.Start();
+			var searcherThread1 = new SearcherThread(this, dir1, dir2, timedThreads);
+		    var srchThreadRunner = new Thread(searcherThread1.Run);
+		    threads[numThread++] = srchThreadRunner;
+			srchThreadRunner.Start();
+			var searcherThread2 = new SearcherThread(this, dir1, dir2, timedThreads);
+		    var srchThreadRunner2 = new Thread(searcherThread2.Run);
+		    threads[numThread++] = srchThreadRunner2;
+			srchThreadRunner2.Start();
 			for (int i = 0; i < numThread; i++)
 			{
 				threads[i].Join();
 			}
 			for (int i_1 = 0; i_1 < numThread; i_1++)
 			{
-				IsTrue(!threads[i_1].failed);
+				IsTrue(!timedThreads[i_1].failed);
 			}
 			dir1.Dispose();
 			dir2.Dispose();

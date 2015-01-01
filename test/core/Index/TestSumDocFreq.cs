@@ -1,13 +1,10 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
-using Lucene.Net.Document;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
-using Lucene.Net.Util;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Index;
+using Lucene.Net.TestFramework.Util;
+using NUnit.Framework;
 
 
 namespace Lucene.Net.Test.Index
@@ -19,8 +16,8 @@ namespace Lucene.Net.Test.Index
 	/// <lucene.experimental></lucene.experimental>
 	public class TestSumDocFreq : LuceneTestCase
 	{
-		/// <exception cref="System.Exception"></exception>
-		public virtual void TestSumDocFreq()
+		[Test]
+		public virtual void TestForSumDocFreq()
 		{
 			int numDocs = AtLeast(500);
 			Directory dir = NewDirectory();
@@ -35,13 +32,13 @@ namespace Lucene.Net.Test.Index
 			doc.Add(field2);
 			for (int i = 0; i < numDocs; i++)
 			{
-				id.StringValue = string.Empty + i);
+				id.StringValue = string.Empty + i;
 				char ch1 = (char)TestUtil.NextInt(Random(), 'a', 'z');
 				char ch2 = (char)TestUtil.NextInt(Random(), 'a', 'z');
-				field1.StringValue = string.Empty + ch1 + " " + ch2);
+				field1.StringValue = string.Empty + ch1 + " " + ch2;
 				ch1 = (char)TestUtil.NextInt(Random(), 'a', 'z');
 				ch2 = (char)TestUtil.NextInt(Random(), 'a', 'z');
-				field2.StringValue = string.Empty + ch1 + " " + ch2);
+				field2.StringValue = string.Empty + ch1 + " " + ch2;
 				writer.AddDocument(doc);
 			}
 			IndexReader ir = writer.Reader;
@@ -79,7 +76,7 @@ namespace Lucene.Net.Test.Index
 					continue;
 				}
 				long computedSumDocFreq = 0;
-				TermsEnum termsEnum = terms.IEnumerator(null);
+				TermsEnum termsEnum = terms.Iterator(null);
 				while (termsEnum.Next() != null)
 				{
 					computedSumDocFreq += termsEnum.DocFreq;

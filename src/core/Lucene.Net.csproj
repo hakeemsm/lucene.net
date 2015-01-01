@@ -567,7 +567,6 @@
     <Compile Include="Index\TermVectorsConsumerPerField.cs" />
     <Compile Include="Index\TieredMergePolicy.cs" />
     <Compile Include="Index\TrackingIndexWriter.cs" />
-    <Compile Include="Index\TwoPhaseCommit.cs" />
     <Compile Include="Index\TwoPhaseCommitTool.cs" />
     <Compile Include="Index\TwoStoredFieldsConsumers.cs" />
     <Compile Include="Index\UpgradeIndexMergePolicy.cs" />

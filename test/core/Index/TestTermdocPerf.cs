@@ -1,17 +1,17 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
+using System;
 using System.IO;
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Test.Analysis.Tokenattributes;
-using Lucene.Net.Document;
+using Lucene.Net.Analysis;
+using Lucene.Net.Analysis.Tokenattributes;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
-using Lucene.Net.Store;
+using Lucene.Net.Support;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
+using Lucene.Net.Store;
+using NUnit.Framework;
+using Directory = Lucene.Net.Store.Directory;
 
 
 namespace Lucene.Net.Test.Index
@@ -30,7 +30,7 @@ namespace Lucene.Net.Test.Index
 
 		internal string value;
 
-		public RepeatingTokenizer(StreamReader reader, string val, Random random, float percentDocs
+		public RepeatingTokenizer(TextReader reader, string val, Random random, float percentDocs
 			, int maxTF) : base(reader)
 		{
 			this.value = val;
@@ -57,7 +57,7 @@ namespace Lucene.Net.Test.Index
 		public override void Reset()
 		{
 			base.Reset();
-			if (random.NextFloat() < percentDocs)
+			if (random.NextDouble() < percentDocs)
 			{
 				num = random.Next(maxTF) + 1;
 			}
@@ -74,7 +74,7 @@ namespace Lucene.Net.Test.Index
 		internal virtual void AddDocs(Random random, Directory dir, int ndocs, string field
 			, string val, int maxTF, float percentDocs)
 		{
-			Analyzer analyzer = new _Analyzer_81(val, random, percentDocs, maxTF);
+			Analyzer analyzer = new AnonymousAnalyzer(val, random, percentDocs, maxTF);
 			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
 			doc.Add(NewStringField(field, val, Field.Store.NO));
@@ -89,9 +89,9 @@ namespace Lucene.Net.Test.Index
 			writer.Dispose();
 		}
 
-		private sealed class _Analyzer_81 : Analyzer
+		private sealed class AnonymousAnalyzer : Analyzer
 		{
-			public _Analyzer_81(string val, Random random, float percentDocs, int maxTF)
+			public AnonymousAnalyzer(string val, Random random, float percentDocs, int maxTF)
 			{
 				this.val = val;
 				this.random = random;
@@ -99,8 +99,8 @@ namespace Lucene.Net.Test.Index
 				this.maxTF = maxTF;
 			}
 
-			protected override Analyzer.TokenStreamComponents CreateComponents(string fieldName
-				, StreamReader reader)
+		    public override Analyzer.TokenStreamComponents CreateComponents(string fieldName
+				, TextReader reader)
 			{
 				return new Analyzer.TokenStreamComponents(new RepeatingTokenizer(reader, val, random
 					, percentDocs, maxTF));
@@ -115,7 +115,7 @@ namespace Lucene.Net.Test.Index
 			private readonly int maxTF;
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual int DoTest(int iter, int ndocs, int maxTF, float percentDocs)
 		{
 			Directory dir = NewDirectory();
@@ -128,11 +128,11 @@ namespace Lucene.Net.Test.Index
 					 + (end - start));
 			}
 			IndexReader reader = DirectoryReader.Open(dir);
-			TermsEnum tenum = MultiFields.GetTerms(reader, "foo").IEnumerator(null);
+			TermsEnum tenum = MultiFields.GetTerms(reader, "foo").Iterator(null);
 			start = DateTime.Now.CurrentTimeMillis();
 			int ret = 0;
 			DocsEnum tdocs = null;
-			Random random = new Random(Random().NextLong());
+			Random random = new Random(Random().Next());
 			for (int i = 0; i < iter; i++)
 			{
 				tenum.SeekCeil(new BytesRef("val"));

@@ -1,15 +1,11 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Document;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
+using Lucene.Net.TestFramework;
 using Lucene.Net.Util;
+using NUnit.Framework;
 
 
 namespace Lucene.Net.Test.Index
@@ -18,7 +14,7 @@ namespace Lucene.Net.Test.Index
 	public class TestTermVectorsWriter : LuceneTestCase
 	{
 		// LUCENE-1442
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestDoubleOffsetCounting()
 		{
 			Directory dir = NewDirectory();
@@ -41,16 +37,16 @@ namespace Lucene.Net.Test.Index
 			IndexReader r = DirectoryReader.Open(dir);
 			Terms vector = r.GetTermVectors(0).Terms("field");
 			IsNotNull(vector);
-			TermsEnum termsEnum = vector.IEnumerator(null);
+			TermsEnum termsEnum = vector.Iterator(null);
 			IsNotNull(termsEnum.Next());
-			AreEqual(string.Empty, termsEnum.Term().Utf8ToString());
+			AreEqual(string.Empty, termsEnum.Term.Utf8ToString());
 			// Token "" occurred once
 			AreEqual(1, termsEnum.TotalTermFreq);
 			DocsAndPositionsEnum dpEnum = termsEnum.DocsAndPositions(null, null);
 			IsTrue(dpEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
 			dpEnum.NextPosition();
-			AreEqual(8, dpEnum.StartOffset());
-			AreEqual(8, dpEnum.EndOffset());
+			AreEqual(8, dpEnum.StartOffset);
+			AreEqual(8, dpEnum.EndOffset);
 			AreEqual(DocIdSetIterator.NO_MORE_DOCS, dpEnum.NextDoc());
 			// Token "abcd" occurred three times
 			AreEqual(new BytesRef("abcd"), termsEnum.Next());
@@ -58,14 +54,14 @@ namespace Lucene.Net.Test.Index
 			AreEqual(3, termsEnum.TotalTermFreq);
 			IsTrue(dpEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
 			dpEnum.NextPosition();
-			AreEqual(0, dpEnum.StartOffset());
-			AreEqual(4, dpEnum.EndOffset());
+			AreEqual(0, dpEnum.StartOffset);
+			AreEqual(4, dpEnum.EndOffset);
 			dpEnum.NextPosition();
-			AreEqual(4, dpEnum.StartOffset());
-			AreEqual(8, dpEnum.EndOffset());
+			AreEqual(4, dpEnum.StartOffset);
+			AreEqual(8, dpEnum.EndOffset);
 			dpEnum.NextPosition();
-			AreEqual(8, dpEnum.StartOffset());
-			AreEqual(12, dpEnum.EndOffset());
+			AreEqual(8, dpEnum.StartOffset);
+			AreEqual(12, dpEnum.EndOffset);
 			AreEqual(DocIdSetIterator.NO_MORE_DOCS, dpEnum.NextDoc());
 			IsNull(termsEnum.Next());
 			r.Dispose();
@@ -73,7 +69,7 @@ namespace Lucene.Net.Test.Index
 		}
 
 		// LUCENE-1442
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestDoubleOffsetCounting2()
 		{
 			Directory dir = NewDirectory();
@@ -91,24 +87,24 @@ namespace Lucene.Net.Test.Index
 			w.AddDocument(doc);
 			w.Dispose();
 			IndexReader r = DirectoryReader.Open(dir);
-			TermsEnum termsEnum = r.GetTermVectors(0).Terms("field").IEnumerator(null);
+			TermsEnum termsEnum = r.GetTermVectors(0).Terms("field").Iterator(null);
 			IsNotNull(termsEnum.Next());
 			DocsAndPositionsEnum dpEnum = termsEnum.DocsAndPositions(null, null);
 			AreEqual(2, termsEnum.TotalTermFreq);
 			IsTrue(dpEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
 			dpEnum.NextPosition();
-			AreEqual(0, dpEnum.StartOffset());
-			AreEqual(4, dpEnum.EndOffset());
+			AreEqual(0, dpEnum.StartOffset);
+			AreEqual(4, dpEnum.EndOffset);
 			dpEnum.NextPosition();
-			AreEqual(5, dpEnum.StartOffset());
-			AreEqual(9, dpEnum.EndOffset());
+			AreEqual(5, dpEnum.StartOffset);
+			AreEqual(9, dpEnum.EndOffset);
 			AreEqual(DocIdSetIterator.NO_MORE_DOCS, dpEnum.NextDoc());
 			r.Dispose();
 			dir.Dispose();
 		}
 
 		// LUCENE-1448
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestEndOffsetPositionCharAnalyzer()
 		{
 			Directory dir = NewDirectory();
@@ -116,42 +112,44 @@ namespace Lucene.Net.Test.Index
 				MockAnalyzer(Random())));
 			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
 				();
-			FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
-			customType.StoreTermVectors = true;
-			customType.StoreTermVectorPositions = true;
-			customType.StoreTermVectorOffsets = true;
-			Field f = NewField("field", "abcd   ", customType);
+			FieldType customType = new FieldType(TextField.TYPE_NOT_STORED)
+			{
+			    StoreTermVectors = true,
+			    StoreTermVectorPositions = true,
+			    StoreTermVectorOffsets = true
+			};
+		    Field f = NewField("field", "abcd   ", customType);
 			doc.Add(f);
 			doc.Add(f);
 			w.AddDocument(doc);
 			w.Dispose();
 			IndexReader r = DirectoryReader.Open(dir);
-			TermsEnum termsEnum = r.GetTermVectors(0).Terms("field").IEnumerator(null);
+			TermsEnum termsEnum = r.GetTermVectors(0).Terms("field").Iterator(null);
 			IsNotNull(termsEnum.Next());
 			DocsAndPositionsEnum dpEnum = termsEnum.DocsAndPositions(null, null);
 			AreEqual(2, termsEnum.TotalTermFreq);
 			IsTrue(dpEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
 			dpEnum.NextPosition();
-			AreEqual(0, dpEnum.StartOffset());
-			AreEqual(4, dpEnum.EndOffset());
+			AreEqual(0, dpEnum.StartOffset);
+			AreEqual(4, dpEnum.EndOffset);
 			dpEnum.NextPosition();
-			AreEqual(8, dpEnum.StartOffset());
-			AreEqual(12, dpEnum.EndOffset());
+			AreEqual(8, dpEnum.StartOffset);
+			AreEqual(12, dpEnum.EndOffset);
 			AreEqual(DocIdSetIterator.NO_MORE_DOCS, dpEnum.NextDoc());
 			r.Dispose();
 			dir.Dispose();
 		}
 
 		// LUCENE-1448
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestEndOffsetPositionWithCachingTokenFilter()
 		{
 			Directory dir = NewDirectory();
 			Analyzer analyzer = new MockAnalyzer(Random());
 			IndexWriter w = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer
 				));
-			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-				();
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document();
+		    TokenStream stream = analyzer.TokenStream("field", "abcd   ");
 			stream.Reset();
 			// TODO: weird to reset before wrapping with CachingTokenFilter... correct?
 			TokenStream cachedStream = new CachingTokenFilter(stream);
@@ -165,24 +163,24 @@ namespace Lucene.Net.Test.Index
 			w.AddDocument(doc);
 			w.Dispose();
 			IndexReader r = DirectoryReader.Open(dir);
-			TermsEnum termsEnum = r.GetTermVectors(0).Terms("field").IEnumerator(null);
+			TermsEnum termsEnum = r.GetTermVectors(0).Terms("field").Iterator(null);
 			IsNotNull(termsEnum.Next());
 			DocsAndPositionsEnum dpEnum = termsEnum.DocsAndPositions(null, null);
 			AreEqual(2, termsEnum.TotalTermFreq);
 			IsTrue(dpEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
 			dpEnum.NextPosition();
-			AreEqual(0, dpEnum.StartOffset());
-			AreEqual(4, dpEnum.EndOffset());
+			AreEqual(0, dpEnum.StartOffset);
+			AreEqual(4, dpEnum.EndOffset);
 			dpEnum.NextPosition();
-			AreEqual(8, dpEnum.StartOffset());
-			AreEqual(12, dpEnum.EndOffset());
+			AreEqual(8, dpEnum.StartOffset);
+			AreEqual(12, dpEnum.EndOffset);
 			AreEqual(DocIdSetIterator.NO_MORE_DOCS, dpEnum.NextDoc());
 			r.Dispose();
 			dir.Dispose();
 		}
 
 		// LUCENE-1448
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestEndOffsetPositionStopFilter()
 		{
 			Directory dir = NewDirectory();
@@ -201,24 +199,24 @@ namespace Lucene.Net.Test.Index
 			w.AddDocument(doc);
 			w.Dispose();
 			IndexReader r = DirectoryReader.Open(dir);
-			TermsEnum termsEnum = r.GetTermVectors(0).Terms("field").IEnumerator(null);
+			TermsEnum termsEnum = r.GetTermVectors(0).Terms("field").Iterator(null);
 			IsNotNull(termsEnum.Next());
 			DocsAndPositionsEnum dpEnum = termsEnum.DocsAndPositions(null, null);
 			AreEqual(2, termsEnum.TotalTermFreq);
 			IsTrue(dpEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
 			dpEnum.NextPosition();
-			AreEqual(0, dpEnum.StartOffset());
-			AreEqual(4, dpEnum.EndOffset());
+			AreEqual(0, dpEnum.StartOffset);
+			AreEqual(4, dpEnum.EndOffset);
 			dpEnum.NextPosition();
-			AreEqual(9, dpEnum.StartOffset());
-			AreEqual(13, dpEnum.EndOffset());
+			AreEqual(9, dpEnum.StartOffset);
+			AreEqual(13, dpEnum.EndOffset);
 			AreEqual(DocIdSetIterator.NO_MORE_DOCS, dpEnum.NextDoc());
 			r.Dispose();
 			dir.Dispose();
 		}
 
 		// LUCENE-1448
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestEndOffsetPositionStandard()
 		{
 			Directory dir = NewDirectory();
@@ -237,31 +235,31 @@ namespace Lucene.Net.Test.Index
 			w.AddDocument(doc);
 			w.Dispose();
 			IndexReader r = DirectoryReader.Open(dir);
-			TermsEnum termsEnum = r.GetTermVectors(0).Terms("field").IEnumerator(null);
+			TermsEnum termsEnum = r.GetTermVectors(0).Terms("field").Iterator(null);
 			IsNotNull(termsEnum.Next());
 			DocsAndPositionsEnum dpEnum = termsEnum.DocsAndPositions(null, null);
 			IsTrue(dpEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
 			dpEnum.NextPosition();
-			AreEqual(0, dpEnum.StartOffset());
-			AreEqual(4, dpEnum.EndOffset());
+			AreEqual(0, dpEnum.StartOffset);
+			AreEqual(4, dpEnum.EndOffset);
 			IsNotNull(termsEnum.Next());
 			dpEnum = termsEnum.DocsAndPositions(null, dpEnum);
 			IsTrue(dpEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
 			dpEnum.NextPosition();
-			AreEqual(11, dpEnum.StartOffset());
-			AreEqual(17, dpEnum.EndOffset());
+			AreEqual(11, dpEnum.StartOffset);
+			AreEqual(17, dpEnum.EndOffset);
 			IsNotNull(termsEnum.Next());
 			dpEnum = termsEnum.DocsAndPositions(null, dpEnum);
 			IsTrue(dpEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
 			dpEnum.NextPosition();
-			AreEqual(18, dpEnum.StartOffset());
-			AreEqual(21, dpEnum.EndOffset());
+			AreEqual(18, dpEnum.StartOffset);
+			AreEqual(21, dpEnum.EndOffset);
 			r.Dispose();
 			dir.Dispose();
 		}
 
 		// LUCENE-1448
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestEndOffsetPositionStandardEmptyField()
 		{
 			Directory dir = NewDirectory();
@@ -280,26 +278,26 @@ namespace Lucene.Net.Test.Index
 			w.AddDocument(doc);
 			w.Dispose();
 			IndexReader r = DirectoryReader.Open(dir);
-			TermsEnum termsEnum = r.GetTermVectors(0).Terms("field").IEnumerator(null);
+			TermsEnum termsEnum = r.GetTermVectors(0).Terms("field").Iterator(null);
 			IsNotNull(termsEnum.Next());
 			DocsAndPositionsEnum dpEnum = termsEnum.DocsAndPositions(null, null);
 			AreEqual(1, (int)termsEnum.TotalTermFreq);
 			IsTrue(dpEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
 			dpEnum.NextPosition();
-			AreEqual(1, dpEnum.StartOffset());
-			AreEqual(7, dpEnum.EndOffset());
+			AreEqual(1, dpEnum.StartOffset);
+			AreEqual(7, dpEnum.EndOffset);
 			IsNotNull(termsEnum.Next());
 			dpEnum = termsEnum.DocsAndPositions(null, dpEnum);
 			IsTrue(dpEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
 			dpEnum.NextPosition();
-			AreEqual(8, dpEnum.StartOffset());
-			AreEqual(11, dpEnum.EndOffset());
+			AreEqual(8, dpEnum.StartOffset);
+			AreEqual(11, dpEnum.EndOffset);
 			r.Dispose();
 			dir.Dispose();
 		}
 
 		// LUCENE-1448
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestEndOffsetPositionStandardEmptyField2()
 		{
 			Directory dir = NewDirectory();
@@ -319,26 +317,26 @@ namespace Lucene.Net.Test.Index
 			w.AddDocument(doc);
 			w.Dispose();
 			IndexReader r = DirectoryReader.Open(dir);
-			TermsEnum termsEnum = r.GetTermVectors(0).Terms("field").IEnumerator(null);
+			TermsEnum termsEnum = r.GetTermVectors(0).Terms("field").Iterator(null);
 			IsNotNull(termsEnum.Next());
 			DocsAndPositionsEnum dpEnum = termsEnum.DocsAndPositions(null, null);
 			AreEqual(1, (int)termsEnum.TotalTermFreq);
 			IsTrue(dpEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
 			dpEnum.NextPosition();
-			AreEqual(0, dpEnum.StartOffset());
-			AreEqual(4, dpEnum.EndOffset());
+			AreEqual(0, dpEnum.StartOffset);
+			AreEqual(4, dpEnum.EndOffset);
 			IsNotNull(termsEnum.Next());
 			dpEnum = termsEnum.DocsAndPositions(null, dpEnum);
 			IsTrue(dpEnum.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
 			dpEnum.NextPosition();
-			AreEqual(6, dpEnum.StartOffset());
-			AreEqual(12, dpEnum.EndOffset());
+			AreEqual(6, dpEnum.StartOffset);
+			AreEqual(12, dpEnum.EndOffset);
 			r.Dispose();
 			dir.Dispose();
 		}
 
 		// LUCENE-1168
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestTermVectorCorruption()
 		{
 			Directory dir = NewDirectory();
@@ -388,7 +386,7 @@ namespace Lucene.Net.Test.Index
 		}
 
 		// LUCENE-1168
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestTermVectorCorruption2()
 		{
 			Directory dir = NewDirectory();
@@ -427,7 +425,7 @@ namespace Lucene.Net.Test.Index
 		}
 
 		// LUCENE-1168
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestTermVectorCorruption3()
 		{
 			Directory dir = NewDirectory();
@@ -473,7 +471,7 @@ namespace Lucene.Net.Test.Index
 		}
 
 		// LUCENE-1008
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestNoTermVectorAfterTermVector()
 		{
 			Directory dir = NewDirectory();
@@ -504,7 +502,7 @@ namespace Lucene.Net.Test.Index
 		}
 
 		// LUCENE-1010
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestNoTermVectorAfterTermVectorMerge()
 		{
 			Directory dir = NewDirectory();

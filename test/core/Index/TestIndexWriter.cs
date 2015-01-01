@@ -15,6 +15,7 @@ using Lucene.Net.Codecs;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
+using Lucene.Net.TestFramework.Index;
 using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
 using Lucene.Net.Util.Automaton;
@@ -945,7 +946,7 @@ namespace Lucene.Net.Test.Index
             writer.Dispose();
             DirectoryReader reader = DirectoryReader.Open(dir);
             AtomicReader subreader = GetOnlySegmentReader(reader);
-            TermsEnum te = subreader.Fields.Terms(string.Empty).IEnumerator(null);
+            TermsEnum te = subreader.Fields.Terms(string.Empty).Iterator(null);
             AssertEquals(new BytesRef("a"), te.Next());
             AssertEquals(new BytesRef("b"), te.Next());
             AssertEquals(new BytesRef("c"), te.Next());
@@ -971,7 +972,7 @@ namespace Lucene.Net.Test.Index
             writer.Dispose();
             DirectoryReader reader = DirectoryReader.Open(dir);
             AtomicReader subreader = GetOnlySegmentReader(reader);
-            TermsEnum te = subreader.Fields.Terms(string.Empty).IEnumerator(null);
+            TermsEnum te = subreader.Fields.Terms(string.Empty).Iterator(null);
             AssertEquals(new BytesRef(string.Empty), te.Next());
             AssertEquals(new BytesRef("a"), te.Next());
             AssertEquals(new BytesRef("b"), te.Next());
@@ -1110,7 +1111,7 @@ namespace Lucene.Net.Test.Index
             w.Dispose();
             IndexReader r = DirectoryReader.Open(dir);
             Terms tpv = r.GetTermVectors(0).Terms("field");
-            TermsEnum termsEnum = tpv.IEnumerator(null);
+            TermsEnum termsEnum = tpv.Iterator(null);
             IsNotNull(termsEnum.Next());
             DocsAndPositionsEnum dpEnum = termsEnum.DocsAndPositions(null, null);
             IsNotNull(dpEnum);
@@ -1624,7 +1625,7 @@ namespace Lucene.Net.Test.Index
             d.Add(f);
             w.AddDocument(d);
             AtomicReader r = GetOnlySegmentReader(w.Reader);
-            TermsEnum t = r.Fields.Terms("field").IEnumerator(null);
+            TermsEnum t = r.Fields.Terms("field").Iterator(null);
             int count = 0;
             while (t.Next() != null)
             {

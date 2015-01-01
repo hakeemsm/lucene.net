@@ -113,7 +113,7 @@ namespace Lucene.Net.Test.Index
 				customType.Tokenized = (false);
 				FieldType customType2 = new FieldType(TextField.TYPE_STORED);
 				customType2.Tokenized = (false);
-				customType2.OmitsNorms = (true);
+				customType2.OmitNorms = (true);
 				FieldType customType3 = new FieldType();
 				customType3.Stored = (true);
 				for (int i = 0; i < 4; i++)
@@ -213,12 +213,13 @@ namespace Lucene.Net.Test.Index
 			}
 			writer.ForceMerge(1);
 			writer.Dispose();
-			DirectoryReaderReopenForTest test = new _TestReopen_208(dir, n);
+			DirectoryReaderReopenForTest test = new AnonymousReopenTest(dir, n);
 		    var readers = new ConcurrentHashSet<ReaderCouple>();
 			DirectoryReader firstReader = DirectoryReader.Open(dir);
 			DirectoryReader reader = firstReader;
 			
 			var threads = new Thread[n];
+			var readerThreads = new ReaderThread[n];
 			ICollection<DirectoryReader> readersToClose = new ConcurrentHashSet<DirectoryReader>();
 			for (int i = 0; i < n; i++)
 			{
@@ -234,95 +235,44 @@ namespace Lucene.Net.Test.Index
 				DirectoryReader r = reader;
 				int index = i;
 				Thread task;
+			    ReaderThreadTask readerThread;
 				if (i < 4 || (i >= 10 && i < 14) || i > 18)
 				{
-					//task = new _ReaderThreadTask_245(this, index, r, test, readersToClose, readers);
-					task = new Thread(() =>
-					{
-                        Random rnd = Random();
-                        while (!this.stopped)
-                        {
-                            if (index % 2 == 0)
-                            {
-                                ReaderCouple c = (this.RefreshReader(r, test
-                                    , index, true));
-                                readersToClose.Add(c.newReader);
-                                readersToClose.Add(c.refreshedReader);
-                                readers.Add(c);
-                                break;
-                            }
-                            DirectoryReader refreshed = DirectoryReader.OpenIfChanged(r);
-                            if (refreshed == null)
-                            {
-                                refreshed = r;
-                            }
-                            IndexSearcher searcher = LuceneTestCase.NewSearcher(refreshed);
-                            ScoreDoc[] hits = searcher.Search(new TermQuery(new Term("field1", "a" + rnd.Next
-                                (refreshed.MaxDoc))), null, 1000).ScoreDocs;
-                            if (hits.Length > 0)
-                            {
-                                searcher.Doc(hits[0].Doc);
-                            }
-                            if (!Equals(refreshed, r))
-                            {
-                                refreshed.Dispose();
-                            }
-                            lock (this)
-                            {
-                                
-                                Thread.Wait(this, Random().NextInt(1, 100));
-                            }
-                        }
-					});
-                    
+				    readerThread = new SearcherThread(this, index, r, test, readersToClose, readers);
+				    task = new Thread(readerThread.Run);
 				}
 				else
 				{
-					// refresh reader synchronized
+				    // refresh reader synchronized
 					// prevent too many readers
 					// not synchronized
-					
-					task = new Thread(() =>
-					{
-                        Random rnd = LuceneTestCase.Random();
-                        while (!this.stopped)
-                        {
-                            int numReaders = readers.Count;
-                            if (numReaders > 0)
-                            {
-                                TestDirectoryReaderReopen.ReaderCouple c = readers.ElementAt([rnd.Next(numReaders)]);
-                                TestDirectoryReader.AssertIndexEquals(c.newReader, c.refreshedReader);
-                            }
-                            lock (this)
-                            {
-                                Runtime.Wait(this, TestUtil.NextInt(LuceneTestCase.Random(), 1, 100));
-                            }
-                        }
-					});
+				    readerThread = new DirectoryReaderThread(readers);
+				    task = new Thread(readerThread.Run);
 				}
-				threads[i] = task;
+			    threads[i] = task;
+			    readerThreads[i] = new ReaderThread(readerThread);
 				threads[i].Start();
 			}
 			lock (this)
 			{
-				Runtime.Wait(this, 1000);
+				Thread.Sleep(1000);
 			}
-			for (int i_2 = 0; i_2 < n; i_2++)
+			for (int j = 0; j < n; j++)
 			{
-				if (threads[i_2] != null)
+				if (readerThreads[j] != null)
 				{
-					threads[i_2].StopThread();
+					readerThreads[j].StopThread();
 				}
 			}
-			for (int i_3 = 0; i_3 < n; i_3++)
+			for (int k = 0; k < n; k++)
 			{
-				if (threads[i_3] != null)
+				if (threads[k] != null)
 				{
-					threads[i_3].Join();
-					if (threads[i_3].error != null)
+					threads[k].Join();
+					if (readerThreads[k].error != null)
 					{
-						string msg = "Error occurred in thread " + threads[i_3].Name + ":\n" + threads
-							[i_3].error.Message;
+						string msg = "Error occurred in thread " + threads[k].Name + ":\n" + readerThreads
+							[k].error.Message;
 						Fail(msg);
 					}
 				}
@@ -342,9 +292,9 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		private sealed class _TestReopen_208 : TestDirectoryReaderReopen.DirectoryReaderReopenForTest
+		private sealed class AnonymousReopenTest : DirectoryReaderReopenForTest
 		{
-			public _TestReopen_208(Directory dir, int n)
+			public AnonymousReopenTest(Directory dir, int n)
 			{
 				this.dir = dir;
 				this.n = n;
@@ -353,9 +303,8 @@ namespace Lucene.Net.Test.Index
 			/// <exception cref="System.IO.IOException"></exception>
 			protected internal override void ModifyIndex(int i)
 			{
-				IndexWriter modifier = new IndexWriter(dir, new IndexWriterConfig(LuceneTestCase.
-					TEST_VERSION_CURRENT, new MockAnalyzer(LuceneTestCase.Random())));
-				modifier.AddDocument(TestDirectoryReaderReopen.CreateDocument(n + i, 6));
+				IndexWriter modifier = new IndexWriter(dir, new IndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(Random())));
+				modifier.AddDocument(CreateDocument(n + i, 6));
 				modifier.Dispose();
 			}
 
@@ -370,11 +319,11 @@ namespace Lucene.Net.Test.Index
 			private readonly int n;
 		}
 
-		private sealed class _ReaderThreadTask_245 : ReaderThreadTask
+		private sealed class SearcherThread : ReaderThreadTask
 		{
-			public _ReaderThreadTask_245(TestDirectoryReaderReopen _enclosing, int index, DirectoryReader
+			public SearcherThread(TestDirectoryReaderReopen _enclosing, int index, DirectoryReader
 				 r, TestDirectoryReaderReopen.DirectoryReaderReopenForTest test, ICollection<DirectoryReader> readersToClose
-				, IList<TestDirectoryReaderReopen.ReaderCouple> readers)
+				, ConcurrentHashSet<ReaderCouple> readers)
 			{
 				this._enclosing = _enclosing;
 				this.index = index;
@@ -417,7 +366,7 @@ namespace Lucene.Net.Test.Index
 				    }
 				    lock (this)
 					{
-						Thread.Wait(this, Random().NextInt(1, 100));
+						Thread.Sleep(Random().NextInt(1, 100));
 					}
 				}
 			}
@@ -432,12 +381,12 @@ namespace Lucene.Net.Test.Index
 
 			private readonly ICollection<DirectoryReader> readersToClose;
 
-			private readonly IList<TestDirectoryReaderReopen.ReaderCouple> readers;
+			private readonly ConcurrentHashSet<ReaderCouple> readers;
 		}
 
-		private sealed class _ReaderThreadTask_285 : TestDirectoryReaderReopen.ReaderThreadTask
+		private sealed class DirectoryReaderThread : ReaderThreadTask
 		{
-			public _ReaderThreadTask_285(IList<TestDirectoryReaderReopen.ReaderCouple> readers
+			public DirectoryReaderThread(ConcurrentHashSet<ReaderCouple> readers
 				)
 			{
 				this.readers = readers;
@@ -452,20 +401,20 @@ namespace Lucene.Net.Test.Index
 					int numReaders = readers.Count;
 					if (numReaders > 0)
 					{
-						TestDirectoryReaderReopen.ReaderCouple c = readers[rnd.Next(numReaders)];
+						TestDirectoryReaderReopen.ReaderCouple c = readers.ElementAt(rnd.Next(numReaders));
 						TestDirectoryReader.AssertIndexEquals(c.newReader, c.refreshedReader);
 					}
 					lock (this)
 					{
-						Runtime.Wait(this, TestUtil.NextInt(LuceneTestCase.Random(), 1, 100));
+						Thread.Sleep(Random().NextInt(1, 100));
 					}
 				}
 			}
 
-			private readonly IList<TestDirectoryReaderReopen.ReaderCouple> readers;
+			private readonly ConcurrentHashSet<ReaderCouple> readers;
 		}
 
-		private class ReaderCouple
+        internal class ReaderCouple
 		{
 			internal ReaderCouple(DirectoryReader r1, DirectoryReader r2)
 			{
@@ -491,7 +440,7 @@ namespace Lucene.Net.Test.Index
 			public abstract void Run();
 		}
 
-		private class ReaderThread : Thread
+		private class ReaderThread
 		{
 			internal TestDirectoryReaderReopen.ReaderThreadTask task;
 
@@ -507,7 +456,7 @@ namespace Lucene.Net.Test.Index
 				this.task.Stop();
 			}
 
-			public override void Run()
+			public void Run()
 			{
 				try
 				{
@@ -515,7 +464,7 @@ namespace Lucene.Net.Test.Index
 				}
 				catch (Exception r)
 				{
-					Runtime.PrintStackTrace(r, System.Console.Out);
+					r.printStackTrace();
 					this.error = r;
 				}
 			}
@@ -524,15 +473,15 @@ namespace Lucene.Net.Test.Index
 		private object createReaderMutex = new object();
 
 		/// <exception cref="System.IO.IOException"></exception>
-		private TestDirectoryReaderReopen.ReaderCouple RefreshReader(DirectoryReader reader
+		private ReaderCouple RefreshReader(DirectoryReader reader
 			, bool hasChanges)
 		{
 			return RefreshReader(reader, null, -1, hasChanges);
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		internal virtual TestDirectoryReaderReopen.ReaderCouple RefreshReader(DirectoryReader
-			 reader, TestDirectoryReaderReopen.DirectoryReaderReopenForTest test, int modify, bool hasChanges)
+		internal virtual ReaderCouple RefreshReader(DirectoryReader
+			 reader, DirectoryReaderReopenForTest test, int modify, bool hasChanges)
 		{
 			lock (createReaderMutex)
 			{
@@ -575,7 +524,7 @@ namespace Lucene.Net.Test.Index
 							);
 					}
 				}
-				return new TestDirectoryReaderReopen.ReaderCouple(r, refreshed);
+				return new ReaderCouple(r, refreshed);
 			}
 		}
 
@@ -621,7 +570,7 @@ namespace Lucene.Net.Test.Index
 			sb.Append(n);
 			FieldType customType2 = new FieldType(TextField.TYPE_STORED);
 			customType2.Tokenized = (false);
-			customType2.OmitsNorms = (true);
+			customType2.OmitNorms = (true);
 			FieldType customType3 = new FieldType();
 			customType3.Stored = (true);
 			doc.Add(new TextField("field1", sb.ToString(), Field.Store.YES));
@@ -723,7 +672,7 @@ namespace Lucene.Net.Test.Index
 			}
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestReopenOnCommit()
 		{
 			Directory dir = NewDirectory();
@@ -737,16 +686,16 @@ namespace Lucene.Net.Test.Index
 				doc.Add(NewStringField("id", string.Empty + i, Field.Store.NO));
 				writer.AddDocument(doc);
 				IDictionary<string, string> data = new Dictionary<string, string>();
-				data.Put("index", i + string.Empty);
-				writer.CommitData(data);
+				data["index"] = i + string.Empty;
+				writer.CommitData = (data);
 				writer.Commit();
 			}
 			for (int i_1 = 0; i_1 < 4; i_1++)
 			{
 				writer.DeleteDocuments(new Term("id", string.Empty + i_1));
 				IDictionary<string, string> data = new Dictionary<string, string>();
-				data.Put("index", (4 + i_1) + string.Empty);
-				writer.CommitData(data);
+				data["index"] = (4 + i_1) + string.Empty;
+				writer.CommitData = (data);
 				writer.Commit();
 			}
 			writer.Dispose();
@@ -767,7 +716,7 @@ namespace Lucene.Net.Test.Index
 				}
 				else
 				{
-					v = System.Convert.ToInt32(s.Get("index"));
+					v = System.Convert.ToInt32(s["index"]);
 				}
 				if (v < 4)
 				{
@@ -784,7 +733,7 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestOpenIfChangedNRTToCommit()
 		{
 			Directory dir = NewDirectory();
@@ -792,9 +741,10 @@ namespace Lucene.Net.Test.Index
 			IndexWriter w = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new 
 				MockAnalyzer(Random())));
 			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-				();
-			doc.Add(NewStringField("field", "value", Field.Store.NO));
-			w.AddDocument(doc);
+			{
+			    NewStringField("field", "value", Field.Store.NO)
+			};
+		    w.AddDocument(doc);
 			w.Commit();
 			IList<IndexCommit> commits = DirectoryReader.ListCommits(dir);
 			AreEqual(1, commits.Count);

@@ -15,6 +15,7 @@ using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Randomized.Generators;
 using Lucene.Net.Support;
+using Lucene.Net.TestFramework;
 using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
 using Lucene.Net.Store;

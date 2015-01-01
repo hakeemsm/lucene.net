@@ -182,7 +182,7 @@ namespace Lucene.Net.Search
 				start = DateTime.Now.CurrentTimeMillis();
 				Terms vector = reader.GetTermVectors(docId).Terms("field");
 				timeElapsed += DateTime.Now.CurrentTimeMillis() - start;
-				VerifyVector(vector.IEnumerator(null), docId);
+				VerifyVector(vector.Iterator(null), docId);
 			}
 		}
 
@@ -194,7 +194,7 @@ namespace Lucene.Net.Search
 				Terms terms = vectors.Terms(field);
 				//HM:revisit 
 				//assert terms != null;
-				VerifyVector(terms.IEnumerator(null), num);
+				VerifyVector(terms.Iterator(null), num);
 			}
 		}
 

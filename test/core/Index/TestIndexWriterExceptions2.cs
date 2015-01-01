@@ -1,6 +1,8 @@
 
 using System;
 using System.IO;
+using System.Linq;
+using System.Text;
 using Lucene.Net.Analysis;
 using Lucene.Net.Codecs;
 using Lucene.Net.Codecs.Asserting.TestFramework;
@@ -14,6 +16,8 @@ using Lucene.Net.TestFramework;
 using Lucene.Net.TestFramework.Analysis;
 using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
+using NUnit.Framework;
+using Directory = Lucene.Net.Store.Directory;
 
 namespace Lucene.Net.Test.Index
 {
@@ -24,7 +28,7 @@ namespace Lucene.Net.Test.Index
 	public class TestIndexWriterExceptions2 : LuceneTestCase
 	{
 		// just one thread, serial merge policy, hopefully debuggable
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestBasics()
 		{
 			// disable slow things: we don't rely upon sleeps here.
@@ -35,18 +39,18 @@ namespace Lucene.Net.Test.Index
 				((MockDirectoryWrapper)dir).SetUseSlowOpenClosers(false);
 			}
 			// log all exceptions we hit, in case we fail (for debugging)
-			ByteArrayOutputStream exceptionLog = new ByteArrayOutputStream();
-			TextWriter exceptionStream = new TextWriter(exceptionLog, true, "UTF-8");
+			var exceptionLog = new MemoryStream();
+			var exceptionStream = new StreamWriter(exceptionLog, Encoding.UTF8);
 			//PrintStream exceptionStream = System.out;
 			// create lots of non-aborting exceptions with a broken analyzer
-			long analyzerSeed = Random().NextLong();
-			Analyzer analyzer = new _Analyzer_75(analyzerSeed);
+			int analyzerSeed = Random().Next();
+			Analyzer analyzer = new AnonymousAnalyzer(analyzerSeed);
 			// TODO: can we turn this on? our filter is probably too evil
 			// emit some payloads
 			// create lots of aborting exceptions with a broken codec
 			// we don't need a random codec, as we aren't trying to find bugs in the codec here.
-			Codec inner = RANDOM_MULTIPLIER > 1 ? Codec.GetDefault() : new AssertingCodec();
-			Codec codec = new CrankyCodec(inner, new Random(Random().NextLong()));
+			Codec inner = RANDOM_MULTIPLIER > 1 ? Codec.Default : new AssertingCodec();
+			Codec codec = new CrankyCodec(inner, new Random(Random().Next()));
 			IndexWriterConfig conf = NewIndexWriterConfig(TEST_VERSION_CURRENT, analyzer);
 			// just for now, try to keep this test reproducible
 			conf.SetMergeScheduler(new SerialMergeScheduler());
@@ -62,16 +66,12 @@ namespace Lucene.Net.Test.Index
 						();
 					doc.Add(NewStringField("id", i.ToString(), Field.Store.NO));
 					doc.Add(new NumericDocValuesField("dv", i));
-					doc.Add(new BinaryDocValuesField("dv2", new BytesRef(Extensions.ToString(
-						i))));
-					doc.Add(new SortedDocValuesField("dv3", new BytesRef(Extensions.ToString(
-						i))));
+					doc.Add(new BinaryDocValuesField("dv2", new BytesRef(i.ToString())));
+					doc.Add(new SortedDocValuesField("dv3", new BytesRef(i.ToString())));
 					if (DefaultCodecSupportsSortedSet())
 					{
-						doc.Add(new SortedSetDocValuesField("dv4", new BytesRef(Extensions.ToString
-							(i))));
-						doc.Add(new SortedSetDocValuesField("dv4", new BytesRef(Extensions.ToString
-							(i - 1))));
+						doc.Add(new SortedSetDocValuesField("dv4", new BytesRef(i.ToString())));
+						doc.Add(new SortedSetDocValuesField("dv4", new BytesRef((i-1).ToString())));
 					}
 					doc.Add(NewTextField("text1", TestUtil.RandomAnalysisString(Random(), 20, true), 
 						Field.Store.NO));
@@ -110,7 +110,7 @@ namespace Lucene.Net.Test.Index
 									if (thingToDo == 2 && DefaultCodecSupportsFieldUpdates())
 									{
 										iw.UpdateBinaryDocValue(new Term("id", i.ToString()), "dv2", new 
-											BytesRef(Extensions.ToString(i + 1)));
+											BytesRef((i+1).ToString()));
 									}
 								}
 							}
@@ -124,7 +124,7 @@ namespace Lucene.Net.Test.Index
 							}
 							else
 							{
-								throw
+							    throw;
 							}
 						}
 					}
@@ -132,22 +132,22 @@ namespace Lucene.Net.Test.Index
 					{
 						// block docs
 						Lucene.Net.Documents.Document doc2 = new Lucene.Net.Documents.Document
-							();
-						doc2.Add(NewStringField("id", Extensions.ToString(-i), Field.Store.NO));
-						doc2.Add(NewTextField("text1", TestUtil.RandomAnalysisString(Random(), 20, true), 
-							Field.Store.NO));
-						doc2.Add(new StoredField("stored1", "foo"));
-						doc2.Add(new StoredField("stored1", "bar"));
-						doc2.Add(NewField("text_vectors", TestUtil.RandomAnalysisString(Random(), 6, true
-							), ft));
-						try
 						{
-							iw.AddDocuments(Arrays.AsList(doc, doc2).AsIterable());
+						    NewStringField("id", (-i).ToString(), Field.Store.NO),
+						    NewTextField("text1", TestUtil.RandomAnalysisString(Random(), 20, true),
+						        Field.Store.NO),
+						    new StoredField("stored1", "foo"),
+						    new StoredField("stored1", "bar"),
+						    NewField("text_vectors", TestUtil.RandomAnalysisString(Random(), 6, true
+						        ), ft)
+						};
+					    try
+						{
+							iw.AddDocuments(Arrays.AsList(doc, doc2).AsEnumerable());
 							// we made it, sometimes delete our docs
 							if (Random().NextBoolean())
 							{
-								iw.DeleteDocuments(new Term("id", i.ToString()), new Term("id", 
-									Extensions.ToString(-i)));
+								iw.DeleteDocuments(new Term("id", i.ToString()), new Term("id", (-i).ToString()));
 							}
 						}
 						catch (Exception e)
@@ -159,7 +159,7 @@ namespace Lucene.Net.Test.Index
 							}
 							else
 							{
-								throw
+							    throw;
 							}
 						}
 					}
@@ -178,7 +178,7 @@ namespace Lucene.Net.Test.Index
 								}
 								finally
 								{
-									IOUtils.CloseWhileHandlingException(ir);
+									IOUtils.CloseWhileHandlingException((IDisposable)ir);
 								}
 							}
 							else
@@ -199,7 +199,7 @@ namespace Lucene.Net.Test.Index
 							}
 							else
 							{
-								throw
+							    throw;
 							}
 						}
 					}
@@ -224,7 +224,7 @@ namespace Lucene.Net.Test.Index
 					}
 					else
 					{
-						throw
+					    throw;
 					}
 				}
 				dir.Dispose();
@@ -234,29 +234,29 @@ namespace Lucene.Net.Test.Index
 				System.Console.Out.WriteLine("Unexpected exception: dumping fake-exception-log:..."
 					);
 				exceptionStream.Flush();
-				System.Console.Out.WriteLine(exceptionLog.ToString("UTF-8"));
+			    System.Console.Out.WriteLine(Encoding.UTF8.GetString(exceptionLog.GetBuffer()));
 				System.Console.Out.Flush();
-				Rethrow.Rethrow(t);
+			    throw;
 			}
 			if (VERBOSE)
 			{
 				System.Console.Out.WriteLine("TEST PASSED: dumping fake-exception-log:...");
-				System.Console.Out.WriteLine(exceptionLog.ToString("UTF-8"));
+                System.Console.Out.WriteLine(Encoding.UTF8.GetString(exceptionLog.GetBuffer()));
 			}
 		}
 
-		private sealed class _Analyzer_75 : Analyzer
+		private sealed class AnonymousAnalyzer : Analyzer
 		{
-			public _Analyzer_75(long analyzerSeed)
+			public AnonymousAnalyzer(int analyzerSeed)
 			{
 				this.analyzerSeed = analyzerSeed;
 			}
 
-			protected override Analyzer.TokenStreamComponents CreateComponents(string fieldName
-				, StreamReader reader)
+		    public override Analyzer.TokenStreamComponents CreateComponents(string fieldName
+				, TextReader reader)
 			{
 				MockTokenizer tokenizer = new MockTokenizer(reader, MockTokenizer.SIMPLE, false);
-				tokenizer.SetEnableChecks(false);
+				tokenizer.setEnableChecks(false);
 				TokenStream stream = tokenizer;
 				if (fieldName.Contains("payloads"))
 				{
@@ -266,7 +266,7 @@ namespace Lucene.Net.Test.Index
 				return new Analyzer.TokenStreamComponents(tokenizer, stream);
 			}
 
-			private readonly long analyzerSeed;
+			private readonly int analyzerSeed;
 		}
 	}
 }

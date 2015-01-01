@@ -204,7 +204,7 @@ namespace Lucene.Net.Search
 			/// <exception cref="System.IO.IOException"></exception>
 			protected override TermsEnum GetTermsEnum(Terms terms, AttributeSource atts)
 			{
-				return new _TermRangeTermsEnum_161(terms.IEnumerator(null), new BytesRef("2"), new BytesRef
+				return new _TermRangeTermsEnum_161(terms.Iterator(null), new BytesRef("2"), new BytesRef
 					("7"), true, true);
 			}
 

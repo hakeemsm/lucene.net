@@ -7,6 +7,7 @@ using Lucene.Net.Search.Similarities;
 using Lucene.Net.Store;
 using Lucene.Net.Support;
 using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Index;
 using Lucene.Net.TestFramework.Util;
 using NUnit.Framework;
 

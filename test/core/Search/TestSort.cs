@@ -1464,7 +1464,7 @@ namespace Lucene.Net.Search
 			/// <exception cref="System.IO.IOException"></exception>
 			public TermsEnum TermsEnum(Terms terms)
 			{
-				return terms.IEnumerator(null);
+				return terms.Iterator(null);
 			}
 		}
 
@@ -1516,7 +1516,7 @@ namespace Lucene.Net.Search
 			/// <exception cref="System.IO.IOException"></exception>
 			public TermsEnum TermsEnum(Terms terms)
 			{
-				return terms.IEnumerator(null);
+				return terms.Iterator(null);
 			}
 		}
 
@@ -1568,7 +1568,7 @@ namespace Lucene.Net.Search
 			/// <exception cref="System.IO.IOException"></exception>
 			public TermsEnum TermsEnum(Terms terms)
 			{
-				return terms.IEnumerator(null);
+				return terms.Iterator(null);
 			}
 		}
 
@@ -1620,7 +1620,7 @@ namespace Lucene.Net.Search
 			/// <exception cref="System.IO.IOException"></exception>
 			public TermsEnum TermsEnum(Terms terms)
 			{
-				return terms.IEnumerator(null);
+				return terms.Iterator(null);
 			}
 		}
 
@@ -1672,7 +1672,7 @@ namespace Lucene.Net.Search
 			/// <exception cref="System.IO.IOException"></exception>
 			public TermsEnum TermsEnum(Terms terms)
 			{
-				return terms.IEnumerator(null);
+				return terms.Iterator(null);
 			}
 		}
 
@@ -1724,7 +1724,7 @@ namespace Lucene.Net.Search
 			/// <exception cref="System.IO.IOException"></exception>
 			public TermsEnum TermsEnum(Terms terms)
 			{
-				return terms.IEnumerator(null);
+				return terms.Iterator(null);
 			}
 		}
 

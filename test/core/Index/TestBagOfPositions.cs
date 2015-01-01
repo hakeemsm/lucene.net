@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using Lucene.Net.Analysis;
@@ -58,10 +60,11 @@ namespace Lucene.Net.Test.Index
 				}
 			}
 			postingsList.Shuffle(Random());
-			ConcurrentLinkedQueue<string> postings = new ConcurrentLinkedQueue<string>(postingsList);
+		    var postings = new ConcurrentQueue<string>(postingsList);
+		    
 			Directory dir = NewFSDirectory(CreateTempDir("bagofpositions"));
 			RandomIndexWriter iw = new RandomIndexWriter(Random(), dir, iwc);
-			int threadCount = TestUtil.NextInt(Random(), 1, 5);
+			int threadCount = Random().NextInt(1, 5);
 			if (VERBOSE)
 			{
 				System.Console.Out.WriteLine("config: " + iw.w.Config);
@@ -71,7 +74,7 @@ namespace Lucene.Net.Test.Index
 			FieldType fieldType = new FieldType((FieldType) prototype.FieldTypeValue);
 			if (Random().NextBoolean())
 			{
-				fieldType.OmitsNorms = (true);
+				fieldType.OmitNorms = (true);
 			}
 			int options = Random().Next(3);
 			if (options == 0)
@@ -95,7 +98,7 @@ namespace Lucene.Net.Test.Index
 			CountdownEvent startingGun = new CountdownEvent(1);
 			for (int threadID = 0; threadID < threadCount; threadID++)
 			{
-				Random threadRandom = new Random(Random().NextInt());
+				Random threadRandom = new Random(Random().Next());
 				var document = new Lucene.Net.Documents.Document();
 				Field field = new Field("field", string.Empty, fieldType);
 				document.Add(field);
@@ -109,8 +112,9 @@ namespace Lucene.Net.Test.Index
 						int numTerms2 = threadRandom.Next(maxTermsPerDoc);
 						for (int i = 0; i < numTerms2; i++)
 						{
-							string token = postings.Poll();
-							if (token == null)
+							string token;
+                            
+							if (!postings.TryDequeue(out token))
 							{
 								break;
 							}
@@ -136,7 +140,7 @@ namespace Lucene.Net.Test.Index
 			Terms terms = air.Terms("field");
 			// numTerms-1 because there cannot be a term 0 with 0 postings:
 			AreEqual(numTerms - 1, terms.Size);
-			TermsEnum termsEnum = terms.IEnumerator(null);
+			TermsEnum termsEnum = terms.Iterator(null);
 			BytesRef term_1;
 			while ((term_1 = termsEnum.Next()) != null)
 			{

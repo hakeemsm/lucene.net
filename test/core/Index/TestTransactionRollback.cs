@@ -1,15 +1,14 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
+using System;
+using System.Collections;
 using System.Collections.Generic;
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Document;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
+using Lucene.Net.Support;
+using Lucene.Net.TestFramework;
 using Lucene.Net.Util;
+using NUnit.Framework;
 
 
 namespace Lucene.Net.Test.Index
@@ -35,13 +34,13 @@ namespace Lucene.Net.Test.Index
 			string ids = "-" + id;
 			IndexCommit last = null;
 			ICollection<IndexCommit> commits = DirectoryReader.ListCommits(dir);
-			for (IEnumerator<IndexCommit> iterator = commits.IEnumerator(); iterator.HasNext(); )
+			for (IEnumerator<IndexCommit> iterator = commits.GetEnumerator(); iterator.MoveNext(); )
 			{
-				IndexCommit commit = iterator.Next();
+				IndexCommit commit = iterator.Current;
 				IDictionary<string, string> ud = commit.UserData;
 				if (ud.Count > 0)
 				{
-					if (ud.Get("index").EndsWith(ids))
+					if (ud["index"].EndsWith(ids))
 					{
 						last = commit;
 					}
@@ -55,12 +54,12 @@ namespace Lucene.Net.Test.Index
 				MockAnalyzer(Random())).SetIndexDeletionPolicy(new TestTransactionRollback.RollbackDeletionPolicy
 				(this, id)).SetIndexCommit(last));
 			IDictionary<string, string> data = new Dictionary<string, string>();
-			data.Put("index", "Rolled back to 1-" + id);
-			w.CommitData(data);
+			data["index"] = "Rolled back to 1-" + id;
+			w.CommitData = (data);
 			w.Dispose();
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestRepeatedRollBacks()
 		{
 			int expectedLastRecordId = 100;
@@ -68,39 +67,42 @@ namespace Lucene.Net.Test.Index
 			{
 				expectedLastRecordId -= 10;
 				RollBackLast(expectedLastRecordId);
-				BitSet expecteds = new BitSet(100);
-				expecteds.Set(1, (expectedLastRecordId + 1), true);
-				CheckExpecteds(expecteds);
+				BitArray expecteds = new BitArray(100);
+			    for (int i = 1; i < (expectedLastRecordId + 1); i++)
+			    {
+			        expecteds.Set(i, true);
+			    }
+			    CheckExpecteds(expecteds);
 			}
 		}
 
 		/// <exception cref="System.Exception"></exception>
-		private void CheckExpecteds(BitSet expecteds)
+		private void CheckExpecteds(BitArray expecteds)
 		{
 			IndexReader r = DirectoryReader.Open(dir);
 			//Perhaps not the most efficient approach but meets our
 			//needs here.
-			Bits liveDocs = MultiFields.GetLiveDocs(r);
+			IBits liveDocs = MultiFields.GetLiveDocs(r);
 			for (int i = 0; i < r.MaxDoc; i++)
 			{
-				if (liveDocs == null || liveDocs.Get(i))
+				if (liveDocs == null || liveDocs[i])
 				{
 					string sval = r.Document(i).Get(FIELD_RECORD_ID);
 					if (sval != null)
 					{
 						int val = System.Convert.ToInt32(sval);
-						IsTrue("Did not expect document #" + val, expecteds.Get(val
+						AssertTrue("Did not expect document #" + val, expecteds.Get(val
 							));
 						expecteds.Set(val, false);
 					}
 				}
 			}
 			r.Dispose();
-			AreEqual("Should have 0 docs remaining ", 0, expecteds.Cardinality
+			AssertEquals("Should have 0 docs remaining ", 0, expecteds.Cardinality
 				());
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[SetUp]
 		public override void SetUp()
 		{
 			base.SetUp();
@@ -119,15 +121,15 @@ namespace Lucene.Net.Test.Index
 				if (currentRecordId % 10 == 0)
 				{
 					IDictionary<string, string> data = new Dictionary<string, string>();
-					data.Put("index", "records 1-" + currentRecordId);
-					w.CommitData(data);
+					data["index"] = "records 1-" + currentRecordId;
+					w.CommitData = (data);
 					w.Commit();
 				}
 			}
 			w.Dispose();
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[TearDown]
 		public override void TearDown()
 		{
 			dir.Dispose();
@@ -147,12 +149,12 @@ namespace Lucene.Net.Test.Index
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
-			public override void OnCommit<_T0>(IList<_T0> commits)
+			public override void OnCommit<T>(IList<T> commits)
 			{
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
-			public override void OnInit<_T0>(IList<_T0> commits)
+			public override void OnInit<T>(IList<T> commits)
 			{
 				foreach (IndexCommit commit in commits)
 				{
@@ -162,8 +164,8 @@ namespace Lucene.Net.Test.Index
 						// Label for a commit point is "Records 1-30"
 						// This code reads the last id ("30" in this example) and deletes it
 						// if it is after the desired rollback point
-						string x = userData.Get("index");
-						string lastVal = Runtime.Substring(x, x.LastIndexOf("-") + 1);
+						string x = userData["index"];
+						string lastVal = x.Substring(x.LastIndexOf("-") + 1);
 						int last = System.Convert.ToInt32(lastVal);
 						if (last > this.rollbackPoint)
 						{
@@ -197,7 +199,7 @@ namespace Lucene.Net.Test.Index
 			private readonly TestTransactionRollback _enclosing;
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestRollbackDeletionPolicy()
 		{
 			for (int i = 0; i < 2; i++)

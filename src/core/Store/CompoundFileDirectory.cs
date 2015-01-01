@@ -9,7 +9,7 @@ using System.Text;
 
 namespace Lucene.Net.Store
 {
-    public sealed class CompoundFileDirectory : Directory
+	public sealed class CompoundFileDirectory : BaseDirectory
     {
         public sealed class FileEntry
         {
@@ -70,12 +70,14 @@ namespace Lucene.Net.Store
         private static IDictionary<string, FileEntry> ReadEntries(IndexInputSlicer handle, Directory dir, string name)
         {
             System.IO.IOException priorE = null;
-            IndexInput stream = null, entriesStream = null;
+			ChecksumIndexInput entriesStream = null;
+			IDictionary<string, FileEntry> mapping = null;
+            IndexInput stream = null; 
             // read the first VInt. If it is negative, it's the version number
             // otherwise it's the count (pre-3.1 indexes)
+			bool success = false;
             try
             {
-                IDictionary<String, FileEntry> mapping;
                 stream = handle.OpenFullSlice();
                 int firstInt = stream.ReadVInt();
                 // impossible for 3.0 to have 63 files in a .cfs, CFS writer was not visible
@@ -92,13 +94,14 @@ namespace Lucene.Net.Store
                         throw new CorruptIndexException("Illegal/impossible header for CFS file: "
                                                        + secondByte + "," + thirdByte + "," + fourthByte);
                     }
-                    CodecUtil.CheckHeaderNoMagic(stream, CompoundFileWriter.DATA_CODEC,
-                        CompoundFileWriter.VERSION_START, CompoundFileWriter.VERSION_START);
+					int version = CodecUtil.CheckHeaderNoMagic(stream, CompoundFileWriter.DATA_CODEC, 
+						CompoundFileWriter.VERSION_START, CompoundFileWriter.VERSION_CURRENT);
                     String entriesFileName = IndexFileNames.SegmentFileName(
                                                           IndexFileNames.StripExtension(name), "",
                                                           IndexFileNames.COMPOUND_FILE_ENTRIES_EXTENSION);
-                    entriesStream = dir.OpenInput(entriesFileName, IOContext.READONCE);
-                    CodecUtil.CheckHeader(entriesStream, CompoundFileWriter.ENTRY_CODEC, CompoundFileWriter.VERSION_START, CompoundFileWriter.VERSION_START);
+					entriesStream = dir.OpenChecksumInput(entriesFileName, IOContext.READONCE);
+					CodecUtil.CheckHeader(entriesStream, CompoundFileWriter.ENTRY_CODEC, CompoundFileWriter
+						.VERSION_START, CompoundFileWriter.VERSION_CURRENT);
                     int numEntries = entriesStream.ReadVInt();
                     mapping = new HashMap<String, FileEntry>(numEntries);
                     for (int i = 0; i < numEntries; i++)
@@ -113,24 +116,34 @@ namespace Lucene.Net.Store
                         fileEntry.Offset = entriesStream.ReadLong();
                         fileEntry.Length = entriesStream.ReadLong();
                     }
+					if (version >= CompoundFileWriter.VERSION_CHECKSUM)
+					{
+						CodecUtil.CheckFooter(entriesStream);
+					}
+					else
+					{
+						CodecUtil.CheckEOF(entriesStream);
+					}
                 }
                 else
                 {
                     // TODO remove once 3.x is not supported anymore
                     mapping = ReadLegacyEntries(stream, firstInt);
                 }
-                return mapping;
+				success = true;
             }
-            catch (System.IO.IOException ioe)
-            {
-                priorE = ioe;
-            }
-            finally
-            {
-                IOUtils.CloseWhileHandlingException(priorE, stream, entriesStream);
-            }
-            // this is needed until Java 7's real try-with-resources:
-            throw new InvalidOperationException("impossible to get here");
+			finally
+			{
+				if (success)
+				{
+					IOUtils.Close(stream, entriesStream);
+				}
+				else
+				{
+					IOUtils.CloseWhileHandlingException((IDisposable)stream, entriesStream);
+				}
+			}
+			return mapping;
         }
 
         private static IDictionary<String, FileEntry> ReadLegacyEntries(IndexInput stream, int firstInt)

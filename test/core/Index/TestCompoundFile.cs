@@ -21,6 +21,7 @@ using Lucene.Net.Index;
 using Lucene.Net.Store;
 using Lucene.Net.Support;
 using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Index;
 using Lucene.Net.TestFramework.Store;
 using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
@@ -63,10 +64,11 @@ namespace Lucene.Net.Test.Index
 		public override void  SetUp()
 		{
 			base.SetUp();
-			System.IO.DirectoryInfo file = new System.IO.DirectoryInfo(System.IO.Path.Combine(AppSettings.Get("tempDir", ""), "testIndex"));
-			_TestUtil.RmDir(file);
+			System.IO.DirectoryInfo dirInfo = new System.IO.DirectoryInfo(System.IO.Path.Combine(AppSettings.Get("tempDir", ""), "testIndex"));
+			dirInfo.Delete(true);
+            
 			// use a simple FSDir here, to be sure to have SimpleFSInputs
-			dir = new SimpleFSDirectory(file, null);
+			dir = new SimpleFSDirectory(dirInfo, null);
 		}
 		
 		[TearDown]
@@ -581,7 +583,7 @@ namespace Lucene.Net.Test.Index
 			CompoundFileDirectory cr = new CompoundFileDirectory(dir, "f.comp", NewIOContext(
 				Random()), false);
 			// Open two files
-		    Assert.Throws<System.IO.IOException>(() => cr.OpenInput("bogus"), "File not found");
+            Assert.Throws<System.IO.IOException>(() => cr.OpenInput("bogus", NewIOContext(Random())), "File not found");
 			cr.Dispose();
 		}
 		
@@ -834,8 +836,8 @@ namespace Lucene.Net.Test.Index
 			doc.Add(bodyField);
 			for (int i = 0; i < 100; i++)
 			{
-				idField.StringValue = i.ToString());
-				bodyField.StringValue = TestUtil.RandomUnicodeString(Random()));
+				idField.StringValue = i.ToString();
+				bodyField.StringValue = TestUtil.RandomUnicodeString(Random());
 				riw.AddDocument(doc);
 				if (Random().Next(7) == 0)
 				{

@@ -154,8 +154,8 @@ namespace Lucene.Net.Test.Codecs.Lucene41
 			// NOTE: we don't 
 			
 			//assert hasOffsets/hasPositions/hasPayloads because they are allowed to be different
-			TermsEnum leftTermsEnum = leftTerms.IEnumerator(null);
-			TermsEnum rightTermsEnum = rightTerms.IEnumerator(null);
+			TermsEnum leftTermsEnum = leftTerms.Iterator(null);
+			TermsEnum rightTermsEnum = rightTerms.Iterator(null);
 			AssertTermsEnum(leftTermsEnum, rightTermsEnum, true);
 			AssertTermsSeeking(leftTerms, rightTerms);
 			if (deep)

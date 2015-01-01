@@ -2,6 +2,7 @@ using System.IO;
 using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Index;
 using Lucene.Net.TestFramework.Util;
 using NUnit.Framework;
 

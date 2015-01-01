@@ -11,6 +11,7 @@ using Lucene.Net.Randomized.Generators;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
 using Lucene.Net.Support;
+using Lucene.Net.TestFramework;
 using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
 using NUnit.Framework;
@@ -22,16 +23,19 @@ namespace Lucene.Net.Test.Index
     [TestFixture]
 	public class TestBackwardsCompatibility : LuceneTestCase
 	{
-		internal static readonly string[] oldNames = new string[] { "40.cfs", "40.nocfs", 
-			"41.cfs", "41.nocfs", "42.cfs", "42.nocfs", "45.cfs", "45.nocfs", "461.cfs", "461.nocfs"
-			 };
+		internal static readonly string[] oldNames =
+		{ "40.cfs", "40.nocfs", 
+		    "41.cfs", "41.nocfs", "42.cfs", "42.nocfs", "45.cfs", "45.nocfs", "461.cfs", "461.nocfs"
+		};
 
-		internal readonly string[] unsupportedNames = new string[] { "19.cfs", "19.nocfs"
-			, "20.cfs", "20.nocfs", "21.cfs", "21.nocfs", "22.cfs", "22.nocfs", "23.cfs", "23.nocfs"
-			, "24.cfs", "24.nocfs", "29.cfs", "29.nocfs" };
+		internal readonly string[] unsupportedNames =
+		{ "19.cfs", "19.nocfs"
+		    , "20.cfs", "20.nocfs", "21.cfs", "21.nocfs", "22.cfs", "22.nocfs", "23.cfs", "23.nocfs"
+		    , "24.cfs", "24.nocfs", "29.cfs", "29.nocfs" };
 
-		internal static readonly string[] oldSingleSegmentNames = new string[] { "40.optimized.cfs"
-			, "40.optimized.nocfs" };
+		internal static readonly string[] oldSingleSegmentNames =
+		{ "40.optimized.cfs"
+		    , "40.optimized.nocfs" };
 
 		internal static IDictionary<string, Directory> oldIndexDirs;
 
@@ -203,7 +207,8 @@ namespace Lucene.Net.Test.Index
 				IsFalse(indexStatus.clean);
 				IsTrue(bos.ToString().Contains(typeof(IndexFormatTooOldException).FullName));
 				dir.Dispose();
-				TestUtil.Rm(oldIndxeDir);
+                oldIndxeDir.Delete(true);
+				
 			}
 		}
 
@@ -542,7 +547,8 @@ namespace Lucene.Net.Test.Index
 			
 		    string oldIdxPath = Path.Combine(Path.GetTempPath(), "\\idx");
 		    var indexDir = new DirectoryInfo(oldIdxPath);
-		    TestUtil.Rm(indexDir);
+            indexDir.Delete(true);
+		    
 			Directory dir = NewFSDirectory(indexDir);
 			LogByteSizeMergePolicy mp = new LogByteSizeMergePolicy();
 			mp.SetNoCFSRatio(doCFS ? 1.0 : 0.0);
@@ -690,7 +696,7 @@ namespace Lucene.Net.Test.Index
 			{
 				Directory dir = oldIndexDirs[name];
 				IndexReader r = DirectoryReader.Open(dir);
-				TermsEnum terms = MultiFields.GetFields(r).Terms("content").IEnumerator(null);
+				TermsEnum terms = MultiFields.GetFields(r).Terms("content").Iterator(null);
 				BytesRef t = terms.Next();
 				IsNotNull(t);
 				// content field only has term aaa:

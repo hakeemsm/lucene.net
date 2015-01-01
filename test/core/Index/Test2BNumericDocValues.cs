@@ -2,6 +2,7 @@ using Lucene.Net.Analysis;
 using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
+using Lucene.Net.TestFramework;
 using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index

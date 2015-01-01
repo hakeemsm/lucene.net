@@ -101,7 +101,7 @@ namespace Lucene.Net.Search
 			protected override TermsEnum GetTermsEnum(Terms terms, AttributeSource atts)
 			{
 				return new TestRegexpRandom2.DumbRegexpQuery.SimpleAutomatonTermsEnum(this, terms
-					.IEnumerator(null));
+					.Iterator(null));
 			}
 
 			private class SimpleAutomatonTermsEnum : FilteredTermsEnum

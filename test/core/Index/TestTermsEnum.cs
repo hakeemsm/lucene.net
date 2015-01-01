@@ -1,32 +1,33 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
+using System;
 using System.Collections.Generic;
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Document;
+using System.Linq;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
+using Lucene.Net.Randomized.Generators;
+using Lucene.Net.Support;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Index;
+using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
 using Lucene.Net.Util.Automaton;
+using NUnit.Framework;
 
 
 namespace Lucene.Net.Test.Index
 {
 	public class TestTermsEnum : LuceneTestCase
 	{
-		/// <exception cref="System.Exception"></exception>
-		public virtual void Test()
+		[Test]
+		public virtual void TestEnumTerms()
 		{
-			Random random = new Random(Random().NextLong());
+			Random random = new Random(Random().Next());
 			LineFileDocs docs = new LineFileDocs(random, DefaultCodecSupportsDocValues());
 			Directory d = NewDirectory();
 			MockAnalyzer analyzer = new MockAnalyzer(Random());
-			analyzer.SetMaxTokenLength(TestUtil.NextInt(Random(), 1, IndexWriter.MAX_TERM_LENGTH
-				));
+			analyzer.SetMaxTokenLength(Random().NextInt(1, IndexWriter.MAX_TERM_LENGTH));
 			RandomIndexWriter w = new RandomIndexWriter(Random(), d, analyzer);
 			int numDocs = AtLeast(10);
 			for (int docCount = 0; docCount < numDocs; docCount++)
@@ -36,7 +37,7 @@ namespace Lucene.Net.Test.Index
 			IndexReader r = w.Reader;
 			w.Dispose();
 			IList<BytesRef> terms = new List<BytesRef>();
-			TermsEnum termsEnum = MultiFields.GetTerms(r, "body").IEnumerator(null);
+			TermsEnum termsEnum = MultiFields.GetTerms(r, "body").Iterator(null);
 			BytesRef term;
 			while ((term = termsEnum.Next()) != null)
 			{
@@ -73,11 +74,11 @@ namespace Lucene.Net.Test.Index
 					{
 						if (VERBOSE)
 						{
-							System.Console.Out.WriteLine("  got term=" + termsEnum.Term().Utf8ToString() + " expected="
+							System.Console.Out.WriteLine("  got term=" + termsEnum.Term.Utf8ToString() + " expected="
 								 + terms[upto].Utf8ToString());
 						}
 						IsTrue(upto < terms.Count);
-						AreEqual(terms[upto], termsEnum.Term());
+						AreEqual(terms[upto], termsEnum.Term);
 					}
 				}
 				else
@@ -103,7 +104,8 @@ namespace Lucene.Net.Test.Index
 						target = terms[Random().Next(terms.Count)];
 						exists = "yes";
 					}
-					upto = Collections.BinarySearch(terms, target);
+				    upto = terms.IndexOf(terms.FirstOrDefault(t => t.BytesEquals(target)));
+				    
 					if (Random().NextBoolean())
 					{
 						if (VERBOSE)
@@ -128,13 +130,13 @@ namespace Lucene.Net.Test.Index
 							else
 							{
 								AreEqual(TermsEnum.SeekStatus.NOT_FOUND, status);
-								AreEqual(terms[upto], termsEnum.Term());
+								AreEqual(terms[upto], termsEnum.Term);
 							}
 						}
 						else
 						{
 							AreEqual(TermsEnum.SeekStatus.FOUND, status);
-							AreEqual(terms[upto], termsEnum.Term());
+							AreEqual(terms[upto], termsEnum.Term);
 						}
 					}
 					else
@@ -158,31 +160,29 @@ namespace Lucene.Net.Test.Index
 						else
 						{
 							IsTrue(result);
-							AreEqual(target, termsEnum.Term());
+							AreEqual(target, termsEnum.Term);
 						}
 					}
 				}
 			}
 			r.Dispose();
 			d.Dispose();
-			docs.Dispose();
+			docs.Close();
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
 		private void AddDoc(RandomIndexWriter w, ICollection<string> terms, IDictionary<BytesRef
 			, int> termToID, int id)
 		{
-			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-				();
-			doc.Add(new IntField("id", id, Field.Store.NO));
-			if (VERBOSE)
+			var doc = new Lucene.Net.Documents.Document {new IntField("id", id, Field.Store.NO)};
+		    if (VERBOSE)
 			{
 				System.Console.Out.WriteLine("TEST: addDoc id:" + id + " terms=" + terms);
 			}
 			foreach (string s2 in terms)
 			{
 				doc.Add(NewStringField("f", s2, Field.Store.NO));
-				termToID.Put(new BytesRef(s2), id);
+				termToID[new BytesRef(s2)] = id;
 			}
 			w.AddDocument(doc);
 			terms.Clear();
@@ -190,7 +190,7 @@ namespace Lucene.Net.Test.Index
 
 		private bool Accepts(CompiledAutomaton c, BytesRef b)
 		{
-			int state = c.runAutomaton.GetInitialState();
+			int state = c.runAutomaton.InitialState;
 			for (int idx = 0; idx < b.length; idx++)
 			{
 				IsTrue(state != -1);
@@ -201,7 +201,7 @@ namespace Lucene.Net.Test.Index
 		}
 
 		// Tests Terms.intersect
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestIntersectRandom()
 		{
 			Directory dir = NewDirectory();
@@ -243,8 +243,7 @@ namespace Lucene.Net.Test.Index
 				System.Console.Out.WriteLine("\nTEST: indexed terms (unicode order):");
 				foreach (BytesRef t in termsArray)
 				{
-					System.Console.Out.WriteLine("  " + t.Utf8ToString() + " -> id:" + termToID.Get(t
-						));
+					System.Console.Out.WriteLine("  " + t.Utf8ToString() + " -> id:" + termToID[t]);
 				}
 			}
 			IndexReader r = w.Reader;
@@ -258,7 +257,7 @@ namespace Lucene.Net.Test.Index
 				// From the random terms, pick some ratio and compile an
 				// automaton:
 				ICollection<string> acceptTerms = new HashSet<string>();
-				TreeSet<BytesRef> sortedAcceptTerms = new TreeSet<BytesRef>();
+				var sortedAcceptTerms = new HashSet<BytesRef>();
 				double keepPct = Random().NextDouble();
 				Lucene.Net.Util.Automaton.Automaton a;
 				if (iter == 0)
@@ -331,7 +330,7 @@ namespace Lucene.Net.Test.Index
 							 == null ? "<null>" : startTerm.Utf8ToString()));
 						if (startTerm != null)
 						{
-							int state = c.runAutomaton.GetInitialState();
+							int state = c.runAutomaton.InitialState;
 							for (int idx = 0; idx < startTerm.length; idx++)
 							{
 								int label = startTerm.bytes[startTerm.offset + idx] & unchecked((int)(0xff));
@@ -380,7 +379,7 @@ namespace Lucene.Net.Test.Index
 						docsEnum = TestUtil.Docs(Random(), te, null, docsEnum, DocsEnum.FLAG_NONE);
 						int docID = docsEnum.NextDoc();
 						IsTrue(docID != DocIdSetIterator.NO_MORE_DOCS);
-						AreEqual(docIDToID.Get(docID), termToID.Get(expected));
+						AreEqual(docIDToID.Get(docID), termToID[expected]);
 						do
 						{
 							loc++;
@@ -437,7 +436,7 @@ namespace Lucene.Net.Test.Index
 			return r.DocFreq(new Term(FIELD, term));
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestEasy()
 		{
 			// No floor arcs:
@@ -511,7 +510,7 @@ namespace Lucene.Net.Test.Index
 			AreEqual(1, DocFreq(r, "aa9"));
 			AreEqual(1, DocFreq(r, "xx"));
 			AreEqual(1, DocFreq(r, "aa4"));
-			TermsEnum te = MultiFields.GetTerms(r, FIELD).IEnumerator(null);
+			TermsEnum te = MultiFields.GetTerms(r, FIELD).Iterator(null);
 			while (te.Next() != null)
 			{
 			}
@@ -525,8 +524,8 @@ namespace Lucene.Net.Test.Index
 			Close();
 		}
 
-		/// <exception cref="System.Exception"></exception>
-		public virtual void TestZeroTerms()
+        [Test]
+        public virtual void TestZeroTerms()
 		{
 			d = NewDirectory();
 			RandomIndexWriter w = new RandomIndexWriter(Random(), d);
@@ -546,7 +545,7 @@ namespace Lucene.Net.Test.Index
 			Terms terms = MultiFields.GetTerms(r, "field");
 			if (terms != null)
 			{
-				IsNull(terms.IEnumerator(null).Next());
+				IsNull(terms.Iterator(null).Next());
 			}
 			r.Dispose();
 			d.Dispose();
@@ -558,10 +557,10 @@ namespace Lucene.Net.Test.Index
 			return TestUtil.RandomRealisticUnicodeString(Random());
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestRandomTerms()
 		{
-			string[] terms = new string[TestUtil.NextInt(Random(), 1, AtLeast(1000))];
+			string[] terms = new string[Random().NextInt(1, AtLeast(1000))];
 			ICollection<string> seen = new HashSet<string>();
 			bool allowEmptyString = Random().NextBoolean();
 			if (Random().Next(10) == 7 && terms.Length > 2)
@@ -578,10 +577,7 @@ namespace Lucene.Net.Test.Index
 						{
 							continue;
 						}
-						else
-						{
-							break;
-						}
+					    break;
 					}
 					while (seen.Count < numTermsSamePrefix)
 					{
@@ -657,7 +653,7 @@ namespace Lucene.Net.Test.Index
 			}
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		private void TestRandomSeeks(IndexReader r, params string[] validTermStrings)
 		{
 			BytesRef[] validTerms = new BytesRef[validTermStrings.Length];
@@ -674,10 +670,9 @@ namespace Lucene.Net.Test.Index
 					System.Console.Out.WriteLine("  " + t.Utf8ToString() + " " + t);
 				}
 			}
-			TermsEnum te = MultiFields.GetTerms(r, FIELD).IEnumerator(null);
+			TermsEnum te = MultiFields.GetTerms(r, FIELD).Iterator(null);
 			int END_LOC = -validTerms.Length - 1;
-			IList<TestTermsEnum.TermAndState> termStates = new List<TestTermsEnum.TermAndState
-				>();
+			IList<TermAndState> termStates = new List<TestTermsEnum.TermAndState>();
 			for (int iter = 0; iter < 100 * RANDOM_MULTIPLIER; iter++)
 			{
 				BytesRef t;
@@ -763,7 +758,7 @@ namespace Lucene.Net.Test.Index
 							}
 							else
 							{
-								//HM:revisit 
+								
 								//assert loc >= -validTerms.length;
 								AreEqual(TermsEnum.SeekStatus.NOT_FOUND, result);
 							}
@@ -772,29 +767,23 @@ namespace Lucene.Net.Test.Index
 				}
 				if (loc >= 0)
 				{
-					AreEqual(t, te.Term());
+					AreEqual(t, te.Term);
 				}
 				else
 				{
-					if (doSeekExact)
+				    if (doSeekExact)
 					{
 						// TermsEnum is unpositioned if seekExact returns false
 						continue;
 					}
-					else
-					{
-						if (loc == END_LOC)
-						{
-							continue;
-						}
-						else
-						{
-							loc = -loc - 1;
-							AreEqual(validTerms[loc], te.Term());
-						}
-					}
+				    if (loc == END_LOC)
+				    {
+				        continue;
+				    }
+				    loc = -loc - 1;
+				    AreEqual(validTerms[loc], te.Term);
 				}
-				// Do a bunch of next's after the seek
+			    // Do a bunch of next's after the seek
 				int numNext = Random().Next(validTerms.Length);
 				for (int nextCount = 0; nextCount < numNext; nextCount++)
 				{
@@ -810,20 +799,16 @@ namespace Lucene.Net.Test.Index
 						IsNull(t2);
 						break;
 					}
-					else
-					{
-						AreEqual(validTerms[loc], t2);
-						if (Random().Next(40) == 17 && termStates.Count < 100)
-						{
-							termStates.Add(new TestTermsEnum.TermAndState(validTerms[loc], te.TermState()
-								));
-						}
-					}
+				    AreEqual(validTerms[loc], t2);
+				    if (Random().Next(40) == 17 && termStates.Count < 100)
+				    {
+				        termStates.Add(new TestTermsEnum.TermAndState(validTerms[loc], te.TermState));
+				    }
 				}
 			}
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestIntersectBasic()
 		{
 			Directory dir = NewDirectory();
@@ -831,21 +816,17 @@ namespace Lucene.Net.Test.Index
 				(Random()));
 			iwc.SetMergePolicy(new LogDocMergePolicy());
 			RandomIndexWriter w = new RandomIndexWriter(Random(), dir, iwc);
-			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-				();
-			doc.Add(NewTextField("field", "aaa", Field.Store.NO));
-			w.AddDocument(doc);
-			doc = new Lucene.Net.Documents.Document();
-			doc.Add(NewStringField("field", "bbb", Field.Store.NO));
-			w.AddDocument(doc);
-			doc = new Lucene.Net.Documents.Document();
-			doc.Add(NewTextField("field", "ccc", Field.Store.NO));
-			w.AddDocument(doc);
+			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document {NewTextField("field", "aaa", Field.Store.NO)};
+		    w.AddDocument(doc);
+			doc = new Lucene.Net.Documents.Document {NewStringField("field", "bbb", Field.Store.NO)};
+		    w.AddDocument(doc);
+			doc = new Lucene.Net.Documents.Document {NewTextField("field", "ccc", Field.Store.NO)};
+		    w.AddDocument(doc);
 			w.ForceMerge(1);
 			DirectoryReader r = w.Reader;
 			w.Dispose();
 			AtomicReader sub = GetOnlySegmentReader(r);
-			Terms terms = sub.Fields().Terms("field");
+			Terms terms = sub.Fields.Terms("field");
 			Lucene.Net.Util.Automaton.Automaton automaton = new RegExp(".*", RegExp.NONE
 				).ToAutomaton();
 			CompiledAutomaton ca = new CompiledAutomaton(automaton, false, false);
@@ -880,7 +861,7 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestIntersectStartTerm()
 		{
 			Directory dir = NewDirectory();
@@ -889,23 +870,21 @@ namespace Lucene.Net.Test.Index
 			iwc.SetMergePolicy(new LogDocMergePolicy());
 			RandomIndexWriter w = new RandomIndexWriter(Random(), dir, iwc);
 			Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
-				();
-			doc.Add(NewStringField("field", "abc", Field.Store.NO));
-			w.AddDocument(doc);
-			doc = new Lucene.Net.Documents.Document();
-			doc.Add(NewStringField("field", "abd", Field.Store.NO));
-			w.AddDocument(doc);
-			doc = new Lucene.Net.Documents.Document();
-			doc.Add(NewStringField("field", "acd", Field.Store.NO));
-			w.AddDocument(doc);
-			doc = new Lucene.Net.Documents.Document();
-			doc.Add(NewStringField("field", "bcd", Field.Store.NO));
-			w.AddDocument(doc);
+			{
+			    NewStringField("field", "abc", Field.Store.NO)
+			};
+		    w.AddDocument(doc);
+			doc = new Lucene.Net.Documents.Document {NewStringField("field", "abd", Field.Store.NO)};
+		    w.AddDocument(doc);
+			doc = new Lucene.Net.Documents.Document {NewStringField("field", "acd", Field.Store.NO)};
+		    w.AddDocument(doc);
+			doc = new Lucene.Net.Documents.Document {NewStringField("field", "bcd", Field.Store.NO)};
+		    w.AddDocument(doc);
 			w.ForceMerge(1);
 			DirectoryReader r = w.Reader;
 			w.Dispose();
 			AtomicReader sub = GetOnlySegmentReader(r);
-			Terms terms = sub.Fields().Terms("field");
+			Terms terms = sub.Fields.Terms("field");
 			Lucene.Net.Util.Automaton.Automaton automaton = new RegExp(".*d", RegExp.NONE
 				).ToAutomaton();
 			CompiledAutomaton ca = new CompiledAutomaton(automaton, false, false);
@@ -937,7 +916,7 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestIntersectEmptyString()
 		{
 			Directory dir = NewDirectory();
@@ -961,7 +940,7 @@ namespace Lucene.Net.Test.Index
 			DirectoryReader r = w.Reader;
 			w.Dispose();
 			AtomicReader sub = GetOnlySegmentReader(r);
-			Terms terms = sub.Fields().Terms("field");
+			Terms terms = sub.Fields.Terms("field");
 			Lucene.Net.Util.Automaton.Automaton automaton = new RegExp(".*", RegExp.NONE
 				).ToAutomaton();
 			// accept ALL

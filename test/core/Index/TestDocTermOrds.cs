@@ -8,6 +8,7 @@ using Lucene.Net.Search;
 using Lucene.Net.Store;
 using Lucene.Net.Support;
 using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Index;
 using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
 using NUnit.Framework;
@@ -32,17 +33,17 @@ namespace Lucene.Net.Test.Index
 				();
 			Field field = NewTextField("field", string.Empty, Field.Store.NO);
 			doc.Add(field);
-			field.StringValue = "a b c");
+			field.StringValue = "a b c";
 			w.AddDocument(doc);
-			field.StringValue = "d e f");
+			field.StringValue = "d e f";
 			w.AddDocument(doc);
-			field.StringValue = "a f");
+			field.StringValue = "a f";
 			w.AddDocument(doc);
 			IndexReader r = w.Reader;
 			w.Close();
 			AtomicReader ar = SlowCompositeReaderWrapper.Wrap(r);
 			DocTermOrds dto = new DocTermOrds(ar, ar.LiveDocs, "field");
-			SortedSetDocValues iter = dto.IEnumerator(ar);
+			SortedSetDocValues iter = dto.Iterator(ar);
 			iter.SetDocument(0);
 			AreEqual(0, iter.NextOrd());
 			AreEqual(1, iter.NextOrd());
@@ -289,7 +290,7 @@ namespace Lucene.Net.Test.Index
 				System.Console.Out.WriteLine("TEST: verify prefix=" + (prefixRef == null ? "null"
 					 : prefixRef.Utf8ToString()));
 				System.Console.Out.WriteLine("TEST: all TERMS:");
-				TermsEnum allTE = MultiFields.GetTerms(r, "field").IEnumerator(null);
+				TermsEnum allTE = MultiFields.GetTerms(r, "field").Iterator(null);
 				int ord = 0;
 				while (allTE.Next() != null)
 				{
@@ -310,7 +311,7 @@ namespace Lucene.Net.Test.Index
 					Terms terms = MultiFields.GetTerms(r, "field");
 					if (terms != null)
 					{
-						TermsEnum termsEnum = terms.IEnumerator(null);
+						TermsEnum termsEnum = terms.Iterator(null);
 						TermsEnum.SeekStatus result = termsEnum.SeekCeil(prefixRef);
 						if (result != TermsEnum.SeekStatus.END)
 						{
@@ -338,7 +339,7 @@ namespace Lucene.Net.Test.Index
 					}
 				}
 			}
-			SortedSetDocValues iter = dto.IEnumerator(r);
+			SortedSetDocValues iter = dto.Iterator(r);
 			for (int docID = 0; docID < r.MaxDoc; docID++)
 			{
 				if (VERBOSE)

@@ -9,6 +9,7 @@ using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Index;
 using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
 using NUnit.Framework;
@@ -270,7 +271,7 @@ namespace Lucene.Net.Test.Index
 						{
 							Terms tfv = r.GetTermVectors(docID).Terms(name);
 							IsNotNull(tfv);
-							TermsEnum termsEnum = tfv.IEnumerator(null);
+							TermsEnum termsEnum = tfv.Iterator(null);
 							AreEqual(new BytesRef(string.Empty + counter), termsEnum.Next
 								());
 							AreEqual(1, termsEnum.TotalTermFreq);

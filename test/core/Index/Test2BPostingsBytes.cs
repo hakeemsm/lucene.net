@@ -4,6 +4,7 @@ using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
 using Lucene.Net.Support;
+using Lucene.Net.TestFramework;
 using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index
@@ -42,7 +43,7 @@ namespace Lucene.Net.Test.Index
 			var doc = new Lucene.Net.Documents.Document();
 			FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
 			ft.IndexOptions = (FieldInfo.IndexOptions.DOCS_AND_FREQS);
-			ft.OmitsNorms = (true);
+			ft.OmitNorms = (true);
 			Test2BPostingsBytes.MyTokenStream tokenStream = new Test2BPostingsBytes.MyTokenStream
 				();
 			Field field = new Field("field", tokenStream, ft);

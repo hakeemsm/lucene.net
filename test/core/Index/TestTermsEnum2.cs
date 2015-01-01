@@ -1,18 +1,20 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System.Collections.Generic;
-using Lucene.Net.Test.Analysis;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
+using Lucene.Net.Randomized.Generators;
+using Lucene.Net.Support;
 using Lucene.Net.Codecs;
-using Lucene.Net.Document;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Index;
+using Lucene.Net.TestFramework.Search;
+using Lucene.Net.TestFramework.Util;
+using Lucene.Net.TestFramework.Util.Automaton;
 using Lucene.Net.Util;
 using Lucene.Net.Util.Automaton;
+using NUnit.Framework;
 
 
 namespace Lucene.Net.Test.Index
@@ -33,13 +35,13 @@ namespace Lucene.Net.Test.Index
 
 		// the terms we put in the index
 		// automata of the same
-		/// <exception cref="System.Exception"></exception>
+		[SetUp]
 		public override void SetUp()
 		{
 			base.SetUp();
 			// we generate aweful regexps: good for testing.
 			// but for preflex codec, the test can be very slow, so use less iterations.
-			numIterations = Codec.GetDefault().GetName().Equals("Lucene3x") ? 10 * RANDOM_MULTIPLIER
+			numIterations = Codec.Default.Name.Equals("Lucene3x") ? 10 * RANDOM_MULTIPLIER
 				 : AtLeast(50);
 			dir = NewDirectory();
 			RandomIndexWriter writer = new RandomIndexWriter(Random(), dir, ((IndexWriterConfig
@@ -49,12 +51,12 @@ namespace Lucene.Net.Test.Index
 				();
 			Field field = NewStringField("field", string.Empty, Field.Store.YES);
 			doc.Add(field);
-			terms = new TreeSet<BytesRef>();
+			terms = new HashSet<BytesRef>();
 			int num = AtLeast(200);
 			for (int i = 0; i < num; i++)
 			{
 				string s = TestUtil.RandomUnicodeString(Random());
-				field.StringValue = s);
+				field.StringValue = s;
 				terms.Add(new BytesRef(s));
 				writer.AddDocument(doc);
 			}
@@ -64,7 +66,7 @@ namespace Lucene.Net.Test.Index
 			writer.Dispose();
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[TearDown]
 		public override void TearDown()
 		{
 			reader.Dispose();
@@ -73,7 +75,7 @@ namespace Lucene.Net.Test.Index
 		}
 
 		/// <summary>tests a pre-intersected automaton against the original</summary>
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestFiniteVersusInfinite()
 		{
 			for (int i = 0; i < numIterations; i++)
@@ -104,15 +106,14 @@ namespace Lucene.Net.Test.Index
 		}
 
 		/// <summary>seeks to every term accepted by some automata</summary>
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestSeeking()
 		{
 			for (int i = 0; i < numIterations; i++)
 			{
 				string reg = AutomatonTestUtil.RandomRegexp(Random());
-				Lucene.Net.Util.Automaton.Automaton automaton = new RegExp(reg, RegExp.NONE
-					).ToAutomaton();
-				TermsEnum te = MultiFields.GetTerms(reader, "field").IEnumerator(null);
+				var automaton = new RegExp(reg, RegExp.NONE).ToAutomaton();
+				TermsEnum te = MultiFields.GetTerms(reader, "field").Iterator(null);
 				List<BytesRef> unsortedTerms = new List<BytesRef>(terms);
 				Collections.Shuffle(unsortedTerms, Random());
 				foreach (BytesRef term in unsortedTerms)
@@ -129,7 +130,7 @@ namespace Lucene.Net.Test.Index
 						{
 							// seek ceil
 							AreEqual(TermsEnum.SeekStatus.FOUND, te.SeekCeil(term));
-							AreEqual(term, te.Term());
+							AreEqual(term, te.Term);
 						}
 					}
 				}
@@ -137,12 +138,12 @@ namespace Lucene.Net.Test.Index
 		}
 
 		/// <summary>mixes up seek and next for all terms</summary>
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestSeekingAndNexting()
 		{
 			for (int i = 0; i < numIterations; i++)
 			{
-				TermsEnum te = MultiFields.GetTerms(reader, "field").IEnumerator(null);
+				TermsEnum te = MultiFields.GetTerms(reader, "field").Iterator(null);
 				foreach (BytesRef term in terms)
 				{
 					int c = Random().Next(3);
@@ -155,7 +156,7 @@ namespace Lucene.Net.Test.Index
 						if (c == 1)
 						{
 							AreEqual(TermsEnum.SeekStatus.FOUND, te.SeekCeil(term));
-							AreEqual(term, te.Term());
+							AreEqual(term, te.Term);
 						}
 						else
 						{
@@ -167,7 +168,7 @@ namespace Lucene.Net.Test.Index
 		}
 
 		/// <summary>tests intersect: TODO start at a random term!</summary>
-		/// <exception cref="System.Exception"></exception>
+		[Test]
 		public virtual void TestIntersect()
 		{
 			for (int i = 0; i < numIterations; i++)
@@ -180,10 +181,10 @@ namespace Lucene.Net.Test.Index
 				TermsEnum te = MultiFields.GetTerms(reader, "field").Intersect(ca, null);
 				Lucene.Net.Util.Automaton.Automaton expected = BasicOperations.Intersection
 					(termsAutomaton, automaton);
-				TreeSet<BytesRef> found = new TreeSet<BytesRef>();
+				var found = new HashSet<BytesRef>();
 				while (te.Next() != null)
 				{
-					found.Add(BytesRef.DeepCopyOf(te.Term()));
+					found.Add(BytesRef.DeepCopyOf(te.Term));
 				}
 				Lucene.Net.Util.Automaton.Automaton actual = BasicAutomata.MakeStringUnion
 					(found);

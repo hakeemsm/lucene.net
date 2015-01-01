@@ -196,7 +196,7 @@ namespace Lucene.Net.TestFramework.Index
 
         public virtual void AddDocuments<T>(IEnumerable<T> docs) where T : IEnumerable<IIndexableField>
         {
-            LuceneTestCase.MaybeChangeLiveIndexWriterConfig(r, w.GetConfig());
+            LuceneTestCase.MaybeChangeLiveIndexWriterConfig(r, w.Config);
             w.AddDocuments(docs);
             MaybeCommit();
         }
@@ -204,7 +204,7 @@ namespace Lucene.Net.TestFramework.Index
         public virtual void UpdateDocuments<T>(Term delTerm, IEnumerable<T> docs) where
             T : IEnumerable<IIndexableField>
         {
-            LuceneTestCase.MaybeChangeLiveIndexWriterConfig(r, w.GetConfig());
+            LuceneTestCase.MaybeChangeLiveIndexWriterConfig(r, w.Config);
             w.UpdateDocuments(delTerm, docs);
             MaybeCommit();
         }
@@ -213,9 +213,9 @@ namespace Lucene.Net.TestFramework.Index
          * Updates a document.
          * @see IndexWriter#updateDocument(Term, IEnumerable)
          */
-        public virtual void UpdateDocument<T>(Term t, IEnumerable<T> doc) where T : IndexableField
+        public virtual void UpdateDocument<T>(Term t, IEnumerable<T> doc) where T : IIndexableField
         {
-            LuceneTestCase.MaybeChangeLiveIndexWriterConfig(r, w.GetConfig());
+            LuceneTestCase.MaybeChangeLiveIndexWriterConfig(r, w.Config);
             if (r.Next(5) == 3)
             {
                 w.UpdateDocuments(t, new _Iterable_188(doc));

@@ -1,4 +1,6 @@
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using Lucene.Net.Analysis;
@@ -7,6 +9,7 @@ using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
 using Lucene.Net.Support;
+using Lucene.Net.TestFramework;
 using Lucene.Net.TestFramework.Index;
 using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
@@ -55,8 +58,8 @@ namespace Lucene.Net.Test.Index
                 }
             }
             postingsList.Shuffle(Random());
-            ConcurrentLinkedQueue<string> postings = new ConcurrentLinkedQueue<string>(postingsList
-                );
+            var postings = new ConcurrentQueue<string>(postingsList);
+            
             Directory dir = NewFSDirectory(CreateTempDir("bagofpostings"));
             RandomIndexWriter iw = new RandomIndexWriter(Random(), dir, iwc);
             int threadCount = TestUtil.NextInt(Random(), 1, 5);
@@ -75,20 +78,20 @@ namespace Lucene.Net.Test.Index
                     Field field = LuceneTestCase.NewTextField("field", string.Empty, Field.Store.NO);
                     document.Add(field);
                     startingGun.Wait();
-                    while (!postings.IsEmpty())
+                    while (postings.Any())
                     {
                         StringBuilder text = new StringBuilder();
                         ICollection<string> visited = new HashSet<string>();
                         for (int i = 0; i < maxTermsPerDoc; i++)
                         {
-                            string token = postings.Poll();
-                            if (token == null)
+                            string token;
+                            if (!postings.TryDequeue(out token))
                             {
                                 break;
                             }
                             if (visited.Contains(token))
                             {
-                                postings.Add(token);
+                                postings.Enqueue(token);
                                 break;
                             }
                             text.Append(' ');
@@ -117,7 +120,7 @@ namespace Lucene.Net.Test.Index
                 {
                     AreEqual(numTerms - 1, terms.Size);
                 }
-                TermsEnum termsEnum = terms.IEnumerator(null);
+                TermsEnum termsEnum = terms.Iterator(null);
                 BytesRef term_1;
                 while ((term_1 = termsEnum.Next()) != null)
                 {

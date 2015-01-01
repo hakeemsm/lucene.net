@@ -8,6 +8,7 @@ using Lucene.Net.Search;
 using Lucene.Net.Store;
 using Lucene.Net.Support;
 using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Index;
 using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
 using NUnit.Framework;
@@ -91,7 +92,7 @@ namespace Lucene.Net.Test.Index
 			Terms terms = reader.Terms(fieldName);
 			if (terms != null)
 			{
-				TermsEnum te = terms.IEnumerator(null);
+				TermsEnum te = terms.Iterator(null);
 				if (te.SeekExact(bytes))
 				{
 					return te.DocsAndPositions(liveDocs, null);
@@ -123,7 +124,7 @@ namespace Lucene.Net.Test.Index
 			int term = Random().Next(max);
 			int[][] positionsInDoc = new int[numDocs][];
 			FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
-			customType.OmitsNorms = (true);
+			customType.OmitNorms = (true);
 			for (int i = 0; i < numDocs; i++)
 			{
 				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
@@ -221,7 +222,7 @@ namespace Lucene.Net.Test.Index
 			int term = Random().Next(max);
 			int[] freqInDoc = new int[numDocs];
 			FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
-			customType.OmitsNorms = (true);
+			customType.OmitNorms = (true);
 			for (int i = 0; i < numDocs; i++)
 			{
 				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
@@ -321,7 +322,7 @@ namespace Lucene.Net.Test.Index
 				(TEST_VERSION_CURRENT, new MockAnalyzer(Random())));
 			int howMany = 1000;
 			FieldType customType = new FieldType(TextField.TYPE_NOT_STORED);
-			customType.OmitsNorms = (true);
+			customType.OmitNorms = (true);
 			for (int i = 0; i < 39; i++)
 			{
 				Lucene.Net.Documents.Document doc = new Lucene.Net.Documents.Document
@@ -396,7 +397,7 @@ namespace Lucene.Net.Test.Index
 			AssertEquals(-1, docid);
 			IsTrue(disi.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
 			// now reuse and check again
-			TermsEnum te = r.Terms("foo").IEnumerator(null);
+			TermsEnum te = r.Terms("foo").Iterator(null);
 			IsTrue(te.SeekExact(new BytesRef("bar")));
 			disi = TestUtil.Docs(Random(), te, null, disi, DocsEnum.FLAG_NONE);
 			docid = disi.DocID;
@@ -423,7 +424,7 @@ namespace Lucene.Net.Test.Index
 			AssertEquals(-1, docid);
 			IsTrue(disi.NextDoc() != DocIdSetIterator.NO_MORE_DOCS);
 			// now reuse and check again
-			TermsEnum te = r.Terms("foo").IEnumerator(null);
+			TermsEnum te = r.Terms("foo").Iterator(null);
 			IsTrue(te.SeekExact(new BytesRef("bar")));
 			disi = te.DocsAndPositions(null, disi);
 			docid = disi.DocID;

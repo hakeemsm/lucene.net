@@ -3,6 +3,7 @@ using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
 using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Index;
 using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
 using NUnit.Framework;
@@ -64,7 +65,7 @@ namespace Lucene.Net.Test.Index
 				}
 				int docCount = terms.DocCount;
 				FixedBitSet visited = new FixedBitSet(ir.MaxDoc);
-				TermsEnum te = terms.IEnumerator(null);
+				TermsEnum te = terms.Iterator(null);
 				while (te.Next() != null)
 				{
 					DocsEnum de = TestUtil.Docs(Random(), te, null, null, DocsEnum.FLAG_NONE);

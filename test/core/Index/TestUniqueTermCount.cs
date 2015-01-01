@@ -1,19 +1,16 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Document;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Search.Similarities;
 using Lucene.Net.Store;
-using Lucene.Net.Util;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Index;
+using Lucene.Net.TestFramework.Util;
+using NUnit.Framework;
 
 
 namespace Lucene.Net.Test.Index
@@ -27,7 +24,7 @@ namespace Lucene.Net.Test.Index
 
 		internal List<int> expected = new List<int>();
 
-		/// <exception cref="System.Exception"></exception>
+		[SetUp]
 		public override void SetUp()
 		{
 			base.SetUp();
@@ -43,14 +40,14 @@ namespace Lucene.Net.Test.Index
 			doc.Add(foo);
 			for (int i = 0; i < 100; i++)
 			{
-				foo.StringValue = AddValue());
+				foo.StringValue = AddValue();
 				writer.AddDocument(doc);
 			}
 			reader = writer.Reader;
 			writer.Dispose();
 		}
 
-		/// <exception cref="System.Exception"></exception>
+		[TearDown]
 		public override void TearDown()
 		{
 			reader.Dispose();
@@ -58,8 +55,8 @@ namespace Lucene.Net.Test.Index
 			base.TearDown();
 		}
 
-		/// <exception cref="System.Exception"></exception>
-		public virtual void Test()
+		[Test]
+		public virtual void TestNormCount()
 		{
 			NumericDocValues fooNorms = MultiDocValues.GetNormValues(reader, "foo");
 			IsNotNull(fooNorms);
@@ -96,7 +93,7 @@ namespace Lucene.Net.Test.Index
 		{
 			public override long ComputeNorm(FieldInvertState state)
 			{
-				return state.GetUniqueTermCount();
+				return state.UniqueTermCount;
 			}
 
 			public override Similarity.SimWeight ComputeWeight(float queryBoost, CollectionStatistics
@@ -106,7 +103,7 @@ namespace Lucene.Net.Test.Index
 			}
 
 			/// <exception cref="System.IO.IOException"></exception>
-			public override Similarity.SimScorer SimScorer(Similarity.SimWeight weight, AtomicReaderContext
+			public override SimScorer GetSimScorer(Similarity.SimWeight weight, AtomicReaderContext
 				 context)
 			{
 				throw new NotSupportedException();

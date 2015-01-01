@@ -5,6 +5,8 @@ using Lucene.Net.Codecs;
 using Lucene.Net.Codecs.Lucene46;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
+using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Index;
 using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
 using NUnit.Framework;

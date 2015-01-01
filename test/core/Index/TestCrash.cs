@@ -4,6 +4,7 @@ using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
 using Lucene.Net.TestFramework;
+using Lucene.Net.TestFramework.Index;
 using NUnit.Framework;
 
 namespace Lucene.Net.Test.Index

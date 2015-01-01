@@ -28,24 +28,24 @@ namespace Lucene.Net.Test.Index
 				/// <exception cref="System.IO.IOException"></exception>
 				public override Lucene.Net.Index.Terms Terms(string field)
 				{
-					return new TestFilterAtomicReader.TestReader.TestTerms(base.Terms(field));
+					return new TestTerms(base.Terms(field));
 				}
 			}
 
-			private class TestTerms : FilterAtomicReader.FilterTerms
+			private class TestTerms : FilterTerms
 			{
 				public TestTerms(Terms @in) : base(@in)
 				{
 				}
 
 				/// <exception cref="System.IO.IOException"></exception>
-				public override TermsEnum IEnumerator(TermsEnum reuse)
+				public override TermsEnum Iterator(TermsEnum reuse)
 				{
-					return new TestFilterAtomicReader.TestReader.TestTermsEnum(base.IEnumerator(reuse));
+					return new TestTermsEnum(base.Iterator(reuse));
 				}
 			}
 
-			private class TestTermsEnum : FilterAtomicReader.FilterTermsEnum
+			private class TestTermsEnum : FilterTermsEnum
 			{
 				public TestTermsEnum(TermsEnum @in) : base(@in)
 				{
@@ -145,7 +145,7 @@ namespace Lucene.Net.Test.Index
 			writer.Dispose();
 			reader.Dispose();
 			reader = DirectoryReader.Open(target);
-			TermsEnum terms = MultiFields.GetTerms(reader, "default").IEnumerator(null);
+			TermsEnum terms = MultiFields.GetTerms(reader, "default").Iterator(null);
 			while (terms.Next() != null)
 			{
 				IsTrue(terms.Term.Utf8ToString().IndexOf('e') != -1);

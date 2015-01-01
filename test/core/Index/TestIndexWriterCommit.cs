@@ -11,6 +11,7 @@ using Lucene.Net.TestFramework;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
+using Lucene.Net.TestFramework.Index;
 using Lucene.Net.TestFramework.Util;
 using NUnit.Framework;
 using Directory = Lucene.Net.Store.Directory;

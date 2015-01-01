@@ -3,6 +3,7 @@ using Lucene.Net.Analysis.Tokenattributes;
 using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
+using Lucene.Net.TestFramework;
 
 namespace Lucene.Net.Test.Index
 {
@@ -34,7 +35,7 @@ namespace Lucene.Net.Test.Index
 			}
 			var doc = new Lucene.Net.Documents.Document();
 			FieldType ft = new FieldType(TextField.TYPE_NOT_STORED);
-			ft.OmitsNorms = (true);
+			ft.OmitNorms = (true);
 			ft.IndexOptions = (FieldInfo.IndexOptions.DOCS_ONLY);
 			Field field = new Field("field", new Test2BPostings.MyTokenStream(), ft);
 			doc.Add(field);

@@ -43,7 +43,7 @@ namespace Lucene.Net.Search
 			IndexSearcher s = NewSearcher(r);
 			Terms terms = MultiFields.GetFields(r).Terms("body");
 			int termCount = 0;
-			TermsEnum termsEnum = terms.IEnumerator(null);
+			TermsEnum termsEnum = terms.Iterator(null);
 			while (termsEnum.Next() != null)
 			{
 				termCount++;

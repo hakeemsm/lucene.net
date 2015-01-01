@@ -9,6 +9,7 @@ using Lucene.Net.Support;
 using Lucene.Net.TestFramework;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
+using Lucene.Net.TestFramework.Index;
 using Lucene.Net.TestFramework.Util;
 using Lucene.Net.Util;
 using Lucene.Net.Store;
@@ -33,7 +34,7 @@ namespace Lucene.Net.Test.Index
             for (int i = 0; i < numDocs; i++)
             {
                 Lucene.Net.Documents.Document d = new Lucene.Net.Documents.Document();
-                long number = Random().NextLong();
+                long number = Random().NextLong(0,long.MaxValue);
                 d.Add(new NumericDocValuesField("number", number));
                 BytesRef bytes = new BytesRef(TestUtil.RandomRealisticUnicodeString(Random()));
                 d.Add(new BinaryDocValuesField("bytes", bytes));

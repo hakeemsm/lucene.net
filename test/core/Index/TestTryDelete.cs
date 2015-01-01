@@ -1,15 +1,11 @@
-/*
- * This code is derived from MyJavaLibrary (http://somelinktomycoollibrary)
- * 
- * If this is an open source Java library, include the proper license and copyright attributions here!
- */
-
-using Lucene.Net.Test.Analysis;
-using Lucene.Net.Document;
+using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
+using Lucene.Net.Randomized.Generators;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
-using Lucene.Net.Util;
+using Lucene.Net.TestFramework;
+using NUnit.Framework;
 
 
 namespace Lucene.Net.Test.Index
@@ -45,14 +41,14 @@ namespace Lucene.Net.Test.Index
 			return directory;
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestTryDeleteDocument()
 		{
 			Directory directory = CreateIndex();
 			IndexWriter writer = GetWriter(directory);
 			ReferenceManager<IndexSearcher> mgr = new SearcherManager(writer, true, new SearcherFactory
 				());
-			TrackingIndexWriter mgrWriter = new TrackingIndexWriter(writer);
+			var mgrWriter = new NRTManager.TrackingIndexWriter(writer);
 			IndexSearcher searcher = mgr.Acquire();
 			TopDocs topDocs = searcher.Search(new TermQuery(new Term("foo", "0")), 100);
 			AreEqual(1, topDocs.TotalHits);
@@ -69,19 +65,19 @@ namespace Lucene.Net.Test.Index
 			}
 			// The tryDeleteDocument should have succeeded:
 			IsTrue(result != -1);
-			IsTrue(writer.HasDeletions());
+			IsTrue(writer.HasDeletions);
 			if (Random().NextBoolean())
 			{
 				writer.Commit();
 			}
-			IsTrue(writer.HasDeletions());
+			IsTrue(writer.HasDeletions);
 			mgr.MaybeRefresh();
 			searcher = mgr.Acquire();
 			topDocs = searcher.Search(new TermQuery(new Term("foo", "0")), 100);
 			AreEqual(0, topDocs.TotalHits);
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestTryDeleteDocumentCloseAndReopen()
 		{
 			Directory directory = CreateIndex();
@@ -91,11 +87,11 @@ namespace Lucene.Net.Test.Index
 			IndexSearcher searcher = mgr.Acquire();
 			TopDocs topDocs = searcher.Search(new TermQuery(new Term("foo", "0")), 100);
 			AreEqual(1, topDocs.TotalHits);
-			TrackingIndexWriter mgrWriter = new TrackingIndexWriter(writer);
+			var mgrWriter = new NRTManager.TrackingIndexWriter(writer);
 			long result = mgrWriter.TryDeleteDocument(DirectoryReader.Open(writer, true), 0);
 			AreEqual(1, result);
 			writer.Commit();
-			IsTrue(writer.HasDeletions());
+			IsTrue(writer.HasDeletions);
 			mgr.MaybeRefresh();
 			searcher = mgr.Acquire();
 			topDocs = searcher.Search(new TermQuery(new Term("foo", "0")), 100);
@@ -106,7 +102,7 @@ namespace Lucene.Net.Test.Index
 			AreEqual(0, topDocs.TotalHits);
 		}
 
-		/// <exception cref="System.IO.IOException"></exception>
+		[Test]
 		public virtual void TestDeleteDocuments()
 		{
 			Directory directory = CreateIndex();
@@ -116,11 +112,11 @@ namespace Lucene.Net.Test.Index
 			IndexSearcher searcher = mgr.Acquire();
 			TopDocs topDocs = searcher.Search(new TermQuery(new Term("foo", "0")), 100);
 			AreEqual(1, topDocs.TotalHits);
-			TrackingIndexWriter mgrWriter = new TrackingIndexWriter(writer);
+			var mgrWriter = new NRTManager.TrackingIndexWriter(writer);
 			long result = mgrWriter.DeleteDocuments(new TermQuery(new Term("foo", "0")));
 			AreEqual(1, result);
 			// writer.commit();
-			IsTrue(writer.HasDeletions());
+			IsTrue(writer.HasDeletions);
 			mgr.MaybeRefresh();
 			searcher = mgr.Acquire();
 			topDocs = searcher.Search(new TermQuery(new Term("foo", "0")), 100);

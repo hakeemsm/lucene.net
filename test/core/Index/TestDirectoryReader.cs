@@ -71,11 +71,11 @@ namespace Lucene.Net.Test.Index
 			MultiReader mr2 = new MultiReader(readers1);
 			MultiReader mr3 = new MultiReader(readers2);
 			// test mixing up TermDocs and TermEnums from different readers.
-			TermsEnum te2 = MultiFields.GetTerms(mr2, "body").IEnumerator(null);
+			TermsEnum te2 = MultiFields.GetTerms(mr2, "body").Iterator(null);
 			te2.SeekCeil(new BytesRef("wow"));
 			DocsEnum td = TestUtil.Docs(Random(), mr2, "body", te2.Term, MultiFields.GetLiveDocs
 				(mr2), null, 0);
-			TermsEnum te3 = MultiFields.GetTerms(mr3, "body").IEnumerator(null);
+			TermsEnum te3 = MultiFields.GetTerms(mr3, "body").Iterator(null);
 			te3.SeekCeil(new BytesRef("wow"));
 			td = TestUtil.Docs(Random(), te3, MultiFields.GetLiveDocs(mr3), td, 0);
 			int ret = 0;
@@ -404,7 +404,8 @@ namespace Lucene.Net.Test.Index
 			writer.Dispose();
 			dir.Dispose();
 			// Try to erase the data - this ensures that the writer closed all files
-			TestUtil.Rm(dirFile);
+            dirFile.Delete(true);
+			
 			dir = NewFSDirectory(dirFile);
 			// Now create the data set again, just as before
 			writer = new IndexWriter(dir, NewIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer(Random())).SetOpenMode(IndexWriterConfig.OpenMode.CREATE));
@@ -418,7 +419,7 @@ namespace Lucene.Net.Test.Index
 			dir.Dispose();
 			// The following will fail if reader did not close
 			// all files
-			TestUtil.Rm(dirFile);
+			dirFile.Delete(true); //this is needed
 		}
 
 		[Test]
@@ -603,10 +604,10 @@ namespace Lucene.Net.Test.Index
 					IsNull(fields2.Terms(field1_1));
 					continue;
 				}
-				TermsEnum enum1 = terms1.IEnumerator(null);
+				TermsEnum enum1 = terms1.Iterator(null);
 				Terms terms2 = fields2.Terms(field1_1);
 				IsNotNull(terms2);
-				TermsEnum enum2 = terms2.IEnumerator(null);
+				TermsEnum enum2 = terms2.Iterator(null);
 				while (enum1.Next() != null)
 				{
 					AssertEquals("Different terms", enum1.Term, enum2.Next());
@@ -682,7 +683,7 @@ namespace Lucene.Net.Test.Index
 				();
 			FieldType customType = new FieldType(TextField.TYPE_STORED);
 			customType.Tokenized = (false);
-			customType.OmitsNorms = (true);
+			customType.OmitNorms = (true);
 			doc.Add(NewField("id", id, customType));
 			return doc;
 		}
@@ -694,7 +695,8 @@ namespace Lucene.Net.Test.Index
 		public virtual void TestNoDir()
 		{
 			DirectoryInfo tempDir = CreateTempDir("doesnotexist");
-			TestUtil.Rm(tempDir);
+            tempDir.Delete(true);
+			
 			Directory dir = NewFSDirectory(tempDir);
 			try
 			{
