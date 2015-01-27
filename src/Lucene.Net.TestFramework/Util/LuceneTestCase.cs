@@ -607,9 +607,17 @@ namespace Lucene.Net.Util
         /// </summary>
         public static Random Random()
         {
-            return new Random();
+            return _random ?? (_random = new Random( /* LUCENENET TODO seed */));
             //return RandomizedContext.Current.Random;
         }
+
+        protected static Random randon()
+        {
+            return Random();
+        }
+
+        [ThreadStatic]
+        private static Random _random;
 
         /// <summary>
         /// Registers a <seealso cref="IDisposable"/> resource that should be closed after the test
@@ -1195,16 +1203,16 @@ namespace Lucene.Net.Util
                 switch (random.Next(10))
                 {
                     case 3: // sometimes rate limit on flush
-                        rateLimitedDirectoryWrapper.SetMaxWriteMBPerSec(maxMBPerSec, IOContext.Context_e.FLUSH);
+                        rateLimitedDirectoryWrapper.SetMaxWriteMBPerSec(maxMBPerSec, IOContext.UsageContext.FLUSH);
                         break;
 
                     case 2: // sometimes rate limit flush & merge
-                        rateLimitedDirectoryWrapper.SetMaxWriteMBPerSec(maxMBPerSec, IOContext.Context_e.FLUSH);
-                        rateLimitedDirectoryWrapper.SetMaxWriteMBPerSec(maxMBPerSec, IOContext.Context_e.MERGE);
+                        rateLimitedDirectoryWrapper.SetMaxWriteMBPerSec(maxMBPerSec, IOContext.UsageContext.FLUSH);
+                        rateLimitedDirectoryWrapper.SetMaxWriteMBPerSec(maxMBPerSec, IOContext.UsageContext.MERGE);
                         break;
 
                     default:
-                        rateLimitedDirectoryWrapper.SetMaxWriteMBPerSec(maxMBPerSec, IOContext.Context_e.MERGE);
+                        rateLimitedDirectoryWrapper.SetMaxWriteMBPerSec(maxMBPerSec, IOContext.UsageContext.MERGE);
                         break;
                 }
                 directory = rateLimitedDirectoryWrapper;
@@ -1213,7 +1221,7 @@ namespace Lucene.Net.Util
             if (bare)
             {
                 BaseDirectoryWrapper @base = new BaseDirectoryWrapper(directory);
-                //CloseAfterSuite(new IDisposableDirectory(@base, SuiteFailureMarker));
+                // LUCENENET TODO CloseAfterSuite(new IDisposableDirectory(@base, SuiteFailureMarker));
                 return @base;
             }
             else
@@ -1221,7 +1229,7 @@ namespace Lucene.Net.Util
                 MockDirectoryWrapper mock = new MockDirectoryWrapper(random, directory);
 
                 mock.Throttling = TEST_THROTTLING;
-                //CloseAfterSuite(new IDisposableDirectory(mock, SuiteFailureMarker));
+                // LUCENENET TODO CloseAfterSuite(new IDisposableDirectory(mock, SuiteFailureMarker));
                 return mock;
             }
         }
