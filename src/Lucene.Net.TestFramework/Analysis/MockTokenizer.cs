@@ -138,7 +138,7 @@ namespace Lucene.Net.Analysis
         {
         }
 
-        public override bool IncrementToken()
+        public override sealed bool IncrementToken()
         {
             //Debug.Assert(!EnableChecks_Renamed || (StreamState == State.RESET || StreamState == State.INCREMENT), "IncrementToken() called while in wrong state: " + StreamState);
             ClearAttributes();
