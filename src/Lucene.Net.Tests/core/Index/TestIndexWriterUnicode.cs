@@ -1,3 +1,4 @@
+using Lucene.Net.Attributes;
 using Lucene.Net.Documents;
 using Lucene.Net.Support;
 using System;
@@ -172,7 +173,7 @@ namespace Lucene.Net.Index
 
             if (isTop)
             {
-                Assert.IsTrue(allTerms.Equals(seenTerms));
+                Assert.IsTrue(allTerms.SetEquals(seenTerms));
             }
 
             // Test seeking:
@@ -185,7 +186,7 @@ namespace Lucene.Net.Index
         }
 
         // LUCENE-510
-        [Test]
+        [Test, LongRunningTest]
         public virtual void TestRandomUnicodeStrings()
         {
             char[] buffer = new char[20];
