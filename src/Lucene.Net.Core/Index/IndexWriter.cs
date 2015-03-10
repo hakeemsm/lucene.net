@@ -50,7 +50,6 @@ namespace Lucene.Net.Index
     using MergeInfo = Lucene.Net.Store.MergeInfo;
     using OpenMode_e = Lucene.Net.Index.IndexWriterConfig.OpenMode_e;
     using Query = Lucene.Net.Search.Query;
-    using ThreadInterruptedException = Lucene.Net.Util.ThreadInterruptedException;
     using TrackingDirectoryWrapper = Lucene.Net.Store.TrackingDirectoryWrapper;
 
     /// <summary>
@@ -905,7 +904,7 @@ namespace Lucene.Net.Index
                         // points.
                         if (commit.Directory != directory)
                         {
-                            throw new System.ArgumentException("IndexCommit's directory doesn't match my directory");
+                            throw new ArgumentException(string.Format("IndexCommit's directory doesn't match my directory (mine: {0}, commit's: {1})", directory, commit.Directory));
                         }
                         SegmentInfos oldInfos = new SegmentInfos();
                         oldInfos.Read(directory, commit.SegmentsFileName);
@@ -2862,7 +2861,7 @@ namespace Lucene.Net.Index
 
         /// <summary>
         /// Called internally if any index state has changed. </summary>
-        internal virtual void Changed()
+        internal void Changed()
         {
             lock (this)
             {
@@ -5365,7 +5364,7 @@ namespace Lucene.Net.Index
                 }
                 catch (ThreadInterruptedException ie)
                 {
-                    throw new ThreadInterruptedException(ie);
+                    throw new ThreadInterruptedException("Thread Interrupted Exception", ie);
                 }
             }
         }

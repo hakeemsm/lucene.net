@@ -1,3 +1,4 @@
+using System.Threading;
 using Apache.NMS.Util;
 using Lucene.Net.Search;
 using System;
@@ -30,7 +31,6 @@ namespace Lucene.Net.Index
     using DeleteSlice = Lucene.Net.Index.DocumentsWriterDeleteQueue.DeleteSlice;
     using LuceneTestCase = Lucene.Net.Util.LuceneTestCase;
     using TermQuery = Lucene.Net.Search.TermQuery;
-    using ThreadInterruptedException = Lucene.Net.Util.ThreadInterruptedException;
 
     /// <summary>
     /// Unit test for <seealso cref="DocumentsWriterDeleteQueue"/>
@@ -80,9 +80,9 @@ namespace Lucene.Net.Index
                 }
                 Assert.AreEqual(j + 1, queue.NumGlobalTermDeletes());
             }
-            Assert.AreEqual(uniqueValues, bd1.Terms_Nunit().Keys);
-            Assert.AreEqual(uniqueValues, bd2.Terms_Nunit().Keys);
-            HashSet<Term> frozenSet = new HashSet<Term>();
+            assertEquals(uniqueValues, new HashSet<Term>(bd1.Terms.Keys));
+            assertEquals(uniqueValues, new HashSet<Term>(bd2.Terms.Keys));
+            var frozenSet = new HashSet<Term>();
             foreach (Term t in queue.FreezeGlobalBuffer(null).TermsIterable())
             {
                 BytesRef bytesRef = new BytesRef();
@@ -97,7 +97,7 @@ namespace Lucene.Net.Index
         {
             for (int i = start; i <= end; i++)
             {
-                Assert.AreEqual(Convert.ToInt32(end), deletes.Terms_Nunit()[new Term("id", ids[i].ToString())]);
+                Assert.AreEqual(Convert.ToInt32(end), deletes.Terms[new Term("id", ids[i].ToString())]);
             }
         }
 
@@ -240,7 +240,7 @@ namespace Lucene.Net.Index
                 queue.UpdateSlice(slice);
                 BufferedUpdates deletes = updateThread.Deletes;
                 slice.Apply(deletes, BufferedUpdates.MAX_INT);
-                assertEquals(uniqueValues, deletes.Terms_Nunit().Keys);
+                assertEquals(uniqueValues, new HashSet<Term>(deletes.Terms.Keys));
             }
             queue.TryApplyGlobalSlice();
             HashSet<Term> frozenSet = new HashSet<Term>();
@@ -282,7 +282,7 @@ namespace Lucene.Net.Index
                 }
                 catch (ThreadInterruptedException e)
                 {
-                    throw new ThreadInterruptedException(e);
+                    throw new ThreadInterruptedException("Thread Interrupted Exception", e);
                 }
                 int i = 0;
                 while ((i = Index.GetAndIncrement()) < Ids.Length)

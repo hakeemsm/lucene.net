@@ -32,7 +32,6 @@ namespace Lucene.Net.Index
 
     using MockAnalyzer = Lucene.Net.Analysis.MockAnalyzer;
     using TextField = TextField;
-    using ThreadInterruptedException = Lucene.Net.Util.ThreadInterruptedException;
 
     //
     // this was developed for Lucene In Action,
@@ -72,8 +71,6 @@ namespace Lucene.Net.Index
             }
         }
 
-        protected internal IList<IndexCommit> Snapshots = new List<IndexCommit>();
-
         protected internal virtual void PrepareIndexAndSnapshots(SnapshotDeletionPolicy sdp, IndexWriter writer, int numSnapshots)
         {
             for (int i = 0; i < numSnapshots; i++)
@@ -109,6 +106,16 @@ namespace Lucene.Net.Index
                     Assert.AreEqual(snapshot.Generation, sdp.GetIndexCommit(snapshot.Generation).Generation);
                 }
             }
+        }
+
+        protected internal IList<IndexCommit> Snapshots;
+
+        [SetUp]
+        public override void SetUp()
+        {
+            base.SetUp();
+
+            this.Snapshots = new List<IndexCommit>();
         }
 
         [Ignore]
@@ -225,7 +232,7 @@ namespace Lucene.Net.Index
                     }
                     catch (ThreadInterruptedException ie)
                     {
-                        throw new ThreadInterruptedException(ie);
+                        throw new ThreadInterruptedException("Thread Interrupted Exception", ie);
                     }
                 } while (DateTime.Now.Millisecond < StopTime);
             }

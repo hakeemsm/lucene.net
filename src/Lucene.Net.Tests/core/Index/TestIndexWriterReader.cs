@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
+using Lucene.Net.Attributes;
 using Lucene.Net.Documents;
 
 namespace Lucene.Net.Index
@@ -43,7 +45,6 @@ namespace Lucene.Net.Index
     using TermQuery = Lucene.Net.Search.TermQuery;
     using TestUtil = Lucene.Net.Util.TestUtil;
     using TextField = TextField;
-    using ThreadInterruptedException = Lucene.Net.Util.ThreadInterruptedException;
     using TopDocs = Lucene.Net.Search.TopDocs;
     
     [TestFixture]
@@ -514,7 +515,7 @@ namespace Lucene.Net.Index
                     }
                     catch (ThreadInterruptedException ie)
                     {
-                        throw new ThreadInterruptedException(ie);
+                        throw new ThreadInterruptedException("Thread Interrupted Exception", ie);
                     }
                 }
             }
@@ -843,7 +844,7 @@ namespace Lucene.Net.Index
         }
 
         // Stress test reopen during addIndexes
-        [Test]
+        [Test, LongRunningTest]
         public virtual void TestDuringAddIndexes()
         {
             Directory dir1 = GetAssertNoDeletesDirectory(NewDirectory());
@@ -967,7 +968,7 @@ namespace Lucene.Net.Index
         }
 
         // Stress test reopen during add/delete
-        [Test]
+        [Test, LongRunningTest]
         public virtual void TestDuringAddDelete()
         {
             Directory dir1 = NewDirectory();
