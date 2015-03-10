@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.30501.0
+VisualStudioVersion = 12.0.30723.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lucene.Net", "src\Lucene.Net.Core\Lucene.Net.csproj", "{5D4AD9BE-1FFB-41AB-9943-25737971BF57}"
 EndProject
@@ -37,6 +37,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lucene.Net.Codecs", "src\Lucene.Net.Codecs\Lucene.Net.Codecs.csproj", "{3F79B6D4-4359-4F83-B64F-07F4F6262425}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lucene.Net.Codecs.Tests", "src\Lucene.Net.Tests.Codecs\Lucene.Net.Codecs.Tests.csproj", "{351B75B1-BBD5-4E32-8036-7BED4E0135A6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lucene.Net.Grouping", "src\Lucene.Net.Grouping\Lucene.Net.Grouping.csproj", "{688B116B-E4F2-4664-B7FA-B5541C80C737}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lucene.Net.Tests.Grouping", "src\Lucene.Net.Tests.Grouping\Lucene.Net.Tests.Grouping.csproj", "{348BA1BF-BAEC-442D-8732-9FDFB2136CCB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -179,6 +183,26 @@ Global
 		{351B75B1-BBD5-4E32-8036-7BED4E0135A6}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{351B75B1-BBD5-4E32-8036-7BED4E0135A6}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{351B75B1-BBD5-4E32-8036-7BED4E0135A6}.Release|x86.ActiveCfg = Release|Any CPU
+		{688B116B-E4F2-4664-B7FA-B5541C80C737}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{688B116B-E4F2-4664-B7FA-B5541C80C737}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{688B116B-E4F2-4664-B7FA-B5541C80C737}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{688B116B-E4F2-4664-B7FA-B5541C80C737}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{688B116B-E4F2-4664-B7FA-B5541C80C737}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{688B116B-E4F2-4664-B7FA-B5541C80C737}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{688B116B-E4F2-4664-B7FA-B5541C80C737}.Release|Any CPU.Build.0 = Release|Any CPU
+		{688B116B-E4F2-4664-B7FA-B5541C80C737}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{688B116B-E4F2-4664-B7FA-B5541C80C737}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{688B116B-E4F2-4664-B7FA-B5541C80C737}.Release|x86.ActiveCfg = Release|Any CPU
+		{348BA1BF-BAEC-442D-8732-9FDFB2136CCB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{348BA1BF-BAEC-442D-8732-9FDFB2136CCB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{348BA1BF-BAEC-442D-8732-9FDFB2136CCB}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{348BA1BF-BAEC-442D-8732-9FDFB2136CCB}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{348BA1BF-BAEC-442D-8732-9FDFB2136CCB}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{348BA1BF-BAEC-442D-8732-9FDFB2136CCB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{348BA1BF-BAEC-442D-8732-9FDFB2136CCB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{348BA1BF-BAEC-442D-8732-9FDFB2136CCB}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{348BA1BF-BAEC-442D-8732-9FDFB2136CCB}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{348BA1BF-BAEC-442D-8732-9FDFB2136CCB}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
