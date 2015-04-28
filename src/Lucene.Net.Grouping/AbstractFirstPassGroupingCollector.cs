@@ -39,8 +39,8 @@ namespace Lucene.Net.Grouping
         private readonly int compIDXEnd;
 
         /// <lucene.internal></lucene.internal>
-        protected internal HashSet<CollectedSearchGroup<GROUP_VALUE_TYPE>> orderedGroups;
-
+        protected internal SortedSet<CollectedSearchGroup<GROUP_VALUE_TYPE>> orderedGroups;
+        
         private int docBase;
 
         private int spareSlot;

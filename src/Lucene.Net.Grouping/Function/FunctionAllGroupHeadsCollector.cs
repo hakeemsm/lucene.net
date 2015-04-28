@@ -131,7 +131,7 @@ namespace Lucene.Net.Grouping.Function
     /// <summary>Holds current head document for a single group.</summary>
     /// <remarks>Holds current head document for a single group.</remarks>
     /// <lucene.experimental></lucene.experimental>
-    public class GroupHead : GroupHead<IComparable>
+    public class GroupHead : GroupHead<MutableValue>
     {
         internal readonly FieldComparator[] comparators;
 

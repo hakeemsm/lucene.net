@@ -11,7 +11,7 @@ namespace Lucene.Net.Grouping
     /// <remarks>This collector specializes in collecting the most relevant document (group head) for each group that match the query.
     /// 	</remarks>
     /// <lucene.experimental></lucene.experimental>
-    public abstract class AbstractAllGroupHeadsCollector<GH> : Collector where GH : GroupHead<IComparable>
+    public abstract class AbstractAllGroupHeadsCollector<GH> : Collector where GH : GroupHead<IComparable<MutableValue>>
     {
         protected internal readonly int[] reversed;
 
@@ -166,7 +166,7 @@ namespace Lucene.Net.Grouping
     /// The relevancy is based is usually based on the sort.
     /// The group head contains a group value with its associated most relevant document id.
     /// </remarks>
-    public abstract class GroupHead<GROUP_VALUE_TYPE> where GROUP_VALUE_TYPE:IComparable
+    public abstract class GroupHead<GROUP_VALUE_TYPE> where GROUP_VALUE_TYPE:IComparable<MutableValue>
     {
         public readonly GROUP_VALUE_TYPE groupValue;
 
